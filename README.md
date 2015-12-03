@@ -1,2 +1,3 @@
 # appc.daemon
-AppC Daemon
+
+Prototype for the new daemon design
