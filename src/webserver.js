@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events';
+import helmet from 'koa-helmet';
 import Koa from 'koa';
 import path from 'path';
 import send from 'koa-send';
@@ -8,33 +9,41 @@ export default class WebServer extends EventEmitter {
 	constructor(opts = {}) {
 		super();
 
-		this.app      = new Koa;
 		this.hostname = opts.hostname || '127.0.0.1';
 		this.port     = opts.port || 1732;
 		this.server   = null;
+
+		// init the Koa app with helmet and a simple request logger
+		this.app = new Koa()
+			.use(helmet())
+			.use((ctx, next) => {
+				const start = new Date;
+				return next().then(() => {
+					console.info('%s %s %s %s',
+						ctx.method,
+						ctx.url,
+						console.chalk[ctx.status < 400 ? 'green' : ctx.status < 500 ? 'yellow' : 'red'](ctx.status),
+						console.chalk.cyan((new Date - start) + 'ms')
+					);
+				});
+			});
+	}
+
+	use(middleware) {
+		this.app.use(middleware);
+		return this;
 	}
 
 	listen() {
-		this.app.use((ctx, next) => {
-			const start = new Date;
-			return next().then(() => {
-				const ms = new Date - start;
-				console.log(`${ctx.method} ${ctx.url} - ${ms}ms`);
-			});
-		});
+		// make sure that if there is a previous websocket server, it's shutdown to free up the port
+		this.close();
 
+		// static file serving middleware
 		this.app.use(async (ctx) => {
 			await send(ctx, ctx.path, { root: path.resolve(__dirname, '..', 'public') });
 		});
 
-		this.app.use(ctx => {
-			console.log('hi!');
-			ctx.body = 'Hello World';
-		});
-
-		// make sure the previous server is shutdown to free up the port
-		this.close();
-
+		// create the websocket server and start listening
 		this.server = new WebSocketServer({
 			server: this.app.listen(this.port, this.hostname, () => {
 				console.info('Server listening on port ' + console.chalk.cyan(this.port));

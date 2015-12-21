@@ -1,5 +1,5 @@
 {
-  "name": "appc.daemon",
+  "name": "appcd",
   "version": "0.0.1",
   "description": "Appcelerator Daemon",
   "main": "index.js",
@@ -38,8 +38,10 @@
   "homepage": "https://github.com/appcelerator/appc.daemon#readme",
   "dependencies": {
     "chalk": "^1.1.1",
+    "co": "^4.6.0",
     "commander": "^2.9.0",
     "koa": "git+https://git@github.com/koajs/koa.git#v2.x",
+    "koa-helmet": "^1.0.0-alpha.1",
     "koa-router": "^7.0.0",
     "koa-send": "^3.1.0",
     "node-uuid": "^1.4.7",
@@ -51,12 +53,14 @@
     "del": "^2.2.0",
     "gulp": "^3.9.0",
     "gulp-babel": "^6.1.1",
+    "gulp-chug": "^0.4.2",
     "gulp-debug": "^2.1.2",
     "gulp-eslint": "^1.1.1",
     "gulp-filter": "^3.0.1",
     "gulp-load-plugins": "^1.1.0",
     "gulp-mocha": "^2.2.0",
     "gulp-plumber": "^1.0.1",
-    "gulp-sourcemaps": "^1.6.0"
+    "gulp-sourcemaps": "^1.6.0",
+    "gulp-sync": "^0.1.4"
   }
 }

@@ -1,10 +1,10 @@
 import { EventEmitter } from 'events';
 import Console from './console';
-import Dispatcher from './dispatcher';
 import fs from 'fs';
 import http from 'http';
 import os from 'os';
 import path from 'path';
+import Router from 'koa-router';
 import { spawn } from 'child_process';
 import WebServer from './webserver';
 
@@ -17,22 +17,7 @@ export default class Server extends EventEmitter {
 		const appcDir = path.join(process.env.HOME || process.env.USERPROFILE, '.appcelerator');
 		const configFile = path.join(appcDir, 'appcd.js');
 
-		const cfg = {};
-		if (fs.existsSync(configFile)) {
-			(function add(obj, prefix) {
-				Object.keys(obj).forEach(key => {
-					if (obj[key] !== null && typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
-						add(obj[key], prefix + key + '.');
-					} else {
-						cfg[prefix + key] = obj[key];
-					}
-				});
-			}(require(configFile) || {}, ''));
-		}
-		this.config = (key, defaultValue) => {
-			const value = cfg[key];
-			return value !== undefined ? value : defaultValue;
-		};
+		this._cfg = require(configFile) || {};
 
 		this.daemonize = opts.daemonize;
 
@@ -42,6 +27,26 @@ export default class Server extends EventEmitter {
 			hostname: this.config('hostname', '127.0.0.1'),
 			port:     this.config('port', 1732)
 		});
+	}
+
+	config(key, defaultValue) {
+		const parts = key.split('.');
+		const ns = parts.pop();
+		let i = 0;
+		let p = parts.length && parts[i++];
+		let obj = this._cfg;
+
+		if (p) {
+			do {
+				if (p in obj) {
+					obj = obj[p];
+				} else {
+					return defaultValue;
+				}
+			} while (obj && (p = parts[i++]));
+		}
+
+		return obj && ns && obj.hasOwnProperty(ns) ? obj[ns] : defaultValue;
 	}
 
 	isRunning() {
@@ -122,9 +127,26 @@ export default class Server extends EventEmitter {
 			process.on('SIGINT', this.shutdown.bind(this));
 			process.on('SIGTERM', this.shutdown.bind(this));
 
+			// load plugins
+			const pluginsPath = [ path.join(__dirname, 'plugins') ].concat(this.config('paths.plugins', []));
+			pluginsPath.forEach(dir => {
+				// load the plugin!
+			});
+
+			console.log('loading test plugin');
+			require('../plugins/test/dist/index.js');
+			console.log('success!');
+
+			this.router = new Router;
+
+			this.router.get('/hello', (ctx, next) => {
+				ctx.body = 'Hello World';
+			});
+
 			// wire up the dispatcher and start listening
 			this.webserver
-				.on('dispatch', this.dispatch.bind(this))
+				.use(this.router.routes())
+				.use(this.router.allowedMethods())
 				.listen();
 
 			resolve(this);

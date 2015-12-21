@@ -3,7 +3,6 @@ const del = require('del');
 const gulp = require('gulp');
 const path = require('path');
 const spawn = require('child_process').spawn;
-const sync = require('gulp-sync')(gulp).sync;
 
 const distDir = path.join(__dirname, 'dist');
 const babelOptions = {
@@ -22,9 +21,7 @@ gulp.task('clean-dist', function (done) {
 /*
  * build tasks
  */
-gulp.task('build', ['build-src', 'build-plugins']);
-
-gulp.task('build-src', ['clean-dist', 'lint-src'], function () {
+gulp.task('build', ['clean-dist', 'lint-src'], function () {
 	return gulp
 		.src('src/**/*.js')
 		.pipe($.plumber())
@@ -33,14 +30,6 @@ gulp.task('build-src', ['clean-dist', 'lint-src'], function () {
 		.pipe($.babel(babelOptions))
 		.pipe($.sourcemaps.write('.'))
 		.pipe(gulp.dest(distDir));
-});
-
-gulp.task('build-plugins', function () {
-	return gulp
-		.src('plugins/**/gulpfile.js')
-		.pipe($.chug({
-			tasks: ['build']
-		}));
 });
 
 /*
@@ -91,17 +80,6 @@ gulp.task('test', ['build', 'lint-test'], function () {
 			reporter: 'spec',
 			ui: 'bdd'
 		}));
-});
-
-/*
- * watch/debug tasks
- */
-gulp.task('restart-daemon', spawn.bind(null, process.execPath, ['bin/appcd', 'restart', '--debug'], { stdio: 'inherit' }));
-
-gulp.task('watch', sync(['build-src', 'build-plugins', 'restart-daemon']), function () {
-	console.log('ready');
-	//gulp.watch('src/**/*.js', sync(['build-src', 'restart-daemon']));
-	//gulp.watch('plugins/**/*.js', sync(['build-plugins', 'restart-daemon']));
 });
 
 gulp.task('default', ['test']);

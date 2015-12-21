@@ -44,7 +44,7 @@ program
 	.option('-o, --output <report|json>', 'the format to render the output', 'report')
 	.action(cmd => {
 		new Client()
-			.request('status')
+			.request('core/status')
 			.on('response', data => {
 				console.log('got status!');
 				console.log(data);

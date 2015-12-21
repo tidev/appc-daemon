@@ -39,7 +39,7 @@ export default class Console {
 			// prepend the prefix to each line
 			const output = util.format.apply(null, arguments).split('\n').map(line => {
 				return prefix + line;
-			}) + '\n';
+			}).join('\n') + '\n';
 
 			// remove old log output from the buffer
 			while (this.buffer.length >= this.maxBuffer) {
