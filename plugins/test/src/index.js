@@ -1,4 +1,4 @@
-import { Service } from 'appcd';
+import { Service } from 'appcd-core';
 
 export default class CoreService extends Service {
 	constructor() {

@@ -1,8 +1,8 @@
 {
-  "name": "appcd",
+  "name": "appcd-core",
   "version": "0.0.1",
   "description": "Appcelerator Daemon",
-  "main": "index.js",
+  "main": "dist/index",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "gulp build",
@@ -37,8 +37,6 @@
   "homepage": "https://github.com/appcelerator/appc.daemon#readme",
   "dependencies": {
     "chalk": "^1.1.1",
-    "co": "^4.6.0",
-    "commander": "^2.9.0",
     "koa": "git+https://git@github.com/koajs/koa.git#v2.x",
     "koa-helmet": "^1.0.0-alpha.1",
     "koa-router": "^7.0.0",
@@ -52,7 +50,6 @@
     "del": "^2.2.0",
     "gulp": "^3.9.0",
     "gulp-babel": "^6.1.1",
-    "gulp-chug": "^0.4.2",
     "gulp-debug": "^2.1.2",
     "gulp-eslint": "^1.1.1",
     "gulp-filter": "^3.0.1",

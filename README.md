@@ -2,6 +2,23 @@
 
 Prototype for the new daemon design
 
+## Installation
+
+```
+cd appcd-core
+npm install
+sudo npm link
+cd ..
+
+cd appcd
+npm install
+cd ..
+
+cd plugins/test
+npm install
+cd ../..
+```
+
 ## Quick Start
 
 Start the server:

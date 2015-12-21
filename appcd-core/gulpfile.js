@@ -3,7 +3,6 @@ const del = require('del');
 const gulp = require('gulp');
 const path = require('path');
 const spawn = require('child_process').spawn;
-const sync = require('gulp-sync')(gulp).sync;
 
 const distDir = path.join(__dirname, 'dist');
 const babelOptions = {
@@ -82,3 +81,5 @@ gulp.task('test', ['build', 'lint-test'], function () {
 			ui: 'bdd'
 		}));
 });
+
+gulp.task('default', ['test']);

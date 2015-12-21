@@ -2,11 +2,14 @@
   "name": "appcd",
   "version": "0.0.1",
   "description": "Appcelerator Daemon",
-  "main": "index.js",
+  "main": "dist/clid",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "gulp build",
     "prepublish": "npm run build"
+  },
+  "bin": {
+    "appcd": "./bin/appcd"
   },
   "repository": {
     "type": "git",
@@ -36,8 +39,10 @@
   },
   "homepage": "https://github.com/appcelerator/appc.daemon#readme",
   "dependencies": {
-    "commander": "^2.9.0",
-	"appcd-core": "*"
+    "commander": "^2.9.0"
+  },
+  "optionalDependencies": {
+    "appcd-core": "*"
   },
   "devDependencies": {
     "babel-eslint": "^4.1.6",
