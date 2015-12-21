@@ -1,14 +1,67 @@
 {
-  "private": true,
+  "name": "appcd",
+  "version": "0.0.1",
+  "description": "Appcelerator Daemon",
+  "main": "dist/index",
   "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
     "build": "gulp build",
-    "watch": "gulp watch"
+    "prepublish": "npm run build"
   },
+  "bin": {
+    "appcd": "./bin/appcd"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/appcelerator/appc.daemon.git"
+  },
+  "keywords": [
+    "appcelerator",
+    "appc",
+    "daemon",
+    "hyperloop",
+    "titanium",
+    "alloy"
+  ],
+  "author": {
+    "name": "Appcelerator, Inc.",
+    "email": "npmjs@appcelerator.com"
+  },
+  "maintainers": [
+    {
+      "name": "Chris Barber",
+      "email": "cbarber@appcelerator.com"
+    }
+  ],
   "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/appcelerator/appc.daemon/issues"
+  },
+  "homepage": "https://github.com/appcelerator/appc.daemon#readme",
+  "dependencies": {
+    "chalk": "^1.1.1",
+    "commander": "^2.9.0",
+    "koa": "git+https://git@github.com/koajs/koa.git#v2.x",
+    "koa-helmet": "^1.0.0-alpha.1",
+    "koa-router": "^7.0.0",
+    "koa-send": "^3.1.0",
+    "node-uuid": "^1.4.7",
+    "ws": "^0.8.1"
+  },
   "devDependencies": {
+    "babel-eslint": "^4.1.6",
+    "babel-preset-es2016-node5": "^1.1.2",
+    "del": "^2.2.0",
     "gulp": "^3.9.0",
+    "gulp-babel": "^6.1.1",
     "gulp-chug": "^0.4.2",
+    "gulp-debug": "^2.1.2",
+    "gulp-eslint": "^1.1.1",
+    "gulp-filter": "^3.0.1",
     "gulp-load-plugins": "^1.1.0",
+    "gulp-mocha": "^2.2.0",
+    "gulp-plumber": "^1.0.1",
+    "gulp-sourcemaps": "^1.6.0",
     "gulp-sync": "^0.1.4"
   }
 }
