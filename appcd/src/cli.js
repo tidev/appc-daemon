@@ -1,6 +1,5 @@
-import Client from './client';
+import { Client, Server } from 'appcd-core';
 import program from 'commander';
-import Server from './server';
 
 const pkgJson = require('../package.json');
 
