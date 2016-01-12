@@ -7,8 +7,8 @@
     "build": "gulp build",
     "prepublish": "npm run build"
   },
-  "optionalDependencies": {
-    "appcd-core": "*"
+  "dependencies": {
+    "appcd": "*"
   },
   "devDependencies": {
     "babel-eslint": "^4.1.6",

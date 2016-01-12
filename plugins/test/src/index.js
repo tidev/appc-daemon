@@ -1,7 +1,9 @@
-import { Service } from 'appcd-core';
+export default class TestService extends appcd.Service {
+	init() {
+		this.logger.info('hi from test service init()');
+	}
 
-export default class CoreService extends Service {
-	constructor() {
-		super();
+	shutdown() {
+		this.logger.info('hi from test service shutdown()');
 	}
 }

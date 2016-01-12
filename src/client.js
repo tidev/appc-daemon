@@ -29,9 +29,6 @@ export default class Client extends EventEmitter {
 						const json = JSON.parse(data);
 						if (json.id) {
 							this.emit(json.id, json.data);
-							if (!json.more) {
-								this.removeListener(json.id);
-							}
 						}
 					} catch (e) {}
 				}
@@ -43,7 +40,7 @@ export default class Client extends EventEmitter {
 		});
 	}
 
-	request(url, payload) {
+	request(path, payload) {
 		const emitter = new EventEmitter;
 
 		const send = () => {
@@ -54,13 +51,18 @@ export default class Client extends EventEmitter {
 
 						this.on(id, (data) => {
 							emitter.emit('response', data);
+							if (data.eof) {
+								this.removeListener(id);
+								emitter.emit('end');
+							}
 						});
 
-						socket.send(JSON.stringify(Object.assign({
+						socket.send(JSON.stringify({
 							version: '1.0',
-							url: url,
-							id: id
-						}, payload || {})));
+							path: path,
+							id: id,
+							data: payload
+						}));
 					});
 			});
 		};
@@ -70,7 +72,7 @@ export default class Client extends EventEmitter {
 			.then(send)
 			.catch(err => {
 				if (err.code !== 'ALREADY_RUNNING') {
-					throw err;
+					emitter.emit('error', err);
 				}
 				send();
 			});

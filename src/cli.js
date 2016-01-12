@@ -1,4 +1,5 @@
-import { Client, Server } from 'appcd-core';
+import Client from './client';
+import Server from './server';
 import program from 'commander';
 
 const pkgJson = require('../package.json');
@@ -10,10 +11,11 @@ program
 	.command('start')
 	.option('--debug', 'don\'t run as a background daemon')
 	.action(cmd => {
-		new Server({ daemonize: !cmd.debug })
+		new Server({ daemon: !cmd.debug })
 			.start()
 			.catch(err => {
 				console.error(err.toString());
+				process.exit(1);
 			});
 	});
 
@@ -28,13 +30,14 @@ program
 	.command('restart')
 	.option('--debug', 'don\'t run as a background daemon')
 	.action(cmd => {
-		new Server({ daemonize: !cmd.debug })
+		new Server({ daemon: !cmd.debug })
 			.stop()
 			.then(server => {
 				return server.start();
 			})
 			.catch(err => {
-				console.error(err.toString());
+				console.error(err.stack || toString());
+				process.exit(1);
 			});
 	});
 
@@ -42,25 +45,25 @@ program
 	.command('status')
 	.option('-o, --output <report|json>', 'the format to render the output', 'report')
 	.action(cmd => {
-		new Client()
-			.request('core/status')
+		const client = new Client();
+		client
+			.request('/appcd/status')
 			.on('response', data => {
-				console.log('got status!');
 				console.log(data);
-			});
+				client.disconnect();
+			})
+			.on('error', console.error);
 	});
 
 program
 	.command('logcat')
 	.action(() => {
-		new Client()
-			.request('logcat')
-			.then((connection) => {
-				console.log('got status!');
-			})
-			.catch(err => {
-				console.error(err.toString());
-			});
+		const client = new Client();
+		client
+			.request('/appcd/logcat')
+			.on('response', console.log)
+			.on('end', client.disconnect)
+			.on('error', console.error);
 	});
 
 program

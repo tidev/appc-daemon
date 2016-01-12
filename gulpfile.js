@@ -1,36 +1,70 @@
+'use strict';
+
 const $ = require('gulp-load-plugins')();
 const del = require('del');
+const fs = require('fs');
 const gulp = require('gulp');
 const path = require('path');
+const runSequence = require('run-sequence');
 const spawn = require('child_process').spawn;
-const sync = require('gulp-sync')(gulp).sync;
 
+const manifest = require('./package.json');
 const distDir = path.join(__dirname, 'dist');
+const docsDir = path.join(__dirname, 'docs');
 const babelOptions = {
-	presets: ['es2016-node5']
+	presets: ['es2016-node5'],
+	plugins: ['transform-decorators-legacy', 'transform-class-properties']
 };
 
 /*
  * Clean tasks
  */
-gulp.task('clean', ['clean-dist']);
+gulp.task('clean', ['clean-dist', 'clean-docs']);
 
 gulp.task('clean-dist', function (done) {
 	del([distDir]).then(function () { done(); });
 });
 
+gulp.task('clean-docs', function (done) {
+	del([docsDir]).then(function () { done(); });
+});
+
 /*
  * build tasks
  */
-gulp.task('build', ['clean-dist', 'lint-src'], function () {
+gulp.task('build', ['build-src', 'build-plugins']);
+
+gulp.task('build-src', ['clean-dist', 'lint-src'], function () {
 	return gulp
 		.src('src/**/*.js')
 		.pipe($.plumber())
-		.pipe($.debug({ title: 'build-src' }))
+		.pipe($.debug({ title: 'build' }))
 		.pipe($.sourcemaps.init())
 		.pipe($.babel(babelOptions))
 		.pipe($.sourcemaps.write('.'))
 		.pipe(gulp.dest(distDir));
+});
+
+gulp.task('build-plugins', function () {
+	return gulp
+		.src('plugins/*/gulpfile.js')
+		.pipe($.chug({
+			tasks: ['build']
+		}));
+});
+
+gulp.task('docs', ['lint-src', 'clean-docs'], function () {
+	return gulp.src('src')
+		.pipe($.plumber())
+		.pipe($.debug({ title: 'docs' }))
+		.pipe($.esdoc({
+			// debug: true,
+			destination: docsDir,
+			plugins: [
+				{ name: "esdoc-es7-plugin" }
+			],
+			title: manifest.name
+		}));
 });
 
 /*
@@ -41,7 +75,7 @@ function lint(pattern) {
 		.pipe($.plumber())
 		.pipe($.eslint())
 		.pipe($.eslint.format())
-		.pipe($.eslint.failOnError());
+		.pipe($.eslint.failAfterError());
 }
 
 gulp.task('lint-src', function () {
@@ -86,30 +120,25 @@ gulp.task('test', ['build', 'lint-test'], function () {
 gulp.task('default', ['test']);
 
 /*
- * build tasks
- */
-// gulp.task('build', function () {
-// 	// build appcd, core, and plugins
-// 	return gulp
-// 		.src([
-// 			'appcd/gulpfile.js',
-// 			'appcd-core/gulpfile.js',
-// 			'plugins/*/gulpfile.js'
-// 		])
-// 		.pipe($.chug({
-// 			tasks: ['build']
-// 		}));
-// });
-
-/*
  * watch/debug tasks
  */
-gulp.task('restart-daemon', spawn.bind(null, process.execPath, ['appcd/bin/appcd', 'restart', '--debug'], { stdio: 'inherit' }));
+gulp.task('restart-daemon', function () {
+	spawn(process.execPath, ['bin/appcd', 'restart', '--debug'], { stdio: 'inherit' });
+});
 
-gulp.task('watch', sync(['build', 'restart-daemon']), function () {
-	console.log('ready');
-	gulp.watch('src/**/*.js', sync(['build', 'restart-daemon']));
-	//gulp.watch('plugins/**/*.js', sync(['build-plugins', 'restart-daemon']));
+gulp.task('watch', function () {
+	runSequence('build', 'restart-daemon', function () {
+		process.on('SIGINT', process.exit.bind(null, 0));
+		process.on('SIGTERM', process.exit.bind(null, 0));
+
+		gulp.watch('src/**/*.js', function () {
+			runSequence('build-src', 'restart-daemon');
+		});
+
+		gulp.watch('plugins/*/src/**/*.js', function () {
+			runSequence('build-plugins', 'restart-daemon');
+		});
+	});
 });
 
 gulp.task('default', ['build']);

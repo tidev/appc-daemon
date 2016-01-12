@@ -7,9 +7,6 @@
 		"console": false,
 		"describe": false,
 		"expect": false,
-		"it": false,
-		"sinon": false,
-		"spy": false,
-		"stub": false
+		"it": false
 	}
 }
