@@ -32,9 +32,7 @@ program
 	.action(cmd => {
 		new Server({ daemon: !cmd.debug })
 			.stop()
-			.then(server => {
-				return server.start();
-			})
+			.then(server => server.start())
 			.catch(err => {
 				console.error(err.stack || toString());
 				process.exit(1);

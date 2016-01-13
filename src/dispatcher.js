@@ -1,10 +1,34 @@
 import autobind from 'autobind-decorator';
 import pathToRegExp from 'path-to-regexp';
 
+export class DispatchError extends Error {
+	constructor(status, message) {
+		super(message);
+		this.message = message;
+		this.status = status;
+		Error.captureStackTrace(this, this.constructor);
+	}
+
+	toJSON() {
+		return {
+			status: this.status,
+			message: this.message || Dispatcher.statusCodes[this.status] || 'Unknown error'
+		};
+	}
+}
+
 /**
  * Cross between an event emitter and a router.
  */
 export default class Dispatcher {
+	static statusCodes = {
+		'200': 'OK',
+		'400': 'Bad request',
+		'404': 'File not found',
+		'500': 'Server error',
+		'505': 'Unsupported version'
+	};
+
 	routes = [];
 
 	/**
@@ -66,7 +90,7 @@ export default class Dispatcher {
 					return true;
 				}
 			})) {
-				reject(new Error('No route'));
+				reject(new DispatchError(404, 'No route'));
 			}
 		});
 	}

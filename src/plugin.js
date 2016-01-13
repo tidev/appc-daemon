@@ -1,5 +1,6 @@
 import Dispatcher from './dispatcher';
 import fs from 'fs';
+import Logger from './logger';
 import path from 'path';
 import resolvePath from 'resolve-path';
 import Router from 'koa-router';
@@ -19,12 +20,12 @@ export default class Plugin {
 		this.pkgJson = typeof pkgJson === 'object' && pkgJson !== null ? pkgJson : {};
 
 		this.service = new cls({
-			logger: console.new(name),
+			logger: new Logger(name),
 			router: this.router,
 			dispatcher: this.dispatcher
 		});
 
-		console.info('Loaded plugin ' + name + (pkgJson.version ? ' v' + pkgJson.version : '') + ' (' + path + ')');
+		appcd.logger.info('Loaded plugin ' + name + (pkgJson.version ? ' v' + pkgJson.version : '') + ' (' + path + ')');
 	}
 
 	/**

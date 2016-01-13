@@ -3,35 +3,47 @@
  */
 export default class Connection {
 	/**
-	 * Creates the connection object.
+     * Creates the connection object.
+     *
 	 * @param {Object} opts
-	 */
-	constructor(opts={}) {
+	 * @param {WebSocket} opts.socket
+	 * @param {String} opts.id
+	 * @param {Object} opts.data
+     */
+	constructor(opts) {
 		this.socket = opts.socket;
 		this.id = opts.id;
-		this.data = opts.data || {};
+		this.data = opts.data;
 	}
 
 	/**
-	 * Listens for additional messages from the client.
+	 * Add listener for additional messages from the client.
+	 *
+	 * @param {String} path
+	 * @param {Function} fn
+	 * @access public
 	 */
 	on(path, fn) {
+		//
 	}
 
 	/**
 	 * Sends a response to the client.
 	 *
-	 * @param {*} data
+	 * @param {Number} status=200
+	 * @param {*} response
 	 * @returns {Promise}
+	 * @access public
 	 */
-	send(data) {
+	send(status, response) {
 		return new Promise((resolve, reject) => {
-			this.socket.send(JSON.stringify({
-				status: 200,
+			const res = {
+				status: status || 200,
 				id: this.id,
-				data: data
-			}));
-			resolve();
+				data: response
+			};
+			this.socket.send(JSON.stringify(res));
+			resolve(res);
 		});
 	}
 }

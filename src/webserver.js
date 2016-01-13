@@ -1,3 +1,4 @@
+import autobind from 'autobind-decorator';
 import { EventEmitter } from 'events';
 import helmet from 'koa-helmet';
 import Koa from 'koa';
@@ -13,6 +14,8 @@ export default class WebServer extends EventEmitter {
 
 	server = null;
 
+	httpServer = null;
+
 	constructor(opts = {}) {
 		super();
 
@@ -25,53 +28,82 @@ export default class WebServer extends EventEmitter {
 			.use((ctx, next) => {
 				const start = new Date;
 				return next().then(() => {
-					console.info('%s %s %s %s',
+					appcd.logger.info('%s %s %s %s',
 						ctx.method,
 						ctx.url,
-						console.chalk[ctx.status < 400 ? 'green' : ctx.status < 500 ? 'yellow' : 'red'](ctx.status),
-						console.chalk.cyan((new Date - start) + 'ms')
+						appcd.logger.chalk[ctx.status < 400 ? 'green' : ctx.status < 500 ? 'yellow' : 'red'](ctx.status),
+						appcd.logger.chalk.cyan((new Date - start) + 'ms')
 					);
 				});
 			});
 	}
 
+	/**
+	 * Adds a middleware function to the web server.
+	 *
+	 * @param {Function} middleware
+	 * @returns {WebServer}
+	 * @access public
+	 */
 	use(middleware) {
 		this.app.use(middleware);
 		return this;
 	}
 
+	@autobind
 	listen() {
-		// make sure that if there is a previous websocket server, it's shutdown to free up the port
-		this.close();
+		return Promise.resolve()
+			// make sure that if there is a previous websocket server, it's shutdown to free up the port
+			.then(this.close)
+			.then(() => {
+				return new Promise((resolve, reject) => {
+					const route = this.router.routes();
+					this.app.use(route);
 
-		const route = this.router.routes();
-		this.app.use(route);
+					// static file serving middleware
+					this.app.use(async (ctx) => {
+						await send(ctx, ctx.path, { root: path.resolve(__dirname, '..', 'public') });
+					});
 
-		// static file serving middleware
-		this.app.use(async (ctx) => {
-			await send(ctx, ctx.path, { root: path.resolve(__dirname, '..', 'public') });
-		});
+					this.httpServer = this.app.listen(this.port, this.hostname, () => {
+						appcd.logger.info('Server listening on port ' + appcd.logger.chalk.cyan(this.port));
+						resolve();
+					});
 
-		// create the websocket server and start listening
-		this.server = new WebSocketServer({
-			server: this.app.listen(this.port, this.hostname, () => {
-				console.info('Server listening on port ' + console.chalk.cyan(this.port));
-			})
-		});
+					// create the websocket server and start listening
+					this.server = new WebSocketServer({
+						server: this.httpServer
+					});
 
-		this.server.on('connection', ws => {
-			this.emit('websocket', ws);
-		});
-
-		return this;
+					this.server.on('connection', ws => {
+						this.emit('websocket', ws);
+					});
+				});
+			});
 	}
 
+	@autobind
 	close() {
-		if (this.server) {
-			this.server.close();
-			this.server = null;
-		}
-
-		return this;
+		return Promise.resolve()
+			.then(() => {
+				if (this.server) {
+					return new Promise((resolve, reject) => {
+						this.server.close(() => {
+							this.server = null;
+							resolve();
+						});
+					});
+				}
+			})
+			.then(() => {
+				if (this.httpServer) {
+					return new Promise((resolve, reject) => {
+						this.httpServer.close(() => {
+							this.httpServer = null;
+							resolve();
+						});
+					});
+				}
+			});
 	}
 }

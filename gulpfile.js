@@ -122,19 +122,23 @@ gulp.task('default', ['test']);
 /*
  * watch/debug tasks
  */
+var children = 0;
 gulp.task('restart-daemon', function () {
-	spawn(process.execPath, ['bin/appcd', 'restart', '--debug'], { stdio: 'inherit' });
+	var child = spawn(process.execPath, ['bin/appcd', 'restart', '--debug'], { stdio: 'inherit' });
+	children++;
+	child.on('exit', function () {
+		// if appcd is killed via kill(1), then we force gulp watch to exit
+		if (--children < 1) {
+			process.exit(0);
+		}
+	});
 });
 
 gulp.task('watch', function () {
 	runSequence('build', 'restart-daemon', function () {
-		process.on('SIGINT', process.exit.bind(null, 0));
-		process.on('SIGTERM', process.exit.bind(null, 0));
-
 		gulp.watch('src/**/*.js', function () {
 			runSequence('build-src', 'restart-daemon');
 		});
-
 		gulp.watch('plugins/*/src/**/*.js', function () {
 			runSequence('build-plugins', 'restart-daemon');
 		});
