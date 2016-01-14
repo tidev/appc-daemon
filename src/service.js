@@ -2,10 +2,18 @@
  * Base class to define a service.
  */
 export default class Service {
-	constructor(opts) {
-		this.logger = opts.logger;
-		this.router = opts.router;
-		this.register = opts.dispatcher.register;
-		this.request = opts.dispatcher.request;
+	/**
+	 * Initializes the service internals.
+	 *
+	 * @param {Object} opts
+	 * @param {Logger} opts.logger
+	 * @param {Router} opts.router
+	 * @param {Dispatcher} opts.dispatcher
+	 */
+	constructor({ logger, router, dispatcher }) {
+		this.logger   = logger;
+		this.router   = router;
+		this.register = dispatcher.register;
+		this.request  = dispatcher.request;
 	}
 }

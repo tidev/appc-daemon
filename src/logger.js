@@ -1,14 +1,37 @@
-import chalk from 'chalk';
-import { PassThrough } from 'stream';
+import colors from 'colors/safe';
+import { PassThrough, Writable } from 'stream';
+import through2 from 'through2';
 import util from 'util';
 
+// force the colors to be enabled if the terminal doesn't support them.
+colors.enabled = true;
+
+/**
+ * A logger object formats and pipes output to a stream.
+ */
 export default class Logger {
+	/**
+	 * The main read/write passthrough stream.
+	 * @type {stream.PassThrough}
+	 */
+	static out = new PassThrough({ highWaterMark: 0 });
+
+	/**
+	 * The maximum number of lines to buffer.
+	 * @type {Number}
+	 */
 	static maxBuffer = 100;
 
+	/**
+	 * Buffer containing the lines of output.
+	 * @type {Array}
+	 */
 	static buffer = [];
 
-	static out = new PassThrough;
-
+	/**
+	 * Log levels and their associated colors.
+	 * @type {Object}
+	 */
 	static levels = {
 		log: 'gray',
 		info: 'green',
@@ -16,31 +39,41 @@ export default class Logger {
 		error: 'red'
 	};
 
-	chalk = chalk;
+	/**
+	 * The colors module.
+	 * @type {colors}
+	 */
+	colors = colors;
 
+	/**
+	 * Creates the logger and initializes the log level methods.
+	 *
+	 * @param {String} [label]
+	 */
 	constructor(label) {
-		label = label ? chalk.gray('[' + label + '] ') : '';
+		label = label ? colors.gray('[' + label + '] ') : '';
 
 		Object.keys(Logger.levels).forEach(level => {
-			const rlabel = label + chalk[Logger.levels[level]](level);
+			const rlabel = label + colors[Logger.levels[level]](level);
 
 			Object.defineProperty(this, level, {
 				enumerable: true,
 				value: function () {
 					// cache the timestamp and label just in case we're outputting multiple lines
-					const prefix = chalk.magenta(new Date().toISOString()) + ' ' + rlabel + ': ';
-
+					const prefix = colors.magenta(new Date().toISOString()) + ' ' + rlabel + ': ';
 					const lines = util.format.apply(null, arguments).split('\n');
 
-					// remove old log output from the buffer
-					if (Logger.buffer.length + lines.length > Logger.maxBuffer) {
-						Logger.buffer.splice(0, Logger.maxBuffer - (Logger.buffer.length + lines.length));
+					// remove old log output from the buffer and stream
+					const n = Logger.maxBuffer - (Logger.buffer.length + lines.length);
+					if (n) {
+						Logger.buffer.splice(n);
 					}
 
-					// write each line to the buffer and stream
+					// write each line to the stream
 					lines.forEach(line => {
-						Logger.buffer.push(prefix + line);
-						Logger.out.write(prefix + line + '\n');
+						const str = prefix + line + '\n';
+						Logger.buffer.push(str);
+						Logger.out.write(str);
 					});
 				}
 			});
@@ -48,18 +81,60 @@ export default class Logger {
 
 	}
 
-	static pipe(out, flush=true, colors=false) {
-		Logger.out.pipe(out);
+	/**
+	 * Pipes the logger to the specified writable stream.
+	 *
+	 * @param {stream.Writable} out
+	 * @param {Object} obj
+	 * @param {Boolean} [obj.flush=true]
+	 * @param {Boolean} [obj.colors=false]
+	 * @access public
+	 */
+	static pipe(out, { flush=true, colors }) {
+		let stream = out;
+		if (colors) {
+			Logger.out.pipe(stream);
+		} else {
+			// strip the colors
+			const strip = /\x1B\[\d+m/g;
+			stream = through2((chunk, enc, callback) => {
+				callback(null, chunk.toString().replace(strip, ''));
+			});
+			Logger.out.pipe(stream).pipe(out);
+		}
 
 		if (flush) {
 			// flush the buffer to our new stream
-			Logger.buffer.forEach(line => {
-				out.write(colors ? line : chalk.stripColor(line));
-			});
+			Logger.buffer.forEach(line => stream.write(line));
 		}
+
+		out.on('finish', () => Logger.out.unpipe(stream));
+		out.on('error', () => Logger.out.unpipe(stream));
 	}
 
+	/**
+	 * Removes the writeable stream from being piped.
+	 *
+	 * @param {stream.Writable} out
+	 * @access public
+	 */
 	static unpipe(out) {
 		Logger.out.unpipe(out);
 	}
 }
+
+/**
+ * A writable stream that swallows up data.
+ */
+class Blackhole extends Writable {
+	_write(chunk, enc, cb) {
+		setImmediate(cb);
+	}
+}
+
+/**
+ * The logger's PassThrough stream likes to buffer data, so we need to prime the
+ * pipeline with a writable stream to purge the initial PassThrough stream's
+ * buffer.
+ */
+Logger.out.pipe(new Blackhole);

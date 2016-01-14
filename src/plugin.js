@@ -10,10 +10,27 @@ import Service from './service';
  * Wraps a plugin lifecycle.
  */
 export default class Plugin {
+	/**
+	 * Scoped dispatcher.
+	 * @type {Router}
+	 */
 	dispatcher = new Dispatcher;
 
+	/**
+	 * Scoped koa router.
+	 * @type {Router}
+	 */
 	router = new Router;
 
+	/**
+	 * Initializes a plugin descriptor.
+	 *
+	 * @param {Object} opts
+	 * @param {String} opts.name
+	 * @param {String} opts.path
+	 * @param {Object} opts.cls
+	 * @param {Object} opts.pkgJson
+	 */
 	constructor({ name, path, cls, pkgJson }) {
 		this.name = name;
 		this.path = path;
@@ -25,12 +42,13 @@ export default class Plugin {
 			dispatcher: this.dispatcher
 		});
 
-		appcd.logger.info('Loaded plugin ' + name + (pkgJson.version ? ' v' + pkgJson.version : '') + ' (' + path + ')');
+		appcd.logger.info('Loaded plugin ' + appcd.logger.colors.cyan(name) + (pkgJson.version ? ' v' + pkgJson.version : '') + ' ' + appcd.logger.colors.grey(path));
 	}
 
 	/**
 	 * Calls the service's init function.
 	 *
+	 * @returns {Promise}
 	 * @access public
 	 */
 	async init() {
@@ -42,6 +60,7 @@ export default class Plugin {
 	/**
 	 * Calls the service's shutdown function.
 	 *
+	 * @returns {Promise}
 	 * @access public
 	 */
 	async shutdown() {
@@ -54,6 +73,7 @@ export default class Plugin {
 	 * Loads all plugins in the specified directory.
 	 *
 	 * @param {String} pluginDir
+	 * @returns {Plugin}
 	 * @access public
 	 */
 	static load(pluginDir) {

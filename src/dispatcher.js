@@ -1,6 +1,9 @@
 import autobind from 'autobind-decorator';
 import pathToRegExp from 'path-to-regexp';
 
+/**
+ *
+ */
 export class DispatchError extends Error {
 	constructor(status, message) {
 		super(message);
@@ -21,6 +24,10 @@ export class DispatchError extends Error {
  * Cross between an event emitter and a router.
  */
 export default class Dispatcher {
+	/**
+	 * A map of status codes and their descriptions.
+	 * @type {Object}
+	 */
 	static statusCodes = {
 		'200': 'OK',
 		'400': 'Bad request',
@@ -29,6 +36,10 @@ export default class Dispatcher {
 		'505': 'Unsupported version'
 	};
 
+	/**
+	 * List of registered routes.
+	 * @type {Array}
+	 */
 	routes = [];
 
 	/**

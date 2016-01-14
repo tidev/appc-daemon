@@ -1,6 +1,6 @@
 import autobind from 'autobind-decorator';
 import 'babel-polyfill';
-import chalk from 'chalk';
+import colors from 'colors/safe';
 import Connection from './connection';
 import Dispatcher, { DispatcherError } from './dispatcher';
 import { EventEmitter } from 'events';
@@ -27,6 +27,10 @@ global.appcd = {
 	Service
 };
 
+/**
+ * The core server logic that orchestrates the plugin lifecycle and request
+ * dispatching.
+ */
 export default class Server extends EventEmitter {
 	/**
 	 * The web server instance.
@@ -151,7 +155,10 @@ export default class Server extends EventEmitter {
 
 				if (!this.config('logger.silent')) {
 					// we are the server process running in debug mode, so hook up some output
-					Logger.pipe(process.stdout, true, this.config('logger.colors', true));
+					Logger.pipe(process.stdout, {
+						colors: this.config('logger.colors', true),
+						flush: true
+					});
 				}
 
 				// since we are not running as a daemon, we have to write the pid file ourselves
@@ -175,8 +182,11 @@ export default class Server extends EventEmitter {
 				port:     this.config('port', 1732)
 			});
 
-			this.webserver.on('websocket', ws => {
-				ws.on('message', message => {
+			this.webserver.on('websocket', socket => {
+				const address = colors.cyan(socket._socket.remoteAddress);
+				appcd.logger.info('WebSocket %s: connect', address);
+
+				socket.on('message', message => {
 					let req;
 
 					try {
@@ -189,45 +199,28 @@ export default class Server extends EventEmitter {
 						switch (req.version) {
 							case '1.0':
 								const conn = new Connection({
-									socket: ws,
+									socket,
 									id: req.id,
 									data: req.data || {}
 								});
 
-
-/*
-
-errors
-
-1. unsupported version
-
-2. bad request
-
-3. dispatch bad URL
-
-4. dispatch handler threw error
-
-5. dispatch handler rejected
-
-6. websocket closed and handler tried to send()
-
-*/
-
 								const startTime = new Date;
 
 								this.dispatcher.dispatch(req.path, conn)
-									.then((res) => {
-										appcd.logger.info(chalk.blue('REQ ' + req.path) + ' ' + chalk.green(res.status) + ' ' + chalk.cyan(new Date - startTime) + 'ms');
+									.then(res => {
+										appcd.logger.info('WebSocket %s: %s %s %s', address, colors.blue(req.path), (res ? colors.green(res.status) + ' ' : ''), colors.cyan((new Date - startTime) + 'ms'));
 									})
 									.catch(err => {
 										if (err instanceof DispatcherError) {
-											ws.send(err.toJSON());
+											socket.send(err.toJSON());
 										} else {
-											appcd.logger.error(chalk.red('REQ ' + req.path + ' 500 ' + (new Date - startTime) + 'ms'));
+											const status = err.status && Dispatcher.statusCodes[String(err.status)] ? err.status : 500;
+											const delta = new Date - startTime;
+											appcd.logger.error(colors.red(`Websocket ${req.path} ${status} ${delta}ms`));
 											appcd.logger.error(err.stack || err.toString());
-											ws.send(JSON.stringify({
-												status: 500,
-												error: Dispatcher.statusCodes['500'] + ': ' + err.toString()
+											socket.send(JSON.stringify({
+												status: err.status || 500,
+												error: (err.status && Dispatcher.statusCodes[String(err.status)] || Dispatcher.statusCodes['500']) + ': ' + err.toString()
 											}));
 										}
 									});
@@ -239,125 +232,20 @@ errors
 						}
 					} catch (err) {
 						appcd.logger.error('Bad request:', err);
-						ws.send(JSON.stringify({
+						socket.send(JSON.stringify({
 							status: 400,
 							error: 'Bad request: ' + err.toString()
 						}));
 					}
 				});
 
-				ws.on('close', () => {
-					// client hung up
+				socket.on('close', () => {
+					appcd.logger.info('WebSocket %s: disconnect', address);
 				});
 			});
-
-
-			/*
-				let done = false;
-
-console.info(req);
-					if (req && typeof req === 'object' && req.version === '1.0' && req.path && req.id) {
-						if (!req.data || typeof req.data !== 'object') {
-							req.data = {};
-						}
-
-						// get the handler from the dispatcher
-						const handler = this.dispatcher.getHandler();
-
-						// const ctx = {
-						// 	method: 'GET',
-						// 	path: req.path,
-						// 	response: {}
-						// };
-
-						// route(ctx).then(() => {
-						// 	console.info('finished routing ' + req.path);
-						// 	console.log(ctx);
-						// 	ws.send(JSON.stringify({
-						// 		id: req.id,
-						//      status: 200,
-						// 		data: JSON.parse(ctx.body)
-						// 	}));
-						// }).catch(err => {
-						// 	console.error('error routing ' + req.path);
-						// 	console.error(err);
-						// });
-
-						// this.emit('dispatch', req, (payload) => {
-						// 	if (!done) {
-						// 		done = true;
-						// 		ws.send(JSON.stringify({
-						// 			id: req.id,
-						// 			data: payload
-						// 		}));
-						// 	}
-						// });
-					}
-				} catch (e) {
-					console.error('Failed to parse request:', e);
-				}
-
-				ws.on('close', () => {
-					// client hung up
-					done = true;
-				});
-			});
-		});
-*/
-
-
-/*
-router.get('/logcat', (ctx, next) => {
-	const s = new stream.Writable;
-	const end = this.theConsole.stream(s, s, false);
-	let buffer = '';
-
-	s.on('data', data => {
-		ctx.body = data;
-	});
-
-	s.on('error', err => {
-		end();
-		console.error(err);
-	});
-});
-
-
-if the websocket is closed, we need to let logcat() know to stop!
-
-
-thinger.on('/logcat', (ctx) => {
-	const s = new stream.Writable;
-	const end = this.theConsole.stream(s, s, false);
-	try {
-		s.pipe(ctx);
-	} catch (e) {
-		end();
-	}
-});
-*/
-
-
-		// this.server.on('connection', ws => {
-		// 	var id = setInterval(function() {
-		// 		ws.send(JSON.stringify(process.memoryUsage()), function() { /* ignore errors */ });
-		// 	}, 500);
-		//
-		// 	ws.on('message', function incoming(message) {
-		// 	    console.log('received: %s', message);
-		// 	  });
-		//
-		// 	console.log('started client interval');
-		//
-		// 	ws.on('close', function() {
-		// 		console.log('stopping client interval');
-		// 		clearInterval(id);
-		// 	});
-		// });
-
-			this.initHandlers();
 
 			Promise.resolve()
+				.then(this.initHandlers)
 				.then(this.loadPlugins)
 				.then(this.webserver.listen)
 				.then(resolve)
@@ -383,8 +271,6 @@ thinger.on('/logcat', (ctx) => {
 		args.push(path.resolve(__dirname, 'cli.js'));
 		args.push('start');
 
-		appcd.logger.info('Spawning server: ' + node + ' ' + args.map(s => typeof s === 'string' && s.indexOf(' ') !== -1 ? '"' + s + '"' : s).join(' '));
-
 		const child = spawn(node, args, {
 			detached: true,
 			stdio: 'ignore'
@@ -396,37 +282,47 @@ thinger.on('/logcat', (ctx) => {
 	/**
 	 * Helper function that returns the server status.
 	 *
+	 * @returns {String}
 	 * @access private
 	 */
 	getStatus() {
-		return {
-			appcd: {
-				version:  pkgJson.version,
-				uptime:   process.uptime(),
-				pid:      process.pid,
-				execPath: process.execPath,
-				execArgv: process.execArgv,
-				argv:     process.argv,
-				env:      process.env,
-				plugins:  Object.keys(this.plugins)
-			},
-			node: {
-				version:  process.version.replace(/^v/, ''),
-				versions: process.versions
-			},
-			system: {
-				platform: process.platform,
-				arch:     process.arch,
-				cpus:     os.cpus().length,
-				hostname: os.hostname(),
-				loadavg:  os.loadavg(),
-				memory: {
-					usage: process.memoryUsage(),
-					free:  os.freemem(),
-					total: os.totalmem()
+		let cache = this._statusCache;
+
+		if (!cache) {
+			// init the cache
+			cache = this._statusCache = {
+				appcd: {
+					version:  pkgJson.version,
+					pid:      process.pid,
+					execPath: process.execPath,
+					execArgv: process.execArgv,
+					argv:     process.argv
+				},
+				node: {
+					version:  process.version.replace(/^v/, ''),
+					versions: process.versions
+				},
+				system: {
+					platform: process.platform,
+					arch:     process.arch,
+					cpus:     os.cpus().length,
+					hostname: os.hostname()
 				}
-			}
+			};
+		}
+
+		// refresh the cache
+		cache.appcd.uptime   = process.uptime();
+		cache.appcd.env      = process.env;
+		cache.appcd.plugins  = Object.keys(this.plugins);
+		cache.system.loadavg = os.loadavg();
+		cache.system.memory  = {
+			usage: process.memoryUsage(),
+			free:  os.freemem(),
+			total: os.totalmem()
 		};
+
+		return JSON.stringify(cache, null, '  ');
 	}
 
 	/**
@@ -434,45 +330,29 @@ thinger.on('/logcat', (ctx) => {
 	 *
 	 * @access private
 	 */
+	@autobind
 	initHandlers() {
 		this.webserver.router.get('/appcd/status', (ctx, next) => {
 			ctx.response.type = 'json';
-			ctx.body = JSON.stringify(this.getStatus(), null, '  ');
+			ctx.body = this.getStatus();
 		});
-
-// conn.on(path, fn)
-// conn.send(it)
 
 		this.dispatcher.register('/appcd/status', conn => {
 			const timer = setInterval(() => {
-				conn.send(this.getStatus())
-					.catch(err => {
-						clearInterval(timer);
-					});
-			}, 1000);
+				try {
+					conn.write(this.getStatus());
+				} catch (e) {
+					clearInterval(timer);
+				}
+			}, conn.data.interval || 1000);
 		});
 
 		this.dispatcher.register('/appcd/logcat', conn => {
-			Logger.pipe(conn);
+			Logger.pipe(conn, {
+				colors: !!conn.data.colors,
+				flush: true
+			});
 		});
-
-		// router.get('/logcat', (ctx, next) => {
-		// 	this.theConsole.pipe(ctx);
-		// 	const s = new stream.Writable;
-		// 	this.theConsole.stream(s, s, false);
-		//
-		// 	s.on('data', data => {
-		// 		//
-		// 	});
-		//
-		// 	s.on('close', () => {
-		// 		//
-		// 	});
-		//
-		// 	s.on('error', err => {
-		// 		//
-		// 	});
-		// });
 	}
 
 	/**
@@ -531,13 +411,14 @@ thinger.on('/logcat', (ctx) => {
 	shutdown() {
 		return new Promise((resolve, reject) => {
 			appcd.logger.info('Shutting down server gracefully');
-			this.webserver.close();
-
-			Promise.all(Object.values(this.plugins).map(plugin => { return plugin.shutdown(); }))
+			this.webserver
+				.close()
 				.then(() => {
-					appcd.logger.info('Removing ' + chalk.cyan(this.pidFile));
+					return Promise.all(Object.values(this.plugins).map(plugin => { return plugin.shutdown(); }));
+				})
+				.then(() => {
+					appcd.logger.info('Removing ' + colors.cyan(this.pidFile));
 					fs.unlinkSync(this.pidFile);
-
 					resolve();
 				})
 				.catch(reject);
@@ -545,7 +426,7 @@ thinger.on('/logcat', (ctx) => {
 	}
 
 	/**
-	 * Full stops the server. If it doesn't exit in 35 seconds, we shoot it in
+	 * Full stops the server. If it doesn't exit in 10 seconds, we shoot it in
 	 * the head.
 	 *
 	 * @param {Boolean} kill - Force kill the server.
@@ -563,7 +444,7 @@ thinger.on('/logcat', (ctx) => {
 
 			process.kill(pid, kill ? 'SIGKILL' : 'SIGTERM');
 
-			const timeout = 35000;
+			const timeout = 10000;
 			const interval = 500;
 			let countdown = kill ? -1 : timeout / interval;
 

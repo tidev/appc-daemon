@@ -23,7 +23,8 @@ program
 	.command('stop')
 	.option('--force', 'force the server to stop')
 	.action(cmd => {
-		new Server().stop(cmd.force);
+		new Server()
+			.stop(cmd.force);
 	});
 
 program
@@ -39,6 +40,15 @@ program
 			});
 	});
 
+function handleError(err) {
+	if (err.code === 'ECONNREFUSED') {
+		console.error('Server not running');
+	} else {
+		console.error(err);
+	}
+	process.exit(1);
+}
+
 program
 	.command('status')
 	.option('-o, --output <report|json>', 'the format to render the output', 'report')
@@ -50,18 +60,21 @@ program
 				console.log(data);
 				client.disconnect();
 			})
-			.on('error', console.error);
+			.on('error', handleError);
 	});
 
 program
 	.command('logcat')
-	.action(() => {
+	.option('--no-colors', 'disables colors')
+	.action(cmd => {
 		const client = new Client();
 		client
-			.request('/appcd/logcat')
-			.on('response', console.log)
+			.request('/appcd/logcat', { colors: cmd.colors })
+			.on('response', data => {
+				process.stdout.write(data);
+			})
 			.on('end', client.disconnect)
-			.on('error', console.error);
+			.on('error', handleError);
 	});
 
 program
