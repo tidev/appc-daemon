@@ -25,24 +25,48 @@ export default class Plugin {
 	/**
 	 * Initializes a plugin descriptor.
 	 *
-	 * @param {Object} opts
-	 * @param {String} opts.name
-	 * @param {String} opts.path
-	 * @param {Object} opts.cls
-	 * @param {Object} opts.pkgJson
+	 * @param {Object} opts - An object containing various options.
+	 * @param {String} opts.name - The plugin name.
+	 * @param {String} opts.path - The plugin path.
+	 * @param {Object} opts.ServiceClass - The plugin's main exported service class.
+	 * @param {Object} opts.pkgJson - The contents of the package.json.
 	 */
-	constructor({ name, path, cls, pkgJson }) {
+	constructor({ name, path, ServiceClass, pkgJson }) {
+		/**
+		 * The plugin name.
+		 * @type {String}
+		 */
 		this.name = name;
-		this.path = path;
-		this.pkgJson = typeof pkgJson === 'object' && pkgJson !== null ? pkgJson : {};
 
-		this.service = new cls({
+		/**
+		 * The path to the plugin.
+		 * @type {String}
+		 */
+		this.path = path;
+
+		/**
+		 * The contents of the package.json.
+		 * @type {Object}
+		 */
+		this.pkgJson = pkgJson;
+
+		/**
+		 * The plugin version.
+		 * @type {String}
+		 */
+		this.version = pkgJson.version || null;
+
+		/**
+		 * The instance of the service.
+		 * @type {Service}
+		 */
+		this.service = new ServiceClass({
 			logger: new Logger(name),
 			router: this.router,
 			dispatcher: this.dispatcher
 		});
 
-		appcd.logger.info('Loaded plugin ' + appcd.logger.colors.cyan(name) + (pkgJson.version ? ' v' + pkgJson.version : '') + ' ' + appcd.logger.colors.grey(path));
+		appcd.logger.info('Loaded plugin %s%s %s', appcd.logger.colors.cyan(name), (this.version ? ' v' + this.version : ''), appcd.logger.colors.grey(path));
 	}
 
 	/**
@@ -72,41 +96,48 @@ export default class Plugin {
 	/**
 	 * Loads all plugins in the specified directory.
 	 *
-	 * @param {String} pluginDir
-	 * @returns {Plugin}
+	 * @param {String} pluginPath - The path to a plugin.
+	 * @returns {Plugin} Plugin instance or null if not a plugin.
 	 * @access public
 	 */
-	static load(pluginDir) {
-		const pkgJsonFile = path.join(pluginDir, 'package.json');
-		let pkgJson = {};
-		if (fs.existsSync(pkgJsonFile)) {
-			pkgJson = JSON.parse(fs.readFileSync(pkgJsonFile));
+	static load(pluginPath) {
+		if (!fs.existsSync(pluginPath)) {
+			return null;
 		}
 
-		const main = pkgJson && pkgJson.main || 'index.js';
+		const pkgJsonFile = path.join(pluginPath, 'package.json');
+		if (!fs.existsSync(pkgJsonFile)) {
+			return null;
+		}
+
+		let pkgJson = JSON.parse(fs.readFileSync(pkgJsonFile));
+		if (!pkgJson || typeof pkgJson !== 'object') {
+			pkgJson = {};
+		}
+
+		const main = pkgJson.main || 'index.js';
 
 		let file = main;
 		if (!/\.js$/.test(file)) {
 			file += '.js';
 		}
-		file = resolvePath(pluginDir, file);
+		file = resolvePath(pluginPath, file);
 		if (!fs.existsSync(file)) {
 			throw new Error(`Unable to find main file: ${main}`);
 		}
 
-		const name = pkgJson.name || name;
 		const module = require(file);
 		const obj = module && module.__esModule ? module : { default: module };
-		const cls = module.default;
+		const ServiceClass = module.default;
 
-		if (!cls || typeof cls !== 'function' || !(cls.prototype instanceof Service)) {
+		if (!ServiceClass || typeof ServiceClass !== 'function' || !(ServiceClass.prototype instanceof Service)) {
 			throw new Error(`Plugin does not export a service`);
 		}
 
 		return new Plugin({
-			name,
-			path: pluginDir,
-			cls,
+			name: pkgJson.name || path.basename(pluginPath),
+			path: pluginPath,
+			ServiceClass,
 			pkgJson
 		});
 	}

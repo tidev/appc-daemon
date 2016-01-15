@@ -1,3 +1,4 @@
+import 'babel-polyfill';
 import colors from 'colors/safe';
 import { PassThrough, Writable } from 'stream';
 import through2 from 'through2';
@@ -48,19 +49,23 @@ export default class Logger {
 	/**
 	 * Creates the logger and initializes the log level methods.
 	 *
-	 * @param {String} [label]
+	 * @param {String} [label] - A label to print between the timestamp and the log level.
 	 */
 	constructor(label) {
-		label = label ? colors.gray('[' + label + '] ') : '';
+		label = label ? colors.gray(('[' + label + '] ').padRight(9)) : '';
 
 		Object.keys(Logger.levels).forEach(level => {
-			const rlabel = label + colors[Logger.levels[level]](level);
+			let rlabel = label + (colors[Logger.levels[level]](level) + ': ');
+			const n = 5 - level.length;
+			if (n > 0) {
+				rlabel += ''.padRight(n);
+			}
 
 			Object.defineProperty(this, level, {
 				enumerable: true,
 				value: function () {
 					// cache the timestamp and label just in case we're outputting multiple lines
-					const prefix = colors.magenta(new Date().toISOString()) + ' ' + rlabel + ': ';
+					const prefix = colors.magenta(new Date().toISOString()) + ' ' + rlabel;
 					const lines = util.format.apply(null, arguments).split('\n');
 
 					// remove old log output from the buffer and stream
@@ -84,10 +89,12 @@ export default class Logger {
 	/**
 	 * Pipes the logger to the specified writable stream.
 	 *
-	 * @param {stream.Writable} out
-	 * @param {Object} obj
-	 * @param {Boolean} [obj.flush=true]
-	 * @param {Boolean} [obj.colors=false]
+	 * @param {Writable} out - The stream to pipe the log output to.
+	 * @param {Object} [obj] - An object containing various options.
+	 * @param {Boolean} [obj.flush=true] - When true, flushes the existing
+	 * buffer to the stream immediately.
+	 * @param {Boolean} [obj.colors=false] - When true, allows log output to
+	 * contain ANSI color codes, otherwise they colors are stripped.
 	 * @access public
 	 */
 	static pipe(out, { flush=true, colors }) {
@@ -115,7 +122,7 @@ export default class Logger {
 	/**
 	 * Removes the writeable stream from being piped.
 	 *
-	 * @param {stream.Writable} out
+	 * @param {Writable} out - A stream to no longer pipe logs to.
 	 * @access public
 	 */
 	static unpipe(out) {

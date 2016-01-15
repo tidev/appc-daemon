@@ -2,6 +2,8 @@ import { EventEmitter } from 'events';
 
 /**
  * Connection object to pass through the dispatcher.
+ *
+ * @extends {EventEmitter}
  */
 export default class Connection extends EventEmitter {
 	/**
@@ -14,15 +16,30 @@ export default class Connection extends EventEmitter {
      */
 	constructor({ socket, id, data }) {
 		super();
+
+		/**
+		 * The connection's WebSocket.
+		 * @type {WebSocket}
+		 */
 		this.socket = socket;
+
+		/**
+		 * The request id.
+		 * @type {String}
+		 */
 		this.id = id;
+
+		/**
+		 * The request data payload.
+		 * @type {Object}
+		 */
 		this.data = data;
 	}
 
 	/**
 	 * Writes data to the socket. This is useful for piping streams.
 	 *
-	 * @param {*} data
+	 * @param {Object} data
 	 * @returns {Boolean}
 	 * @access public
 	 */
@@ -34,8 +51,8 @@ export default class Connection extends EventEmitter {
 	/**
 	 * Sends a response to the client.
 	 *
-	 * @param {Number} status=200
-	 * @param {*} data
+	 * @param {Number} status=200 - The response status code.
+	 * @param {*} data - The response payload to send. Must not be cyclic.
 	 * @returns {Promise}
 	 * @access public
 	 */

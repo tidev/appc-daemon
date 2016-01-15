@@ -44,23 +44,43 @@ function handleError(err) {
 	if (err.code === 'ECONNREFUSED') {
 		console.error('Server not running');
 	} else {
-		console.error(err);
+		console.error(err.message || err.toString());
 	}
 	process.exit(1);
 }
 
 program
-	.command('status')
-	.option('-o, --output <report|json>', 'the format to render the output', 'report')
-	.action(cmd => {
+	.command('exec <path> [<json>]')
+	.action((path, json) => {
+		let payload = {};
+		if (json) {
+			try {
+				payload = JSON.parse(json);
+			} catch (e) {
+				console.error('Error parsing JSON:');
+				console.error(e);
+				process.exit(1);
+			}
+		}
+
 		const client = new Client();
 		client
-			.request('/appcd/status')
+			.request(path, payload)
 			.on('response', data => {
 				console.log(data);
-				client.disconnect();
 			})
-			.on('error', handleError);
+			.on('error', err => {
+				client.disconnect();
+				handleError(err);
+			});
+
+		function disconnect() {
+			client.disconnect();
+			process.exit(0);
+		}
+
+		process.on('SIGINT', disconnect);
+		process.on('SIGTERM', disconnect);
 	});
 
 program
@@ -74,6 +94,20 @@ program
 				process.stdout.write(data);
 			})
 			.on('end', client.disconnect)
+			.on('error', handleError);
+	});
+
+program
+	.command('status')
+	.option('-o, --output <report|json>', 'the format to render the output', 'report')
+	.action(cmd => {
+		const client = new Client();
+		client
+			.request('/appcd/status')
+			.on('response', data => {
+				console.log(data);
+				client.disconnect();
+			})
 			.on('error', handleError);
 	});
 

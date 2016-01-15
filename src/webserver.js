@@ -9,6 +9,8 @@ import { Server as WebSocketServer } from 'ws';
 
 /**
  * The internal web server that serves up API and WebSocket requests.
+ *
+ * @extends {EventEmitter}
  */
 export default class WebServer extends EventEmitter {
 	/**
@@ -45,7 +47,7 @@ export default class WebServer extends EventEmitter {
 	/**
 	 * Initializes the web server.
 	 *
-	 * @param {Object} [opts]
+	 * @param {Object} [opts] - An object of options.
 	 * @param {String} [opts.hostname=127.0.0.1]
 	 * @param {Number} [opts.port=1732]
 	 */
@@ -74,7 +76,7 @@ export default class WebServer extends EventEmitter {
 	/**
 	 * Adds a middleware function to the web server.
 	 *
-	 * @param {Function} middleware
+	 * @param {Function} middleware - A middleware function to add to the Koa app.
 	 * @returns {WebServer}
 	 * @access public
 	 */

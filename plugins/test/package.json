@@ -8,7 +8,6 @@
     "prepublish": "npm run build"
   },
   "dependencies": {
-    "appcd": "*"
   },
   "devDependencies": {
     "babel-eslint": "^4.1.6",

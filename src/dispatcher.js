@@ -2,9 +2,9 @@ import autobind from 'autobind-decorator';
 import pathToRegExp from 'path-to-regexp';
 
 /**
- *
+ * A custom error for dispatcher errors.
  */
-export class DispatchError extends Error {
+export class DispatcherError extends Error {
 	constructor(status, message) {
 		super(message);
 		this.message = message;
@@ -12,11 +12,8 @@ export class DispatchError extends Error {
 		Error.captureStackTrace(this, this.constructor);
 	}
 
-	toJSON() {
-		return {
-			status: this.status,
-			message: this.message || Dispatcher.statusCodes[this.status] || 'Unknown error'
-		};
+	toString() {
+		return this.message;
 	}
 }
 
@@ -101,7 +98,7 @@ export default class Dispatcher {
 					return true;
 				}
 			})) {
-				reject(new DispatchError(404, 'No route'));
+				reject(new DispatcherError(404, 'No route'));
 			}
 		});
 	}

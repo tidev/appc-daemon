@@ -28,8 +28,22 @@ global.appcd = {
 };
 
 /**
+ * The path to the Appcelerator home directory.
+ * @type {String}
+ */
+const appcDir = path.join(process.env.HOME || process.env.USERPROFILE, '.appcelerator');
+
+/**
+ * The path to the appcd config file.
+ * @type {String}
+ */
+const configFile = path.join(appcDir, 'appcd.js');
+
+/**
  * The core server logic that orchestrates the plugin lifecycle and request
  * dispatching.
+ *
+ * @extends {EventEmitter}
  */
 export default class Server extends EventEmitter {
 	/**
@@ -53,38 +67,52 @@ export default class Server extends EventEmitter {
 	/**
 	 * Constructs a server instance.
 	 *
-	 * @param {Object} [opts]
-	 * @param {Boolean} [opts.daemon=false]
-	 * @param {Object} [opts.logger]
-	 * @param {Boolean} [opts.logger.color=true]
-	 * @param {Boolean} [opts.logger.silent=false]
+	 * @param {Object} [opts] - An object containing various options.
+	 * @param {Boolean} [opts.daemon=false] - When true, spawns the server as a
+	 * background process.
+	 * @param {Object} [opts.logger] - Logger settings object.
+	 * @param {Boolean} [opts.logger.colors=true] - When true, enables colors in
+	 * log output when not running in daemon mode.
+	 * @param {Boolean} [opts.logger.silent=false] - When true, suppresses all
+	 * log output when not running in daemon mode.
 	 */
 	constructor(opts = {}) {
 		super();
-
-		const appcDir = path.join(process.env.HOME || process.env.USERPROFILE, '.appcelerator');
-		const configFile = path.join(appcDir, 'appcd.js');
 
 		const cfg = this._cfg = fs.existsSync(configFile) && require(configFile) || {};
 
 		cfg.logger || (cfg.logger = {});
 		Object.assign(cfg.logger, opts.logger);
 
+		/**
+		 * When true, spawns the server as a background process on startup.
+		 * @type {Boolean}
+		 */
 		this.daemon = !!opts.daemon;
+
+		/**
+		 * The path to the pid file.
+		 * @type {String}
+		 */
 		this.pidFile = path.join(appcDir, 'appcd.pid');
-		this.pluginsPath = [ path.resolve(__dirname, '..', 'plugins') ].concat(this.config('paths.plugins', []));
+
+		/**
+		 * An array of paths to scan for plugins to load during startup.
+		 * @type {Array}
+		 */
+		this.pluginsPath = [ path.resolve(__dirname, '..', 'plugins'), ...this.config('paths.plugins', []) ];
 	}
 
 	/**
 	 * Returns a configuration setting.
 	 *
-	 * @param {String} key
-	 * @param {*} [defaultValue]
+	 * @param {String} name - The config option name.
+	 * @param {*} [defaultValue] - A default value if the config option is not found.
 	 * @returns {*}
 	 * @access public
 	 */
-	config(key, defaultValue) {
-		const parts = key.split('.');
+	config(name, defaultValue) {
+		const parts = name.split('.');
 		const ns = parts.pop();
 		let i = 0;
 		let p = parts.length && parts[i++];
@@ -208,21 +236,28 @@ export default class Server extends EventEmitter {
 
 								this.dispatcher.dispatch(req.path, conn)
 									.then(res => {
-										appcd.logger.info('WebSocket %s: %s %s %s', address, colors.blue(req.path), (res ? colors.green(res.status) + ' ' : ''), colors.cyan((new Date - startTime) + 'ms'));
+										appcd.logger.info(
+											'WebSocket %s: %s %s%s',
+											address,
+											colors.blue(req.path),
+											(res ? colors.green(res.status) + ' ' : ''),
+											colors.cyan((new Date - startTime) + 'ms')
+										);
 									})
 									.catch(err => {
-										if (err instanceof DispatcherError) {
-											socket.send(err.toJSON());
-										} else {
-											const status = err.status && Dispatcher.statusCodes[String(err.status)] ? err.status : 500;
-											const delta = new Date - startTime;
-											appcd.logger.error(colors.red(`Websocket ${req.path} ${status} ${delta}ms`));
-											appcd.logger.error(err.stack || err.toString());
-											socket.send(JSON.stringify({
-												status: err.status || 500,
-												error: (err.status && Dispatcher.statusCodes[String(err.status)] || Dispatcher.statusCodes['500']) + ': ' + err.toString()
-											}));
-										}
+										const status = err.status && Dispatcher.statusCodes[String(err.status)] ? err.status : 500;
+										const message = (err.status && Dispatcher.statusCodes[String(err.status)] || Dispatcher.statusCodes['500']) + ': ' + (err.message || err.toString());
+										const delta = new Date - startTime;
+										appcd.logger.error(
+											'WebSocket %s: %s',
+											address,
+											colors.red(req.path + ' ' + status + ' ' + delta + 'ms - ' + message)
+										);
+										socket.send(JSON.stringify({
+											id: req.id,
+											status: err.status || 500,
+											error: message
+										}));
 									});
 
 								break;
@@ -314,7 +349,13 @@ export default class Server extends EventEmitter {
 		// refresh the cache
 		cache.appcd.uptime   = process.uptime();
 		cache.appcd.env      = process.env;
-		cache.appcd.plugins  = Object.keys(this.plugins);
+		cache.appcd.plugins  = Object.entries(this.plugins).map(([name, plugin]) => {
+			return {
+				name:    name,
+				path:    plugin.path,
+				version: plugin.version
+			};
+		});
 		cache.system.loadavg = os.loadavg();
 		cache.system.memory  = {
 			usage: process.memoryUsage(),

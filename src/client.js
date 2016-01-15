@@ -5,6 +5,8 @@ import WebSocket from 'ws';
 
 /**
  * The client for connecting to the appcd server.
+ *
+ * @extends {EventEmitter}
  */
 export default class Client extends EventEmitter {
 	/**
@@ -45,16 +47,22 @@ export default class Client extends EventEmitter {
 			socket.on('message', (data, flags) => {
 				if (flags.binary) {
 					// unsupported
-				} else {
-					try {
-						const json = JSON.parse(data);
-						if (json.id) {
-							this.emit(json.id, json.data);
-						}
-					} catch (e) {
-						console.log(e);
-					}
+					return;
 				}
+
+				let json = null;
+				try {
+					json = JSON.parse(data);
+				} catch (e) {
+					this.emit('error', new Error('Error parsing server response: ' + e.message));
+					return;
+				}
+
+				if (!json || typeof json !== 'object' || !json.id) {
+					return;
+				}
+
+				this.emit(json.id, json);
 			});
 
 			socket.on('open', () => {
@@ -83,12 +91,27 @@ export default class Client extends EventEmitter {
 				.then(socket => {
 					const id = uuid.v4();
 
-					this.on(id, data => {
-						emitter.emit('response', data);
-						if (data.eof) {
-							this.removeListener(id);
-							emitter.emit('end');
+					this.on(id, response => {
+						switch (Math.floor(~~response.status / 100)) {
+							case 2:
+								emitter.emit('response', response.data);
+								break;
+
+							case 3:
+								// unsupported
+								break;
+
+							case 4:
+							case 5:
+								const err = new Error(response.status + ' ' + (response.error || 'An error occurred'));
+								err.errorCode = response.status;
+								emitter.emit('error', err);
 						}
+
+						// if (data.eof) {
+						// 	this.removeListener(id);
+						// 	emitter.emit('end');
+						// }
 					});
 
 					socket.send(JSON.stringify({
