@@ -4,66 +4,50 @@ Prototype for the new daemon design
 
 ## Installation
 
-```
-npm install
-sudo npm link
-```
+	npm install
+	sudo npm link
 
 ## Quick Start
 
 Start the server:
 
-```
-appcd start
-```
+	appcd start
 
 Start the server in debug mode:
 
-```
-appcd start --debug
-```
+	appcd start --debug
 
 Stop the server:
 
-```
-appcd stop
-```
+	appcd stop
 
 For fast development iteration:
 
-```
-gulp watch
+	gulp watch
 
-# or
+	# or
 
-npm run watch
-```
+	npm run watch
 
 Query the status of the server:
 
-```
-appcd status
-```
+	appcd status
 
 View server log output:
 
-```
-appcd logcat
-```
+	appcd logcat
 
 ## Configuration
 
 appcd is designed to use sensible defaults. However, to override these defaults
 appcd supports loading a a CommonJS formatted JavaScript file:
 
-```
-~/.appcelerator/appcd.js
-```
+	~/.appcelerator/appcd.js
 
 Example:
 
 ```javascript
-exports = {
+module.exports = {
 	logger: {
 		colors: true,
 		silent: false
@@ -80,9 +64,7 @@ exports = {
 
 To generate API docs into static HTML files, run:
 
-```
-gulp docs
-```
+	gulp docs
 
 Currently, esdoc does not support ES7 features, so API docs for constructs such
 as class properties are ignored.

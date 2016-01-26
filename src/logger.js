@@ -35,9 +35,19 @@ export default class Logger {
 	 */
 	static levels = {
 		log: 'gray',
+		debug: 'magenta',
 		info: 'green',
 		warn: 'yellow',
 		error: 'red'
+	};
+
+	static styles = {
+		highlight: 'cyan',
+		lowlight:  'blue',
+		ok:        'green',
+		notice:    'yellow',
+		alert:     'red',
+		note:      'gray'
 	};
 
 	/**
@@ -54,8 +64,9 @@ export default class Logger {
 	constructor(label) {
 		label = label ? colors.gray(('[' + label + '] ').padRight(9)) : '';
 
-		Object.keys(Logger.levels).forEach(level => {
-			let rlabel = label + (colors[Logger.levels[level]](level) + ': ');
+		// wire up the log methods
+		Object.entries(Logger.levels).forEach(([level, color]) => {
+			let rlabel = label + (colors[color](level) + ': ');
 			const n = 5 - level.length;
 			if (n > 0) {
 				rlabel += ''.padRight(n);
@@ -84,6 +95,13 @@ export default class Logger {
 			});
 		});
 
+		// wire up the style helpers
+		Object.entries(Logger.styles).forEach(([name, color]) => {
+			Object.defineProperty(this, name, {
+				enumerable: true,
+				value: str => colors[color](str)
+			});
+		});
 	}
 
 	/**

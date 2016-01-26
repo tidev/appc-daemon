@@ -6,8 +6,7 @@ const spawn = require('child_process').spawn;
 
 const distDir = path.join(__dirname, 'dist');
 const babelOptions = {
-	presets: ['es2016-node5'],
-	plugins: ['transform-decorators-legacy']
+	presets: ['es2016-node5']
 };
 
 /*

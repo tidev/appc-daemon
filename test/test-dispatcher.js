@@ -48,6 +48,7 @@ describe('dispatcher', () => {
 			d.register('/bar', () => {});
 			d2.register('/foo', d);
 		});
+
 	});
 
 	describe('dispatch', () => {
@@ -60,7 +61,7 @@ describe('dispatcher', () => {
 				count++;
 			});
 
-			d.dispatch('/foo')
+			d.call('/foo')
 				.then(() => {
 					expect(count).to.equal(1);
 					done();
@@ -84,7 +85,7 @@ describe('dispatcher', () => {
 				});
 			});
 
-			d.dispatch('/foo')
+			d.call('/foo')
 				.then(() => {
 					expect(count).to.equal(1);
 					done();
@@ -104,7 +105,7 @@ describe('dispatcher', () => {
 				expect(data.a).to.equal(1);
 			});
 
-			d.dispatch('/foo', data)
+			d.call('/foo', data)
 				.then(() => {
 					expect(count).to.equal(1);
 					done();
@@ -122,7 +123,7 @@ describe('dispatcher', () => {
 				expect(data.params.bar).to.equal('abc');
 			});
 
-			d.dispatch('/foo/abc')
+			d.call('/foo/abc')
 				.then(() => {
 					done();
 				})
@@ -132,7 +133,7 @@ describe('dispatcher', () => {
 		it('should error if route not found', done => {
 			const d = new Dispatcher;
 
-			d.dispatch('/foo')
+			d.call('/foo')
 				.then(() => {
 					done(new Error('Expected error for no route'));
 				})
@@ -150,7 +151,7 @@ describe('dispatcher', () => {
 				throw new Error('oops');
 			});
 
-			d.dispatch('/foo')
+			d.call('/foo')
 				.then(() => {
 					done(new Error('Expected error from handler'));
 				})
@@ -170,13 +171,66 @@ describe('dispatcher', () => {
 				});
 			});
 
-			d.dispatch('/foo')
+			d.call('/foo')
 				.then(() => {
 					done(new Error('Expected error from handler'));
 				})
 				.catch(err => {
 					expect(err).to.be.instanceof(Error);
 					expect(err.message).to.equal('oops');
+					done();
+				});
+		});
+
+		it('should handle route to child dispatcher handler', done => {
+			const d = new Dispatcher;
+			const d2 = new Dispatcher;
+			let count = 0;
+
+			d.register('/bar', () => {
+				count++;
+			});
+			d2.register('/foo', d);
+
+			d2.call('/foo/bar')
+				.then(() => {
+					expect(count).to.equal(1);
+					done();
+				})
+				.catch(done);
+		});
+
+		it('should handle route to child dispatcher handler (reordered)', done => {
+			const d = new Dispatcher;
+			const d2 = new Dispatcher;
+			let count = 0;
+
+			d2.register('/foo', d);
+			d.register('/bar', () => {
+				count++;
+			});
+
+			d2.call('/foo/bar')
+				.then(() => {
+					expect(count).to.equal(1);
+					done();
+				})
+				.catch(done);
+		});
+
+		it('should error if no route to child dispatcher handler', done => {
+			const d = new Dispatcher;
+			const d2 = new Dispatcher;
+
+			d2.register('/foo', d);
+
+			d2.call('/foo/baz')
+				.then(() => {
+					done(new Error('Expected error for no route'));
+				})
+				.catch(err => {
+					expect(err).to.be.instanceof(Error);
+					expect(err.message).to.equal('No route');
 					done();
 				});
 		});

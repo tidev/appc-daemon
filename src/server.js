@@ -1,6 +1,5 @@
 import autobind from 'autobind-decorator';
 import 'babel-polyfill';
-import colors from 'colors/safe';
 import Connection from './connection';
 import Dispatcher, { DispatcherError } from './dispatcher';
 import { EventEmitter } from 'events';
@@ -10,6 +9,7 @@ import Logger from './logger';
 import os from 'os';
 import path from 'path';
 import Plugin from './plugin';
+import resolvePath from 'resolve-path';
 import Router from 'koa-router';
 import Service from './service';
 import { spawn } from 'child_process';
@@ -18,11 +18,31 @@ import WebServer from './webserver';
 import 'source-map-support/register';
 
 const pkgJson = require('../package.json');
+const appcdEmitter = new EventEmitter;
+const appcdDispatcher = new Dispatcher;
+
+/*
+
+global HookEmitter
+
+
+pass a scoped HookEmitter into the plugin/service
+
+
+*/
+
 
 /**
  * Global appcd namespace.
  */
 global.appcd = {
+	/**
+	 * The request dipatcher.
+	 * @type {Dispatcher}
+	 */
+	call: appcdDispatcher.call.bind(appcdDispatcher),
+
+	on: appcdEmitter.on.bind(appcdEmitter),
 	logger: new Logger('appcd'),
 	Service
 };
@@ -59,17 +79,13 @@ export default class Server extends EventEmitter {
 	plugins = {};
 
 	/**
-	 * The request dipatcher.
-	 * @type {Dispatcher}
-	 */
-	dispatcher = new Dispatcher;
-
-	/**
 	 * Constructs a server instance.
 	 *
 	 * @param {Object} [opts] - An object containing various options.
 	 * @param {Boolean} [opts.daemon=false] - When true, spawns the server as a
 	 * background process.
+	 * @param {String} [opts.pidFile=~/.appcelerator/appcd.pid] - Path to the
+	 * appcd pid file.
 	 * @param {Object} [opts.logger] - Logger settings object.
 	 * @param {Boolean} [opts.logger.colors=true] - When true, enables colors in
 	 * log output when not running in daemon mode.
@@ -94,7 +110,7 @@ export default class Server extends EventEmitter {
 		 * The path to the pid file.
 		 * @type {String}
 		 */
-		this.pidFile = path.join(appcDir, 'appcd.pid');
+		this.pidFile = opts.pidFile || path.join(appcDir, 'appcd.pid');
 
 		/**
 		 * An array of paths to scan for plugins to load during startup.
@@ -211,7 +227,7 @@ export default class Server extends EventEmitter {
 			});
 
 			this.webserver.on('websocket', socket => {
-				const address = colors.cyan(socket._socket.remoteAddress);
+				const address = appcd.logger.highlight(socket._socket.remoteAddress);
 				appcd.logger.info('WebSocket %s: connect', address);
 
 				socket.on('message', message => {
@@ -228,21 +244,26 @@ export default class Server extends EventEmitter {
 							case '1.0':
 								const conn = new Connection({
 									socket,
-									id: req.id,
-									data: req.data || {}
+									id: req.id
 								});
 
 								const startTime = new Date;
 
-								this.dispatcher.dispatch(req.path, conn)
-									.then(res => {
-										appcd.logger.info(
-											'WebSocket %s: %s %s%s',
-											address,
-											colors.blue(req.path),
-											(res ? colors.green(res.status) + ' ' : ''),
-											colors.cyan((new Date - startTime) + 'ms')
-										);
+								appcdDispatcher.call(req.path, { conn, data: req.data || {} })
+									.then(result => {
+										const p = result && result instanceof Promise ? result : Promise.resolve(result);
+										return p.then(result => {
+											if (result) {
+												conn.send(result).then(conn.close);
+											}
+											appcd.logger.info(
+												'WebSocket %s: %s %s %s',
+												address,
+												appcd.logger.lowlight(req.path),
+												appcd.logger.ok('200'),
+												appcd.logger.highlight((new Date - startTime) + 'ms')
+											);
+										});
 									})
 									.catch(err => {
 										const status = err.status && Dispatcher.statusCodes[String(err.status)] ? err.status : 500;
@@ -251,7 +272,7 @@ export default class Server extends EventEmitter {
 										appcd.logger.error(
 											'WebSocket %s: %s',
 											address,
-											colors.red(req.path + ' ' + status + ' ' + delta + 'ms - ' + message)
+											appcd.logger.alert(req.path + ' ' + status + ' ' + delta + 'ms - ' + message)
 										);
 										socket.send(JSON.stringify({
 											id: req.id,
@@ -283,7 +304,10 @@ export default class Server extends EventEmitter {
 				.then(this.initHandlers)
 				.then(this.loadPlugins)
 				.then(this.webserver.listen)
-				.then(resolve)
+				.then(() => {
+					appcdEmitter.emit('appcd:start');
+					resolve();
+				})
 				.catch(reject);
 		});
 	}
@@ -353,7 +377,8 @@ export default class Server extends EventEmitter {
 			return {
 				name:    name,
 				path:    plugin.path,
-				version: plugin.version
+				version: plugin.version,
+				status:  plugin.getStatus()
 			};
 		});
 		cache.system.loadavg = os.loadavg();
@@ -378,19 +403,20 @@ export default class Server extends EventEmitter {
 			ctx.body = this.getStatus();
 		});
 
-		this.dispatcher.register('/appcd/status', conn => {
+		appcdDispatcher.register('/appcd/status', ctx => {
 			const timer = setInterval(() => {
 				try {
-					conn.write(this.getStatus());
+					ctx.conn.write(this.getStatus());
 				} catch (e) {
+					// connection was terminated, stop sending data
 					clearInterval(timer);
 				}
-			}, conn.data.interval || 1000);
+			}, Math.max(ctx.data.interval || 1000, 0));
 		});
 
-		this.dispatcher.register('/appcd/logcat', conn => {
-			Logger.pipe(conn, {
-				colors: !!conn.data.colors,
+		appcdDispatcher.register('/appcd/logcat', ctx => {
+			Logger.pipe(ctx.conn, {
+				colors: !!ctx.data.colors,
 				flush: true
 			});
 		});
@@ -405,37 +431,67 @@ export default class Server extends EventEmitter {
 	@autobind
 	loadPlugins() {
 		// build list of all potential plugin directories
-		const pluginDirs = [];
+		const pluginPaths = [];
 		this.pluginsPath.forEach(dir => {
-			fs.readdirSync(dir).forEach((name) => {
-				const pluginDir = path.join(dir, name);
-				if (fs.existsSync(pluginDir) && fs.statSync(pluginDir).isDirectory()) {
-					pluginDirs.push(pluginDir);
-				}
-			});
+			if (fs.existsSync(path.join(dir, 'package.json'))) {
+				pluginPaths.push(dir);
+			} else {
+				fs.readdirSync(dir).forEach(name => {
+					if (fs.existsSync(path.join(dir, name, 'package.json'))) {
+						pluginPaths.push(path.join(dir, name));
+					}
+				});
+			}
 		});
 
-		return Promise.all(pluginDirs.map(pluginDir => {
+		return Promise.all(pluginPaths.map(pluginPath => {
 			return new Promise((resolve, reject) => {
 				try {
-					const plugin = Plugin.load(pluginDir);
-					if (plugin) {
-						this.plugins[plugin.name] = plugin;
-						plugin.init()
-							.then(() => {
-								// plugin initialized successfully, so wire up any routes
-								this.webserver.router.use('/' + plugin.name.replace(/^appcd-plugin-/, ''), plugin.router.routes());
-								resolve();
-							})
-							.catch(reject);
-						return;
+					let pkgJson = JSON.parse(fs.readFileSync(path.join(pluginPath, 'package.json')));
+					if (!pkgJson || typeof pkgJson !== 'object') {
+						pkgJson = {};
 					}
+
+					const main = pkgJson.main || 'index.js';
+					let file = main;
+					if (!/\.js$/.test(file)) {
+						file += '.js';
+					}
+					file = resolvePath(pluginPath, file);
+					if (!fs.existsSync(file)) {
+						throw new Error(`Unable to find main file: ${main}`);
+					}
+
+					const module = require(file);
+					const ServiceClass = module && module.__esModule ? module.default : module;
+
+					if (!ServiceClass || typeof ServiceClass !== 'function' || !(ServiceClass.prototype instanceof Service)) {
+						throw new Error(`Plugin does not export a service`);
+					}
+
+					const name = pkgJson.name || path.basename(pluginPath);
+
+					if (this.plugins[name]) {
+						throw new Error('Already loaded a plugin with the same name: ' + this.plugins[name].path);
+					}
+
+					const plugin = this.plugins[name] = new Plugin({
+						name,
+						path: pluginPath,
+						ServiceClass,
+						pkgJson,
+						appcdEmitter,
+						appcdDispatcher,
+						server: this
+					});
+
+					plugin.init().then(resolve, reject);
 				} catch (e) {
-					appcd.logger.error(`Failed to load plugin ${pluginDir}`);
+					appcd.logger.error(`Failed to load plugin ${pluginPath}`);
 					appcd.logger.error(e.stack || e.toString());
-					appcd.logger.error(`Skipping ${pluginDir}`);
+					appcd.logger.error(`Skipping ${pluginPath}`);
+					resolve();
 				}
-				resolve();
 			});
 		}));
 	}
@@ -458,7 +514,7 @@ export default class Server extends EventEmitter {
 					return Promise.all(Object.values(this.plugins).map(plugin => { return plugin.shutdown(); }));
 				})
 				.then(() => {
-					appcd.logger.info('Removing ' + colors.cyan(this.pidFile));
+					appcd.logger.info('Removing ' + appcd.logger.highlight(this.pidFile));
 					fs.unlinkSync(this.pidFile);
 					resolve();
 				})

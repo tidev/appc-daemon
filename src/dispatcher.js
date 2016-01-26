@@ -40,6 +40,12 @@ export default class Dispatcher {
 	routes = [];
 
 	/**
+	 * The parent's path.
+	 * @type {String}
+	 */
+	prefix = null;
+
+	/**
 	 * Registers a handler to a path.
 	 *
 	 * @param {String|RegExp|Array<String>|Array<RegExp>} path
@@ -55,12 +61,8 @@ export default class Dispatcher {
 			});
 		} else if (typeof path !== 'string' && !(path instanceof RegExp)) {
 			throw new TypeError('Invalid path');
-		} else if (typeof handler === 'function') {
+		} else if (typeof handler === 'function' || handler instanceof Dispatcher) {
 			this.addRoute(path, handler);
-		} else if (handler instanceof Dispatcher) {
-			handler.routes.forEach(route => {
-				this.addRoute(path + route.path, route.handler);
-			});
 		} else {
 			throw new TypeError('Invalid handler');
 		}
@@ -78,59 +80,68 @@ export default class Dispatcher {
 	 * @access public
 	 */
 	@autobind
-	dispatch(path, data) {
+	call(path, data) {
 		if (!data || typeof data !== 'object') {
 			data = {};
 		}
 
-		return new Promise((resolve, reject) => {
-			if (!this.routes.some(route => {
-				const m = path.match(route.regexp);
-				if (m) {
-					const params = m.slice(1);
-					params.forEach((param, i) => {
-						if (route.keys[i]) {
-							data.params || (data.params = {});
-							data.params[route.keys[i].name] = param;
-						}
-					});
-					this.execRoute(route, data).then(resolve, reject);
-					return true;
-				}
-			})) {
-				reject(new DispatcherError(404, 'No route'));
+		for (let route of this.routes) {
+			const m = path.match(route.regexp);
+			if (m) {
+				const params = m.slice(1);
+				params.forEach((param, i) => {
+					if (route.keys[i]) {
+						data.params || (data.params = {});
+						data.params[route.keys[i].name] = param;
+					}
+				});
+				return this.execRoute(path, route, data);
 			}
-		});
+		}
+
+		return Promise.reject(new DispatcherError(404, 'No route'));
 	}
 
 	/**
 	 * Adds a route to the list of routes.
 	 *
 	 * @param {String|RegExp} path
-	 * @param {Function} handler
+	 * @param {Function|Dispatcher} handler
 	 * @access private
 	 */
 	addRoute(path, handler) {
 		const keys = [];
-		const regexp = pathToRegExp(path, keys);
+		const regexp = pathToRegExp(path, keys, { end: !(handler instanceof Dispatcher) });
 
 		this.routes.push({
 			path,
+			prefix: handler instanceof Dispatcher ? path : null,
 			handler,
 			keys,
 			regexp
 		});
+
+		// if this is a scoped dispatcher and the path is /, then suppress the
+		// redundant log message
+		if (!this.prefix || path !== '/') {
+			appcd.logger.debug('Registered dispatcher route ' + appcd.logger.highlight(path));
+		}
 	}
 
 	/**
 	 * Executes the route's handler.
 	 *
+	 * @param {String} path
 	 * @param {Object} route
 	 * @param {Object} data
 	 * @returns {Promise}
 	 * @access private
 	 */
-	async execRoute(route, data) {
-		await route.handler(data);
+	async execRoute(path, route, data) {
+		if (route.handler instanceof Dispatcher) {
+			return await route.handler.call(path.replace(route.prefix, ''), data);
+		} else {
+			return await route.handler(data);
+		}
 	}
 }

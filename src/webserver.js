@@ -66,8 +66,8 @@ export default class WebServer extends EventEmitter {
 					appcd.logger.info('%s %s %s %s',
 						ctx.method,
 						ctx.url,
-						appcd.logger.colors[ctx.status < 400 ? 'green' : ctx.status < 500 ? 'yellow' : 'red'](ctx.status),
-						appcd.logger.colors.cyan((new Date - start) + 'ms')
+						appcd.logger[ctx.status < 400 ? 'ok' : ctx.status < 500 ? 'notice' : 'alert'](ctx.status),
+						appcd.logger.highlight((new Date - start) + 'ms')
 					);
 				});
 			});
@@ -90,6 +90,7 @@ export default class WebServer extends EventEmitter {
 	 * websocket server.
 	 *
 	 * @returns {Promise}
+	 * @emits {websocket} Emitted when a new WebSocket connection has been established.
 	 * @access public
 	 */
 	@autobind
@@ -108,7 +109,7 @@ export default class WebServer extends EventEmitter {
 					});
 
 					this.httpServer = this.app.listen(this.port, this.hostname, () => {
-						appcd.logger.info('Server listening on port ' + appcd.logger.colors.cyan(this.port));
+						appcd.logger.info('Server listening on port ' + appcd.logger.highlight(this.port));
 						resolve();
 					});
 

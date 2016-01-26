@@ -117,8 +117,6 @@ gulp.task('test', ['build', 'lint-test'], function () {
 		}));
 });
 
-gulp.task('default', ['test']);
-
 /*
  * watch/debug tasks
  */

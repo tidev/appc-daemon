@@ -19,19 +19,24 @@ export default class Client extends EventEmitter {
 	 * Initializes the client.
 	 *
 	 * @param {Object} [opts]
-	 * @param {String} [opts.hostname=127.0.0.1]
-	 * @param {Number} [opts.port=1732]
+	 * @param {String} [opts.hostname=127.0.0.1] - The host to connect to.
+	 * @param {Number} [opts.port=1732] - The port to connect to.
+	 * @param {Boolean} [opts.startServer=true] - Start the server if it's not
+	 * already running.
 	 */
 	constructor(opts = {}) {
 		super();
-		this.hostname = opts.hostname || '127.0.0.1';
-		this.port     = opts.port || 1732;
+		this.hostname    = opts.hostname || '127.0.0.1';
+		this.port        = opts.port || 1732;
+		this.startServer = opts.startServer !== false;
 	}
 
 	/**
 	 * Connects to the server via a websocket.
 	 *
 	 * @returns {Promise}
+	 * @emits {<request id>} Emitted when a specific request has received a response.
+	 * @emits {error} Emitted when a request error has occurred.
 	 * @access public
 	 */
 	connect() {
@@ -65,10 +70,8 @@ export default class Client extends EventEmitter {
 				this.emit(json.id, json);
 			});
 
-			socket.on('open', () => {
-				resolve(socket);
-			});
-
+			socket.on('open', () => resolve(socket));
+			socket.on('close', () => this.emit('close'));
 			socket.on('error', reject);
 		});
 	}
@@ -76,17 +79,15 @@ export default class Client extends EventEmitter {
 	/**
 	 * Issues a request to the server over a websocket.
 	 *
-	 * @param {String} path
-	 * @param {Object} [payload]
-	 * @returns {EventEmitter}
+	 * @param {String} path - The path to send.
+	 * @param {Object} [payload] - An object to send.
+	 * @returns {EventEmitter} Emits events `response` and `error`.
 	 * @access public
 	 */
 	request(path, payload) {
 		const emitter = new EventEmitter;
 
-		// need to delay request so event emitter can be returned and events
-		// can be wired up
-		setImmediate(() => {
+		const send = () => {
 			this.connect()
 				.then(socket => {
 					const id = uuid.v4();
@@ -121,8 +122,24 @@ export default class Client extends EventEmitter {
 						data: payload
 					}));
 				})
+				.catch(err => emitter.emit('error', err));
+		};
+
+		// need to delay request so event emitter can be returned and events can
+		// be wired up
+		setImmediate(() => {
+			if (!this.startServer) {
+				return send();
+			}
+
+			new Server()
+				.start()
+				.then(send)
 				.catch(err => {
-					emitter.emit('error', err);
+					if (err.code !== 'ALREADY_RUNNING') {
+						emitter.emit('error', err);
+					}
+					send();
 				});
 		});
 

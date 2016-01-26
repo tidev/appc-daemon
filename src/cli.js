@@ -63,12 +63,13 @@ program
 			}
 		}
 
-		const client = new Client();
+		const client = new Client({ startServer: false });
 		client
 			.request(path, payload)
 			.on('response', data => {
 				console.log(data);
 			})
+			.on('close', () => process.exit(0))
 			.on('error', err => {
 				client.disconnect();
 				handleError(err);
@@ -87,7 +88,7 @@ program
 	.command('logcat')
 	.option('--no-colors', 'disables colors')
 	.action(cmd => {
-		const client = new Client();
+		const client = new Client({ startServer: false });
 		client
 			.request('/appcd/logcat', { colors: cmd.colors })
 			.on('response', data => {
@@ -101,7 +102,7 @@ program
 	.command('status')
 	.option('-o, --output <report|json>', 'the format to render the output', 'report')
 	.action(cmd => {
-		const client = new Client();
+		const client = new Client({ startServer: false });
 		client
 			.request('/appcd/status')
 			.on('response', data => {

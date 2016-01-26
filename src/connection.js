@@ -1,3 +1,4 @@
+import autobind from 'autobind-decorator';
 import { EventEmitter } from 'events';
 
 /**
@@ -12,9 +13,8 @@ export default class Connection extends EventEmitter {
 	 * @param {Object} opts
 	 * @param {WebSocket} opts.socket
 	 * @param {String} opts.id
-	 * @param {Object} opts.data
      */
-	constructor({ socket, id, data }) {
+	constructor({ socket, id }) {
 		super();
 
 		/**
@@ -28,12 +28,6 @@ export default class Connection extends EventEmitter {
 		 * @type {String}
 		 */
 		this.id = id;
-
-		/**
-		 * The request data payload.
-		 * @type {Object}
-		 */
-		this.data = data;
 	}
 
 	/**
@@ -44,19 +38,19 @@ export default class Connection extends EventEmitter {
 	 * @access public
 	 */
 	write(data) {
-		this.send(200, data);
+		this.send(data);
 		return true;
 	}
 
 	/**
 	 * Sends a response to the client.
 	 *
-	 * @param {Number} status=200 - The response status code.
 	 * @param {*} data - The response payload to send. Must not be cyclic.
+	 * @param {Number} [status=200] - The response status code.
 	 * @returns {Promise}
 	 * @access public
 	 */
-	send(status, data) {
+	send(data, status) {
 		return new Promise((resolve, reject) => {
 			const res = {
 				status: status || 200,
@@ -67,5 +61,15 @@ export default class Connection extends EventEmitter {
 			this.socket.send(JSON.stringify(res));
 			resolve(res);
 		});
+	}
+
+	/**
+	 * Ends the request.
+	 *
+	 * @access public
+	 */
+	@autobind
+	close() {
+		this.socket.close();
 	}
 }

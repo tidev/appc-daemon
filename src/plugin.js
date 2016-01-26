@@ -11,18 +11,6 @@ import Service from './service';
  */
 export default class Plugin {
 	/**
-	 * Scoped dispatcher.
-	 * @type {Router}
-	 */
-	dispatcher = new Dispatcher;
-
-	/**
-	 * Scoped koa router.
-	 * @type {Router}
-	 */
-	router = new Router;
-
-	/**
 	 * Initializes a plugin descriptor.
 	 *
 	 * @param {Object} opts - An object containing various options.
@@ -30,13 +18,23 @@ export default class Plugin {
 	 * @param {String} opts.path - The plugin path.
 	 * @param {Object} opts.ServiceClass - The plugin's main exported service class.
 	 * @param {Object} opts.pkgJson - The contents of the package.json.
+	 * @param {Server} opts.server - The appcd server instance.
 	 */
-	constructor({ name, path, ServiceClass, pkgJson }) {
+	constructor({ name, path, ServiceClass, pkgJson, appcdEmitter, appcdDispatcher, server }) {
 		/**
 		 * The plugin name.
 		 * @type {String}
 		 */
 		this.name = name;
+
+		/**
+		 * The namespace to use for the plugin's routes.
+		 * @type {String}
+		 */
+		this.namespace = name.replace(/^appcd-plugin-/, '');
+		if (this.namespace === 'appcd') {
+			throw new Error('Forbidden plugin name "appcd"');
+		}
 
 		/**
 		 * The path to the plugin.
@@ -57,16 +55,39 @@ export default class Plugin {
 		this.version = pkgJson.version || null;
 
 		/**
+		 * The plugin's scoped logger.
+		 * @type {Logger}
+		 */
+		this.logger = new Logger(this.namespace);
+
+		/**
+		 * The plugin's scoped dispatcher.
+		 * @type {Router}
+		 */
+		this.dispatcher = new Dispatcher;
+		appcdDispatcher.register('/' + this.namespace, this.dispatcher);
+
+		/**
+		 * The plugin's scoped koa router.
+		 * @type {Router}
+		 */
+		this.router = new Router;
+		server.webserver.router.use('/' + this.namespace, this.router.routes());
+
+		/**
 		 * The instance of the service.
 		 * @type {Service}
 		 */
 		this.service = new ServiceClass({
-			logger: new Logger(name),
+			logger: this.logger,
 			router: this.router,
-			dispatcher: this.dispatcher
+			register: this.dispatcher.register,
+			emit: (evt, ...args) => {
+				appcdEmitter.emit.apply(appcdEmitter, [this.namespace + ':' + evt, ...args]);
+			}
 		});
 
-		appcd.logger.info('Loaded plugin %s%s %s', appcd.logger.colors.cyan(name), (this.version ? ' v' + this.version : ''), appcd.logger.colors.grey(path));
+		appcd.logger.info('Loaded plugin %s%s %s', appcd.logger.highlight(name), (this.version ? ' v' + this.version : ''), appcd.logger.note(path));
 	}
 
 	/**
@@ -94,51 +115,12 @@ export default class Plugin {
 	}
 
 	/**
-	 * Loads all plugins in the specified directory.
+	 * Returns the service's status to be included in server status requests.
 	 *
-	 * @param {String} pluginPath - The path to a plugin.
-	 * @returns {Plugin} Plugin instance or null if not a plugin.
+	 * @returns {Object}
 	 * @access public
 	 */
-	static load(pluginPath) {
-		if (!fs.existsSync(pluginPath)) {
-			return null;
-		}
-
-		const pkgJsonFile = path.join(pluginPath, 'package.json');
-		if (!fs.existsSync(pkgJsonFile)) {
-			return null;
-		}
-
-		let pkgJson = JSON.parse(fs.readFileSync(pkgJsonFile));
-		if (!pkgJson || typeof pkgJson !== 'object') {
-			pkgJson = {};
-		}
-
-		const main = pkgJson.main || 'index.js';
-
-		let file = main;
-		if (!/\.js$/.test(file)) {
-			file += '.js';
-		}
-		file = resolvePath(pluginPath, file);
-		if (!fs.existsSync(file)) {
-			throw new Error(`Unable to find main file: ${main}`);
-		}
-
-		const module = require(file);
-		const obj = module && module.__esModule ? module : { default: module };
-		const ServiceClass = module.default;
-
-		if (!ServiceClass || typeof ServiceClass !== 'function' || !(ServiceClass.prototype instanceof Service)) {
-			throw new Error(`Plugin does not export a service`);
-		}
-
-		return new Plugin({
-			name: pkgJson.name || path.basename(pluginPath),
-			path: pluginPath,
-			ServiceClass,
-			pkgJson
-		});
+	getStatus() {
+		return this.service.getStatus();
 	}
 }

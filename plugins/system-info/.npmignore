@@ -1,0 +1,8 @@
+.DS_Store
+._*
+npm-debug.log
+node_modules
+.git*
+.travis.yml
+src
+test
