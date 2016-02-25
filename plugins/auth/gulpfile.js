@@ -5,9 +5,6 @@ const path = require('path');
 const spawn = require('child_process').spawn;
 
 const distDir = path.join(__dirname, 'dist');
-const babelOptions = {
-	presets: ['es2016-node5']
-};
 
 /*
  * Clean tasks
@@ -27,7 +24,7 @@ gulp.task('build', ['clean-dist', 'lint-src'], function () {
 		.pipe($.plumber())
 		.pipe($.debug({ title: 'build-src' }))
 		.pipe($.sourcemaps.init())
-		.pipe($.babel(babelOptions))
+		.pipe($.babel())
 		.pipe($.sourcemaps.write('.'))
 		.pipe(gulp.dest(distDir));
 });
@@ -61,25 +58,14 @@ gulp.task('test', ['build', 'lint-test'], function () {
 		grep = process.argv[p + 1];
 	}
 
-	var jsFilter = $.filter('**/*.js', { restore: true });
-
-	return gulp
-		.src(['test/**'])
+	return gulp.src(['src/**/*.js', 'test/**/*.js'])
 		.pipe($.plumber())
+		.pipe($.debug({ title: 'build' }))
+		.pipe($.babel())
+		.pipe($.injectModules())
+		.pipe($.filter('test/**/*.js'))
 		.pipe($.debug({ title: 'test' }))
-		.pipe(jsFilter)
-		.pipe($.sourcemaps.init())
-		.pipe($.babel(babelOptions))
-		.pipe($.sourcemaps.write('.'))
-		.pipe(jsFilter.restore)
-		.pipe(gulp.dest(distDir + '/test'))
-		.pipe($.filter('**/*.js'))
-		.pipe($.mocha({
-			globals: [],
-			grep: grep,
-			reporter: 'spec',
-			ui: 'bdd'
-		}));
+		.pipe($.mocha({ grep: grep }));
 });
 
 gulp.task('default', ['test']);

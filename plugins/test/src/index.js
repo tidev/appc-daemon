@@ -4,7 +4,7 @@ export default class TestService extends appcd.Service {
 	init() {
 		this.logger.info('hi from test service init()');
 
-		appcd.on('appcd:start', this.start);
+//		appcd.on('appcd:start', this.start);
 	}
 
 	@autobind

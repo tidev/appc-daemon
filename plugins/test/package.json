@@ -17,7 +17,7 @@
     "gulp-babel": "^6.1.1",
     "gulp-debug": "^2.1.2",
     "gulp-eslint": "^1.1.1",
-    "gulp-filter": "^3.0.1",
+    "gulp-filter": "git+https://github.com/appcelerator/gulp-filter.git#cwd-fix",
     "gulp-load-plugins": "^1.1.0",
     "gulp-mocha": "^2.2.0",
     "gulp-plumber": "^1.0.1",

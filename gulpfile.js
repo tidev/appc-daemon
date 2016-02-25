@@ -11,10 +11,6 @@ const spawn = require('child_process').spawn;
 const manifest = require('./package.json');
 const distDir = path.join(__dirname, 'dist');
 const docsDir = path.join(__dirname, 'docs');
-const babelOptions = {
-	presets: ['es2016-node5'],
-	plugins: ['transform-decorators-legacy', 'transform-class-properties']
-};
 
 /*
  * Clean tasks
@@ -40,7 +36,7 @@ gulp.task('build-src', ['clean-dist', 'lint-src'], function () {
 		.pipe($.plumber())
 		.pipe($.debug({ title: 'build' }))
 		.pipe($.sourcemaps.init())
-		.pipe($.babel(babelOptions))
+		.pipe($.babel())
 		.pipe($.sourcemaps.write('.'))
 		.pipe(gulp.dest(distDir));
 });
@@ -89,33 +85,41 @@ gulp.task('lint-test', function () {
 /*
  * test tasks
  */
-gulp.task('test', ['build', 'lint-test'], function () {
+gulp.task('test', ['lint-test', 'build'], function () {
 	var grep;
 	var p = process.argv.indexOf('--suite');
 	if (p !== -1 && p + 1 < process.argv.length) {
 		grep = process.argv[p + 1];
 	}
 
-	var jsFilter = $.filter('**/*.js', { restore: true });
-
-	return gulp
-		.src(['test/**'])
+	return gulp.src('test/**/*.js')
 		.pipe($.plumber())
 		.pipe($.debug({ title: 'test' }))
-		.pipe(jsFilter)
-		.pipe($.sourcemaps.init())
-		.pipe($.babel(babelOptions))
-		.pipe($.sourcemaps.write('.'))
-		.pipe(jsFilter.restore)
-		.pipe(gulp.dest(distDir + '/test'))
-		.pipe($.filter('**/*.js'))
-		.pipe($.mocha({
-			globals: [],
-			grep: grep,
-			reporter: 'spec',
-			ui: 'bdd'
-		}));
+		.pipe($.babel())
+		.pipe($.injectModules())
+		.pipe($.mocha({ grep: grep }));
 });
+
+/*
+gulp.task('coverage', ['lint-src', 'lint-test', 'clean-coverage'], function (cb) {
+	gulp.src('src/**        /*.js')
+		.pipe($.plumber())
+		.pipe($.debug({ title: 'build' }))
+		.pipe($.babelIstanbul())
+		.pipe($.injectModules())
+		.on('finish', function () {
+			gulp.src('test/**        /*.js')
+				.pipe($.plumber())
+				.pipe($.debug({ title: 'test' }))
+				.pipe($.babel())
+				.pipe($.injectModules())
+				.pipe($.mocha())
+				.pipe($.babelIstanbul.writeReports())
+				//.pipe($.babelIstanbul.enforceThresholds({ thresholds: { global: 90 } }))
+				.on('end', cb);
+		});
+});
+*/
 
 /*
  * watch/debug tasks

@@ -1,4 +1,5 @@
-import Dispatcher from '../dispatcher';
+import Dispatcher from '../dist/dispatcher';
+import { expect } from 'chai';
 
 describe('dispatcher', () => {
 

@@ -1,9 +1,10 @@
+import Analytics from './analytics';
 import autobind from 'autobind-decorator';
 import 'babel-polyfill';
 import Connection from './connection';
 import Dispatcher, { DispatcherError } from './dispatcher';
-import { EventEmitter } from 'events';
 import fs from 'fs';
+import { HookEmitter } from 'hook-emitter';
 import http from 'http';
 import Logger from './logger';
 import os from 'os';
@@ -12,38 +13,41 @@ import Plugin from './plugin';
 import resolvePath from 'resolve-path';
 import Router from 'koa-router';
 import Service from './service';
-import { spawn } from 'child_process';
+import { fork, spawn } from 'child_process';
 import stream from 'stream';
 import WebServer from './webserver';
 import 'source-map-support/register';
 
 const pkgJson = require('../package.json');
-const appcdEmitter = new EventEmitter;
+const appcdEmitter = new HookEmitter;
 const appcdDispatcher = new Dispatcher;
-
-/*
-
-global HookEmitter
-
-
-pass a scoped HookEmitter into the plugin/service
-
-
-*/
-
 
 /**
  * Global appcd namespace.
  */
 global.appcd = {
 	/**
-	 * The request dipatcher.
-	 * @type {Dispatcher}
+	 * The request dipatcher call() function.
+	 * @type {Function}
 	 */
 	call: appcdDispatcher.call.bind(appcdDispatcher),
 
+	/**
+	 * The global event emitter on() function.
+	 * @type {Function}
+	 */
 	on: appcdEmitter.on.bind(appcdEmitter),
+
+	/**
+	 * The global logger instance.
+	 * @type {Function}
+	 */
 	logger: new Logger('appcd'),
+
+	/**
+	 * The service base class.
+	 * @type {Service}
+	 */
 	Service
 };
 
@@ -62,10 +66,8 @@ const configFile = path.join(appcDir, 'appcd.js');
 /**
  * The core server logic that orchestrates the plugin lifecycle and request
  * dispatching.
- *
- * @extends {EventEmitter}
  */
-export default class Server extends EventEmitter {
+export default class Server {
 	/**
 	 * The web server instance.
 	 * @type {WebServer}
@@ -84,21 +86,40 @@ export default class Server extends EventEmitter {
 	 * @param {Object} [opts] - An object containing various options.
 	 * @param {Boolean} [opts.daemon=false] - When true, spawns the server as a
 	 * background process.
+	 * @param {Object} [opts.analytics] - Analytics settings.
 	 * @param {String} [opts.pidFile=~/.appcelerator/appcd.pid] - Path to the
 	 * appcd pid file.
-	 * @param {Object} [opts.logger] - Logger settings object.
+	 * @param {Object} [opts.logger] - Logger settings.
 	 * @param {Boolean} [opts.logger.colors=true] - When true, enables colors in
 	 * log output when not running in daemon mode.
 	 * @param {Boolean} [opts.logger.silent=false] - When true, suppresses all
 	 * log output when not running in daemon mode.
 	 */
 	constructor(opts = {}) {
-		super();
+		// init the default settings
+		const cfg = this._cfg = {
+			analytics: {
+				enabled: true,
+				endpoint: '',
+				eventDir: '~/.appcelerator/appcd/events'
+			},
+			logger: {
+				colors: true,
+				silent: false
+			}
+		};
 
-		const cfg = this._cfg = fs.existsSync(configFile) && require(configFile) || {};
+		// load the config file
+		if (fs.existsSync(configFile)) {
+			Object.assign(cfg, require(configFile));
+		}
 
-		cfg.logger || (cfg.logger = {});
-		Object.assign(cfg.logger, opts.logger);
+		// overwrite with instance options
+		Object.keys(opts).forEach(key => {
+			if (cfg.hasOwnProperty(key)) {
+				Object.assign(cfg[key], opts[key]);
+			}
+		});
 
 		/**
 		 * When true, spawns the server as a background process on startup.
@@ -116,7 +137,7 @@ export default class Server extends EventEmitter {
 		 * An array of paths to scan for plugins to load during startup.
 		 * @type {Array}
 		 */
-		this.pluginsPath = [ path.resolve(__dirname, '..', 'plugins'), ...this.config('paths.plugins', []) ];
+		this.pluginPaths = [ path.resolve(__dirname, '..', 'plugins'), ...this.config('paths.plugins', []) ];
 	}
 
 	/**
@@ -179,163 +200,189 @@ export default class Server extends EventEmitter {
 	 * @access public
 	 */
 	start() {
-		return new Promise((resolve, reject) => {
-			const pid = this.isRunning();
+		const pid = this.isRunning();
 
-			// if we found a pid and it's not this process, then we are not the daemon you were looking for
-			if (pid && pid !== process.pid) {
-				const err = new Error(`Server already running (pid: ${pid})`);
-				err.code = 'ALREADY_RUNNING';
-				return reject(err);
+		// if we found a pid and it's not this process, then we are not the daemon you were looking for
+		if (pid && pid !== process.pid) {
+			const err = new Error(`Server already running (pid: ${pid})`);
+			err.code = 'ALREADY_RUNNING';
+			return Promise.reject(err);
+		}
+
+		if (!pid) {
+			// server is not running
+
+			// check if we should daemonize
+			if (this.daemon) {
+				return this.daemonize().then(child => this);
 			}
 
-			if (!pid) {
-				// server is not running
-				if (this.daemon) {
-					this.daemonize();
-					resolve(this);
-					return;
-				}
-
-				if (!this.config('logger.silent')) {
-					// we are the server process running in debug mode, so hook up some output
-					Logger.pipe(process.stdout, {
-						colors: this.config('logger.colors', true),
-						flush: true
-					});
-				}
-
-				// since we are not running as a daemon, we have to write the pid file ourselves
-				fs.writeFileSync(this.pidFile, process.pid);
+			if (!this.config('logger.silent')) {
+				// we are the server process running in debug mode, so hook up some output
+				Logger.pipe(process.stdout, {
+					colors: this.config('logger.colors', true),
+					flush: true
+				});
 			}
 
-			// at this point, we're either running in debug mode (no pid) or *this* process is the spawned daemon process
+			// since we are not running as a daemon, we have to write the pid file ourselves
+			fs.writeFileSync(this.pidFile, process.pid);
+		}
 
-			appcd.logger.info(`Appcelerator Daemon v${pkgJson.version}`);
-			appcd.logger.info(`Node.js ${process.version} (module api ${process.versions.modules})`);
+		//
+		// at this point, we're either running in debug mode (no pid) or *this* process is the spawned daemon process
+		//
 
-			// replace the process title to avoid `killall node` taking down the server
-			process.title = 'appcd (Appcelerator Daemon)';
+		appcd.logger.info(`Appcelerator Daemon v${pkgJson.version}`);
+		appcd.logger.info(`Node.js ${process.version} (module api ${process.versions.modules})`);
 
-			// listen for signals to trigger a shutdown
-			process.on('SIGINT', () => this.shutdown().then(() => process.exit(0)));
-			process.on('SIGTERM', () => this.shutdown().then(() => process.exit(0)));
+		// replace the process title to avoid `killall node` taking down the server
+		process.title = 'appcd (Appcelerator Daemon)';
 
-			this.webserver = new WebServer({
-				hostname: this.config('hostname', '127.0.0.1'),
-				port:     this.config('port', 1732)
-			});
+		// listen for signals to trigger a shutdown
+		process.on('SIGINT', () => this.shutdown().then(() => process.exit(0)));
+		process.on('SIGTERM', () => this.shutdown().then(() => process.exit(0)));
 
-			this.webserver.on('websocket', socket => {
-				const address = appcd.logger.highlight(socket._socket.remoteAddress);
-				appcd.logger.info('WebSocket %s: connect', address);
+		this.analytic = new Analytics();
+		appcd.on('analytics:event', data => {
+			// TODO: inject common data
+			appcd.logger.log('got analytics event!');
+			appcd.logger.log(data);
+		});
 
-				socket.on('message', message => {
-					let req;
+		this.webserver = new WebServer({
+			hostname: this.config('hostname', '127.0.0.1'),
+			port:     this.config('port', 1732)
+		});
 
-					try {
-						req = JSON.parse(message);
-						if (!req || typeof req !== 'object') { throw new Error('invalid request object'); }
-						if (!req.version) { throw new Error('invalid request object, missing version'); }
-						if (!req.path)    { throw new Error('invalid request object, missing path'); }
-						if (!req.id)      { throw new Error('invalid request object, missing id'); }
+		this.webserver.on('websocket', socket => {
+			const address = appcd.logger.highlight(socket._socket.remoteAddress);
+			appcd.logger.info('WebSocket %s: connect', address);
 
-						switch (req.version) {
-							case '1.0':
-								const conn = new Connection({
-									socket,
-									id: req.id
+			socket.on('message', message => {
+				let req;
+
+				try {
+					req = JSON.parse(message);
+					if (!req || typeof req !== 'object') { throw new Error('invalid request object'); }
+					if (!req.version) { throw new Error('invalid request object, missing version'); }
+					if (!req.path)    { throw new Error('invalid request object, missing path'); }
+					if (!req.id)      { throw new Error('invalid request object, missing id'); }
+
+					switch (req.version) {
+						case '1.0':
+							const conn = new Connection({
+								socket,
+								id: req.id
+							});
+
+							const startTime = new Date;
+
+							appcdDispatcher.call(req.path, { conn, data: req.data || {} })
+								.then(result => {
+									const p = result && result instanceof Promise ? result : Promise.resolve(result);
+									return p.then(result => {
+										if (result) {
+											conn.send(result).then(conn.close);
+										}
+										appcd.logger.info(
+											'WebSocket %s: %s %s %s',
+											address,
+											appcd.logger.lowlight(req.path),
+											appcd.logger.ok('200'),
+											appcd.logger.highlight((new Date - startTime) + 'ms')
+										);
+									});
+								})
+								.catch(err => {
+									const status = err.status && Dispatcher.statusCodes[String(err.status)] ? err.status : 500;
+									const message = (err.status && Dispatcher.statusCodes[String(err.status)] || Dispatcher.statusCodes['500']) + ': ' + (err.message || err.toString());
+									const delta = new Date - startTime;
+									appcd.logger.error(
+										'WebSocket %s: %s',
+										address,
+										appcd.logger.alert(req.path + ' ' + status + ' ' + delta + 'ms - ' + message)
+									);
+									socket.send(JSON.stringify({
+										id: req.id,
+										status: err.status || 500,
+										error: message
+									}));
 								});
 
-								const startTime = new Date;
+							break;
 
-								appcdDispatcher.call(req.path, { conn, data: req.data || {} })
-									.then(result => {
-										const p = result && result instanceof Promise ? result : Promise.resolve(result);
-										return p.then(result => {
-											if (result) {
-												conn.send(result).then(conn.close);
-											}
-											appcd.logger.info(
-												'WebSocket %s: %s %s %s',
-												address,
-												appcd.logger.lowlight(req.path),
-												appcd.logger.ok('200'),
-												appcd.logger.highlight((new Date - startTime) + 'ms')
-											);
-										});
-									})
-									.catch(err => {
-										const status = err.status && Dispatcher.statusCodes[String(err.status)] ? err.status : 500;
-										const message = (err.status && Dispatcher.statusCodes[String(err.status)] || Dispatcher.statusCodes['500']) + ': ' + (err.message || err.toString());
-										const delta = new Date - startTime;
-										appcd.logger.error(
-											'WebSocket %s: %s',
-											address,
-											appcd.logger.alert(req.path + ' ' + status + ' ' + delta + 'ms - ' + message)
-										);
-										socket.send(JSON.stringify({
-											id: req.id,
-											status: err.status || 500,
-											error: message
-										}));
-									});
-
-								break;
-
-							default:
-								throw new Error(`Unsupported version "${req.version}"`);
-						}
-					} catch (err) {
-						appcd.logger.error('Bad request:', err);
-						socket.send(JSON.stringify({
-							status: 400,
-							error: 'Bad request: ' + err.toString()
-						}));
+						default:
+							throw new Error(`Unsupported version "${req.version}"`);
 					}
-				});
-
-				socket.on('close', () => {
-					appcd.logger.info('WebSocket %s: disconnect', address);
-				});
+				} catch (err) {
+					appcd.logger.error('Bad request:', err);
+					socket.send(JSON.stringify({
+						status: 400,
+						error: 'Bad request: ' + err.toString()
+					}));
+				}
 			});
 
-			Promise.resolve()
-				.then(this.initHandlers)
-				.then(this.loadPlugins)
-				.then(this.webserver.listen)
-				.then(() => {
-					appcdEmitter.emit('appcd:start');
-					resolve();
-				})
-				.catch(reject);
+			socket.on('close', () => {
+				appcd.logger.info('WebSocket %s: disconnect', address);
+			});
 		});
+
+		return Promise.resolve()
+			.then(this.initHandlers)
+			.then(this.loadPlugins)
+			.then(this.webserver.listen)
+			.then(() => appcdEmitter.emit('appcd:start'))
+			.then(() => appcdEmitter.emit('analytics:event', {
+				type: 'appcd.server.start'
+			}));
 	}
 
 	/**
 	 * Spawns the child appcd process in daemon mode.
 	 *
+	 * @returns {Promise}
 	 * @access private
 	 */
 	daemonize() {
+		return appcdEmitter.hook('appcd:daemonize', (args, opts) => {
+			return this.spawnNode(args, opts)
+				.then(child => {
+					fs.writeFileSync(this.pidFile, child.pid);
+					child.unref();
+				});
+		})([ path.resolve(__dirname, 'cli.js'), 'start' ], {
+			detached: true,
+			stdio: 'ignore'
+		});
+	}
+
+	/**
+	 * Spawns a new node process with the specfied args.
+	 *
+	 * @param {Array} [args] - An array of arguments to pass to the subprocess.
+	 * @param {Object} [opts] - Spawn options.
+	 * @returns {Promise}
+	 * @access private
+	 */
+	spawnNode(args = [], opts = {}) {
 		const node = process.env.NODE_EXEC_PATH || process.execPath;
-		const args = [];
+		const v8args = [];
 
 		// if the user has more than 2GB of RAM, set the max memory to 3GB or 75% of the total memory
 		const totalMem = Math.floor(os.totalmem() / 1e6);
 		if (totalMem * 0.75 > 1500) {
-			args.push('--max_old_space_size=' + Math.min(totalMem * 0.75, 3000));
+			v8args.push('--max_old_space_size=' + Math.min(totalMem * 0.75, 3000));
 		}
 
-		args.push(path.resolve(__dirname, 'cli.js'));
-		args.push('start');
-
-		const child = spawn(node, args, {
-			detached: true,
-			stdio: 'ignore'
-		});
-		fs.writeFileSync(this.pidFile, child.pid);
-		child.unref();
+		return Promise.resolve(
+			spawn(
+				process.env.NODE_EXEC_PATH || process.execPath,
+				[v8args, ...args],
+				opts
+			)
+		);
 	}
 
 	/**
@@ -432,7 +479,7 @@ export default class Server extends EventEmitter {
 	loadPlugins() {
 		// build list of all potential plugin directories
 		const pluginPaths = [];
-		this.pluginsPath.forEach(dir => {
+		this.pluginPaths.forEach(dir => {
 			if (fs.existsSync(path.join(dir, 'package.json'))) {
 				pluginPaths.push(dir);
 			} else {
@@ -444,56 +491,90 @@ export default class Server extends EventEmitter {
 			}
 		});
 
-		return Promise.all(pluginPaths.map(pluginPath => {
-			return new Promise((resolve, reject) => {
-				try {
-					let pkgJson = JSON.parse(fs.readFileSync(path.join(pluginPath, 'package.json')));
+		/**
+		 * For each plugin path, check if it contains a valid plugin:
+		 *  - must have a package.json
+		 *  - must have a main file or index.js
+	  	 *  - main file must export a service that extends appcd.Service
+		 *
+		 * We test each plugin path in a subprocess since we don't want to try to
+		 * load a plugin that breaks the server due to some bad syntax, pollute
+		 * global namespace, or load dependencies that consume unrecoverable memory.
+		 */
+		return Promise.all(pluginPaths.map(pluginPath => new Promise((resolve, reject) => {
+			let pkgJson;
+			let mainFile;
+
+			// we do not want to return this promise chain since it could contain
+			// an error and bad plugins are ingored, so that's why we wrap it with
+			// another promise
+			Promise.resolve()
+				.then(() => {
+					pkgJson = JSON.parse(fs.readFileSync(path.join(pluginPath, 'package.json')));
 					if (!pkgJson || typeof pkgJson !== 'object') {
 						pkgJson = {};
 					}
 
 					const main = pkgJson.main || 'index.js';
-					let file = main;
-					if (!/\.js$/.test(file)) {
-						file += '.js';
+					mainFile = main;
+					if (!/\.js$/.test(mainFile)) {
+						mainFile += '.js';
 					}
-					file = resolvePath(pluginPath, file);
-					if (!fs.existsSync(file)) {
+
+					mainFile = resolvePath(pluginPath, mainFile);
+					if (!fs.existsSync(mainFile)) {
 						throw new Error(`Unable to find main file: ${main}`);
 					}
+				})
+				.then(() => this.spawnNode([ path.join(__dirname, 'check-plugin.js'), mainFile ]))
+				.then(child => new Promise((resolve, reject) => {
+					let output = '';
+					child.stdout.on('data', data => output += data.toString());
+					child.stderr.on('data', data => output += data.toString());
+					child.on('close', code => {
+						if (code === 3) {
+							appcd.logger.warn(`Plugin "${pluginPath}" does not export a service, skipping`);
+							return resolve();
+						} else if (code > 0) {
+							return reject(`Check plugin exited with code ${code}: ${output.trim()}`);
+						}
 
-					const module = require(file);
-					const ServiceClass = module && module.__esModule ? module.default : module;
+						const module = require(mainFile);
+						const ServiceClass = module && module.__esModule ? module.default : module;
 
-					if (!ServiceClass || typeof ServiceClass !== 'function' || !(ServiceClass.prototype instanceof Service)) {
-						throw new Error(`Plugin does not export a service`);
-					}
+						// double check that this plugin exports a service
+						// check-plugin.js should have already done this for us, but better safe than sorry
+						if (!ServiceClass || typeof ServiceClass !== 'function' || !(ServiceClass.prototype instanceof Service)) {
+							return reject(new Error('Plugin does not export a service'));
+						}
 
-					const name = pkgJson.name || path.basename(pluginPath);
+						const name = pkgJson.name || path.basename(pluginPath);
 
-					if (this.plugins[name]) {
-						throw new Error('Already loaded a plugin with the same name: ' + this.plugins[name].path);
-					}
+						if (this.plugins[name]) {
+							return reject(new Error('Already loaded a plugin with the same name: ' + this.plugins[name].path));
+						}
 
-					const plugin = this.plugins[name] = new Plugin({
-						name,
-						path: pluginPath,
-						ServiceClass,
-						pkgJson,
-						appcdEmitter,
-						appcdDispatcher,
-						server: this
+						const plugin = this.plugins[name] = new Plugin({
+							name,
+							path: pluginPath,
+							ServiceClass,
+							pkgJson,
+							appcdEmitter,
+							appcdDispatcher,
+							server: this
+						});
+
+						plugin.init().then(resolve, reject);
 					});
-
-					plugin.init().then(resolve, reject);
-				} catch (e) {
+				}))
+				.then(resolve)
+				.catch(err => {
 					appcd.logger.error(`Failed to load plugin ${pluginPath}`);
-					appcd.logger.error(e.stack || e.toString());
+					appcd.logger.error(err.stack || err.toString());
 					appcd.logger.error(`Skipping ${pluginPath}`);
 					resolve();
-				}
-			});
-		}));
+				});
+		})));
 	}
 
 	/**

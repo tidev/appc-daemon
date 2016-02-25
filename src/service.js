@@ -8,9 +8,11 @@ export default class Service {
 	 * @param {Object} opts - An object containing various options.
 	 * @param {Logger} opts.logger - The plugin's scoped logger.
 	 * @param {Router} opts.router - The plugin's scoped koa router.
-	 * @param {Dispatcher} opts.dispatcher - The plugin's scoped dispatcher.
+	 * @param {Function} opts.register - The plugin's scoped dispatcher register function.
+	 * @param {Function} opts.emit - The plugin's scoped event emitter.
+	 * @param {Function} opts.hook - The plugin's scoped hook emitter.
 	 */
-	constructor({ logger, router, register, emit }) {
+	constructor({ logger, router, register, emit, hook }) {
 		/**
 		 * The plugin's scoped logger.
 		 * @type {Logger}
@@ -34,14 +36,25 @@ export default class Service {
 		this.register = register;
 
 		/**
-		 * ???????????????????
+		 * Emits an event.
 		 *
-		 * @param {String} evt
-		 * @param {Object} [data={}]
-		 * @returns {EventEmitter}
+		 * @param {String} evt - The event name.
+		 * @param {*} [...] - One or more arguments.
+		 * @returns {Promise}
 		 * @access public
 		 */
 		this.emit = emit;
+
+		/**
+		 * Hooks a function.
+		 *
+		 * @param {String} evt - The event name.
+		 * @param {Object} [ctx] - The context to bind `fn`.
+		 * @param {Function} fn - The function to hook.
+		 * @returns {Promise}
+		 * @access public
+		 */
+		this.hook = hook;
 	}
 
 	/**

@@ -91,6 +91,34 @@ client
 	});
 ```
 
+## WebSocket Protocol
+
+Any WebSocket capable platform can connect to appcd as long as it follows the
+appcd protocol.
+
+Each request must be a serialized JSON object that contains a `version`, `id`,
+`path`, and optionally a `data` payload.
+
+The following is an example of a web browser that issues a status request:
+
+```javascript
+var ws = new WebSocket('ws://127.0.0.1:1732');
+ws.onopen = function () {
+	ws.onmessage = function (evt) {
+		console.log('Got status!');
+		console.log(evt.data);
+		ws.close();
+	};
+
+	ws.send(JSON.stringify({
+		version: '1.0',
+		path: '/appcd/status',
+		id: '123456',
+		data: { interval: 2000 }
+	}));
+};
+```
+
 ## Architecture
 
 The appcd server is designed to run as a detached background process. Basic

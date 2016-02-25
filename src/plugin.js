@@ -25,13 +25,13 @@ export default class Plugin {
 		 * The plugin name.
 		 * @type {String}
 		 */
-		this.name = name;
+		this.name = this.name || name;
 
 		/**
 		 * The namespace to use for the plugin's routes.
 		 * @type {String}
 		 */
-		this.namespace = name.replace(/^appcd-plugin-/, '');
+		this.namespace = this.namespace || name.replace(/^appcd-plugin-/, '');
 		if (this.namespace === 'appcd') {
 			throw new Error('Forbidden plugin name "appcd"');
 		}
@@ -83,7 +83,10 @@ export default class Plugin {
 			router: this.router,
 			register: this.dispatcher.register,
 			emit: (evt, ...args) => {
-				appcdEmitter.emit.apply(appcdEmitter, [this.namespace + ':' + evt, ...args]);
+				return appcdEmitter.emit.apply(appcdEmitter, [this.namespace + ':' + evt, ...args]);
+			},
+			hook: (evt, ...args) => {
+				return appcdEmitter.hook.apply(appcdEmitter, [this.namespace + ':' + evt, ...args]);
 			}
 		});
 

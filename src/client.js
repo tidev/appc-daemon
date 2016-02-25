@@ -98,21 +98,12 @@ export default class Client extends EventEmitter {
 								emitter.emit('response', response.data);
 								break;
 
-							case 3:
-								// unsupported
-								break;
-
 							case 4:
 							case 5:
 								const err = new Error(response.status + ' ' + (response.error || 'An error occurred'));
 								err.errorCode = response.status;
 								emitter.emit('error', err);
 						}
-
-						// if (data.eof) {
-						// 	this.removeListener(id);
-						// 	emitter.emit('end');
-						// }
 					});
 
 					socket.send(JSON.stringify({

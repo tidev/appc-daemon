@@ -1,4 +1,5 @@
-import Server from '../server';
+import { expect } from 'chai';
+import Server from '../dist/server';
 
 describe('server', () => {
 
