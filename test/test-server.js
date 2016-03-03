@@ -1,4 +1,3 @@
-import { expect } from 'chai';
 import Server from '../dist/server';
 
 describe('server', () => {
@@ -14,16 +13,12 @@ describe('server', () => {
 		server.start()
 			.then(() => {
 				server.shutdown()
-					.then(() => {
-						done();
-					})
+					.then(() => done())
 					.catch(done);
 			})
 			.catch(err => {
 				server.shutdown()
-					.then(() => {
-						done(err);
-					})
+					.then(() => done(err))
 					.catch(done);
 			});
 	});

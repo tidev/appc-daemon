@@ -66,17 +66,19 @@
     "esdoc-es7-plugin": "0.0.3",
     "gulp": "^3.9.1",
     "gulp-babel": "^6.1.2",
-    "gulp-babel-istanbul": "^0.12.0",
+    "gulp-babel-istanbul": "^1.0.0",
     "gulp-chug": "^0.5.1",
     "gulp-debug": "^2.1.2",
     "gulp-esdoc": "^0.2.0",
     "gulp-eslint": "^2.0.0",
-    "gulp-filter": "git+https://github.com/appcelerator/gulp-filter.git#cwd-fix",
+    "gulp-filter": "^4.0.0",
     "gulp-inject-modules": "^0.1.0",
     "gulp-load-plugins": "^1.2.0",
     "gulp-mocha": "^2.2.0",
     "gulp-plumber": "^1.1.0",
     "gulp-sourcemaps": "^1.6.0",
-    "run-sequence": "^1.1.5"
+    "run-sequence": "^1.1.5",
+    "sinon": "^1.17.3",
+    "sinon-chai": "^2.8.0"
   }
 }

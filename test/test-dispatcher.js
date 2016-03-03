@@ -1,5 +1,4 @@
 import Dispatcher from '../dist/dispatcher';
-import { expect } from 'chai';
 
 describe('dispatcher', () => {
 
@@ -53,7 +52,6 @@ describe('dispatcher', () => {
 	});
 
 	describe('dispatch', () => {
-
 		it('should dispatch to valid route', done => {
 			const d = new Dispatcher;
 			let count = 0;
@@ -140,7 +138,7 @@ describe('dispatcher', () => {
 				})
 				.catch(err => {
 					expect(err).to.be.instanceof(Error);
-					expect(err.message).to.equal('No route');
+					expect(err.toString()).to.equal('No route');
 					done();
 				});
 		});
@@ -235,7 +233,6 @@ describe('dispatcher', () => {
 					done();
 				});
 		});
-
 	});
 
 });

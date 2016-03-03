@@ -41,6 +41,10 @@ export default class Logger {
 		error: 'red'
 	};
 
+	/**
+	 * Various styles to help keep output consistent.
+	 * @type {Object}
+	 */
 	static styles = {
 		highlight: 'cyan',
 		lowlight:  'blue',
@@ -49,6 +53,12 @@ export default class Logger {
 		alert:     'red',
 		note:      'gray'
 	};
+
+	/**
+	 * List of all registered streams.
+	 * @type {Object}
+	 */
+	static streams = {};
 
 	/**
 	 * The colors module.
@@ -80,9 +90,9 @@ export default class Logger {
 					const lines = util.format.apply(null, arguments).split('\n');
 
 					// remove old log output from the buffer and stream
-					const n = Logger.maxBuffer - (Logger.buffer.length + lines.length);
-					if (n) {
-						Logger.buffer.splice(n);
+					const n = Logger.buffer.length + lines.length;
+					if (n > Logger.maxBuffer) {
+						Logger.buffer.splice(0, n - Logger.maxBuffer);
 					}
 
 					// write each line to the stream
@@ -115,10 +125,11 @@ export default class Logger {
 	 * contain ANSI color codes, otherwise they colors are stripped.
 	 * @access public
 	 */
-	static pipe(out, { flush=true, colors }) {
+	static pipe(out, { flush=true, colors } = {}) {
 		let stream = out;
 		if (colors) {
 			Logger.out.pipe(stream);
+			Logger.streams[out] = [ out ];
 		} else {
 			// strip the colors
 			const strip = /\x1B\[\d+m/g;
@@ -126,6 +137,7 @@ export default class Logger {
 				callback(null, chunk.toString().replace(strip, ''));
 			});
 			Logger.out.pipe(stream).pipe(out);
+			Logger.streams[out] = [ out, stream ];
 		}
 
 		if (flush) {
@@ -133,8 +145,8 @@ export default class Logger {
 			Logger.buffer.forEach(line => stream.write(line));
 		}
 
-		out.on('finish', () => Logger.out.unpipe(stream));
-		out.on('error', () => Logger.out.unpipe(stream));
+		out.on('finish', () => Logger.unpipe(out));
+		out.on('error', () => Logger.unpipe(out));
 	}
 
 	/**
@@ -144,7 +156,11 @@ export default class Logger {
 	 * @access public
 	 */
 	static unpipe(out) {
-		Logger.out.unpipe(out);
+		const streams = Logger.streams[out];
+		if (streams) {
+			streams.forEach(stream => Logger.out.unpipe(stream));
+			delete Logger.streams[out];
+		}
 	}
 }
 

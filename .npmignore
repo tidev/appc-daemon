@@ -5,5 +5,8 @@ node_modules
 .git*
 .travis.yml
 plugins
+coverage
+docs
 src
 test
+gulpfile.tmp.*

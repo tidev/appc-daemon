@@ -1,12 +1,12 @@
 import autobind from 'autobind-decorator';
-import { EventEmitter } from 'events';
+import { HookEmitter } from 'hook-emitter';
 
 /**
  * Connection object to pass through the dispatcher.
  *
  * @extends {EventEmitter}
  */
-export default class Connection extends EventEmitter {
+export default class Connection extends HookEmitter {
 	/**
      * Creates the connection object.
      *
@@ -16,6 +16,14 @@ export default class Connection extends EventEmitter {
      */
 	constructor({ socket, id }) {
 		super();
+
+		if (!socket || typeof socket !== 'object' || typeof socket.send !== 'function' || typeof socket.close !== 'function') {
+			throw new TypeError('Invalid socket');
+		}
+
+		if (!id || typeof id !== 'string') {
+			throw new TypeError('Invalid id');
+		}
 
 		/**
 		 * The connection's WebSocket.

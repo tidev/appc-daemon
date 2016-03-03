@@ -58,12 +58,6 @@ global.appcd = {
 const appcDir = path.join(process.env.HOME || process.env.USERPROFILE, '.appcelerator');
 
 /**
- * The path to the appcd config file.
- * @type {String}
- */
-const configFile = path.join(appcDir, 'appcd.js');
-
-/**
  * The core server logic that orchestrates the plugin lifecycle and request
  * dispatching.
  */
@@ -84,16 +78,11 @@ export default class Server {
 	 * Constructs a server instance.
 	 *
 	 * @param {Object} [opts] - An object containing various options.
+	 * @param {String} [opts.configFile=~/.appcelerator/appcd.js] - The path to the config file to load.
 	 * @param {Boolean} [opts.daemon=false] - When true, spawns the server as a
 	 * background process.
-	 * @param {Object} [opts.analytics] - Analytics settings.
 	 * @param {String} [opts.pidFile=~/.appcelerator/appcd.pid] - Path to the
 	 * appcd pid file.
-	 * @param {Object} [opts.logger] - Logger settings.
-	 * @param {Boolean} [opts.logger.colors=true] - When true, enables colors in
-	 * log output when not running in daemon mode.
-	 * @param {Boolean} [opts.logger.silent=false] - When true, suppresses all
-	 * log output when not running in daemon mode.
 	 */
 	constructor(opts = {}) {
 		// init the default settings
@@ -103,15 +92,25 @@ export default class Server {
 				endpoint: '',
 				eventDir: '~/.appcelerator/appcd/events'
 			},
+			appcd: {
+				pidFile: opts.pidFile || path.join(appcDir, 'appcd.pid'),
+				skipPluginCheck: false
+			},
 			logger: {
 				colors: true,
 				silent: false
 			}
 		};
 
+		const configFile = opts.configFile || path.join(appcDir, 'appcd.js');
+
 		// load the config file
-		if (fs.existsSync(configFile)) {
+		if (!/\.js$/.test(configFile)) {
+			throw new Error('Config file must be a JavaScript file.');
+		} else if (fs.existsSync(configFile)) {
 			Object.assign(cfg, require(configFile));
+		} else if (opts.configFile) {
+			throw new Error(`Specified config file not found: ${opts.configFile}.`);
 		}
 
 		// overwrite with instance options
@@ -126,12 +125,6 @@ export default class Server {
 		 * @type {Boolean}
 		 */
 		this.daemon = !!opts.daemon;
-
-		/**
-		 * The path to the pid file.
-		 * @type {String}
-		 */
-		this.pidFile = opts.pidFile || path.join(appcDir, 'appcd.pid');
 
 		/**
 		 * An array of paths to scan for plugins to load during startup.
@@ -176,9 +169,10 @@ export default class Server {
 	 * @access public
 	 */
 	isRunning() {
-		if (fs.existsSync(this.pidFile)) {
+		const pidFile = this.config('appcd.pidFile');
+		if (fs.existsSync(pidFile)) {
 			// found a pid file, check to see if it's stale
-			const pid = parseInt(fs.readFileSync(this.pidFile).toString());
+			const pid = parseInt(fs.readFileSync(pidFile).toString());
 			if (pid) {
 				try {
 					process.kill(pid, 0);
@@ -186,7 +180,7 @@ export default class Server {
 					return pid;
 				} catch (e) {
 					// stale pid file
-					fs.unlinkSync(this.pidFile);
+					fs.unlinkSync(pidFile);
 				}
 			}
 		}
@@ -226,7 +220,7 @@ export default class Server {
 			}
 
 			// since we are not running as a daemon, we have to write the pid file ourselves
-			fs.writeFileSync(this.pidFile, process.pid);
+			fs.writeFileSync(this.config('appcd.pidFile'), process.pid);
 		}
 
 		//
@@ -349,7 +343,7 @@ export default class Server {
 		return appcdEmitter.hook('appcd:daemonize', (args, opts) => {
 			return this.spawnNode(args, opts)
 				.then(child => {
-					fs.writeFileSync(this.pidFile, child.pid);
+					fs.writeFileSync(this.config('appcd.pidFile'), child.pid);
 					child.unref();
 				});
 		})([ path.resolve(__dirname, 'cli.js'), 'start' ], {
@@ -526,47 +520,58 @@ export default class Server {
 						throw new Error(`Unable to find main file: ${main}`);
 					}
 				})
-				.then(() => this.spawnNode([ path.join(__dirname, 'check-plugin.js'), mainFile ]))
-				.then(child => new Promise((resolve, reject) => {
-					let output = '';
-					child.stdout.on('data', data => output += data.toString());
-					child.stderr.on('data', data => output += data.toString());
-					child.on('close', code => {
-						if (code === 3) {
-							appcd.logger.warn(`Plugin "${pluginPath}" does not export a service, skipping`);
-							return resolve();
-						} else if (code > 0) {
-							return reject(`Check plugin exited with code ${code}: ${output.trim()}`);
-						}
-
-						const module = require(mainFile);
-						const ServiceClass = module && module.__esModule ? module.default : module;
-
-						// double check that this plugin exports a service
-						// check-plugin.js should have already done this for us, but better safe than sorry
-						if (!ServiceClass || typeof ServiceClass !== 'function' || !(ServiceClass.prototype instanceof Service)) {
-							return reject(new Error('Plugin does not export a service'));
-						}
-
-						const name = pkgJson.name || path.basename(pluginPath);
-
-						if (this.plugins[name]) {
-							return reject(new Error('Already loaded a plugin with the same name: ' + this.plugins[name].path));
-						}
-
-						const plugin = this.plugins[name] = new Plugin({
-							name,
-							path: pluginPath,
-							ServiceClass,
-							pkgJson,
-							appcdEmitter,
-							appcdDispatcher,
-							server: this
+				.then(() => {
+					if (!this.config('appcd.skipPluginCheck')) {
+						return this.spawnNode([ path.join(__dirname, 'check-plugin.js'), mainFile ]);
+					}
+				})
+				.then(child => {
+					if (child) {
+						return new Promise((resolve, reject) => {
+							let output = '';
+							child.stdout.on('data', data => output += data.toString());
+							child.stderr.on('data', data => output += data.toString());
+							child.on('close', code => {
+								if (code === 3) {
+									appcd.logger.warn(`Plugin "${pluginPath}" does not export a service, skipping`);
+									resolve();
+								} else if (code > 0) {
+									reject(`Check plugin exited with code ${code}: ${output.trim()}`);
+								} else {
+									resolve(true);
+								}
+							});
 						});
+					}
+				})
+				.then(isService => {
+					const module = require(mainFile);
+					const ServiceClass = module && module.__esModule ? module.default : module;
 
-						plugin.init().then(resolve, reject);
+					// double check that this plugin exports a service
+					// check-plugin.js should have already done this for us, but better safe than sorry
+					if (!ServiceClass || typeof ServiceClass !== 'function' || !(ServiceClass.prototype instanceof Service)) {
+						throw new Error('Plugin does not export a service');
+					}
+
+					const name = pkgJson.name || path.basename(pluginPath);
+
+					if (this.plugins[name]) {
+						throw new Error('Already loaded a plugin with the same name: ' + this.plugins[name].path);
+					}
+
+					const plugin = this.plugins[name] = new Plugin({
+						name,
+						path: pluginPath,
+						ServiceClass,
+						pkgJson,
+						appcdEmitter,
+						appcdDispatcher,
+						server: this
 					});
-				}))
+
+					return plugin.init();
+				})
 				.then(resolve)
 				.catch(err => {
 					appcd.logger.error(`Failed to load plugin ${pluginPath}`);
@@ -595,8 +600,9 @@ export default class Server {
 					return Promise.all(Object.values(this.plugins).map(plugin => { return plugin.shutdown(); }));
 				})
 				.then(() => {
-					appcd.logger.info('Removing ' + appcd.logger.highlight(this.pidFile));
-					fs.unlinkSync(this.pidFile);
+					const pidFile = this.config('appcd.pidFile');
+					appcd.logger.info('Removing ' + appcd.logger.highlight(pidFile));
+					fs.unlinkSync(pidFile);
 					resolve();
 				})
 				.catch(reject);

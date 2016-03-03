@@ -9,14 +9,24 @@ program
 
 program
 	.command('start')
+	.option('--config <json>', 'serialized JSON string to mix into the appcd config')
+	.option('--config-file <file>', 'path to a appcd JS config file')
 	.option('--debug', 'don\'t run as a background daemon')
 	.action(cmd => {
-		new Server({ daemon: !cmd.debug })
-			.start()
-			.catch(err => {
-				console.error(err.toString());
-				process.exit(1);
-			});
+		try {
+			new Server(mixinConfig({
+				configFile: cmd.configFile,
+				daemon: !cmd.debug
+			}, cmd.config))
+				.start()
+				.catch(err => {
+					console.error(err.toString());
+					process.exit(1);
+				});
+		} catch (e) {
+			console.error(e.toString());
+			process.exit(1);
+		}
 	});
 
 program
@@ -29,9 +39,14 @@ program
 
 program
 	.command('restart')
+	.option('--config <json>', 'serialized JSON string to mix into the appcd config')
+	.option('--config-file <file>', 'path to a appcd JS config file')
 	.option('--debug', 'don\'t run as a background daemon')
 	.action(cmd => {
-		new Server({ daemon: !cmd.debug })
+		new Server(mixinConfig({
+			configFile: cmd.configFile,
+			daemon: !cmd.debug
+		}, cmd.config))
 			.stop()
 			.then(server => server.start())
 			.catch(err => {
@@ -123,4 +138,20 @@ program.parse(process.argv);
 
 if (program.args.length === 0) {
 	program.help();
+}
+
+function mixinConfig(opts, config) {
+	if (config) {
+		let json = null;
+		try {
+			json = eval('(' + config + ')');
+		} catch (e) {
+			throw new Error('Failed to parse JSON config: ' + e.toString());
+		}
+		if (!json || typeof json !== 'object') {
+			throw new Error('Invalid config: must be an object');
+		}
+		Object.assign(opts, json);
+	}
+	return opts;
 }

@@ -9,13 +9,18 @@ const runSequence = require('run-sequence');
 const spawn = require('child_process').spawn;
 
 const manifest = require('./package.json');
+const coverageDir = path.join(__dirname, 'coverage');
 const distDir = path.join(__dirname, 'dist');
 const docsDir = path.join(__dirname, 'docs');
 
 /*
  * Clean tasks
  */
-gulp.task('clean', ['clean-dist', 'clean-docs']);
+gulp.task('clean', ['clean-coverage', 'clean-dist', 'clean-docs']);
+
+gulp.task('clean-coverage', function (done) {
+	del([coverageDir]).then(function () { done(); });
+});
 
 gulp.task('clean-dist', function (done) {
 	del([distDir]).then(function () { done(); });
@@ -100,26 +105,25 @@ gulp.task('test', ['lint-test', 'build'], function () {
 		.pipe($.mocha({ grep: grep }));
 });
 
-/*
-gulp.task('coverage', ['lint-src', 'lint-test', 'clean-coverage'], function (cb) {
-	gulp.src('src/**        /*.js')
+gulp.task('coverage', ['lint-src', 'build-plugins', 'lint-test', 'clean-coverage', 'clean-dist'], function (cb) {
+	gulp.src('src/**/*.js')
 		.pipe($.plumber())
 		.pipe($.debug({ title: 'build' }))
+		.pipe($.sourcemaps.init())
 		.pipe($.babelIstanbul())
-		.pipe($.injectModules())
+		.pipe($.sourcemaps.write('.'))
+		.pipe(gulp.dest(distDir))
 		.on('finish', function () {
-			gulp.src('test/**        /*.js')
+			gulp.src('test/**/*.js')
 				.pipe($.plumber())
 				.pipe($.debug({ title: 'test' }))
 				.pipe($.babel())
 				.pipe($.injectModules())
 				.pipe($.mocha())
 				.pipe($.babelIstanbul.writeReports())
-				//.pipe($.babelIstanbul.enforceThresholds({ thresholds: { global: 90 } }))
 				.on('end', cb);
 		});
 });
-*/
 
 /*
  * watch/debug tasks

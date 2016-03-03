@@ -2,6 +2,7 @@
 ._*
 npm-debug.log
 node_modules
+coverage
 dist
 docs
 gulpfile.tmp.*
