@@ -4,11 +4,11 @@ const $ = require('gulp-load-plugins')();
 const del = require('del');
 const fs = require('fs');
 const gulp = require('gulp');
+const manifest = require('./package.json');
 const path = require('path');
 const runSequence = require('run-sequence');
 const spawn = require('child_process').spawn;
 
-const manifest = require('./package.json');
 const coverageDir = path.join(__dirname, 'coverage');
 const distDir = path.join(__dirname, 'dist');
 const docsDir = path.join(__dirname, 'docs');

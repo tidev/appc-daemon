@@ -7,6 +7,7 @@ import fs from 'fs';
 import { HookEmitter } from 'hook-emitter';
 import http from 'http';
 import Logger from './logger';
+import mkdirp from 'mkdirp';
 import os from 'os';
 import path from 'path';
 import Plugin from './plugin';
@@ -58,6 +59,20 @@ global.appcd = {
 const appcDir = path.join(process.env.HOME || process.env.USERPROFILE, '.appcelerator');
 
 /**
+ * Determines if a file or directory exists.
+ * @param {String} file - The full path to check if exists.
+ * @returns {Boolean}
+ */
+function existsSync(file) {
+	try {
+		fs.statSync(file);
+		return true;
+	} catch (e) {
+		return false;
+	}
+}
+
+/**
  * The core server logic that orchestrates the plugin lifecycle and request
  * dispatching.
  */
@@ -107,7 +122,7 @@ export default class Server {
 		// load the config file
 		if (!/\.js$/.test(configFile)) {
 			throw new Error('Config file must be a JavaScript file.');
-		} else if (fs.existsSync(configFile)) {
+		} else if (existsSync(configFile)) {
 			Object.assign(cfg, require(configFile));
 		} else if (opts.configFile) {
 			throw new Error(`Specified config file not found: ${opts.configFile}.`);
@@ -142,23 +157,15 @@ export default class Server {
 	 * @access public
 	 */
 	config(name, defaultValue) {
-		const parts = name.split('.');
-		const ns = parts.pop();
-		let i = 0;
-		let p = parts.length && parts[i++];
-		let obj = this._cfg;
-
-		if (p) {
-			do {
-				if (p in obj) {
-					obj = obj[p];
-				} else {
-					return defaultValue;
+		if (name) {
+			return name.split('.').reduce((cfg, segment) => {
+				if (typeof cfg === 'object' && cfg !== null) {
+					return cfg.hasOwnProperty(segment) ? cfg[segment] : defaultValue;
 				}
-			} while (obj && (p = parts[i++]));
+			}, this._cfg);
 		}
 
-		return obj && ns && obj.hasOwnProperty(ns) ? obj[ns] : defaultValue;
+		return this._cfg;
 	}
 
 	/**
@@ -170,7 +177,7 @@ export default class Server {
 	 */
 	isRunning() {
 		const pidFile = this.config('appcd.pidFile');
-		if (fs.existsSync(pidFile)) {
+		if (existsSync(pidFile)) {
 			// found a pid file, check to see if it's stale
 			const pid = parseInt(fs.readFileSync(pidFile).toString());
 			if (pid) {
@@ -219,8 +226,15 @@ export default class Server {
 				});
 			}
 
+			const pidFile = this.config('appcd.pidFile');
+			const dir = path.dirname(pidFile);
+
+			if (!existsSync(dir)) {
+				mkdirp.sync(dir);
+			}
+
 			// since we are not running as a daemon, we have to write the pid file ourselves
-			fs.writeFileSync(this.config('appcd.pidFile'), process.pid);
+			fs.writeFileSync(pidFile, process.pid);
 		}
 
 		//
@@ -474,11 +488,11 @@ export default class Server {
 		// build list of all potential plugin directories
 		const pluginPaths = [];
 		this.pluginPaths.forEach(dir => {
-			if (fs.existsSync(path.join(dir, 'package.json'))) {
+			if (existsSync(path.join(dir, 'package.json'))) {
 				pluginPaths.push(dir);
 			} else {
 				fs.readdirSync(dir).forEach(name => {
-					if (fs.existsSync(path.join(dir, name, 'package.json'))) {
+					if (existsSync(path.join(dir, name, 'package.json'))) {
 						pluginPaths.push(path.join(dir, name));
 					}
 				});
@@ -516,7 +530,7 @@ export default class Server {
 					}
 
 					mainFile = resolvePath(pluginPath, mainFile);
-					if (!fs.existsSync(mainFile)) {
+					if (!existsSync(mainFile)) {
 						throw new Error(`Unable to find main file: ${main}`);
 					}
 				})

@@ -1,8 +1,8 @@
-.DS_Store*
 ._*
-npm-debug.log
-node_modules
+.DS_Store*
 coverage
 dist
 docs
 gulpfile.tmp.*
+node_modules
+npm-debug.log
