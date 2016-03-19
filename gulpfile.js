@@ -62,7 +62,7 @@ gulp.task('docs', ['lint-src', 'clean-docs'], function () {
 			// debug: true,
 			destination: docsDir,
 			plugins: [
-				{ name: "esdoc-es7-plugin" }
+				{ name: 'esdoc-es7-plugin' }
 			],
 			title: manifest.name
 		}));
@@ -91,8 +91,12 @@ gulp.task('lint-test', function () {
  * test tasks
  */
 gulp.task('test', ['lint-test', 'build'], function () {
-	var grep;
+	var suite, grep;
 	var p = process.argv.indexOf('--suite');
+	if (p !== -1 && p + 1 < process.argv.length) {
+		suite = process.argv[p + 1];
+	}
+	p = process.argv.indexOf('--grep');
 	if (p !== -1 && p + 1 < process.argv.length) {
 		grep = process.argv[p + 1];
 	}
@@ -102,6 +106,7 @@ gulp.task('test', ['lint-test', 'build'], function () {
 		.pipe($.debug({ title: 'test' }))
 		.pipe($.babel())
 		.pipe($.injectModules())
+		.pipe($.filter(suite ? ['test/setup.js'].concat(suite.split(',').map(s => 'test/**/test-' + s + '.js')) : 'test/**/*.js'))
 		.pipe($.mocha({ grep: grep }));
 });
 

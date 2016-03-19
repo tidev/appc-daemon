@@ -1,6 +1,7 @@
 import Client from './client';
-import Server from './server';
+import { mergeDeep } from './util';
 import program from 'commander';
+import Server from './server';
 
 const pkgJson = require('../package.json');
 
@@ -15,8 +16,11 @@ program
 	.action(cmd => {
 		try {
 			new Server(mixinConfig({
-				configFile: cmd.configFile,
-				daemon: !cmd.debug
+				appcd: {
+					allowExit: false,
+					configFile: cmd.configFile,
+					daemonize: !cmd.debug
+				}
 			}, cmd.config))
 				.start()
 				.catch(err => {
@@ -44,8 +48,11 @@ program
 	.option('--debug', 'don\'t run as a background daemon')
 	.action(cmd => {
 		new Server(mixinConfig({
-			configFile: cmd.configFile,
-			daemon: !cmd.debug
+			appcd: {
+				allowExit: false,
+				configFile: cmd.configFile,
+				daemonize: !cmd.debug
+			}
 		}, cmd.config))
 			.stop()
 			.then(server => server.start())
@@ -151,7 +158,7 @@ function mixinConfig(opts, config) {
 		if (!json || typeof json !== 'object') {
 			throw new Error('Invalid config: must be an object');
 		}
-		Object.assign(opts, json);
+		mergeDeep(opts, json);
 	}
 	return opts;
 }

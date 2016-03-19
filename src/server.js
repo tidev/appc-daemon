@@ -3,10 +3,12 @@ import autobind from 'autobind-decorator';
 import 'babel-polyfill';
 import Connection from './connection';
 import Dispatcher, { DispatcherError } from './dispatcher';
+import { existsSync } from './util';
 import fs from 'fs';
 import { HookEmitter } from 'hook-emitter';
 import http from 'http';
 import Logger from './logger';
+import { mergeDeep, absolutePath } from './util';
 import mkdirp from 'mkdirp';
 import os from 'os';
 import path from 'path';
@@ -19,9 +21,8 @@ import stream from 'stream';
 import WebServer from './webserver';
 import 'source-map-support/register';
 
-const pkgJson = require('../package.json');
-const appcdEmitter = new HookEmitter;
 const appcdDispatcher = new Dispatcher;
+const appcdEmitter = new HookEmitter;
 
 /**
  * Global appcd namespace.
@@ -49,28 +50,14 @@ global.appcd = {
 	 * The service base class.
 	 * @type {Service}
 	 */
-	Service
+	Service,
+
+	/**
+	 * Exits the process.
+	 * @type {Function}
+	 */
+	exit: process.exit
 };
-
-/**
- * The path to the Appcelerator home directory.
- * @type {String}
- */
-const appcDir = path.join(process.env.HOME || process.env.USERPROFILE, '.appcelerator');
-
-/**
- * Determines if a file or directory exists.
- * @param {String} file - The full path to check if exists.
- * @returns {Boolean}
- */
-function existsSync(file) {
-	try {
-		fs.statSync(file);
-		return true;
-	} catch (e) {
-		return false;
-	}
-}
 
 /**
  * The core server logic that orchestrates the plugin lifecycle and request
@@ -93,59 +80,70 @@ export default class Server {
 	 * Constructs a server instance.
 	 *
 	 * @param {Object} [opts] - An object containing various options.
-	 * @param {String} [opts.configFile=~/.appcelerator/appcd.js] - The path to the config file to load.
-	 * @param {Boolean} [opts.daemon=false] - When true, spawns the server as a
-	 * background process.
-	 * @param {String} [opts.pidFile=~/.appcelerator/appcd.pid] - Path to the
+	 * @param {Object} [opts.analytics] - Analytics options.
+	 * @param {Object} [opts.appcd] - appcd options.
+	 * @param {String} [opts.appcd.configFile=~/.appcelerator/appcd.js] - The path to the config file to load.
+	 * @param {Boolean} [opts.appcd.daemonize=false] - When true, spawns the server as a background process.
+	 * @param {String} [opts.appcd.pidFile=~/.appcelerator/appcd.pid] - Path to the daemon's pid file.
+	 * @param {Object} [opts.logger] - Logger options.
+	 * @param {Object} [opts.network] - Network options.
+	 * @param {Object} [opts.paths] - An object of path names to paths.
+	 * @param {String|Array<String>} [opts.paths.plugins] - One or more paths to scan for plugins.
 	 * appcd pid file.
 	 */
 	constructor(opts = {}) {
+		const pkgJson = require('../package.json');
+
+		const appcHome = opts.appc && opts.appc.home || '~/.appcelerator';
+
 		// init the default settings
-		const cfg = this._cfg = {
+		const cfg = {
 			analytics: {
 				enabled: true,
-				endpoint: '',
-				eventDir: '~/.appcelerator/appcd/events'
+				eventsDir: path.join(appcHome, 'appcd/events'),
+				url: 'https://api.appcelerator.net/p/v2/partner-track'
+			},
+			appc: {
+				home: appcHome
 			},
 			appcd: {
-				pidFile: opts.pidFile || path.join(appcDir, 'appcd.pid'),
-				skipPluginCheck: false
+				allowExit: true,
+				configFile: path.join(appcHome, 'appcd/config.js'),
+				daemonize: false,
+				guid: 'ea327577-858f-4d31-905e-fa670f50ef48',
+				pidFile: path.join(appcHome, 'appcd/appcd.pid'),
+				skipPluginCheck: false,
+				version: pkgJson.version
 			},
 			logger: {
 				colors: true,
 				silent: false
+			},
+			network: {
+				proxyUrl: null
+			},
+			paths: {
+				plugins: []
 			}
 		};
 
-		const configFile = opts.configFile || path.join(appcDir, 'appcd.js');
+		// override config with constructor options
+		mergeDeep(cfg, opts);
+
+		// force set the pkgJson so that it can't be overwritten
+		cfg.appcd.pkgJson = pkgJson;
 
 		// load the config file
+		const configFile = absolutePath(cfg.appcd.configFile);
 		if (!/\.js$/.test(configFile)) {
 			throw new Error('Config file must be a JavaScript file.');
 		} else if (existsSync(configFile)) {
 			Object.assign(cfg, require(configFile));
-		} else if (opts.configFile) {
-			throw new Error(`Specified config file not found: ${opts.configFile}.`);
+		} else if (opts.appcd && opts.appcd.configFile) {
+			throw new Error(`Specified config file not found: ${opts.appcd.configFile}.`);
 		}
 
-		// overwrite with instance options
-		Object.keys(opts).forEach(key => {
-			if (cfg.hasOwnProperty(key)) {
-				Object.assign(cfg[key], opts[key]);
-			}
-		});
-
-		/**
-		 * When true, spawns the server as a background process on startup.
-		 * @type {Boolean}
-		 */
-		this.daemon = !!opts.daemon;
-
-		/**
-		 * An array of paths to scan for plugins to load during startup.
-		 * @type {Array}
-		 */
-		this.pluginPaths = [ path.resolve(__dirname, '..', 'plugins'), ...this.config('paths.plugins', []) ];
+		this._cfg = Object.freeze(cfg);
 	}
 
 	/**
@@ -158,9 +156,9 @@ export default class Server {
 	 */
 	config(name, defaultValue) {
 		if (name) {
-			return name.split('.').reduce((cfg, segment) => {
+			return name.split('.').reduce((cfg, prop) => {
 				if (typeof cfg === 'object' && cfg !== null) {
-					return cfg.hasOwnProperty(segment) ? cfg[segment] : defaultValue;
+					return cfg.hasOwnProperty(prop) ? cfg[prop] : defaultValue;
 				}
 			}, this._cfg);
 		}
@@ -176,7 +174,7 @@ export default class Server {
 	 * @access public
 	 */
 	isRunning() {
-		const pidFile = this.config('appcd.pidFile');
+		const pidFile = absolutePath(this.config('appcd.pidFile'));
 		if (existsSync(pidFile)) {
 			// found a pid file, check to see if it's stale
 			const pid = parseInt(fs.readFileSync(pidFile).toString());
@@ -201,280 +199,84 @@ export default class Server {
 	 * @access public
 	 */
 	start() {
-		const pid = this.isRunning();
-
-		// if we found a pid and it's not this process, then we are not the daemon you were looking for
-		if (pid && pid !== process.pid) {
-			const err = new Error(`Server already running (pid: ${pid})`);
-			err.code = 'ALREADY_RUNNING';
-			return Promise.reject(err);
+		if (!this.daemonize) {
+			// enable long stack traces in debug mode
+			require('longjohn');
 		}
 
-		if (!pid) {
-			// server is not running
-
-			// check if we should daemonize
-			if (this.daemon) {
-				return this.daemonize().then(child => this);
-			}
-
-			if (!this.config('logger.silent')) {
-				// we are the server process running in debug mode, so hook up some output
-				Logger.pipe(process.stdout, {
-					colors: this.config('logger.colors', true),
-					flush: true
-				});
-			}
-
-			const pidFile = this.config('appcd.pidFile');
-			const dir = path.dirname(pidFile);
-
-			if (!existsSync(dir)) {
-				mkdirp.sync(dir);
-			}
-
-			// since we are not running as a daemon, we have to write the pid file ourselves
-			fs.writeFileSync(pidFile, process.pid);
-		}
-
-		//
-		// at this point, we're either running in debug mode (no pid) or *this* process is the spawned daemon process
-		//
-
-		appcd.logger.info(`Appcelerator Daemon v${pkgJson.version}`);
-		appcd.logger.info(`Node.js ${process.version} (module api ${process.versions.modules})`);
-
-		// replace the process title to avoid `killall node` taking down the server
-		process.title = 'appcd (Appcelerator Daemon)';
-
-		// listen for signals to trigger a shutdown
-		process.on('SIGINT', () => this.shutdown().then(() => process.exit(0)));
-		process.on('SIGTERM', () => this.shutdown().then(() => process.exit(0)));
-
-		this.analytic = new Analytics();
-		appcd.on('analytics:event', data => {
-			// TODO: inject common data
-			appcd.logger.log('got analytics event!');
-			appcd.logger.log(data);
-		});
-
-		this.webserver = new WebServer({
-			hostname: this.config('hostname', '127.0.0.1'),
-			port:     this.config('port', 1732)
-		});
-
-		this.webserver.on('websocket', socket => {
-			const address = appcd.logger.highlight(socket._socket.remoteAddress);
-			appcd.logger.info('WebSocket %s: connect', address);
-
-			socket.on('message', message => {
-				let req;
-
-				try {
-					req = JSON.parse(message);
-					if (!req || typeof req !== 'object') { throw new Error('invalid request object'); }
-					if (!req.version) { throw new Error('invalid request object, missing version'); }
-					if (!req.path)    { throw new Error('invalid request object, missing path'); }
-					if (!req.id)      { throw new Error('invalid request object, missing id'); }
-
-					switch (req.version) {
-						case '1.0':
-							const conn = new Connection({
-								socket,
-								id: req.id
-							});
-
-							const startTime = new Date;
-
-							appcdDispatcher.call(req.path, { conn, data: req.data || {} })
-								.then(result => {
-									const p = result && result instanceof Promise ? result : Promise.resolve(result);
-									return p.then(result => {
-										if (result) {
-											conn.send(result).then(conn.close);
-										}
-										appcd.logger.info(
-											'WebSocket %s: %s %s %s',
-											address,
-											appcd.logger.lowlight(req.path),
-											appcd.logger.ok('200'),
-											appcd.logger.highlight((new Date - startTime) + 'ms')
-										);
-									});
-								})
-								.catch(err => {
-									const status = err.status && Dispatcher.statusCodes[String(err.status)] ? err.status : 500;
-									const message = (err.status && Dispatcher.statusCodes[String(err.status)] || Dispatcher.statusCodes['500']) + ': ' + (err.message || err.toString());
-									const delta = new Date - startTime;
-									appcd.logger.error(
-										'WebSocket %s: %s',
-										address,
-										appcd.logger.alert(req.path + ' ' + status + ' ' + delta + 'ms - ' + message)
-									);
-									socket.send(JSON.stringify({
-										id: req.id,
-										status: err.status || 500,
-										error: message
-									}));
-								});
-
-							break;
-
-						default:
-							throw new Error(`Unsupported version "${req.version}"`);
-					}
-				} catch (err) {
-					appcd.logger.error('Bad request:', err);
-					socket.send(JSON.stringify({
-						status: 400,
-						error: 'Bad request: ' + err.toString()
-					}));
+		if (!this.config('appcd.allowExit')) {
+			// hijack process.exit()
+			Object.defineProperty(process, 'exit', {
+				value: function () {
+					const stack = new Error().stack;
+					appcd.logger.error('process.exit() is not allowed');
+					appcd.logger.error(stack);
 				}
 			});
-
-			socket.on('close', () => {
-				appcd.logger.info('WebSocket %s: disconnect', address);
-			});
-		});
+		}
 
 		return Promise.resolve()
-			.then(this.initHandlers)
 			.then(this.loadPlugins)
-			.then(this.webserver.listen)
-			.then(() => appcdEmitter.emit('appcd:start'))
-			.then(() => appcdEmitter.emit('analytics:event', {
-				type: 'appcd.server.start'
-			}));
-	}
+			.then(() => {
+				const pid = this.isRunning();
 
-	/**
-	 * Spawns the child appcd process in daemon mode.
-	 *
-	 * @returns {Promise}
-	 * @access private
-	 */
-	daemonize() {
-		return appcdEmitter.hook('appcd:daemonize', (args, opts) => {
-			return this.spawnNode(args, opts)
-				.then(child => {
-					fs.writeFileSync(this.config('appcd.pidFile'), child.pid);
-					child.unref();
-				});
-		})([ path.resolve(__dirname, 'cli.js'), 'start' ], {
-			detached: true,
-			stdio: 'ignore'
-		});
-	}
-
-	/**
-	 * Spawns a new node process with the specfied args.
-	 *
-	 * @param {Array} [args] - An array of arguments to pass to the subprocess.
-	 * @param {Object} [opts] - Spawn options.
-	 * @returns {Promise}
-	 * @access private
-	 */
-	spawnNode(args = [], opts = {}) {
-		const node = process.env.NODE_EXEC_PATH || process.execPath;
-		const v8args = [];
-
-		// if the user has more than 2GB of RAM, set the max memory to 3GB or 75% of the total memory
-		const totalMem = Math.floor(os.totalmem() / 1e6);
-		if (totalMem * 0.75 > 1500) {
-			v8args.push('--max_old_space_size=' + Math.min(totalMem * 0.75, 3000));
-		}
-
-		return Promise.resolve(
-			spawn(
-				process.env.NODE_EXEC_PATH || process.execPath,
-				[v8args, ...args],
-				opts
-			)
-		);
-	}
-
-	/**
-	 * Helper function that returns the server status.
-	 *
-	 * @returns {String}
-	 * @access private
-	 */
-	getStatus() {
-		let cache = this._statusCache;
-
-		if (!cache) {
-			// init the cache
-			cache = this._statusCache = {
-				appcd: {
-					version:  pkgJson.version,
-					pid:      process.pid,
-					execPath: process.execPath,
-					execArgv: process.execArgv,
-					argv:     process.argv
-				},
-				node: {
-					version:  process.version.replace(/^v/, ''),
-					versions: process.versions
-				},
-				system: {
-					platform: process.platform,
-					arch:     process.arch,
-					cpus:     os.cpus().length,
-					hostname: os.hostname()
+				// if we found a pid and it's not this process, then we are not the daemon you were looking for
+				if (pid && pid !== process.pid) {
+					const err = new Error(`Server already running (pid: ${pid})`);
+					err.code = 'ALREADY_RUNNING';
+					throw err;
 				}
-			};
-		}
 
-		// refresh the cache
-		cache.appcd.uptime   = process.uptime();
-		cache.appcd.env      = process.env;
-		cache.appcd.plugins  = Object.entries(this.plugins).map(([name, plugin]) => {
-			return {
-				name:    name,
-				path:    plugin.path,
-				version: plugin.version,
-				status:  plugin.getStatus()
-			};
-		});
-		cache.system.loadavg = os.loadavg();
-		cache.system.memory  = {
-			usage: process.memoryUsage(),
-			free:  os.freemem(),
-			total: os.totalmem()
-		};
+				if (!pid) {
+					// server is not running
 
-		return JSON.stringify(cache, null, '  ');
-	}
+					// check if we should daemonize
+					if (this.config('appcd.daemonize')) {
+						return this.daemonize().then(child => this);
+					}
 
-	/**
-	 * Wires up core request handlers.
-	 *
-	 * @access private
-	 */
-	@autobind
-	initHandlers() {
-		this.webserver.router.get('/appcd/status', (ctx, next) => {
-			ctx.response.type = 'json';
-			ctx.body = this.getStatus();
-		});
+					if (!this.config('logger.silent')) {
+						// we are the server process running in debug mode, so hook up some output
+						Logger.pipe(process.stdout, {
+							colors: this.config('logger.colors', true),
+							flush: true
+						});
+					}
 
-		appcdDispatcher.register('/appcd/status', ctx => {
-			const timer = setInterval(() => {
-				try {
-					ctx.conn.write(this.getStatus());
-				} catch (e) {
-					// connection was terminated, stop sending data
-					clearInterval(timer);
+					const pidFile = absolutePath(this.config('appcd.pidFile'));
+					const dir = path.dirname(pidFile);
+
+					if (!existsSync(dir)) {
+						mkdirp.sync(dir);
+					}
+
+					// since we are not running as a daemon, we have to write the pid file ourselves
+					fs.writeFileSync(pidFile, process.pid);
 				}
-			}, Math.max(ctx.data.interval || 1000, 0));
-		});
 
-		appcdDispatcher.register('/appcd/logcat', ctx => {
-			Logger.pipe(ctx.conn, {
-				colors: !!ctx.data.colors,
-				flush: true
+				//
+				// at this point, we're either running in debug mode (no pid) or *this* process is the spawned daemon process
+				//
+
+				appcd.logger.info(`Appcelerator Daemon v${this.config('appcd.version')}`);
+				appcd.logger.info(`Node.js ${process.version} (module api ${process.versions.modules})`);
+
+				// replace the process title to avoid `killall node` taking down the server
+				process.title = 'appcd (Appcelerator Daemon)';
+
+				// listen for signals to trigger a shutdown
+				process.on('SIGINT', () => this.shutdown().then(() => appcd.exit(0)));
+				process.on('SIGTERM', () => this.shutdown().then(() => appcd.exit(0)));
+
+				return Promise.resolve()
+					.then(this.initAnalytics)
+					.then(this.initHandlers)
+					.then(this.initWebServer)
+					.then(() => appcdEmitter.emit('appcd:start'))
+					.then(() => appcdEmitter.emit('analytics:event', {
+						type: 'appcd.server.start'
+					}));
 			});
-		});
 	}
 
 	/**
@@ -485,17 +287,33 @@ export default class Server {
 	 */
 	@autobind
 	loadPlugins() {
+		// if the `plugins` directory in the appc home directory doesn't exist,
+		// then create it
+		const appcHomePluginDir = absolutePath(this.config('appc.home'), 'appcd/plugins');
+		if (!existsSync(appcHomePluginDir)) {
+			mkdirp.sync(appcHomePluginDir);
+		}
+
 		// build list of all potential plugin directories
+		const pathsToCheck = [
+			path.resolve(__dirname, '..', 'plugins'),
+			appcHomePluginDir,
+			...this.config('paths.plugins', [])
+		];
 		const pluginPaths = [];
-		this.pluginPaths.forEach(dir => {
-			if (existsSync(path.join(dir, 'package.json'))) {
-				pluginPaths.push(dir);
-			} else {
-				fs.readdirSync(dir).forEach(name => {
-					if (existsSync(path.join(dir, name, 'package.json'))) {
-						pluginPaths.push(path.join(dir, name));
-					}
-				});
+
+		pathsToCheck.forEach(dir => {
+			dir = absolutePath(dir);
+			if (!pluginPaths.includes(dir) && existsSync(dir)) {
+				if (existsSync(path.join(dir, 'package.json'))) {
+					pluginPaths.push(dir);
+				} else {
+					fs.readdirSync(dir).forEach(name => {
+						if (existsSync(path.join(dir, name, 'package.json'))) {
+							pluginPaths.push(path.join(dir, name));
+						}
+					});
+				}
 			}
 		});
 
@@ -597,6 +415,258 @@ export default class Server {
 	}
 
 	/**
+	 * Spawns the child appcd process in daemon mode.
+	 *
+	 * @returns {Promise}
+	 * @access private
+	 */
+	daemonize() {
+		return appcdEmitter.hook('appcd:daemonize', (args, opts) => {
+			return this.spawnNode(args, opts)
+				.then(child => {
+					fs.writeFileSync(absolutePath(this.config('appcd.pidFile')), child.pid);
+					child.unref();
+				});
+		})([ path.resolve(__dirname, 'cli.js'), 'start', '--config-file', this.config('appcd.configFile') ], {
+			detached: true,
+			stdio: 'ignore'
+		});
+	}
+
+	/**
+	 * Spawns a new node process with the specfied args.
+	 *
+	 * @param {Array} [args] - An array of arguments to pass to the subprocess.
+	 * @param {Object} [opts] - Spawn options.
+	 * @returns {Promise}
+	 * @access private
+	 */
+	spawnNode(args = [], opts = {}) {
+		const node = process.env.NODE_EXEC_PATH || process.execPath;
+		const v8args = [];
+
+		// if the user has more than 2GB of RAM, set the max memory to 3GB or 75% of the total memory
+		const totalMem = Math.floor(os.totalmem() / 1e6);
+		if (totalMem * 0.75 > 1500) {
+			v8args.push('--max_old_space_size=' + Math.min(totalMem * 0.75, 3000));
+		}
+
+		return Promise.resolve(
+			spawn(
+				process.env.NODE_EXEC_PATH || process.execPath,
+				[v8args, ...args],
+				opts
+			)
+		);
+	}
+
+	/**
+	 * Initializes the analytics system.
+	 *
+	 * @returns {Promise}
+	 * @access private
+	 */
+	@autobind
+	initAnalytics() {
+		return appcdEmitter
+			.hook('appcd:init.analytics', opts => {
+				const analytics = new Analytics(opts);
+				appcd.on('analytics:event', analytics.newEvent);
+				return analytics;
+			})({
+				enabled:   this.config('analytics.enabled'),
+				eventsDir: this.config('analytics.eventsDir'),
+				url:       this.config('analytics.url')
+			})
+			.then(analytics => {
+				this.analytics = analytics;
+			});
+	}
+
+	/**
+	 * Helper function that returns the server status.
+	 *
+	 * @returns {String}
+	 * @access private
+	 */
+	getStatus() {
+		let cache = this._statusCache;
+
+		if (!cache) {
+			// init the cache
+			cache = this._statusCache = {
+				appcd: {
+					version:  this.config('appcd.version'),
+					pid:      process.pid,
+					execPath: process.execPath,
+					execArgv: process.execArgv,
+					argv:     process.argv
+				},
+				node: {
+					version:  process.version.replace(/^v/, ''),
+					versions: process.versions
+				},
+				system: {
+					platform: process.platform,
+					arch:     process.arch,
+					cpus:     os.cpus().length,
+					hostname: os.hostname()
+				}
+			};
+		}
+
+		// refresh the cache
+		cache.appcd.uptime   = process.uptime();
+		cache.appcd.env      = process.env;
+		cache.appcd.plugins  = Object.entries(this.plugins).map(([name, plugin]) => {
+			return {
+				name:    name,
+				path:    plugin.path,
+				version: plugin.version,
+				status:  plugin.getStatus()
+			};
+		});
+		cache.system.loadavg = os.loadavg();
+		cache.system.memory  = {
+			usage: process.memoryUsage(),
+			free:  os.freemem(),
+			total: os.totalmem()
+		};
+
+		return JSON.stringify(cache, null, '  ');
+	}
+
+	/**
+	 * Wires up core request handlers.
+	 *
+	 * @returns {Promise}
+	 * @access private
+	 */
+	@autobind
+	initHandlers() {
+		return appcdEmitter.hook('appcd:init.handlers', () => {
+			appcdDispatcher.register('/appcd/status', ctx => {
+				const timer = setInterval(() => {
+					try {
+						ctx.conn.write(this.getStatus());
+					} catch (e) {
+						// connection was terminated, stop sending data
+						clearInterval(timer);
+					}
+				}, Math.max(ctx.data.interval || 1000, 0));
+			});
+
+			appcdDispatcher.register('/appcd/logcat', ctx => {
+				Logger.pipe(ctx.conn, {
+					colors: !!ctx.data.colors,
+					flush: true
+				});
+			});
+		})();
+	}
+
+	/**
+	 * Wires up core request handlers.
+	 *
+	 * @returns {Promise}
+	 * @access private
+	 */
+	@autobind
+	initWebServer() {
+		appcdEmitter.hook('appcd:init.webserver', opts => {
+			const webserver = this.webserver = new WebServer(opts);
+
+			webserver.on('websocket', socket => {
+				const address = appcd.logger.highlight(socket._socket.remoteAddress);
+				appcd.logger.info('WebSocket %s: connect', address);
+
+				socket.on('message', message => {
+					let req;
+
+					try {
+						req = JSON.parse(message);
+						if (!req || typeof req !== 'object') { throw new Error('invalid request object'); }
+						if (!req.version) { throw new Error('invalid request object, missing version'); }
+						if (!req.path)    { throw new Error('invalid request object, missing path'); }
+						if (!req.id)      { throw new Error('invalid request object, missing id'); }
+
+						switch (req.version) {
+							case '1.0':
+								const conn = new Connection({
+									socket,
+									id: req.id
+								});
+
+								const startTime = new Date;
+
+								appcdDispatcher.call(req.path, { conn, data: req.data || {} })
+									.then(result => {
+										const p = result && result instanceof Promise ? result : Promise.resolve(result);
+										return p.then(result => {
+											if (result) {
+												conn.send(result).then(conn.close);
+											}
+											appcd.logger.info(
+												'WebSocket %s: %s %s %s',
+												address,
+												appcd.logger.lowlight(req.path),
+												appcd.logger.ok('200'),
+												appcd.logger.highlight((new Date - startTime) + 'ms')
+											);
+										});
+									})
+									.catch(err => {
+										const status = err.status && Dispatcher.statusCodes[String(err.status)] ? err.status : 500;
+										const message = (err.status && Dispatcher.statusCodes[String(err.status)] || Dispatcher.statusCodes['500']) + ': ' + (err.message || err.toString());
+										const delta = new Date - startTime;
+										appcd.logger.error(
+											'WebSocket %s: %s',
+											address,
+											appcd.logger.alert(req.path + ' ' + status + ' ' + delta + 'ms - ' + message)
+										);
+										socket.send(JSON.stringify({
+											id: req.id,
+											status: err.status || 500,
+											error: message
+										}));
+									});
+
+								break;
+
+							default:
+								throw new Error(`Unsupported version "${req.version}"`);
+						}
+					} catch (err) {
+						appcd.logger.error('Bad request:', err);
+						socket.send(JSON.stringify({
+							status: 400,
+							error: 'Bad request: ' + err.toString()
+						}));
+					}
+				});
+
+				socket.on('close', () => {
+					appcd.logger.info('WebSocket %s: disconnect', address);
+				});
+			});
+
+			webserver.router.get('/appcd/status', (ctx, next) => {
+				ctx.response.type = 'json';
+				ctx.body = this.getStatus();
+			});
+
+			Object.values(this.plugins).forEach(plugin => {
+				webserver.router.use('/' + plugin.namespace, plugin.router.routes());
+			});
+
+			return this.webserver.listen();
+		})({
+			hostname: this.config('hostname', '127.0.0.1'),
+			port:     this.config('port', 1732)
+		});
+	}
+
+	/**
 	 * Shutsdown the server including the web server and websocket server. All
 	 * connections will be terminated after 30 seconds. Lastly, the pid file
 	 * is removed.
@@ -614,7 +684,7 @@ export default class Server {
 					return Promise.all(Object.values(this.plugins).map(plugin => { return plugin.shutdown(); }));
 				})
 				.then(() => {
-					const pidFile = this.config('appcd.pidFile');
+					const pidFile = absolutePath(this.config('appcd.pidFile'));
 					appcd.logger.info('Removing ' + appcd.logger.highlight(pidFile));
 					fs.unlinkSync(pidFile);
 					resolve();

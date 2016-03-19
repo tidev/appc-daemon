@@ -123,7 +123,12 @@ export default class Client extends EventEmitter {
 				return send();
 			}
 
-			new Server()
+			new Server({
+				appcd: {
+					allowExit: false,
+					daemonize: true
+				}
+			})
 				.start()
 				.then(send)
 				.catch(err => {

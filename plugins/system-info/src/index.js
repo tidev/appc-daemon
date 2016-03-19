@@ -16,6 +16,10 @@ export default class InfoService extends appcd.Service {
 		appcd.on('test:howdy', () => {
 			console.log('got test:howdy');
 		});
+
+		// setTimeout(() => {
+		// 	process.exit(1);
+		// }, 5000);
 	}
 
 	shutdown() {

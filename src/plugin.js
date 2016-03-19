@@ -72,7 +72,6 @@ export default class Plugin {
 		 * @type {Router}
 		 */
 		this.router = new Router;
-		server.webserver.router.use('/' + this.namespace, this.router.routes());
 
 		/**
 		 * The instance of the service.
