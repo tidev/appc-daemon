@@ -31,6 +31,9 @@ export default class Connection extends HookEmitter {
 		 */
 		this.socket = socket;
 
+		socket.on('close', () => this.emit('close'));
+		socket.on('error', err => this.emit('error', err));
+
 		/**
 		 * The request id.
 		 * @type {String}

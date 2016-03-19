@@ -85,6 +85,8 @@ export default class Dispatcher {
 			data = {};
 		}
 
+		data.path = path;
+
 		for (let route of this.routes) {
 			const m = path.match(route.regexp);
 			if (m) {

@@ -1,20 +1,18 @@
 import autobind from 'autobind-decorator';
-import { existsSync, absolutePath } from './util';
+import { existsSync, expandPath } from './util';
 import mkdirp from 'mkdirp';
 
 export default class Analytics {
 	constructor(opts = {}) {
 		this.enabled   = !!opts.enabled;
-		this.eventsDir = absolutePath(opts.eventsDir);
+		this.eventsDir = expandPath(opts.eventsDir);
 		this.url       = opts.url;
 
 		if (!this.enabled) {
 			return;
 		}
 
-		if (!existsSync(this.eventsDir)) {
-			mkdirp.sync(this.eventsDir);
-		}
+		mkdirp.sync(this.eventsDir);
 	}
 
 	/**

@@ -5,10 +5,11 @@ import Connection from './connection';
 import Dispatcher, { DispatcherError } from './dispatcher';
 import { existsSync } from './util';
 import fs from 'fs';
+import { gawk } from 'gawk';
 import { HookEmitter } from 'hook-emitter';
 import http from 'http';
 import Logger from './logger';
-import { mergeDeep, absolutePath } from './util';
+import { mergeDeep, expandPath } from './util';
 import mkdirp from 'mkdirp';
 import os from 'os';
 import path from 'path';
@@ -115,6 +116,9 @@ export default class Server {
 				skipPluginCheck: false,
 				version: pkgJson.version
 			},
+			environment: {
+				name: 'production'
+			},
 			logger: {
 				colors: true,
 				silent: false
@@ -134,7 +138,7 @@ export default class Server {
 		cfg.appcd.pkgJson = pkgJson;
 
 		// load the config file
-		const configFile = absolutePath(cfg.appcd.configFile);
+		const configFile = expandPath(cfg.appcd.configFile);
 		if (!/\.js$/.test(configFile)) {
 			throw new Error('Config file must be a JavaScript file.');
 		} else if (existsSync(configFile)) {
@@ -174,7 +178,7 @@ export default class Server {
 	 * @access public
 	 */
 	isRunning() {
-		const pidFile = absolutePath(this.config('appcd.pidFile'));
+		const pidFile = expandPath(this.config('appcd.pidFile'));
 		if (existsSync(pidFile)) {
 			// found a pid file, check to see if it's stale
 			const pid = parseInt(fs.readFileSync(pidFile).toString());
@@ -243,12 +247,9 @@ export default class Server {
 						});
 					}
 
-					const pidFile = absolutePath(this.config('appcd.pidFile'));
+					const pidFile = expandPath(this.config('appcd.pidFile'));
 					const dir = path.dirname(pidFile);
-
-					if (!existsSync(dir)) {
-						mkdirp.sync(dir);
-					}
+					mkdirp.sync(dir);
 
 					// since we are not running as a daemon, we have to write the pid file ourselves
 					fs.writeFileSync(pidFile, process.pid);
@@ -259,6 +260,7 @@ export default class Server {
 				//
 
 				appcd.logger.info(`Appcelerator Daemon v${this.config('appcd.version')}`);
+				appcd.logger.info(`Environment: ${this.config('environment.name')}`);
 				appcd.logger.info(`Node.js ${process.version} (module api ${process.versions.modules})`);
 
 				// replace the process title to avoid `killall node` taking down the server
@@ -270,6 +272,7 @@ export default class Server {
 
 				return Promise.resolve()
 					.then(this.initAnalytics)
+					.then(this.initStatusMonitor)
 					.then(this.initHandlers)
 					.then(this.initWebServer)
 					.then(() => appcdEmitter.emit('appcd:start'))
@@ -289,10 +292,8 @@ export default class Server {
 	loadPlugins() {
 		// if the `plugins` directory in the appc home directory doesn't exist,
 		// then create it
-		const appcHomePluginDir = absolutePath(this.config('appc.home'), 'appcd/plugins');
-		if (!existsSync(appcHomePluginDir)) {
-			mkdirp.sync(appcHomePluginDir);
-		}
+		const appcHomePluginDir = expandPath(this.config('appc.home'), 'appcd/plugins');
+		mkdirp.sync(appcHomePluginDir);
 
 		// build list of all potential plugin directories
 		const pathsToCheck = [
@@ -303,7 +304,7 @@ export default class Server {
 		const pluginPaths = [];
 
 		pathsToCheck.forEach(dir => {
-			dir = absolutePath(dir);
+			dir = expandPath(dir);
 			if (!pluginPaths.includes(dir) && existsSync(dir)) {
 				if (existsSync(path.join(dir, 'package.json'))) {
 					pluginPaths.push(dir);
@@ -424,7 +425,7 @@ export default class Server {
 		return appcdEmitter.hook('appcd:daemonize', (args, opts) => {
 			return this.spawnNode(args, opts)
 				.then(child => {
-					fs.writeFileSync(absolutePath(this.config('appcd.pidFile')), child.pid);
+					fs.writeFileSync(expandPath(this.config('appcd.pidFile')), child.pid);
 					child.unref();
 				});
 		})([ path.resolve(__dirname, 'cli.js'), 'start', '--config-file', this.config('appcd.configFile') ], {
@@ -484,56 +485,62 @@ export default class Server {
 	}
 
 	/**
-	 * Helper function that returns the server status.
-	 *
-	 * @returns {String}
-	 * @access private
+	 * Initializes the server status system.
 	 */
-	getStatus() {
-		let cache = this._statusCache;
+	@autobind
+	initStatusMonitor() {
+		return appcdEmitter
+			.hook('appcd:init.status.monitor', () => {
+				this.status = gawk({
+					appcd: {
+						version:  this.config('appcd.version'),
+						pid:      process.pid,
+						execPath: process.execPath,
+						execArgv: process.execArgv,
+						argv:     process.argv,
+						env:      process.env
+					},
+					node: {
+						version:  process.version.replace(/^v/, ''),
+						versions: process.versions
+					},
+					system: {
+						platform: process.platform,
+						arch:     process.arch,
+						cpus:     os.cpus().length,
+						hostname: os.hostname()
+					}
+				});
 
-		if (!cache) {
-			// init the cache
-			cache = this._statusCache = {
-				appcd: {
-					version:  this.config('appcd.version'),
-					pid:      process.pid,
-					execPath: process.execPath,
-					execArgv: process.execArgv,
-					argv:     process.argv
-				},
-				node: {
-					version:  process.version.replace(/^v/, ''),
-					versions: process.versions
-				},
-				system: {
-					platform: process.platform,
-					arch:     process.arch,
-					cpus:     os.cpus().length,
-					hostname: os.hostname()
-				}
-			};
-		}
+				const refresh = () => {
+					this.status.mergeDeep({
+						appcd: {
+							uptime: process.uptime(),
+							plugins: Object.entries(this.plugins).map(([name, plugin]) => {
+								return {
+									name:    name,
+									path:    plugin.path,
+									version: plugin.version,
+									status:  plugin.getStatus()
+								};
+							})
+						},
+						system: {
+							loadavg: os.loadavg(),
+							memory: {
+								usage: process.memoryUsage(),
+								free:  os.freemem(),
+								total: os.totalmem()
+							}
+						}
+					});
+				};
 
-		// refresh the cache
-		cache.appcd.uptime   = process.uptime();
-		cache.appcd.env      = process.env;
-		cache.appcd.plugins  = Object.entries(this.plugins).map(([name, plugin]) => {
-			return {
-				name:    name,
-				path:    plugin.path,
-				version: plugin.version,
-				status:  plugin.getStatus()
-			};
-		});
-		cache.system.loadavg = os.loadavg();
-		cache.system.memory  = {
-			usage: process.memoryUsage(),
-			free:  os.freemem(),
-			total: os.totalmem()
-		};
+				refresh();
+				setInterval(refresh, 1000);
 
-		return JSON.stringify(cache, null, '  ');
+				return this.status;
+			})();
 	}
 
 	/**
@@ -545,15 +552,16 @@ export default class Server {
 	@autobind
 	initHandlers() {
 		return appcdEmitter.hook('appcd:init.handlers', () => {
-			appcdDispatcher.register('/appcd/status', ctx => {
-				const timer = setInterval(() => {
-					try {
-						ctx.conn.write(this.getStatus());
-					} catch (e) {
-						// connection was terminated, stop sending data
-						clearInterval(timer);
-					}
-				}, Math.max(ctx.data.interval || 1000, 0));
+			appcdDispatcher.register(/\/appcd\/status(\/.*)?/, ctx => {
+				const filter = ctx.params[0] && ctx.params[0].replace(/^\//, '').split('/') || undefined;
+				const node = this.status.get(filter);
+				if (!node) {
+					throw new Error('Invalid request: ' + ctx.path);
+				}
+				ctx.conn.write(node.toJSON(true));
+				const off = node.watch(evt => ctx.conn.write(evt.source.toJSON(true)));
+				ctx.conn.on('close', off);
+				ctx.conn.on('error', off);
 			});
 
 			appcdDispatcher.register('/appcd/logcat', ctx => {
@@ -650,9 +658,9 @@ export default class Server {
 				});
 			});
 
-			webserver.router.get('/appcd/status', (ctx, next) => {
+			webserver.router.get('/appcd/status/:filter?', (ctx, next) => {
 				ctx.response.type = 'json';
-				ctx.body = this.getStatus();
+				ctx.body = this.getStatus(ctx.params.filter);
 			});
 
 			Object.values(this.plugins).forEach(plugin => {
@@ -684,7 +692,7 @@ export default class Server {
 					return Promise.all(Object.values(this.plugins).map(plugin => { return plugin.shutdown(); }));
 				})
 				.then(() => {
-					const pidFile = absolutePath(this.config('appcd.pidFile'));
+					const pidFile = expandPath(this.config('appcd.pidFile'));
 					appcd.logger.info('Removing ' + appcd.logger.highlight(pidFile));
 					fs.unlinkSync(pidFile);
 					resolve();

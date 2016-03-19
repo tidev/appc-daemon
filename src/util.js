@@ -45,7 +45,7 @@ const winEnvVarRegExp = /(%([^%]*)%)/g;
  * @param {...String} segments - The path segments to join and resolve.
  * @returns {String}
  */
-export function absolutePath(...segments) {
+export function expandPath(...segments) {
 	segments[0] = segments[0].replace(homeDirRegExp, (process.env.HOME || process.env.USERPROFILE) + '$1');
 	if (process.platform === 'win32') {
 		return path.resolve(path.join.apply(null, segments).replace(winEnvVarRegExp, (s, m, n) => {
