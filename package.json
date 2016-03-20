@@ -1,30 +1,8 @@
 {
-  "name": "appcd",
+  "name": "appc-daemon",
   "version": "0.0.1",
   "description": "Appcelerator Daemon",
-  "main": "dist/index",
-  "scripts": {
-    "build": "gulp build",
-    "docs": "gulp docs",
-    "prepublish": "npm run build",
-    "test": "gulp test",
-    "watch": "gulp watch"
-  },
-  "bin": {
-    "appcd": "./bin/appcd"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/appcelerator/appc.daemon.git"
-  },
-  "keywords": [
-    "appcelerator",
-    "appc",
-    "daemon",
-    "hyperloop",
-    "titanium",
-    "alloy"
-  ],
+  "main": "./dist/index",
   "author": {
     "name": "Appcelerator, Inc.",
     "email": "npmjs@appcelerator.com"
@@ -36,10 +14,25 @@
     }
   ],
   "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://github.com/appcelerator/appc.daemon/issues"
+  "keywords": [
+    "appcelerator",
+    "appc",
+    "daemon",
+    "hyperloop",
+    "titanium",
+    "alloy"
+  ],
+  "bin": {
+    "appcd": "./bin/appcd"
   },
-  "homepage": "https://github.com/appcelerator/appc.daemon#readme",
+  "scripts": {
+    "build": "gulp build",
+    "coverage": "gulp coverage",
+    "docs": "gulp docs",
+    "prepublish": "gulp build && npm shrinkwrap",
+    "test": "gulp test",
+    "watch": "gulp watch"
+  },
   "dependencies": {
     "babel-polyfill": "^6.7.2",
     "colors": "^1.1.2",
@@ -86,5 +79,14 @@
     "run-sequence": "^1.1.5",
     "sinon": "^1.17.3",
     "sinon-chai": "^2.8.0"
+  },
+  "homepage": "https://github.com/appcelerator/appc-daemon#readme",
+  "bugs": "https://github.com/appcelerator/appc-daemon/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/appcelerator/appc-daemon.git"
+  },
+  "engines": {
+    "node": ">=4.0.0"
   }
 }
