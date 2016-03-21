@@ -54,6 +54,22 @@ gulp.task('build-core', function () {
 		}));
 });
 
+gulp.task('build-core-src', function () {
+	return gulp
+		.src('core/gulpfile.js')
+		.pipe($.chug({
+			tasks: ['build-src']
+		}));
+});
+
+gulp.task('build-core-plugins', function () {
+	return gulp
+		.src('core/plugins/*/gulpfile.js')
+		.pipe($.chug({
+			tasks: ['build']
+		}));
+});
+
 gulp.task('docs', ['lint-src', 'clean-docs'], function () {
 	return gulp.src('src')
 		.pipe($.plumber())
@@ -146,14 +162,17 @@ gulp.task('restart-daemon', function () {
 });
 
 gulp.task('watch', function () {
-	// runSequence('build', 'restart-daemon', function () {
-	// 	gulp.watch('src/**/*.js', function () {
-	// 		runSequence('build-src', 'restart-daemon');
-	// 	});
-	// 	gulp.watch('plugins/*/src/**/*.js', function () {
-	// 		runSequence('build-plugins', 'restart-daemon');
-	// 	});
-	// });
+	runSequence('build', 'restart-daemon', function () {
+		gulp.watch('src/**/*.js', function () {
+			runSequence('build-src', 'restart-daemon');
+		});
+		gulp.watch('core/src/**/*.js', function () {
+			runSequence('build-core-src', 'restart-daemon');
+		});
+		gulp.watch('core/plugins/*/src/**/*.js', function () {
+			runSequence('build-core-plugins', 'restart-daemon');
+		});
+	});
 });
 
 gulp.task('default', ['build']);
