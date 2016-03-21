@@ -659,8 +659,14 @@ export default class Server {
 			});
 
 			webserver.router.get('/appcd/status/:filter?', (ctx, next) => {
+				const filter = ctx.params[0] && ctx.params[0].replace(/^\//, '').split('/') || undefined;
+				const node = this.status.get(filter);
+				if (!node) {
+					return next();
+				}
+
 				ctx.response.type = 'json';
-				ctx.body = this.getStatus(ctx.params.filter);
+				ctx.body = node.toJSON(true);
 			});
 
 			Object.values(this.plugins).forEach(plugin => {
