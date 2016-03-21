@@ -1,12 +1,11 @@
-import Client from './client';
 import { mergeDeep } from './util';
 import program from 'commander';
-import Server from './server';
+import { loadCore, detectCores, switchCore } from './index';
 
 const pkgJson = require('../package.json');
 
 program
-	.version(pkgJson.version);
+	.version(pkgJson.version, '-v, --version');
 
 program
 	.command('start')
@@ -14,31 +13,30 @@ program
 	.option('--config-file <file>', 'path to a appcd JS config file')
 	.option('--debug', 'don\'t run as a background daemon')
 	.action(cmd => {
-		try {
-			new Server(mixinConfig({
-				appcd: {
-					allowExit: false,
-					configFile: cmd.configFile,
-					daemonize: !cmd.debug
-				}
-			}, cmd.config))
-				.start()
-				.catch(err => {
-					console.error(err.toString());
-					process.exit(1);
-				});
-		} catch (e) {
-			console.error(e.toString());
-			process.exit(1);
-		}
+		loadCore({ version: program.use })
+			.then(appcd => {
+				return new appcd.Server(mixinConfig({
+					appcd: {
+						allowExit: false,
+						configFile: cmd.configFile,
+						daemonize: !cmd.debug
+					}
+				}, cmd.config));
+			})
+			.then(server => server.start())
+			.catch(handleError);
 	});
 
 program
 	.command('stop')
 	.option('--force', 'force the server to stop')
 	.action(cmd => {
-		new Server()
-			.stop(cmd.force);
+		loadCore({ version: program.use })
+			.then(appcd => {
+				new appcd.Server()
+					.stop(cmd.force);
+			})
+			.catch(handleError);
 	});
 
 program
@@ -47,29 +45,20 @@ program
 	.option('--config-file <file>', 'path to a appcd JS config file')
 	.option('--debug', 'don\'t run as a background daemon')
 	.action(cmd => {
-		new Server(mixinConfig({
-			appcd: {
-				allowExit: false,
-				configFile: cmd.configFile,
-				daemonize: !cmd.debug
-			}
-		}, cmd.config))
-			.stop()
+		loadCore({ version: program.use })
+			.then(appcd => {
+				return new appcd.Server(mixinConfig({
+					appcd: {
+						allowExit: false,
+						configFile: cmd.configFile,
+						daemonize: !cmd.debug
+					}
+				}, cmd.config));
+			})
+			.then(server => server.stop())
 			.then(server => server.start())
-			.catch(err => {
-				console.error(err.stack || toString());
-				process.exit(1);
-			});
+			.catch(handleError);
 	});
-
-function handleError(err) {
-	if (err.code === 'ECONNREFUSED') {
-		console.error('Server not running');
-	} else {
-		console.error(err.message || err.toString());
-	}
-	process.exit(1);
-}
 
 program
 	.command('exec <path> [<json>]')
@@ -85,53 +74,72 @@ program
 			}
 		}
 
-		const client = new Client({ startServer: false });
-		client
-			.request(path, payload)
-			.on('response', data => {
-				console.log(data);
+		loadCore({ version: program.use })
+			.then(appcd => {
+				const client = new appcd.Client({ startServer: false });
+				client
+					.request(path, payload)
+					.on('response', data => {
+						console.log(data);
+					})
+					.on('close', () => process.exit(0))
+					.on('error', err => {
+						client.disconnect();
+						handleError(err);
+					});
+
+				function disconnect() {
+					client.disconnect();
+					process.exit(0);
+				}
+
+				process.on('SIGINT', disconnect);
+				process.on('SIGTERM', disconnect);
 			})
-			.on('close', () => process.exit(0))
-			.on('error', err => {
-				client.disconnect();
-				handleError(err);
-			});
-
-		function disconnect() {
-			client.disconnect();
-			process.exit(0);
-		}
-
-		process.on('SIGINT', disconnect);
-		process.on('SIGTERM', disconnect);
+			.catch(handleError);
 	});
 
 program
 	.command('logcat')
 	.option('--no-colors', 'disables colors')
 	.action(cmd => {
-		const client = new Client({ startServer: false });
-		client
-			.request('/appcd/logcat', { colors: cmd.colors })
-			.on('response', data => {
-				process.stdout.write(data);
+		loadCore({ version: program.use })
+			.then(appcd => {
+				const client = new appcd.Client({ startServer: false });
+				client
+					.request('/appcd/logcat', { colors: cmd.colors })
+					.on('response', data => {
+						process.stdout.write(data);
+					})
+					.on('end', client.disconnect)
+					.on('error', handleError);
 			})
-			.on('end', client.disconnect)
-			.on('error', handleError);
+			.catch(handleError);
 	});
 
 program
 	.command('status')
 	.option('-o, --output <report|json>', 'the format to render the output', 'report')
 	.action(cmd => {
-		const client = new Client({ startServer: false });
-		client
-			.request('/appcd/status')
-			.on('response', data => {
-				console.log(data);
-				client.disconnect();
+		loadCore({ version: program.use })
+			.then(appcd => {
+				const client = new appcd.Client({ startServer: false });
+				client
+					.request('/appcd/status')
+					.on('response', data => {
+						console.log(data);
+						client.disconnect();
+					})
+					.on('error', handleError);
 			})
-			.on('error', handleError);
+			.catch(handleError);
+	});
+
+program
+	.command('switch <version>')
+	.action(version => {
+		switchCore({ version })
+			.catch(handleError);
 	});
 
 program
@@ -141,10 +149,21 @@ program
 		program.help();
 	});
 
-program.parse(process.argv);
+program
+	.option('--use <version>')
+	.parse(process.argv);
 
 if (program.args.length === 0) {
 	program.help();
+}
+
+function handleError(err) {
+	if (err.code === 'ECONNREFUSED') {
+		console.error('Server not running');
+	} else {
+		console.error(err.message || err.toString());
+	}
+	process.exit(1);
 }
 
 function mixinConfig(opts, config) {

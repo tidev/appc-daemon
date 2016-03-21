@@ -1,17 +1,17 @@
 'use strict';
 
-var $ = require('gulp-load-plugins')();
-var del = require('del');
-var fs = require('fs');
-var gulp = require('gulp');
-var manifest = require('./package.json');
-var path = require('path');
-var runSequence = require('run-sequence');
-var spawn = require('child_process').spawn;
+const $ = require('gulp-load-plugins')();
+const del = require('del');
+const fs = require('fs');
+const gulp = require('gulp');
+const manifest = require('./package.json');
+const path = require('path');
+const runSequence = require('run-sequence');
+const spawn = require('child_process').spawn;
 
-var coverageDir = path.join(__dirname, 'coverage');
-var distDir = path.join(__dirname, 'dist');
-var docsDir = path.join(__dirname, 'docs');
+const coverageDir = path.join(__dirname, 'coverage');
+const distDir = path.join(__dirname, 'dist');
+const docsDir = path.join(__dirname, 'docs');
 
 /*
  * Clean tasks
@@ -33,7 +33,7 @@ gulp.task('clean-docs', function (done) {
 /*
  * build tasks
  */
-gulp.task('build', ['build-src', 'build-core']);
+gulp.task('build', ['build-src', 'build-plugins']);
 
 gulp.task('build-src', ['clean-dist', 'lint-src'], function () {
 	return gulp
@@ -46,9 +46,9 @@ gulp.task('build-src', ['clean-dist', 'lint-src'], function () {
 		.pipe(gulp.dest(distDir));
 });
 
-gulp.task('build-core', function () {
+gulp.task('build-plugins', function () {
 	return gulp
-		.src('core/gulpfile.js')
+		.src('plugins/*/gulpfile.js')
 		.pipe($.chug({
 			tasks: ['build']
 		}));
@@ -106,7 +106,7 @@ gulp.task('test', ['lint-test', 'build'], function () {
 		.pipe($.debug({ title: 'test' }))
 		.pipe($.babel())
 		.pipe($.injectModules())
-		.pipe($.filter(suite ? ['test/setup.js'].concat(suite.split(',').map(function (s) { return 'test/**/test-' + s + '.js'; })) : 'test/**/*.js'))
+		.pipe($.filter(suite ? ['test/setup.js'].concat(suite.split(',').map(s => 'test/**/test-' + s + '.js')) : 'test/**/*.js'))
 		.pipe($.mocha({ grep: grep }));
 });
 

@@ -202,6 +202,7 @@ export default class Server {
 	 * @returns {Promise}
 	 * @access public
 	 */
+	@autobind
 	start() {
 		if (!this.daemonize) {
 			// enable long stack traces in debug mode

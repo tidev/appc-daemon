@@ -1,65 +1,10 @@
-# appc-daemon
+# appc-daemon-core
 
-Background server for running services.
+The core logic of the Appcelerator Daemon responsible for start and stopping the
+daemon, loading plugins, logging, and dispatching requests.
 
-## Installation
-
-	npm install
-	cd core && npm install
-	sudo npm link
-
-## Quick Start
-
-Start the server:
-
-	appcd start
-
-Start the server in debug mode:
-
-	appcd start --debug
-
-Stop the server:
-
-	appcd stop
-
-For fast development iteration:
-
-	gulp watch
-
-	# or
-
-	npm run watch
-
-Query the status of the server:
-
-	appcd status
-
-View server log output:
-
-	appcd logcat
-
-## Configuration
-
-appcd is designed to use sensible defaults. However, to override these defaults
-appcd supports loading a a CommonJS formatted JavaScript file:
-
-	~/.appcelerator/appcd/config.js
-
-Example:
-
-```javascript
-module.exports = {
-	logger: {
-		colors: true,
-		silent: false
-	},
-	paths: {
-		plugins: [
-			'/path/to/a/plugin'
-		]
-	}
-};
-```
+The appc-daemon-core is intended to be used directly by the [appc-daemon](
+https://github.com/appcelerator/appcd-daemon).
 
 ## API Documentation
 
@@ -77,23 +22,17 @@ server. You can also use the client library to issue requests to the appcd
 server.
 
 ```javascript
-import { loadCore } from 'appcd';
+import { Client } from 'appcd';
 
-loadCore()
-	.then(appcd => {
-		const client = new appcd.Client();
-		client
-			.request('/appcd/status')
-			.on('response', status => {
-				console.log(status);
-				client.disconnect();
-			})
-			.on('error', err => {
-				console.error('ERROR!');
-				console.error(err);
-			});
+const client = new Client();
+client
+	.request('/appcd/status')
+	.on('response', status => {
+		console.log(status);
+		client.disconnect();
 	})
-	.catch(err => {
+	.on('error', err => {
+		console.error('ERROR!');
 		console.error(err);
 	});
 ```
