@@ -146,14 +146,14 @@ gulp.task('restart-daemon', function () {
 });
 
 gulp.task('watch', function () {
-	runSequence('build', 'restart-daemon', function () {
-		gulp.watch('src/**/*.js', function () {
-			runSequence('build-src', 'restart-daemon');
-		});
-		gulp.watch('plugins/*/src/**/*.js', function () {
-			runSequence('build-plugins', 'restart-daemon');
-		});
-	});
+	// runSequence('build', 'restart-daemon', function () {
+	// 	gulp.watch('src/**/*.js', function () {
+	// 		runSequence('build-src', 'restart-daemon');
+	// 	});
+	// 	gulp.watch('plugins/*/src/**/*.js', function () {
+	// 		runSequence('build-plugins', 'restart-daemon');
+	// 	});
+	// });
 });
 
 gulp.task('default', ['build']);

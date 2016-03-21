@@ -29,7 +29,7 @@
     "build": "gulp build",
     "coverage": "gulp coverage",
     "docs": "gulp docs",
-    "prepublish": "gulp build && npm shrinkwrap",
+    "prepublish": "cd core && npm install && cd .. && gulp build && npm shrinkwrap",
     "test": "gulp test",
     "watch": "gulp watch"
   },
