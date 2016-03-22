@@ -64,7 +64,7 @@ global.appcd = {
  * The core server logic that orchestrates the plugin lifecycle and request
  * dispatching.
  */
-export default class Server {
+export default class Server extends HookEmitter {
 	/**
 	 * The web server instance.
 	 * @type {WebServer}
@@ -93,6 +93,8 @@ export default class Server {
 	 * appcd pid file.
 	 */
 	constructor(opts = {}) {
+		super();
+
 		const pkgJson = require('../package.json');
 
 		const appcHome = opts.appc && opts.appc.home || '~/.appcelerator';
@@ -196,6 +198,22 @@ export default class Server {
 	}
 
 	/**
+	 * Emits an event to all listeners as well as to the global appcd event
+	 * emitter.
+	 *
+	 * @param {...*} args - Standard emit args where the first argument
+	 * @returns {Promise}
+	 * @access private
+	 */
+	emit(...args) {
+		return super.emit.apply(this, args)
+			.then(() => {
+				args[0] = 'appcd:' + args[0];
+				return appcdEmitter.emit.apply(appcdEmitter, args);
+			});
+	}
+
+	/**
 	 * Starts the server. If the daemon flag is set, subprocess appcd in daemon
 	 * mode and suppress output.
 	 *
@@ -276,10 +294,11 @@ export default class Server {
 					.then(this.initStatusMonitor)
 					.then(this.initHandlers)
 					.then(this.initWebServer)
-					.then(() => appcdEmitter.emit('appcd:start'))
+					.then(() => this.emit('start'))
 					.then(() => appcdEmitter.emit('analytics:event', {
 						type: 'appcd.server.start'
-					}));
+					}))
+					.then(() => this);
 			});
 	}
 
@@ -423,16 +442,17 @@ export default class Server {
 	 * @access private
 	 */
 	daemonize() {
-		return appcdEmitter.hook('appcd:daemonize', (args, opts) => {
-			return this.spawnNode(args, opts)
-				.then(child => {
-					fs.writeFileSync(expandPath(this.config('appcd.pidFile')), child.pid);
-					child.unref();
-				});
-		})([ this.config('appcd.startScript', path.resolve(__dirname, 'start-server.js')), '--daemonize', '--config-file', this.config('appcd.configFile') ], {
-			detached: true,
-			stdio: 'ignore'
-		});
+		return appcdEmitter
+			.hook('appcd:daemonize', (args, opts) => {
+				return this.spawnNode(args, opts)
+					.then(child => {
+						fs.writeFileSync(expandPath(this.config('appcd.pidFile')), child.pid);
+						child.unref();
+					});
+			})([ this.config('appcd.startScript', path.resolve(__dirname, 'start-server.js')), '--daemonize', '--config-file', this.config('appcd.configFile') ], {
+				detached: true,
+				stdio: 'ignore'
+			});
 	}
 
 	/**
@@ -538,7 +558,11 @@ export default class Server {
 				};
 
 				refresh();
-				setInterval(refresh, 1000);
+				let timer = setInterval(refresh, 1000);
+
+				this.on('shutdown', () => {
+					clearInterval(timer);
+				});
 
 				return this.status;
 			})();
@@ -552,26 +576,27 @@ export default class Server {
 	 */
 	@autobind
 	initHandlers() {
-		return appcdEmitter.hook('appcd:init.handlers', () => {
-			appcdDispatcher.register(/\/appcd\/status(\/.*)?/, ctx => {
-				const filter = ctx.params[0] && ctx.params[0].replace(/^\//, '').split('/') || undefined;
-				const node = this.status.get(filter);
-				if (!node) {
-					throw new Error('Invalid request: ' + ctx.path);
-				}
-				ctx.conn.write(node.toJSON(true));
-				const off = node.watch(evt => ctx.conn.write(evt.source.toJSON(true)));
-				ctx.conn.on('close', off);
-				ctx.conn.on('error', off);
-			});
-
-			appcdDispatcher.register('/appcd/logcat', ctx => {
-				Logger.pipe(ctx.conn, {
-					colors: !!ctx.data.colors,
-					flush: true
+		return appcdEmitter
+			.hook('appcd:init.handlers', () => {
+				appcdDispatcher.register(/\/appcd\/status(\/.*)?/, ctx => {
+					const filter = ctx.params[0] && ctx.params[0].replace(/^\//, '').split('/') || undefined;
+					const node = this.status.get(filter);
+					if (!node) {
+						throw new Error('Invalid request: ' + ctx.path);
+					}
+					ctx.conn.write(node.toJSON(true));
+					const off = node.watch(evt => ctx.conn.write(evt.source.toJSON(true)));
+					ctx.conn.on('close', off);
+					ctx.conn.on('error', off);
 				});
-			});
-		})();
+
+				appcdDispatcher.register('/appcd/logcat', ctx => {
+					Logger.pipe(ctx.conn, {
+						colors: !!ctx.data.colors,
+						flush: true
+					});
+				});
+			})();
 	}
 
 	/**
@@ -582,103 +607,104 @@ export default class Server {
 	 */
 	@autobind
 	initWebServer() {
-		appcdEmitter.hook('appcd:init.webserver', opts => {
-			const webserver = this.webserver = new WebServer(opts);
+		return appcdEmitter
+			.hook('appcd:init.webserver', opts => {
+				const webserver = this.webserver = new WebServer(opts);
 
-			webserver.on('websocket', socket => {
-				const address = appcd.logger.highlight(socket._socket.remoteAddress);
-				appcd.logger.info('WebSocket %s: connect', address);
+				webserver.on('websocket', socket => {
+					const address = appcd.logger.highlight(socket._socket.remoteAddress);
+					appcd.logger.info('WebSocket %s: connect', address);
 
-				socket.on('message', message => {
-					let req;
+					socket.on('message', message => {
+						let req;
 
-					try {
-						req = JSON.parse(message);
-						if (!req || typeof req !== 'object') { throw new Error('invalid request object'); }
-						if (!req.version) { throw new Error('invalid request object, missing version'); }
-						if (!req.path)    { throw new Error('invalid request object, missing path'); }
-						if (!req.id)      { throw new Error('invalid request object, missing id'); }
+						try {
+							req = JSON.parse(message);
+							if (!req || typeof req !== 'object') { throw new Error('invalid request object'); }
+							if (!req.version) { throw new Error('invalid request object, missing version'); }
+							if (!req.path)    { throw new Error('invalid request object, missing path'); }
+							if (!req.id)      { throw new Error('invalid request object, missing id'); }
 
-						switch (req.version) {
-							case '1.0':
-								const conn = new Connection({
-									socket,
-									id: req.id
-								});
-
-								const startTime = new Date;
-
-								appcdDispatcher.call(req.path, { conn, data: req.data || {} })
-									.then(result => {
-										const p = result && result instanceof Promise ? result : Promise.resolve(result);
-										return p.then(result => {
-											if (result) {
-												conn.send(result).then(conn.close);
-											}
-											appcd.logger.info(
-												'WebSocket %s: %s %s %s',
-												address,
-												appcd.logger.lowlight(req.path),
-												appcd.logger.ok('200'),
-												appcd.logger.highlight((new Date - startTime) + 'ms')
-											);
-										});
-									})
-									.catch(err => {
-										const status = err.status && Dispatcher.statusCodes[String(err.status)] ? err.status : 500;
-										const message = (err.status && Dispatcher.statusCodes[String(err.status)] || Dispatcher.statusCodes['500']) + ': ' + (err.message || err.toString());
-										const delta = new Date - startTime;
-										appcd.logger.error(
-											'WebSocket %s: %s',
-											address,
-											appcd.logger.alert(req.path + ' ' + status + ' ' + delta + 'ms - ' + message)
-										);
-										socket.send(JSON.stringify({
-											id: req.id,
-											status: err.status || 500,
-											error: message
-										}));
+							switch (req.version) {
+								case '1.0':
+									const conn = new Connection({
+										socket,
+										id: req.id
 									});
 
-								break;
+									const startTime = new Date;
 
-							default:
-								throw new Error(`Unsupported version "${req.version}"`);
+									appcdDispatcher.call(req.path, { conn, data: req.data || {} })
+										.then(result => {
+											const p = result && result instanceof Promise ? result : Promise.resolve(result);
+											return p.then(result => {
+												if (result) {
+													conn.send(result).then(conn.close);
+												}
+												appcd.logger.info(
+													'WebSocket %s: %s %s %s',
+													address,
+													appcd.logger.lowlight(req.path),
+													appcd.logger.ok('200'),
+													appcd.logger.highlight((new Date - startTime) + 'ms')
+												);
+											});
+										})
+										.catch(err => {
+											const status = err.status && Dispatcher.statusCodes[String(err.status)] ? err.status : 500;
+											const message = (err.status && Dispatcher.statusCodes[String(err.status)] || Dispatcher.statusCodes['500']) + ': ' + (err.message || err.toString());
+											const delta = new Date - startTime;
+											appcd.logger.error(
+												'WebSocket %s: %s',
+												address,
+												appcd.logger.alert(req.path + ' ' + status + ' ' + delta + 'ms - ' + message)
+											);
+											socket.send(JSON.stringify({
+												id: req.id,
+												status: err.status || 500,
+												error: message
+											}));
+										});
+
+									break;
+
+								default:
+									throw new Error(`Unsupported version "${req.version}"`);
+							}
+						} catch (err) {
+							appcd.logger.error('Bad request:', err);
+							socket.send(JSON.stringify({
+								status: 400,
+								error: 'Bad request: ' + err.toString()
+							}));
 						}
-					} catch (err) {
-						appcd.logger.error('Bad request:', err);
-						socket.send(JSON.stringify({
-							status: 400,
-							error: 'Bad request: ' + err.toString()
-						}));
+					});
+
+					socket.on('close', () => {
+						appcd.logger.info('WebSocket %s: disconnect', address);
+					});
+				});
+
+				webserver.router.get('/appcd/status/:filter?', (ctx, next) => {
+					const filter = ctx.params[0] && ctx.params[0].replace(/^\//, '').split('/') || undefined;
+					const node = this.status.get(filter);
+					if (!node) {
+						return next();
 					}
+
+					ctx.response.type = 'json';
+					ctx.body = node.toJSON(true);
 				});
 
-				socket.on('close', () => {
-					appcd.logger.info('WebSocket %s: disconnect', address);
+				Object.values(this.plugins).forEach(plugin => {
+					webserver.router.use('/' + plugin.namespace, plugin.router.routes());
 				});
+
+				return this.webserver.listen();
+			})({
+				hostname: this.config('hostname', '127.0.0.1'),
+				port:     this.config('port', 1732)
 			});
-
-			webserver.router.get('/appcd/status/:filter?', (ctx, next) => {
-				const filter = ctx.params[0] && ctx.params[0].replace(/^\//, '').split('/') || undefined;
-				const node = this.status.get(filter);
-				if (!node) {
-					return next();
-				}
-
-				ctx.response.type = 'json';
-				ctx.body = node.toJSON(true);
-			});
-
-			Object.values(this.plugins).forEach(plugin => {
-				webserver.router.use('/' + plugin.namespace, plugin.router.routes());
-			});
-
-			return this.webserver.listen();
-		})({
-			hostname: this.config('hostname', '127.0.0.1'),
-			port:     this.config('port', 1732)
-		});
 	}
 
 	/**
@@ -691,32 +717,35 @@ export default class Server {
 	 */
 	@autobind
 	shutdown() {
-		return new Promise((resolve, reject) => {
-			appcd.logger.info('Shutting down server gracefully');
-			this.webserver
-				.close()
-				.then(() => {
-					return Promise.all(Object.values(this.plugins).map(plugin => { return plugin.shutdown(); }));
-				})
-				.then(() => {
-					const pidFile = expandPath(this.config('appcd.pidFile'));
-					appcd.logger.info('Removing ' + appcd.logger.highlight(pidFile));
-					fs.unlinkSync(pidFile);
-					resolve();
-				})
-				.catch(reject);
-		});
+		appcd.logger.info('Shutting down server gracefully');
+
+		return Promise.resolve()
+			.then(() => this.emit('shutdown'))
+			.then(() => new Promise((resolve, reject) => {
+				this.webserver
+					.close()
+					.then(() => {
+						return Promise.all(Object.values(this.plugins).map(plugin => { return plugin.shutdown(); }));
+					})
+					.then(() => {
+						const pidFile = expandPath(this.config('appcd.pidFile'));
+						appcd.logger.info('Removing ' + appcd.logger.highlight(pidFile));
+						fs.unlinkSync(pidFile);
+						resolve();
+					})
+					.catch(reject);
+			}));
 	}
 
 	/**
 	 * Full stops the server. If it doesn't exit in 10 seconds, we shoot it in
 	 * the head.
 	 *
-	 * @param {Boolean} kill - Force kill the server.
+	 * @param {Boolean} forceKill - Force kill the server.
 	 * @returns {Promise}
 	 * @access public
 	 */
-	stop(kill) {
+	stop(forceKill) {
 		return new Promise((resolve, reject) => {
 			const pid = this.isRunning();
 			const self = this;
@@ -725,11 +754,11 @@ export default class Server {
 				return resolve(this);
 			}
 
-			process.kill(pid, kill ? 'SIGKILL' : 'SIGTERM');
+			process.kill(pid, forceKill ? 'SIGKILL' : 'SIGTERM');
 
 			const timeout = 10000;
 			const interval = 500;
-			let countdown = kill ? -1 : timeout / interval;
+			let countdown = forceKill ? -1 : timeout / interval;
 
 			function check() {
 				try {

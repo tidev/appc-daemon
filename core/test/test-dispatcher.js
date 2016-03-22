@@ -1,4 +1,5 @@
 import Dispatcher from '../dist/dispatcher';
+import Server from '../dist/server';
 
 describe('dispatcher', () => {
 

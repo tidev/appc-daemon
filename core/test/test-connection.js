@@ -5,6 +5,9 @@ class MockSocket {
 		this.send = spy();
 		this.close = spy();
 	}
+
+	on() {
+	}
 }
 
 describe('connection', () => {
