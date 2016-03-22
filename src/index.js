@@ -134,6 +134,6 @@ export function switchCore(opts = {}) {
 			const core = findCore(opts);
 			const appcdHome = expandPath(opts.appcdHome || '~/.appcelerator/appcd');
 			mkdirp.sync(appcdHome);
-			fs.writeFileSync(path.join(appcdHome, '.core_version'), core.version);
+			fs.writeFileSync(path.join(appcdHome, '.core_version'), core.pkgJson.version);
 		});
 }

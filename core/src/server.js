@@ -159,15 +159,15 @@ export default class Server {
 	 * @access public
 	 */
 	config(name, defaultValue) {
-		if (name) {
-			return name.split('.').reduce((cfg, prop) => {
-				if (typeof cfg === 'object' && cfg !== null) {
-					return cfg.hasOwnProperty(prop) ? cfg[prop] : defaultValue;
-				}
-			}, this._cfg);
+		if (!name) {
+			return this._cfg;
 		}
 
-		return this._cfg;
+		return name.split('.').reduce((cfg, prop) => {
+			if (typeof cfg === 'object' && cfg !== null) {
+				return cfg.hasOwnProperty(prop) ? cfg[prop] : defaultValue;
+			}
+		}, this._cfg);
 	}
 
 	/**
@@ -429,7 +429,7 @@ export default class Server {
 					fs.writeFileSync(expandPath(this.config('appcd.pidFile')), child.pid);
 					child.unref();
 				});
-		})([ path.resolve(__dirname, 'cli.js'), 'start', '--config-file', this.config('appcd.configFile') ], {
+		})([ this.config('appcd.startScript', path.resolve(__dirname, 'start-server.js')), '--daemonize', '--config-file', this.config('appcd.configFile') ], {
 			detached: true,
 			stdio: 'ignore'
 		});
