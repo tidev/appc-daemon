@@ -1,4 +1,4 @@
-import Server from './Server';
+import { Server } from './index';
 
 /**
  * This file is the entry point for when appcd daemonizes. This file can be

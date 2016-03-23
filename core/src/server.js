@@ -20,7 +20,6 @@ import Service from './service';
 import { fork, spawn } from 'child_process';
 import stream from 'stream';
 import WebServer from './webserver';
-import 'source-map-support/register';
 
 const appcdDispatcher = new Dispatcher;
 const appcdEmitter = new HookEmitter;
@@ -150,6 +149,8 @@ export default class Server extends HookEmitter {
 		}
 
 		this._cfg = Object.freeze(cfg);
+
+		this.link(appcdEmitter, 'appcd:');
 	}
 
 	/**
@@ -195,22 +196,6 @@ export default class Server extends HookEmitter {
 				}
 			}
 		}
-	}
-
-	/**
-	 * Emits an event to all listeners as well as to the global appcd event
-	 * emitter.
-	 *
-	 * @param {...*} args - Standard emit args where the first argument
-	 * @returns {Promise}
-	 * @access private
-	 */
-	emit(...args) {
-		return super.emit.apply(this, args)
-			.then(() => {
-				args[0] = 'appcd:' + args[0];
-				return appcdEmitter.emit.apply(appcdEmitter, args);
-			});
 	}
 
 	/**
@@ -442,8 +427,8 @@ export default class Server extends HookEmitter {
 	 * @access private
 	 */
 	daemonize() {
-		return appcdEmitter
-			.hook('appcd:daemonize', (args, opts) => {
+		return this
+			.hook('daemonize', (args, opts) => {
 				return this.spawnNode(args, opts)
 					.then(child => {
 						fs.writeFileSync(expandPath(this.config('appcd.pidFile')), child.pid);
@@ -490,8 +475,8 @@ export default class Server extends HookEmitter {
 	 */
 	@autobind
 	initAnalytics() {
-		return appcdEmitter
-			.hook('appcd:init.analytics', opts => {
+		return this
+			.hook('init.analytics', opts => {
 				const analytics = new Analytics(opts);
 				appcd.on('analytics:event', analytics.newEvent);
 				return analytics;
@@ -510,8 +495,8 @@ export default class Server extends HookEmitter {
 	 */
 	@autobind
 	initStatusMonitor() {
-		return appcdEmitter
-			.hook('appcd:init.status.monitor', () => {
+		return this
+			.hook('init.status.monitor', () => {
 				this.status = gawk({
 					appcd: {
 						version:  this.config('appcd.version'),
@@ -576,8 +561,8 @@ export default class Server extends HookEmitter {
 	 */
 	@autobind
 	initHandlers() {
-		return appcdEmitter
-			.hook('appcd:init.handlers', () => {
+		return this
+			.hook('init.handlers', () => {
 				appcdDispatcher.register(/\/appcd\/status(\/.*)?/, ctx => {
 					const filter = ctx.params[0] && ctx.params[0].replace(/^\//, '').split('/') || undefined;
 					const node = this.status.get(filter);
@@ -607,8 +592,8 @@ export default class Server extends HookEmitter {
 	 */
 	@autobind
 	initWebServer() {
-		return appcdEmitter
-			.hook('appcd:init.webserver', opts => {
+		return this
+			.hook('init.webserver', opts => {
 				const webserver = this.webserver = new WebServer(opts);
 
 				webserver.on('websocket', socket => {

@@ -17,8 +17,8 @@ export function existsSync(file) {
 
 /**
  * Deeply merges two JavaScript objects.
- * @param {Object} src - The object to copy.
  * @param {Object} dest - The object to copy the source into.
+ * @param {Object} src - The object to copy.
  * @returns {Object} Returns the dest object.
  */
 export function mergeDeep(dest, src) {
