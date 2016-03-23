@@ -4,6 +4,7 @@ import fs from 'fs';
 import { HookEmitter } from 'hook-emitter';
 import mkdirp from 'mkdirp';
 import path from 'path';
+import request from 'request';
 
 export default class Analytics extends HookEmitter {
 	/**
@@ -106,6 +107,7 @@ export default class Analytics extends HookEmitter {
 				this.hook('send', events => new Promise((resolve, reject) => {
 					console.log(events);
 
+					// request()
 					// network: {
 					// 	proxyUrl: null,
 					// 	rejectUnauthorized: true
