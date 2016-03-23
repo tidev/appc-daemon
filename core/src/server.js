@@ -102,7 +102,7 @@ export default class Server extends HookEmitter {
 		const cfg = {
 			analytics: {
 				enabled: true,
-				eventsDir: path.join(appcHome, 'appcd/events'),
+				eventsDir: path.join(appcHome, 'appcd/analytics'),
 				url: 'https://api.appcelerator.net/p/v2/partner-track'
 			},
 			appc: {
@@ -125,12 +125,23 @@ export default class Server extends HookEmitter {
 				silent: false
 			},
 			network: {
-				proxyUrl: null
+				proxyUrl: null,
+				rejectUnauthorized: true
 			},
 			paths: {
 				plugins: []
 			}
 		};
+
+		// load the config file
+		const configFile = expandPath(cfg.appcd.configFile);
+		if (!/\.js$/.test(configFile)) {
+			throw new Error('Config file must be a JavaScript file.');
+		} else if (existsSync(configFile)) {
+			mergeDeep(cfg, require(configFile));
+		} else if (opts.appcd && opts.appcd.configFile) {
+			throw new Error(`Specified config file not found: ${opts.appcd.configFile}.`);
+		}
 
 		// override config with constructor options
 		mergeDeep(cfg, opts);
@@ -138,19 +149,9 @@ export default class Server extends HookEmitter {
 		// force set the pkgJson so that it can't be overwritten
 		cfg.appcd.pkgJson = pkgJson;
 
-		// load the config file
-		const configFile = expandPath(cfg.appcd.configFile);
-		if (!/\.js$/.test(configFile)) {
-			throw new Error('Config file must be a JavaScript file.');
-		} else if (existsSync(configFile)) {
-			Object.assign(cfg, require(configFile));
-		} else if (opts.appcd && opts.appcd.configFile) {
-			throw new Error(`Specified config file not found: ${opts.appcd.configFile}.`);
-		}
-
 		this._cfg = Object.freeze(cfg);
 
-		this.link(appcdEmitter, 'appcd:');
+		this.link(appcdEmitter);
 	}
 
 	/**
@@ -264,7 +265,7 @@ export default class Server extends HookEmitter {
 				//
 
 				appcd.logger.info(`Appcelerator Daemon v${this.config('appcd.version')}`);
-				appcd.logger.info(`Environment: ${this.config('environment.name')}`);
+				appcd.logger.info(`Environment: ${appcd.logger.highlight(this.config('environment.name'))}`);
 				appcd.logger.info(`Node.js ${process.version} (module api ${process.versions.modules})`);
 
 				// replace the process title to avoid `killall node` taking down the server
@@ -279,8 +280,8 @@ export default class Server extends HookEmitter {
 					.then(this.initStatusMonitor)
 					.then(this.initHandlers)
 					.then(this.initWebServer)
-					.then(() => this.emit('start'))
-					.then(() => appcdEmitter.emit('analytics:event', {
+					.then(() => this.emit('appcd:server.start'))
+					.then(() => this.emit('analytics:event', {
 						type: 'appcd.server.start'
 					}))
 					.then(() => this);
@@ -476,15 +477,11 @@ export default class Server extends HookEmitter {
 	@autobind
 	initAnalytics() {
 		return this
-			.hook('init.analytics', opts => {
-				const analytics = new Analytics(opts);
-				appcd.on('analytics:event', analytics.newEvent);
+			.hook('init.analytics', server => {
+				const analytics = new Analytics(server);
+				this.on('analytics:event', data => analytics.emit('event', data));
 				return analytics;
-			})({
-				enabled:   this.config('analytics.enabled'),
-				eventsDir: this.config('analytics.eventsDir'),
-				url:       this.config('analytics.url')
-			})
+			})(this)
 			.then(analytics => {
 				this.analytics = analytics;
 			});

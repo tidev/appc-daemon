@@ -22,10 +22,14 @@ export function existsSync(file) {
  * @returns {Object} Returns the dest object.
  */
 export function mergeDeep(dest, src) {
+	if (typeof src !== 'object' || src === null || Array.isArray(src)) {
+		return dest;
+	}
+
 	Object.keys(src).forEach(key => {
 		const value = src[key];
 		if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-			if (typeof dest[key] !== 'object' && dest[key] === null || Array.isArray(dest[key])) {
+			if (typeof dest[key] !== 'object' || dest[key] === null || Array.isArray(dest[key])) {
 				dest[key] = {};
 			}
 			mergeDeep(dest[key], value);

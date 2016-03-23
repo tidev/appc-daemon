@@ -82,10 +82,16 @@ export default class Plugin {
 			router: this.router,
 			register: this.dispatcher.register,
 			emit: (evt, ...args) => {
-				return appcdEmitter.emit.apply(appcdEmitter, [this.namespace + ':' + evt, ...args]);
+				if (evt.indexOf(':') === -1) {
+					evt = this.namespace + ':' + evt;
+				}
+				return server.emit.apply(server, [evt, ...args]);
 			},
 			hook: (evt, ...args) => {
-				return appcdEmitter.hook.apply(appcdEmitter, [this.namespace + ':' + evt, ...args]);
+				if (evt.indexOf(':') === -1) {
+					evt = this.namespace + ':' + evt;
+				}
+				return server.hook.apply(server, [evt, ...args]);
 			}
 		});
 
