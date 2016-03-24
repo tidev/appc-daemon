@@ -5,7 +5,7 @@ import Connection from './connection';
 import Dispatcher, { DispatcherError } from './dispatcher';
 import { existsSync } from './util';
 import fs from 'fs';
-import { gawk } from 'gawk';
+import { gawk, GawkUndefined } from 'gawk';
 import { HookEmitter } from 'hook-emitter';
 import http from 'http';
 import Logger from './logger';
@@ -30,19 +30,26 @@ const appcdEmitter = new HookEmitter;
 global.appcd = {
 	/**
 	 * The global request dipatcher call() function.
-	 * @type {Function}
+	 * @param {String} path - The dispatch path to request.
+	 * @param {Object} [data={}] - An optional data payload to send.
+	 * @returns {Promise}
 	 */
 	call: appcdDispatcher.call.bind(appcdDispatcher),
 
 	/**
-	 * The global event emitter on() function.
-	 * @type {Function}
+	 * The global event emitter on() function. Plugins and other modules can use
+	 * this to listen for events and hooks from all `Server` instances.
+	 * @param {String} event - One or more space-separated event names to add the listener to.
+	 * @param {Function} listener - A function to call when the event is emitted.
+	 * @returns {HookEmitter}
 	 */
 	on: appcdEmitter.on.bind(appcdEmitter),
 
 	/**
-	 * The global logger instance.
-	 * @type {Function}
+	 * The global logger instance. All appc daemon code should use this to log
+	 * messages. Daemon plugins should use the namespaced logger that is apart
+	 * of the `Service` base class.
+	 * @type {Object}
 	 */
 	logger: new Logger('appcd'),
 
@@ -53,7 +60,10 @@ global.appcd = {
 	Service,
 
 	/**
-	 * Exits the process.
+	 * Exits the process. If any server instance has `allowExit` set to `false`,
+	 * then `process.exit()` will become a no-op and you will have to call
+	 * `appcd.exit()` to exit. This is a safety feature so that a plugin doesn't
+	 * try to take down the daemon.
 	 * @type {Function}
 	 */
 	exit: process.exit
@@ -155,8 +165,11 @@ export default class Server extends HookEmitter {
 		// force set the pkgJson so that it can't be overwritten
 		cfg.appcd.pkgJson = pkgJson;
 
-		this._cfg = Object.freeze(cfg);
+		// gawk the config so that we can monitor it at runtime
+		this.cfg = gawk(cfg);
 
+		// link our hook emitter to the global hook emitter so we can broadcast
+		// our events and hooks to anything
 		this.link(appcdEmitter);
 	}
 
@@ -170,14 +183,14 @@ export default class Server extends HookEmitter {
 	 */
 	config(name, defaultValue) {
 		if (!name) {
-			return this._cfg;
+			return this.cfg.toJS();
 		}
 
-		return name.split('.').reduce((cfg, prop) => {
-			if (typeof cfg === 'object' && cfg !== null) {
-				return cfg.hasOwnProperty(prop) ? cfg[prop] : defaultValue;
-			}
-		}, this._cfg);
+		const value = this.cfg.get(name.split('.'));
+		if (value instanceof GawkUndefined) {
+			return defaultValue;
+		}
+		return value.toJS();
 	}
 
 	/**

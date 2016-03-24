@@ -74,8 +74,8 @@ export default class Dispatcher {
 	 * Asynchronously dispatch a request. If unable to find a appropriate
 	 * handler, an error is returned.
 	 *
-	 * @param {String} path
-	 * @param {Object} [data={}]
+	 * @param {String} path - The dispatch path to request.
+	 * @param {Object} [data={}] - An optional data payload to send.
 	 * @returns {Promise}
 	 * @access public
 	 */
