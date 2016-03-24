@@ -20,7 +20,7 @@ export default class Plugin {
 	 * @param {Object} opts.pkgJson - The contents of the package.json.
 	 * @param {Server} opts.server - The appcd server instance.
 	 */
-	constructor({ name, path, ServiceClass, pkgJson, appcdEmitter, appcdDispatcher, server }) {
+	constructor({ name, path, ServiceClass, pkgJson, appcdDispatcher, server }) {
 		/**
 		 * The plugin name.
 		 * @type {String}

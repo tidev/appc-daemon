@@ -404,7 +404,6 @@ export default class Server extends HookEmitter {
 						path: pluginPath,
 						ServiceClass,
 						pkgJson,
-						appcdEmitter,
 						appcdDispatcher,
 						server: this
 					});
