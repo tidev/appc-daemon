@@ -18,10 +18,14 @@ export default class Analytics extends HookEmitter {
 		this.server = server;
 
 		this.eventsDir     = server.config('analytics.eventsDir');
+		this.guid          = server.config('appcd.guid');
 		this.url           = server.config('analytics.url');
 		this.sendBatchSize = Math.max(~~server.config('analytics.sendBatchSize', 10), 1);
 
-		if (!server.config('analytics.enabled', true) || typeof this.url !== 'string' || !this.url || typeof this.eventsDir !== 'string' || !this.eventsDir) {
+		if (!server.config('analytics.enabled', true)
+			|| typeof this.guid !== 'string' || !this.guid
+			|| typeof this.url !== 'string' || !this.url
+			|| typeof this.eventsDir !== 'string' || !this.eventsDir) {
 			return;
 		}
 
@@ -36,7 +40,7 @@ export default class Analytics extends HookEmitter {
 		this.on('event', this.storeEvent.bind(this));
 
 		// ensure that the flush interval is at least 1 second
-		const sendInterval = Math.max(~~server.config('analytics.sendInterval', 15000), 1000);
+		const sendInterval = Math.max(~~server.config('analytics.sendInterval', 60000), 1000);
 		const sendLoop = () => {
 			this.sendTimer = setTimeout(() => this.sendEvents().then(sendLoop), sendInterval);
 		};
@@ -53,26 +57,28 @@ export default class Analytics extends HookEmitter {
 	 * @access private
 	 */
 	storeEvent(data) {
-		if (!this.server.config('analytics.enabled', true) || typeof data !== 'object' || data === null || Array.isArray(data)) {
+		if (!this.server.config('analytics.enabled', true) || typeof data !== 'object' || data === null || Array.isArray(data) || !data.type) {
 			return;
 		}
 
-		if (!data.type) {
-			data.type = 'unknown';
-		}
+		// generate a 24-byte unique id
+		const rand = () => Math.floor(1e10 * Math.random()).toString(16);
+		const id = (Date.now().toString(16) + rand() + rand()).slice(0, 24);
 
-		return this.hook('store', data => new Promise((resolve, reject) => {
-			appcd.logger.log('got analytics event!');
-			appcd.logger.log(data);
+		const event = {
+			type: data.type,
+			id,
+			aguid: this.guid,
+			data,
+			ts: new Date().toISOString()
+		};
 
-			const filename = (new Date).toISOString().replace(/:/g, '-') + '_' + String(this.seqId++).padStart(6, '0') + '.json';
-			fs.writeFile(path.join(this.eventsDir, filename), JSON.stringify(data), err => {
-				if (err) {
-					return reject(err);
-				}
-				return resolve();
-			});
-		}))(data);
+		// don't need 'type' anymore
+		delete data.type;
+
+		return this.hook('store', (filename, event) => new Promise((resolve, reject) => {
+			fs.writeFile(filename, JSON.stringify(event), err => err ? reject(err) : resolve());
+		}))(path.join(this.eventsDir, id + '.json'), event);
 	}
 
 	/**

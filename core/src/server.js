@@ -29,7 +29,7 @@ const appcdEmitter = new HookEmitter;
  */
 global.appcd = {
 	/**
-	 * The request dipatcher call() function.
+	 * The global request dipatcher call() function.
 	 * @type {Function}
 	 */
 	call: appcdDispatcher.call.bind(appcdDispatcher),
@@ -75,6 +75,12 @@ export default class Server extends HookEmitter {
 	 * @type {Object}
 	 */
 	plugins = {};
+
+	/**
+	 * The count of the Node process uptime when the server is started.
+	 * @type {Number}
+	 */
+	startupTime = 0;
 
 	/**
 	 * Constructs a server instance.
@@ -269,11 +275,13 @@ export default class Server extends HookEmitter {
 				appcd.logger.info(`Node.js ${process.version} (module api ${process.versions.modules})`);
 
 				// replace the process title to avoid `killall node` taking down the server
-				process.title = 'appcd (Appcelerator Daemon)';
+				process.title = 'appcd';
 
 				// listen for signals to trigger a shutdown
 				process.on('SIGINT', () => this.shutdown().then(() => appcd.exit(0)));
 				process.on('SIGTERM', () => this.shutdown().then(() => appcd.exit(0)));
+
+				this.startupTime = process.uptime();
 
 				return Promise.resolve()
 					.then(this.initAnalytics)
@@ -281,9 +289,21 @@ export default class Server extends HookEmitter {
 					.then(this.initHandlers)
 					.then(this.initWebServer)
 					.then(() => this.emit('appcd:server.start'))
-					.then(() => this.emit('analytics:event', {
-						type: 'appcd.server.start'
-					}))
+					.then(() => {
+						const status = this.status.toJS();
+						return this.emit('analytics:event', {
+							type: 'appcd.server.start',
+							appcd: {
+								version:  status.appcd.version,
+								execPath: status.appcd.execPath,
+								execArgv: status.appcd.execArgv,
+								argv:     status.appcd.argv,
+								plugins:  status.appcd.plugins
+							},
+							node: status.node,
+							system: status.system
+						});
+					})
 					.then(() => this);
 			});
 	}
@@ -517,7 +537,7 @@ export default class Server extends HookEmitter {
 				const refresh = () => {
 					this.status.mergeDeep({
 						appcd: {
-							uptime: process.uptime(),
+							uptime: process.uptime() - this.startupTime,
 							plugins: Object.entries(this.plugins).map(([name, plugin]) => {
 								return {
 									name:    name,
@@ -701,6 +721,10 @@ export default class Server extends HookEmitter {
 		appcd.logger.info('Shutting down server gracefully');
 
 		return Promise.resolve()
+			.then(() => this.emit('analytics:event', {
+				type: 'appcd.server.shutdown',
+				uptime: this.status.get(['appcd', 'uptime']).toJS()
+			}))
 			.then(() => this.emit('shutdown'))
 			.then(() => new Promise((resolve, reject) => {
 				this.webserver
