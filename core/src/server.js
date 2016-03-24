@@ -110,9 +110,8 @@ export default class Server extends HookEmitter {
 	constructor(opts = {}) {
 		super();
 
-		const pkgJson = require('../package.json');
-
 		const appcHome = opts.appc && opts.appc.home || '~/.appcelerator';
+		const pkgJson = require('../package.json');
 
 		// init the default settings
 		const cfg = {
@@ -304,6 +303,7 @@ export default class Server extends HookEmitter {
 					.then(() => this.emit('appcd:server.start'))
 					.then(() => {
 						const status = this.status.toJS();
+						delete status.system.loadavg;
 						return this.emit('analytics:event', {
 							type: 'appcd.server.start',
 							appcd: {
@@ -752,7 +752,8 @@ export default class Server extends HookEmitter {
 						resolve();
 					})
 					.catch(reject);
-			}));
+			}))
+			.then(() => this);
 	}
 
 	/**
