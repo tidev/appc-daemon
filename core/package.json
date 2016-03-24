@@ -33,7 +33,7 @@
   "dependencies": {
     "babel-polyfill": "^6.7.4",
     "colors": "^1.1.2",
-    "gawk": "^0.2.4",
+    "gawk": "^1.0.0",
     "hook-emitter": "^0.2.0",
     "koa": "git+https://git@github.com/koajs/koa.git#v2.x",
     "koa-helmet": "^2.0.0-alpha.1",
