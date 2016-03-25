@@ -6,6 +6,7 @@ import Dispatcher, { DispatcherError } from './dispatcher';
 import { existsSync } from './util';
 import fs from 'fs';
 import { gawk, GawkUndefined } from 'gawk';
+import { getDefaultConfig, getEnvironmentConfig } from './defaults';
 import { HookEmitter } from 'hook-emitter';
 import http from 'http';
 import Logger from './logger';
@@ -101,6 +102,7 @@ export default class Server extends HookEmitter {
 	 * @param {String} [opts.appcd.configFile=~/.appcelerator/appcd.js] - The path to the config file to load.
 	 * @param {Boolean} [opts.appcd.daemonize=false] - When true, spawns the server as a background process.
 	 * @param {String} [opts.appcd.pidFile=~/.appcelerator/appcd.pid] - Path to the daemon's pid file.
+	 * @param {String} [opts.environment] - The environment to use. If set, it must be "production" or "preproduction".
 	 * @param {Object} [opts.logger] - Logger options.
 	 * @param {Object} [opts.network] - Network options.
 	 * @param {Object} [opts.paths] - An object of path names to paths.
@@ -110,61 +112,31 @@ export default class Server extends HookEmitter {
 	constructor(opts = {}) {
 		super();
 
-		const appcHome = opts.appc && opts.appc.home || '~/.appcelerator';
-		const pkgJson = require('../package.json');
-
-		// init the default settings
-		const cfg = {
-			analytics: {
-				enabled: true,
-				eventsDir: path.join(appcHome, 'appcd/analytics'),
-				url: 'https://api.appcelerator.net/p/v2/partner-track',
-				userAgent: `Node script: ${process.mainModule.filename}`
-			},
-			appc: {
-				home: appcHome
-			},
-			appcd: {
-				allowExit: true,
-				configFile: path.join(appcHome, 'appcd/config.js'),
-				daemonize: false,
-				guid: 'ea327577-858f-4d31-905e-fa670f50ef48',
-				home: path.join(appcHome, 'appcd'),
-				pidFile: path.join(appcHome, 'appcd/appcd.pid'),
-				skipPluginCheck: false,
-				version: pkgJson.version
-			},
-			environment: {
-				name: 'production'
-			},
-			logger: {
-				colors: true,
-				silent: false
-			},
-			network: {
-				proxyUrl: null,
-				rejectUnauthorized: true
-			},
-			paths: {
-				plugins: []
-			}
-		};
+		// initialize with the default config
+		const cfg = mergeDeep({}, getDefaultConfig());
 
 		// load the config file
-		const configFile = expandPath(cfg.appcd.configFile);
-		if (!/\.js$/.test(configFile)) {
-			throw new Error('Config file must be a JavaScript file.');
-		} else if (existsSync(configFile)) {
-			mergeDeep(cfg, require(configFile));
-		} else if (opts.appcd && opts.appcd.configFile) {
-			throw new Error(`Specified config file not found: ${opts.appcd.configFile}.`);
+		const defaultConfigFile  = cfg.appcd.configFile;
+		const optsConfigFile     = opts.appcd && opts.appcd.configFile;
+		const expandedConfigFile = expandPath(optsConfigFile || defaultConfigFile);
+		if (optsConfigFile) {
+			if (!/\.js(on)?$/.test(optsConfigFile)) {
+				throw new Error('Config file must be a JavaScript or JSON file.');
+			}
+			if (!existsSync(expandedConfigFile)) {
+				throw new Error(`Specified config file not found: ${optsConfigFile}.`);
+			}
 		}
+		const savedConfig = existsSync(expandedConfigFile) && require(expandedConfigFile) || {};
 
-		// override config with constructor options
+		// merge in the default environment settings, config file settings, and
+		// constructor settings
+		mergeDeep(cfg, getEnvironmentConfig(savedConfig.environment));
+		mergeDeep(cfg, savedConfig);
 		mergeDeep(cfg, opts);
 
-		// force set the pkgJson so that it can't be overwritten
-		cfg.appcd.pkgJson = pkgJson;
+		// set the actual config file that was loaded
+		cfg.appcd.configFile = optsConfigFile || defaultConfigFile;
 
 		// gawk the config so that we can monitor it at runtime
 		this.cfg = gawk(cfg);
@@ -248,6 +220,14 @@ export default class Server extends HookEmitter {
 			});
 		}
 
+		appcd.logger.info(`Appcelerator Daemon v${this.config('appcd.version')}`);
+		appcd.logger.info(`Config file: ${appcd.logger.highlight(this.config('appcd.configFile'))}`);
+		appcd.logger.info(`Environment: ${appcd.logger.highlight(this.config('environment'))}`);
+		appcd.logger.info(`Node.js ${process.version} (module api ${process.versions.modules})`);
+
+		// replace the process title to avoid `killall node` taking down the server
+		process.title = 'appcd';
+
 		return Promise.resolve()
 			.then(this.analytics.initialize)
 			.then(this.loadPlugins)
@@ -289,13 +269,6 @@ export default class Server extends HookEmitter {
 				// at this point, we're either running in debug mode (no pid) or *this* process is the spawned daemon process
 				//
 
-				appcd.logger.info(`Appcelerator Daemon v${this.config('appcd.version')}`);
-				appcd.logger.info(`Environment: ${appcd.logger.highlight(this.config('environment.name'))}`);
-				appcd.logger.info(`Node.js ${process.version} (module api ${process.versions.modules})`);
-
-				// replace the process title to avoid `killall node` taking down the server
-				process.title = 'appcd';
-
 				// listen for signals to trigger a shutdown
 				process.on('SIGINT', () => this.shutdown().then(() => appcd.exit(0)));
 				process.on('SIGTERM', () => this.shutdown().then(() => appcd.exit(0)));
@@ -306,7 +279,6 @@ export default class Server extends HookEmitter {
 					.then(this.initStatusMonitor)
 					.then(this.initHandlers)
 					.then(this.initWebServer)
-					.then(() => this.emit('appcd:server.start'))
 					.then(() => {
 						const status = this.status.toJS();
 						delete status.system.loadavg;
@@ -324,6 +296,7 @@ export default class Server extends HookEmitter {
 							system: status.system
 						});
 					})
+					.then(() => this.emit('appcd:start'))
 					.then(() => this);
 			});
 	}
@@ -468,7 +441,7 @@ export default class Server extends HookEmitter {
 	 */
 	daemonize() {
 		return this
-			.hook('daemonize', (args, opts) => {
+			.hook('appcd:daemonize', (args, opts) => {
 				return this.spawnNode(args, opts)
 					.then(child => {
 						fs.writeFileSync(expandPath(this.config('appcd.pidFile')), child.pid);
@@ -513,7 +486,7 @@ export default class Server extends HookEmitter {
 	@autobind
 	initStatusMonitor() {
 		return this
-			.hook('init.status.monitor', () => {
+			.hook('appcd:init.status.monitor', () => {
 				this.status = gawk({
 					appcd: {
 						version:  this.config('appcd.version'),
@@ -562,7 +535,7 @@ export default class Server extends HookEmitter {
 				refresh();
 				let timer = setInterval(refresh, 1000);
 
-				this.on('shutdown', () => {
+				this.on('appcd:shutdown', () => {
 					clearInterval(timer);
 				});
 
@@ -579,7 +552,7 @@ export default class Server extends HookEmitter {
 	@autobind
 	initHandlers() {
 		return this
-			.hook('init.handlers', () => {
+			.hook('appcd:init.handlers', () => {
 				appcdDispatcher.register(/\/appcd\/status(\/.*)?/, ctx => {
 					const filter = ctx.params[0] && ctx.params[0].replace(/^\//, '').split('/') || undefined;
 					const node = this.status.get(filter);
@@ -610,7 +583,7 @@ export default class Server extends HookEmitter {
 	@autobind
 	initWebServer() {
 		return this
-			.hook('init.webserver', opts => {
+			.hook('appcd:init.webserver', opts => {
 				const webserver = this.webserver = new WebServer(opts);
 
 				webserver.on('websocket', socket => {
@@ -726,7 +699,7 @@ export default class Server extends HookEmitter {
 				type: 'appcd.server.shutdown',
 				uptime: this.status.get(['appcd', 'uptime']).toJS()
 			}))
-			.then(() => this.emit('shutdown'))
+			.then(() => this.emit('appcd:shutdown'))
 			.then(() => new Promise((resolve, reject) => {
 				this.webserver
 					.close()

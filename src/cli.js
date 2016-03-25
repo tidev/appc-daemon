@@ -61,6 +61,7 @@ program
 				}, cmd.config));
 			})
 			.then(server => server.stop())
+			.then(server => (console.log('-- restart --'), server))
 			.then(server => server.start())
 			.catch(handleError);
 	});
@@ -166,7 +167,7 @@ function handleError(err) {
 	if (err.code === 'ECONNREFUSED') {
 		console.error('Server not running');
 	} else {
-		console.error(err.message || err.toString());
+		console.error(err.stack || err.toString());
 	}
 	process.exit(1);
 }
