@@ -3,6 +3,9 @@ import program from 'commander';
 import { loadCore, detectCores, switchCore } from './index';
 
 const pkgJson = require('../package.json');
+const analytics = {
+	userAgent: `Appcelerator Daemon CLI v${pkgJson.version}`
+};
 
 program
 	.version(pkgJson.version, '-v, --version');
@@ -16,6 +19,7 @@ program
 		loadCore({ version: program.use })
 			.then(appcd => {
 				return new appcd.Server(mixinConfig({
+					analytics,
 					appcd: {
 						allowExit: false,
 						configFile: cmd.configFile,
@@ -33,9 +37,9 @@ program
 	.action(cmd => {
 		loadCore({ version: program.use })
 			.then(appcd => {
-				new appcd.Server()
-					.stop(cmd.force);
+				return new appcd.Server({ analytics });
 			})
+			.then(server => server.stop(cmd.force))
 			.catch(handleError);
 	});
 
@@ -48,6 +52,7 @@ program
 		loadCore({ version: program.use })
 			.then(appcd => {
 				return new appcd.Server(mixinConfig({
+					analytics,
 					appcd: {
 						allowExit: false,
 						configFile: cmd.configFile,

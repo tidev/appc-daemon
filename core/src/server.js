@@ -118,7 +118,8 @@ export default class Server extends HookEmitter {
 			analytics: {
 				enabled: true,
 				eventsDir: path.join(appcHome, 'appcd/analytics'),
-				url: 'https://api.appcelerator.net/p/v2/partner-track'
+				url: 'https://api.appcelerator.net/p/v2/partner-track',
+				userAgent: `Node script: ${process.mainModule.filename}`
 			},
 			appc: {
 				home: appcHome
@@ -128,6 +129,7 @@ export default class Server extends HookEmitter {
 				configFile: path.join(appcHome, 'appcd/config.js'),
 				daemonize: false,
 				guid: 'ea327577-858f-4d31-905e-fa670f50ef48',
+				home: path.join(appcHome, 'appcd'),
 				pidFile: path.join(appcHome, 'appcd/appcd.pid'),
 				skipPluginCheck: false,
 				version: pkgJson.version
@@ -170,6 +172,10 @@ export default class Server extends HookEmitter {
 		// link our hook emitter to the global hook emitter so we can broadcast
 		// our events and hooks to anything
 		this.link(appcdEmitter);
+
+		// initialize the analytics system
+		this.analytics = new Analytics(this);
+		this.on('analytics:event', data => this.analytics.emit('event', data));
 	}
 
 	/**
@@ -243,6 +249,7 @@ export default class Server extends HookEmitter {
 		}
 
 		return Promise.resolve()
+			.then(this.analytics.initialize)
 			.then(this.loadPlugins)
 			.then(() => {
 				const pid = this.isRunning();
@@ -296,7 +303,6 @@ export default class Server extends HookEmitter {
 				this.startupTime = process.uptime();
 
 				return Promise.resolve()
-					.then(this.initAnalytics)
 					.then(this.initStatusMonitor)
 					.then(this.initHandlers)
 					.then(this.initWebServer)
@@ -304,6 +310,7 @@ export default class Server extends HookEmitter {
 					.then(() => {
 						const status = this.status.toJS();
 						delete status.system.loadavg;
+						delete status.system.hostname;
 						return this.emit('analytics:event', {
 							type: 'appcd.server.start',
 							appcd: {
@@ -498,25 +505,6 @@ export default class Server extends HookEmitter {
 				opts
 			)
 		);
-	}
-
-	/**
-	 * Initializes the analytics system.
-	 *
-	 * @returns {Promise}
-	 * @access private
-	 */
-	@autobind
-	initAnalytics() {
-		return this
-			.hook('init.analytics', server => {
-				const analytics = new Analytics(server);
-				this.on('analytics:event', data => analytics.emit('event', data));
-				return analytics;
-			})(this)
-			.then(analytics => {
-				this.analytics = analytics;
-			});
 	}
 
 	/**

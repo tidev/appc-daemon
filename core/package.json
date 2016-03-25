@@ -40,6 +40,7 @@
     "koa-router": "^7.0.0",
     "koa-send": "^3.2.0",
     "longjohn": "^0.2.11",
+    "macaddress": "^0.2.8",
     "mkdirp": "^0.5.1",
     "node-uuid": "^1.4.7",
     "path-to-regexp": "^1.2.1",

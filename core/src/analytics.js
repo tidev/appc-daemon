@@ -1,10 +1,13 @@
 import autobind from 'autobind-decorator';
+import crypto from 'crypto';
 import { existsSync, expandPath } from './util';
 import fs from 'fs';
 import { HookEmitter } from 'hook-emitter';
+import macaddress from 'macaddress';
 import mkdirp from 'mkdirp';
 import path from 'path';
 import request from 'request';
+import uuid from 'node-uuid';
 
 export default class Analytics extends HookEmitter {
 	/**
@@ -31,7 +34,12 @@ export default class Analytics extends HookEmitter {
 
 		// ensure the events directory exists
 		this.eventsDir = expandPath(this.eventsDir);
-		mkdirp.sync(this.eventsDir);
+
+		// the machine id
+		this.machineId = null;
+
+		// create ourselves a session id
+		this.sessionId = uuid.v4();
 
 		// init the sequence id that is appended to each event filename
 		this.seqId = 0;
@@ -40,13 +48,59 @@ export default class Analytics extends HookEmitter {
 		this.on('event', this.storeEvent.bind(this));
 
 		// ensure that the flush interval is at least 1 second
-		const sendInterval = Math.max(~~server.config('analytics.sendInterval', 60000), 1000);
-		const sendLoop = () => {
-			this.sendTimer = setTimeout(() => this.sendEvents().then(sendLoop), sendInterval);
-		};
-		sendLoop();
+		this.sendInterval = Math.max(~~server.config('analytics.sendInterval', 60000), 1000);
+	}
 
-		server.on('shutdown', () => clearTimeout(this.sendTimer));
+	/**
+	 * Initializes the analytics system.
+	 *
+	 * @returns {Promise}
+	 * @access public
+	 */
+	@autobind
+	initialize() {
+		return Promise
+			.all([
+				new Promise((resolve, reject) => {
+					const appcdHome = expandPath(this.server.config('appcd.home'));
+					const midFile = path.join(appcdHome, '.appcd.mid');
+					if (existsSync(midFile)) {
+						this.machineId = fs.readFileSync(midFile).toString().split('\n')[0];
+					}
+
+					if (this.machineId && this.machineId.length === 32) {
+						return resolve();
+					}
+
+					macaddress.one((err, mac) => {
+						if (err || !mac) {
+							this.machineId = crypto.randomBytes(16).toString('hex');
+						} else {
+							this.machineId = crypto.createHash('md5').update(mac).digest('hex');
+						}
+
+						// save the mid to file
+						mkdirp(appcdHome, err => {
+							if (err) {
+								return reject(err);
+							}
+							fs.writeFile(midFile, this.machineId, err => err ? reject(err) : resolve());
+						});
+					});
+				}),
+				new Promise((resolve, reject) => {
+					mkdirp(this.eventsDir, err => {
+						err ? reject(err) : resolve();
+					});
+				})
+			])
+			.then(() => {
+				const sendLoop = () => {
+					this.sendTimer = setTimeout(() => this.sendEvents().then(sendLoop), this.sendInterval);
+				};
+				sendLoop();
+				this.server.on('shutdown', () => clearTimeout(this.sendTimer));
+			});
 	}
 
 	/**
@@ -62,8 +116,7 @@ export default class Analytics extends HookEmitter {
 		}
 
 		// generate a 24-byte unique id
-		const rand = () => Math.floor(1e10 * Math.random()).toString(16);
-		const id = (Date.now().toString(16) + rand() + rand()).slice(0, 24);
+		const id = (Date.now().toString(16) + crypto.randomBytes(8).toString('hex')).slice(0, 24);
 
 		const event = {
 			type: data.type,
@@ -72,6 +125,18 @@ export default class Analytics extends HookEmitter {
 			data,
 			ts: new Date().toISOString()
 		};
+
+		if (!data.mid) {
+			data.mid = this.machineId;
+		}
+
+		if (!data.sid) {
+			data.sid = this.sessionId;
+		}
+
+		if (!data.userAgent) {
+			data.userAgent = this.server.config('analytics.userAgent');
+		}
 
 		// don't need 'type' anymore
 		delete data.type;
@@ -104,7 +169,7 @@ export default class Analytics extends HookEmitter {
 							file,
 							data: JSON.parse(fs.readFileSync(file))
 						});
-						if (events.length >= this.sendBatchSize) {
+						if (this.sendBatchSize > 0 && events.length >= this.sendBatchSize) {
 							break;
 						}
 					}
