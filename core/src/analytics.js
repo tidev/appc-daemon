@@ -88,11 +88,7 @@ export default class Analytics extends HookEmitter {
 						});
 					});
 				}),
-				new Promise((resolve, reject) => {
-					mkdirp(this.eventsDir, err => {
-						err ? reject(err) : resolve();
-					});
-				})
+				new Promise((resolve, reject) => mkdirp(this.eventsDir, err => err ? reject(err) : resolve()))
 			])
 			.then(() => {
 				const sendLoop = () => {
