@@ -59,44 +59,47 @@ export default class Analytics extends HookEmitter {
 	 */
 	@autobind
 	initialize() {
-		return Promise
-			.all([
-				new Promise((resolve, reject) => {
-					const appcdHome = expandPath(this.server.config('appcd.home'));
-					const midFile = path.join(appcdHome, '.appcd.mid');
-					if (existsSync(midFile)) {
-						this.machineId = fs.readFileSync(midFile).toString().split('\n')[0];
-					}
+		if (!this._initialized) {
+			this._initialized = true;
+			return Promise.resolve();
+		}
 
-					if (this.machineId && this.machineId.length === 32) {
-						return resolve();
-					}
+		const appcdHome = expandPath(this.server.config('appcd.home'));
+		const midFile = path.join(appcdHome, '.mid');
 
-					macaddress.one((err, mac) => {
-						if (err || !mac) {
-							this.machineId = crypto.randomBytes(16).toString('hex');
-						} else {
-							this.machineId = crypto.createHash('md5').update(mac).digest('hex');
-						}
+		// create required directories
+		mkdirp.sync(appcdHome);
+		mkdirp.sync(this.eventsDir);
 
-						// save the mid to file
-						mkdirp(appcdHome, err => {
-							if (err) {
-								return reject(err);
-							}
-							fs.writeFile(midFile, this.machineId, err => err ? reject(err) : resolve());
-						});
-					});
-				}),
-				new Promise((resolve, reject) => mkdirp(this.eventsDir, err => err ? reject(err) : resolve()))
-			])
-			.then(() => {
-				const sendLoop = () => {
-					this.sendTimer = setTimeout(() => this.sendEvents().then(sendLoop), this.sendInterval);
-				};
-				sendLoop();
-				this.server.on('shutdown', () => clearTimeout(this.sendTimer));
+		// start the send events loop
+		const sendLoop = () => {
+			this.sendTimer = setTimeout(() => this.sendEvents().then(sendLoop), this.sendInterval);
+		};
+		sendLoop();
+		this.server.on('shutdown', () => clearTimeout(this.sendTimer));
+
+		return new Promise((resolve, reject) => {
+			// load the machine id, if exists
+			this.machineId = null;
+			if (existsSync(midFile)) {
+				this.machineId = fs.readFileSync(midFile).toString().split('\n')[0];
+			}
+
+			if (this.machineId && this.machineId.length === 32) {
+				return resolve();
+			}
+
+			macaddress.one((err, mac) => {
+				if (err || !mac) {
+					this.machineId = crypto.randomBytes(16).toString('hex');
+				} else {
+					this.machineId = crypto.createHash('md5').update(mac).digest('hex');
+				}
+
+				// save the mid to file
+				fs.writeFile(midFile, this.machineId, err => err ? reject(err) : resolve());
 			});
+		});
 	}
 
 	/**
