@@ -6,6 +6,7 @@ import Dispatcher, { DispatcherError } from './dispatcher';
 import { existsSync } from './util';
 import fs from 'fs';
 import { gawk, GawkUndefined } from 'gawk';
+import { getActiveHandles } from 'double-stack';
 import { getDefaultConfig, getEnvironmentConfig } from './defaults';
 import { HookEmitter } from 'hook-emitter';
 import http from 'http';
@@ -15,6 +16,7 @@ import mkdirp from 'mkdirp';
 import os from 'os';
 import path from 'path';
 import Plugin from './plugin';
+import pluralize from 'pluralize';
 import resolvePath from 'resolve-path';
 import Router from 'koa-router';
 import Service from './service';
@@ -204,11 +206,6 @@ export default class Server extends HookEmitter {
 	 */
 	@autobind
 	start() {
-		if (!this.daemonize) {
-			// enable long stack traces in debug mode
-			require('longjohn');
-		}
-
 		if (!this.config('appcd.allowExit')) {
 			// hijack process.exit()
 			Object.defineProperty(process, 'exit', {
@@ -700,21 +697,31 @@ export default class Server extends HookEmitter {
 				uptime: this.status.get(['appcd', 'uptime']).toJS()
 			}))
 			.then(() => this.emit('appcd:shutdown'))
-			.then(() => new Promise((resolve, reject) => {
-				this.webserver
-					.close()
-					.then(() => {
-						return Promise.all(Object.values(this.plugins).map(plugin => { return plugin.shutdown(); }));
-					})
-					.then(() => {
-						const pidFile = expandPath(this.config('appcd.pidFile'));
-						appcd.logger.info('Removing ' + appcd.logger.highlight(pidFile));
-						fs.unlinkSync(pidFile);
-						resolve();
-					})
-					.catch(reject);
-			}))
-			.then(() => this);
+			.then(this.webserver.close)
+			.then(() => Promise.all(Object.values(this.plugins).map(plugin => { return plugin.shutdown(); })))
+			.then(() => {
+				const pidFile = expandPath(this.config('appcd.pidFile'));
+				appcd.logger.info('Removing ' + appcd.logger.highlight(pidFile));
+				fs.unlinkSync(pidFile);
+			})
+			.then(() => {
+				const handles = getActiveHandles();
+
+				if (handles.timers.length) {
+					const timers = handles.timers.filter(timer => timer.__stack__);
+					appcd.logger.warn(`Stopping ${appcd.logger.notice(timers.length)} active ${pluralize('timers', timers.length)}:`);
+					let i = 1;
+					for (let timer of timers) {
+						appcd.logger.warn(`${i++}) ${appcd.logger.highlight(timer.__stack__[0] || 'unknown origin')}`);
+					}
+					appcd.logger.warn(`Did you forget to clear these timeouts during the ${appcd.logger.highlight('"appcd.shutdown"')} event?`);
+					handles.timers.forEach(t => clearTimeout(t));
+				}
+			})
+			.then(() => {
+				appcd.logger.info('appcd shutdown successfully');
+				return this;
+			});
 	}
 
 	/**

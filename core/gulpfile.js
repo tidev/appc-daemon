@@ -135,7 +135,7 @@ gulp.task('coverage', ['lint-src', 'build-plugins', 'lint-test', 'clean-coverage
  */
 var children = 0;
 gulp.task('restart-daemon', function () {
-	var child = spawn(process.execPath, ['bin/appcd', 'restart', '--debug'], { stdio: 'inherit' });
+	var child = spawn(process.execPath, ['../bin/appcd', 'restart', '--debug'], { stdio: 'inherit' });
 	children++;
 	child.on('exit', function () {
 		// if appcd is killed via kill(1), then we force gulp watch to exit

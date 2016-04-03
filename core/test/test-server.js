@@ -5,6 +5,9 @@ describe('server', () => {
 	describe('config', () => {
 		it('should init from constructor args', () => {
 			const server = new Server({
+				analytics: {
+					enabled: false
+				},
 				appcd: {
 					foo: 'bar'
 				},
@@ -43,6 +46,9 @@ describe('server', () => {
 			this.timeout(5000);
 
 			const server = new Server({
+				analytics: {
+					enabled: false
+				},
 				logger: {
 					silent: true
 				}
