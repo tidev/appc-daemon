@@ -1,6 +1,6 @@
 import { mergeDeep } from './util';
 import program from 'commander';
-import { loadCore, detectCores, switchCore } from './index';
+import { findCore, loadCore, detectCores, switchCore } from './index';
 
 const pkgJson = require('../package.json');
 const analytics = {
@@ -8,15 +8,13 @@ const analytics = {
 };
 
 program
-	.version(pkgJson.version, '-v, --version');
-
-program
 	.command('start')
 	.option('--config <json>', 'serialized JSON string to mix into the appcd config')
 	.option('--config-file <file>', 'path to a appcd JS config file')
 	.option('--debug', 'don\'t run as a background daemon')
 	.action(cmd => {
-		loadCore({ version: program.use })
+		Promise.resolve()
+			.then(() => loadCore({ version: program.use }))
 			.then(appcd => {
 				return new appcd.Server(mixinConfig({
 					analytics,
@@ -35,10 +33,9 @@ program
 	.command('stop')
 	.option('--force', 'force the server to stop')
 	.action(cmd => {
-		loadCore({ version: program.use })
-			.then(appcd => {
-				return new appcd.Server({ analytics });
-			})
+		Promise.resolve()
+			.then(() => loadCore({ version: program.use }))
+			.then(appcd => new appcd.Server({ analytics }))
 			.then(server => server.stop(cmd.force))
 			.catch(handleError);
 	});
@@ -49,7 +46,8 @@ program
 	.option('--config-file <file>', 'path to a appcd JS config file')
 	.option('--debug', 'don\'t run as a background daemon')
 	.action(cmd => {
-		loadCore({ version: program.use })
+		Promise.resolve()
+			.then(() => loadCore({ version: program.use }))
 			.then(appcd => {
 				return new appcd.Server(mixinConfig({
 					analytics,
@@ -80,7 +78,8 @@ program
 			}
 		}
 
-		loadCore({ version: program.use })
+		Promise.resolve()
+			.then(() => loadCore({ version: program.use }))
 			.then(appcd => {
 				const client = new appcd.Client({ startServer: false });
 				client
@@ -109,7 +108,8 @@ program
 	.command('logcat')
 	.option('--no-colors', 'disables colors')
 	.action(cmd => {
-		loadCore({ version: program.use })
+		Promise.resolve()
+			.then(() => loadCore({ version: program.use }))
 			.then(appcd => {
 				const client = new appcd.Client({ startServer: false });
 				client
@@ -127,7 +127,8 @@ program
 	.command('status')
 	.option('-o, --output <report|json>', 'the format to render the output', 'report')
 	.action(cmd => {
-		loadCore({ version: program.use })
+		Promise.resolve()
+			.then(() => loadCore({ version: program.use }))
 			.then(appcd => {
 				const client = new appcd.Client({ startServer: false });
 				client
@@ -156,7 +157,25 @@ program
 	});
 
 program
-	.option('--use <version>')
+	.option('-v, --version', 'outputs the version info')
+	.option('--use <version>', 'selects the appcd core to use')
+	.removeAllListeners('version')
+	.on('version', () => {
+		const versions = {
+			bootstrap: pkgJson.version,
+			core: null
+		};
+
+		try {
+			const core = findCore({ version: program.use });
+			versions.core = core.pkgJson.version;
+		} catch (e) {
+			// squeltch
+		}
+
+		console.info(JSON.stringify(versions, null, '  '));
+		process.exit(0);
+	})
 	.parse(process.argv);
 
 if (program.args.length === 0) {

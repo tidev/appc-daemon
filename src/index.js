@@ -108,17 +108,14 @@ export function findCore(opts = {}) {
  * @returns {Promise}
  */
 export function loadCore(opts = {}) {
-	return Promise.resolve()
-		.then(() => {
-			const core = findCore(opts);
+	const core = findCore(opts);
 
-			const nodeVer = core.pkgJson.engines && core.pkgJson.engines.node;
-			if (nodeVer && !semver.satisfies(process.version, nodeVer)) {
-				throw new Error('Appcelerator Daemon requires Node.js ' + semver.validRange(nodeVer));
-			}
+	const nodeVer = core.pkgJson.engines && core.pkgJson.engines.node;
+	if (nodeVer && !semver.satisfies(process.version, nodeVer)) {
+		throw new Error('Appcelerator Daemon requires Node.js ' + semver.validRange(nodeVer));
+	}
 
-			return require(core.main);
-		});
+	return require(core.main);
 }
 
 /**

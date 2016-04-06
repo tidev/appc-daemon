@@ -10,6 +10,7 @@ import { getActiveHandles } from 'double-stack';
 import { getDefaultConfig, getEnvironmentConfig } from './defaults';
 import { HookEmitter } from 'hook-emitter';
 import http from 'http';
+import humanize from 'humanize';
 import Logger from './logger';
 import { mergeDeep, expandPath } from './util';
 import mkdirp from 'mkdirp';
@@ -96,7 +97,8 @@ export default class Server extends HookEmitter {
 	startupTime = 0;
 
 	/**
-	 * Constructs a server instance.
+	 * Constructs a server instance, loads the config file, and initializes the
+	 * analytics system.
 	 *
 	 * @param {Object} [opts] - An object containing various options.
 	 * @param {Object} [opts.analytics] - Analytics options.
@@ -109,7 +111,6 @@ export default class Server extends HookEmitter {
 	 * @param {Object} [opts.network] - Network options.
 	 * @param {Object} [opts.paths] - An object of path names to paths.
 	 * @param {String|Array<String>} [opts.paths.plugins] - One or more paths to scan for plugins.
-	 * appcd pid file.
 	 */
 	constructor(opts = {}) {
 		super();
@@ -530,10 +531,69 @@ export default class Server extends HookEmitter {
 				};
 
 				refresh();
-				let timer = setInterval(refresh, 1000);
+
+				let refreshTimer = setInterval(refresh, 1000);
+
+				const logger      = new Logger('appcd:status');
+				let prevLoadAvg   = null;
+				let prevMemory    = null;
+				let logTimer      = setInterval(() => {
+					const currentLoadAvg = this.status.get(['system', 'loadavg']).toJS();
+					const loadAvg = currentLoadAvg.map((val, i) => {
+						const v = val.toFixed(2);
+						if (prevLoadAvg && val < prevLoadAvg[i]) {
+							return logger.ok('\u2193' + v);
+						} else if (prevLoadAvg && val > prevLoadAvg[i]) {
+							return logger.alert('\u2191' + v);
+						}
+						return ' ' + logger.note(v);
+					}).join(' ');
+					prevLoadAvg = currentLoadAvg;
+
+					const currentMemoryUsage = this.status.get(['system', 'memory', 'usage']).toJS();
+					const heapUsed = humanize.filesize(currentMemoryUsage.heapUsed).toUpperCase();
+					const heapTotal = humanize.filesize(currentMemoryUsage.heapTotal).toUpperCase();
+					const rss = humanize.filesize(currentMemoryUsage.rss).toUpperCase();
+					let heapUsage = logger.note(heapUsed.padStart(11)) + ' /' + logger.note(heapTotal.padStart(11));
+					let rssUsage = logger.note(rss.padStart(11));
+
+					if (prevMemory) {
+						if (currentMemoryUsage.heapUsed < prevMemory.heapUsed) {
+							heapUsage = logger.ok(('\u2193' + heapUsed).padStart(11));
+						} else if (currentMemoryUsage.heapUsed > prevMemory.heapUsed) {
+							heapUsage = logger.alert(('\u2191' + heapUsed).padStart(11));
+						} else {
+							heapUsage = logger.note(heapUsed.padStart(11));
+						}
+						heapUsage += ' /';
+						if (currentMemoryUsage.heapTotal < prevMemory.heapTotal) {
+							heapUsage += logger.ok(('\u2193' + heapTotal).padStart(11));
+						} else if (currentMemoryUsage.heapTotal > prevMemory.heapTotal) {
+							heapUsage += logger.alert(('\u2191' + heapTotal).padStart(11));
+						} else {
+							heapUsage += logger.note(heapTotal.padStart(11));
+						}
+
+						if (currentMemoryUsage.rss < prevMemory.rss) {
+							rssUsage = logger.ok(('\u2193' + rss).padStart(11));
+						} else if (currentMemoryUsage.rss > prevMemory.rss) {
+							rssUsage = logger.alert(('\u2191' + rss).padStart(11));
+						}
+					}
+
+					prevMemory = currentMemoryUsage;
+
+					logger.debug(
+						`Load Avg: ${loadAvg}  ` +
+						`Heap:${heapUsage}  ` + // purposely don't put a space after the ':', heapUsage is already left padded
+						`RSS: ${rssUsage}  ` +
+						`Uptime: ${logger.highlight(this.status.get(['appcd', 'uptime']).toJS().toFixed(1) + 's')}`
+					);
+				}, 2000);
 
 				this.on('appcd:shutdown', () => {
-					clearInterval(timer);
+					clearInterval(refreshTimer);
+					clearInterval(logTimer);
 				});
 
 				return this.status;
@@ -711,7 +771,7 @@ export default class Server extends HookEmitter {
 					const timers = handles.timers.filter(timer => timer.__stack__);
 					appcd.logger.warn(`Stopping ${appcd.logger.notice(timers.length)} active ${pluralize('timers', timers.length)}:`);
 					let i = 1;
-					for (let timer of timers) {
+					for (const timer of timers) {
 						appcd.logger.warn(`${i++}) ${appcd.logger.highlight(timer.__stack__[0] || 'unknown origin')}`);
 					}
 					appcd.logger.warn(`Did you forget to clear these timeouts during the ${appcd.logger.highlight('"appcd.shutdown"')} event?`);

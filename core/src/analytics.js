@@ -180,7 +180,7 @@ export default class Analytics extends HookEmitter {
 			}
 
 			let files = [];
-			for (let name of fs.readdirSync(this.eventsDir)) {
+			for (const name of fs.readdirSync(this.eventsDir)) {
 				if (jsonRegExp.test(name)) {
 					files.push(path.join(this.eventsDir, name));
 				}

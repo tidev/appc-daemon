@@ -71,7 +71,7 @@ export function getDefaultConfig() {
  * @returns {Object}
  */
 export function getEnvironmentConfig(env) {
-	if (!env || !environments[env]) {
+	if (!env) {
 		const parentPkgJsonFile = path.resolve(__dirname, '..', 'package.json');
 		const parentPkgJson = existsSync(parentPkgJsonFile) ? require(parentPkgJsonFile) : {};
 
@@ -82,5 +82,5 @@ export function getEnvironmentConfig(env) {
 		}
 	}
 
-	return environments[env];
+	return environments[env] || { ...environments.preproduction, environment: env };
 }
