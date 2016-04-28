@@ -1,0 +1,8 @@
+{
+	"type": "appc-daemon",
+	"subtype": "plugin",
+	"access": "public",
+	"owners": [
+		"cbarber@appcelerator.com"
+	]
+}

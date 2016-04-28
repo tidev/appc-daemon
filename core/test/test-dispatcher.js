@@ -4,7 +4,6 @@ import Server from '../dist/server';
 describe('dispatcher', () => {
 
 	describe('register', () => {
-
 		it('should register with valid path and handler', () => {
 			const d = new Dispatcher;
 			d.register('/foo', () => {});
@@ -49,7 +48,6 @@ describe('dispatcher', () => {
 			d.register('/bar', () => {});
 			d2.register('/foo', d);
 		});
-
 	});
 
 	describe('dispatch', () => {
@@ -180,6 +178,81 @@ describe('dispatcher', () => {
 					expect(err.message).to.equal('oops');
 					done();
 				});
+		});
+
+		it('should handle a route that returns error', done => {
+			const d = new Dispatcher;
+
+			d.register('/foo', (data, next) => {
+				next(new Error('oops'));
+			});
+
+			d.call('/foo')
+				.then(() => {
+					done(new Error('Expected error from handler'));
+				})
+				.catch(err => {
+					expect(err).to.be.instanceof(Error);
+					expect(err.message).to.equal('oops');
+					done();
+				});
+		});
+
+		it('should re-route to error', done => {
+			const d = new Dispatcher;
+			let fooCount = 0;
+
+			d.register('/foo', async (data, next) => {
+				fooCount++;
+				await next();
+			});
+
+			d.call('/foo')
+				.then(ctx => {
+					done(new Error('Expected error for no route'));
+				})
+				.catch(err => {
+					expect(fooCount).to.equal(1);
+					expect(err).to.be.instanceof(Error);
+					expect(err.message).to.equal('No route');
+					done();
+				});
+		});
+
+		it('should re-route to new route', done => {
+			const d = new Dispatcher;
+			let fooCount = 0;
+			let barCount = 0;
+
+			d.register('/foo', async (data, next) => {
+				fooCount++;
+				data.path = '/bar';
+				await next();
+			});
+
+			d.register('/bar', data => {
+				barCount++;
+			});
+
+			d.call('/foo')
+				.then(() => {
+					expect(fooCount).to.equal(1);
+					expect(barCount).to.equal(1);
+					done();
+				})
+				.catch(done);
+		});
+
+		it('should continue if next() is called without any arguments', done => {
+			const d = new Dispatcher;
+
+			d.register('/foo', (data, next) => {
+				next();
+			});
+
+			d.call('/foo')
+				.then(() => done())
+				.catch(err => done);
 		});
 
 		it('should handle route to child dispatcher handler', done => {

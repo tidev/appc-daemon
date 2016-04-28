@@ -1,9 +1,10 @@
 import autobind from 'autobind-decorator';
+import bodyParser from 'koa-bodyparser';
 import { EventEmitter } from 'events';
 import helmet from 'koa-helmet';
 import Koa from 'koa';
 import path from 'path';
-import Router from 'koa-router';
+import Router from './router';
 import send from 'koa-send';
 import { Server as WebSocketServer } from 'ws';
 
@@ -60,8 +61,15 @@ export default class WebServer extends EventEmitter {
 		// init the Koa app with helmet and a simple request logger
 		this.app
 			.use(helmet())
+			.use(bodyParser())
 			.use((ctx, next) => {
 				const start = new Date;
+
+				ctx.source = {
+					type: 'web',
+					name: ctx.request.headers['user-agent'] || ''
+				};
+
 				return next().then(() => {
 					appcd.logger.info('%s %s %s %s',
 						ctx.method,
@@ -100,8 +108,7 @@ export default class WebServer extends EventEmitter {
 			.then(this.close)
 			.then(() => {
 				return new Promise((resolve, reject) => {
-					const route = this.router.routes();
-					this.app.use(route);
+					this.app.use(this.router.routes());
 
 					// static file serving middleware
 					this.app.use(async (ctx) => {
@@ -109,7 +116,7 @@ export default class WebServer extends EventEmitter {
 					});
 
 					this.httpServer = this.app.listen(this.port, this.hostname, () => {
-						appcd.logger.info('Server listening on port ' + appcd.logger.highlight(this.port));
+						appcd.logger.info('Web server listening on ' + appcd.logger.highlight('http://localhost:' + this.port));
 						resolve();
 					});
 

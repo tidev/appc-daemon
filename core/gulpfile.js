@@ -18,24 +18,18 @@ const docsDir = path.join(__dirname, 'docs');
  */
 gulp.task('clean', ['clean-coverage', 'clean-dist', 'clean-docs']);
 
-gulp.task('clean-coverage', function (done) {
-	del([coverageDir]).then(function () { done(); });
-});
+gulp.task('clean-coverage', done => { del([coverageDir]).then(() => done()) });
 
-gulp.task('clean-dist', function (done) {
-	del([distDir]).then(function () { done(); });
-});
+gulp.task('clean-dist', done => { del([distDir]).then(() => done()) });
 
-gulp.task('clean-docs', function (done) {
-	del([docsDir]).then(function () { done(); });
-});
+gulp.task('clean-docs', done => { del([docsDir]).then(() => done()) });
 
 /*
  * build tasks
  */
 gulp.task('build', ['build-src', 'build-plugins']);
 
-gulp.task('build-src', ['clean-dist', 'lint-src'], function () {
+gulp.task('build-src', ['clean-dist', 'lint-src'], () => {
 	return gulp
 		.src('src/**/*.js')
 		.pipe($.plumber())
@@ -46,7 +40,7 @@ gulp.task('build-src', ['clean-dist', 'lint-src'], function () {
 		.pipe(gulp.dest(distDir));
 });
 
-gulp.task('build-plugins', function () {
+gulp.task('build-plugins', () => {
 	return gulp
 		.src('plugins/*/gulpfile.js')
 		.pipe($.chug({
@@ -54,7 +48,7 @@ gulp.task('build-plugins', function () {
 		}));
 });
 
-gulp.task('docs', ['lint-src', 'clean-docs'], function () {
+gulp.task('docs', ['lint-src', 'clean-docs'], () => {
 	return gulp.src('src')
 		.pipe($.plumber())
 		.pipe($.debug({ title: 'docs' }))
@@ -79,20 +73,17 @@ function lint(pattern) {
 		.pipe($.eslint.failAfterError());
 }
 
-gulp.task('lint-src', function () {
-	return lint('src/**/*.js');
-});
+gulp.task('lint-src', () => lint('src/**/*.js'));
 
-gulp.task('lint-test', function () {
-	return lint('test/**/test-*.js');
-});
+gulp.task('lint-test', () => lint('test/**/test-*.js'));
 
 /*
  * test tasks
  */
-gulp.task('test', ['lint-test', 'build'], function () {
-	var suite, grep;
-	var p = process.argv.indexOf('--suite');
+gulp.task('test', ['lint-test', 'build'], () => {
+	let suite;
+	let grep;
+	let p = process.argv.indexOf('--suite');
 	if (p !== -1 && p + 1 < process.argv.length) {
 		suite = process.argv[p + 1];
 	}
@@ -110,7 +101,7 @@ gulp.task('test', ['lint-test', 'build'], function () {
 		.pipe($.mocha({ grep: grep }));
 });
 
-gulp.task('coverage', ['lint-src', 'build-plugins', 'lint-test', 'clean-coverage', 'clean-dist'], function (cb) {
+gulp.task('coverage', ['lint-src', 'build-plugins', 'lint-test', 'clean-coverage', 'clean-dist'], cb => {
 	gulp.src('src/**/*.js')
 		.pipe($.plumber())
 		.pipe($.debug({ title: 'build' }))
@@ -118,7 +109,7 @@ gulp.task('coverage', ['lint-src', 'build-plugins', 'lint-test', 'clean-coverage
 		.pipe($.babelIstanbul())
 		.pipe($.sourcemaps.write('.'))
 		.pipe(gulp.dest(distDir))
-		.on('finish', function () {
+		.on('finish', () => {
 			gulp.src('test/**/*.js')
 				.pipe($.plumber())
 				.pipe($.debug({ title: 'test' }))
@@ -133,11 +124,11 @@ gulp.task('coverage', ['lint-src', 'build-plugins', 'lint-test', 'clean-coverage
 /*
  * watch/debug tasks
  */
-var children = 0;
-gulp.task('restart-daemon', function () {
-	var child = spawn(process.execPath, ['../bin/appcd', 'restart', '--debug'], { stdio: 'inherit' });
+let children = 0;
+gulp.task('restart-daemon', () => {
+	const child = spawn(process.execPath, ['../bin/appcd', 'restart', '--debug'], { stdio: 'inherit' });
 	children++;
-	child.on('exit', function () {
+	child.on('exit', () => {
 		// if appcd is killed via kill(1), then we force gulp watch to exit
 		if (--children < 1) {
 			process.exit(0);
@@ -145,12 +136,12 @@ gulp.task('restart-daemon', function () {
 	});
 });
 
-gulp.task('watch', function () {
-	runSequence('build', 'restart-daemon', function () {
-		gulp.watch('src/**/*.js', function () {
+gulp.task('watch', () => {
+	runSequence('build', 'restart-daemon', () => {
+		gulp.watch('src/**/*.js', () => {
 			runSequence('build-src', 'restart-daemon');
 		});
-		gulp.watch('plugins/*/src/**/*.js', function () {
+		gulp.watch('plugins/*/src/**/*.js', () => {
 			runSequence('build-plugins', 'restart-daemon');
 		});
 	});

@@ -3,6 +3,14 @@
  */
 export default class Service {
 	/**
+	 * The namespace to use for all dispatcher endpoints, events, and log messages.
+	 * Defaults to the name of the plugin from the `package.json`. If the name
+	 * begins with "appcd-plugin-", it is stripped.
+	 * @type {String}
+	 */
+	static namespace = null;
+
+	/**
 	 * Initializes the service internals.
 	 *
 	 * @param {Object} opts - An object containing various options.

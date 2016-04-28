@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import Server from './Server';
+import { mergeDeep } from './util';
 import uuid from 'node-uuid';
 import WebSocket from 'ws';
 
@@ -19,8 +19,9 @@ export default class Client extends EventEmitter {
 	 * Initializes the client.
 	 *
 	 * @param {Object} [opts]
-	 * @param {String} [opts.hostname=127.0.0.1] - The host to connect to.
+	 * @param {String} [opts.hostname='127.0.0.1'] - The host to connect to.
 	 * @param {Number} [opts.port=1732] - The port to connect to.
+	 * @param {Object} [opts.source] - The source type and name using this client.
 	 * @param {Boolean} [opts.startServer=true] - Start the server if it's not
 	 * already running.
 	 */
@@ -28,6 +29,7 @@ export default class Client extends EventEmitter {
 		super();
 		this.hostname    = opts.hostname || '127.0.0.1';
 		this.port        = opts.port || 1732;
+		this.source      = mergeDeep({ type: 'client', name: 'appcd client' }, opts.source);
 		this.startServer = opts.startServer !== false;
 	}
 
@@ -110,6 +112,7 @@ export default class Client extends EventEmitter {
 						version: '1.0',
 						path: path,
 						id: id,
+						source: this.source,
 						data: payload
 					}));
 				})
@@ -122,6 +125,9 @@ export default class Client extends EventEmitter {
 			if (!this.startServer) {
 				return send();
 			}
+
+			// we must require the server at runtime to workaround circular dependencies
+			const Server = require('./server');
 
 			new Server({
 				appcd: {

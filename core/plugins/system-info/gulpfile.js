@@ -1,3 +1,5 @@
+'use strict';
+
 const $ = require('gulp-load-plugins')();
 const del = require('del');
 const gulp = require('gulp');

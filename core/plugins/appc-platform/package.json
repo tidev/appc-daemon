@@ -1,6 +1,6 @@
 {
-  "name": "appcd-plugin-system-info",
-  "version": "0.0.1",
+  "name": "appcd-plugin-appc-platform",
+  "version": "0.1.0",
   "main": "dist/index",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -8,6 +8,7 @@
     "prepublish": "npm run build"
   },
   "dependencies": {
+    "appc-platform-sdk": "git+ssh://git@github.com/appcelerator/appc-platform-sdk.git"
   },
   "devDependencies": {
     "babel-eslint": "^6.0.4",
@@ -17,7 +18,7 @@
     "gulp-babel": "^6.1.2",
     "gulp-debug": "^2.1.2",
     "gulp-eslint": "^2.0.0",
-    "gulp-filter": "git+https://github.com/appcelerator/gulp-filter.git#cwd-fix",
+    "gulp-filter": "^4.0.0",
     "gulp-load-plugins": "^1.2.2",
     "gulp-mocha": "^2.2.0",
     "gulp-plumber": "^1.1.0",

@@ -1,10 +1,8 @@
 import autobind from 'autobind-decorator';
-import crypto from 'crypto';
-import { existsSync, expandPath } from './util';
+import { existsSync, expandPath, randomBytes } from './util';
 import fs from 'fs';
 import { HookEmitter } from 'hook-emitter';
 import Logger from './logger';
-import macaddress from 'macaddress';
 import mkdirp from 'mkdirp';
 import path from 'path';
 import pluralize from 'pluralize';
@@ -12,12 +10,6 @@ import request from 'request';
 import uuid from 'node-uuid';
 
 export default class Analytics extends HookEmitter {
-	/**
-	 * The machine id to be loaded from the `.mid` file or from the mac address.
-	 * @type {String}
-	 */
-	machineId = null;
-
 	/**
 	 * The session id.
 	 * @type {String}
@@ -53,7 +45,7 @@ export default class Analytics extends HookEmitter {
 	 * @access public
 	 */
 	@autobind
-	initialize() {
+	init() {
 		// no need to initialize more than once
 		if (this._initialized) {
 			this.logger.warn('Analytics system already initialized');
@@ -89,34 +81,6 @@ export default class Analytics extends HookEmitter {
 		});
 
 		this.logger.info('Analytics system is ' + this.logger.highlight(this.server.config('analytics.enabled', true) ? 'enabled' : 'disabled'));
-
-		return new Promise((resolve, reject) => {
-			const appcdHome = expandPath(this.server.config('appcd.home'));
-			const midFile = path.join(appcdHome, '.mid');
-
-			// load the machine id, if exists
-			this.machineId = null;
-			if (existsSync(midFile)) {
-				this.machineId = fs.readFileSync(midFile).toString().split('\n')[0];
-			}
-
-			if (this.machineId && this.machineId.length === 32) {
-				return resolve();
-			}
-
-			// try to get a mac address
-			macaddress.one((err, mac) => {
-				if (err || !mac) {
-					this.machineId = crypto.randomBytes(16).toString('hex');
-				} else {
-					this.machineId = crypto.createHash('md5').update(mac).digest('hex');
-				}
-
-				// save the mid to file
-				mkdirp.sync(appcdHome);
-				fs.writeFile(midFile, this.machineId, err => err ? reject(err) : resolve());
-			});
-		});
 	}
 
 	/**
@@ -139,7 +103,7 @@ export default class Analytics extends HookEmitter {
 		}
 
 		// generate a 24-byte unique id
-		const id = (Date.now().toString(16) + crypto.randomBytes(8).toString('hex')).slice(0, 24);
+		const id = (Date.now().toString(16) + randomBytes(8)).slice(0, 24);
 
 		const event = {
 			type: data.type,
@@ -150,7 +114,7 @@ export default class Analytics extends HookEmitter {
 		};
 
 		// override with required data properties
-		data.mid = this.machineId;
+		data.mid = this.server.config('appcd.machineId');
 		data.sid = this.sessionId;
 		data.userAgent = this.server.config('analytics.userAgent');
 

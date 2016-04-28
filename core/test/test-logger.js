@@ -11,11 +11,11 @@ class MockStream extends EventEmitter {
 describe('logger', () => {
 
 	beforeEach(() => {
-		Logger.buffer = [];
+		Logger.reset();
 	});
 
 	afterEach(() => {
-		Logger.buffer = [];
+		Logger.reset();
 	});
 
 	it('should have log methods and styles', () => {

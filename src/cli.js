@@ -3,8 +3,12 @@ import program from 'commander';
 import { findCore, loadCore, detectCores, switchCore } from './index';
 
 const pkgJson = require('../package.json');
+const source = {
+	type: 'cli',
+	name: `Appcelerator Daemon CLI v${pkgJson.version}`
+};
 const analytics = {
-	userAgent: `Appcelerator Daemon CLI v${pkgJson.version}`
+	userAgent: source.name
 };
 
 program
@@ -81,7 +85,7 @@ program
 		Promise.resolve()
 			.then(() => loadCore({ version: program.use }))
 			.then(appcd => {
-				const client = new appcd.Client({ startServer: false });
+				const client = new appcd.Client({ source, startServer: false });
 				client
 					.request(path, payload)
 					.on('response', data => {
@@ -90,7 +94,7 @@ program
 					.on('close', () => process.exit(0))
 					.on('error', err => {
 						client.disconnect();
-						handleError(err);
+						handleError(err.toString());
 					});
 
 				function disconnect() {
@@ -111,14 +115,17 @@ program
 		Promise.resolve()
 			.then(() => loadCore({ version: program.use }))
 			.then(appcd => {
-				const client = new appcd.Client({ startServer: false });
+				const client = new appcd.Client({ source, startServer: false });
 				client
 					.request('/appcd/logcat', { colors: cmd.colors })
 					.on('response', data => {
 						process.stdout.write(data);
 					})
 					.on('end', client.disconnect)
-					.on('error', handleError);
+					.on('error', err => {
+						client.disconnect();
+						handleError(err.toString());
+					});
 			})
 			.catch(handleError);
 	});
@@ -130,14 +137,17 @@ program
 		Promise.resolve()
 			.then(() => loadCore({ version: program.use }))
 			.then(appcd => {
-				const client = new appcd.Client({ startServer: false });
+				const client = new appcd.Client({ source, startServer: false });
 				client
 					.request('/appcd/status')
 					.on('response', data => {
 						console.log(data);
 						client.disconnect();
 					})
-					.on('error', handleError);
+					.on('error', err => {
+						client.disconnect();
+						handleError(err.toString());
+					});
 			})
 			.catch(handleError);
 	});

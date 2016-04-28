@@ -104,7 +104,8 @@ Any WebSocket capable platform can connect to appcd as long as it follows the
 appcd protocol.
 
 Each request must be a serialized JSON object that contains a `version`, `id`,
-`path`, and optionally a `data` payload.
+`path`, and optionally a `data` payload and `source` containing a `type` and a
+`name`.
 
 The following is an example of a web browser that issues a status request:
 

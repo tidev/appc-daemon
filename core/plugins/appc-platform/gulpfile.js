@@ -1,3 +1,5 @@
+'use strict';
+
 const $ = require('gulp-load-plugins')();
 const del = require('del');
 const gulp = require('gulp');
@@ -11,14 +13,12 @@ const distDir = path.join(__dirname, 'dist');
  */
 gulp.task('clean', ['clean-dist']);
 
-gulp.task('clean-dist', function (done) {
-	del([distDir]).then(function () { done(); });
-});
+gulp.task('clean-dist', done => { del([distDir]).then(() => done()) });
 
 /*
  * build tasks
  */
-gulp.task('build', ['clean-dist', 'lint-src'], function () {
+gulp.task('build', ['clean-dist', 'lint-src'], () => {
 	return gulp
 		.src('src/**/*.js')
 		.pipe($.plumber())
@@ -40,31 +40,31 @@ function lint(pattern) {
 		.pipe($.eslint.failOnError());
 }
 
-gulp.task('lint-src', function () {
-	return lint('src/**/*.js');
-});
+gulp.task('lint-src', () => lint('src/**/*.js'));
 
-gulp.task('lint-test', function () {
-	return lint('test/**/test-*.js');
-});
+gulp.task('lint-test', () => lint('test/**/test-*.js'));
 
 /*
  * test tasks
  */
-gulp.task('test', ['build', 'lint-test'], function () {
-	var grep;
-	var p = process.argv.indexOf('--suite');
+gulp.task('test', ['build', 'lint-test'], () => {
+	let suite;
+	let grep;
+	let p = process.argv.indexOf('--suite');
+	if (p !== -1 && p + 1 < process.argv.length) {
+		suite = process.argv[p + 1];
+	}
+	p = process.argv.indexOf('--grep');
 	if (p !== -1 && p + 1 < process.argv.length) {
 		grep = process.argv[p + 1];
 	}
 
-	return gulp.src(['src/**/*.js', 'test/**/*.js'])
+	return gulp.src('test/**/*.js')
 		.pipe($.plumber())
-		.pipe($.debug({ title: 'build' }))
+		.pipe($.debug({ title: 'test' }))
 		.pipe($.babel())
 		.pipe($.injectModules())
-		.pipe($.filter('test/**/*.js'))
-		.pipe($.debug({ title: 'test' }))
+		.pipe($.filter(suite ? ['test/setup.js'].concat(suite.split(',').map(s => 'test/**/test-' + s + '.js')) : 'test/**/*.js'))
 		.pipe($.mocha({ grep: grep }));
 });
 

@@ -71,40 +71,6 @@ export default class Dispatcher {
 	}
 
 	/**
-	 * Asynchronously dispatch a request. If unable to find a appropriate
-	 * handler, an error is returned.
-	 *
-	 * @param {String} path - The dispatch path to request.
-	 * @param {Object} [data={}] - An optional data payload to send.
-	 * @returns {Promise}
-	 * @access public
-	 */
-	@autobind
-	call(path, data) {
-		if (!data || typeof data !== 'object') {
-			data = {};
-		}
-
-		data.path = path;
-
-		for (const route of this.routes) {
-			const m = path.match(route.regexp);
-			if (m) {
-				const params = m.slice(1);
-				params.forEach((param, i) => {
-					if (route.keys[i]) {
-						data.params || (data.params = {});
-						data.params[route.keys[i].name] = param;
-					}
-				});
-				return this.execRoute(path, route, data);
-			}
-		}
-
-		return Promise.reject(new DispatcherError(404, 'No route'));
-	}
-
-	/**
 	 * Adds a route to the list of routes.
 	 *
 	 * @param {String|RegExp} path
@@ -114,10 +80,11 @@ export default class Dispatcher {
 	addRoute(path, handler) {
 		const keys = [];
 		const regexp = pathToRegExp(path, keys, { end: !(handler instanceof Dispatcher) });
+		const prefix = handler instanceof Dispatcher ? path : null;
 
 		this.routes.push({
 			path,
-			prefix: handler instanceof Dispatcher ? path : null,
+			prefix,
 			handler,
 			keys,
 			regexp
@@ -131,19 +98,122 @@ export default class Dispatcher {
 	}
 
 	/**
-	 * Executes the route's handler.
+	 * Asynchronously dispatch a request. If unable to find a appropriate
+	 * handler, an error is returned.
 	 *
-	 * @param {String} path
-	 * @param {Object} route
-	 * @param {Object} data
+	 * @param {String} path - The dispatch path to request.
+	 * @param {Object} [ctx={}] - An optional data payload to send.
 	 * @returns {Promise}
-	 * @access private
+	 * @access public
 	 */
-	async execRoute(path, route, data) {
-		if (route.handler instanceof Dispatcher) {
-			return await route.handler.call(path.replace(route.prefix, ''), data);
-		} else {
-			return await route.handler(data);
+	@autobind
+	call(path, ctx) {
+		if (!ctx || typeof ctx !== 'object') {
+			ctx = {};
 		}
+
+		ctx.path = path;
+		ctx.status = 200;
+
+		let index = -1;
+
+		const dispatch = i => {
+			if (i <= index) {
+				// next() was called multiple times, but there's nothing we can do about
+				// it except break the chain... no error will ever be propagated
+				return Promise.reject(new Error('next() was called multiple times'));
+			}
+			index = i;
+
+			const route = this.routes[i];
+			if (!route) {
+				// end of the line
+				if (ctx.status !== 404) {
+					ctx.status = 404;
+				}
+				return Promise.reject(new DispatcherError(404, 'No route'));
+			}
+
+			const m = ctx.path.match(route.regexp);
+			if (!m) {
+				return dispatch(i + 1);
+			}
+
+			// extract the params from the path
+			delete ctx.params;
+			const params = m.slice(1);
+			params.forEach((param, i) => {
+				if (route.keys[i]) {
+					ctx.params || (ctx.params = {});
+					ctx.params[route.keys[i].name] = param;
+				}
+			});
+
+			return new Promise((resolve, reject) => {
+				let fired = null;
+				let pending = false;
+				let result;
+				let wait = false;
+
+				if (route.handler instanceof Dispatcher) {
+					// call the nested dispatcher
+					route.handler
+						.call(path.replace(route.prefix, ''), ctx)
+						.then(resolve, reject);
+					return;
+				}
+
+				// call the handler
+				// make note of the arity so we know if we have to wait
+				wait = route.handler.length > 1;
+				result = route.handler(ctx, function next(err) {
+					fired = { err };
+
+					if (err) {
+						if (!pending) {
+							return Promise.reject(err);
+						}
+						return reject(err);
+					}
+
+					return dispatch(i + 1)
+						.then(ctx2 => {
+							if (pending) {
+								resolve(ctx2 || ctx);
+							}
+						})
+						.catch(err => {
+							if (!pending) {
+								return Promise.reject(err);
+							}
+							reject(err);
+						});
+				});
+
+				if (result instanceof Promise) {
+					return result.then(resolve, reject);
+				}
+
+				if (fired) {
+					// handler was synchronous and next() was already called,
+					// so resolve this promise
+					return fired.err ? reject(fired.err) : resolve(ctx);
+				}
+
+				// handler was asynchronous and we must wait for next() to be called
+				if (wait) {
+					pending = true;
+					return;
+				}
+
+				// no need to wait for anything async and everythign is fired,
+				// so resolve this promise
+				resolve(result);
+			});
+		};
+
+		// start the chain and return its promise
+		return dispatch(0)
+			.catch(err => Promise.reject(err));
 	}
 }

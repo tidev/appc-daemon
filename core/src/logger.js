@@ -21,7 +21,7 @@ export default class Logger {
 	 * The maximum number of lines to buffer.
 	 * @type {Number}
 	 */
-	static maxBuffer = 100;
+	static maxBuffer = 1000;
 
 	/**
 	 * Buffer containing the lines of output.
@@ -75,7 +75,7 @@ export default class Logger {
 		label = label ? colors.gray(('[' + label + '] ').padRight(9)) : '';
 
 		// wire up the log methods
-		Object.entries(Logger.levels).forEach(([level, color]) => {
+		for (const [level, color] of Object.entries(Logger.levels)) {
 			let rlabel = label + (colors[color](level) + ': ');
 			const n = 5 - level.length;
 			if (n > 0) {
@@ -103,7 +103,7 @@ export default class Logger {
 					});
 				}
 			});
-		});
+		}
 
 		// wire up the style helpers
 		Object.entries(Logger.styles).forEach(([name, color]) => {
@@ -162,6 +162,23 @@ export default class Logger {
 			delete Logger.streams[out];
 		}
 	}
+
+	/**
+	 *
+	 */
+	static reset() {
+		Logger.buffer = [];
+
+		for (const streams of Object.values(Logger.streams)) {
+			for (const stream of streams) {
+				Logger.out.unpipe(stream);
+			}
+		}
+		Logger.streams = {};
+
+		Logger.out = new PassThrough({ highWaterMark: 0 });
+		Logger.out.pipe(new Blackhole);
+	}
 }
 
 /**
@@ -178,4 +195,4 @@ class Blackhole extends Writable {
  * pipeline with a writable stream to purge the initial PassThrough stream's
  * buffer.
  */
-Logger.out.pipe(new Blackhole);
+Logger.reset();

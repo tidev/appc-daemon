@@ -75,6 +75,21 @@ export default class Connection extends HookEmitter {
 	}
 
 	/**
+	 * Sends a response, then closes the connection.
+	 *
+	 * @param {*} [data] - The response payload to send.
+	 * @access public
+	 */
+	end(data) {
+		if (data) {
+			return this.send(data)
+				.then(() => this.close());
+		}
+
+		this.close();
+	}
+
+	/**
 	 * Ends the request.
 	 *
 	 * @access public

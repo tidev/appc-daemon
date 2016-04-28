@@ -2,27 +2,22 @@ import Analytics from './analytics';
 import autobind from 'autobind-decorator';
 import 'babel-polyfill';
 import Connection from './connection';
-import Dispatcher, { DispatcherError } from './dispatcher';
-import { existsSync } from './util';
+import Dispatcher from './dispatcher';
 import fs from 'fs';
 import { gawk, GawkUndefined } from 'gawk';
 import { getActiveHandles } from 'double-stack';
 import { getDefaultConfig, getEnvironmentConfig } from './defaults';
 import { HookEmitter } from 'hook-emitter';
-import http from 'http';
 import humanize from 'humanize';
 import Logger from './logger';
-import { mergeDeep, expandPath } from './util';
 import mkdirp from 'mkdirp';
 import os from 'os';
 import path from 'path';
-import Plugin from './plugin';
+import pidusage from 'pidusage';
+import PluginManager from './plugin-manager';
 import pluralize from 'pluralize';
-import resolvePath from 'resolve-path';
-import Router from 'koa-router';
 import Service from './service';
-import { fork, spawn } from 'child_process';
-import stream from 'stream';
+import * as util from './util';
 import WebServer from './webserver';
 
 const appcdDispatcher = new Dispatcher;
@@ -31,47 +26,49 @@ const appcdEmitter = new HookEmitter;
 /**
  * Global appcd namespace.
  */
-global.appcd = {
-	/**
-	 * The global request dipatcher call() function.
-	 * @param {String} path - The dispatch path to request.
-	 * @param {Object} [data={}] - An optional data payload to send.
-	 * @returns {Promise}
-	 */
-	call: appcdDispatcher.call.bind(appcdDispatcher),
+Object.defineProperty(global, 'appcd', {
+	value: {
+		/**
+		 * The global request dipatcher call() function.
+		 * @param {String} path - The dispatch path to request.
+		 * @param {Object} [data={}] - An optional data payload to send.
+		 * @returns {Promise}
+		 */
+		call: appcdDispatcher.call,
 
-	/**
-	 * The global event emitter on() function. Plugins and other modules can use
-	 * this to listen for events and hooks from all `Server` instances.
-	 * @param {String} event - One or more space-separated event names to add the listener to.
-	 * @param {Function} listener - A function to call when the event is emitted.
-	 * @returns {HookEmitter}
-	 */
-	on: appcdEmitter.on.bind(appcdEmitter),
+		/**
+		 * The global event emitter on() function. Plugins and other modules can use
+		 * this to listen for events and hooks from all `Server` instances.
+		 * @param {String} event - One or more space-separated event names to add the listener to.
+		 * @param {Function} listener - A function to call when the event is emitted.
+		 * @returns {HookEmitter}
+		 */
+		on: appcdEmitter.on.bind(appcdEmitter),
 
-	/**
-	 * The global logger instance. All appc daemon code should use this to log
-	 * messages. Daemon plugins should use the namespaced logger that is apart
-	 * of the `Service` base class.
-	 * @type {Object}
-	 */
-	logger: new Logger('appcd'),
+		/**
+		 * The global logger instance. All appc daemon code should use this to log
+		 * messages. Daemon plugins should use the namespaced logger that is apart
+		 * of the `Service` base class.
+		 * @type {Object}
+		 */
+		logger: new Logger('appcd'),
 
-	/**
-	 * The service base class.
-	 * @type {Service}
-	 */
-	Service,
+		/**
+		 * The service base class.
+		 * @type {Service}
+		 */
+		Service,
 
-	/**
-	 * Exits the process. If any server instance has `allowExit` set to `false`,
-	 * then `process.exit()` will become a no-op and you will have to call
-	 * `appcd.exit()` to exit. This is a safety feature so that a plugin doesn't
-	 * try to take down the daemon.
-	 * @type {Function}
-	 */
-	exit: process.exit
-};
+		/**
+		 * Exits the process. If any server instance has `allowExit` set to `false`,
+		 * then `process.exit()` will become a no-op and you will have to call
+		 * `appcd.exit()` to exit. This is a safety feature so that a plugin doesn't
+		 * try to take down the daemon.
+		 * @type {Function}
+		 */
+		exit: process.exit
+	}
+});
 
 /**
  * The core server logic that orchestrates the plugin lifecycle and request
@@ -85,10 +82,10 @@ export default class Server extends HookEmitter {
 	webserver = null;
 
 	/**
-	 * A map of all loaded plugins.
+	 * The plugin manager.
 	 * @type {Object}
 	 */
-	plugins = {};
+	pluginMgr = null;
 
 	/**
 	 * The count of the Node process uptime when the server is started.
@@ -116,30 +113,32 @@ export default class Server extends HookEmitter {
 		super();
 
 		// initialize with the default config
-		const cfg = mergeDeep({}, getDefaultConfig());
+		const cfg = util.mergeDeep({}, getDefaultConfig());
 
 		// load the config file
 		const defaultConfigFile  = cfg.appcd.configFile;
 		const optsConfigFile     = opts.appcd && opts.appcd.configFile;
-		const expandedConfigFile = expandPath(optsConfigFile || defaultConfigFile);
+		const expandedConfigFile = util.expandPath(optsConfigFile || defaultConfigFile);
 		if (optsConfigFile) {
 			if (!/\.js(on)?$/.test(optsConfigFile)) {
 				throw new Error('Config file must be a JavaScript or JSON file.');
 			}
-			if (!existsSync(expandedConfigFile)) {
+			if (!util.existsSync(expandedConfigFile)) {
 				throw new Error(`Specified config file not found: ${optsConfigFile}.`);
 			}
 		}
-		const savedConfig = existsSync(expandedConfigFile) && require(expandedConfigFile) || {};
+		const savedConfig = util.existsSync(expandedConfigFile) && require(expandedConfigFile) || {};
 
 		// merge in the default environment settings, config file settings, and
 		// constructor settings
-		mergeDeep(cfg, getEnvironmentConfig(savedConfig.environment));
-		mergeDeep(cfg, savedConfig);
-		mergeDeep(cfg, opts);
+		util.mergeDeep(cfg, getEnvironmentConfig(savedConfig.environment));
+		util.mergeDeep(cfg, savedConfig);
+		util.mergeDeep(cfg, opts);
 
 		// set the actual config file that was loaded
 		cfg.appcd.configFile = optsConfigFile || defaultConfigFile;
+
+		cfg.machineId = null;
 
 		// gawk the config so that we can monitor it at runtime
 		this.cfg = gawk(cfg);
@@ -147,6 +146,21 @@ export default class Server extends HookEmitter {
 		// link our hook emitter to the global hook emitter so we can broadcast
 		// our events and hooks to anything
 		this.link(appcdEmitter);
+
+		// if the `plugins` directory in the appc home directory doesn't exist,
+		// then create it
+		const appcHomePluginDir = util.expandPath(this.config('appc.home'), 'appcd/plugins');
+		mkdirp.sync(appcHomePluginDir);
+
+		this.pluginMgr = new PluginManager({
+			appcdDispatcher,
+			pluginPaths: [
+				path.resolve(__dirname, '..', 'plugins'),
+				appcHomePluginDir,
+				...this.config('paths.plugins', [])
+			],
+			server: this
+		});
 
 		// initialize the analytics system
 		this.analytics = new Analytics(this);
@@ -181,8 +195,8 @@ export default class Server extends HookEmitter {
 	 * @access public
 	 */
 	isRunning() {
-		const pidFile = expandPath(this.config('appcd.pidFile'));
-		if (existsSync(pidFile)) {
+		const pidFile = util.expandPath(this.config('appcd.pidFile'));
+		if (util.existsSync(pidFile)) {
 			// found a pid file, check to see if it's stale
 			const pid = parseInt(fs.readFileSync(pidFile).toString());
 			if (pid) {
@@ -227,8 +241,9 @@ export default class Server extends HookEmitter {
 		process.title = 'appcd';
 
 		return Promise.resolve()
-			.then(this.analytics.initialize)
-			.then(this.loadPlugins)
+			.then(this.init)
+			.then(this.analytics.init)
+			.then(this.pluginMgr.load)
 			.then(() => {
 				const pid = this.isRunning();
 
@@ -255,7 +270,7 @@ export default class Server extends HookEmitter {
 						});
 					}
 
-					const pidFile = expandPath(this.config('appcd.pidFile'));
+					const pidFile = util.expandPath(this.config('appcd.pidFile'));
 					const dir = path.dirname(pidFile);
 					mkdirp.sync(dir);
 
@@ -300,135 +315,114 @@ export default class Server extends HookEmitter {
 	}
 
 	/**
-	 * Detects, loads, and initializes plugins.
+	 * Initializes the server in preparation for start.
 	 *
 	 * @returns {Promise}
 	 * @access private
 	 */
 	@autobind
-	loadPlugins() {
-		// if the `plugins` directory in the appc home directory doesn't exist,
-		// then create it
-		const appcHomePluginDir = expandPath(this.config('appc.home'), 'appcd/plugins');
-		mkdirp.sync(appcHomePluginDir);
+	init() {
+		const appcdHome = util.expandPath(this.config('appcd.home'));
+		mkdirp.sync(appcdHome);
 
-		// build list of all potential plugin directories
-		const pathsToCheck = [
-			path.resolve(__dirname, '..', 'plugins'),
-			appcHomePluginDir,
-			...this.config('paths.plugins', [])
-		];
-		const pluginPaths = [];
+		appcdDispatcher.register('/appcd/config/:key*', this.configRouteHandler);
 
-		pathsToCheck.forEach(dir => {
-			dir = expandPath(dir);
-			if (!pluginPaths.includes(dir) && existsSync(dir)) {
-				if (existsSync(path.join(dir, 'package.json'))) {
-					pluginPaths.push(dir);
-				} else {
-					fs.readdirSync(dir).forEach(name => {
-						if (existsSync(path.join(dir, name, 'package.json'))) {
-							pluginPaths.push(path.join(dir, name));
-						}
-					});
-				}
-			}
-		});
+		return Promise.resolve()
+			.then(this.initMachineId);
+	}
 
-		/**
-		 * For each plugin path, check if it contains a valid plugin:
-		 *  - must have a package.json
-		 *  - must have a main file or index.js
-	  	 *  - main file must export a service that extends appcd.Service
-		 *
-		 * We test each plugin path in a subprocess since we don't want to try to
-		 * load a plugin that breaks the server due to some bad syntax, pollute
-		 * global namespace, or load dependencies that consume unrecoverable memory.
-		 */
-		return Promise.all(pluginPaths.map(pluginPath => new Promise((resolve, reject) => {
-			let pkgJson;
-			let mainFile;
+	/**
+	 * Config route handler for both the dispatcher and web server.
+	 *
+	 * @param {Context} ctx - The Koa request context.
+	 * @access private
+	 */
+	@autobind
+	configRouteHandler(ctx) {
+		const filter = ctx.params.key && ctx.params.key.split('/') || undefined;
+		const node = this.cfg.get(filter);
+		if (!node) {
+			throw new Error('Invalid request: ' + ctx.path);
+		}
+		ctx.body = node.toJSON(true);
+	}
 
-			// we do not want to return this promise chain since it could contain
-			// an error and bad plugins are ingored, so that's why we wrap it with
-			// another promise
-			Promise.resolve()
-				.then(() => {
-					pkgJson = JSON.parse(fs.readFileSync(path.join(pluginPath, 'package.json')));
-					if (!pkgJson || typeof pkgJson !== 'object') {
-						pkgJson = {};
-					}
+	/**
+	 * Determines the machine's unique identifier and stores the value in the
+	 * appcd server config.
+	 *
+	 * @returns {Promise}
+	 * @access private
+	 */
+	@autobind
+	initMachineId() {
+		const midFile = util.expandPath(this.config('appcd.home'), '.mid');
 
-					const main = pkgJson.main || 'index.js';
-					mainFile = main;
-					if (!/\.js$/.test(mainFile)) {
-						mainFile += '.js';
-					}
+		return Promise.resolve()
+			.then(() => new Promise((resolve, reject) => {
+				let promise = Promise.resolve();
 
-					mainFile = resolvePath(pluginPath, mainFile);
-					if (!existsSync(mainFile)) {
-						throw new Error(`Unable to find main file: ${main}`);
-					}
-				})
-				.then(() => {
-					if (!this.config('appcd.skipPluginCheck')) {
-						return this.spawnNode([ path.join(__dirname, 'check-plugin.js'), mainFile ]);
-					}
-				})
-				.then(child => {
-					if (child) {
-						return new Promise((resolve, reject) => {
-							let output = '';
-							child.stdout.on('data', data => output += data.toString());
-							child.stderr.on('data', data => output += data.toString());
-							child.on('close', code => {
-								if (code === 3) {
-									appcd.logger.warn(`Plugin "${pluginPath}" does not export a service, skipping`);
-									resolve();
-								} else if (code > 0) {
-									reject(`Check plugin exited with code ${code}: ${output.trim()}`);
-								} else {
-									resolve(true);
-								}
-							});
+				// if we're running on OS X or Windows, then get the operating system's
+				// unique identifier
+				if (process.platform === 'darwin') {
+					promise = util.run('ioreg', ['-ard1', '-c', 'IOPlatformExpertDevice'])
+						.then(result => {
+							const plist = require('simple-plist');
+							const json = plist.parse(result.stdout)[0];
+							return json && util.sha1(json.IOPlatformUUID);
 						});
-					}
-				})
-				.then(isService => {
-					const module = require(mainFile);
-					const ServiceClass = module && module.__esModule ? module.default : module;
+				} else if (/^win/.test(process.platform)) {
+					promise = util.run('reg', ['query', 'HKLM\\Software\\Microsoft\\Cryptography', '/v', 'MachineGuid'])
+						.then(result => {
+							const m = result.stdout.trim().match(/MachineGuid\s+REG_SZ\s+(.+)/i);
+							if (m) {
+								return util.sha1(m[1]);
+							}
+						});
+				}
 
-					// double check that this plugin exports a service
-					// check-plugin.js should have already done this for us, but better safe than sorry
-					if (!ServiceClass || typeof ServiceClass !== 'function' || !(ServiceClass.prototype instanceof Service)) {
-						throw new Error('Plugin does not export a service');
-					}
+				promise
+					.then(resolve)
+					// squeltch errors
+					.catch(err => resolve());
+			}))
+			.then(machineId => {
+				if (machineId) {
+					return machineId;
+				}
 
-					const name = pkgJson.name || path.basename(pluginPath);
-
-					if (this.plugins[name]) {
-						throw new Error('Already loaded a plugin with the same name: ' + this.plugins[name].path);
-					}
-
-					const plugin = this.plugins[name] = new Plugin({
-						name,
-						path: pluginPath,
-						ServiceClass,
-						pkgJson,
-						appcdDispatcher,
-						server: this
-					});
-
-					return plugin.init();
-				})
-				.then(resolve)
-				.catch(err => {
-					appcd.logger.error(`Failed to load plugin ${pluginPath}`);
-					appcd.logger.error(err.stack || err.toString());
-					appcd.logger.error(`Skipping ${pluginPath}`);
-					resolve();
+				// try to generate the machine id based on the mac address
+				return new Promise((resolve, reject) => {
+					const macaddress = require('macaddress');
+					macaddress.one((err, mac) => resolve(!err && mac ? util.sha1(mac) : null));
 				});
-		})));
+			})
+			.then(machineId => {
+				if (machineId) {
+					return machineId;
+				}
+
+				// see if we have a cached machine id
+				let mid = null;
+				if (util.existsSync(midFile)) {
+					mid = fs.readFileSync(midFile).toString().split('\n')[0];
+					if (!mid || mid.length !== 40) {
+						mid = null;
+					}
+				}
+
+				// generate a random machine id
+				if (!mid) {
+					mid = util.randomBytes(20);
+				}
+
+				return mid;
+			})
+			.then(machineId => {
+				appcd.logger.debug(`Machine ID: ${appcd.logger.highlight(machineId)}`);
+				fs.writeFileSync(midFile, machineId);
+				this.cfg.set('machineId', machineId);
+			});
 	}
 
 	/**
@@ -440,9 +434,9 @@ export default class Server extends HookEmitter {
 	daemonize() {
 		return this
 			.hook('appcd:daemonize', (args, opts) => {
-				return this.spawnNode(args, opts)
+				return util.spawnNode(args, opts)
 					.then(child => {
-						fs.writeFileSync(expandPath(this.config('appcd.pidFile')), child.pid);
+						fs.writeFileSync(util.expandPath(this.config('appcd.pidFile')), child.pid);
 						child.unref();
 					});
 			})([ this.config('appcd.startScript', path.resolve(__dirname, 'start-server.js')), '--daemonize', '--config-file', this.config('appcd.configFile') ], {
@@ -452,34 +446,10 @@ export default class Server extends HookEmitter {
 	}
 
 	/**
-	 * Spawns a new node process with the specfied args.
+	 * Initializes the server status system.
 	 *
-	 * @param {Array} [args] - An array of arguments to pass to the subprocess.
-	 * @param {Object} [opts] - Spawn options.
 	 * @returns {Promise}
 	 * @access private
-	 */
-	spawnNode(args = [], opts = {}) {
-		const node = process.env.NODE_EXEC_PATH || process.execPath;
-		const v8args = [];
-
-		// if the user has more than 2GB of RAM, set the max memory to 3GB or 75% of the total memory
-		const totalMem = Math.floor(os.totalmem() / 1e6);
-		if (totalMem * 0.75 > 1500) {
-			v8args.push('--max_old_space_size=' + Math.min(totalMem * 0.75, 3000));
-		}
-
-		return Promise.resolve(
-			spawn(
-				process.env.NODE_EXEC_PATH || process.execPath,
-				[v8args, ...args],
-				opts
-			)
-		);
-	}
-
-	/**
-	 * Initializes the server status system.
 	 */
 	@autobind
 	initStatusMonitor() {
@@ -507,26 +477,22 @@ export default class Server extends HookEmitter {
 				});
 
 				const refresh = () => {
-					this.status.mergeDeep({
-						appcd: {
-							uptime: process.uptime() - this.startupTime,
-							plugins: Object.entries(this.plugins).map(([name, plugin]) => {
-								return {
-									name:    name,
-									path:    plugin.path,
-									version: plugin.version,
-									status:  plugin.getStatus()
-								};
-							})
-						},
-						system: {
-							loadavg: os.loadavg(),
-							memory: {
-								usage: process.memoryUsage(),
-								free:  os.freemem(),
-								total: os.totalmem()
+					pidusage.stat(process.pid, (err, stat) => {
+						this.status.mergeDeep({
+							appcd: {
+								cpuUsage: err ? null : stat.cpu,
+								plugins: this.pluginMgr.status(),
+								uptime: process.uptime() - this.startupTime
+							},
+							system: {
+								loadavg: os.loadavg(),
+								memory: {
+									usage: process.memoryUsage(),
+									free:  os.freemem(),
+									total: os.totalmem()
+								}
 							}
-						}
+						});
 					});
 				};
 
@@ -535,20 +501,22 @@ export default class Server extends HookEmitter {
 				let refreshTimer = setInterval(refresh, 1000);
 
 				const logger      = new Logger('appcd:status');
-				let prevLoadAvg   = null;
+				let prevCPUUsage  = null;
 				let prevMemory    = null;
 				let logTimer      = setInterval(() => {
-					const currentLoadAvg = this.status.get(['system', 'loadavg']).toJS();
-					const loadAvg = currentLoadAvg.map((val, i) => {
-						const v = val.toFixed(2);
-						if (prevLoadAvg && val < prevLoadAvg[i]) {
-							return logger.ok('\u2193' + v);
-						} else if (prevLoadAvg && val > prevLoadAvg[i]) {
-							return logger.alert('\u2191' + v);
+					const currentCPUUsage = this.status.get(['appcd', 'cpuUsage']).toJS();
+					let cpuUsage = '';
+					if (currentCPUUsage && prevCPUUsage) {
+						if (currentCPUUsage < prevCPUUsage) {
+							cpuUsage = logger.ok(('\u2193' + currentCPUUsage.toFixed(1) + '%').padStart(7));
+						} else if (currentCPUUsage > prevCPUUsage) {
+							cpuUsage = logger.alert(('\u2191' + currentCPUUsage.toFixed(1) + '%').padStart(7));
 						}
-						return ' ' + logger.note(v);
-					}).join(' ');
-					prevLoadAvg = currentLoadAvg;
+					}
+					if (!cpuUsage) {
+						cpuUsage = logger.note((' ' + (currentCPUUsage ? currentCPUUsage.toFixed(1) : '?') + '%').padStart(7));
+					}
+					prevCPUUsage = currentCPUUsage;
 
 					const currentMemoryUsage = this.status.get(['system', 'memory', 'usage']).toJS();
 					const heapUsed = humanize.filesize(currentMemoryUsage.heapUsed).toUpperCase();
@@ -584,7 +552,7 @@ export default class Server extends HookEmitter {
 					prevMemory = currentMemoryUsage;
 
 					logger.debug(
-						`Load Avg: ${loadAvg}  ` +
+						`CPU: ${cpuUsage}  ` +
 						`Heap:${heapUsage}  ` + // purposely don't put a space after the ':', heapUsage is already left padded
 						`RSS: ${rssUsage}  ` +
 						`Uptime: ${logger.highlight(this.status.get(['appcd', 'uptime']).toJS().toFixed(1) + 's')}`
@@ -594,6 +562,7 @@ export default class Server extends HookEmitter {
 				this.on('appcd:shutdown', () => {
 					clearInterval(refreshTimer);
 					clearInterval(logTimer);
+					pidusage.unmonitor(process.pid);
 				});
 
 				return this.status;
@@ -610,16 +579,20 @@ export default class Server extends HookEmitter {
 	initHandlers() {
 		return this
 			.hook('appcd:init.handlers', () => {
-				appcdDispatcher.register(/\/appcd\/status(\/.*)?/, ctx => {
-					const filter = ctx.params[0] && ctx.params[0].replace(/^\//, '').split('/') || undefined;
+				appcdDispatcher.register('/appcd/status/:key*', ctx => {
+					const filter = ctx.params.key && ctx.params.key.replace(/^\//, '').split('/') || undefined;
 					const node = this.status.get(filter);
 					if (!node) {
 						throw new Error('Invalid request: ' + ctx.path);
 					}
 					ctx.conn.write(node.toJSON(true));
-					const off = node.watch(evt => ctx.conn.write(evt.source.toJSON(true)));
-					ctx.conn.on('close', off);
-					ctx.conn.on('error', off);
+					if (ctx.data.continuous) {
+						const off = node.watch(evt => ctx.conn.write(evt.source.toJSON(true)));
+						ctx.conn.on('close', off);
+						ctx.conn.on('error', off);
+					} else {
+						ctx.conn.close();
+					}
 				});
 
 				appcdDispatcher.register('/appcd/logcat', ctx => {
@@ -657,6 +630,8 @@ export default class Server extends HookEmitter {
 							if (!req.path)    { throw new Error('invalid request object, missing path'); }
 							if (!req.id)      { throw new Error('invalid request object, missing id'); }
 
+							const source = util.mergeDeep({ type: 'websocket', name: 'Websocket client' }, req.source);
+
 							switch (req.version) {
 								case '1.0':
 									const conn = new Connection({
@@ -665,13 +640,16 @@ export default class Server extends HookEmitter {
 									});
 
 									const startTime = new Date;
+									const data = req.data && typeof req.data === 'object' ? req.data : {};
+									const ctx = { conn, data, source };
 
-									appcdDispatcher.call(req.path, { conn, data: req.data || {} })
+									// dispatch the request
+									appcdDispatcher.call(req.path, ctx)
 										.then(result => {
 											const p = result && result instanceof Promise ? result : Promise.resolve(result);
 											return p.then(result => {
-												if (result) {
-													conn.send(result).then(conn.close);
+												if (result || ctx.body) {
+													conn.end(result || ctx.body);
 												}
 												appcd.logger.info(
 													'WebSocket %s: %s %s %s',
@@ -683,7 +661,7 @@ export default class Server extends HookEmitter {
 											});
 										})
 										.catch(err => {
-											const status = err.status && Dispatcher.statusCodes[String(err.status)] ? err.status : 500;
+											const status = err.status && Dispatcher.statusCodes[String(err.status)] ? err.status : ctx.status || 500;
 											const message = (err.status && Dispatcher.statusCodes[String(err.status)] || Dispatcher.statusCodes['500']) + ': ' + (err.message || err.toString());
 											const delta = new Date - startTime;
 											appcd.logger.error(
@@ -718,7 +696,7 @@ export default class Server extends HookEmitter {
 				});
 
 				webserver.router.get('/appcd/status/:filter?', (ctx, next) => {
-					const filter = ctx.params[0] && ctx.params[0].replace(/^\//, '').split('/') || undefined;
+					const filter = ctx.params[0] && ctx.params[0].replace(/^(\/)/, '').split('/') || undefined;
 					const node = this.status.get(filter);
 					if (!node) {
 						return next();
@@ -728,11 +706,11 @@ export default class Server extends HookEmitter {
 					ctx.body = node.toJSON(true);
 				});
 
-				Object.values(this.plugins).forEach(plugin => {
-					webserver.router.use('/' + plugin.namespace, plugin.router.routes());
-				});
+				webserver.router.get('/appcd/config/:key*', this.configRouteHandler);
 
-				return this.webserver.listen();
+				this.pluginMgr.initWebRoutes(webserver.router);
+
+				return webserver.listen();
 			})({
 				hostname: this.config('hostname', '127.0.0.1'),
 				port:     this.config('port', 1732)
@@ -758,9 +736,9 @@ export default class Server extends HookEmitter {
 			}))
 			.then(() => this.emit('appcd:shutdown'))
 			.then(this.webserver.close)
-			.then(() => Promise.all(Object.values(this.plugins).map(plugin => { return plugin.shutdown(); })))
+			.then(this.pluginMgr.shutdown)
 			.then(() => {
-				const pidFile = expandPath(this.config('appcd.pidFile'));
+				const pidFile = util.expandPath(this.config('appcd.pidFile'));
 				appcd.logger.info('Removing ' + appcd.logger.highlight(pidFile));
 				fs.unlinkSync(pidFile);
 			})
