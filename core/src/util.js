@@ -25,6 +25,10 @@ export function existsSync(file) {
  * @returns {Object} Returns the dest object.
  */
 export function mergeDeep(dest, src) {
+	if (typeof dest !== 'object' || dest === null || Array.isArray(dest)) {
+		dest = {};
+	}
+
 	if (typeof src !== 'object' || src === null || Array.isArray(src)) {
 		return dest;
 	}

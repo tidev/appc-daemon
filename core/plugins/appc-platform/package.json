@@ -1,6 +1,6 @@
 {
   "name": "appcd-plugin-appc-platform",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "main": "dist/index",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -12,7 +12,7 @@
   },
   "devDependencies": {
     "babel-eslint": "^6.0.4",
-    "babel-preset-es2016-node5": "^1.1.2",
+    "babel-preset-nodejs-lts": "^2.0.1",
     "del": "^2.2.0",
     "gulp": "^3.9.1",
     "gulp-babel": "^6.1.2",

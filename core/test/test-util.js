@@ -15,19 +15,19 @@ describe('util', () => {
 	});
 
 	describe('mergeDeep', () => {
-		it('should merge two objects together', function () {
+		it('should merge two objects together', () => {
 			const obj = util.mergeDeep({ a: 1 }, { b: 2 });
 			expect(obj).to.deep.equal({ a: 1, b: 2 });
 		});
 	});
 
 	describe('expandPath', () => {
-		it('should resolve the home directory', function () {
+		it('should resolve the home directory', () => {
 			const path = util.expandPath('~/foo');
 			expect(path).to.match(/^.*\/foo$/);
 		});
 
-		it('should collapse relative segments', function () {
+		it('should collapse relative segments', () => {
 			const path = util.expandPath('/path/./to/../foo');
 			expect(path).to.equal('/path/foo');
 		});

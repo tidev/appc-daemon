@@ -3,6 +3,7 @@ import bodyParser from 'koa-bodyparser';
 import { EventEmitter } from 'events';
 import helmet from 'koa-helmet';
 import Koa from 'koa';
+import { mergeDeep } from './util';
 import path from 'path';
 import Router from './router';
 import send from 'koa-send';
@@ -65,6 +66,10 @@ export default class WebServer extends EventEmitter {
 			.use((ctx, next) => {
 				const start = new Date;
 
+				// unify the context to be compatible with dispatcher contexts
+				ctx.data = mergeDeep(ctx.data, ctx.request.body);
+
+				// set the request source
 				ctx.source = {
 					type: 'web',
 					name: ctx.request.headers['user-agent'] || ''

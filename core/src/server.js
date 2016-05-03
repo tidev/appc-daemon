@@ -579,8 +579,8 @@ export default class Server extends HookEmitter {
 	initHandlers() {
 		return this
 			.hook('appcd:init.handlers', () => {
-				appcdDispatcher.register('/appcd/status/:key*', ctx => {
-					const filter = ctx.params.key && ctx.params.key.replace(/^\//, '').split('/') || undefined;
+				appcdDispatcher.register('/appcd/status/:filter*', ctx => {
+					const filter = ctx.params.filter && ctx.params.filter.replace(/^\//, '').split('/') || undefined;
 					const node = this.status.get(filter);
 					if (!node) {
 						throw new Error('Invalid request: ' + ctx.path);

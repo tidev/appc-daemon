@@ -65,13 +65,13 @@ export default class AppcPlatformService extends appcd.Service {
 				// 	baseurl: 'https://security.appcelerator.com'
 				// });
 
-				const username = ctx.request ? ctx.request.body.username : ctx.data.username;
+				const username = ctx.data.username;
 
 				this.logger.info(`Logging into the Appcelerator platform as ${username}`);
 
 				appcPlatformSDK.Auth.login({
 					username: username,
-					password: ctx.request ? ctx.request.body.password : ctx.data.password,
+					password: ctx.data.password,
 					fingerprint: machineId,
 					from: ctx.source.type
 				}, (err, session) => {
