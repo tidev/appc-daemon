@@ -127,7 +127,7 @@ export function run(cmd, args, opts) {
  * @returns {Promise}
  */
 export function spawnNode(args = [], opts = {}) {
-	const node = process.env.NODE_EXEC_PATH || process.execPath;
+	const cmd = process.env.NODE_EXEC_PATH || process.execPath;
 	const v8args = opts.v8args || [];
 
 	// if the user has more than 2GB of RAM, set the max memory to 3GB or 75% of the total memory
@@ -135,12 +135,9 @@ export function spawnNode(args = [], opts = {}) {
 	if (totalMem * 0.75 > 1500) {
 		v8args.push('--max_old_space_size=' + Math.min(totalMem * 0.75, 3000));
 	}
+	args.unshift.apply(args, v8args);
 
-	return Promise.resolve(
-		spawn(
-			process.env.NODE_EXEC_PATH || process.execPath,
-			[v8args, ...args],
-			opts
-		)
-	);
+	appcd.logger.debug('Executing: ' + appcd.logger.highlight(cmd + ' ' + args.join(' ')));
+
+	return Promise.resolve(spawn(cmd, args, opts));
 }

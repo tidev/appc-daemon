@@ -1,4 +1,4 @@
-import { existsSync, expandPath } from './util';
+import appc from 'node-appc';
 import fs from 'fs';
 import mkdirp from 'mkdirp';
 import path from 'path';
@@ -45,7 +45,7 @@ export function detectCores(appcdHome) {
 			}
 
 			mainFile = resolvePath(coreDir, mainFile);
-			if (existsSync(mainFile)) {
+			if (appc.fs.existsSync(mainFile)) {
 				cores[pkgJson.version] = {
 					pkgJson,
 					main: mainFile,
@@ -68,13 +68,13 @@ export function detectCores(appcdHome) {
  * @returns {Object} The appc-daemon-core descriptor.
  */
 export function findCore(opts = {}) {
-	const appcdHome = expandPath(opts.appcdHome || '~/.appcelerator/appcd');
+	const appcdHome = appc.path.expand(opts.appcdHome || '~/.appcelerator/appcd');
 	let version = opts.version;
 
 	if (!version) {
 		// no explicit version, check the selected version
 		const versionFile = path.join(appcdHome, '.core_version');
-		if (existsSync(versionFile)) {
+		if (appc.fs.existsSync(versionFile)) {
 			version = fs.readFileSync(versionFile).toString().split('\n').shift().trim();
 		}
 		if (!version) {
@@ -129,7 +129,7 @@ export function switchCore(opts = {}) {
 	return Promise.resolve()
 		.then(() => {
 			const core = findCore(opts);
-			const appcdHome = expandPath(opts.appcdHome || '~/.appcelerator/appcd');
+			const appcdHome = appc.path.expand(opts.appcdHome || '~/.appcelerator/appcd');
 			mkdirp.sync(appcdHome);
 			fs.writeFileSync(path.join(appcdHome, '.core_version'), core.pkgJson.version);
 		});

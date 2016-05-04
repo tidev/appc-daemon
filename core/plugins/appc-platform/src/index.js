@@ -17,6 +17,11 @@ export default class AppcPlatformService extends appcd.Service {
 	 */
 	session = null;
 
+	constructor() {
+		// temporary hack for https://phabricator.babeljs.io/T7309
+		super();
+	}
+
 	/**
 	 * Returns the status of the current session.
 	 *

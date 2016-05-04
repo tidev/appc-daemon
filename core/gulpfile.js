@@ -62,6 +62,55 @@ gulp.task('docs', ['lint-src', 'clean-docs'], () => {
 		}));
 });
 
+gulp.task('prepublish', done => {
+	if (process.env.npm_lifecycle_event !== 'prepublish') {
+		console.error('This task is meant to be run via "npm install"');
+		process.exit(1);
+	}
+
+	const pluginsDir = path.join(__dirname, 'plugins');
+	const toDel = [];
+	const plugins = fs.readdirSync(pluginsDir)
+		.map(name => path.join(pluginsDir, name))
+		.filter(p => {
+			try {
+				if (fs.statSync(p).isDirectory()) {
+					toDel.push(path.join(p, 'node_modules'), path.join(p, 'npm-debug.log'), path.join(p, 'npm-shrinkwrap.json'));
+					return true;
+				}
+			} catch (e) {
+				// not a plugin directory
+			}
+		});
+
+	toDel.forEach(s => console.log('Deleting:', s));
+
+	Promise.resolve()
+		.then(() => del(toDel))
+		.then(() => Promise.all(plugins.map(pluginDir => new Promise((resolve, reject) => {
+			console.log('Running: ' + process.execPath + ' ' + process.env.npm_execpath + ' install -- cwd=' + pluginDir);
+			spawn(
+				process.execPath,
+				[ process.env.npm_execpath, 'install' ],
+				{ cwd: pluginDir, stdio: 'inherit' }
+			).on('close', code => code ? reject(code) : resolve());
+		}))))
+		.then(() => new Promise((resolve, reject) => {
+			console.log('Running gulp build task');
+			gulp.start('build', err => err ? reject(err) : resolve());
+		}))
+		.then(() => new Promise((resolve, reject) => {
+			console.log('Running: ' + process.execPath + ' ' + process.env.npm_execpath + ' shrinkwrap -- cwd=' + __dirname);
+			spawn(
+				process.execPath,
+				[ process.env.npm_execpath, 'shrinkwrap' ],
+				{ cwd: __dirname, stdio: 'inherit' }
+			).on('close', code => code ? reject(code) : resolve());
+		}))
+		.then(done)
+		.catch(done);
+});
+
 /*
  * lint tasks
  */

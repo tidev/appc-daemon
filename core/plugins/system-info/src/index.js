@@ -19,6 +19,11 @@ export default class SystemInfoService extends appcd.Service {
 	 */
 	watchers = {};
 
+	constructor() {
+		// temporary hack for https://phabricator.babeljs.io/T7309
+		super();
+	}
+
 	/**
 	 * Initializes the system info plugin.
 	 */

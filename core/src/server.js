@@ -695,7 +695,7 @@ export default class Server extends HookEmitter {
 					});
 				});
 
-				webserver.router.get('/appcd/status/:filter?', (ctx, next) => {
+				webserver.router.get('/appcd/status/:filter*', (ctx, next) => {
 					const filter = ctx.params[0] && ctx.params[0].replace(/^(\/)/, '').split('/') || undefined;
 					const node = this.status.get(filter);
 					if (!node) {

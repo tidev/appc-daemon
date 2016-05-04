@@ -1,4 +1,3 @@
 {
-	"presets": ["nodejs-lts"],
-	"plugins": ["transform-class-properties"]
+	"presets": ["nodejs-lts"]
 }

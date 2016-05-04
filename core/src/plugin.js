@@ -83,23 +83,22 @@ export default class Plugin {
 		 * The instance of the service.
 		 * @type {Service}
 		 */
-		this.service = new ServiceClass({
-			logger: this.logger,
-			router: this.router,
-			register: this.dispatcher.register,
-			emit: (evt, ...args) => {
-				if (evt.indexOf(':') === -1) {
-					evt = this.namespace + ':' + evt;
-				}
-				return server.emit.apply(server, [evt, ...args]);
-			},
-			hook: (evt, ...args) => {
-				if (evt.indexOf(':') === -1) {
-					evt = this.namespace + ':' + evt;
-				}
-				return server.hook.apply(server, [evt, ...args]);
+		const service    = this.service = new ServiceClass();
+		service.logger   = this.logger;
+		service.router   = this.router;
+		service.register = this.dispatcher.register;
+		service.emit     = (evt, ...args) => {
+			if (evt.indexOf(':') === -1) {
+				evt = this.namespace + ':' + evt;
 			}
-		});
+			return server.emit.apply(server, [evt, ...args]);
+		};
+		service.hook     = (evt, ...args) => {
+			if (evt.indexOf(':') === -1) {
+				evt = this.namespace + ':' + evt;
+			}
+			return server.hook.apply(server, [evt, ...args]);
+		};
 	}
 
 	/**

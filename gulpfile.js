@@ -84,13 +84,17 @@ gulp.task('prepublish', done => {
 		process.exit(1);
 	}
 
+	const toDel = [
+		path.join(__dirname, 'core', 'node_modules'),
+		path.join(__dirname, 'core', 'npm-debug.log'),
+		path.join(__dirname, 'core', 'npm-shrinkwrap.json')
+	];
+	toDel.forEach(s => console.log('Deleting:', s));
+
 	Promise.resolve()
-		.then(() => del([
-			path.join(__dirname, 'core', 'node_modules'),
-			path.join(__dirname, 'core', 'npm-debug.log'),
-			path.join(__dirname, 'core', 'npm-shrinkwrap.json')
-		]))
+		.then(() => del(toDel))
 		.then(() => new Promise((resolve, reject) => {
+			console.log('Running: ' + process.execPath + ' ' + process.env.npm_execpath + ' install -- cwd=' + path.join(__dirname, 'core'));
 			spawn(
 				process.execPath,
 				[ process.env.npm_execpath, 'install' ],
@@ -98,9 +102,11 @@ gulp.task('prepublish', done => {
 			).on('close', code => code ? reject(code) : resolve());
 		}))
 		.then(() => new Promise((resolve, reject) => {
+			console.log('Running gulp build task');
 			gulp.start('build', err => err ? reject(err) : resolve());
 		}))
 		.then(() => new Promise((resolve, reject) => {
+			console.log('Running: ' + process.execPath + ' ' + process.env.npm_execpath + ' shrinkwrap -- cwd=' + __dirname);
 			spawn(
 				process.execPath,
 				[ process.env.npm_execpath, 'shrinkwrap' ],

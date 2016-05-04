@@ -153,6 +153,7 @@ export default class PluginManager {
 												reject(`Check plugin exited with code ${code}: ${output.trim()}`);
 											} else {
 												// plugin is good!
+												appcd.logger.debug(`Plugin ${appcd.logger.highlight(pluginInfo.path)} appears safe to load`);
 												resolve(true);
 											}
 										});

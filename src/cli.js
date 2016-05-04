@@ -1,4 +1,4 @@
-import { mergeDeep } from './util';
+import appc from 'node-appc';
 import program from 'commander';
 import { findCore, loadCore, detectCores, switchCore } from './index';
 
@@ -212,7 +212,7 @@ function mixinConfig(opts, config) {
 		if (!json || typeof json !== 'object') {
 			throw new Error('Invalid config: must be an object');
 		}
-		mergeDeep(opts, json);
+		appc.util.mergeDeep(opts, json);
 	}
 	return opts;
 }
