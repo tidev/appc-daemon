@@ -1,6 +1,6 @@
 {
   "name": "appc-daemon-core",
-  "version": "0.0.1-dev",
+  "version": "1.0.0",
   "description": "Appcelerator Daemon Core",
   "main": "./dist/index",
   "author": {
@@ -60,7 +60,7 @@
     "babel-eslint": "^6.0.4",
     "babel-plugin-transform-class-properties": "^6.8.0",
     "babel-plugin-transform-decorators-legacy": "^1.3.4",
-    "babel-preset-nodejs-lts": "^2.0.1",
+    "babel-preset-nodejs-lts": "^1.2.2",
     "chai": "^3.5.0",
     "del": "^2.2.0",
     "double-stack": "^1.2.0",

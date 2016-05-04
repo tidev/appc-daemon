@@ -298,36 +298,6 @@ export default class PluginManager {
 				namespaces[plugin.namespace][plugin.version] = plugin.router.routes();
 			}
 		}
-/*
-				this.appcdDispatcher.register(`/${plugin.namespace}/:version?/:path*`, async (ctx, next) => {
-
-
-
-			// determine the latest version of this plugin which will be used
-			// later to wire up the `latest` dispatcher path for this plugin
-
-			for (const [ version, plugin ] of Object.entries(pluginVersions)) {
-				const latest = latestMajorVersion === majorVer;
-
-				console.log('^/' + plugin.namespace + '/' +
-				(latest ? '(?:latest|' : '') +
-				majorVer + '(?:\\.(?:' +
-				semver.minor(plugin.version) + '|x)(?:\\.(?:' +
-				semver.patch(plugin.version) + '|x))?)?' +
-				(latest ? ')' : '') +
-				'(?:\/(?=$))?(?=\/|$)');
-
-				router.use(new RegExp(
-					'^/' + plugin.namespace + '/' +
-					(latest ? '(?:latest|' : '') +
-					majorVer + '(?:\\.(?:' +
-					semver.minor(plugin.version) + '|x)(?:\\.(?:' +
-					semver.patch(plugin.version) + '|x))?)?' +
-					(latest ? ')' : '') +
-					'(?:\/(?=$))?(?=\/|$)',
-				'i'), plugin.router.routes());
-			}
-		}*/
 	}
 
 	/**
