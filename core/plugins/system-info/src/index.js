@@ -1,9 +1,9 @@
 import { GawkObject } from 'gawk';
 
 const modules = {
-	android: require('androidlib')//,
-	// ios:     process.platform === 'darwin' && require('ioslib'),
-	// windows: /^win/.test(process.platform) && require('windowslib')
+	android: require('androidlib'),
+	ios:     process.platform === 'darwin' && require('ioslib'),
+	windows: /^win/.test(process.platform) && require('windowslib')
 };
 
 export default class SystemInfoService extends appcd.Service {
@@ -28,14 +28,6 @@ export default class SystemInfoService extends appcd.Service {
 	 * Initializes the system info plugin.
 	 */
 	init() {
-		/*
-		for (const [name, module] of Object.entries(modules)) {
-			if (module) {
-				const node = data.set(name, {});
-				this.watchers[name] = module.watch(results => node.mergeDeep(results));
-			}
-		}
-
 		const handler = ctx => {
 			const filter = ctx.params.filter && ctx.params.filter.replace(/^\//, '').split('/') || undefined;
 			const node = this.data.get(filter);
@@ -60,15 +52,28 @@ export default class SystemInfoService extends appcd.Service {
 
 		this.register('/:filter*', handler);
 		this.router.get('/:filter*', handler);
-		*/
+
+		return Promise.all(Object.entries(modules).map(([name, module]) => {
+			if (module) {
+				const node = this.data.set(name, {});
+				return module
+					.watch({})
+					.then(watcher => {
+						this.watchers[name] = watcher;
+						watcher.listen(results => {
+							node.mergeDeep(results);
+						});
+					});
+			}
+		}));
 	}
 
 	/**
 	 * Shuts down the system info plugin.
 	 */
 	shutdown() {
-		for (const unwatch of Object.values(this.watchers)) {
-			unwatch();
+		for (const stop of Object.values(this.watchers)) {
+			stop();
 		}
 		this.watchers = {};
 	}
