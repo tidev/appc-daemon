@@ -1,9 +1,9 @@
+import appc from 'node-appc';
 import autobind from 'autobind-decorator';
 import bodyParser from 'koa-bodyparser';
 import { EventEmitter } from 'events';
 import helmet from 'koa-helmet';
 import Koa from 'koa';
-import { mergeDeep } from './util';
 import path from 'path';
 import Router from './router';
 import send from 'koa-send';
@@ -67,7 +67,7 @@ export default class WebServer extends EventEmitter {
 				const start = new Date;
 
 				// unify the context to be compatible with dispatcher contexts
-				ctx.data = mergeDeep(ctx.data, ctx.request.body);
+				ctx.data = appc.util.mergeDeep(ctx.data, ctx.request.body);
 
 				// set the request source
 				ctx.source = {

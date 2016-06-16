@@ -1,5 +1,5 @@
+import appc from 'node-appc';
 import { EventEmitter } from 'events';
-import { mergeDeep } from './util';
 import uuid from 'node-uuid';
 import WebSocket from 'ws';
 
@@ -29,7 +29,7 @@ export default class Client extends EventEmitter {
 		super();
 		this.hostname    = opts.hostname || '127.0.0.1';
 		this.port        = opts.port || 1732;
-		this.source      = mergeDeep({ type: 'client', name: 'appcd client' }, opts.source);
+		this.source      = appc.util.mergeDeep({ type: 'client', name: 'appcd client' }, opts.source);
 		this.startServer = opts.startServer !== false;
 	}
 

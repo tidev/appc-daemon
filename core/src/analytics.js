@@ -1,5 +1,5 @@
+import appc from 'node-appc';
 import autobind from 'autobind-decorator';
-import { existsSync, expandPath, randomBytes } from './util';
 import fs from 'fs';
 import { HookEmitter } from 'hook-emitter';
 import Logger from './logger';
@@ -54,7 +54,7 @@ export default class Analytics extends HookEmitter {
 		this._initialized = true;
 
 		// create required directories
-		this.eventsDir = expandPath(this.server.config('analytics.eventsDir'));
+		this.eventsDir = appc.path.expand(this.server.config('analytics.eventsDir'));
 		mkdirp.sync(this.eventsDir);
 
 		this._sendingEvents = false;
@@ -103,7 +103,7 @@ export default class Analytics extends HookEmitter {
 		}
 
 		// generate a 24-byte unique id
-		const id = (Date.now().toString(16) + randomBytes(8)).slice(0, 24);
+		const id = (Date.now().toString(16) + appc.util.randomBytes(8)).slice(0, 24);
 
 		const event = {
 			type: data.type,
@@ -164,7 +164,7 @@ export default class Analytics extends HookEmitter {
 					if (!err && Array.isArray(body)) {
 						this.logger.debug(`Sent ${batch.length} analytics ${pluralize('event', batch.length)} successfully`);
 						body.forEach((status, i) => {
-							if (status === 204 && existsSync(batch[i])) {
+							if (status === 204 && appc.fs.existsSync(batch[i])) {
 								fs.unlinkSync(batch[i]);
 							}
 						});

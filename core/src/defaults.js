@@ -1,5 +1,4 @@
-import { existsSync, mergeDeep } from './util';
-import fs from 'fs';
+import appc from 'node-appc';
 import path from 'path';
 
 const pkgJson = require('../package.json');
@@ -74,7 +73,7 @@ export function getDefaultConfig() {
 export function getEnvironmentConfig(env) {
 	if (!env) {
 		const parentPkgJsonFile = path.resolve(__dirname, '..', 'package.json');
-		const parentPkgJson = existsSync(parentPkgJsonFile) ? require(parentPkgJsonFile) : {};
+		const parentPkgJson = appc.fs.isFile(parentPkgJsonFile) ? require(parentPkgJsonFile) : {};
 
 		if (pkgJson._id || pkgJson._from || parentPkgJson._id || parentPkgJson._from) {
 			env = 'production';

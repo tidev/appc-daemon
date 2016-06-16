@@ -1,4 +1,5 @@
 import Analytics from './analytics';
+import appc from 'node-appc';
 import autobind from 'autobind-decorator';
 import 'babel-polyfill';
 import Connection from './connection';
@@ -113,27 +114,28 @@ export default class Server extends HookEmitter {
 		super();
 
 		// initialize with the default config
-		const cfg = util.mergeDeep({}, getDefaultConfig());
+		const cfg = appc.util.mergeDeep({}, getDefaultConfig());
 
 		// load the config file
 		const defaultConfigFile  = cfg.appcd.configFile;
 		const optsConfigFile     = opts.appcd && opts.appcd.configFile;
-		const expandedConfigFile = util.expandPath(optsConfigFile || defaultConfigFile);
+		const expandedConfigFile = appc.path.expand(optsConfigFile || defaultConfigFile);
 		if (optsConfigFile) {
 			if (!/\.js(on)?$/.test(optsConfigFile)) {
 				throw new Error('Config file must be a JavaScript or JSON file.');
 			}
-			if (!util.existsSync(expandedConfigFile)) {
+			if (!appc.fs.isFile(expandedConfigFile)) {
 				throw new Error(`Specified config file not found: ${optsConfigFile}.`);
 			}
+			cfg.appcd.configFile = expandedConfigFile;
 		}
-		const savedConfig = util.existsSync(expandedConfigFile) && require(expandedConfigFile) || {};
+		const savedConfig = appc.fs.isFile(expandedConfigFile) && require(expandedConfigFile) || {};
 
 		// merge in the default environment settings, config file settings, and
 		// constructor settings
-		util.mergeDeep(cfg, getEnvironmentConfig(savedConfig.environment));
-		util.mergeDeep(cfg, savedConfig);
-		util.mergeDeep(cfg, opts);
+		appc.util.mergeDeep(cfg, getEnvironmentConfig(savedConfig.environment));
+		appc.util.mergeDeep(cfg, savedConfig);
+		appc.util.mergeDeep(cfg, opts);
 
 		// set the actual config file that was loaded
 		cfg.appcd.configFile = optsConfigFile || defaultConfigFile;
@@ -149,7 +151,7 @@ export default class Server extends HookEmitter {
 
 		// if the `plugins` directory in the appc home directory doesn't exist,
 		// then create it
-		const appcHomePluginDir = util.expandPath(this.config('appc.home'), 'appcd/plugins');
+		const appcHomePluginDir = appc.path.expand(this.config('appc.home'), 'appcd/plugins');
 		mkdirp.sync(appcHomePluginDir);
 
 		this.pluginMgr = new PluginManager({
@@ -195,8 +197,8 @@ export default class Server extends HookEmitter {
 	 * @access public
 	 */
 	isRunning() {
-		const pidFile = util.expandPath(this.config('appcd.pidFile'));
-		if (util.existsSync(pidFile)) {
+		const pidFile = appc.path.expand(this.config('appcd.pidFile'));
+		if (appc.fs.isFile(pidFile)) {
 			// found a pid file, check to see if it's stale
 			const pid = parseInt(fs.readFileSync(pidFile).toString());
 			if (pid) {
@@ -270,7 +272,7 @@ export default class Server extends HookEmitter {
 						});
 					}
 
-					const pidFile = util.expandPath(this.config('appcd.pidFile'));
+					const pidFile = appc.path.expand(this.config('appcd.pidFile'));
 					const dir = path.dirname(pidFile);
 					mkdirp.sync(dir);
 
@@ -322,7 +324,7 @@ export default class Server extends HookEmitter {
 	 */
 	@autobind
 	init() {
-		const appcdHome = util.expandPath(this.config('appcd.home'));
+		const appcdHome = appc.path.expand(this.config('appcd.home'));
 		mkdirp.sync(appcdHome);
 
 		appcdDispatcher.register('/appcd/config/:key*', this.configRouteHandler);
@@ -356,7 +358,7 @@ export default class Server extends HookEmitter {
 	 */
 	@autobind
 	initMachineId() {
-		const midFile = util.expandPath(this.config('appcd.home'), '.mid');
+		const midFile = appc.path.expand(this.config('appcd.home'), '.mid');
 
 		return Promise.resolve()
 			.then(() => new Promise((resolve, reject) => {
@@ -365,18 +367,18 @@ export default class Server extends HookEmitter {
 				// if we're running on OS X or Windows, then get the operating system's
 				// unique identifier
 				if (process.platform === 'darwin') {
-					promise = util.run('ioreg', ['-ard1', '-c', 'IOPlatformExpertDevice'])
+					promise = appc.subprocess.run('ioreg', ['-ard1', '-c', 'IOPlatformExpertDevice'])
 						.then(result => {
 							const plist = require('simple-plist');
 							const json = plist.parse(result.stdout)[0];
-							return json && util.sha1(json.IOPlatformUUID);
+							return json && appc.util.sha1(json.IOPlatformUUID);
 						});
 				} else if (/^win/.test(process.platform)) {
-					promise = util.run('reg', ['query', 'HKLM\\Software\\Microsoft\\Cryptography', '/v', 'MachineGuid'])
+					promise = appc.subprocess.run('reg', ['query', 'HKLM\\Software\\Microsoft\\Cryptography', '/v', 'MachineGuid'])
 						.then(result => {
 							const m = result.stdout.trim().match(/MachineGuid\s+REG_SZ\s+(.+)/i);
 							if (m) {
-								return util.sha1(m[1]);
+								return appc.util.sha1(m[1]);
 							}
 						});
 				}
@@ -394,7 +396,7 @@ export default class Server extends HookEmitter {
 				// try to generate the machine id based on the mac address
 				return new Promise((resolve, reject) => {
 					const macaddress = require('macaddress');
-					macaddress.one((err, mac) => resolve(!err && mac ? util.sha1(mac) : null));
+					macaddress.one((err, mac) => resolve(!err && mac ? appc.util.sha1(mac) : null));
 				});
 			})
 			.then(machineId => {
@@ -404,7 +406,7 @@ export default class Server extends HookEmitter {
 
 				// see if we have a cached machine id
 				let mid = null;
-				if (util.existsSync(midFile)) {
+				if (appc.fs.isFile(midFile)) {
 					mid = fs.readFileSync(midFile).toString().split('\n')[0];
 					if (!mid || mid.length !== 40) {
 						mid = null;
@@ -413,7 +415,7 @@ export default class Server extends HookEmitter {
 
 				// generate a random machine id
 				if (!mid) {
-					mid = util.randomBytes(20);
+					mid = appc.util.randomBytes(20);
 				}
 
 				return mid;
@@ -432,14 +434,20 @@ export default class Server extends HookEmitter {
 	 * @access private
 	 */
 	daemonize() {
+		const args = [ this.config('appcd.startScript', path.resolve(__dirname, 'start-server.js')), '--daemonize' ];
+		const configFile = this.config('appcd.configFile');
+		if (configFile && appc.fs.isFile(configFile)) {
+			args.push('--config-file', configFile);
+		}
+
 		return this
 			.hook('appcd:daemonize', (args, opts) => {
 				return util.spawnNode(args, opts)
 					.then(child => {
-						fs.writeFileSync(util.expandPath(this.config('appcd.pidFile')), child.pid);
+						fs.writeFileSync(appc.path.expand(this.config('appcd.pidFile')), child.pid);
 						child.unref();
 					});
-			})([ this.config('appcd.startScript', path.resolve(__dirname, 'start-server.js')), '--daemonize', '--config-file', this.config('appcd.configFile') ], {
+			})(args, {
 				detached: true,
 				nodePath: this.config('appcd.nodePath'),
 				stdio: 'ignore'
@@ -631,7 +639,7 @@ export default class Server extends HookEmitter {
 							if (!req.path)    { throw new Error('invalid request object, missing path'); }
 							if (!req.id)      { throw new Error('invalid request object, missing id'); }
 
-							const source = util.mergeDeep({ type: 'websocket', name: 'Websocket client' }, req.source);
+							const source = appc.util.mergeDeep({ type: 'websocket', name: 'Websocket client' }, req.source);
 
 							switch (req.version) {
 								case '1.0':
@@ -739,7 +747,7 @@ export default class Server extends HookEmitter {
 			.then(this.webserver.close)
 			.then(this.pluginMgr.shutdown)
 			.then(() => {
-				const pidFile = util.expandPath(this.config('appcd.pidFile'));
+				const pidFile = appc.path.expand(this.config('appcd.pidFile'));
 				appcd.logger.info('Removing ' + appcd.logger.highlight(pidFile));
 				fs.unlinkSync(pidFile);
 			})

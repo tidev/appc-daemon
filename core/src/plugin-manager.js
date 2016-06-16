@@ -1,6 +1,6 @@
+import appc from 'node-appc';
 import autobind from 'autobind-decorator';
 import Dispatcher from './dispatcher';
-import { existsSync, expandPath, spawnNode } from './util';
 import fs from 'fs';
 import path from 'path';
 import Plugin from './plugin';
@@ -8,6 +8,7 @@ import resolvePath from 'resolve-path';
 import Router from './router';
 import semver from 'semver';
 import Service from './service';
+import { spawnNode } from './util';
 
 export default class PluginManager {
 	/**
@@ -76,7 +77,7 @@ export default class PluginManager {
 				}
 
 				mainFile = resolvePath(pluginPath, mainFile);
-				if (!existsSync(mainFile)) {
+				if (!appc.fs.isFile(mainFile)) {
 					throw new Error(`Unable to find main file: ${main}`);
 				}
 
@@ -108,15 +109,15 @@ export default class PluginManager {
 		(function checkDirs(dirs, depth) {
 			depth = ~~depth;
 			for (let dir of dirs) {
-				if (existsSync(dir) && fs.statSync(dir).isDirectory()) {
-					if (existsSync(path.join(dir, 'package.json'))) {
+				if (appc.fs.isDir(dir) && fs.statSync(dir).isDirectory()) {
+					if (appc.fs.isFile(path.join(dir, 'package.json'))) {
 						loadPkgJson(dir);
 					} else if (depth < 2) {
 						checkDirs(fs.readdirSync(dir).map(name => path.join(dir, name)), depth + 1);
 					}
 				}
 			}
-		}(this.pluginPaths.map(dir => expandPath(dir)), 0));
+		}(this.pluginPaths.map(dir => appc.path.expand(dir)), 0));
 
 		/*
 		 * At this point we have a map of all plugins and their versions. We

@@ -1,4 +1,4 @@
-import { Server } from './index';
+import appcd from './index';
 
 /**
  * This file is the entry point for when appcd daemonizes. This file can be
@@ -8,7 +8,7 @@ import { Server } from './index';
 const p = process.argv.indexOf('--config-file');
 let configFile = p !== -1 && process.argv.length > p ? process.argv[p + 1] : null;
 
-new Server({
+new appcd.Server({
 	appcd: {
 		allowExit: false,
 		configFile,

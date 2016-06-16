@@ -115,7 +115,8 @@ export function loadCore(opts = {}) {
 		throw new Error('Appcelerator Daemon requires Node.js ' + semver.validRange(nodeVer));
 	}
 
-	return require(core.main);
+	const module = require(core.main);
+	return module && module.__esModule ? module.default : module;
 }
 
 /**
