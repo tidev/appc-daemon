@@ -3,6 +3,7 @@ import { GawkObject } from 'gawk';
 const modules = {
 	android: require('androidlib'),
 	ios:     process.platform === 'darwin' && require('ioslib'),
+	jdklib:  require('jdklib'),
 	windows: /^win/.test(process.platform) && require('windowslib')
 };
 
@@ -56,14 +57,17 @@ export default class SystemInfoService extends appcd.Service {
 		return Promise.all(Object.entries(modules).map(([name, module]) => {
 			if (module) {
 				const node = this.data.set(name, {});
-				return module
+				this.watchers[name] = module
 					.watch({})
-					.then(watcher => {
-						this.watchers[name] = watcher;
-						watcher.listen(results => {
-							node.mergeDeep(results);
-						});
+					.on('results', results => {
+						node.mergeDeep(results);
 					});
+					// .then(watcher => {
+					// 	this.watchers[name] = watcher;
+					// 	watcher.listen(results => {
+					//
+					// 	});
+					// });
 			}
 		}));
 	}

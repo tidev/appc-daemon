@@ -235,7 +235,7 @@ export default class Server extends HookEmitter {
 		appcd.logger.info(`Appcelerator Daemon v${this.config('appcd.version')}`);
 		appcd.logger.info(`Config file: ${appcd.logger.highlight(this.config('appcd.configFile'))}`);
 		appcd.logger.info(`Environment: ${appcd.logger.highlight(this.config('environment'))}`);
-		appcd.logger.info(`Node.js ${process.version} (module api ${process.versions.modules})`);
+		appcd.logger.info(`Node.js ${process.version} (module v${process.versions.modules})`);
 
 		// replace the process title to avoid `killall node` taking down the server
 		process.title = 'appcd';
@@ -441,6 +441,7 @@ export default class Server extends HookEmitter {
 					});
 			})([ this.config('appcd.startScript', path.resolve(__dirname, 'start-server.js')), '--daemonize', '--config-file', this.config('appcd.configFile') ], {
 				detached: true,
+				nodePath: this.config('appcd.nodePath'),
 				stdio: 'ignore'
 			});
 	}

@@ -124,10 +124,11 @@ export function run(cmd, args, opts) {
  *
  * @param {Array} [args] - An array of arguments to pass to the subprocess.
  * @param {Object} [opts] - Spawn options.
+ * @param {String} [opts.nodePath] - The path to the Node.js executable.
  * @returns {Promise}
  */
 export function spawnNode(args = [], opts = {}) {
-	const cmd = process.env.NODE_EXEC_PATH || process.execPath;
+	const cmd = opts.nodePath || process.env.NODE_EXEC_PATH || process.execPath;
 	const v8args = opts.v8args || [];
 
 	// if the user has more than 2GB of RAM, set the max memory to 3GB or 75% of the total memory

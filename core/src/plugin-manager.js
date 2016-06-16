@@ -132,7 +132,9 @@ export default class PluginManager {
 						Promise.resolve()
 							.then(() => {
 								if (!this.server.config('appcd.skipPluginCheck')) {
-									return spawnNode([ path.join(__dirname, 'check-plugin.js'), pluginInfo.mainFile ]);
+									return spawnNode([ path.join(__dirname, 'check-plugin.js'), pluginInfo.mainFile ], {
+										nodePath: this.server.config('appcd.nodePath')
+									});
 								}
 							})
 							.then(child => {

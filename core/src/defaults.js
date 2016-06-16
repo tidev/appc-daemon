@@ -30,6 +30,7 @@ const defaults = {
 		silent: false
 	},
 	network: {
+		caFile: null,
 		proxy: null,
 		strictSSL: true
 	},
