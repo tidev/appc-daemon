@@ -6,4 +6,3 @@
 gulpfile.tmp.*
 node_modules
 npm-debug.log
-/npm-shrinkwrap.json

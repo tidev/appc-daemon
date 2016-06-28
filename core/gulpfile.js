@@ -100,6 +100,14 @@ gulp.task('prepublish', done => {
 			gulp.start('build', err => err ? reject(err) : resolve());
 		}))
 		.then(() => new Promise((resolve, reject) => {
+			console.log('Running: ' + process.execPath + ' ' + process.env.npm_execpath + ' prune -- cwd=' + __dirname);
+			spawn(
+				process.execPath,
+				[ process.env.npm_execpath, 'prune' ],
+				{ cwd: __dirname, stdio: 'inherit' }
+			).on('close', code => code ? reject(code) : resolve());
+		}))
+		.then(() => new Promise((resolve, reject) => {
 			console.log('Running: ' + process.execPath + ' ' + process.env.npm_execpath + ' shrinkwrap -- cwd=' + __dirname);
 			spawn(
 				process.execPath,

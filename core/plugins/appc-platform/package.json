@@ -4,7 +4,7 @@
   "main": "dist/index",
   "scripts": {
     "build": "gulp build",
-    "prepublish": "gulp build && npm shrinkwrap",
+    "prepublish": "gulp build && npm prune && npm shrinkwrap",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
@@ -12,10 +12,10 @@
     "autobind-decorator": "^1.3.3"
   },
   "devDependencies": {
-    "babel-eslint": "^6.0.4",
+    "babel-eslint": "^6.1.0",
     "babel-plugin-transform-decorators-legacy": "^1.3.4",
     "babel-preset-nodejs-lts": "^1.2.2",
-    "del": "^2.2.0",
+    "del": "^2.2.1",
     "gulp": "^3.9.1",
     "gulp-babel": "^6.1.2",
     "gulp-debug": "^2.1.2",
