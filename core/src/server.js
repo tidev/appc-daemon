@@ -639,7 +639,7 @@ export default class Server extends HookEmitter {
 							if (!req.path)    { throw new Error('invalid request object, missing path'); }
 							if (!req.id)      { throw new Error('invalid request object, missing id'); }
 
-							const source = appc.util.mergeDeep({ type: 'websocket', name: 'Websocket client' }, req.source);
+							const userAgent = req.userAgent || 'WebSocket';
 
 							switch (req.version) {
 								case '1.0':
@@ -650,7 +650,7 @@ export default class Server extends HookEmitter {
 
 									const startTime = new Date;
 									const data = req.data && typeof req.data === 'object' ? req.data : {};
-									const ctx = { conn, data, source };
+									const ctx = { conn, data, userAgent };
 
 									// dispatch the request
 									appcdDispatcher.call(req.path, ctx)
@@ -721,8 +721,8 @@ export default class Server extends HookEmitter {
 
 				return webserver.listen();
 			})({
-				hostname: this.config('hostname', '127.0.0.1'),
-				port:     this.config('port', 1732)
+				hostname: this.config('appcd.hostname'),
+				port:     this.config('appcd.port')
 			});
 	}
 

@@ -1,5 +1,6 @@
 import appc from 'node-appc';
 import { EventEmitter } from 'events';
+import path from 'path';
 import uuid from 'node-uuid';
 import WebSocket from 'ws';
 
@@ -21,15 +22,18 @@ export default class Client extends EventEmitter {
 	 * @param {Object} [opts]
 	 * @param {String} [opts.hostname='127.0.0.1'] - The host to connect to.
 	 * @param {Number} [opts.port=1732] - The port to connect to.
-	 * @param {Object} [opts.source] - The source type and name using this client.
+	 * @param {String} [opts.userAgent] - The user agent containing the name and
+	 * version of the client.
 	 * @param {Boolean} [opts.startServer=true] - Start the server if it's not
 	 * already running.
 	 */
 	constructor(opts = {}) {
 		super();
+
+		// if we don't have an user agent, then try to generate one
 		this.hostname    = opts.hostname || '127.0.0.1';
 		this.port        = opts.port || 1732;
-		this.source      = appc.util.mergeDeep({ type: 'client', name: 'appcd client' }, opts.source);
+		this.userAgent   = opts.userAgent || generateUserAgent();
 		this.startServer = opts.startServer !== false;
 	}
 
@@ -109,11 +113,11 @@ export default class Client extends EventEmitter {
 					});
 
 					socket.send(JSON.stringify({
-						version: '1.0',
-						path: path,
-						id: id,
-						source: this.source,
-						data: payload
+						version:   '1.0',
+						path:      path,
+						id:        id,
+						userAgent: this.userAgent,
+						data:      payload
 					}));
 				})
 				.catch(err => emitter.emit('error', err));
@@ -159,4 +163,41 @@ export default class Client extends EventEmitter {
 		}
 		this.socket = null;
 	}
+}
+
+/**
+ * Generates a user agent string containing the name of the parent-most script
+ * name, Node.js version, platform name, and architecture.
+ *
+ * @returns {String}
+ */
+function generateUserAgent() {
+	let entry = module;
+	while (module.parent) {
+		entry = module.parent;
+	}
+
+	const name = path.basename(entry.filename);
+	const root = path.resolve('/');
+	let dir = path.dirname(entry.filename);
+	let version = '';
+
+	while (1) {
+		const pkgJsonFile = path.join(dir, 'package.json');
+		if (fs.existsSync(pkgJsonFile)) {
+			try {
+				version = JSON.parse(fs.readFileSync(pkgJsonFile)).version || '';
+			} catch (e) {
+				// squeltch
+			}
+			break;
+		}
+
+		dir = path.dirname(dir);
+		if (dir === root) {
+			break;
+		}
+	}
+
+	return `${name}/${version} node/${process.version.replace(/^v/, '')} ${process.platform} ${process.arch}`;
 }

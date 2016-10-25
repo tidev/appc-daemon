@@ -49,15 +49,15 @@ export default class WebServer extends EventEmitter {
 	/**
 	 * Initializes the web server.
 	 *
-	 * @param {Object} [opts] - An object of options.
-	 * @param {String} [opts.hostname=127.0.0.1]
-	 * @param {Number} [opts.port=1732]
+	 * @param {Object} opts - An object of options.
+	 * @param {String} opts.hostname - The hostname to listen on.
+	 * @param {Number} opts.port - The port to listen on.
 	 */
 	constructor(opts = {}) {
 		super();
 
-		this.hostname = opts.hostname || '127.0.0.1';
-		this.port     = opts.port || 1732;
+		this.hostname = opts.hostname;
+		this.port     = opts.port;
 
 		// init the Koa app with helmet and a simple request logger
 		this.app
@@ -69,11 +69,8 @@ export default class WebServer extends EventEmitter {
 				// unify the context to be compatible with dispatcher contexts
 				ctx.data = appc.util.mergeDeep(ctx.data, ctx.request.body);
 
-				// set the request source
-				ctx.source = {
-					type: 'web',
-					name: ctx.request.headers['user-agent'] || ''
-				};
+				// set the user agent
+				ctx.userAgent = ctx.request.headers['user-agent'] || `Web ${ctx.request.protocol}`;
 
 				return next().then(() => {
 					appcd.logger.info('%s %s %s %s',

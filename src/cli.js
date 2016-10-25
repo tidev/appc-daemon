@@ -3,13 +3,8 @@ import program from 'commander';
 import { findCore, loadCore, detectCores, switchCore } from './index';
 
 const pkgJson = require('../package.json');
-const source = {
-	type: 'cli',
-	name: `Appcelerator Daemon CLI v${pkgJson.version}`
-};
-const analytics = {
-	userAgent: source.name
-};
+const userAgent = `appcd/${pkgJson.version} node/${process.version.replace(/^v/, '')} ${process.platform} ${process.arch}`;
+const analytics = { userAgent };
 
 program
 	.command('start')
@@ -85,7 +80,7 @@ program
 		Promise.resolve()
 			.then(() => loadCore({ version: program.use }))
 			.then(appcd => {
-				const client = new appcd.Client({ source, startServer: false });
+				const client = new appcd.Client({ userAgent, startServer: false });
 				client
 					.request(path, payload)
 					.on('response', data => {
@@ -115,7 +110,7 @@ program
 		Promise.resolve()
 			.then(() => loadCore({ version: program.use }))
 			.then(appcd => {
-				const client = new appcd.Client({ source, startServer: false });
+				const client = new appcd.Client({ userAgent, startServer: false });
 				client
 					.request('/appcd/logcat', { colors: cmd.colors })
 					.on('response', data => {
@@ -137,7 +132,7 @@ program
 		Promise.resolve()
 			.then(() => loadCore({ version: program.use }))
 			.then(appcd => {
-				const client = new appcd.Client({ source, startServer: false });
+				const client = new appcd.Client({ userAgent, startServer: false });
 				client
 					.request('/appcd/status')
 					.on('response', data => {

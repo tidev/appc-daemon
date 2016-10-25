@@ -1,5 +1,6 @@
 import appc from 'node-appc';
 import path from 'path';
+import
 
 const pkgJson = require('../package.json');
 
@@ -19,8 +20,10 @@ const defaults = {
 		configFile: '~/.appcelerator/appcd/config.js',
 		daemonize: false,
 		home: '~/.appcelerator/appcd',
+		hostname: '127.0.0.1',
 		pidFile: '~/.appcelerator/appcd/appcd.pid',
 		pkgJson,
+		port: 1732,
 		skipPluginCheck: false,
 		version: pkgJson.version
 	},

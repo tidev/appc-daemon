@@ -78,6 +78,7 @@ gulp.task('docs', ['lint-src', 'clean-docs'], () => {
 		}));
 });
 
+/*
 gulp.task('prepublish', done => {
 	if (process.env.npm_lifecycle_event !== 'prepublish') {
 		console.error('This task is meant to be run via "npm install"');
@@ -86,8 +87,7 @@ gulp.task('prepublish', done => {
 
 	const toDel = [
 		path.join(__dirname, 'core', 'node_modules'),
-		path.join(__dirname, 'core', 'npm-debug.log'),
-		path.join(__dirname, 'core', 'npm-shrinkwrap.json')
+		path.join(__dirname, 'core', 'npm-debug.log')
 	];
 	toDel.forEach(s => console.log('Deleting:', s));
 
@@ -124,6 +124,7 @@ gulp.task('prepublish', done => {
 		.then(done)
 		.catch(done);
 });
+*/
 
 /*
  * lint tasks

@@ -62,6 +62,7 @@ gulp.task('docs', ['lint-src', 'clean-docs'], () => {
 		}));
 });
 
+/*
 gulp.task('prepublish', done => {
 	if (process.env.npm_lifecycle_event !== 'prepublish') {
 		console.error('This task is meant to be run via "npm install"');
@@ -118,6 +119,7 @@ gulp.task('prepublish', done => {
 		.then(done)
 		.catch(done);
 });
+*/
 
 /*
  * lint tasks
