@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "gulp build",
+	"prepublish": "gulp install",
     "watch": "gulp watch"
   },
   "dependencies": {
