@@ -1,19 +1,29 @@
 {
-  "name": "appcd-plugin-appc-platform",
+  "name": "appcd-plugin-system-info",
   "version": "1.0.0",
-  "main": "dist/index",
+  "description": "System Info plugin for the Appc Daemon",
+  "main": "./dist/index",
+  "author": {
+    "name": "Appcelerator, Inc.",
+    "email": "npmjs@appcelerator.com"
+  },
+  "maintainers": [
+    {
+      "name": "Chris Barber",
+      "email": "cbarber@appcelerator.com"
+    }
+  ],
+  "license": "SEE LICENSE IN LICENSE",
   "scripts": {
     "build": "gulp build",
     "prepublish": "gulp build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "appc-platform-sdk": "git+ssh://git@github.com/appcelerator/appc-platform-sdk.git",
-    "autobind-decorator": "^1.3.4"
+    "gawk": "^2.0.0"
   },
   "devDependencies": {
     "babel-eslint": "^7.0.0",
-    "babel-plugin-transform-decorators-legacy": "^1.3.4",
     "babel-preset-nodejs-lts": "^1.2.2",
     "del": "^2.2.2",
     "gulp": "^3.9.1",
