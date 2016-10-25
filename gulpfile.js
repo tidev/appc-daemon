@@ -1,6 +1,7 @@
 'use strict';
 
 const chug = require('gulp-chug');
+const fs = require('fs');
 const gulp = require('gulp');
 const path = require('path');
 const runSequence = require('run-sequence');
@@ -12,7 +13,7 @@ function runYarn(dir) {
 			process.execPath,
 			[ path.resolve(__dirname, 'node_modules', 'yarn', 'bin', 'yarn.js') ],
 			{
-				cwd: path.resolve(__dirname, dir),
+				cwd: dir,
 				stdio: 'inherit'
 			}
 		);
@@ -31,12 +32,12 @@ gulp.task('install', () => {
 });
 
 gulp.task('install-deps', callback => {
-	const dirs = ['bootstrap', 'client', 'core'];
+	const dirs = ['bootstrap', 'client', 'core'].map(dir => path.resolve(__dirname, dir));
 	const pluginsDir = path.join(__dirname, 'plugins');
 	fs.readdirSync(pluginsDir).forEach(dir => {
 		try {
 			if (fs.statSync(path.join(pluginsDir, dir, 'package.json'))) {
-				dirs.push(dir);
+				dirs.push(path.join(pluginsDir, dir));
 			}
 		} catch (e) {
 			// squeltch
@@ -103,9 +104,9 @@ gulp.task('watch', () => {
 		gulp.watch(__dirname + '/core/src/**/*.js', () => {
 			runSequence('build-core', 'restart-daemon');
 		});
-		// gulp.watch(__dirname + '/plugins/*/src/**/*.js', () => {
-		// 	runSequence('build-plugins', 'restart-daemon');
-		// });
+		gulp.watch(__dirname + '/plugins/*/src/**/*.js', () => {
+			runSequence('build-plugins', 'restart-daemon');
+		});
 	});
 });
 
