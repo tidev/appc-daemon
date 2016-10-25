@@ -10,12 +10,10 @@
     "build": "gulp build",
     "watch": "gulp watch"
   },
-  "devDependencies": {
+  "dependencies": {
     "gulp": "^3.9.1",
     "gulp-chug": "^0.5.1",
-    "run-sequence": "^1.2.2"
-  },
-  "dependencies": {
+    "run-sequence": "^1.2.2",
     "yarn": "^0.16.1"
   }
 }
