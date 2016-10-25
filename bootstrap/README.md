@@ -4,8 +4,7 @@ Background server for running services.
 
 ## Installation
 
-	npm install
-	cd core && npm install
+	yarn install
 	sudo npm link
 
 ## Quick Start
