@@ -27,7 +27,7 @@ gulp.task('clean-docs', done => { del([docsDir]).then(() => done()) });
 /*
  * build tasks
  */
-gulp.task('build', ['build-src']); //, 'build-core']);
+gulp.task('build', ['build-src', 'build-plugins']);
 
 gulp.task('build-src', ['clean-dist', 'lint-src'], () => {
 	return gulp
@@ -39,31 +39,15 @@ gulp.task('build-src', ['clean-dist', 'lint-src'], () => {
 		.pipe($.sourcemaps.write('.'))
 		.pipe(gulp.dest(distDir));
 });
-/*
-gulp.task('build-core', () => {
+
+gulp.task('build-plugins', () => {
 	return gulp
-		.src('../core/gulpfile.js')
+		.src('plugins/*/gulpfile.js')
 		.pipe($.chug({
 			tasks: ['build']
 		}));
 });
 
-gulp.task('build-core-src', () => {
-	return gulp
-		.src('../core/gulpfile.js')
-		.pipe($.chug({
-			tasks: ['build-src']
-		}));
-});
-
-gulp.task('build-core-plugins', () => {
-	return gulp
-		.src('../plugins/*                             /gulpfile.js')
-		.pipe($.chug({
-			tasks: ['build']
-		}));
-});
-*/
 gulp.task('docs', ['lint-src', 'clean-docs'], () => {
 	return gulp.src('src')
 		.pipe($.plumber())
@@ -85,22 +69,33 @@ gulp.task('prepublish', done => {
 		process.exit(1);
 	}
 
-	const toDel = [
-		path.join(__dirname, 'core', 'node_modules'),
-		path.join(__dirname, 'core', 'npm-debug.log')
-	];
+	const pluginsDir = path.join(__dirname, 'plugins');
+	const toDel = [];
+	const plugins = fs.readdirSync(pluginsDir)
+		.map(name => path.join(pluginsDir, name))
+		.filter(p => {
+			try {
+				if (fs.statSync(p).isDirectory()) {
+					toDel.push(path.join(p, 'node_modules'), path.join(p, 'npm-debug.log'), path.join(p, 'npm-shrinkwrap.json'));
+					return true;
+				}
+			} catch (e) {
+				// not a plugin directory
+			}
+		});
+
 	toDel.forEach(s => console.log('Deleting:', s));
 
 	Promise.resolve()
 		.then(() => del(toDel))
-		.then(() => new Promise((resolve, reject) => {
-			console.log('Running: ' + process.execPath + ' ' + process.env.npm_execpath + ' install -- cwd=' + path.join(__dirname, 'core'));
+		.then(() => Promise.all(plugins.map(pluginDir => new Promise((resolve, reject) => {
+			console.log('Running: ' + process.execPath + ' ' + process.env.npm_execpath + ' install -- cwd=' + pluginDir);
 			spawn(
 				process.execPath,
 				[ process.env.npm_execpath, 'install' ],
-				{ cwd: path.join(__dirname, 'core'), stdio: 'inherit' }
+				{ cwd: pluginDir, stdio: 'inherit' }
 			).on('close', code => code ? reject(code) : resolve());
-		}))
+		}))))
 		.then(() => new Promise((resolve, reject) => {
 			console.log('Running gulp build task');
 			gulp.start('build', err => err ? reject(err) : resolve());
@@ -190,7 +185,7 @@ gulp.task('coverage', ['lint-src', 'build-plugins', 'lint-test', 'clean-coverage
  */
 let children = 0;
 gulp.task('restart-daemon', () => {
-	const child = spawn(process.execPath, ['bin/appcd', 'restart', '--debug'], { stdio: 'inherit' });
+	const child = spawn(process.execPath, ['../bin/appcd', 'restart', '--debug'], { stdio: 'inherit' });
 	children++;
 	child.on('exit', () => {
 		// if appcd is killed via kill(1), then we force gulp watch to exit
@@ -205,12 +200,9 @@ gulp.task('watch', () => {
 		gulp.watch('src/**/*.js', () => {
 			runSequence('build-src', 'restart-daemon');
 		});
-		// gulp.watch('../core/src/**/*.js', () => {
-		// 	runSequence('build-core-src', 'restart-daemon');
-		// });
-		// gulp.watch('../plugins/*/src/**/*.js', () => {
-		// 	runSequence('build-core-plugins', 'restart-daemon');
-		// });
+		gulp.watch('plugins/*/src/**/*.js', () => {
+			runSequence('build-plugins', 'restart-daemon');
+		});
 	});
 });
 

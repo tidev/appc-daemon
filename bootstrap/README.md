@@ -1,11 +1,10 @@
-# appc-daemon
+# appcd
 
 Background server for running services.
 
 ## Installation
 
-	yarn install
-	sudo npm link
+	yarn install appcd
 
 ## Quick Start
 

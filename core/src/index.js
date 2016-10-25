@@ -8,7 +8,6 @@ export const api = {
 };
 
 const modules = {
-	Client:  './client',
 	Server:  './server',
 	Service: './service'
 };

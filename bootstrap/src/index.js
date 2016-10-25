@@ -12,7 +12,8 @@ import 'source-map-support/register';
  * @returns {Object} Map of versions to appc-daemon-core descriptors.
  */
 export function detectCores(appcdHome) {
-	const coresDir = path.join(appcdHome, 'packages', 'appc-daemon-core');
+	appcdHome = appc.path.expand(appcdHome || '~/.appcelerator/appcd');
+	const coresDir = path.join(appcdHome, 'packages', 'appcd-core');
 	const cores = {};
 
 	let dirs = [];
@@ -23,7 +24,7 @@ export function detectCores(appcdHome) {
 	} catch (e) {
 		// squeltch
 	}
-	dirs.push(path.join(__dirname, '..', 'core'));
+	dirs.push(path.resolve(__dirname, '..', '..', 'core'));
 
 	// get all globally installed cores
 	dirs.forEach(coreDir => {

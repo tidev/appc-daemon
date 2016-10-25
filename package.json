@@ -1,0 +1,21 @@
+{
+  "name": "appc-daemon",
+  "version": "1.0.0",
+  "description": "Appcelerator Daemon",
+  "private": true,
+  "bin": {
+    "appcd": "./bootstrap/bin/appcd"
+  },
+  "scripts": {
+    "build": "gulp build",
+    "watch": "gulp watch"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-chug": "^0.5.1",
+    "run-sequence": "^1.2.2"
+  },
+  "dependencies": {
+    "yarn": "^0.16.1"
+  }
+}

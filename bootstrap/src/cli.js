@@ -6,6 +6,8 @@ const pkgJson = require('../package.json');
 const userAgent = `appcd/${pkgJson.version} node/${process.version.replace(/^v/, '')} ${process.platform} ${process.arch}`;
 const analytics = { userAgent };
 
+// err.code === 'ECONNREFUSED'
+
 program
 	.command('start')
 	.option('--config <json>', 'serialized JSON string to mix into the appcd config')
@@ -127,7 +129,7 @@ program
 
 program
 	.command('status')
-	.option('-o, --output <report|json>', 'the format to render the output', 'report')
+	.option('--json', 'outputs the status as JSON')
 	.action(cmd => {
 		Promise.resolve()
 			.then(() => loadCore({ version: program.use }))
@@ -148,10 +150,30 @@ program
 	});
 
 program
-	.command('switch <version>')
-	.action(version => {
-		switchCore({ version })
-			.catch(handleError);
+	.command('switch [<version>]')
+	.option('--json', 'outputs the status as JSON')
+	.action((version, cmd) => {
+		if (version) {
+			switchCore({ version })
+				.catch(handleError);
+			return;
+		}
+
+		const cores = detectCores();
+		if (cmd.json) {
+			console.info(cores);
+		} else {
+			const versions = Object.keys(cores);
+			if (!versions.length) {
+				console.info('No cores found');
+			} else {
+				console.info('Available cores:');
+				for (const ver of versions) {
+					console.info('  ' + ver + '\t' + cores[ver].path);
+				}
+			}
+		}
+		process.exit(1);
 	});
 
 program
@@ -196,7 +218,14 @@ function handleError(err) {
 	process.exit(1);
 }
 
-function mixinConfig(opts, config) {
+/**
+ * Parses and mixes a JSON serialized into the specified object.
+ *
+ * @param {Object} obj={} - The object to mix the config into.
+ * @param {String} config - A JSON serialized string.
+ * @returns {Object}
+ */
+function mixinConfig(obj = {}, config) {
 	if (config) {
 		let json = null;
 		try {
@@ -207,7 +236,7 @@ function mixinConfig(opts, config) {
 		if (!json || typeof json !== 'object') {
 			throw new Error('Invalid config: must be an object');
 		}
-		appc.util.mergeDeep(opts, json);
+		appc.util.mergeDeep(obj, json);
 	}
-	return opts;
+	return obj;
 }

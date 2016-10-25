@@ -96,6 +96,7 @@ export default class Connection extends HookEmitter {
 	 */
 	@autobind
 	close() {
+		// TODO: do NOT close the socket, rather send the end request message
 		this.socket.close();
 	}
 }

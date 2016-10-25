@@ -1,6 +1,5 @@
 import appc from 'node-appc';
 import path from 'path';
-import
 
 const pkgJson = require('../package.json');
 

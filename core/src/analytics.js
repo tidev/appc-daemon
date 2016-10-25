@@ -67,6 +67,9 @@ export default class Analytics extends HookEmitter {
 						if (this._sendingEvents) {
 							this.sendTimer = setTimeout(sendLoop, Math.max(~~this.server.config('analytics.sendInterval', 60000), 1000));
 						}
+					})
+					.catch(err => {
+						this.logger.error(`Failed to send analytics: ${err.message}`);
 					});
 			};
 			this.logger.info('Starting analytics send loop');

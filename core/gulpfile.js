@@ -27,7 +27,7 @@ gulp.task('clean-docs', done => { del([docsDir]).then(() => done()) });
 /*
  * build tasks
  */
-gulp.task('build', ['build-src', 'build-plugins']);
+gulp.task('build', ['build-src']); //, 'build-plugins']);
 
 gulp.task('build-src', ['clean-dist', 'lint-src'], () => {
 	return gulp
@@ -40,13 +40,15 @@ gulp.task('build-src', ['clean-dist', 'lint-src'], () => {
 		.pipe(gulp.dest(distDir));
 });
 
+/*
 gulp.task('build-plugins', () => {
 	return gulp
-		.src('plugins/*/gulpfile.js')
+		.src('plugins/*                     /gulpfile.js')
 		.pipe($.chug({
 			tasks: ['build']
 		}));
 });
+*/
 
 gulp.task('docs', ['lint-src', 'clean-docs'], () => {
 	return gulp.src('src')
@@ -160,7 +162,7 @@ gulp.task('test', ['lint-test', 'build'], () => {
 		.pipe($.mocha({ grep: grep }));
 });
 
-gulp.task('coverage', ['lint-src', 'build-plugins', 'lint-test', 'clean-coverage', 'clean-dist'], cb => {
+gulp.task('coverage', ['lint-src', /*'build-plugins',*/ 'lint-test', 'clean-coverage', 'clean-dist'], cb => {
 	gulp.src('src/**/*.js')
 		.pipe($.plumber())
 		.pipe($.debug({ title: 'build' }))
@@ -200,9 +202,9 @@ gulp.task('watch', () => {
 		gulp.watch('src/**/*.js', () => {
 			runSequence('build-src', 'restart-daemon');
 		});
-		gulp.watch('plugins/*/src/**/*.js', () => {
-			runSequence('build-plugins', 'restart-daemon');
-		});
+		// gulp.watch('plugins/*/src/**/*.js', () => {
+		// 	runSequence('build-plugins', 'restart-daemon');
+		// });
 	});
 });
 
