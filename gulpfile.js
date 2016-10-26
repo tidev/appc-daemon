@@ -7,11 +7,11 @@ const path = require('path');
 const runSequence = require('run-sequence');
 const spawn = require('child_process').spawn;
 
-function runYarn(dir) {
+function runYarn(dir, ...args) {
 	return new Promise((resolve, reject) => {
 		const child = spawn(
 			process.execPath,
-			[ path.resolve(__dirname, 'node_modules', 'yarn', 'bin', 'yarn.js') ],
+			[ path.resolve(__dirname, 'node_modules', 'yarn', 'bin', 'yarn.js') ].concat(args),
 			{
 				cwd: dir,
 				stdio: 'inherit'
@@ -28,7 +28,7 @@ function runYarn(dir) {
  * install tasks
  */
 gulp.task('install', () => {
-	return runSequence('install-deps', 'build');
+	return runSequence('install-deps', 'link', 'build');
 });
 
 gulp.task('install-deps', callback => {
@@ -45,7 +45,15 @@ gulp.task('install-deps', callback => {
 	});
 
 	Promise
-		.all(dirs.map(dir => runYarn(dir)))
+		.all(dirs.map(dir => runYarn(dir, 'install')))
+		.then(() => callback(), callback);
+});
+
+gulp.task('link', callback => {
+	Promise.resolve()
+		.then(() => runYarn(path.join(__dirname, 'client'), 'link'))
+		.catch(() => {})
+		.then(() => runYarn(path.join(__dirname, 'bootstrap'), 'link', 'appcd-client'))
 		.then(() => callback(), callback);
 });
 

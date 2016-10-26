@@ -4,7 +4,8 @@
   "description": "Appcelerator Daemon",
   "private": true,
   "bin": {
-    "appcd": "./bootstrap/bin/appcd"
+    "appcd": "./bootstrap/bin/appcd",
+    "appcd-debug": "./bootstrap/bin/appcd-debug"
   },
   "scripts": {
     "build": "gulp build",

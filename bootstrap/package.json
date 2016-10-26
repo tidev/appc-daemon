@@ -34,6 +34,7 @@
     "watch": "gulp watch"
   },
   "dependencies": {
+    "appcd-client": "*",
     "commander": "^2.9.0",
     "mkdirp": "^0.5.1",
     "node-appc": "2.0.0-alpha39",

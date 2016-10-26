@@ -1,12 +1,10 @@
 import appc from 'node-appc';
+import Client from 'appcd-client';
+import { detectCores, findCore, loadCore, switchCore } from './index';
 import program from 'commander';
-import { findCore, loadCore, detectCores, switchCore } from './index';
 
 const pkgJson = require('../package.json');
 const userAgent = `appcd/${pkgJson.version} node/${process.version.replace(/^v/, '')} ${process.platform} ${process.arch}`;
-const analytics = { userAgent };
-
-// err.code === 'ECONNREFUSED'
 
 program
 	.command('start')
@@ -16,27 +14,25 @@ program
 	.action(cmd => {
 		Promise.resolve()
 			.then(() => loadCore({ version: program.use }))
-			.then(appcd => {
-				return new appcd.Server(mixinConfig({
-					analytics,
-					appcd: {
-						allowExit: false,
-						configFile: cmd.configFile,
-						daemonize: !cmd.debug
-					}
-				}, cmd.config));
-			})
+			.then(appcd => createServer(appcd, cmd, {
+				appcd: {
+					allowExit: false,
+					daemonize: !cmd.debug
+				}
+			}))
 			.then(server => server.start())
 			.catch(handleError);
 	});
 
 program
 	.command('stop')
+	.option('--config <json>', 'serialized JSON string to mix into the appcd config')
+	.option('--config-file <file>', 'path to a appcd JS config file')
 	.option('--force', 'force the server to stop')
 	.action(cmd => {
 		Promise.resolve()
 			.then(() => loadCore({ version: program.use }))
-			.then(appcd => new appcd.Server({ analytics }))
+			.then(appcd => createServer(appcd, cmd))
 			.then(server => server.stop(cmd.force))
 			.catch(handleError);
 	});
@@ -49,16 +45,12 @@ program
 	.action(cmd => {
 		Promise.resolve()
 			.then(() => loadCore({ version: program.use }))
-			.then(appcd => {
-				return new appcd.Server(mixinConfig({
-					analytics,
-					appcd: {
-						allowExit: false,
-						configFile: cmd.configFile,
-						daemonize: !cmd.debug
-					}
-				}, cmd.config));
-			})
+			.then(appcd => createServer(appcd, cmd, {
+				appcd: {
+					allowExit: false,
+					daemonize: !cmd.debug
+				}
+			}))
 			.then(server => server.stop())
 			.then(server => (console.log('-- restart --'), server))
 			.then(server => server.start())
@@ -79,74 +71,43 @@ program
 			}
 		}
 
-		Promise.resolve()
-			.then(() => loadCore({ version: program.use }))
-			.then(appcd => {
-				const client = new appcd.Client({ userAgent, startServer: false });
-				client
-					.request(path, payload)
-					.on('response', data => {
-						console.log(data);
-					})
-					.on('close', () => process.exit(0))
-					.on('error', err => {
-						client.disconnect();
-						handleError(err.toString());
-					});
-
-				function disconnect() {
-					client.disconnect();
-					process.exit(0);
-				}
-
-				process.on('SIGINT', disconnect);
-				process.on('SIGTERM', disconnect);
-			})
-			.catch(handleError);
+		createRequest(path, payload)
+			.request
+			.on('response', data => {
+				console.log(data);
+			});
 	});
 
 program
 	.command('logcat')
 	.option('--no-colors', 'disables colors')
 	.action(cmd => {
-		Promise.resolve()
-			.then(() => loadCore({ version: program.use }))
-			.then(appcd => {
-				const client = new appcd.Client({ userAgent, startServer: false });
-				client
-					.request('/appcd/logcat', { colors: cmd.colors })
-					.on('response', data => {
-						process.stdout.write(data);
-					})
-					.on('end', client.disconnect)
-					.on('error', err => {
-						client.disconnect();
-						handleError(err.toString());
-					});
-			})
-			.catch(handleError);
+		createRequest('/appcd/logcat', { colors: cmd.colors })
+			.request
+			.on('response', data => {
+				process.stdout.write(data);
+			});
 	});
 
 program
 	.command('status')
 	.option('--json', 'outputs the status as JSON')
 	.action(cmd => {
-		Promise.resolve()
-			.then(() => loadCore({ version: program.use }))
-			.then(appcd => {
-				const client = new appcd.Client({ userAgent, startServer: false });
-				client
-					.request('/appcd/status')
-					.on('response', data => {
-						console.log(data);
-						client.disconnect();
-					})
-					.on('error', err => {
-						client.disconnect();
-						handleError(err.toString());
-					});
-			})
-			.catch(handleError);
+		const { client, request } = createRequest('/appcd/status');
+		request.on('response', data => {
+			client.disconnect();
+			if (cmd.json) {
+				console.info(data);
+			} else {
+				const { appcd, node, system } = JSON.parse(data);
+				console.info(`Version:      ${appcd.version}`);
+				console.info(`PID:          ${appcd.pid}`);
+				console.info(`Uptime:       ${(appcd.uptime / 60).toFixed(2)} minutes`);
+				console.info(`Node.js:      ${node.version}`);
+				console.info(`Memory RSS:   ${system.memory.usage.rss}`);
+				console.info(`Memory Heap:  ${system.memory.usage.heapUsed} / ${system.memory.usage.heapTotal}`);
+			}
+		});
 	});
 
 program
@@ -161,16 +122,16 @@ program
 
 		const cores = detectCores();
 		if (cmd.json) {
-			console.info(cores);
+			console.info(JSON.stringify(cores, null, '    '));
 		} else {
 			const versions = Object.keys(cores);
-			if (!versions.length) {
-				console.info('No cores found');
-			} else {
+			if (versions.length) {
 				console.info('Available cores:');
 				for (const ver of versions) {
 					console.info('  ' + ver + '\t' + cores[ver].path);
 				}
+			} else {
+				console.info('No cores found');
 			}
 		}
 		process.exit(1);
@@ -209,6 +170,11 @@ if (program.args.length === 0) {
 	program.help();
 }
 
+/**
+ * Displays an error from a promise chain, then exits.
+ *
+ * @param {Error} err - The error.
+ */
 function handleError(err) {
 	if (err.code === 'ECONNREFUSED') {
 		console.error('Server not running');
@@ -239,4 +205,56 @@ function mixinConfig(obj = {}, config) {
 		appc.util.mergeDeep(obj, json);
 	}
 	return obj;
+}
+
+/**
+ * Creates an server instance with the config.
+ *
+ * @param {Object} appcd - The Appc Daemon core object.
+ * @param {Object} cmd - The commander command instance.
+ * @param {Object} [config] - An optional config to mix into the default config.
+ * @returns {Server}
+ */
+function createServer(appcd, cmd, config) {
+	return new appcd.Server(appc.util.mergeDeep(mixinConfig({
+		analytics: {
+			userAgent
+		},
+		appcd: {
+			configFile: cmd.configFile
+		}
+	}, cmd.config), config || {}));
+}
+
+/**
+ * Makes a request to the Appc Daemon.
+ *
+ * @param {String} path - The path to request.
+ * @param {Object} [payload] - The data to send along with the request.
+ * @returns {Client}
+ */
+function createRequest(path, payload) {
+	const client = new Client({ userAgent });
+	const request = client
+		.request(path, payload)
+		.on('close', () => process.exit(0))
+		.on('error', err => {
+			if (err.code === 'ECONNREFUSED') {
+				console.error('Server not running');
+			} else {
+				client.disconnect();
+				console.error(err.toString());
+			}
+			process.exit(1);
+		});
+
+	function disconnect() {
+		client.disconnect();
+		process.exit(0);
+	}
+
+	process.on('SIGINT', disconnect);
+	process.on('SIGTERM', disconnect);
+
+	return { client, request };
 }

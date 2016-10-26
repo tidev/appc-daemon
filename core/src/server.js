@@ -237,6 +237,7 @@ export default class Server extends HookEmitter {
 		appcd.logger.info(`Appcelerator Daemon v${this.config('appcd.version')}`);
 		appcd.logger.info(`Config file: ${appcd.logger.highlight(this.config('appcd.configFile'))}`);
 		appcd.logger.info(`Environment: ${appcd.logger.highlight(this.config('environment'))}`);
+		appcd.logger.info(`PID: ${appcd.logger.highlight(process.pid)}`);
 		appcd.logger.info(`Node.js ${process.version} (module v${process.versions.modules})`);
 
 		// replace the process title to avoid `killall node` taking down the server

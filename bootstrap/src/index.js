@@ -8,6 +8,7 @@ import 'source-map-support/register';
 
 /**
  * Detects all installed appc-daemon-core modules.
+ *
  * @param {String} appcdHome - The path to the appcd home directory.
  * @returns {Object} Map of versions to appc-daemon-core descriptors.
  */
@@ -63,6 +64,7 @@ export function detectCores(appcdHome) {
 
 /**
  * Finds a appc-daemon-core module.
+ *
  * @param {Object} [opts] - Various options.
  * @param {String} [opts.version] - The appc-daemon-core version to load or `latest`.
  * @param {String} [opts.appcdHome='~/.appcelerator/appcd'] - Path to the appcd home directory.
@@ -103,6 +105,7 @@ export function findCore(opts = {}) {
 
 /**
  * Finds and loads an appc-daemon-core module.
+ *
  * @param {Object} [opts] - Various options.
  * @param {String} [opts.version] - The appc-daemon-core version to load or `latest`.
  * @param {String} [opts.appcdHome='~/.appcelerator/appcd'] - Path to the appcd home directory.
@@ -122,6 +125,7 @@ export function loadCore(opts = {}) {
 
 /**
  * Saves the specified appc-daemon-core version.
+ *
  * @param {Object} [opts] - Various options.
  * @param {String} [opts.version] - The appc-daemon-core version to load or `latest`.
  * @param {String} [opts.appcdHome='~/.appcelerator/appcd'] - Path to the appcd home directory.
