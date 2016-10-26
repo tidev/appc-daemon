@@ -63,13 +63,17 @@ export default class Analytics extends HookEmitter {
 		this.server.on('appcd:start', () => {
 			const sendLoop = () => {
 				this.sendEvents()
+					.catch(err => {
+						// we've already displayed the error, so just fall
+						// through and schedule the send loop again
+					})
 					.then(() => {
 						if (this._sendingEvents) {
-							this.sendTimer = setTimeout(sendLoop, Math.max(~~this.server.config('analytics.sendInterval', 60000), 1000));
+							this.sendTimer = setTimeout(
+								sendLoop,
+								Math.max(~~this.server.config('analytics.sendInterval', 60000), 1000)
+							);
 						}
-					})
-					.catch(err => {
-						this.logger.error(`Failed to send analytics: ${err.message}`);
 					});
 			};
 			this.logger.info('Starting analytics send loop');
@@ -164,20 +168,20 @@ export default class Analytics extends HookEmitter {
 				params.json = batch.map(file => JSON.parse(fs.readFileSync(file)));
 
 				request(params, (err, resp, body) => {
-					if (!err && Array.isArray(body)) {
-						this.logger.debug(`Sent ${batch.length} analytics ${pluralize('event', batch.length)} successfully`);
-						body.forEach((status, i) => {
-							if (status === 204 && appc.fs.existsSync(batch[i])) {
-								fs.unlinkSync(batch[i]);
-							}
-						});
-						setImmediate(sendBatch);
-						resolve();
-					} else {
-						this.logger.error(`Error sending ${batch.length} analytics ${pluralize('event', batch.length)}:`);
+					if (err) {
+						this.logger.error(`Error sending ${batch.length} analytics ${pluralize('event', batch.length)} (status ${resp.statusCode}):`);
 						this.logger.error(err);
 						reject(err);
+						return;
 					}
+
+					this.logger.debug(`Sent ${batch.length} analytics ${pluralize('event', batch.length)} successfully (status ${resp.statusCode})`);
+					for (const file of batch) {
+						if (appc.fs.existsSync(file)) {
+							fs.unlinkSync(file);
+						}
+					}
+					resolve();
 				});
 			}));
 
@@ -194,13 +198,16 @@ export default class Analytics extends HookEmitter {
 					return resolve();
 				}
 
-				sendHook(batch, {
-					method:    'POST',
-					proxy:     this.server.config('network.proxy'),
-					strictSSL: this.server.config('network.strictSSL', true),
-					timeout:   Math.max(~~this.server.config('analytics.sendTimeout', 30000), 0),
-					url
-				});
+				Promise.resolve()
+					.then(() => sendHook(batch, {
+						method:    'POST',
+						proxy:     this.server.config('network.proxy'),
+						strictSSL: this.server.config('network.strictSSL', true),
+						timeout:   Math.max(~~this.server.config('analytics.sendTimeout', 30000), 0),
+						url
+					}))
+					.then(() => setImmediate(sendBatch))
+					.catch(reject);
 			};
 
 			// kick off the sending
