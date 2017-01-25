@@ -1,0 +1,41 @@
+{
+  "name": "appcd-nodejs",
+  "version": "1.0.0",
+  "description": "Library for managing and spawning Node.js",
+  "main": "./dist/index",
+  "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
+  "maintainers": [
+    "Chris Barber <cbarber@appcelerator.com>"
+  ],
+  "license": "SEE LICENSE IN LICENSE",
+  "scripts": {
+    "build": "optional-dev-dependency && gulp build",
+    "coverage": "optional-dev-dependency && gulp coverage",
+    "docs": "optional-dev-dependency && gulp docs",
+    "prepublish": "optional-dev-dependency && gulp build",
+    "test": "optional-dev-dependency && gulp test"
+  },
+  "dependencies": {
+    "debug": "^2.6.0",
+    "del": "^2.2.2",
+    "fs-extra": "^2.0.0",
+    "progress": "^1.1.8",
+    "request": "^2.79.0",
+    "source-map-support": "^0.4.10",
+    "tar-stream": "^1.5.2",
+    "tmp": "^0.0.31",
+    "yauzl": "^2.7.0"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1"
+  },
+  "optionalDevDependencies": {
+    "appcd-gulp": "*"
+  },
+  "homepage": "https://github.com/appcelerator/appc-daemon#readme",
+  "bugs": "https://github.com/appcelerator/appc-daemon/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/appcelerator/appc-daemon.git"
+  }
+}

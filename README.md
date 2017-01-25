@@ -10,19 +10,19 @@ Appcelerator products such as Titanium.
 This is a monorepo that contains all of the Appc Daemon related source code. It
 is broken up into separate subdirectories:
 
-### Bootstrap (aka appcd)
+### Bootstrap
 
 The CLI and main entry point for the Appc Daemon. It is responsible for
 detecting all appcd cores and loading a core.
-
-### Client
-
-This is the Node.js client for connecting to a running Appc Daemon server.
 
 ### Core
 
 This is the Appc Daemon server. It provides all the facilities for plugin
 management, logging, analytics, and more.
+
+### Packages
+
+This contains various micro dependencies of the daemon and its plugins.
 
 ### Plugins
 
@@ -32,17 +32,22 @@ There are several built-in plugins that ship with the Appc Daemon:
  * Appc Platform
  * System Info
 
-## Development
+## Build Instructions
 
-First start by installing the root level dependencies:
+In order to build the daemon, you must first install a few dependencies.
 
-	yarn install
+	sudo npm install -g optional-dev-dependency
+	brew update && brew install yarn
+
+	yarn
+	gulp install
 	sudo npm link
 
-From here, you simply need to run:
+## Development Workflow
 
-	gulp watch
+Simply run `gulp watch` or `gulp build`.
 
-Or
+Periodically, run `gulp check` to make sure everything is up-to-date.
 
-	gulp build
+Dependencies are maintained in the `dependency-map.json` file. If this file is
+changed, then run `gulp link` to wire things up.

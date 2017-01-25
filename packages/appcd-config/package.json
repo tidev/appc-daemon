@@ -1,0 +1,38 @@
+{
+  "name": "appcd-config",
+  "version": "1.0.0",
+  "description": "Config file library",
+  "main": "./dist/config",
+  "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
+  "maintainers": [
+    "Chris Barber <cbarber@appcelerator.com>"
+  ],
+  "license": "SEE LICENSE IN LICENSE",
+  "scripts": {
+    "build": "optional-dev-dependency && gulp build",
+    "coverage": "optional-dev-dependency && gulp coverage",
+    "docs": "optional-dev-dependency && gulp docs",
+    "prepublish": "optional-dev-dependency && gulp build",
+    "test": "optional-dev-dependency && gulp test"
+  },
+  "dependencies": {
+    "babel-traverse": "^6.22.1",
+    "babel-types": "^6.22.0",
+    "babylon": "^6.15.0",
+    "debug": "^2.6.0",
+    "doctrine": "^2.0.0",
+    "source-map-support": "^0.4.10"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1"
+  },
+  "optionalDevDependencies": {
+    "appcd-gulp": "*"
+  },
+  "homepage": "https://github.com/appcelerator/appc-daemon#readme",
+  "bugs": "https://github.com/appcelerator/appc-daemon/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/appcelerator/appc-daemon.git"
+  }
+}

@@ -1,4 +1,7 @@
 {
-	"presets": ["nodejs-lts"],
-	"plugins": ["transform-decorators-legacy"]
+	"plugins": [
+		"transform-async-to-generator",
+		"transform-es2015-destructuring",
+		"transform-es2015-modules-commonjs"
+	]
 }

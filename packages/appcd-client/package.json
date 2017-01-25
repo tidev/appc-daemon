@@ -1,0 +1,44 @@
+{
+  "name": "appcd-client",
+  "version": "1.0.0",
+  "description": "Appcelerator Daemon Client",
+  "main": "./dist/index",
+  "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
+  "maintainers": [
+    "Chris Barber <cbarber@appcelerator.com>"
+  ],
+  "license": "SEE LICENSE IN LICENSE",
+  "keywords": [
+    "appcelerator",
+    "appc",
+    "appcd",
+    "daemon"
+  ],
+  "scripts": {
+    "build": "optional-dev-dependency && gulp build",
+    "coverage": "optional-dev-dependency && gulp coverage",
+    "docs": "optional-dev-dependency && gulp docs",
+    "prepublish": "optional-dev-dependency && gulp build",
+    "test": "optional-dev-dependency && gulp test"
+  },
+  "dependencies": {
+    "node-uuid": "^1.4.7",
+    "source-map-support": "^0.4.10",
+    "ws": "^1.1.1"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1"
+  },
+  "optionalDevDependencies": {
+    "appcd-gulp": "*"
+  },
+  "homepage": "https://github.com/appcelerator/appc-daemon#readme",
+  "bugs": "https://github.com/appcelerator/appc-daemon/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/appcelerator/appc-daemon.git"
+  },
+  "engines": {
+    "node": ">=4.0.0"
+  }
+}

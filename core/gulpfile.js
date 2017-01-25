@@ -27,9 +27,7 @@ gulp.task('clean-docs', done => { del([docsDir]).then(() => done()) });
 /*
  * build tasks
  */
-gulp.task('build', ['build-src']); //, 'build-plugins']);
-
-gulp.task('build-src', ['clean-dist', 'lint-src'], () => {
+gulp.task('build', ['clean-dist', 'lint-src'], () => {
 	return gulp
 		.src('src/**/*.js')
 		.pipe($.plumber())
@@ -39,16 +37,6 @@ gulp.task('build-src', ['clean-dist', 'lint-src'], () => {
 		.pipe($.sourcemaps.write('.'))
 		.pipe(gulp.dest(distDir));
 });
-
-/*
-gulp.task('build-plugins', () => {
-	return gulp
-		.src('plugins/*                     /gulpfile.js')
-		.pipe($.chug({
-			tasks: ['build']
-		}));
-});
-*/
 
 gulp.task('docs', ['lint-src', 'clean-docs'], () => {
 	return gulp.src('src')
@@ -63,65 +51,6 @@ gulp.task('docs', ['lint-src', 'clean-docs'], () => {
 			title: manifest.name
 		}));
 });
-
-/*
-gulp.task('prepublish', done => {
-	if (process.env.npm_lifecycle_event !== 'prepublish') {
-		console.error('This task is meant to be run via "npm install"');
-		process.exit(1);
-	}
-
-	const pluginsDir = path.join(__dirname, 'plugins');
-	const toDel = [];
-	const plugins = fs.readdirSync(pluginsDir)
-		.map(name => path.join(pluginsDir, name))
-		.filter(p => {
-			try {
-				if (fs.statSync(p).isDirectory()) {
-					toDel.push(path.join(p, 'node_modules'), path.join(p, 'npm-debug.log'), path.join(p, 'npm-shrinkwrap.json'));
-					return true;
-				}
-			} catch (e) {
-				// not a plugin directory
-			}
-		});
-
-	toDel.forEach(s => console.log('Deleting:', s));
-
-	Promise.resolve()
-		.then(() => del(toDel))
-		.then(() => Promise.all(plugins.map(pluginDir => new Promise((resolve, reject) => {
-			console.log('Running: ' + process.execPath + ' ' + process.env.npm_execpath + ' install -- cwd=' + pluginDir);
-			spawn(
-				process.execPath,
-				[ process.env.npm_execpath, 'install' ],
-				{ cwd: pluginDir, stdio: 'inherit' }
-			).on('close', code => code ? reject(code) : resolve());
-		}))))
-		.then(() => new Promise((resolve, reject) => {
-			console.log('Running gulp build task');
-			gulp.start('build', err => err ? reject(err) : resolve());
-		}))
-		.then(() => new Promise((resolve, reject) => {
-			console.log('Running: ' + process.execPath + ' ' + process.env.npm_execpath + ' prune -- cwd=' + __dirname);
-			spawn(
-				process.execPath,
-				[ process.env.npm_execpath, 'prune' ],
-				{ cwd: __dirname, stdio: 'inherit' }
-			).on('close', code => code ? reject(code) : resolve());
-		}))
-		.then(() => new Promise((resolve, reject) => {
-			console.log('Running: ' + process.execPath + ' ' + process.env.npm_execpath + ' shrinkwrap -- cwd=' + __dirname);
-			spawn(
-				process.execPath,
-				[ process.env.npm_execpath, 'shrinkwrap' ],
-				{ cwd: __dirname, stdio: 'inherit' }
-			).on('close', code => code ? reject(code) : resolve());
-		}))
-		.then(done)
-		.catch(done);
-});
-*/
 
 /*
  * lint tasks
@@ -162,7 +91,7 @@ gulp.task('test', ['lint-test', 'build'], () => {
 		.pipe($.mocha({ grep: grep }));
 });
 
-gulp.task('coverage', ['lint-src', /*'build-plugins',*/ 'lint-test', 'clean-coverage', 'clean-dist'], cb => {
+gulp.task('coverage', ['lint-src', 'build-plugins', 'lint-test', 'clean-coverage', 'clean-dist'], cb => {
 	gulp.src('src/**/*.js')
 		.pipe($.plumber())
 		.pipe($.debug({ title: 'build' }))
@@ -180,32 +109,6 @@ gulp.task('coverage', ['lint-src', /*'build-plugins',*/ 'lint-test', 'clean-cove
 				.pipe($.babelIstanbul.writeReports())
 				.on('end', cb);
 		});
-});
-
-/*
- * watch/debug tasks
- */
-let children = 0;
-gulp.task('restart-daemon', () => {
-	const child = spawn(process.execPath, ['../bin/appcd', 'restart', '--debug'], { stdio: 'inherit' });
-	children++;
-	child.on('exit', () => {
-		// if appcd is killed via kill(1), then we force gulp watch to exit
-		if (--children < 1) {
-			process.exit(0);
-		}
-	});
-});
-
-gulp.task('watch', () => {
-	runSequence('build', 'restart-daemon', () => {
-		gulp.watch('src/**/*.js', () => {
-			runSequence('build-src', 'restart-daemon');
-		});
-		// gulp.watch('plugins/*/src/**/*.js', () => {
-		// 	runSequence('build-plugins', 'restart-daemon');
-		// });
-	});
 });
 
 gulp.task('default', ['build']);
