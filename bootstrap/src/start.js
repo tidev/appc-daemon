@@ -1,11 +1,9 @@
-import Config from 'appcd-config';
 import debug from 'debug';
 import fs from 'fs';
-import path from 'path';
 
-import { isFile } from 'appcd-fs';
-import { arch } from 'appcd-util';
+import { expandPath } from 'appcd-path';
 import { spawnNode } from 'appcd-nodejs';
+import * as init from './init';
 
 const log = debug('appcd:start');
 
@@ -17,56 +15,23 @@ const cmd = {
 	},
 	action: ({ argv }) => {
 		const { config, configFile, debug } = argv;
-		const confPath = path.resolve(__dirname, '../../conf');
-		const cfg = new Config({ config, configFile: path.join(confPath, 'default.js') });
-		isFile(configFile) && cfg.load(configFile);
+		const cfg = init.config({ config, configFile });
 
-		let env = cfg.environment && cfg.environment.name || cfg.environment || 'preprod';
-		let remerge = false;
-
-		const cfgPaths = [
-			path.resolve(confPath, `${env}.js`),
-			path.resolve(confPath, `${env}.json`),
-			configFile && path.join(path.dirname(configFile), `${env}.js`),
-			configFile && path.join(path.dirname(configFile), `${env}.json`)
-		];
-		for (const file of cfgPaths) {
-			if (isFile(file)) {
-				remerge = true;
-				cfg.load(file);
-			}
+		// find the appcd core
+		const corePkgJson = JSON.parse(fs.readFileSync(require.resolve('appcd-core/package.json'), 'utf8'));
+		let nodeVer = corePkgJson.engines.node.match(/(\d+\.\d+\.\d+)/);
+		if (!nodeVer) {
+			throw new Error('Unable to determine Node.js engine version from appcd-core package.json');
 		}
+		nodeVer = `v${nodeVer[1]}`;
 
-		if (remerge && config) {
-			cfg.merge(config);
-		}
-
-
-		// const corePath = path.resolve(__dirname, '../node_modules/appcd-core');
-		// const corePkgJson = JSON.parse(fs.readFileSync(path.join(corePath, 'package.json')));
-		// const coreMain = path.resolve(corePath, corePkgJson.main);
-		//
-		// console.log(require.resolve('appcd-core/package.json'));
-
-		// let nodeVer = corePkgJson.engines.node;
-		// if (!/^v/.test(nodeVer)) {
-		// 	nodeVer = `v${nodeVer}`;
-		// }
-		//
-		// if (!debug) {
-		// 	return spawnNode({
-		// 		version: nodeVer,
-		// 		// arch: corePkgJson.arch?????
-		// 		args: [coreMain],
-		// 		detached: true
-		// 	});
-		// }
-		//
-		// if (process.version !== nodeVer) {
-		// 	throw new Error(`You must run appcd using Node.js ${nodeVer} when using --debug`);
-		// }
-		//
-		// require(coreMain);
+		return spawnNode({
+			args:     [ require.resolve('appcd-core') ],
+			detached: !debug,
+			nodeHome: expandPath(cfg.get('home'), 'node'),
+			version:  nodeVer,
+			v8mem:    cfg.get('core.v8.memory')
+		});
 	}
 };
 

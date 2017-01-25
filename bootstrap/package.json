@@ -24,6 +24,7 @@
     "test": "optional-dev-dependency && gulp test"
   },
   "dependencies": {
+	"cli-kit": "*",
     "debug": "^2.6.0",
     "source-map-support": "^0.4.10"
   },
@@ -31,8 +32,7 @@
     "gulp": "^3.9.1"
   },
   "optionalDevDependencies": {
-    "appcd-gulp": "*",
-	"cli-kit": "*"
+    "appcd-gulp": "*"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",

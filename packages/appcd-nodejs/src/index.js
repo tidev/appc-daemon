@@ -11,7 +11,7 @@ import tar from 'tar-stream';
 import yauzl from 'yauzl';
 import zlib from 'zlib';
 
-import { execSync, spawn } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
 import { isDir, isFile } from 'appcd-fs';
 import { arch as getArch, formatNumber } from 'appcd-util';
 import { STATUS_CODES } from 'http';
@@ -42,10 +42,10 @@ export function prepareNode({ arch, nodeHome, version }) {
 		throw new TypeError('Expected version to be a non-empty string');
 	}
 
-	const binaryPath = path.join(nodeHome, 'node', version, process.platform, arch);
+	const binaryPath = path.join(nodeHome, version, process.platform, arch);
 	const binary = path.join(binaryPath, process.platform === 'win32' ? 'node.exe' : 'node');
 
-	if (isFile(binary) && execSync(`${binaryPath} --version`).toString().split('\n')[0] === version) {
+	if (isFile(binary) && spawnSync(binary, ['--version'], { encoding: 'utf8' }).stdout.split('\n')[0] === version) {
 		log(`Node.js ${version} ready`);
 		return Promise.resolve(binary);
 	}
@@ -224,47 +224,62 @@ export function extractNode({ archive, dest }) {
  * Spawns the specified script using the specified Node.js version.
  *
  * @param {Object} params - Various parameters.
- * @param {String} version - The Node.js version to use.
- * @param {String} script - The script to execute.
+ * @param {String} [params.arch] - The desired Node.js architecture. Must be
+ * `x86` or `x64`. Defaults to the current machine architecture.
+ * @param {String} params.args - The arguments to pass into Node.js.
+ * @param {Boolean} [params.detached=false] - When true, detaches the child
+ * process.
+ * @param {Array<String>} [params.nodeArgs] - Node and V8 arguments to pass into
+ * the Node process. Useful for specifying V8 settings or enabling debugging.
+ * @param {String} params.nodeHome - The path to where Node.js executables are
+ * stored.
+ * @param {Number|String} params.v8mem - The maximum amount of memory for child
+ * Node.js process's V8 engine to use. The value must either be the number of
+ * megabytes or the string `auto`, which will automatically select a sensible
+ * size based on the system architecture and installed memory.
+ * @param {String} params.version - The Node.js version to use.
  * @returns {Promise}
  */
-export function spawnNode({ arch, version, args, nodeHome, detached, v8mem = 'auto', v8args }) {
+export function spawnNode({ arch, args, detached, nodeHome, nodeArgs, v8mem = 'auto', version }) {
 	if (v8mem && (typeof v8mem !== 'number' && v8mem !== 'auto')) {
 		throw new TypeError('Expected v8mem to be a number or "auto"');
-	}
-
-	if (!Array.isArray(v8args)) {
-		v8args = [];
 	}
 
 	if (!arch) {
 		arch = getArch();
 	}
 
-	if (v8mem && !v8args.some(arg => arg.indexOf('--max_old_space_size=') === 0)) {
-		let mem = v8mem;
-		if (mem === 'auto') {
-			const defaultMem = getArch() === 'x64' ? 1400 : 700;
-			const totalMem = Math.floor(os.totalmem() / 1e6);
-			// you must have at least double the RAM of the default memory amount
-			if (totalMem * 0.5 > defaultMem) {
-				mem = Math.min(totalMem * 0.5, 3000);
-			}
-		}
-		v8args.push(`--max_old_space_size=${mem}`);
-	}
-
-	args.unshift.apply(args, v8args);
-
-	const opts = {};
-	if (detached) {
-		opts.detached = true;
-		opts.stdio = 'ignore';
-	}
-
 	return Promise.resolve()
 		.then(() => prepareNode({ arch, nodeHome, version }))
 		.then(node => {
+			if (!Array.isArray(nodeArgs)) {
+				nodeArgs = [];
+			}
+
+			if (v8mem && !nodeArgs.some(arg => arg.indexOf('--max_old_space_size=') === 0)) {
+				let mem = v8mem;
+				if (mem === 'auto') {
+					const defaultMem = getArch() === 'x64' ? 1400 : 700;
+					const totalMem = Math.floor(os.totalmem() / 1e6);
+					// you must have at least double the RAM of the default memory amount
+					if (totalMem * 0.5 > defaultMem) {
+						mem = Math.min(totalMem * 0.5, 3000);
+					}
+				}
+				nodeArgs.push(`--max_old_space_size=${mem}`);
+			}
+
+			args.unshift.apply(args, nodeArgs);
+
+			const opts = {
+				stdio: 'inherit'
+			};
+			if (detached) {
+				opts.detached = true;
+				opts.stdio = 'ignore';
+			}
+
+			log(`spawning: ${node} ${args.map(s => s.indexOf(' ') === -1 ? s : `"${s}"`).join(' ')} # ${JSON.stringify(opts)}`);
 			const child = spawn(node, args, opts);
 			if (detached) {
 				child.unref();

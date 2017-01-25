@@ -25,6 +25,19 @@ module.exports = {
 		url: 'https://api.appcelerator.net/p/v2/partner-track'
 	},
 
+	core: {
+		v8: {
+			/**
+			 * The maximum amount of memory the spawned appcd-core process
+			 * should allocate. The value must either be the number of megabytes
+			 * or the string `auto`, which will automatically select a sensible
+			 * size based on the system architecture and installed memory.
+			 * @type {Number|String}
+			 */
+			memory: 'auto'
+		}
+	},
+
 	/**
 	 * The path to the appcd home directory
 	 * @type {String}

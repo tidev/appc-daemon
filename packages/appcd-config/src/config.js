@@ -268,7 +268,7 @@ export default class Config extends EventEmitter {
  	 * @param {Boolean} [opts.overrideReadonly=false] - When true, does not
  	 * enforce readonly.
 	 * @returns {Config}
-	 * @access private
+	 * @access public
 	 */
 	merge(values, opts={}) {
 		if (!values || typeof values !== 'object' || Array.isArray(values)) {

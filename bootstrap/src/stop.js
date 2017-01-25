@@ -5,7 +5,12 @@ const cmd = {
 		'--force':              { desc: 'force the daemon to stop' }
 	},
 	action: ({ argv }) => {
-		//
+		// OLD
+		// Promise.resolve()
+		// 	.then(() => loadCore({ version: program.use }))
+		// 	.then(appcd => createServer(appcd, cmd))
+		// 	.then(server => server.stop(cmd.force))
+		// 	.catch(handleError);
 	}
 };
 
