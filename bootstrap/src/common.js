@@ -1,10 +1,13 @@
 import Config from 'appcd-config';
 import debug from 'debug';
+import fs from 'fs';
 import path from 'path';
 
+import { expandPath} from 'appcd-path';
 import { isFile } from 'appcd-fs';
+import { spawnNode } from 'appcd-nodejs';
 
-const log = debug('appcd:init');
+const log = debug('appcd:common');
 
 /**
  * Loads the appcd configuration.
@@ -18,7 +21,7 @@ const log = debug('appcd:init');
  * a JavaScript or JSON file.
  * @returns {Config}
  */
-export function config({ config, configFile } = {}) {
+export function loadConfig({ config, configFile } = {}) {
 	const cfg = new Config({ config, configFile: path.resolve(__dirname, '../../conf/default.js') });
 	let remerge = false;
 
@@ -52,4 +55,38 @@ export function config({ config, configFile } = {}) {
 	log(cfg.toString());
 
 	return cfg;
+}
+
+/**
+ * Spawns the Appc Daemon core.
+ *
+ * @param {Object} params - Various parameters.
+ * @param {Array} [params.args] - Arguments to pass into the core such as the
+ * command.
+ * @param {Config} params.cfg - The configuration object.
+ * @param {Boolean} [params.debug=false] - When true, spawns the core with stdio
+ * inherited and does not detach the child process.
+ * @returns {Promise}
+ */
+export function spawnCore({ args, cfg, debug }) {
+	// find the appcd core
+	const corePkgJson = JSON.parse(fs.readFileSync(require.resolve('appcd-core/package.json'), 'utf8'));
+	let nodeVer = corePkgJson.engines.node;
+	const m = nodeVer.match(/(\d+\.\d+\.\d+)/);
+	if (!m) {
+		if (nodeVer) {
+			throw new Error(`Invalid Node.js engine version from appcd-core package.json: ${nodeVer}`);
+		} else {
+			throw new Error('Unable to determine Node.js engine version from appcd-core package.json');
+		}
+	}
+	nodeVer = `v${m[1]}`;
+
+	return spawnNode({
+		args:     [ require.resolve('appcd-core') ].concat(args),
+		detached: !debug,
+		nodeHome: expandPath(cfg.get('home'), 'node'),
+		version:  nodeVer,
+		v8mem:    cfg.get('core.v8.memory')
+	});
 }

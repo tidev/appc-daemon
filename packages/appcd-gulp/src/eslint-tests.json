@@ -1,0 +1,37 @@
+{
+	"ecmaFeatures": {
+		"modules": true
+	},
+	"env": {
+		"es6": true,
+		"node": true
+	},
+	"extends": "eslint:recommended",
+	"globals": [
+		"appcd",
+		"after",
+		"afterEach",
+		"before",
+		"beforeEach",
+		"console",
+		"describe",
+		"expect",
+		"it",
+		"spy",
+		"stub",
+		"sinon"
+	],
+	"parser": "babel-eslint",
+	"rules": {
+		"indent": [ 2, "tab", { "SwitchCase": 1 } ],
+		"linebreak-style": [ 2, "unix" ],
+		"no-console": 0,
+		"no-cond-assign": 0,
+		"no-mixed-spaces-and-tabs": 0,
+		"no-inner-declarations": 0,
+		"no-case-declarations": 0,
+		"no-unused-vars": 0,
+		"quotes": [ 2, "single" ],
+		"semi": [ 2, "always" ]
+	}
+}

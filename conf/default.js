@@ -136,6 +136,7 @@ module.exports = {
 		/**
 		 * The port to listen for incoming requests.
 		 * @type {Number}
+		 * @readonly
 		 */
 		port: 1732
 	}

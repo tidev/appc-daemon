@@ -2,7 +2,7 @@
   "name": "appcd-config",
   "version": "1.0.0",
   "description": "Config file library",
-  "main": "./dist/config",
+  "main": "./dist/index",
   "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
     "Chris Barber <cbarber@appcelerator.com>"

@@ -1,5 +1,6 @@
 import 'source-map-support/register';
 
-// create server
+import Server from './server';
 
-console.log('hi from core!');
+global.appcd = new Server();
+appcd.run(process.argv.slice(2));
