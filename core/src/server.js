@@ -1,20 +1,9 @@
-import CLI from 'cli-kit';
-
 //config "userAgent": `Node script: ${process.mainModule.filename}`
 
 export default class Server {
 	constructor() {
 		// load config
 		// init log
-	}
-
-	run(argv) {
-		return new CLI({
-			commands: {
-				start: this.start.bind(this),
-				stop: this.stop.bind(this)
-			}
-		}).exec(argv);
 	}
 
 	start() {

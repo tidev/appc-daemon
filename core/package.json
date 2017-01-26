@@ -2,7 +2,7 @@
   "name": "appcd-core",
   "version": "1.0.0",
   "description": "Appcelerator Daemon Core",
-  "main": "./dist/appcd",
+  "main": "./dist/main",
   "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
     "Chris Barber <cbarber@appcelerator.com>"

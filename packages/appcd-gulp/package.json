@@ -20,7 +20,7 @@
     "esdoc-es7-plugin": "^0.0.3",
     "gulp-babel": "^6.1.2",
     "gulp-debug": "^3.0.0",
-    "gulp-esdoc": "^0.3.0",
+    "gulp-esdoc": "^0.4.0",
     "gulp-eslint": "^3.0.1",
     "gulp-filter": "^5.0.0",
     "gulp-inject-modules": "^1.0.0",

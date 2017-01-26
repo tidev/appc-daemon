@@ -1,3 +1,5 @@
+import { loadConfig, stopServer } from './common';
+
 const cmd = {
 	options: {
 		'--config <json>':      { type: 'json', desc: 'serialized JSON string to mix into the appcd config' },
@@ -5,12 +7,12 @@ const cmd = {
 		'--force':              { desc: 'force the daemon to stop' }
 	},
 	action: ({ argv }) => {
-		// OLD
-		// Promise.resolve()
-		// 	.then(() => loadCore({ version: program.use }))
-		// 	.then(appcd => createServer(appcd, cmd))
-		// 	.then(server => server.stop(cmd.force))
-		// 	.catch(handleError);
+		const { config, configFile, force } = argv;
+
+		return stopServer({
+			cfg: loadConfig({ config, configFile }),
+			force
+		});
 	}
 };
 

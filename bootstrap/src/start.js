@@ -1,4 +1,4 @@
-import { loadConfig, spawnCore } from './common';
+import { loadConfig, startServer } from './common';
 
 const cmd = {
 	options: {
@@ -8,8 +8,8 @@ const cmd = {
 	},
 	action: ({ argv }) => {
 		const { config, configFile, debug } = argv;
-		return spawnCore({
-			args: ['start'],
+
+		return startServer({
 			cfg: loadConfig({ config, configFile }),
 			debug
 		});

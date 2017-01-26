@@ -1,3 +1,5 @@
+import { loadConfig, startServer, stopServer } from './common';
+
 const cmd = {
 	options: {
 		'--config <json>':      { type: 'json', desc: 'serialized JSON string to mix into the appcd config' },
@@ -5,7 +7,11 @@ const cmd = {
 		'--debug':              { desc: 'don\'t run as a background daemon' }
 	},
 	action: ({ argv }) => {
-		//
+		const { config, configFile, debug } = argv;
+		const cfg = loadConfig({ config, configFile });
+
+		return stopServer({ cfg })
+			.then(() => startServer({ cfg, debug }));
 	}
 };
 

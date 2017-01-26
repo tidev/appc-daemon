@@ -1,3 +1,5 @@
+import path from 'path';
+
 import * as util from '../src/index';
 
 describe('util', () => {
@@ -41,6 +43,67 @@ describe('util', () => {
 			process.env.APPCD_TEST_ARCH = 'ia32';
 
 			expect(util.arch(true)).to.equal('x64');
+		});
+	});
+
+	describe('assertNodeEngineVersion()', () => {
+		afterEach(() => {
+			delete process.env.APPCD_TEST_NODE_VERSION;
+		});
+
+		it('should error if pkgJson is not a file or object', () => {
+			expect(() => {
+				util.assertNodeEngineVersion();
+			}).to.throw(TypeError, 'Expected pkgJson to be an object or string to a package.json file');
+			expect(() => {
+				util.assertNodeEngineVersion(null);
+			}).to.throw(TypeError, 'Expected pkgJson to be an object or string to a package.json file');
+			expect(() => {
+				util.assertNodeEngineVersion(['a']);
+			}).to.throw(TypeError, 'Expected pkgJson to be an object or string to a package.json file');
+			expect(() => {
+				util.assertNodeEngineVersion(123);
+			}).to.throw(TypeError, 'Expected pkgJson to be an object or string to a package.json file');
+		});
+
+		it('should error if package.json file does not exist', () => {
+			expect(() => {
+				util.assertNodeEngineVersion('foo');
+			}).to.throw(Error, 'File does not exist: foo');
+		});
+
+		it('should load package.json', () => {
+			expect(util.assertNodeEngineVersion(path.join(__dirname, 'fixtures', 'empty-package.json'))).to.be.true;
+		});
+
+		it('should error with bad package.json', () => {
+			expect(() => {
+				util.assertNodeEngineVersion(path.join(__dirname, 'fixtures', 'bad-package.json'));
+			}).to.throw(Error, /^Unable to parse package.json\: /);
+		});
+
+		it('should succeed without engines definition', () => {
+			expect(util.assertNodeEngineVersion({})).to.be.true;
+		});
+
+		it('should success if node version is valid', () => {
+			process.env.APPCD_TEST_NODE_VERSION = 'v6.9.4';
+			expect(util.assertNodeEngineVersion({ engines: { node: '6.9.4' } })).to.be.true;
+			expect(util.assertNodeEngineVersion({ engines: { node: 'v6.9.4' } })).to.be.true;
+			expect(util.assertNodeEngineVersion(path.join(__dirname, 'fixtures', 'good-package.json'))).to.be.true;
+		});
+
+		it('should fail if node version is not valid', () => {
+			process.env.APPCD_TEST_NODE_VERSION = 'v6.9.4';
+			expect(() => {
+				util.assertNodeEngineVersion({ engines: { node: '>=6.9' } });
+			}).to.throw(Error, 'Invalid Node engine version in package.json: >=6.9');
+			expect(() => {
+				util.assertNodeEngineVersion({ engines: { node: '6.9.3' } });
+			}).to.throw(Error, 'Requires Node.js \'6.9.3\', but the current version is \'v6.9.4\'');
+			expect(() => {
+				util.assertNodeEngineVersion({ engines: { node: '7.0.0' } });
+			}).to.throw(Error, 'Requires Node.js \'7.0.0\', but the current version is \'v6.9.4\'');
 		});
 	});
 
@@ -90,7 +153,8 @@ describe('util', () => {
 					a: 1,
 					d: null,
 					g: [],
-					h: ['a']
+					h: ['a'],
+					i: { j: {} }
 				},
 				{
 					a: 2,
@@ -100,7 +164,8 @@ describe('util', () => {
 					e: undefined,
 					f: null,
 					g: { foo: 'bar' },
-					h: ['b', 'c']
+					h: ['b', 'c'],
+					i: { j: { k: 'l' } }
 				}
 			);
 
@@ -111,7 +176,8 @@ describe('util', () => {
 				d: { fn: fn },
 				f: null,
 				g: { foo: 'bar' },
-				h: ['a', 'b', 'c']
+				h: ['a', 'b', 'c'],
+				i: { j: { k: 'l' } }
 			});
 		});
 	});

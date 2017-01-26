@@ -120,11 +120,11 @@ module.exports = {
 		daemonize: true,
 
 		/**
-		 * The hostname to listen on.
+		 * The IP address to listen on.
 		 * @type {String}
 		 * @readonly
 		 */
-		hostname: '127.0.0.1',
+		host: '127.0.0.1',
 
 		/**
 		 * Path to the daemon's pid file.

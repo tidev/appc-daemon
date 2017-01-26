@@ -16,6 +16,7 @@
     "test": "optional-dev-dependency && gulp test"
   },
   "dependencies": {
+    "semver": "^5.3.0",
     "source-map-support": "^0.4.10"
   },
   "devDependencies": {

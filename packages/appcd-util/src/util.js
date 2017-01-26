@@ -2,6 +2,7 @@ import 'source-map-support/register';
 
 import fs from 'fs';
 import path from 'path';
+import semver from 'semver';
 
 import { execSync } from 'child_process';
 import { isFile } from 'appcd-fs';
@@ -36,6 +37,50 @@ export function arch(bypassCache) {
 	}
 
 	return archCache;
+}
+
+/**
+ * Validates that the current Node.js version strictly equals the Node engine
+ * version in the specified package.json.
+ *
+ * @param {Object|String} pkgJson - The pkgJson object or the path to the
+ * package.json file.
+ * @returns {String} Returns the Node.js version if the current Node.js version
+ * is the exact version required, otherwise throws an error.
+ * @throws {Error} Either the package.json cannot be parsed or the current
+ * Node.js version does not satisfy the required version.
+ */
+export function assertNodeEngineVersion(pkgJson) {
+	if (!pkgJson) {
+		throw new TypeError('Expected pkgJson to be an object or string to a package.json file');
+	}
+
+	if (typeof pkgJson === 'string') {
+		if (!isFile(pkgJson)) {
+			throw new Error(`File does not exist: ${pkgJson}`);
+		}
+
+		try {
+			pkgJson = JSON.parse(fs.readFileSync(pkgJson, 'utf8'));
+		} catch (e) {
+			throw new Error(`Unable to parse package.json: ${e.message}`);
+		}
+	} else if (typeof pkgJson !== 'object' || Array.isArray(pkgJson)) {
+		throw new TypeError('Expected pkgJson to be an object or string to a package.json file');
+	}
+
+	const current = process.env.APPCD_TEST_NODE_VERSION || process.version;
+	const required = pkgJson && pkgJson.engines && pkgJson.engines.node;
+
+	try {
+		if (!required || semver.eq(current, required)) {
+			return true;
+		}
+	} catch (e) {
+		throw new Error(`Invalid Node engine version in package.json: ${required}`);
+	}
+
+	throw new Error(`Requires Node.js '${required}', but the current version is '${current}'`);
 }
 
 /**
