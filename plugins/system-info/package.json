@@ -20,7 +20,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "gawk": "^3.0.1"
+    "gawk": "^3.0.2"
   },
   "devDependencies": {
     "babel-eslint": "^7.1.1",
@@ -31,9 +31,9 @@
     "gulp-debug": "^3.0.0",
     "gulp-eslint": "^3.0.1",
     "gulp-filter": "^5.0.0",
-    "gulp-load-plugins": "^1.4.0",
+    "gulp-load-plugins": "^1.5.0",
     "gulp-mocha": "^3.0.1",
     "gulp-plumber": "^1.1.0",
-    "gulp-sourcemaps": "^2.4.0"
+    "gulp-sourcemaps": "^2.4.1"
   }
 }

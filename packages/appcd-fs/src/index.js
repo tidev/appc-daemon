@@ -1,10 +1,12 @@
-import 'source-map-support/register';
+if (!Error.prepareStackTrace) {
+	require('source-map-support/register');
+}
 
-import debug from 'debug';
 import fs from 'fs';
 import path from 'path';
+import snooplogg from 'snooplogg';
 
-const log = debug('appcd:fs');
+const log = snooplogg.config({ theme: 'detailed' })('appcd:fs').log;
 
 /**
  * Node's FSWatcher object instance doesn't track the actual path it's watching,

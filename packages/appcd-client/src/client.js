@@ -1,10 +1,9 @@
-import 'source-map-support/register';
-
 import fs from 'fs';
 import path from 'path';
-import uuid from 'node-uuid';
+import uuid from 'uuid';
 import WebSocket from 'ws';
 
+import { arch } from 'appcd-util';
 import { EventEmitter } from 'events';
 
 /**
@@ -102,13 +101,14 @@ export default class Client {
 				this.requests[json.id](json);
 			});
 
-			socket.on('open', () => emitter.emit('connected', this));
-			socket.on('close', () => emitter.emit('close'));
-			socket.on('error', err => {
-				socket.close();
-				this.socket = null;
-				emitter.emit('error', err);
-			});
+			socket
+				.on('open', () => emitter.emit('connected', this))
+				.once('close', () => emitter.emit('close'))
+				.once('error', err => {
+					socket.close();
+					this.socket = null;
+					emitter.emit('error', err);
+				});
 		});
 
 		return emitter;
@@ -153,10 +153,10 @@ export default class Client {
 						data:      payload
 					}));
 				})
-				.on('close', () => {
+				.once('close', () => {
 					delete this.requests[id];
 				})
-				.on('error', err => {
+				.once('error', err => {
 					delete this.requests[id];
 					emitter.emit('error', err);
 				});
@@ -214,5 +214,5 @@ function generateUserAgent() {
 		dir = path.dirname(dir);
 	} while (dir !== root);
 
-	return `${name}/${version} node/${process.version.replace(/^v/, '')} ${process.platform} ${process.arch}`;
+	return `${name}/${version} node/${process.version.replace(/^v/, '')} ${process.platform} ${arch()}`;
 }

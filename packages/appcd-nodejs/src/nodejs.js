@@ -1,12 +1,10 @@
-import 'source-map-support/register';
-
-import debug from 'debug';
 import del from 'del';
 import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
 import progress from 'progress';
 import request from 'request';
+import snooplogg from 'snooplogg';
 import tar from 'tar-stream';
 import yauzl from 'yauzl';
 import zlib from 'zlib';
@@ -16,7 +14,7 @@ import { isDir, isFile } from 'appcd-fs';
 import { arch as getArch, formatNumber } from 'appcd-util';
 import { STATUS_CODES } from 'http';
 
-const log = debug('appcd:nodejs');
+const log = snooplogg.config({ theme: 'detailed' })('appcd:nodejs').log;
 
 /**
  * Ensures the correct Node.js version is installed and ready to go. If the

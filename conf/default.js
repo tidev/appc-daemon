@@ -1,3 +1,7 @@
+'use strict';
+
+const path = require('path');
+
 module.exports = {
 	analytics: {
 		/**
@@ -109,6 +113,10 @@ module.exports = {
 		strictSSL: true
 	},
 
+	/**
+	 * A list of plugins to load. Internal plugins are always loaded.
+	 * @type {Array}
+	 */
 	plugins: [],
 
 	server: {

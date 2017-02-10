@@ -1,4 +1,6 @@
-import 'source-map-support/register';
+if (!Error.prepareStackTrace) {
+	require('source-map-support/register');
+}
 
 import CLI from 'cli-kit';
 import start from './start';
@@ -16,5 +18,10 @@ new CLI({
 		exec,
 		logcat,
 		status
+	},
+	options: {
+		'--config <json>':      { type: 'json', desc: 'serialized JSON string to mix into the appcd config' },
+		'--config-file <file>': { type: 'file', desc: 'path to a appcd JS config file' },
 	}
-}).exec().catch(console.error);
+}).exec()
+	.catch(console.error);

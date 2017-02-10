@@ -1,62 +1,69 @@
 import Client from 'appcd-client';
-import Config from 'appcd-config';
-import debug from 'debug';
 import fs from 'fs';
 import path from 'path';
+import snooplogg from 'snooplogg';
 
-import { assertNodeEngineVersion } from 'appcd-util';
-import { connect } from 'net';
+import { arch } from 'appcd-util';
 import { expandPath } from 'appcd-path';
 import { isFile } from 'appcd-fs';
 import { spawnNode } from 'appcd-nodejs';
 
-const log = debug('appcd:common');
+import * as config from 'appcd-config';
+
+const pkgJson = require('../package.json');
+const log = snooplogg.config({ theme: 'detailed' })('appcd:common').log;
 
 /**
- * Loads the appcd configuration.
+ * Makes a request to the Appc Daemon.
  *
- * @param {Object} [opts] - Various options.
- * @param {Object} [opts.config] - An object with various config settings. The
- * config object will be initialized with these values, however if any user-
- * defined or environment specific config files are loaded, then this object
- * will be re-merged since it always takes precedence.
- * @param {String} [opts.configFile] - Path to a config file to load. It may be
- * a JavaScript or JSON file.
+ * @param {Config} cfg - A config instance.
+ * @param {String} path - The path to request.
+ * @param {Object} [payload] - The data to send along with the request.
+ * @returns {Client}
+ */
+export function createRequest(cfg, path, payload) {
+	const client = new Client({
+		host: cfg.get('server.host'),
+		port: cfg.get('server.post'),
+		userAgent: `appcd/${pkgJson.version} node/${process.version.replace(/^v/, '')} ${process.platform} ${arch()}`
+	});
+
+	const request = client
+		.request(path, payload)
+		.once('close', () => process.exit(0))
+		.once('error', err => {
+			if (err.code !== 'ECONNREFUSED') {
+				process
+					.removeListener('SIGINT', disconnect)
+					.removeListener('SIGTERM', disconnect);
+			}
+		});
+
+	function disconnect() {
+		client.disconnect();
+		process.exit(0);
+	}
+
+	process
+		.on('SIGINT', disconnect)
+		.on('SIGTERM', disconnect);
+
+	return { client, request };
+}
+
+/**
+ * Loads the Appc Daemon config.
+ *
+ * @param {Object} argv - The parsed command line arguments.
  * @returns {Config}
  */
-export function loadConfig({ config, configFile } = {}) {
-	const cfg = new Config({ config, configFile: path.resolve(__dirname, '../../conf/default.js') });
-	let remerge = false;
-
-	// load the user-defined config file
-	if (isFile(configFile)) {
-		cfg.load(configFile);
-		remerge = true;
-	}
-
-	// now that the config has been loaded, we can determine the environment
-	const env = cfg.get('environment') && cfg.get('environment.name') || cfg.get('environment') || 'preprod';
-
-	// load environment specific config files
-	const paths = [
-		path.resolve(__dirname, `../../conf/${env}.js`),
-		path.resolve(__dirname, `../../conf/${env}.json`),
-		configFile && path.join(path.dirname(configFile), `${env}.js`),
-		configFile && path.join(path.dirname(configFile), `${env}.json`)
-	];
-	for (const file of paths) {
-		if (isFile(file)) {
-			cfg.load(file);
-			remerge = true;
-		}
-	}
-
-	if (remerge && config) {
-		cfg.merge(config);
-	}
-
+export function loadConfig(argv) {
+	const cfg = config.load({
+		config:            argv.config,
+		configFile:        argv.configFile,
+		defaultConfigFile: path.resolve(__dirname, '../../conf/default.js')
+	});
 	log(cfg.toString());
-
 	return cfg;
 }
 
@@ -69,7 +76,7 @@ export function loadConfig({ config, configFile } = {}) {
  * does not detach the child process.
  * @returns {Promise}
  */
-export function startServer({ cfg, debug }) {
+export function startServer({ cfg, argv }) {
 	const corePkgJson = JSON.parse(fs.readFileSync(require.resolve('appcd-core/package.json'), 'utf8'));
 	let nodeVer = corePkgJson.engines.node;
 	const m = nodeVer.match(/(\d+\.\d+\.\d+)/);
@@ -82,8 +89,19 @@ export function startServer({ cfg, debug }) {
 		throw new Error('Unable to determine Node.js engine version from appcd-core package.json');
 	}
 
+	const { config, configFile, debug } = argv;
+	const args = [ require.resolve('appcd-core') ];
+	if (config) {
+		args.push('--config', JSON.stringify(config));
+	}
+	if (configFile) {
+		args.push('--config-file', configFile);
+	}
+
+	process.env.APPCD_BOOTSTRAP = pkgJson.version;
+
 	return spawnNode({
-		args:     [ require.resolve('appcd-core') ],
+		args,
 		detached: debug ? false : cfg.get('server.daemonize'),
 		nodeHome: expandPath(cfg.get('home'), 'node'),
 		version:  nodeVer,
@@ -130,16 +148,15 @@ export function stopServer({ cfg, force }) {
 
 			log('attempting to connect to the daemon and get the pid');
 
-			client
-				.request('/appcd/pid')
+			createRequest('/appcd/pid')
+				.request
 				.on('response', resolve)
 				.on('close', resolve)
 				.on('error', err => {
 					if (err.code === 'ECONNREFUSED') {
 						resolve();
 					} else {
-						client.disconnect();
-						console.error('Couldn\'t get server pid');
+						console.error('Unable to get server pid');
 						console.error(err.toString());
 						process.exit(1);
 					}

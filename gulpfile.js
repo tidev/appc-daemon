@@ -1,21 +1,23 @@
 'use strict';
 
 // dependency mappings used to wiring up yarn links and build order
-const chug        = require('gulp-chug');
-const david       = require('david');
-const debug       = require('gulp-debug');
-const del         = require('del');
-const depmap      = require('./dependency-map.json');
-const fs          = require('fs');
-const globule     = require('globule');
-const gulp        = require('gulp');
-const gutil       = require('gulp-util');
-const Nsp         = require('nsp');
-const path        = require('path');
-const runSequence = require('run-sequence');
-const semver      = require('semver');
-const spawnSync   = require('child_process').spawnSync;
-const Table       = require('cli-table2');
+const chug             = require('gulp-chug');
+const david            = require('david');
+const debug            = require('gulp-debug');
+const del              = require('del');
+const depmap           = require('./dependency-map.json');
+const fs               = require('fs-extra');
+const globule          = require('globule');
+const gulp             = require('gulp');
+const gutil            = require('gulp-util');
+const istanbul         = require('istanbul');
+const Nsp              = require('nsp');
+const path             = require('path');
+const runSequence      = require('run-sequence');
+const semver           = require('semver');
+const spawn            = require('child_process').spawn;
+const spawnSync        = require('child_process').spawnSync;
+const Table            = require('cli-table2');
 
 const cliTableChars = {
 	bottom: '', 'bottom-left': '', 'bottom-mid': '', 'bottom-right': '',
@@ -41,7 +43,7 @@ if (process.argv.indexOf('--silent') !== -1) {
  */
 gulp.task('install', cb => runSequence('link', 'install-deps', 'build', cb));
 
-gulp.task('install-deps', callback => {
+gulp.task('install-deps', cb => {
 	globule
 		.find(['./*/package.json', 'packages/*/package.json', 'plugins/*/package.json'])
 		.reduce((promise, cwd) => {
@@ -181,11 +183,47 @@ gulp.task('build-packages', buildTask('packages/*/gulpfile.js'));
 
 gulp.task('build-plugins', buildTask('plugins/*/gulpfile.js'));
 
-function buildTask(dir) {
+function buildTask(pattern) {
 	return () => gulp
-		.src(path.join(__dirname, dir))
+		.src(path.join(__dirname, pattern))
 		.pipe(chug({ tasks: ['build'] }));
 }
+
+/*
+ * test tasks
+ */
+gulp.task('coverage', () => {
+	const coverageDir = path.join(__dirname, 'coverage');
+	del.sync([coverageDir]);
+
+	const collector = new istanbul.Collector();
+	const gulp = path.join(path.dirname(require.resolve('gulp')), 'bin', 'gulp.js');
+	const gulpfiles = globule.find(['./*/gulpfile.js', 'packages/*/gulpfile.js', 'plugins/*/gulpfile.js']);
+
+	for (let gulpfile of gulpfiles) {
+		gulpfile = path.resolve(gulpfile);
+		const dir = path.dirname(gulpfile);
+
+		gutil.log(`Spawning: ${process.execPath} ${gulp} coverage # CWD=${dir}`);
+		const child = spawnSync(process.execPath, [
+			gulp,
+			'coverage'
+		], { cwd: dir, stdio: 'inherit' });
+		gutil.log(`Exit code = ${child.status}`);
+
+		if (!child.status) {
+			for (let coverageFile of globule.find(dir + '/coverage/coverage*.json')) {
+				collector.add(JSON.parse(fs.readFileSync(path.resolve(coverageFile), 'utf8')));
+			}
+		}
+	}
+
+	fs.mkdirsSync(coverageDir);
+
+	for (const type of [ 'lcov', 'json', 'text', 'text-summary' ]) {
+		istanbul.Report.create(type, { dir: coverageDir }).writeReport(collector, true);
+	}
+});
 
 /*
  * watch/debug tasks
@@ -312,14 +350,36 @@ function buildDepList(pkg) {
 	return list;
 }
 
+function run(cmd, args, opts) {
+	return new Promise((resolve, reject) => {
+		opts || (opts = {});
+		opts.cwd || (opts.cwd = process.cwd());
+		gutil.log('Running: CWD=' + opts.cwd, cmd, args.join(' '));
+		const child = spawn(cmd, args, opts);
+		let out = '';
+		let err = '';
+		child.stdout.on('data', data => out += data.toString());
+		child.stderr.on('data', data => err += data.toString());
+		child.on('close', code => {
+			resolve({
+				status: code,
+				stdout: out,
+				stderr: err
+			});
+		});
+	});
+}
+
 function runYarn(cwd) {
 	const args = Array.prototype.slice.call(arguments, 1);
 	if (process.argv.indexOf('--json') !== -1 || process.argv.indexOf('--silent') !== -1) {
 		args.push('--no-progress', '--no-emoji');
 	}
-	args.unshift(path.resolve(__dirname, 'node_modules', 'yarn', 'bin', 'yarn.js'));
-	gutil.log('Running: CWD=' + cwd, process.execPath, args.join(' '));
-	return Promise.resolve(spawnSync(process.execPath, args, { cwd: cwd }));
+	return run('yarn', args, { cwd: cwd || process.cwd() });
+}
+
+function runNPM(cwd) {
+	return run('npm', Array.prototype.slice.call(arguments, 1));
 }
 
 function runDavid(pkgJson, type, dest) {
@@ -332,18 +392,16 @@ function runDavid(pkgJson, type, dest) {
 			name: pkgJson.name,
 			dependencies: pkgJson[type]
 		}, { npm: { progress: false } }, (err, deps) => {
-			const result = {};
 			if (err) {
 				gutil.log(gutil.colors.red('David failed! ' + (err.message || err.toString())));
 			} else {
 				for (const dep of Object.keys(deps)) {
-					result[dep] = {};
 					for (const key of Object.keys(deps[dep])) {
 						dest[type][dep][key] = deps[dep][key];
 					}
 				}
 			}
-			resolve(result);
+			resolve();
 		});
 	});
 }
@@ -351,6 +409,7 @@ function runDavid(pkgJson, type, dest) {
 function checkPackages() {
 	const paths = globule.find(['./package.json', './*/package.json', 'packages/*/package.json', 'plugins/*/package.json']).map(p => path.resolve(p));
 	const packages = {};
+	const deprecatedMap = {};
 
 	gutil.log('Checking packages...');
 
@@ -372,6 +431,7 @@ function checkPackages() {
 					packageJson: packageJsonFile,
 					nodeSecurityIssues: [],
 					yarnIssues: [],
+					deprecated: {},
 					dependencies: {},
 					devDependencies: {},
 					optionalDependencies: {}
@@ -387,9 +447,12 @@ function checkPackages() {
 								installed = depPkgJson.version;
 							} catch (e) {}
 
+							deprecatedMap[dep] = null;
+
 							packages[packagePath][type][dep] = {
 								installed: installed,
-								required: pkgJson[type][dep]
+								required: pkgJson[type][dep],
+								deprecated: false
 							};
 						}
 					}
@@ -431,6 +494,40 @@ function checkPackages() {
 					]);
 			});
 		}, Promise.resolve())
+		.then(() => {
+			// now that we have a list of all unique dependencies, we need to
+			// call `npm info` for each and see if the module is deprecated
+			const deps = Object.keys(deprecatedMap).sort();
+			return Promise
+				.all(deps.map(dep => {
+					if (deprecatedMap[dep] === null) {
+						return runNPM(null, 'info', dep, '--json')
+							.then(result => {
+								if (!result.status) {
+									try {
+										const info = JSON.parse(result.stdout);
+										deprecatedMap[dep] = info.deprecated || false;
+									} catch (e) {}
+								}
+							});
+					}
+				}))
+				.then(() => {
+					// update the package information object
+					for (const packagePath of Object.keys(packages)) {
+						for (const type of ['dependencies', 'devDependencies', 'optionalDependencies']) {
+							if (packages[packagePath][type]) {
+								for (const dep of Object.keys(packages[packagePath][type])) {
+									if (deprecatedMap[dep]) {
+										packages[packagePath].deprecated[dep] = deprecatedMap[dep];
+										packages[packagePath][type][dep].deprecated = deprecatedMap[dep];
+									}
+								}
+							}
+						}
+					}
+				});
+		})
 		.then(() => processPackages(packages));
 }
 
@@ -443,6 +540,7 @@ function processPackages(packages) {
 		securityIssues: 0,
 		dependencySecurityIssues: 0,
 		yarnIssues: 0,
+		deprecated: 0,
 		packagesToUpdate: [],
 		criticalToUpdate: []
 	};
@@ -466,6 +564,8 @@ function processPackages(packages) {
 				results.needsFixing[key] = 'install';
 			}
 		}
+
+		results.deprecated += Object.keys(pkg.deprecated).length;
 
 		// check yarn links
 		if (!results.needsFixing[key]) {
@@ -528,6 +628,14 @@ function processPackages(packages) {
 						}
 					}
 
+					if (dep.deprecated) {
+						if (dep.status) {
+							dep.status += ', deprecated';
+						} else {
+							dep.status = 'deprecated';
+						}
+					}
+
 					if (!dep.status) {
 						dep.status = 'ok';
 					}
@@ -586,8 +694,10 @@ function renderPackages(results) {
 
 					if (dep.status === 'ok') {
 						table.push([ packageName, dep.required, dep.installed, dep.stable, dep.latest, green(dep.status) ]);
-					} else if (dep.status === 'out-of-date') {
+					} else if (dep.status.indexOf('out-of-date') !== -1) {
 						table.push([ packageName, dep.required, red(dep.installed), green(dep.stable), dep.latest, red(dep.status) ]);
+					} else if (dep.status === 'deprecated') {
+						table.push([ packageName, dep.required, dep.installed, dep.stable, dep.latest, red(dep.status) ]);
 					} else {
 						table.push([ packageName, dep.required, red(dep.installed), dep.stable, dep.latest, red(dep.status) ]);
 					}
@@ -627,6 +737,22 @@ function renderPackages(results) {
 			}
 		}
 
+		if (Object.keys(pkg.deprecated).length) {
+			console.log('\n' + gray(' Deprecations:'));
+			table = new Table({
+				chars: cliTableChars,
+				head: [gray('Package'), gray('Note')],
+				style: {
+					head: ['bold'],
+					border: []
+				}
+			});
+			for (const name of Object.keys(pkg.deprecated)) {
+				table.push([ name, pkg.deprecated[name] ]);
+			}
+			console.log(table.toString().split('\n').map(s => '   ' + s).join('\n'));
+		}
+
 		console.log();
 	}
 
@@ -650,6 +776,10 @@ function renderPackages(results) {
 	table.push([
 		'Out-of-date',
 		results.packagesToUpdate.length > 0 ? red(results.packagesToUpdate.length) : green(results.packagesToUpdate.length)
+	]);
+	table.push([
+		'Deprecated',
+		results.deprecated > 0 ? red(results.deprecated) : green(results.deprecated)
 	]);
 	table.push([
 		'Top Level Node Security Issues',

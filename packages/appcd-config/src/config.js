@@ -1,9 +1,7 @@
-import 'source-map-support/register';
-
-import debug from 'debug';
 import fs from 'fs';
 import Metadata from './metadata';
 import path from 'path';
+import snooplogg from 'snooplogg';
 import vm from 'vm';
 
 import { EventEmitter } from 'events';
@@ -12,7 +10,7 @@ import { isFile } from 'appcd-fs';
 import { parse } from 'babylon';
 import { wrap } from 'module';
 
-const log = debug('appcd:config');
+const log = snooplogg.config({ theme: 'detailed' })('appcd:config').log;
 
 /**
  * A config model that loads config files, retrieves settings, changes settings,
@@ -30,6 +28,7 @@ export default class Config extends EventEmitter {
 	 * AFTER the config file has been loaded.
 	 * @param {String} [opts.configFile] - The path to a .js or .json config
 	 * file to load.
+	 * @access public
 	 */
 	constructor(opts = {}) {
 		super();
@@ -37,10 +36,19 @@ export default class Config extends EventEmitter {
 		/**
 		 * Config option metadata.
 		 * @type {Metadata}
+		 * @access public
 		 */
 		this.meta = new Metadata;
 
-		Object.defineProperty(this, '_values', { value: {} });
+		/**
+		 * The internal values object. This object can be accessed directly,
+		 * though it is only recommended for read operations. Any write
+		 * operations will not be detected and the `change` event will not be
+		 * emitted.
+		 * @type {Object}
+		 * @access public
+		 */
+		this.values = {};
 
 		if (opts.configFile) {
 			this.load(opts.configFile);
@@ -184,7 +192,7 @@ export default class Config extends EventEmitter {
 			throw new TypeError('Expected key to be a string');
 		}
 
-		let it = this._values;
+		let it = this.values;
 		const parts = key.split('.');
 
 		for (let i = 0, k; it !== undefined && (k = parts[i++]);) {
@@ -223,7 +231,7 @@ export default class Config extends EventEmitter {
 					obj[key] = {};
 				}
 				return obj[key];
-			}, this._values);
+			}, this.values);
 		} else {
 			// key is an object object
 			this.merge(key);
@@ -257,7 +265,7 @@ export default class Config extends EventEmitter {
 				return true;
 			}
 			return false;
-		}(key.split('.'), this._values));
+		}(key.split('.'), this.values));
 	}
 
 	/**
@@ -301,7 +309,7 @@ export default class Config extends EventEmitter {
 			}
 		};
 
-		merger(this._values, values);
+		merger(this.values, values);
 
 		return this;
 	}
@@ -315,6 +323,6 @@ export default class Config extends EventEmitter {
 	 * @access public
 	 */
 	toString(indentation = 2) {
-		return JSON.stringify(this._values, null, Math.max(indentation, 0));
+		return JSON.stringify(this.values, null, Math.max(indentation, 0));
 	}
 }

@@ -12,6 +12,8 @@ import { isFile } from 'appcd-fs';
 export default class Metadata {
 	/**
 	 * Creates a metadata instance.
+	 *
+	 * @access public
 	 */
 	constructor() {
 		Object.defineProperties(this, {

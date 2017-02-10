@@ -1,9 +1,10 @@
 {
-	"bootstrap":             ["appcd-client", "appcd-config", "appcd-core", "appcd-fs", "appcd-gulp", "appcd-nodejs", "appcd-path", "appcd-util"],
-	"core":                  ["appcd-config", "appcd-gulp", "appcd-util"],
-	"packages/appcd-client": ["appcd-gulp"],
-	"packages/appcd-config": ["appcd-fs", "appcd-gulp", "appcd-path"],
-	"packages/appcd-fs":     ["appcd-gulp"],
-	"packages/appcd-nodejs": ["appcd-fs", "appcd-gulp", "appcd-util"],
-	"packages/appcd-util":   ["appcd-fs", "appcd-gulp"]
+	"bootstrap":                 ["appcd-client", "appcd-config", "appcd-core", "appcd-fs", "appcd-gulp", "appcd-nodejs", "appcd-path", "appcd-util"],
+	"core":                      ["appcd-config", "appcd-dispatcher", "appcd-fs", "appcd-gulp", "appcd-path", "appcd-util"],
+	"packages/appcd-client":     ["appcd-gulp", "appcd-util"],
+	"packages/appcd-config":     ["appcd-fs", "appcd-gulp", "appcd-path"],
+	"packages/appcd-dispatcher": ["appcd-gulp"],
+	"packages/appcd-fs":         ["appcd-gulp"],
+	"packages/appcd-nodejs":     ["appcd-fs", "appcd-gulp", "appcd-util"],
+	"packages/appcd-util":       ["appcd-fs", "appcd-gulp"]
 }

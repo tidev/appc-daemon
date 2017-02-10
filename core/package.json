@@ -14,15 +14,22 @@
     "daemon"
   ],
   "scripts": {
-	"build": "optional-dev-dependency && gulp build",
-	"coverage": "optional-dev-dependency && gulp coverage",
+    "build": "optional-dev-dependency && gulp build",
+    "coverage": "optional-dev-dependency && gulp coverage",
     "docs": "optional-dev-dependency && gulp docs",
     "prepublish": "optional-dev-dependency && gulp build",
     "test": "optional-dev-dependency && gulp test"
   },
   "dependencies": {
-    "debug": "^2.6.0",
-    "source-map-support": "^0.4.10"
+    "autobind-decorator": "^1.3.4",
+    "babel-polyfill": "^6.22.0",
+    "colors": "^1.1.2",
+    "fs-extra": "^2.0.0",
+    "gawk": "^3.0.2",
+    "path-to-regexp": "^1.7.0",
+    "snooplogg": "^1.1.1",
+    "source-map-support": "^0.4.11",
+    "through2": "^2.0.3"
   },
   "devDependencies": {
     "gulp": "^3.9.1"

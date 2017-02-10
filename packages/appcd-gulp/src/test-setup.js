@@ -1,5 +1,11 @@
 'use strict';
 
+if (!Error.prepareStackTrace) {
+	require('source-map-support/register');
+}
+
+require('babel-polyfill');
+
 global.chai = require('chai');
 global.chai.use(require('sinon-chai'));
 global.expect = global.chai.expect;
