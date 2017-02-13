@@ -96,7 +96,7 @@ export function downloadNode({ arch, nodeHome, version }) {
 
 				const len = parseInt(response.headers['content-length']);
 
-				if (debug.enabled('appcd:node')) {
+				if (log.enabled) {
 					const bar = new progress('  [:bar] :percent :etas', {
 						clear: true,
 						complete: '=',

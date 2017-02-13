@@ -27,7 +27,7 @@
     "fs-extra": "^2.0.0",
     "gawk": "^3.0.2",
     "path-to-regexp": "^1.7.0",
-    "snooplogg": "^1.1.1",
+    "snooplogg": "^1.2.1",
     "source-map-support": "^0.4.11",
     "through2": "^2.0.3"
   },
@@ -44,6 +44,6 @@
     "url": "git+https://github.com/appcelerator/appc-daemon.git"
   },
   "engines": {
-    "node": "6.9.4"
+    "node": "6.9.5"
   }
 }

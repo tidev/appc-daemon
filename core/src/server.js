@@ -2,23 +2,13 @@ import debug from 'debug';
 import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs-extra';
 import gawk from 'gawk';
-// import './logger';
+import logger, { snooplogg } from './logger';
 import path from 'path';
-//import PluginManager from './plugin-manager';
+// import PluginManager from './plugin-manager';
 
 import { expandPath } from 'appcd-path';
 import { isDir, isFile } from 'appcd-fs';
 import { load as loadConfig } from 'appcd-config';
-
-// const log = debug('appcd:server');
-
-// if (!global.appcd) {
-// 	Object.defineProperty(global, 'appcd', {
-// 		configurable: false,
-// 		enumerable: true,
-// 		value: {}
-// 	});
-// }
 
 /**
  * The main server logic for the Appc Daemon. It controls all core aspects of
@@ -79,10 +69,11 @@ export default class Server {
 		this.dispatcher = new Dispatcher();
 
 		// init the plugin manager
-		this.pluginManager = new PluginManager({
-		});
+		// this.pluginManager = new PluginManager({
+		// 	//
+		// });
 
-		console.log('STARTING CORE!');
+		logger.info('STARTING CORE!');
 
 		//  - init config handler
 		//  - init machine id
@@ -93,7 +84,8 @@ export default class Server {
 		//     - web server
 
 		return {
-			dispatcher: this.dispatcher
+			dispatcher: this.dispatcher,
+			logger
 		};
 	}
 

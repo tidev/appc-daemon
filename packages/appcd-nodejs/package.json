@@ -20,7 +20,7 @@
     "fs-extra": "^2.0.0",
     "progress": "^1.1.8",
     "request": "^2.79.0",
-    "snooplogg": "^1.1.1",
+    "snooplogg": "^1.2.1",
     "source-map-support": "^0.4.11",
     "tar-stream": "^1.5.2",
     "tmp": "^0.0.31",

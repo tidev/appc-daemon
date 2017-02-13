@@ -1,26 +1,42 @@
-# appcd-config
+# appcd-dispatcher
 
-Library for config files with metadata.
+Provides an HTTP-like API for exposing services.
 
 ## Usage
 
 ```javascript
-import Config from 'appcd-config';
+const dispatcher = new Dispatcher();
 
-const conf = new Config({
-	config: {
-		some: {
-			setting: 'value'
-		}
-	},
-	configFile: '/path/to/js-or-json-file'
+dispatcher.register('/foo/:id?', req => {
+	if (req.params.id) {
+		return {
+			message: `hello ${req.params.id}`
+		};
+	}
+
+	return {
+		message: 'hello guest!'
+	};
 });
 
-conf.get('some.setting');
+// 200
+dispatcher
+	.call('/foo')
+	.then(result => {
+		console.log('Response:', result);
+	})
+	.catch(console.error);
 
-conf.on('change', () => {
-	console.log('config changed!');
-});
+// 200 with parameter
+dispatcher
+	.call('/foo/123')
+	.then(result => {
+		console.log('Response:', result);
+	})
+	.catch(console.error);
 
-conf.set('some.setting', 'another value');
+// 404
+dispatcher
+	.call('/bar')
+	.catch(console.error);
 ```

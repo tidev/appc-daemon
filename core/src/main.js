@@ -7,6 +7,7 @@ import 'babel-polyfill';
 import CLI from 'cli-kit';
 
 import { assertNodeEngineVersion } from 'appcd-util';
+import { snooplogg } from './logger';
 
 assertNodeEngineVersion(`${__dirname}/../package.json`);
 
@@ -18,7 +19,13 @@ new CLI({
 	help: false
 }).exec()
 	.then(({ argv }) => {
+		snooplogg.stdio.snoop();
+
 		const Server = require('./server').default;
-		global.appcd = new Server(argv).start();
+		Object.defineProperty(global, 'appcd', {
+			configurable: false,
+			enumerable: true,
+			value: new Server(argv).start()
+		});
 	})
 	.catch(console.error);

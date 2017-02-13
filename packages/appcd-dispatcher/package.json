@@ -1,7 +1,7 @@
 {
   "name": "appcd-dispatcher",
   "version": "1.0.0",
-  "description": "Dispatches WebSocket sourced requests to route handlers",
+  "description": "Provides HTTP-like API for exposing services",
   "main": "./dist/index",
   "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
@@ -18,7 +18,7 @@
   "dependencies": {
     "autobind-decorator": "^1.3.4",
     "path-to-regexp": "^1.7.0",
-    "snooplogg": "^1.1.1",
+    "snooplogg": "^1.2.1",
     "source-map-support": "^0.4.11"
   },
   "devDependencies": {

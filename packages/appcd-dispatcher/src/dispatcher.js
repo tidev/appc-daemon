@@ -1,6 +1,6 @@
 import autobind from 'autobind-decorator';
 import pathToRegExp from 'path-to-regexp';
-import snooplogg, { snooplogg as foo, chalk } from 'snooplogg';
+import snooplogg, { chalk } from 'snooplogg';
 
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:dispatcher');
 const highlight = chalk.cyan;
@@ -176,7 +176,7 @@ export default class Dispatcher {
 					return result.then(resolve, reject);
 				}
 
-				resolve(result);
+				resolve(result || ctx);
 			});
 		};
 

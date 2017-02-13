@@ -260,8 +260,6 @@ export default class Metadata {
 			throw new Error(`Config option "${key}" is readonly`);
 		}
 
-		debugger;
-
 		if ((meta.nullable && value === null) || meta.validate(value)) {
 			return true;
 		}
