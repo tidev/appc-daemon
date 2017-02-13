@@ -182,4 +182,44 @@ describe('util', () => {
 		});
 	});
 
+	describe('randomBytes()', () => {
+		it('should return 0 random bytes', () => {
+			const r = util.randomBytes(0);
+			expect(r).to.be.a.String;
+			expect(r).to.have.lengthOf(0);
+		});
+
+		it('should return 1 random byte', () => {
+			const r = util.randomBytes(1);
+			expect(r).to.be.a.String;
+			expect(r).to.have.lengthOf(2);
+		});
+
+		it('should return 2 random bytes', () => {
+			const r = util.randomBytes(2);
+			expect(r).to.be.a.String;
+			expect(r).to.have.lengthOf(4);
+		});
+
+		it('should return 20 random bytes', () => {
+			const r = util.randomBytes(20);
+			expect(r).to.be.a.String;
+			expect(r).to.have.lengthOf(40);
+		});
+	});
+
+	describe('sha1()', () => {
+		it('should hash a string', () => {
+			const h1 = util.sha1('foo');
+			expect(h1).to.be.a.String;
+			expect(h1).to.have.lengthOf(40);
+
+			const h2 = util.sha1('bar');
+			expect(h2).to.be.a.String;
+			expect(h2).to.have.lengthOf(40);
+
+			expect(h1).to.not.equal(h2);
+		});
+	});
+
 });

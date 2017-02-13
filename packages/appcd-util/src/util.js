@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import semver from 'semver';
@@ -126,4 +127,25 @@ export function mergeDeep(dest, src) {
 	}
 
 	return dest;
+}
+
+/**
+ * Returns the specified number of random bytes as a hex string.
+ *
+ * @param {Number} howMany - The number of random bytes to generate. Must be
+ * greater than or equal to zero.
+ * @returns {String}
+ */
+export function randomBytes(howMany) {
+	return crypto.randomBytes(Math.max(~~howMany, 0)).toString('hex');
+}
+
+/**
+ * Returns the sha1 of the input string.
+ *
+ * @param {String} str - The string to hash.
+ * @returns {String}
+ */
+export function sha1(str) {
+	return crypto.createHash('sha1').update(typeof str === 'string' ? str : JSON.stringify(str)).digest('hex');
 }

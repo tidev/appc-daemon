@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import gawk from 'gawk';
 import logger, { snooplogg } from './logger';
 import path from 'path';
-// import PluginManager from './plugin-manager';
+import PluginManager from 'appcd-plugin';
 
 import { expandPath } from 'appcd-path';
 import { isDir, isFile } from 'appcd-fs';
@@ -69,24 +69,25 @@ export default class Server {
 		this.dispatcher = new Dispatcher();
 
 		// init the plugin manager
-		// this.pluginManager = new PluginManager({
-		// 	//
-		// });
+		this.pluginManager = new PluginManager();
 
 		logger.info('STARTING CORE!');
 
-		//  - init config handler
-		//  - init machine id
-		//  - init analytics
-		//  - load in-process and plugins
-		//     - status monitor
-		//     - handlers
-		//     - web server
-
-		return {
-			dispatcher: this.dispatcher,
-			logger
-		};
+		return Promise.resolve()
+			.then(() => this.pluginManager.load())
+			//  - init config handler
+			//  - init machine id
+			//  - init analytics
+			//  - load in-process and plugins
+			//     - status monitor
+			//     - handlers
+			//     - web server
+			.then(() => {
+				return {
+					dispatcher: this.dispatcher,
+					logger
+				};
+			});
 	}
 
 	/**

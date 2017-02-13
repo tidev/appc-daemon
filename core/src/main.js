@@ -22,10 +22,14 @@ new CLI({
 		snooplogg.stdio.snoop();
 
 		const Server = require('./server').default;
+		return new Server(argv);
+	})
+	.then(server => server.start())
+	.then(appcd => {
 		Object.defineProperty(global, 'appcd', {
 			configurable: false,
 			enumerable: true,
-			value: new Server(argv).start()
+			value: appcd
 		});
 	})
 	.catch(console.error);

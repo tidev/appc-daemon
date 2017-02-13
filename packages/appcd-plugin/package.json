@@ -1,7 +1,7 @@
 {
-  "name": "appcd-nodejs",
+  "name": "appcd-plugin",
   "version": "1.0.0",
-  "description": "Library for managing and spawning Node.js",
+  "description": "Library for loading and executing plugins",
   "main": "./dist/index",
   "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
@@ -16,15 +16,8 @@
     "test": "optional-dev-dependency && gulp test"
   },
   "dependencies": {
-    "del": "^2.2.2",
-    "fs-extra": "^2.0.0",
-    "progress": "^1.1.8",
-    "request": "^2.79.0",
     "snooplogg": "^1.2.2",
-    "source-map-support": "^0.4.11",
-    "tar-stream": "^1.5.2",
-    "tmp": "^0.0.31",
-    "yauzl": "^2.7.0"
+    "source-map-support": "^0.4.11"
   },
   "devDependencies": {
     "gulp": "^3.9.1"

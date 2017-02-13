@@ -24,7 +24,7 @@
     "test": "optional-dev-dependency && gulp test"
   },
   "dependencies": {
-    "snooplogg": "^1.2.1",
+    "snooplogg": "^1.2.2",
     "source-map-support": "^0.4.11"
   },
   "devDependencies": {

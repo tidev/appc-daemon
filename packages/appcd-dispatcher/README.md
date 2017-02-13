@@ -5,6 +5,8 @@ Provides an HTTP-like API for exposing services.
 ## Usage
 
 ```javascript
+import Dispatcher from 'appcd-dispatcher';
+
 const dispatcher = new Dispatcher();
 
 dispatcher.register('/foo/:id?', req => {
