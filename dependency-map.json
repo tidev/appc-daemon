@@ -9,5 +9,6 @@
 	"packages/appcd-nodejs":     ["appcd-fs", "appcd-gulp", "appcd-util"],
 	"packages/appcd-plugin":     ["appcd-fs", "appcd-gulp", "appcd-path"],
 	"packages/appcd-subprocess": ["appcd-gulp"],
+	"packages/appcd-telemetry":  ["appcd-fs", "appcd-gulp", "appcd-path", "appcd-util"],
 	"packages/appcd-util":       ["appcd-fs", "appcd-gulp"]
 }

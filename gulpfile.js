@@ -190,6 +190,63 @@ function buildTask(pattern) {
 		.pipe(chug({ tasks: ['build'] }));
 }
 
+gulp.task('pack', [/*'build'*/], cb => {
+	const pkgJson = {
+		name:                'appcd-daemon',
+		version:             '1.0.0',
+		description:         'A daemon that powers Appcelerator tooling and makes the impossible possible.',
+		author:              'Appcelerator, Inc. <npmjs@appcelerator.com>',
+		license:             'SEE LICENSE IN LICENSE',
+		keywords:            [ 'appcelerator', 'appc', 'daemon' ],
+		bin:                 {},
+		preferGlobal:        true,
+		dependencies:        {},
+		bundledDependencies: []
+	};
+	const found = {};
+
+	function copyDeps(deps, file) {
+		if (deps) {
+			Object.keys(deps).forEach(dep => {
+				if (!found[dep]) {
+					found[dep] = deps[dep];
+				} else if (found[dep] !== deps[dep]) {
+					throw new Error('Unable to pack: duplicate dependencies with different versions\n' +
+						dep + ' v' + found[dep] + ' already added, but ' + file + ' wants v' + deps[dep]);
+				}
+			});
+		}
+	}
+
+	let bootstrap = require('./bootstrap/package.json');
+	bootstrap.bin && Object.keys(bootstrap.bin).forEach(bin => {
+		pkgJson.bin[bin] = path.resolve('./bootstrap', bootstrap.bin[bin]);
+	});
+	copyDeps(bootstrap.dependencies);
+	pkgJson.bundledDependencies.push('appcd-bootstrap');
+
+	globule
+		.find(['./core/package.json', 'packages/*/package.json', '!packages/appcd-gulp/*', 'plugins/*/package.json'])
+		.forEach(file => {
+			const json = require(path.resolve(file));
+			copyDeps(json.dependencies, file);
+			pkgJson.bundledDependencies.push(json.name);
+		});
+
+	Object.keys(found).sort().forEach(dep => pkgJson.dependencies[dep] = found[dep]);
+	pkgJson.bundledDependencies.sort();
+
+	console.log(JSON.stringify(pkgJson, null, '  '));
+
+	// TODO:
+	// * create the archive
+	// * add the package.json
+	// * add all built bundled dependencies
+	// * write archive to disk
+
+	cb();
+});
+
 /*
  * test tasks
  */

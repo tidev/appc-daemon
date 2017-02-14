@@ -66,43 +66,43 @@ module.exports = {
 	network: {
 		/**
 		 * Additional agent options to pass directly into `request`.
-		 * @type {Object}
+		 * @type {?Object}
 		 */
 		agentOptions: null,
 
 		/**
 		 * Path to a pem file containing one or more certificate authorities.
-		 * @type {String}
+		 * @type {?String}
 		 */
 		caFile: null,
 
 		/**
 		 * Path to a cert file.
-		 * @type {String}
+		 * @type {?String}
 		 */
 		certFile: null,
 
 		/**
 		 * The proxy URL to use for all outgoing HTTP network requests.
-		 * @type {String}
+		 * @type {?String}
 		 */
 		httpProxy: null,
 
 		/**
 		 * The secure proxy URL to use for all outgoing HTTPS network requests.
-		 * @type {String}
+		 * @type {?String}
 		 */
 		httpsProxy: null,
 
 		/**
 		 * Path to a key file.
-		 * @type {String}
+		 * @type {?String}
 		 */
 		keyFile: null,
 
 		/**
 		 * The private key's passphrase.
-		 * @type {String}
+		 * @type {?String}
 		 */
 		passphrase: null,
 
