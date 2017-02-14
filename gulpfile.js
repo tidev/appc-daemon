@@ -1,23 +1,24 @@
 'use strict';
 
 // dependency mappings used to wiring up yarn links and build order
-const chug             = require('gulp-chug');
-const david            = require('david');
-const debug            = require('gulp-debug');
-const del              = require('del');
-const depmap           = require('./dependency-map.json');
-const fs               = require('fs-extra');
-const globule          = require('globule');
-const gulp             = require('gulp');
-const gutil            = require('gulp-util');
-const istanbul         = require('istanbul');
-const Nsp              = require('nsp');
-const path             = require('path');
-const runSequence      = require('run-sequence');
-const semver           = require('semver');
-const spawn            = require('child_process').spawn;
-const spawnSync        = require('child_process').spawnSync;
-const Table            = require('cli-table2');
+const chug        = require('gulp-chug');
+const david       = require('david');
+const debug       = require('gulp-debug');
+const del         = require('del');
+const depmap      = require('./dependency-map.json');
+const fs          = require('fs-extra');
+const globule     = require('globule');
+const gulp        = require('gulp');
+const gutil       = require('gulp-util');
+const istanbul    = require('istanbul');
+const Nsp         = require('nsp');
+const path        = require('path');
+const runSequence = require('run-sequence');
+const semver      = require('semver');
+const sloc        = require('sloc');
+const spawn       = require('child_process').spawn;
+const spawnSync   = require('child_process').spawnSync;
+const Table       = require('cli-table2');
 
 const cliTableChars = {
 	bottom: '', 'bottom-left': '', 'bottom-mid': '', 'bottom-right': '',
@@ -542,7 +543,8 @@ function processPackages(packages) {
 		yarnIssues: 0,
 		deprecated: 0,
 		packagesToUpdate: [],
-		criticalToUpdate: []
+		criticalToUpdate: [],
+		stats: computeSloc()
 	};
 
 	for (const key of Object.keys(packages)) {
@@ -756,15 +758,22 @@ function renderPackages(results) {
 		console.log();
 	}
 
+	console.log(magenta('Source Code Stats') + '\n');
+	table = new Table({ chars: cliTableChars, head: [], style: { head: ['bold'], border: [] } });
+	const stats = results.stats;
+	table.push([ 'Physical lines',       { hAlign: 'right', content: green(formatNumber(stats.total)) }, '' ]);
+	table.push([ 'Lines of source code', { hAlign: 'right', content: green(formatNumber(stats.source)) }, gray(formatPercentage(stats.source / stats.total * 100)) ]);
+	table.push([ 'Total comments',       { hAlign: 'right', content: green(formatNumber(stats.comment)) }, gray(formatPercentage(stats.comment / stats.total * 100)) ]);
+	table.push([ 'Single-lines',         { hAlign: 'right', content: green(formatNumber(stats.single)) }, '' ]);
+	table.push([ 'Blocks',               { hAlign: 'right', content: green(formatNumber(stats.block)) }, '' ]);
+	table.push([ 'Mixed',                { hAlign: 'right', content: green(formatNumber(stats.mixed)) }, '' ]);
+	table.push([ 'Empty lines',          { hAlign: 'right', content: green(formatNumber(stats.empty)) }, '' ]);
+	table.push([ 'Todos',                { hAlign: 'right', content: green(formatNumber(stats.todo)) }, '' ]);
+	table.push([ 'Number of files',      { hAlign: 'right', content: green(formatNumber(stats.files)) }, '' ]);
+	console.log(table.toString() + '\n');
+
 	console.log(magenta('Summary') + '\n');
-	table = new Table({
-		chars: cliTableChars,
-		head: [],
-		style: {
-			head: ['bold'],
-			border: []
-		}
-	});
+	table = new Table({ chars: cliTableChars, head: [], style: { head: ['bold'], border: [] } });
 	table.push([
 		'Missing dependencies',
 		results.missingDeps > 0 ? red(results.missingDeps) : green(results.missingDeps)
@@ -947,4 +956,55 @@ function upgradeDeps(list) {
 				}
 			});
 	}, Promise.resolve());
+}
+
+function computeSloc() {
+	const srcDirs = [];
+	const supported = sloc.extensions;
+	const counters = { total: 0, source: 0, comment: 0, single: 0, block: 0, mixed: 0, empty: 0, todo: 0, files: 0 };
+
+	globule
+		.find(['./*/package.json', 'packages/*/package.json', 'plugins/*/package.json'])
+		.forEach(pkgJson => {
+			const dir = path.join(path.dirname(path.resolve(pkgJson)), 'src');
+			try {
+				if (fs.statSync(dir).isDirectory()) {
+					srcDirs.push(dir + '/*');
+				}
+			} catch (e) {}
+		});
+
+	globule
+		.find(srcDirs)
+		.forEach(file => {
+			const ext = path.extname(file).replace(/^\./, '');
+			if (supported.indexOf(ext) === -1) {
+				return;
+			}
+
+			const stats = sloc(fs.readFileSync(file, 'utf8'), ext);
+			Object.getOwnPropertyNames(stats).forEach(function (key) {
+				counters[key] += stats[key];
+			});
+			counters.files++;
+		});
+
+	return counters;
+}
+
+function formatNumber(num, dontSign) {
+	const n = parseFloat(num)
+	if (isNaN(n)) {
+		return num;
+	}
+	const pos = String(Math.abs(n)).split('.');
+	const val = pos[0].replace(/./g, function(c, i, a) {
+	    return i && c !== "." && ((a.length - i) % 3 === 0) ? ',' + c : c;
+	}) + (pos.length > 1 ? ('.' + pos[1]) : '');
+
+	return dontSign && n < 0 ? `(${val})` : val;
+}
+
+function formatPercentage(value) {
+	return value.toFixed(1) + '%';
 }
