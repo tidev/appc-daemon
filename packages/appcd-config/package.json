@@ -16,8 +16,8 @@
     "test": "optional-dev-dependency && gulp test"
   },
   "dependencies": {
-    "babel-traverse": "^6.22.1",
-    "babel-types": "^6.22.0",
+    "babel-traverse": "^6.23.1",
+    "babel-types": "^6.23.0",
     "babylon": "^6.15.0",
     "doctrine": "^2.0.0",
     "snooplogg": "^1.2.2",
