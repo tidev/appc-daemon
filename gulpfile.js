@@ -15,7 +15,6 @@ const Nsp         = require('nsp');
 const path        = require('path');
 const runSequence = require('run-sequence');
 const semver      = require('semver');
-const sloc        = require('sloc');
 const spawn       = require('child_process').spawn;
 const spawnSync   = require('child_process').spawnSync;
 const Table       = require('cli-table2');
@@ -190,18 +189,19 @@ function buildTask(pattern) {
 		.pipe(chug({ tasks: ['build'] }));
 }
 
-gulp.task('pack', [/*'build'*/], cb => {
+gulp.task('package', [/*'build'*/], cb => {
+	const rootPkgJson = require('./package.json');
+
 	const pkgJson = {
-		name:                'appcd-daemon',
-		version:             '1.0.0',
-		description:         'A daemon that powers Appcelerator tooling and makes the impossible possible.',
-		author:              'Appcelerator, Inc. <npmjs@appcelerator.com>',
-		license:             'SEE LICENSE IN LICENSE',
-		keywords:            [ 'appcelerator', 'appc', 'daemon' ],
+		name:                rootPkgJson.name,
+		version:             rootPkgJson.version,
+		description:         rootPkgJson.description,
+		author:              rootPkgJson.author,
+		license:             rootPkgJson.license,
+		keywords:            rootPkgJson.keywords,
 		bin:                 {},
 		preferGlobal:        true,
-		dependencies:        {},
-		bundledDependencies: []
+		dependencies:        {}
 	};
 	const found = {};
 
@@ -220,31 +220,94 @@ gulp.task('pack', [/*'build'*/], cb => {
 
 	let bootstrap = require('./bootstrap/package.json');
 	bootstrap.bin && Object.keys(bootstrap.bin).forEach(bin => {
-		pkgJson.bin[bin] = path.resolve('./bootstrap', bootstrap.bin[bin]);
+		pkgJson.bin[bin] = './' + path.relative(__dirname, path.resolve('./bootstrap', bootstrap.bin[bin]));
 	});
 	copyDeps(bootstrap.dependencies);
-	pkgJson.bundledDependencies.push('appcd-bootstrap');
 
 	globule
-		.find(['./core/package.json', 'packages/*/package.json', '!packages/appcd-gulp/*', 'plugins/*/package.json'])
+		.find(['./core/package.json', 'packages/*/package.json', '!packages/appcd-gulp/*'])
 		.forEach(file => {
 			const json = require(path.resolve(file));
 			copyDeps(json.dependencies, file);
-			pkgJson.bundledDependencies.push(json.name);
+		});
+
+	globule
+		.find(['plugins/*/package.json'])
+		.forEach(file => {
+			const json = require(path.resolve(file));
+			copyDeps(json.dependencies, file);
 		});
 
 	Object.keys(found).sort().forEach(dep => pkgJson.dependencies[dep] = found[dep]);
-	pkgJson.bundledDependencies.sort();
 
-	console.log(JSON.stringify(pkgJson, null, '  '));
+	const distDir = path.join(__dirname, 'dist');
+	if (!exists(distDir)) {
+		fs.mkdirSync(distDir);
+	}
 
-	// TODO:
-	// * create the archive
-	// * add the package.json
-	// * add all built bundled dependencies
-	// * write archive to disk
+	const outFile = path.join(distDir, pkgJson.name + '-' + pkgJson.version + '.tgz');
+	if (exists(outFile)) {
+		fs.unlinkSync(outFile);
+	}
 
-	cb();
+	gutil.log('Packing ' + outFile);
+
+	const archiver = require('archiver');
+	const ignore = require('ignore');
+
+	const output = fs.createWriteStream(outFile);
+	const archive = archiver('tar', {
+		gzip: true,
+		gzipOptions: {
+			level: 1
+		}
+	});
+
+	output.on('close', () => {
+		gutil.log(`Wrote ${archive.pointer()} bytes`);
+		cb();
+	});
+
+	archive.on('error', err => {
+		cb(err);
+	});
+
+	archive.pipe(output);
+
+	archive.append(JSON.stringify(pkgJson, null, '  '), { name: 'package/package.json' });
+
+	const licenseFile = path.join(__dirname, 'LICENSE');
+	if (exists(licenseFile)) {
+		archive.append(fs.createReadStream(licenseFile), { name: 'package/LICENSE' });
+	}
+
+	function pack(dir, relPath) {
+		const ignoreFile = path.join(dir, '.npmignore');
+		const ig = ignore().add('yarn.lock');
+		const pkg = path.basename(dir);
+		if (exists(ignoreFile)) {
+			ig.add(fs.readFileSync(ignoreFile, 'utf8').split('\n').filter(s => s && s[0] !== '#'));
+		}
+		const files = globule.find(dir + '/**')
+			.filter(file => fs.statSync(file).isFile())
+			.map(file => path.relative(dir, file));
+		ig.filter(files).forEach(file => {
+			const dest = `${relPath}/${pkg}/${file}`;
+			gutil.log(` + ${pkg}/${file} => ${dest}`);
+			archive.append(fs.createReadStream(path.join(dir, file)), { name: dest });
+		});
+	}
+
+	pack(path.join(__dirname, 'bootstrap'), 'package');
+
+	globule
+		.find(['packages/*', '!packages/appcd-gulp'])
+		.filter(dir => fs.statSync(dir).isDirectory())
+		.forEach(dir => {
+			pack(dir, 'package/node_modules');
+		});
+
+	archive.finalize();
 });
 
 /*
@@ -345,11 +408,12 @@ gulp.task('default', () => {
 	table.push([cyan('build-packages'),   'builds all packages']);
 	table.push([cyan('build-plugins'),    'builds all plugins']);
 	table.push([cyan('build-watch'),      'builds all packages, then starts watching them']);
-	table.push([cyan('check'),            'checks missing/outdated dependencies/link and security issues']);
+	table.push([cyan('check'),            'checks missing/outdated dependencies/link, security issues, and code stats']);
 	table.push([cyan('fix'),              'fixes any missing dependencies or links']);
 	table.push([cyan('install'),          'links/installs dependencies, then does a full build']);
 	table.push([cyan('install-deps'),     'installs each package\'s npm dependencies']);
 	table.push([cyan('link'),             'ensures all links are wired up']);
+	table.push([cyan('package'),          'builds and packages an appc daemon distribution archive']);
 	table.push([cyan('ugprade-all'),      'detects latest npm deps, updates package.json, and runs upgrade']);
 	table.push([cyan('upgrade-critical'), 'detects security issues, updates package.json, and runs upgrade']);
 	table.push([cyan('watch'),            'starts watching all packages to perform build']);
@@ -1017,6 +1081,7 @@ function upgradeDeps(list) {
 
 function computeSloc() {
 	const srcDirs = [];
+	const sloc = require('sloc');
 	const supported = sloc.extensions;
 	const counters = { total: 0, source: 0, comment: 0, single: 0, block: 0, mixed: 0, empty: 0, todo: 0, files: 0 };
 
@@ -1064,4 +1129,13 @@ function formatNumber(num, dontSign) {
 
 function formatPercentage(value) {
 	return value.toFixed(1) + '%';
+}
+
+function exists(file) {
+	try {
+		if (fs.statSync(file)) {
+			return true;
+		}
+	} catch (e) {}
+	return false;
 }

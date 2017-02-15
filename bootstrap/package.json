@@ -1,5 +1,5 @@
 {
-  "name": "appcd-daemon",
+  "name": "appc-daemon-bootstrap",
   "version": "1.0.0",
   "description": "Appcelerator Daemon",
   "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",

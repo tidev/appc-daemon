@@ -69,7 +69,12 @@ export default class Server {
 		this.dispatcher = new Dispatcher();
 
 		// init the plugin manager
-		this.pluginManager = new PluginManager();
+		this.pluginManager = new PluginManager({
+			paths: [
+				path.resolve(__dirname, '..', 'plugins'),
+				path.join(homeDir, 'plugins')
+			]
+		});
 
 		logger.info('STARTING CORE!');
 
