@@ -95,11 +95,11 @@ describe('dispatcher', () => {
 			let count = 0;
 			const data = { a: 1 };
 
-			d.register('/foo', data => {
+			d.register('/foo', ctx => {
 				count++;
-				expect(data).to.be.an.object;
-				expect(data).to.have.property('a');
-				expect(data.a).to.equal(1);
+				expect(ctx.data).to.be.an.object;
+				expect(ctx.data).to.have.property('a');
+				expect(ctx.data.a).to.equal(1);
 			});
 
 			d.call('/foo', data)

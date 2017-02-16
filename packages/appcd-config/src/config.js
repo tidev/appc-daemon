@@ -93,7 +93,7 @@ export default class Config extends EventEmitter {
 
 		if (ext === '.json') {
 			try {
-				log(`loading JSON config file: ${file}`);
+				log(`Loading JSON config file: ${file}`);
 				this.merge(JSON.parse(fs.readFileSync(file)), { overrideReadonly: true });
 			} catch (e) {
 				throw new Error(`Failed to load config file: ${e}`);
@@ -101,7 +101,7 @@ export default class Config extends EventEmitter {
 			return this;
 		}
 
-		log(`loading JavaScript config file: ${file}`);
+		log(`Loading JavaScript config file: ${file}`);
 		return this.parseJS(fs.readFileSync(file, 'utf8'), file);
 	}
 
@@ -136,7 +136,7 @@ export default class Config extends EventEmitter {
 		// parse the JavaScript AST using Babylon
 		let ast;
 		try {
-			log('parsing AST...');
+			log('Parsing AST...');
 			ast = parse(code, {
 				plugins: [
 					'asyncGenerators',

@@ -2,7 +2,7 @@
   "name": "appcd-dispatcher",
   "version": "1.0.0",
   "description": "Provides HTTP-like API for exposing services",
-  "main": "./dist/index",
+  "main": "./dist/dispatcher",
   "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
     "Chris Barber <cbarber@appcelerator.com>"

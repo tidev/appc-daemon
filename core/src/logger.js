@@ -1,11 +1,12 @@
-import snooplogg from 'snooplogg';
+import snooplogg, { createInstanceWithDefaults, StdioStream } from 'snooplogg';
 
-const instance = snooplogg.config({
-	maxBufferSize: 250,
-	theme: 'detailed'
-});
-const logger = instance('appcd');
+const instance = createInstanceWithDefaults()
+	.snoop()
+	.config({
+		maxBufferSize: 250,
+		theme: 'detailed'
+	});
 
-export default logger;
+export default instance;
 
-export { instance as snooplogg };
+export { StdioStream };

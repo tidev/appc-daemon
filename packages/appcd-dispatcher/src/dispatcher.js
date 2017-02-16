@@ -1,9 +1,13 @@
+if (!Error.prepareStackTrace) {
+	require('source-map-support/register');
+}
+
 import autobind from 'autobind-decorator';
 import pathToRegExp from 'path-to-regexp';
-import snooplogg, { chalk } from 'snooplogg';
+import snooplogg, { styles } from 'snooplogg';
 
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:dispatcher');
-const highlight = chalk.cyan;
+const { highlight } = styles;
 
 /**
  * A custom error for dispatcher errors.
@@ -95,18 +99,22 @@ export default class Dispatcher {
 	 * handler, an error is returned.
 	 *
 	 * @param {String} path - The dispatch path to request.
-	 * @param {Object} [ctx={}] - An optional data payload to send.
+	 * @param {Object} [data={}] - An optional data payload to send.
 	 * @returns {Promise}
 	 * @access public
 	 */
 	@autobind
-	call(path, ctx) {
-		if (!ctx || typeof ctx !== 'object') {
-			ctx = {};
+	call(path, data) {
+		if (!data || typeof data !== 'object') {
+			data = {};
 		}
 
-		ctx.path = path;
-		ctx.status = 200;
+		const ctx = {
+			data,
+			path,
+			response: null,
+			status: 200
+		};
 
 		let index = -1;
 
@@ -127,14 +135,14 @@ export default class Dispatcher {
 				throw new DispatcherError(404, 'No route');
 			}
 
-			logger.trace(`Testing route: ${route.path}`);
+			logger.trace('Testing route: %s', highlight(route.path));
 
 			const m = ctx.path.match(route.regexp);
 			if (!m) {
 				return dispatch(i + 1);
 			}
 
-			logger.debug(`Founding matching route: ${highlight(route.path)}`);
+			logger.debug('Found matching route: %s', highlight(route.path));
 
 			// extract the params from the path
 			delete ctx.params;
@@ -154,9 +162,11 @@ export default class Dispatcher {
 			return new Promise((resolve, reject) => {
 				let fired = false;
 
-				logger.trace(`calling route handler ${i}`);
+				logger.trace('calling route handler %d', i);
 
 				let result = route.handler(ctx, function next(result) {
+					// go to next route
+
 					if (fired) {
 						logger.debug('next() already fired!');
 						return;
@@ -165,7 +175,7 @@ export default class Dispatcher {
 					fired = true;
 
 					return dispatch(i + 1)
-						.then(ctx2 => ctx2 || ctx)
+						.then(result => result || ctx)
 						.catch(reject);
 				});
 
@@ -173,10 +183,10 @@ export default class Dispatcher {
 
 				// if we got back a promise, we have to wait
 				if (result instanceof Promise) {
-					return result.then(resolve, reject);
+					result.then(result => resolve(result || ctx)).catch(reject);
+				} else {
+					resolve(result || ctx);
 				}
-
-				resolve(result || ctx);
 			});
 		};
 

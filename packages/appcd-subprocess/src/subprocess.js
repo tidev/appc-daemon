@@ -57,7 +57,7 @@ export function run(cmd, args, opts) {
 	}
 
 	return new Promise((resolve, reject) => {
-		logger.info(`Executing: ${styles.highlight(cmd + (args ? args.map(a => a.indexOf(' ') !== -1 ? ` "${a}"` : ` ${a}`).join('') : ''))}`);
+		logger.log('Executing: %s', `${styles.highlight(cmd + (args ? args.map(a => a.indexOf(' ') !== -1 ? ` "${a}"` : ` ${a}`).join('') : ''))}`);
 
 		const child = spawn(cmd, args, opts);
 

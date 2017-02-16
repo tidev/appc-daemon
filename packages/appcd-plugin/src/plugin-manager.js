@@ -63,7 +63,7 @@ export default class PluginManager {
 			return;
 		}
 
-		logger.info(`Scanning for plugins: ${dir}`);
+		logger.log('Scanning for plugins: %s', dir);
 
 		const versionRegExp = /^\d\.\d\.\d$/;
 

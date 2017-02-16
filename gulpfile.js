@@ -189,20 +189,25 @@ function buildTask(pattern) {
 		.pipe(chug({ tasks: ['build'] }));
 }
 
-gulp.task('package', [/*'build'*/], cb => {
-	const rootPkgJson = require('./package.json');
-
+gulp.task('package', ['build'], cb => {
 	const pkgJson = {
-		name:                rootPkgJson.name,
-		version:             rootPkgJson.version,
-		description:         rootPkgJson.description,
-		author:              rootPkgJson.author,
-		license:             rootPkgJson.license,
-		keywords:            rootPkgJson.keywords,
-		bin:                 {},
-		preferGlobal:        true,
-		dependencies:        {}
+		name:         '',
+		version:      '',
+		description:  '',
+		author:       '',
+		license:      '',
+		keywords:     '',
+		bin:          {},
+		preferGlobal: true,
+		dependencies: {},
+		build: {
+			gitHash:   spawnSync('git', ['log', '--pretty=oneline', '-n', '1', '--no-color']).stdout.toString().split(' ')[0],
+			hostname:  require('os').hostname(),
+			platform:  process.platform,
+			timestamp: new Date().toISOString()
+		}
 	};
+
 	const found = {};
 
 	function copyDeps(deps, file) {
@@ -219,24 +224,34 @@ gulp.task('package', [/*'build'*/], cb => {
 	}
 
 	let bootstrap = require('./bootstrap/package.json');
+	pkgJson.name = bootstrap.name;
+	pkgJson.version = bootstrap.version;
+	pkgJson.description = bootstrap.description;
+	pkgJson.author = bootstrap.author;
+	pkgJson.license = bootstrap.license;
+	pkgJson.keywords = bootstrap.keywords;
 	bootstrap.bin && Object.keys(bootstrap.bin).forEach(bin => {
 		pkgJson.bin[bin] = './' + path.relative(__dirname, path.resolve('./bootstrap', bootstrap.bin[bin]));
 	});
 	copyDeps(bootstrap.dependencies);
 
 	globule
-		.find(['./core/package.json', 'packages/*/package.json', '!packages/appcd-gulp/*'])
+		.find([
+			'./core/package.json',
+			'packages/*/package.json',
+			'!packages/appcd-gulp/*'
+		])
 		.forEach(file => {
 			const json = require(path.resolve(file));
 			copyDeps(json.dependencies, file);
 		});
 
-	globule
-		.find(['plugins/*/package.json'])
-		.forEach(file => {
-			const json = require(path.resolve(file));
-			copyDeps(json.dependencies, file);
-		});
+	// globule
+	// 	.find(['plugins/*/package.json'])
+	// 	.forEach(file => {
+	// 		const json = require(path.resolve(file));
+	// 		copyDeps(json.dependencies, file);
+	// 	});
 
 	Object.keys(found).sort().forEach(dep => pkgJson.dependencies[dep] = found[dep]);
 

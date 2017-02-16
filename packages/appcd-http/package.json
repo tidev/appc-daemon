@@ -1,8 +1,8 @@
 {
-  "name": "appcd-util",
+  "name": "appcd-http",
   "version": "1.0.0",
-  "description": "Various utility functions to support the Appc Daemon",
-  "main": "./dist/util",
+  "description": "HTTP server with WebSocket support, router, and various middlewares.",
+  "main": "./dist/index",
   "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
     "Chris Barber <cbarber@appcelerator.com>"
@@ -16,11 +16,17 @@
     "test": "optional-dev-dependency && gulp test"
   },
   "dependencies": {
-    "semver": "^5.3.0",
+    "koa": "next",
+    "koa-bodyparser": "^2.3.0",
+    "koa-helmet": "^3.1.0",
+    "koa-send": "^3.3.0",
+    "path-to-regexp": "^1.7.0",
+    "snooplogg": "^1.2.2",
     "source-map-support": "^0.4.11"
   },
   "devDependencies": {
-    "gulp": "^3.9.1"
+    "gulp": "^3.9.1",
+    "supertest": "^3.0.0"
   },
   "optionalDevDependencies": {
     "appcd-gulp": "*"

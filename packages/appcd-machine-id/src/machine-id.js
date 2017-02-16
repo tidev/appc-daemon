@@ -23,7 +23,7 @@ export function getMachineId(midFile) {
 		midFile = expandPath(midFile);
 	}
 
-	logger.info('Detecting Machine ID...');
+	logger.log('Detecting Machine ID...');
 
 	return Promise.resolve()
 		.then(() => {
@@ -50,7 +50,7 @@ export function getMachineId(midFile) {
 		.catch(err => Promise.resolve()) // squeltch errors
 		.then(machineId => {
 			if (machineId) {
-				logger.info(`Native Machine ID: ${styles.highlight(machineId)}`);
+				logger.log('Native Machine ID: %s', styles.highlight(machineId));
 				return machineId;
 			}
 
@@ -60,7 +60,7 @@ export function getMachineId(midFile) {
 					let machineId = null;
 					if (!err && mac) {
 						machineId = sha1(mac);
-						logger.info(`MAC address Machine ID: ${styles.highlight(machineId)}`);
+						logger.log('MAC address Machine ID: %s', styles.highlight(machineId));
 					}
 					resolve(machineId);
 				});
@@ -82,12 +82,12 @@ export function getMachineId(midFile) {
 				machineId = randomBytes(20);
 			}
 
-			logger.info(`Machine ID: ${styles.highlight(machineId)}`);
+			logger.log('Machine ID: %s', styles.highlight(machineId));
 
 			// write the mid file
 			if (midFile) {
 				fs.mkdirsSync(path.dirname(midFile));
-				logger.info(`Writing Machine ID to ${styles.highlight(midFile)}`);
+				logger.log('Writing Machine ID to %s', styles.highlight(midFile));
 				fs.writeFileSync(midFile, machineId);
 			}
 

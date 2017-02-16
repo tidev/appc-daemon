@@ -1,7 +1,7 @@
 {
-  "name": "appc-daemon-bootstrap",
+  "name": "appc-daemon",
   "version": "1.0.0",
-  "description": "Appcelerator Daemon",
+  "description": "A daemon that powers Appcelerator tooling and makes the impossible possible.",
   "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
     "Chris Barber <cbarber@appcelerator.com>"

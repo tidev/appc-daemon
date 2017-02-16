@@ -22,6 +22,7 @@ new CLI({
 	options: {
 		'--config <json>':      { type: 'json', desc: 'serialized JSON string to mix into the appcd config' },
 		'--config-file <file>': { type: 'file', desc: 'path to a appcd JS config file' },
+		'-v, --version':        { desc: 'outputs the appcd version' }
 	}
 }).exec()
 	.catch(console.error);

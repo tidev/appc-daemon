@@ -1,3 +1,7 @@
+if (!Error.prepareStackTrace) {
+	require('source-map-support/register');
+}
+
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
