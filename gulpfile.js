@@ -749,7 +749,7 @@ function processPackages(packages) {
 						}
 					}
 
-					if (dep.required !== 'latest' && dep.required !== '*') {
+					if (dep.required !== 'latest' && dep.required !== 'next' && dep.required !== '*') {
 						const range = semver.validRange(dep.installed || dep.required) || '';
 						const version = dep.stable || dep.latest;
 						if (version && range && !semver.satisfies(version, range)) {
