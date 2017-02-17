@@ -11,6 +11,7 @@ import { isDir } from 'appcd-fs';
 import { Server as WebSocketServer } from 'ws';
 
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:http:webserver');
+const { pluralize } = snooplogg;
 const { alert, highlight, notice, ok } = snooplogg.styles;
 
 /**
@@ -90,37 +91,47 @@ export default class WebServer extends EventEmitter {
 			}
 		}
 
+		if (opts.index && typeof opts.index !== 'string') {
+			throw new TypeError('Expected index to be a string');
+		}
+
 		this.hostname = opts.hostname;
 		this.port     = opts.port;
 		this.webroot  = opts.webroot;
+		this.index    = opts.index;
+
+		function logRequest(ctx, err) {
+			const style = ctx.status < 400 ? ok : ctx.status < 500 ? notice : alert;
+			const { remoteAddress, remotePort } = ctx.socket;
+
+			logger.log('%s %s %s %s %s%s',
+				highlight(remoteAddress + ':' + remotePort),
+				ctx.method,
+				ctx.url,
+				style(ctx.status),
+				err ? `${style(err.message || err)} ` : '',
+				highlight((new Date - ctx.startTime) + 'ms')
+			);
+		}
 
 		// init the Koa app with helmet and a simple request logger
 		this.app
 			.use(helmet())
 			.use(bodyParser())
 			.use((ctx, next) => {
-				const start = new Date;
-
-				// unify the context to be compatible with dispatcher contexts
-				// ctx.data = appc.util.mergeDeep(ctx.data, ctx.request.body);
-
-				// set the user agent
-				// ctx.userAgent = ctx.request.headers['user-agent'] || `Web ${ctx.request.protocol}`;
-
+				ctx.startTime = new Date;
 				return next()
-					.then(() => {
-						logger.log('%s %s %s %s',
-							ctx.method,
-							ctx.url,
-							(ctx.status < 400 ? ok : ctx.status < 500 ? notice : alert)(ctx.status),
-							highlight((new Date - start) + 'ms')
-						);
-					});
+					.then(() => logRequest(ctx));
+			})
+			.on('error', (err, ctx) => {
+				ctx.status = err.status || 500;
+				logRequest(ctx, err);
 			});
 	}
 
 	/**
-	 * Adds a middleware function to the web server.
+	 * Adds a middleware function to the web server. This should be called
+	 * before calling `listen()`.
 	 *
 	 * @param {Function} middleware - A middleware function to add to the Koa app.
 	 * @returns {WebServer}
@@ -142,24 +153,27 @@ export default class WebServer extends EventEmitter {
 	listen() {
 		return Promise.resolve()
 			// make sure that if there is a previous websocket server, it's shutdown to free up the port
-			.then(this.close)
+			.then(() => this.close())
 			.then(() => {
+				const webroot = this.webroot || path.resolve(__dirname, '..', 'public');
+
 				return new Promise((resolve, reject) => {
 					this.httpServer = this.app
 						.use(this.router.routes())
-						.use(async (ctx) => {
-							await send(ctx, ctx.path, { root: this.webroot || path.resolve(__dirname, '..', 'public') });
-						})
+						.use(ctx => send(ctx, ctx.path, { index: this.index || 'index.html', root: webroot }))
 						.listen(this.port, this.hostname)
 						.once('listening', () => {
-							logger.log('Web server listening on ' + highlight('http://localhost:' + this.port));
+							logger.log('Web server listening on %s', highlight(`http://${this.hostname || 'localhost'}:${this.port}`));
+							logger.log('Served web root: %s', highlight(webroot));
 							resolve();
 						})
 						.on('connection', conn => {
 							const key = conn.remoteAddress + ':' + conn.remotePort;
+							logger.log('%s connected', highlight(key));
 							this.connections[key] = conn;
 							conn.on('close', () => {
 								delete this.connections[key];
+								logger.log('%s disconnected', highlight(key));
 							});
 						});
 
@@ -169,6 +183,14 @@ export default class WebServer extends EventEmitter {
 					});
 
 					this.websocketServer.on('connection', conn => {
+						const { remoteAddress, remotePort } = conn.upgradeReq.socket;
+						const key = remoteAddress + ':' + remotePort;
+						logger.log('%s upgraded to WebSocket', highlight(key));
+
+						conn.on('close', () => {
+							logger.log('%s closed WebSocket', highlight(key));
+						});
+
 						this.emit('websocket', conn);
 					});
 				});
@@ -188,6 +210,7 @@ export default class WebServer extends EventEmitter {
 				if (this.websocketServer) {
 					return new Promise((resolve, reject) => {
 						// close the websocket server
+						logger.log('Closing WebSocket server');
 						this.websocketServer.close(() => {
 							this.websocketServer = null;
 							resolve();
@@ -199,14 +222,18 @@ export default class WebServer extends EventEmitter {
 				if (this.httpServer) {
 					return new Promise((resolve, reject) => {
 						// close the http server
+						logger.log('Closing HTTP server');
 						this.httpServer.close(() => {
+							// manually kill any open connections
+							const conns = Object.keys(this.connections);
+							logger.log(pluralize('Dropping %s connection', conns.length), highlight(conns.length));
+							for (const key of conns) {
+								this.connections[key].destroy();
+								delete this.connections[key];
+							}
+
 							this.httpServer = null;
 							resolve();
-						});
-
-						// manually kill any open connections
-						Object.keys(this.connections).forEach(key => {
-							this.connections[key].destroy();
 						});
 					});
 				}

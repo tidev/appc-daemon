@@ -107,7 +107,7 @@ describe('router', () => {
 
 			app.use((ctx, next) => {
 				ctx.body = '1';
-				return next().then(result => ctx.body += result);
+				return next().then(() => ctx.body += '4');
 			});
 
 			router.get('/', (ctx, next) => {
@@ -119,7 +119,6 @@ describe('router', () => {
 
 			app.use(ctx => {
 				ctx.body += '3';
-				return '4';
 			});
 
 			const server = app.listen();
@@ -133,18 +132,17 @@ describe('router', () => {
 				});
 		});
 
-		it('it should resolve with value', done => {
+		it('should resolve with value', done => {
 			const app = new Koa();
 			const router = new Router();
 
 			app.use((ctx, next) => {
 				ctx.body = '1';
-				return next().then(result => ctx.body += result);
+				return next().then(() => ctx.body += '3');
 			});
 
 			router.get('/', ctx => {
 				ctx.body += '2';
-				return Promise.resolve('3');
 			});
 
 			app.use(router.routes());
@@ -157,6 +155,55 @@ describe('router', () => {
 				.end(err => {
 					server.close();
 					done(err);
+				});
+		});
+
+		it('should continue when no routes', done => {
+			const app = new Koa();
+			const router = new Router();
+
+			app.use((ctx, next) => {
+				ctx.body = '1';
+				return next().then(() => ctx.body += '3');
+			});
+
+			app.use(router.routes());
+
+			const server = app.listen();
+			request(server)
+				.get('/')
+				.expect(200)
+				.expect('13')
+				.end(err => {
+					server.close();
+					done(err);
+				});
+		});
+
+		it('should reject when next() is called multiple times', done => {
+			const app = new Koa();
+			const router = new Router();
+			let theError = null;
+
+			router.get('/', (ctx, next) => {
+				const p = next();
+				return next()
+					.then(() => {
+						throw new Error('Expected 2nd next() call to be rejected');
+					}, () => p);
+			});
+
+			app.on('error', (err, ctx) => {
+				theError = err;
+			});
+			app.use(router.routes());
+
+			const server = app.listen();
+			request(server)
+				.get('/')
+				.end(err => {
+					server.close();
+					done(theError);
 				});
 		});
 	});
@@ -174,7 +221,7 @@ describe('router', () => {
 				const server = app.listen();
 				request(server)[m]('/hello')
 					.expect(200)
-					.expect(m === 'head' ? '' : 'world')
+					.expect(m === 'head' ? undefined : 'world')
 					.end(err => {
 						server.close();
 						done(err);
@@ -194,7 +241,7 @@ describe('router', () => {
 				const server = app.listen();
 				request(server)[m]('/')
 					.expect(200)
-					.expect(m === 'head' ? '' : 'world')
+					.expect(m === 'head' ? undefined : 'world')
 					.end(err => {
 						server.close();
 						done(err);
@@ -215,7 +262,7 @@ describe('router', () => {
 				const server = app.listen();
 				request(server)[m]('/hello')
 					.expect(200)
-					.expect(m === 'head' ? '' : 'world')
+					.expect(m === 'head' ? undefined : 'world')
 					.end(err => {
 						server.close();
 						if (err) {
@@ -240,7 +287,7 @@ describe('router', () => {
 				const server = app.listen();
 				request(server)[m]('/')
 					.expect(200)
-					.expect(m === 'head' ? '' : 'world')
+					.expect(m === 'head' ? undefined : 'world')
 					.end(err => {
 						server.close();
 						if (err) {
@@ -565,9 +612,9 @@ describe('router', () => {
 			expect(() => router.param()).to.throw('Expected key to be a string');
 		});
 
-		it('should throw if fn is not a function', () => {
+		it('should throw if callback is not a function', () => {
 			const router = new Router();
-			expect(() => router.param('')).to.throw('Expected fn to be a function');
+			expect(() => router.param('')).to.throw('Expected callback to be a function');
 		});
 
 		it('should resolve param', done => {
@@ -692,8 +739,7 @@ describe('router', () => {
 
 		it('runs parameter middleware in order of URL appearance', done => {
 			const app = new Koa();
-			const router = new Router();
-			router
+			const router = new Router()
 				.param('user', (ctx, next) => {
 					ctx.user = {
 						name: 'alex'
@@ -701,14 +747,14 @@ describe('router', () => {
 					if (ctx.ranFirst)  {
 						ctx.user.ordered = 'parameters';
 					}
-					next();
+					return next();
 				})
 				.param('first', (ctx, next) => {
 					ctx.ranFirst = true;
 					if (ctx.user) {
 						ctx.ranFirst = false;
 					}
-					next();
+					return next();
 				})
 				.get('/:first/users/:user', ctx => {
 					ctx.body = ctx.user;

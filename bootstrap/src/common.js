@@ -10,8 +10,16 @@ import { spawnNode } from 'appcd-nodejs';
 
 import * as config from 'appcd-config';
 
-const pkgJson = require('../package.json');
 const log = snooplogg.config({ theme: 'detailed' })('appcd:common').log;
+
+let appcdVersion = null;
+
+export function getAppcdVersion() {
+	if (!appcdVersion) {
+		appcdVersion = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')).version;
+	}
+	return appcdVersion;
+}
 
 /**
  * Makes a request to the Appc Daemon.
@@ -25,7 +33,7 @@ export function createRequest(cfg, path, payload) {
 	const client = new Client({
 		host: cfg.get('server.host'),
 		port: cfg.get('server.post'),
-		userAgent: `appcd/${pkgJson.version} node/${process.version.replace(/^v/, '')} ${process.platform} ${arch()}`
+		userAgent: `appcd/${appcdVersion} node/${process.version.replace(/^v/, '')} ${process.platform} ${arch()}`
 	});
 
 	const request = client
@@ -98,7 +106,7 @@ export function startServer({ cfg, argv }) {
 		args.push('--config-file', configFile);
 	}
 
-	process.env.APPCD_BOOTSTRAP = pkgJson.version;
+	process.env.APPCD_BOOTSTRAP = appcdVersion;
 
 	return spawnNode({
 		args,

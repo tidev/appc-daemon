@@ -19,7 +19,7 @@
     "fs-extra": "^2.0.0",
     "macaddress": "^0.2.8",
     "simple-plist": "^0.2.1",
-    "snooplogg": "^1.2.2",
+    "snooplogg": "^1.3.0",
     "source-map-support": "^0.4.11"
   },
   "devDependencies": {

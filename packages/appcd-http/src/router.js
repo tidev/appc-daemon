@@ -9,6 +9,7 @@ import pathToRegexp from 'path-to-regexp';
 import snooplogg from 'snooplogg';
 
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:http:router');
+const { highlight, note } = snooplogg.styles;
 
 /**
  * Supported HTTP methods.
@@ -118,40 +119,22 @@ export default class Router {
 
 			let index = -1;
 
-			const dispatch = i => {
+			return (function dispatch(i) {
 				if (i <= index) {
 					return Promise.reject(new Error('next() called multiple times'));
 				}
 				index = i;
-				const route = middlewares[i];
-				const fn = route && route.fn || next;
-				if (!fn) {
-					return Promise.resolve();
-				}
-				try {
-					ctx.route = route;
-					if (route) {
-						route.paramMiddlewares = paramMiddlewares;
-					}
-					return Promise.resolve(fn(ctx, () => dispatch(i + 1)))
-						// we need to catch errors and set expose to true
-						.catch(err => {
-							if (err instanceof Error) {
-								err.expose = true;
-							}
-							return Promise.reject(err);
-						});
-				} catch (err) {
-					return Promise.reject(err);
-				}
-			};
 
-			return dispatch(0)
-				.then(result => {
-					if (!ctx.body && result) {
-						ctx.body = result;
-					}
-				});
+				ctx.route = middlewares[i];
+
+				if (ctx.route) {
+					ctx.route.paramMiddlewares = paramMiddlewares;
+					return Promise.resolve()
+						.then(() => ctx.route.fn(ctx, () => dispatch(i + 1)));
+				} else {
+					return next(ctx);
+				}
+			}(0));
 		};
 	}
 
@@ -190,6 +173,8 @@ export default class Router {
 
 		const keys = [];
 
+		logger.log('Registering layer: %s %s', highlight(path), methods ? note(`(${methods.join(',')})`) : '');
+
 		this.layers.push({
 			path,
 			middleware: middleware instanceof Router ? middleware.routes() : middleware,
@@ -215,7 +200,7 @@ export default class Router {
 			args.unshift('(.*)');
 		}
 		args.unshift(null);
-		return this.register.apply(this, args);
+		return this.register(...args);
 	}
 
 	/**
@@ -231,7 +216,7 @@ export default class Router {
 			throw new TypeError('Expected key to be a string');
 		}
 		if (typeof callback !== 'function') {
-			throw new TypeError('Expected fn to be a function');
+			throw new TypeError('Expected callback to be a function');
 		}
 		return this.register(null, '(.*)', key, callback);
 	}
@@ -249,7 +234,7 @@ export default class Router {
 			args.unshift('/');
 		}
 		args.unshift(methods);
-		return this.register.apply(this, args);
+		return this.register(...args);
 	}
 
 	/**
@@ -289,6 +274,6 @@ for (const method of methods) {
 			args.unshift('/');
 		}
 		args.unshift([method]);
-		return this.register.apply(this, args);
+		return this.register(...args);
 	};
 }

@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "cli-kit": "*",
-    "snooplogg": "^1.2.2",
+    "snooplogg": "^1.3.0",
     "source-map-support": "^0.4.11"
   },
   "devDependencies": {

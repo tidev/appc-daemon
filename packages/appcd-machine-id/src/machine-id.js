@@ -36,8 +36,11 @@ export function getMachineId(midFile) {
 			if (platform === 'darwin') {
 				return run('ioreg', ['-ard1', '-c', 'IOPlatformExpertDevice'])
 					.then(result => {
-						const json = require('simple-plist').parse(result.stdout)[0];
-						return json && sha1(json.IOPlatformUUID);
+						return import('simple-plist')
+							.then(plist => {
+								const json = plist.parse(result.stdout)[0];
+								return json && sha1(json.IOPlatformUUID);
+							});
 					});
 			}
 
@@ -59,16 +62,17 @@ export function getMachineId(midFile) {
 			}
 
 			// try to generate the machine id based on the mac address
-			return new Promise((resolve, reject) => {
-				require('macaddress').one((err, mac) => {
-					let machineId = null;
-					if (!err && mac) {
-						machineId = sha1(mac);
-						logger.log('MAC address Machine ID: %s', styles.highlight(machineId));
-					}
-					resolve(machineId);
-				});
-			});
+			return import('macaddress')
+				.then(macaddress => new Promise((resolve, reject) => {
+					macaddress.one((err, mac) => {
+						let machineId = null;
+						if (!err && mac) {
+							machineId = sha1(mac);
+							logger.log('MAC address Machine ID: %s', styles.highlight(machineId));
+						}
+						resolve(machineId);
+					});
+				}));
 		})
 		.then(machineId => {
 			if (!machineId) {
