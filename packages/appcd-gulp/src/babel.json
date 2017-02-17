@@ -1,5 +1,6 @@
 {
 	"node4": [
+		"import-node",
 		"transform-async-to-generator",
 		"transform-class-properties",
 		"transform-decorators-legacy",
@@ -10,6 +11,7 @@
 	],
 
 	"node6": [
+		"import-node",
 		"transform-async-to-generator",
 		"transform-class-properties",
 		"transform-decorators-legacy",

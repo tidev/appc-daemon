@@ -1,3 +1,7 @@
+if (!Error.prepareStackTrace) {
+	require('source-map-support/register');
+}
+
 import path from 'path';
 
 const homeDirRegExp = /^~([\\|/].*)?$/;

@@ -19,8 +19,8 @@ new CLI({
 	help: false
 }).exec()
 	.then(({ argv }) => {
-		const Server = require('./server').default;
-		return new Server(argv);
+		return import('./server')
+			.then(server => new server.default(argv));
 	})
 	.then(server => server.start())
 	.then(appcd => {

@@ -17,22 +17,19 @@
   },
   "preferGlobal": true,
   "scripts": {
-    "build": "optional-dev-dependency && gulp build",
-    "coverage": "optional-dev-dependency && gulp coverage",
-    "docs": "optional-dev-dependency && gulp docs",
-    "prepublish": "optional-dev-dependency && gulp build",
-    "test": "optional-dev-dependency && gulp test"
+    "build": "gulp build",
+    "coverage": "gulp coverage",
+    "docs": "gulp docs",
+    "prepublish": "gulp build",
+    "test": "gulp test"
   },
   "dependencies": {
+    "cli-kit": "*",
     "snooplogg": "^1.2.2",
     "source-map-support": "^0.4.11"
   },
   "devDependencies": {
     "gulp": "^3.9.1"
-  },
-  "optionalDevDependencies": {
-    "appcd-gulp": "*",
-    "cli-kit": "*"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",

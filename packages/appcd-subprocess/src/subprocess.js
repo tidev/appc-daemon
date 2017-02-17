@@ -1,3 +1,7 @@
+if (!Error.prepareStackTrace) {
+	require('source-map-support/register');
+}
+
 import snooplogg, { styles } from 'snooplogg';
 import _which from 'which';
 

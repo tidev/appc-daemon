@@ -7,6 +7,7 @@ import { expandPath } from 'appcd-path';
 import { isDir, isFile } from 'appcd-fs';
 
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:plugin:manager');
+const { highlight } = snooplogg.styles;
 
 export default class PluginManager {
 	/**
@@ -63,7 +64,7 @@ export default class PluginManager {
 			return;
 		}
 
-		logger.log('Scanning for plugins: %s', dir);
+		logger.log('Scanning for plugins: %s', highlight(dir));
 
 		const versionRegExp = /^\d\.\d\.\d$/;
 

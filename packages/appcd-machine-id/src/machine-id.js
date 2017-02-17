@@ -1,3 +1,7 @@
+if (!Error.prepareStackTrace) {
+	require('source-map-support/register');
+}
+
 import fs from 'fs-extra';
 import path from 'path';
 import snooplogg, { styles } from 'snooplogg';

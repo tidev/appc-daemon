@@ -5,7 +5,7 @@
 	"packages/appcd-config":     ["appcd-fs", "appcd-gulp", "appcd-path"],
 	"packages/appcd-dispatcher": ["appcd-gulp"],
 	"packages/appcd-fs":         ["appcd-gulp"],
-	"packages/appcd-http":       ["appcd-gulp"],
+	"packages/appcd-http":       ["appcd-fs", "appcd-gulp"],
 	"packages/appcd-machine-id": ["appcd-fs", "appcd-gulp", "appcd-path", "appcd-subprocess", "appcd-util"],
 	"packages/appcd-nodejs":     ["appcd-fs", "appcd-gulp", "appcd-util"],
 	"packages/appcd-path":       ["appcd-gulp"],

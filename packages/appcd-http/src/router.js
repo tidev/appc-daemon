@@ -6,6 +6,9 @@
  */
 
 import pathToRegexp from 'path-to-regexp';
+import snooplogg from 'snooplogg';
+
+const logger = snooplogg.config({ theme: 'detailed' })('appcd:http:router');
 
 /**
  * Supported HTTP methods.

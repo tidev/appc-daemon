@@ -1,10 +1,16 @@
 import fs from 'fs-extra';
 import path from 'path';
-import temp from 'temp';
+import tmp from 'tmp';
 
 import { getMachineId } from '../src/machine-id';
 
-temp.track();
+tmp.setGracefulCleanup();
+function makeTempDir() {
+	return tmp.dirSync({
+		prefix: 'appcd-machine-id-test-',
+		unsafeCleanup: true
+	}).name;
+}
 
 describe('machine-id', () => {
 	beforeEach(() => {
@@ -28,8 +34,7 @@ describe('machine-id', () => {
 	it('should load mid from a file', done => {
 		// NOTE: the mid in good.mid is valid, but because it won't match the
 		// detected machine's id, it will be overwritten by the real one
-		const tmp = temp.mkdirSync('appcd-machine-id-test-');
-		const file = path.join(tmp, 'good.mid');
+		const file = path.join(makeTempDir(), 'good.mid');
 		fs.copySync(path.join(__dirname, 'fixtures', 'good.mid'), file);
 
 		getMachineId(file)
@@ -43,8 +48,7 @@ describe('machine-id', () => {
 	});
 
 	it('should be ok if mid file is empty', done => {
-		const tmp = temp.mkdirSync('appcd-machine-id-test-');
-		const file = path.join(tmp, 'empty.mid');
+		const file = path.join(makeTempDir(), 'empty.mid');
 		fs.copySync(path.join(__dirname, 'fixtures', 'empty.mid'), file);
 
 		getMachineId(file)
@@ -58,8 +62,7 @@ describe('machine-id', () => {
 	});
 
 	it('should be ok if mid file is bad', done => {
-		const tmp = temp.mkdirSync('appcd-machine-id-test-');
-		const file = path.join(tmp, 'bad.mid');
+		const file = path.join(makeTempDir(), 'bad.mid');
 		fs.copySync(path.join(__dirname, 'fixtures', 'bad.mid'), file);
 
 		getMachineId(file)
@@ -73,8 +76,7 @@ describe('machine-id', () => {
 	});
 
 	it('should be ok if mid file does not exist', done => {
-		const tmp = temp.mkdirSync('appcd-machine-id-test-');
-		const file = path.join(tmp, 'test.mid');
+		const file = path.join(makeTempDir(), 'test.mid');
 
 		getMachineId(file)
 			.then(mid => {

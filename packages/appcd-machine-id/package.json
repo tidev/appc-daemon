@@ -2,18 +2,18 @@
   "name": "appcd-machine-id",
   "version": "1.0.0",
   "description": "Determines and caches a unique machine identifier",
-  "main": "./dist/index",
+  "main": "./dist/machine-id",
   "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
     "Chris Barber <cbarber@appcelerator.com>"
   ],
   "license": "SEE LICENSE IN LICENSE",
   "scripts": {
-    "build": "optional-dev-dependency && gulp build",
-    "coverage": "optional-dev-dependency && gulp coverage",
-    "docs": "optional-dev-dependency && gulp docs",
-    "prepublish": "optional-dev-dependency && gulp build",
-    "test": "optional-dev-dependency && gulp test"
+    "build": "gulp build",
+    "coverage": "gulp coverage",
+    "docs": "gulp docs",
+    "prepublish": "gulp build",
+    "test": "gulp test"
   },
   "dependencies": {
     "fs-extra": "^2.0.0",
@@ -24,10 +24,7 @@
   },
   "devDependencies": {
     "gulp": "^3.9.1",
-    "temp": "^0.8.3"
-  },
-  "optionalDevDependencies": {
-    "appcd-gulp": "*"
+    "tmp": "^0.0.31"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",

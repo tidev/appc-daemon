@@ -65,6 +65,8 @@ export default class Server extends HookEmitter {
 	 * @access public
 	 */
 	start() {
+		snooplogg.enable('*').pipe(new StdioStream, { flush: true });
+
 		// check if appcd is already running
 		const pid = this.isRunning();
 		if (pid) {
@@ -73,15 +75,16 @@ export default class Server extends HookEmitter {
 
 		process.title = 'appcd';
 
-		snooplogg.enable('*').pipe(new StdioStream, { flush: true });
-
 		logger.log(`Appcelerator Daemon v${this.version}`);
 		logger.log('Environment: %s', highlight(this.config.get('environment.title')));
 		logger.log(`PID: ${highlight(process.pid)}`);
 		logger.log(`Node.js ${process.version} (module v${process.versions.modules})`);
 
-		process.on('SIGINT',  () => this.shutdown().then(() => process.exit(0)));
-		process.on('SIGTERM', () => this.shutdown().then(() => process.exit(0)));
+		const shutdown = () => this.shutdown()
+			.then(() => process.exit(0))
+			.catch(logger.error);
+		process.on('SIGINT',  shutdown);
+		process.on('SIGTERM', shutdown);
 
 		// init the home directory
 		const homeDir = expandPath(this.config.get('home'));
@@ -126,10 +129,10 @@ export default class Server extends HookEmitter {
 					throw new Error(`Invalid request: ${ctx.path}`);
 				}
 
-				ctx.response.write(node.toJSON(true));
+				ctx.response.write(JSON.stringify(node, null, '  '));
 
 				if (ctx.data.continuous) {
-					const off = node.watch(evt => ctx.response.write(evt.source.toJSON(true)));
+					const off = gawk.watch(node, evt => ctx.response.write(JSON.stringify(evt.source, null, '  ')));
 					ctx.response.on('close', off);
 					ctx.response.on('error', off);
 				} else {
@@ -184,7 +187,7 @@ export default class Server extends HookEmitter {
 			// TODO: shutdown web server
 			// TODO: shutdown plugin manager
 			.then(() => {
-				const pidFile = expandPath(this.config('appcd.pidFile'));
+				const pidFile = expandPath(this.config.get('server.pidFile'));
 				logger.log('Removing %s', highlight(pidFile));
 				fs.unlinkSync(pidFile);
 			})
@@ -203,7 +206,7 @@ export default class Server extends HookEmitter {
 			// 	}
 			// })
 			.then(() => {
-				appcd.logger.info('appcd shutdown successfully');
+				logger.log('appcd shutdown successfully');
 				return this;
 			});
 	}
@@ -223,8 +226,8 @@ export default class Server extends HookEmitter {
 				return pid;
 			} catch (e) {
 				// stale pid file
+				logger.info('%s was stale', highlight(pidFile));
 				fs.unlinkSync(pidFile);
-				// TODO: log('pid file was stale');
 			}
 		}
 		return null;
