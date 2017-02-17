@@ -1,4 +1,4 @@
-import * as path from '../src/index';
+import * as path from '../src/path';
 
 describe('path', () => {
 	describe('expandPath()', () => {

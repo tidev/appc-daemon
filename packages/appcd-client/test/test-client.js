@@ -1,4 +1,5 @@
-import Client from '../src/index';
+import Client from '../src/client';
+
 import { Server as WebSocketServer } from 'ws';
 
 describe('Client', () => {

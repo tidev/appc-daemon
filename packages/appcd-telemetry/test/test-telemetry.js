@@ -1,4 +1,4 @@
-import Telemetry from '../src/index';
+import Telemetry from '../src/telemetry';
 
 describe('telemetry', () => {
 	//

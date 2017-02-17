@@ -1,4 +1,4 @@
-import * as subprocess from '../src/index';
+import * as subprocess from '../src/subprocess';
 import path from 'path';
 
 const executable = `test${subprocess.exe}`;
