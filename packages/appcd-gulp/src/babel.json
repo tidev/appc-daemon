@@ -1,22 +1,32 @@
 {
-	"node4": [
-		"import-node",
-		"transform-async-to-generator",
-		"transform-class-properties",
-		"transform-decorators-legacy",
-		"transform-es2015-destructuring",
-		"transform-es2015-modules-commonjs",
-		"transform-es2015-parameters",
-		"transform-object-rest-spread"
-	],
+	"node4": {
+		"plugins": [
+			"import-node",
+			"transform-async-to-generator",
+			"transform-class-properties",
+			"transform-decorators-legacy",
+			"transform-es2015-destructuring",
+			"transform-es2015-modules-commonjs",
+			"transform-es2015-parameters",
+			"transform-object-rest-spread"
+		],
+		"presets": [
+			"babili"
+		]
+	},
 
-	"node6": [
-		"import-node",
-		"transform-async-to-generator",
-		"transform-class-properties",
-		"transform-decorators-legacy",
-		"transform-es2015-destructuring",
-		"transform-es2015-modules-commonjs",
-		"transform-object-rest-spread"
-	]
+	"node6": {
+		"plugins": [
+			"import-node",
+			"transform-async-to-generator",
+			"transform-class-properties",
+			"transform-decorators-legacy",
+			"transform-es2015-destructuring",
+			"transform-es2015-modules-commonjs",
+			"transform-object-rest-spread"
+		],
+		"presets": [
+			"babili"
+		]
+	}
 }

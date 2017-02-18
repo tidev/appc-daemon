@@ -26,8 +26,8 @@ module.exports = (opts) => {
 	/*
 	 * Wire up Babel
 	 */
-	const babelPlugins = babelConfs[opts.babel] || babelConfs.node4;
-	for (let plugin of babelPlugins) {
+	const babelConf = babelConfs[opts.babel] || babelConfs.node4;
+	for (let plugin of babelConf.plugins) {
 		plugin = `babel-plugin-${plugin}`;
 		(function inject(dir) {
 			for (const name of fs.readdirSync(dir)) {
@@ -71,7 +71,10 @@ module.exports = (opts) => {
 			.pipe($.plumber())
 			.pipe($.debug({ title: 'build' }))
 			.pipe($.sourcemaps.init())
-			.pipe($.babel({ plugins: babelPlugins }))
+			.pipe($.babel({
+				plugins: babelConf.plugins,
+				presets: babelConf.presets
+			}))
 			.pipe($.sourcemaps.write('.'))
 			.pipe(gulp.dest(distDir));
 	});
@@ -128,7 +131,10 @@ module.exports = (opts) => {
 			.pipe($.plumber())
 			.pipe($.debug({ title: 'build' }))
 			.pipe($.sourcemaps.init())
-			.pipe($.babel({ plugins: opts.cover ? babelPlugins.concat('istanbul') : babelPlugins }))
+			.pipe($.babel({
+				plugins: opts.cover ? babelConf.plugins.concat('istanbul') : babelConf.plugins,
+				presets: babelConf.presets
+			}))
 			.pipe($.sourcemaps.write())
 			.pipe($.injectModules())
 			.on('finish', () => {
@@ -136,7 +142,10 @@ module.exports = (opts) => {
 					.pipe($.plumber())
 					.pipe($.debug({ title: 'test' }))
 					.pipe($.sourcemaps.init())
-					.pipe($.babel({ plugins: babelPlugins }))
+					.pipe($.babel({
+						plugins: babelConf.plugins,
+						presets: babelConf.presets
+					}))
 					.pipe($.sourcemaps.write())
 					.pipe($.injectModules());
 
