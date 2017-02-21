@@ -161,11 +161,17 @@ module.exports = (opts) => {
 					stream = stream.pipe($.mocha());
 				}
 
+				let error = null;
+
+				stream.once('error', err => {
+					error = err;
+				});
+
 				if (opts.cover) {
 					stream = stream.pipe($.istanbul.writeReports({ coverageVariable: '__coverage__' }));
 				}
 
-				stream.on('end', opts.callback);
+				stream.once('end', () => opts.callback(error));
 			});
 	}
 

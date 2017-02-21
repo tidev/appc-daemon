@@ -18,7 +18,7 @@
     "gulp-chug": "^0.5.1",
     "gulp-debug": "^3.1.0",
     "gulp-util": "^3.0.8",
-    "ignore": "^3.2.2",
+    "ignore": "^3.2.4",
     "istanbul": "^0.4.5",
     "nsp": "^2.6.2",
     "run-sequence": "^1.2.2",

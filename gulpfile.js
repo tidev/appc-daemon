@@ -12,6 +12,7 @@ const gulp        = require('gulp');
 const gutil       = require('gulp-util');
 const istanbul    = require('istanbul');
 const Nsp         = require('nsp');
+const PassThrough = require('stream').PassThrough;
 const path        = require('path');
 const runSequence = require('run-sequence');
 const semver      = require('semver');
@@ -32,6 +33,10 @@ const fixReasons = {
 	link: 'link missing dependencies',
 	nuke: 'nuke and reinstall'
 };
+
+const dontUpdate = [
+	'gulp-mocha'
+];
 
 if (process.argv.indexOf('--silent') !== -1) {
 	// this is exactly what gulp does internally
@@ -328,7 +333,7 @@ gulp.task('package', ['build'], cb => {
 /*
  * test tasks
  */
-gulp.task('coverage', () => {
+gulp.task('coverage', cb => {
 	const coverageDir = path.join(__dirname, 'coverage');
 	del.sync([coverageDir]);
 
@@ -336,29 +341,49 @@ gulp.task('coverage', () => {
 	const gulp = path.join(path.dirname(require.resolve('gulp')), 'bin', 'gulp.js');
 	const gulpfiles = globule.find(['./*/gulpfile.js', 'packages/*/gulpfile.js', 'plugins/*/gulpfile.js']);
 
-	for (let gulpfile of gulpfiles) {
-		gulpfile = path.resolve(gulpfile);
-		const dir = path.dirname(gulpfile);
+	gulpfiles
+		.reduce((promise, gulpfile) => {
+			return promise
+				.then(() => new Promise((resolve, reject) => {
+					gulpfile = path.resolve(gulpfile);
+					const dir = path.dirname(gulpfile);
 
-		gutil.log(`Spawning: ${process.execPath} ${gulp} coverage # CWD=${dir}`);
-		const child = spawnSync(process.execPath, [
-			gulp,
-			'coverage'
-		], { cwd: dir, stdio: 'inherit' });
-		gutil.log(`Exit code = ${child.status}`);
+					gutil.log(`Spawning: ${process.execPath} ${gulp} coverage # CWD=${dir}`);
+					const child = spawn(process.execPath, [ gulp, 'coverage', '--colors' ], { cwd: dir, stdio: ['inherit', 'pipe', 'inherit'] });
 
-		if (!child.status) {
-			for (let coverageFile of globule.find(dir + '/coverage/coverage*.json')) {
-				collector.add(JSON.parse(fs.readFileSync(path.resolve(coverageFile), 'utf8')));
+					let out = '';
+					child.stdout.on('data', data => {
+						out += data.toString();
+						process.stdout.write(data);
+					});
+
+					child.on('close', code => {
+						if (!code) {
+							gutil.log(`Exit code: ${code}`);
+							for (let coverageFile of globule.find(dir + '/coverage/coverage*.json')) {
+								collector.add(JSON.parse(fs.readFileSync(path.resolve(coverageFile), 'utf8')));
+							}
+						} else if (out.indexOf('Task \'coverage\' is not in your gulpfile') === -1) {
+							gutil.log(`Exit code: ${code}`);
+							process.exit(1);
+						} else {
+							gutil.log(`Exit code: ${code}, no coverage task, continuing`);
+						}
+
+						resolve();
+					});
+				}));
+		}, Promise.resolve())
+		.then(() => {
+			fs.mkdirsSync(coverageDir);
+
+			for (const type of [ 'lcov', 'json', 'text', 'text-summary' ]) {
+				istanbul.Report.create(type, { dir: coverageDir }).writeReport(collector, true);
 			}
-		}
-	}
 
-	fs.mkdirsSync(coverageDir);
-
-	for (const type of [ 'lcov', 'json', 'text', 'text-summary' ]) {
-		istanbul.Report.create(type, { dir: coverageDir }).writeReport(collector, true);
-	}
+			cb();
+		})
+		.catch(cb);
 });
 
 /*
@@ -753,15 +778,19 @@ function processPackages(packages) {
 						const range = semver.validRange(dep.installed || dep.required) || '';
 						const version = dep.stable || dep.latest;
 						if (version && range && !semver.satisfies(version, range)) {
-							const m = dep.required.match(/^(\^|~|>|>=)/);
-							results.packagesToUpdate.push({
-								path: key,
-								name: name,
-								current: dep.required,
-								updated: (m ? m[1] : '') + dep.stable
-							});
-							if (!dep.status) {
-								dep.status = 'out-of-date';
+							if (dontUpdate.indexOf(name) === -1) {
+								const m = dep.required.match(/^(\^|~|>|>=)/);
+								results.packagesToUpdate.push({
+									path: key,
+									name: name,
+									current: dep.required,
+									updated: (m ? m[1] : '') + dep.stable
+								});
+								if (!dep.status) {
+									dep.status = 'out-of-date';
+								}
+							} else {
+								dep.status = 'skipping latest';
 							}
 						}
 					}
@@ -800,6 +829,7 @@ function renderPackages(results) {
 	const green   = gutil.colors.green;
 	const magenta = gutil.colors.magenta;
 	const red     = gutil.colors.red;
+	const yellow  = gutil.colors.yellow;
 
 	const typeLabels = {
 		dependencies: 'Dependencies',
@@ -836,6 +866,8 @@ function renderPackages(results) {
 						table.push([ packageName, dep.required, red(dep.installed), green(dep.stable), dep.latest, red(dep.status) ]);
 					} else if (dep.status === 'deprecated') {
 						table.push([ packageName, dep.required, dep.installed, dep.stable, dep.latest, red(dep.status) ]);
+					} else if (dep.status === 'skipping latest') {
+						table.push([ packageName, dep.required, dep.installed, dep.stable, dep.latest, yellow(dep.status) ]);
 					} else {
 						table.push([ packageName, dep.required, red(dep.installed), dep.stable, dep.latest, red(dep.status) ]);
 					}
