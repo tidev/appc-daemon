@@ -340,6 +340,7 @@ gulp.task('coverage', cb => {
 	const collector = new istanbul.Collector();
 	const gulp = path.join(path.dirname(require.resolve('gulp')), 'bin', 'gulp.js');
 	const gulpfiles = globule.find(['./*/gulpfile.js', 'packages/*/gulpfile.js', 'plugins/*/gulpfile.js']);
+	let projectsFailed = 0;
 
 	gulpfiles
 		.reduce((promise, gulpfile) => {
@@ -365,7 +366,7 @@ gulp.task('coverage', cb => {
 							}
 						} else if (out.indexOf('Task \'coverage\' is not in your gulpfile') === -1) {
 							gutil.log(`Exit code: ${code}`);
-							process.exit(1);
+							projectsFailed++;
 						} else {
 							gutil.log(`Exit code: ${code}, no coverage task, continuing`);
 						}
@@ -381,7 +382,13 @@ gulp.task('coverage', cb => {
 				istanbul.Report.create(type, { dir: coverageDir }).writeReport(collector, true);
 			}
 
-			cb();
+			if (projectsFailed === 1) {
+				cb(new Error('1 project had test failures'));
+			} else if (projectsFailed) {
+				cb(new Error(`${projectsFailed} projects had test failures`));
+			} else {
+				cb();
+			}
 		})
 		.catch(cb);
 });
