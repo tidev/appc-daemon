@@ -68,12 +68,11 @@ export default class StatusMonitor {
 
 		let obj = this.status;
 
-		if (!filter) {
-			return obj;
-		}
-
-		for (let i = 0, len = filter.length; obj && typeof obj === 'object' && i < len; i++) {
-			if (obj.hasOwnProperty(filter[i])) {
+		if (filter) {
+			for (let i = 0, len = filter.length; obj && typeof obj === 'object' && i < len; i++) {
+				if (!obj.hasOwnProperty(filter[i])) {
+					return null;
+				}
 				obj = obj[filter[i]];
 			}
 		}
@@ -124,7 +123,7 @@ export default class StatusMonitor {
 			}
 		}
 		if (!cpuUsage) {
-			cpuUsage = note((' ' + (currentCPUUsage ? currentCPUUsage : '?') + '%').padStart(6));
+			cpuUsage = note((' ' + (currentCPUUsage ? currentCPUUsage : '?') + '%').padStart(7));
 		}
 		this.prevCPUUsage = currentCPUUsage;
 

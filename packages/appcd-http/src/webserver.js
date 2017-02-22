@@ -45,8 +45,7 @@ export default class WebServer extends EventEmitter {
 	httpServer = null;
 
 	/**
-	 * Map of active connections. Used when stopping the web server to drop
-	 * active connections.
+	 * Map of active connections. Used when stopping the web server to drop active connections.
 	 * @type {Object}
 	 */
 	connections = {};
@@ -55,12 +54,11 @@ export default class WebServer extends EventEmitter {
 	 * Initializes the web server.
 	 *
 	 * @param {Object} opts - An object of options.
-	 * @param {String} [opts.hostname] - The hostname to listen on. If a
-	 * hostname is not specified, it defaults to listening on all interfaces.
-	 * Specify `127.0.0.1` to only listen on localhost.
+	 * @param {String} [opts.hostname] - The hostname to listen on. If a hostname is not specified,
+	 * it defaults to listening on all interfaces. Specify `127.0.0.1` to only listen on localhost.
 	 * @param {Number} opts.port - The port to listen on.
-	 * @param {String} [opts.webroot] - The path to the public served directory.
-	 * Defaults to the built-in example.
+	 * @param {String} [opts.webroot] - The path to the public served directory. Defaults to the
+	 * built-in example.
 	 */
 	constructor(opts = {}) {
 		super();
@@ -130,8 +128,8 @@ export default class WebServer extends EventEmitter {
 	}
 
 	/**
-	 * Adds a middleware function to the web server. This should be called
-	 * before calling `listen()`.
+	 * Adds a middleware function to the web server. This should be called before calling
+	 * `listen()`.
 	 *
 	 * @param {Function} middleware - A middleware function to add to the Koa app.
 	 * @returns {WebServer}
@@ -198,8 +196,7 @@ export default class WebServer extends EventEmitter {
 	}
 
 	/**
-	 * Closes the web server and websocket server. After 30 seconds, all
-	 * connections are terminated.
+	 * Closes the web server and websocket server. After 30 seconds, all connections are terminated.
 	 *
 	 * @returns {Promise}
 	 * @access public

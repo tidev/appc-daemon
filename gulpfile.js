@@ -389,36 +389,45 @@ gulp.task('coverage', cb => {
 /*
  * watch/debug tasks
  */
-gulp.task('build-watch', cb => runSequence('build', 'watch', cb));
+function startDaemon() {
+	spawnSync(process.execPath, ['bootstrap/bin/appcd', 'stop', '--force']);
+	spawn(process.execPath, ['bootstrap/bin/appcd', 'start', '--debug'], { stdio: 'inherit' });
+}
 
-gulp.task('watch', cb => {
+gulp.task('start-daemon', () => {
+	gutil.log('Starting daemon in debug mode');
 	console.log('-----------------------------------------------------------');
+	startDaemon();
+});
 
+gulp.task('watch-only', cb => {
 	const watchers = [
 		gulp.watch(__dirname + '/bootstrap/src/**/*.js', () => {
 			runSequence('build-bootstrap');
 		}),
 		gulp.watch(__dirname + '/core/src/**/*.js', () => {
-			runSequence('build-core');
+			runSequence('build-core', startDaemon);
 		}),
 		gulp.watch(__dirname + '/packages/*/src/**/*.js', evt => {
 			const m = evt.path.match(new RegExp('^(' + __dirname + '/(packages/([^\/]+)))'));
 			if (m) {
 				gutil.log('Detected change: ' + gutil.colors.cyan(evt.path));
-				buildDepList(m[2]).reduce((promise, dir) => {
-					return promise.then(() => new Promise((resolve, reject) => {
-						console.log();
-						gutil.log(gutil.colors.cyan('Rebuilding ' + dir));
-						gulp
-							.src(__dirname + '/' + dir + '/gulpfile.js')
-							.pipe(chug({ tasks: ['build'] }))
-							.on('finish', resolve);
-					}));
-				}, Promise.resolve());
+				buildDepList(m[2])
+					.reduce((promise, dir) => {
+						return promise.then(() => new Promise((resolve, reject) => {
+							console.log();
+							gutil.log(gutil.colors.cyan('Rebuilding ' + dir));
+							gulp
+								.src(__dirname + '/' + dir + '/gulpfile.js')
+								.pipe(chug({ tasks: ['build'] }))
+								.on('finish', () => resolve());
+						}));
+					}, Promise.resolve())
+					.then(startDaemon);
 			}
 		}),
 		gulp.watch(__dirname + '/plugins/*/src/**/*.js', () => {
-			runSequence('build-plugins');
+			runSequence('build-plugins', startDaemon);
 		})
 	];
 
@@ -429,6 +438,8 @@ gulp.task('watch', cb => {
 		cb();
 	});
 });
+
+gulp.task('watch', cb => runSequence('build', 'start-daemon', 'watch-only', cb));
 
 gulp.task('default', () => {
 	const cyan = gutil.colors.cyan;

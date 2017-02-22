@@ -80,8 +80,8 @@ export function loadConfig(argv) {
  *
  * @param {Object} params - Various parameters.
  * @param {Config} params.cfg - The configuration object.
- * @param {Boolean} [params.debug=false] - When `true`, spawns the core, but
- * does not detach the child process.
+ * @param {Boolean} [params.debug=false] - When `true`, spawns the core, but does not detach the
+ * child process.
  * @returns {Promise}
  */
 export function startServer({ cfg, argv }) {
@@ -122,9 +122,8 @@ export function startServer({ cfg, argv }) {
  *
  * @param {Object} params - Various parameters.
  * @param {Config} params.cfg - The configuration object.
- * @param {Boolean} [params.force=false] - When `true`, forcefully kills the
- * server. When `false`, tries to gracefully shutdown the server, but will force
- * kill the server if it takes too long.
+ * @param {Boolean} [params.force=false] - When `true`, forcefully kills the server. When `false`,
+ * tries to gracefully shutdown the server, but will force kill the server if it takes too long.
  * @returns {Promise}
  */
 export function stopServer({ cfg, force }) {
@@ -154,13 +153,13 @@ export function stopServer({ cfg, force }) {
 			// now we need to try to connect to the server and ask it for the
 			// pid so we can kill it
 
-			log('attempting to connect to the daemon and get the pid');
+			log('Attempting to connect to the daemon and get the pid');
 
-			createRequest('/appcd/pid')
+			createRequest(cfg, '/appcd/pid')
 				.request
 				.on('response', resolve)
-				.on('close', resolve)
-				.on('error', err => {
+				.once('close', resolve)
+				.once('error', err => {
 					if (err.code === 'ECONNREFUSED') {
 						resolve();
 					} else {
@@ -173,11 +172,16 @@ export function stopServer({ cfg, force }) {
 	};
 
 	let tries = 5;
+	let wasRunning = false;
 
 	return (function check() {
 		return new Promise((resolve, reject) => {
 			isRunning().then(pid => {
 				if (pid) {
+					if (!wasRunning) {
+						log('Daemon was running, attempting to stop');
+					}
+					wasRunning = true;
 					if (--tries < 0) {
 						return reject(new Error('Unable to stop the server'));
 					}
@@ -185,12 +189,11 @@ export function stopServer({ cfg, force }) {
 						force = true;
 					}
 					const signal = force ? 'SIGKILL' : 'SIGTERM';
-					log(`server is running, sending ${signal}`);
+					log(`Server is running, sending ${signal}`);
 					process.kill(pid, signal);
 					setTimeout(() => check().then(resolve, reject), 1000);
 				} else {
-					console.log('Server not running');
-					resolve();
+					resolve(wasRunning);
 				}
 			});
 		});

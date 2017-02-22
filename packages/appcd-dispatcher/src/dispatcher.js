@@ -2,7 +2,7 @@ if (!Error.prepareStackTrace) {
 	require('source-map-support/register');
 }
 
-import autobind from 'autobind-decorator';
+import { PassThrough } from 'stream';
 import pathToRegExp from 'path-to-regexp';
 import snooplogg, { styles } from 'snooplogg';
 
@@ -10,12 +10,24 @@ const logger = snooplogg.config({ theme: 'detailed' })('appcd:dispatcher');
 const { highlight } = styles;
 
 /**
+ * A map of status codes and their descriptions.
+ * @type {Object}
+ */
+export const statusCodes = {
+	'200': 'OK',
+	'400': 'Bad request',
+	'404': 'No route',
+	'500': 'Server error',
+	'505': 'Unsupported version'
+};
+
+/**
  * A custom error for dispatcher errors.
  */
 export class DispatcherError extends Error {
 	constructor(status, message) {
 		super(message);
-		this.message = message;
+		this.message = message || statusCodes[status] || '';
 		this.status = status;
 		Error.captureStackTrace(this, this.constructor);
 	}
@@ -29,18 +41,6 @@ export class DispatcherError extends Error {
  * Cross between an event emitter and a router.
  */
 export default class Dispatcher {
-	/**
-	 * A map of status codes and their descriptions.
-	 * @type {Object}
-	 */
-	static statusCodes = {
-		'200': 'OK',
-		'400': 'Bad request',
-		'404': 'File not found',
-		'500': 'Server error',
-		'505': 'Unsupported version'
-	};
-
 	/**
 	 * List of registered routes.
 	 * @type {Array}
@@ -61,7 +61,6 @@ export default class Dispatcher {
 	 * @returns {Dispatcher}
 	 * @access public
 	 */
-	@autobind
 	register(path, handler) {
 		if (Array.isArray(path)) {
 			path.forEach(p => {
@@ -95,15 +94,14 @@ export default class Dispatcher {
 	}
 
 	/**
-	 * Asynchronously dispatch a request. If unable to find a appropriate
-	 * handler, an error is returned.
+	 * Asynchronously dispatch a request. If unable to find a appropriate handler, an error is
+	 * returned.
 	 *
 	 * @param {String} path - The dispatch path to request.
 	 * @param {Object} [data={}] - An optional data payload to send.
 	 * @returns {Promise}
 	 * @access public
 	 */
-	@autobind
 	call(path, data) {
 		if (!data || typeof data !== 'object') {
 			data = {};
@@ -112,7 +110,7 @@ export default class Dispatcher {
 		const ctx = {
 			data,
 			path,
-			response: null,
+			response: new PassThrough({ objectMode: true }),
 			status: 200
 		};
 
@@ -131,8 +129,7 @@ export default class Dispatcher {
 			const route = this.routes[i];
 			if (!route) {
 				// end of the line
-				ctx.status = 404;
-				throw new DispatcherError(404, 'No route');
+				throw new DispatcherError(404);
 			}
 
 			logger.trace('Testing route: %s', highlight(route.path));
@@ -194,5 +191,56 @@ export default class Dispatcher {
 		return Promise.resolve()
 			.then(() => dispatch(0))
 			.catch(err => Promise.reject(err));
+	}
+
+	/**
+	 * Returns a Koa.js middleware callback that dispatches the request through the dispatcher's
+	 * routes.
+	 *
+	 * @returns {Function} Koa middleware
+	 * @access public
+	 */
+	callback() {
+		/**
+		 * A Koa.js middleware function.
+		 *
+		 * @param {Object} ctx - The Koa context.
+		 * @param {Accepts} ctx.accept - Content type negotiation.
+		 * @param {koa.Application} ctx.app - The Koa app instance.
+		 * @param {Cookies} ctx.cookies - An object containing the parsed cookies.
+		 * @param {String} ctx.originalUrl - The original URL from `req.url`.
+		 * @param {http.IncomingMessage} ctx.req - The Node.js HTTP server request object.
+		 * @param {http.ServerResponse} ctx.res - The Node.js HTTP server response object.
+		 * @param {Object} ctx.state - Metadata to pass along to other middlewares.
+		 * @param {Function} next - A function to continue to the next middleware.
+		 * @returns {Promise}
+		 */
+		return (ctx, next) => {
+			if (ctx.method !== 'GET' && ctx.method !== 'POST') {
+				return next();
+			}
+
+			const data = ctx.method === 'POST' ? ctx.request.body : null;
+
+			return this.call(ctx.originalUrl, data)
+				.then(result => {
+					ctx.status = result.status;
+					ctx.body = result.response;
+				})
+				.catch(err => {
+					if (err instanceof DispatcherError) {
+						if (err.status === 404) {
+							return next();
+						}
+						ctx.status = err.status;
+						ctx.body = err.message;
+					} else {
+						ctx.status = 500;
+						ctx.body = `500 - ${statusCodes[500]}\n${err.toString()}`;
+					}
+
+					return Promise.resolve();
+				});
+		};
 	}
 }

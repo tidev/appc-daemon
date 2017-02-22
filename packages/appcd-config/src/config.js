@@ -188,18 +188,21 @@ export default class Config extends EventEmitter {
 	 * @access public
 	 */
 	get(key, defaultValue) {
-		if (!key || typeof key !== 'string') {
-			throw new TypeError('Expected key to be a string');
-		}
-
 		let it = this.values;
-		const parts = key.split('.');
 
-		for (let i = 0, k; it !== undefined && (k = parts[i++]);) {
-			if (typeof it !== 'object' || Array.isArray(it)) {
-				return defaultValue;
+		if (key) {
+			if (typeof key !== 'string') {
+				throw new TypeError('Expected key to be a string');
 			}
-			it = it[k];
+
+			const parts = key.split('.');
+
+			for (let i = 0, k; it !== undefined && (k = parts[i++]);) {
+				if (typeof it !== 'object' || Array.isArray(it)) {
+					return defaultValue;
+				}
+				it = it[k];
+			}
 		}
 
 		return it !== undefined ? it : defaultValue;

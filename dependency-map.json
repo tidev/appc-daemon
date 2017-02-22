@@ -1,6 +1,6 @@
 {
 	"bootstrap":                 ["appcd-client", "appcd-config", "appcd-core", "appcd-fs", "appcd-gulp", "appcd-nodejs", "appcd-path", "appcd-util"],
-	"core":                      ["appcd-config", "appcd-dispatcher", "appcd-fs", "appcd-gulp", "appcd-machine-id", "appcd-path", "appcd-plugin", "appcd-util"],
+	"core":                      ["appcd-config", "appcd-dispatcher", "appcd-fs", "appcd-gulp", "appcd-http", "appcd-machine-id", "appcd-path", "appcd-plugin", "appcd-util"],
 	"packages/appcd-client":     ["appcd-gulp", "appcd-util"],
 	"packages/appcd-config":     ["appcd-fs", "appcd-gulp", "appcd-path"],
 	"packages/appcd-dispatcher": ["appcd-gulp"],

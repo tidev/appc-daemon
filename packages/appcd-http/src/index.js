@@ -5,4 +5,5 @@ if (!Error.prepareStackTrace) {
 import Router from './router';
 import WebServer from './webserver';
 
+export default WebServer;
 export { Router, WebServer };

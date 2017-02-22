@@ -7,6 +7,7 @@ import path from 'path';
 import PluginManager from 'appcd-plugin';
 import snooplogg, { StdioStream } from './logger';
 import StatusMonitor from './status-monitor';
+import WebServer from 'appcd-http';
 
 import { expandPath } from 'appcd-path';
 import { getMachineId } from 'appcd-machine-id';
@@ -17,19 +18,18 @@ const { highlight } = snooplogg.styles;
 const logger = snooplogg('appcd:server');
 
 /**
- * The main server logic for the Appc Daemon. It controls all core aspects of
- * the daemon including plugins, logging, and request dispatching.
+ * The main server logic for the Appc Daemon. It controls all core aspects of the daemon including
+ * plugins, logging, and request dispatching.
  */
 export default class Server extends HookEmitter {
 	/**
 	 * Creates a server instance and loads the configuration.
 	 *
 	 * @param {Object} [opts] - Various options.
-	 * @param {Object} [opts.config] - A object to initialize the config with.
-	 * Note that if a `configFile` is also specified, this `config` is applied
-	 * AFTER the config file has been loaded.
-	 * @param {String} [opts.configFile] - The path to a .js or .json config
-	 * file to load.
+	 * @param {Object} [opts.config] - A object to initialize the config with. Note that if a
+	 * `configFile` is also specified, this `config` is applied AFTER the config file has been
+	 * loaded.
+	 * @param {String} [opts.configFile] - The path to a .js or .json config file to load.
 	 * @access public
 	 */
 	constructor({ config, configFile } = {}) {
@@ -60,8 +60,7 @@ export default class Server extends HookEmitter {
 	/**
 	 * Starts the server.
 	 *
-	 * @returns {Object} An object containing a public API for interacting with
-	 * the server instance.
+	 * @returns {Object} An object containing a public API for interacting with the server instance.
 	 * @access public
 	 */
 	start() {
@@ -114,14 +113,17 @@ export default class Server extends HookEmitter {
 				if (!node) {
 					throw new Error(`Invalid request: ${ctx.path}`);
 				}
-				ctx.response.write(JSON.stringify(node, null, '  '));
+				ctx.response = node;
 			})
+
 			.register('/appcd/logcat', ctx => {
 				snooplogg.pipe(ctx.response, { flush: true });
 			})
+
 			.register('/appcd/plugins', ctx => {
-				//
+				ctx.response.end('foo');
 			})
+
 			.register('/appcd/status/:filter*', ctx => {
 				const filter = ctx.params.filter && ctx.params.filter.replace(/^\//, '').split(/\.|\//) || undefined;
 				const node = this.statusMonitor.get(filter);
@@ -129,16 +131,23 @@ export default class Server extends HookEmitter {
 					throw new Error(`Invalid request: ${ctx.path}`);
 				}
 
-				ctx.response.write(JSON.stringify(node, null, '  '));
-
 				if (ctx.data.continuous) {
-					const off = gawk.watch(node, evt => ctx.response.write(JSON.stringify(evt.source, null, '  ')));
-					ctx.response.on('close', off);
-					ctx.response.on('error', off);
+					ctx.response.write(node);
+					const off = gawk.watch(node, evt => ctx.response.write(evt.source));
+					ctx.response.once('close', off);
+					ctx.response.once('error', off);
 				} else {
-					ctx.response.close();
+					ctx.response = node;
 				}
 			});
+
+		// init the web server
+		this.webserver = new WebServer({
+			hostname: this.config.get('server.host'),
+			port: this.config.get('server.port')
+		});
+
+		this.webserver.use(this.dispatcher.callback());
 
 		return Promise.resolve()
 			.then(() => {
@@ -160,7 +169,7 @@ export default class Server extends HookEmitter {
 			//  - load in-process and plugins
 			//     - status monitor
 			//     - handlers
-			//     - web server
+			.then(() => this.webserver.listen())
 			.then(() => this.emit('appcd.start'))
 			.then(() => ({
 				dispatcher: this.dispatcher,
@@ -169,8 +178,7 @@ export default class Server extends HookEmitter {
 	}
 
 	/**
-	 * Shutsdown the server. All connections will be terminated after 30
-	 * seconds.
+	 * Shutsdown the server.
 	 *
 	 * @returns {Promise}
 	 * @access public
