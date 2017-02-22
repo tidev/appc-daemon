@@ -136,9 +136,6 @@ describe('Config', () => {
 			const config = new Config();
 
 			expect(() => {
-				config.get();
-			}).to.throw(TypeError, 'Expected key to be a string');
-			expect(() => {
 				config.get(123);
 			}).to.throw(TypeError, 'Expected key to be a string');
 
