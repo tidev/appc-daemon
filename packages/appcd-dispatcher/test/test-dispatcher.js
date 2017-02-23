@@ -343,4 +343,41 @@ describe('dispatcher', () => {
 		});
 	});
 
+	describe('middleware', () => {
+		it('should return a middleware callback function', () => {
+			const d = new Dispatcher;
+			const middleware = d.callback();
+			expect(middleware).to.be.a.Function;
+		});
+
+		it.skip('should dispatch GET request', done => {
+			const d = new Dispatcher;
+			let count = 0;
+
+			d.register('/foo', () => {
+				count++;
+			});
+
+			const middleware = d.callback();
+			const ctx = {};
+			const next = () => {};
+
+			Promise.resolve()
+				.then(() => middleware(ctx, next))
+
+			d.call('/foo')
+				.then(() => {
+					expect(count).to.equal(1);
+					done();
+				})
+				.catch(done);
+		});
+
+		it('should dispatch POST request', done => {
+		});
+
+		it('should ignore PUT request', done => {
+		});
+	});
+
 });

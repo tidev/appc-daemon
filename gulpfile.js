@@ -49,16 +49,46 @@ if (process.argv.indexOf('--silent') !== -1) {
 gulp.task('install', cb => runSequence('link', 'install-deps', 'build', cb));
 
 gulp.task('install-deps', cb => {
-	globule
+	const pkgs = globule
 		.find(['./*/package.json', 'packages/*/package.json', 'plugins/*/package.json'])
-		.reduce((promise, cwd) => {
-			cwd = path.dirname(path.resolve(cwd));
+		.map(pkgJson => path.relative(__dirname, path.dirname(path.resolve(pkgJson))));
+
+	let pkg = pkgs.shift();
+	const packages = [ pkg ];
+
+	while (pkg = pkgs.shift()) {
+		const deps = (function getDeps(pkg) {
+			const list = depmap[pkg] || [];
+			for (const dep of list) {
+				for (const depdep of getDeps(dep)) {
+					if (list.indexOf(depdep) === -1) {
+						list.push(depdep);
+					}
+				}
+			}
+			return list;
+		}(pkg));
+
+		let insertAt = -1;
+		for (let i = 0; i < deps.length; i++) {
+			const p = packages.indexOf(deps[i]);
+			if (p !== -1 && p > insertAt) {
+				insertAt = p + 1;
+			}
+		}
+
+		insertAt = Math.max(insertAt, 0);
+		packages.splice(insertAt, 0, pkg);
+	}
+
+	packages
+		.reduce((promise, dir) => {
 			return promise
-				.then(() => runYarn(cwd, 'install'))
+				.then(() => runYarn(path.join(__dirname, dir), 'install'))
 				.then(result => {
 					if (result.status) {
 						gutil.log();
-						gutil.log(gutil.colors.red(`Failed to install deps for ${cwd}`));
+						gutil.log(gutil.colors.red(`Failed to install deps for ${dir}`));
 						gutil.log();
 						result.stderr.toString().trim().split('\n').forEach(line => gutil.log(gutil.colors.red(line)));
 						gutil.log();

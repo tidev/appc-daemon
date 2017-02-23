@@ -1,16 +1,75 @@
 {
-	"bootstrap":                 ["appcd-client", "appcd-config", "appcd-core", "appcd-fs", "appcd-gulp", "appcd-nodejs", "appcd-path", "appcd-util"],
-	"core":                      ["appcd-config", "appcd-dispatcher", "appcd-fs", "appcd-gulp", "appcd-http", "appcd-machine-id", "appcd-path", "appcd-plugin", "appcd-util"],
-	"packages/appcd-client":     ["appcd-gulp", "appcd-util"],
-	"packages/appcd-config":     ["appcd-fs", "appcd-gulp", "appcd-path"],
-	"packages/appcd-dispatcher": ["appcd-gulp"],
-	"packages/appcd-fs":         ["appcd-gulp"],
-	"packages/appcd-http":       ["appcd-fs", "appcd-gulp"],
-	"packages/appcd-machine-id": ["appcd-fs", "appcd-gulp", "appcd-path", "appcd-subprocess", "appcd-util"],
-	"packages/appcd-nodejs":     ["appcd-fs", "appcd-gulp", "appcd-util"],
-	"packages/appcd-path":       ["appcd-gulp"],
-	"packages/appcd-plugin":     ["appcd-fs", "appcd-gulp", "appcd-path"],
-	"packages/appcd-subprocess": ["appcd-gulp"],
-	"packages/appcd-telemetry":  ["appcd-fs", "appcd-gulp", "appcd-path", "appcd-util"],
-	"packages/appcd-util":       ["appcd-fs", "appcd-gulp"]
+	"bootstrap": [
+		"packages/appcd-client",
+		"packages/appcd-config",
+		"packages/appcd-core",
+		"packages/appcd-fs",
+		"packages/appcd-gulp",
+		"packages/appcd-nodejs",
+		"packages/appcd-path",
+		"packages/appcd-util"
+	],
+	"core": [
+		"packages/appcd-config",
+		"packages/appcd-dispatcher",
+		"packages/appcd-fs",
+		"packages/appcd-gulp",
+		"packages/appcd-http",
+		"packages/appcd-machine-id",
+		"packages/appcd-path",
+		"packages/appcd-plugin",
+		"packages/appcd-util"
+	],
+	"packages/appcd-client": [
+		"packages/appcd-gulp",
+		"packages/appcd-util"
+	],
+	"packages/appcd-config": [
+		"packages/appcd-fs",
+		"packages/appcd-gulp",
+		"packages/appcd-path"
+	],
+	"packages/appcd-dispatcher": [
+		"packages/appcd-gulp"
+	],
+	"packages/appcd-fs": [
+		"packages/appcd-gulp"
+	],
+	"packages/appcd-http": [
+		"packages/appcd-fs",
+		"packages/appcd-gulp"
+	],
+	"packages/appcd-machine-id": [
+		"packages/appcd-fs",
+		"packages/appcd-gulp",
+		"packages/appcd-path",
+		"packages/appcd-subprocess",
+		"packages/appcd-util"
+	],
+	"packages/appcd-nodejs": [
+		"packages/appcd-fs",
+		"packages/appcd-gulp",
+		"packages/appcd-util"
+	],
+	"packages/appcd-path": [
+		"packages/appcd-gulp"
+	],
+	"packages/appcd-plugin": [
+		"packages/appcd-fs",
+		"packages/appcd-gulp",
+		"packages/appcd-path"
+	],
+	"packages/appcd-subprocess": [
+		"packages/appcd-gulp"
+	],
+	"packages/appcd-telemetry": [
+		"packages/appcd-fs",
+		"packages/appcd-gulp",
+		"packages/appcd-path",
+		"packages/appcd-util"
+	],
+	"packages/appcd-util": [
+		"packages/appcd-fs",
+		"packages/appcd-gulp"
+	]
 }
