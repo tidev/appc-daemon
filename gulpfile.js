@@ -538,7 +538,7 @@ function linkDeps() {
 			return promise.then(() => {
 				const dir = path.join(__dirname, name);
 				return depmap[name].reduce((promise, pkg) => {
-					return promise.then(() => runYarn(dir, 'link', pkg));
+					return promise.then(() => runYarn(dir, 'link', path.basename(pkg)));
 				}, Promise.resolve());
 			});
 		}, Promise.resolve()));
