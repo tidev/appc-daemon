@@ -205,7 +205,7 @@ gulp.task('package', ['build'], cb => {
 	}
 
 	pkgJson.build = {
-		gitHash:   spawnSync('git', ['log', '--pretty=oneline', '-n', '1', '--no-color']).stdout.toString().split(' ')[0],
+		gitHash:   spawnSync('git', ['log', '--pretty=oneline', '-n', '1', '--no-color'], { shell: true }).stdout.toString().split(' ')[0],
 		hostname:  require('os').hostname(),
 		platform:  process.platform,
 		timestamp: new Date().toISOString()
@@ -561,11 +561,11 @@ function runYarn(cwd) {
 	if (process.argv.indexOf('--json') !== -1 || process.argv.indexOf('--silent') !== -1) {
 		args.push('--no-progress', '--no-emoji');
 	}
-	return run('yarn', args, { cwd: cwd || process.cwd() });
+	return run('yarn', args, { cwd: cwd || process.cwd(), shell: true });
 }
 
 function runNPM(cwd) {
-	return run('npm', Array.prototype.slice.call(arguments, 1));
+	return run('npm', Array.prototype.slice.call(arguments, 1), { shell: true });
 }
 
 function runDavid(pkgJson, type, dest) {
