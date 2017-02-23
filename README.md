@@ -36,11 +36,18 @@ There are several built-in plugins that ship with the Appc Daemon:
 
 In order to build the daemon, you must first install a few dependencies.
 
-	brew update && brew install yarn
+* gulp
 
-	yarn
-	gulp install
-	sudo npm link
+  `sudo npm install -g gulp`
+
+* Yarn - https://yarnpkg.com/en/docs/install
+
+  `brew update && brew install yarn`
+
+
+	$ cd appc-daemon
+	$ yarn
+	$ sudo npm link
 
 ## Development Workflow
 
