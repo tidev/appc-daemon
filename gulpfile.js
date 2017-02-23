@@ -81,6 +81,8 @@ gulp.task('install-deps', cb => {
 		packages.splice(insertAt, 0, pkg);
 	}
 
+	gutil.log(packages);
+
 	packages
 		.reduce((promise, dir) => {
 			return promise
