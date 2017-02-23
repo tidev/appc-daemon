@@ -195,22 +195,20 @@ function buildTask(pattern) {
 }
 
 gulp.task('package', ['build'], cb => {
-	const pkgJson = {
-		name:         '',
-		version:      '',
-		description:  '',
-		author:       '',
-		license:      '',
-		keywords:     '',
-		bin:          {},
-		preferGlobal: true,
-		dependencies: {},
-		build: {
-			gitHash:   spawnSync('git', ['log', '--pretty=oneline', '-n', '1', '--no-color']).stdout.toString().split(' ')[0],
-			hostname:  require('os').hostname(),
-			platform:  process.platform,
-			timestamp: new Date().toISOString()
+	const pkgJson = require('./bootstrap/package.json');
+	const keepers = ['name', 'version', 'description', 'author', 'maintainers', 'license', 'keyword', 'bin', 'preferGlobal', 'dependencies', 'homepage', 'bugs', 'repository'];
+
+	for (const key of Object.keys(pkgJson)) {
+		if (keepers.indexOf(key) === -1) {
+			delete pkgJson[key];
 		}
+	}
+
+	pkgJson.build = {
+		gitHash:   spawnSync('git', ['log', '--pretty=oneline', '-n', '1', '--no-color']).stdout.toString().split(' ')[0],
+		hostname:  require('os').hostname(),
+		platform:  process.platform,
+		timestamp: new Date().toISOString()
 	};
 
 	const found = {};
@@ -228,17 +226,8 @@ gulp.task('package', ['build'], cb => {
 		}
 	}
 
-	let bootstrap = require('./bootstrap/package.json');
-	pkgJson.name = bootstrap.name;
-	pkgJson.version = bootstrap.version;
-	pkgJson.description = bootstrap.description;
-	pkgJson.author = bootstrap.author;
-	pkgJson.license = bootstrap.license;
-	pkgJson.keywords = bootstrap.keywords;
-	bootstrap.bin && Object.keys(bootstrap.bin).forEach(bin => {
-		pkgJson.bin[bin] = './' + path.relative(__dirname, path.resolve('./bootstrap', bootstrap.bin[bin]));
-	});
-	copyDeps(bootstrap.dependencies);
+	copyDeps(pkgJson.dependencies);
+	pkgJson.dependencies = {};
 
 	globule
 		.find([
@@ -296,35 +285,52 @@ gulp.task('package', ['build'], cb => {
 
 	archive.append(JSON.stringify(pkgJson, null, '  '), { name: 'package/package.json' });
 
-	const licenseFile = path.join(__dirname, 'LICENSE');
-	if (exists(licenseFile)) {
-		archive.append(fs.createReadStream(licenseFile), { name: 'package/LICENSE' });
-	}
-
-	function pack(dir, relPath) {
-		const ignoreFile = path.join(dir, '.npmignore');
+	function getFiles(dir, ignoreFiles) {
 		const ig = ignore().add('yarn.lock');
-		const pkg = path.basename(dir);
+
+		if (ignoreFiles) {
+			ig.add(ignoreFiles);
+		}
+
+		const ignoreFile = path.join(dir, '.npmignore');
 		if (exists(ignoreFile)) {
 			ig.add(fs.readFileSync(ignoreFile, 'utf8').split('\n').filter(s => s && s[0] !== '#'));
 		}
-		const files = globule.find(dir + '/**')
-			.filter(file => fs.statSync(file).isFile())
-			.map(file => path.relative(dir, file));
-		ig.filter(files).forEach(file => {
-			const dest = `${relPath}/${pkg}/${file}`;
-			gutil.log(` + ${pkg}/${file} => ${dest}`);
-			archive.append(fs.createReadStream(path.join(dir, file)), { name: dest });
+
+		const files = {};
+		for (const file of globule.find(dir + '/**')) {
+			const stat = fs.statSync(file);
+			if (stat.isFile()) {
+				files[path.relative(dir, file)] = stat.mode;
+			}
+		}
+
+		const results = {};
+		ig.filter(Object.keys(files)).forEach(file => {
+			results[file] = files[file];
 		});
+
+		return results;
 	}
 
-	pack(path.join(__dirname, 'bootstrap'), 'package');
+	function pack(dir, relPath, ignoreFiles) {
+		const files = getFiles(dir, ignoreFiles);
+		for (const file of Object.keys(files)) {
+			const dest = `${relPath}/${file}`;
+			gutil.log(` + ${dir}/${file} => ${dest}`);
+			archive.append(fs.createReadStream(path.join(dir, file)), { name: dest, mode: files[file] });
+		}
+	}
+
+	pack(path.join(__dirname, 'bootstrap'), 'package', 'package.json');
+	pack(path.join(__dirname, 'conf'), 'package/conf');
+	pack(path.join(__dirname, 'core'), 'package/node_modules/appcd-core');
 
 	globule
 		.find(['packages/*', '!packages/appcd-gulp'])
 		.filter(dir => fs.statSync(dir).isDirectory())
 		.forEach(dir => {
-			pack(dir, 'package/node_modules');
+			pack(dir, 'package/node_modules/' + path.basename(dir));
 		});
 
 	archive.finalize();

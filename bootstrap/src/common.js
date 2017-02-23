@@ -66,10 +66,17 @@ export function createRequest(cfg, path, payload) {
  * @returns {Config}
  */
 export function loadConfig(argv) {
+	// the default config file is either one or two directories up depending if you are running in
+	// a development vs production environment
+	let defaultConfigFile = path.resolve(__dirname, '../conf/default.js');
+	if (!isFile(defaultConfigFile)) {
+		defaultConfigFile = path.resolve(__dirname, '../../conf/default.js');
+	}
+
 	const cfg = config.load({
 		config:            argv.config,
 		configFile:        argv.configFile,
-		defaultConfigFile: path.resolve(__dirname, '../../conf/default.js')
+		defaultConfigFile
 	});
 	log(cfg.toString());
 	return cfg;
