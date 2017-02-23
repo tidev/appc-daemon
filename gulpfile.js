@@ -550,8 +550,7 @@ function buildDepList(pkg) {
 
 	(function scan(pkg) {
 		for (const dir of Object.keys(depmap)) {
-			const name = pkg.split('/').pop();
-			if (depmap[dir].indexOf(name) !== -1) {
+			if (depmap[dir].indexOf(pkg) !== -1) {
 				if (paths[dir]) {
 					list.splice(list.indexOf(dir), 1);
 				} else {
@@ -790,7 +789,7 @@ function processPackages(packages) {
 			if (depmap[rel]) {
 				for (const link of depmap[rel]) {
 					try {
-						if (!fs.lstatSync(path.join(key, 'node_modules', link)).isSymbolicLink()) {
+						if (!fs.lstatSync(path.join(key, 'node_modules', path.basename(link))).isSymbolicLink()) {
 							throw new Error('bad link');
 						}
 					} catch (e) {
