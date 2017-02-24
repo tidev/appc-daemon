@@ -53,7 +53,7 @@ export function prepareNode({ arch, nodeHome, version } = {}) {
 	const binaryPath = path.join(nodeHome, version, platform, arch);
 	const binary = path.join(binaryPath, platform === 'win32' ? 'node.exe' : 'node');
 
-	if (isFile(binary) && spawnSync(binary, ['--version'], { encoding: 'utf8' }).stdout.split('\n')[0] === version) {
+	if (isFile(binary) && spawnSync(binary, ['--version'], { encoding: 'utf8' }).stdout.trim() === version) {
 		logger.log(`Node.js ${version} ready`);
 		return Promise.resolve(binary);
 	}
