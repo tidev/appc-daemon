@@ -51,7 +51,7 @@ gulp.task('install', cb => runSequence('link', 'install-deps', 'build', cb));
 gulp.task('install-deps', cb => {
 	const pkgs = globule
 		.find(['./*/package.json', 'packages/*/package.json', 'plugins/*/package.json'])
-		.map(pkgJson => path.relative(__dirname, path.dirname(path.resolve(pkgJson))));
+		.map(pkgJson => path.relative(__dirname, path.dirname(path.resolve(pkgJson))).replace(/\\/g, '/'));
 
 	let pkg = pkgs.shift();
 	const packages = [ pkg ];
