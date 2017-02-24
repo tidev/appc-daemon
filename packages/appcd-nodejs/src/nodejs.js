@@ -335,9 +335,13 @@ export function spawnNode({ arch, args, detached, nodeHome, nodeArgs, v8mem = 'a
 					// you must have at least double the RAM of the default memory amount
 					if (totalMem * 0.5 > defaultMem) {
 						mem = Math.min(totalMem * 0.5, 3000);
+					} else {
+						mem = null;
 					}
 				}
-				nodeArgs.push(`--max_old_space_size=${mem}`);
+				if (mem) {
+					nodeArgs.push(`--max_old_space_size=${mem}`);
+				}
 			}
 
 			args.unshift.apply(args, nodeArgs);
