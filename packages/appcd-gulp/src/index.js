@@ -17,7 +17,7 @@ module.exports = opts => {
 	let parent = module.parent;
 	if (!opts.projectDir) {
 		while (parent) {
-			if (/\/gulpfile(\.tmp\.\d+)?\.js$/.test(parent.filename)) {
+			if (/[\/\\]gulpfile(\.tmp\.\d+)?\.js$/.test(parent.filename)) {
 				opts.projectDir = path.dirname(parent.filename);
 				break;
 			}
