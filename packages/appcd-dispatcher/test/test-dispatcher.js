@@ -1,5 +1,7 @@
 import Dispatcher from '../src/dispatcher';
 
+import { DispatcherError } from '../src/dispatcher';
+
 describe('dispatcher', () => {
 
 	describe('register', () => {
@@ -136,9 +138,10 @@ describe('dispatcher', () => {
 				})
 				.catch(err => {
 					expect(err).to.be.instanceof(Error);
-					expect(err.toString()).to.equal('No route');
+					expect(err.message).to.equal('No route');
 					done();
-				});
+				})
+				.catch(done);
 		});
 
 		it('should handle a route that emits an error', done => {
@@ -155,6 +158,66 @@ describe('dispatcher', () => {
 				.catch(err => {
 					expect(err).to.be.instanceof(Error);
 					expect(err.message).to.equal('oops');
+					done();
+				})
+				.catch(done);
+		});
+
+		it('should handle a route that emits an DispatcherError', done => {
+			const d = new Dispatcher;
+
+			d.register('/foo', data => {
+				throw new DispatcherError(123, 'oops');
+			});
+
+			d.call('/foo')
+				.then(() => {
+					done(new Error('Expected error from handler'));
+				})
+				.catch(err => {
+					expect(err).to.be.instanceof(DispatcherError);
+					expect(err.status).to.equal(123);
+					expect(err.message).to.equal('oops');
+					done();
+				})
+				.catch(done);
+		});
+
+		it('should handle a route that emits an DispatcherError with no status', done => {
+			const d = new Dispatcher;
+
+			d.register('/foo', data => {
+				throw new DispatcherError('oops');
+			});
+
+			d.call('/foo')
+				.then(() => {
+					done(new Error('Expected error from handler'));
+				})
+				.catch(err => {
+					expect(err).to.be.instanceof(DispatcherError);
+					expect(err.status).to.equal(500);
+					expect(err.message).to.equal('oops');
+					done();
+				})
+				.catch(done);
+		});
+
+		it('should handle a route that emits an DispatcherError with no args', done => {
+			const d = new Dispatcher;
+
+			d.register('/foo', data => {
+				throw new DispatcherError(123);
+			});
+
+			d.call('/foo')
+				.then(() => {
+					done(new Error('Expected error from handler'));
+				})
+				.catch(err => {
+					expect(err).to.be.instanceof(DispatcherError);
+					expect(err.status).to.equal(123);
+					expect(err.message).to.equal('Error');
 					done();
 				})
 				.catch(done);
@@ -350,22 +413,44 @@ describe('dispatcher', () => {
 			expect(middleware).to.be.a.Function;
 		});
 
-		it.skip('should dispatch GET request', done => {
+		it('should dispatch GET request', done => {
 			const d = new Dispatcher;
-			let count = 0;
 
-			d.register('/foo', () => {
-				count++;
+			d.register('/foo', ctx => {
+				ctx.response = 'foo!';
 			});
 
 			const middleware = d.callback();
-			const ctx = {};
-			const next = () => {};
+			const ctx = {
+				method: 'GET',
+				originalUrl: '/foo'
+			};
+
+			Promise.resolve()
+				.then(() => middleware(ctx, Promise.resolve))
+				.then(() => {
+					expect(ctx.body).to.be.a.String;
+					expect(ctx.body).to.equal('foo!');
+					done();
+				})
+				.catch(done);
+		});
+
+		it('should call next middleware if no route', done => {
+			const d = new Dispatcher;
+			const middleware = d.callback();
+			const ctx = {
+				method: 'GET',
+				originalUrl: '/bar'
+			};
+			let count = 0;
+			const next = () => {
+				count++;
+				return Promise.resolve();
+			};
 
 			Promise.resolve()
 				.then(() => middleware(ctx, next))
-
-			d.call('/foo')
 				.then(() => {
 					expect(count).to.equal(1);
 					done();
@@ -374,9 +459,106 @@ describe('dispatcher', () => {
 		});
 
 		it('should dispatch POST request', done => {
+			const d = new Dispatcher;
+
+			d.register('/foo', ctx => {
+				expect(ctx.data).to.deep.equal({ foo: 'bar' });
+				ctx.response = 'foo!';
+			});
+
+			const middleware = d.callback();
+			const ctx = {
+				method: 'POST',
+				originalUrl: '/foo',
+				request: {
+					body: {
+						foo: 'bar'
+					}
+				}
+			};
+
+			Promise.resolve()
+				.then(() => middleware(ctx, Promise.resolve))
+				.then(() => {
+					expect(ctx.body).to.be.a.String;
+					expect(ctx.body).to.equal('foo!');
+					done();
+				})
+				.catch(done);
 		});
 
 		it('should ignore PUT request', done => {
+			const d = new Dispatcher;
+			let count = 0;
+			let count2 = 0;
+
+			d.register('/', ctx => {
+				count2++;
+			});
+
+			const middleware = d.callback();
+			const ctx = {
+				method: 'PUT',
+				originalUrl: '/'
+			};
+			const next = () => {
+				count++;
+			};
+
+			Promise.resolve()
+				.then(() => middleware(ctx, next))
+				.then(() => {
+					expect(count).to.equal(1);
+					expect(count2).to.equal(0);
+					done();
+				})
+				.catch(done);
+		});
+
+		it('should return 500 error if handler throws error', done => {
+			const d = new Dispatcher;
+
+			d.register('/foo', ctx => {
+				throw new Error('foo!');
+			});
+
+			const middleware = d.callback();
+			const ctx = {
+				method: 'GET',
+				originalUrl: '/foo'
+			};
+
+			Promise.resolve()
+				.then(() => middleware(ctx, Promise.resolve))
+				.then(() => {
+					expect(ctx.status).to.equal(500);
+					expect(ctx.body).to.equal('500 - Server error\nError: foo!');
+					done();
+				})
+				.catch(done);
+		});
+
+		it('should return dispatcher error', done => {
+			const d = new Dispatcher;
+
+			d.register('/foo', ctx => {
+				throw new DispatcherError(403, 'Not authorized!');
+			});
+
+			const middleware = d.callback();
+			const ctx = {
+				method: 'GET',
+				originalUrl: '/foo'
+			};
+
+			Promise.resolve()
+				.then(() => middleware(ctx, Promise.resolve))
+				.then(() => {
+					expect(ctx.status).to.equal(403);
+					expect(ctx.body).to.equal('403 - Not authorized!');
+					done();
+				})
+				.catch(done);
 		});
 	});
 

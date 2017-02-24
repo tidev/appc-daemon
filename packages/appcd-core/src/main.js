@@ -1,3 +1,7 @@
+if (module.parent) {
+	throw new Error('appcd-core is meant to be run directly, not require()\'d');
+}
+
 if (!Error.prepareStackTrace) {
 	require('source-map-support/register');
 }
@@ -5,9 +9,9 @@ if (!Error.prepareStackTrace) {
 import 'babel-polyfill';
 
 import CLI from 'cli-kit';
+import snooplogg from './logger';
 
 import { assertNodeEngineVersion } from 'appcd-util';
-import snooplogg from './logger';
 
 assertNodeEngineVersion(`${__dirname}/../package.json`);
 

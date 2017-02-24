@@ -13,7 +13,7 @@ const { highlight } = styles;
  * A map of status codes and their descriptions.
  * @type {Object}
  */
-export const statusCodes = {
+export const StatusCodes = {
 	'200': 'OK',
 	'400': 'Bad request',
 	'404': 'No route',
@@ -26,14 +26,18 @@ export const statusCodes = {
  */
 export class DispatcherError extends Error {
 	constructor(status, message) {
+		if (typeof status !== 'number' && !message) {
+			message = status;
+			status = 500;
+		}
 		super(message);
-		this.message = message || statusCodes[status] || '';
+		this.message = message || StatusCodes[status] || 'Error';
 		this.status = status;
 		Error.captureStackTrace(this, this.constructor);
 	}
 
 	toString() {
-		return this.message;
+		return `${this.status} - ${this.message}`;
 	}
 }
 
@@ -129,6 +133,7 @@ export default class Dispatcher {
 			const route = this.routes[i];
 			if (!route) {
 				// end of the line
+				logger.debug('Route not found: %s', highlight(path));
 				throw new DispatcherError(404);
 			}
 
@@ -189,8 +194,7 @@ export default class Dispatcher {
 
 		// start the chain and return its promise
 		return Promise.resolve()
-			.then(() => dispatch(0))
-			.catch(err => Promise.reject(err));
+			.then(() => dispatch(0));
 	}
 
 	/**
@@ -220,7 +224,7 @@ export default class Dispatcher {
 				return next();
 			}
 
-			const data = ctx.method === 'POST' ? ctx.request.body : null;
+			const data = ctx.method === 'POST' && ctx.request && ctx.request.body || null;
 
 			return this.call(ctx.originalUrl, data)
 				.then(result => {
@@ -233,10 +237,10 @@ export default class Dispatcher {
 							return next();
 						}
 						ctx.status = err.status;
-						ctx.body = err.message;
+						ctx.body = err.toString();
 					} else {
 						ctx.status = 500;
-						ctx.body = `500 - ${statusCodes[500]}\n${err.toString()}`;
+						ctx.body = `500 - ${StatusCodes[500]}\n${err.toString()}`;
 					}
 
 					return Promise.resolve();
