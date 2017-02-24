@@ -1,23 +1,12 @@
 {
 	"bootstrap": [
-		"core",
 		"packages/appcd-client",
 		"packages/appcd-config",
+		"packages/appcd-core",
 		"packages/appcd-fs",
 		"packages/appcd-gulp",
 		"packages/appcd-nodejs",
 		"packages/appcd-path",
-		"packages/appcd-util"
-	],
-	"core": [
-		"packages/appcd-config",
-		"packages/appcd-dispatcher",
-		"packages/appcd-fs",
-		"packages/appcd-gulp",
-		"packages/appcd-http",
-		"packages/appcd-machine-id",
-		"packages/appcd-path",
-		"packages/appcd-plugin",
 		"packages/appcd-util"
 	],
 	"packages/appcd-client": [
@@ -28,6 +17,17 @@
 		"packages/appcd-fs",
 		"packages/appcd-gulp",
 		"packages/appcd-path"
+	],
+	"packages/appcd-core": [
+		"packages/appcd-config",
+		"packages/appcd-dispatcher",
+		"packages/appcd-fs",
+		"packages/appcd-gulp",
+		"packages/appcd-http",
+		"packages/appcd-machine-id",
+		"packages/appcd-path",
+		"packages/appcd-plugin",
+		"packages/appcd-util"
 	],
 	"packages/appcd-dispatcher": [
 		"packages/appcd-gulp"

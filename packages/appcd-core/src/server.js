@@ -35,13 +35,6 @@ export default class Server extends HookEmitter {
 	constructor({ config, configFile } = {}) {
 		super();
 
-		// the default config file is either one or two directories up depending if you are running in
-		// a development vs production environment
-		let defaultConfigFile = path.resolve(__dirname, '../../conf/default.js');
-		if (!isFile(defaultConfigFile)) {
-			defaultConfigFile = path.resolve(__dirname, '../../../conf/default.js');
-		}
-
 		/**
 		 * The config object.
 		 * @type {Config}
@@ -49,7 +42,7 @@ export default class Server extends HookEmitter {
 		this.config = loadConfig({
 			config,
 			configFile,
-			defaultConfigFile
+			defaultConfigFile: path.resolve(__dirname, '../../../conf/default.js')
 		});
 
 		// gawk the internal config values so that we can watch specific props

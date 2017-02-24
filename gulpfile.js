@@ -210,11 +210,9 @@ gulp.task('upgrade-critical', cb => {
 /*
  * build tasks
  */
-gulp.task('build', cb => runSequence('build-packages', 'build-core', 'build-bootstrap', 'build-plugins', cb));
+gulp.task('build', cb => runSequence('build-packages', 'build-bootstrap', 'build-plugins', cb));
 
 gulp.task('build-bootstrap', buildTask('bootstrap/gulpfile.js'));
-
-gulp.task('build-core', buildTask('core/gulpfile.js'));
 
 gulp.task('build-packages', buildTask('packages/*/gulpfile.js'));
 
@@ -263,7 +261,6 @@ gulp.task('package', ['build'], cb => {
 
 	globule
 		.find([
-			'./core/package.json',
 			'packages/*/package.json',
 			'!packages/appcd-gulp/*'
 		])
@@ -356,7 +353,6 @@ gulp.task('package', ['build'], cb => {
 
 	pack(path.join(__dirname, 'bootstrap'), 'package', 'package.json');
 	pack(path.join(__dirname, 'conf'), 'package/conf');
-	pack(path.join(__dirname, 'core'), 'package/node_modules/appcd-core');
 
 	globule
 		.find(['packages/*', '!packages/appcd-gulp'])
@@ -450,9 +446,6 @@ gulp.task('watch-only', cb => {
 		gulp.watch(__dirname + '/bootstrap/src/**/*.js', () => {
 			runSequence('build-bootstrap');
 		}),
-		gulp.watch(__dirname + '/core/src/**/*.js', () => {
-			runSequence('build-core', startDaemon);
-		}),
 		gulp.watch(__dirname + '/packages/*/src/**/*.js', evt => {
 			const m = evt.path.match(new RegExp('^(' + __dirname + '/(packages/([^\/]+)))'));
 			if (m) {
@@ -500,10 +493,10 @@ gulp.task('default', () => {
 
 	table.push([cyan('build'),            'performs a full build']);
 	table.push([cyan('build-bootstrap'),  'builds only the bootstrap']);
-	table.push([cyan('build-core'),       'builds only the core']);
 	table.push([cyan('build-packages'),   'builds all packages']);
 	table.push([cyan('build-plugins'),    'builds all plugins']);
-	table.push([cyan('build-watch'),      'builds all packages, then starts watching them']);
+	table.push([cyan('watch'),            'builds all packages, then starts watching them']);
+	table.push([cyan('watch-only'),       'starts watching all packages to perform build']);
 	table.push([cyan('check'),            'checks missing/outdated dependencies/link, security issues, and code stats']);
 	table.push([cyan('fix'),              'fixes any missing dependencies or links']);
 	table.push([cyan('install'),          'links/installs dependencies, then does a full build']);
@@ -512,7 +505,6 @@ gulp.task('default', () => {
 	table.push([cyan('package'),          'builds and packages an appc daemon distribution archive']);
 	table.push([cyan('ugprade-all'),      'detects latest npm deps, updates package.json, and runs upgrade']);
 	table.push([cyan('upgrade-critical'), 'detects security issues, updates package.json, and runs upgrade']);
-	table.push([cyan('watch'),            'starts watching all packages to perform build']);
 
 	console.log(table.toString() + '\n');
 });
@@ -526,7 +518,6 @@ function linkDeps() {
 	gutil.log('Linking dependencies...');
 
 	return Promise.resolve()
-		.then(() => runYarn(path.join(__dirname, 'core'), 'link').catch(() => {}))
 		.then(() => fs.readdirSync(packagesDir).reduce((promise, dir) => {
 			return promise.then(() => {
 				try {

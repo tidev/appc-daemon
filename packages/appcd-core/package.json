@@ -1,5 +1,5 @@
 {
-  "name": "appc-daemon-core",
+  "name": "appcd-core",
   "version": "1.0.0",
   "description": "Appcelerator Daemon Core",
   "main": "./dist/main",
@@ -8,11 +8,6 @@
     "Chris Barber <cbarber@appcelerator.com>"
   ],
   "license": "SEE LICENSE IN LICENSE",
-  "keywords": [
-    "appcelerator",
-    "appc",
-    "daemon"
-  ],
   "scripts": {
     "build": "gulp build",
     "coverage": "gulp coverage",
