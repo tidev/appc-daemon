@@ -77,7 +77,7 @@ export default class Server extends HookEmitter {
 		logger.log(`Appcelerator Daemon v${this.version}`);
 		logger.log('Environment: %s', highlight(this.config.get('environment.title')));
 		logger.log(`PID: ${highlight(process.pid)}`);
-		logger.log(`Node.js ${process.version} (module v${process.versions.modules})`);
+		logger.log(`Node.js ${process.version} (${process.platform}, module v${process.versions.modules})`);
 
 		const shutdown = () => this.shutdown()
 			.then(() => process.exit(0))

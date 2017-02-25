@@ -177,7 +177,7 @@ export function extractNode({ archive, dest }) {
 		}
 
 		if (!isDir(dest)) {
-			logger.log(`Creating ${dest}`);
+			logger.log('Creating %s', highlight(dest));
 			fs.mkdirsSync(dest);
 		}
 
@@ -201,7 +201,7 @@ export function extractNode({ archive, dest }) {
 						}
 
 						if (entry.fileName === target) {
-							logger.log(`Found node executable (${formatNumber(entry.uncompressedSize)})`);
+							logger.log(`Found node executable (${formatNumber(entry.uncompressedSize)} bytes)`);
 							zipfile.openReadStream(entry, (err, stream) => {
 								stream.pipe(fs.createWriteStream(binaryPath));
 								stream.once('end', () => {
@@ -265,7 +265,7 @@ export function extractNode({ archive, dest }) {
 						stream.pipe(fs.createWriteStream(binaryPath));
 						stream.once('end', () => {
 							extract.destroy();
-							logger.log(`Setting mode to ${header.mode.toString(8)}`);
+							logger.log(`Setting node executable mode to ${header.mode.toString(8)}`);
 							fs.chmodSync(binaryPath, header.mode);
 							resolve(binaryPath);
 						});
@@ -355,10 +355,28 @@ export function spawnNode({ arch, args, detached, nodeHome, nodeArgs, v8mem = 'a
 			}
 
 			logger.log('Spawning: %s', highlight(`${node} ${args.map(s => s.indexOf(' ') === -1 ? s : `"${s}"`).join(' ')} # ${JSON.stringify(opts)}`));
-			const child = spawn(node, args, opts);
-			if (detached) {
-				child.unref();
-			}
-			return child.pid;
+
+			let tries = 3;
+
+			return (function trySpawn() {
+				return Promise.resolve()
+					.then(() => {
+						tries--;
+						const child = spawn(node, args, opts);
+						if (detached) {
+							child.unref();
+						}
+						return child.pid;
+					})
+					.catch(err => {
+						if (err.code === 'ETXTBSY' && tries) {
+							logger.log('Spawn threw ETXTBSY, retrying...');
+							return new Promise((resolve, reject) => {
+								setTimeout(() => trySpawn().then(resolve, reject), 50);
+							});
+						}
+						return err;
+					});
+			}());
 		});
 }
