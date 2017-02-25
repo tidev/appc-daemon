@@ -82,8 +82,8 @@ export default class Server extends HookEmitter {
 		const shutdown = () => this.shutdown()
 			.then(() => process.exit(0))
 			.catch(logger.error);
-		process.on('SIGINT',  shutdown);
-		process.on('SIGTERM', shutdown);
+		process.once('SIGINT',  shutdown);
+		process.once('SIGTERM', shutdown);
 
 		// init the home directory
 		const homeDir = expandPath(this.config.get('home'));
