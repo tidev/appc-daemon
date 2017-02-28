@@ -2,9 +2,10 @@ if (!Error.prepareStackTrace) {
 	require('source-map-support/register');
 }
 
-import { PassThrough } from 'stream';
 import pathToRegExp from 'path-to-regexp';
 import snooplogg, { styles } from 'snooplogg';
+
+import { PassThrough } from 'stream';
 
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:dispatcher');
 const { highlight } = styles;
@@ -220,11 +221,11 @@ export default class Dispatcher {
 		 * @returns {Promise}
 		 */
 		return (ctx, next) => {
-			if (ctx.method !== 'GET' && ctx.method !== 'POST') {
+			if (ctx.method === 'HEAD') {
 				return next();
 			}
 
-			const data = ctx.method === 'POST' && ctx.request && ctx.request.body || null;
+			const data = (ctx.method === 'POST' || ctx.method === 'PUT') && ctx.request && ctx.request.body || null;
 
 			return this.call(ctx.originalUrl, data)
 				.then(result => {

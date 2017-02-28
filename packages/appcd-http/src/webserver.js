@@ -107,7 +107,7 @@ export default class WebServer extends EventEmitter {
 				ctx.method,
 				ctx.url,
 				style(ctx.status),
-				err ? `${style(err.message || err)} ` : '',
+				err ? (style(err.message || err) + ' ') : '',
 				highlight((new Date - ctx.startTime) + 'ms')
 			);
 		}

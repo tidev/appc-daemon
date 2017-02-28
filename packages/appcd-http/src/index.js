@@ -4,6 +4,7 @@ if (!Error.prepareStackTrace) {
 
 import Router from './router';
 import WebServer from './webserver';
+import WebSocket from 'ws';
 
 export default WebServer;
-export { Router, WebServer };
+export { Router, WebServer, WebSocket };

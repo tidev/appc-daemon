@@ -5,7 +5,8 @@ const instance = createInstanceWithDefaults()
 	.config({
 		maxBufferSize: 250,
 		theme: 'detailed'
-	});
+	})
+	.enable(process.env.SNOOPLOGG || process.env.DEBUG);
 
 export default instance;
 

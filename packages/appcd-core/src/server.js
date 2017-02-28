@@ -8,6 +8,7 @@ import PluginManager from 'appcd-plugin';
 import snooplogg, { StdioStream } from './logger';
 import StatusMonitor from './status-monitor';
 import WebServer from 'appcd-http';
+import WebSocketSession from './websocket-session';
 
 import { expandPath } from 'appcd-path';
 import { getMachineId } from 'appcd-machine-id';
@@ -64,7 +65,10 @@ export default class Server extends HookEmitter {
 	 * @access public
 	 */
 	start() {
-		snooplogg.enable('*').pipe(new StdioStream, { flush: true });
+		// enable logging
+		snooplogg
+			.enable('*')
+			.pipe(new StdioStream, { flush: true });
 
 		// check if appcd is already running
 		const pid = this.isRunning();
@@ -149,6 +153,7 @@ export default class Server extends HookEmitter {
 		});
 
 		this.webserver.use(this.dispatcher.callback());
+		this.webserver.on('websocket', ws => new WebSocketSession(ws, this.dispatcher));
 
 		return Promise.resolve()
 			.then(() => {
@@ -156,7 +161,7 @@ export default class Server extends HookEmitter {
 					.then(mid => this.mid = mid);
 			})
 			// init analytics
-			// enable plugins
+			// load plugins
 			.then(() => {
 				const pidFile = expandPath(this.config.get('server.pidFile'));
 				const dir = path.dirname(pidFile);
@@ -168,7 +173,6 @@ export default class Server extends HookEmitter {
 				fs.writeFileSync(pidFile, process.pid);
 			})
 			//  - load in-process and plugins
-			//     - status monitor
 			//     - handlers
 			.then(() => this.webserver.listen())
 			.then(() => this.emit('appcd.start'))

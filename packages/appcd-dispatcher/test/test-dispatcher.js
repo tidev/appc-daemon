@@ -3,7 +3,6 @@ import Dispatcher from '../src/dispatcher';
 import { DispatcherError } from '../src/dispatcher';
 
 describe('dispatcher', () => {
-
 	describe('register', () => {
 		it('should register with valid path and handler', () => {
 			const d = new Dispatcher;
@@ -487,7 +486,7 @@ describe('dispatcher', () => {
 				.catch(done);
 		});
 
-		it('should ignore PUT request', done => {
+		it('should ignore HEAD request', done => {
 			const d = new Dispatcher;
 			let count = 0;
 			let count2 = 0;
@@ -498,7 +497,7 @@ describe('dispatcher', () => {
 
 			const middleware = d.callback();
 			const ctx = {
-				method: 'PUT',
+				method: 'HEAD',
 				originalUrl: '/'
 			};
 			const next = () => {
@@ -561,5 +560,4 @@ describe('dispatcher', () => {
 				.catch(done);
 		});
 	});
-
 });

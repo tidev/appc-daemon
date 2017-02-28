@@ -16,7 +16,7 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "koa": "next",
+    "koa": "^2.0.1",
     "koa-bodyparser": "next",
     "koa-helmet": "^3.1.0",
     "koa-send": "^3.3.0",

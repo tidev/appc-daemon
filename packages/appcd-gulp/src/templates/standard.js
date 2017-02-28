@@ -111,7 +111,7 @@ module.exports = (opts) => {
 	/*
 	 * test tasks
 	 */
-	gulp.task('test', ['lint-test', 'build'], cb => {
+	gulp.task('test', ['lint-src', 'lint-test'], cb => {
 		runTests({
 			callback: cb
 		});
@@ -165,13 +165,18 @@ module.exports = (opts) => {
 
 				stream.once('error', err => {
 					error = err;
+					opts.callback(err);
 				});
 
 				if (opts.cover) {
 					stream = stream.pipe($.istanbul.writeReports({ coverageVariable: '__coverage__' }));
 				}
 
-				stream.once('end', () => opts.callback(error));
+				stream.once('end', () => {
+					if (!error) {
+						opts.callback();
+					}
+				});
 			});
 	}
 
