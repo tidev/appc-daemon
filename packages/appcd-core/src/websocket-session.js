@@ -51,6 +51,7 @@ class WebSocketRequest {
 							this.send(new Error(`Bad Request: ${err.message || err}`));
 						})
 						.then(result => {
+							// TODO: response might be a ReadableStream!
 							this.send({
 								status: result.status,
 								response: result.response
