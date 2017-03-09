@@ -27,10 +27,12 @@
 		"packages/appcd-machine-id",
 		"packages/appcd-path",
 		"packages/appcd-plugin",
+		"packages/appcd-service",
 		"packages/appcd-util"
 	],
 	"packages/appcd-dispatcher": [
-		"packages/appcd-gulp"
+		"packages/appcd-gulp",
+		"packages/appcd-statuses"
 	],
 	"packages/appcd-fs": [
 		"packages/appcd-gulp"
@@ -58,6 +60,13 @@
 		"packages/appcd-fs",
 		"packages/appcd-gulp",
 		"packages/appcd-path"
+	],
+	"packages/appcd-service": [
+		"packages/appcd-gulp",
+		"packages/appcd-statuses"
+	],
+	"packages/appcd-statuses": [
+		"packages/appcd-gulp"
 	],
 	"packages/appcd-subprocess": [
 		"packages/appcd-gulp"

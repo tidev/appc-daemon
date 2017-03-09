@@ -4,23 +4,21 @@ if (!Error.prepareStackTrace) {
 
 import pathToRegExp from 'path-to-regexp';
 import snooplogg, { styles } from 'snooplogg';
+import Stream from 'stream';
 
-import { PassThrough } from 'stream';
+import { codes, statuses, statusResponse } from 'appcd-statuses';
+import { PassThrough, Transform } from 'stream';
 
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:dispatcher');
 const { highlight } = styles;
 
-/**
- * A map of status codes and their descriptions.
- * @type {Object}
- */
-export const StatusCodes = {
-	'200': 'OK',
-	'400': 'Bad request',
-	'404': 'No route',
-	'500': 'Server error',
-	'505': 'Unsupported version'
-};
+class StringifyStream extends Transform {
+	_transform(chunk, encoding, callback) {
+		console.log('stringifying!');
+		this.push(typeof chunk === 'string' || Buffer.isBuffer(chunk) ? chunk : JSON.stringify(chunk));
+		callback();
+	}
+}
 
 /**
  * A custom error for dispatcher errors.
@@ -29,10 +27,10 @@ export class DispatcherError extends Error {
 	constructor(status, message) {
 		if (typeof status !== 'number' && !message) {
 			message = status;
-			status = 500;
+			status = codes.SERVER_ERROR;
 		}
 		super(message);
-		this.message = message || StatusCodes[status] || 'Error';
+		this.message = message || statuses[status] || 'Error';
 		this.status = status;
 		Error.captureStackTrace(this, this.constructor);
 	}
@@ -68,11 +66,21 @@ export default class Dispatcher {
 	 */
 	register(path, handler) {
 		if (Array.isArray(path)) {
-			path.forEach(p => {
+			for (const p of path) {
 				this.register(p, handler);
-			});
-		} else if (typeof path !== 'string' && !(path instanceof RegExp)) {
+			}
+			return this;
+		}
+
+		// check if we have a object with a path/handler
+		if (path && typeof path === 'object' && path.path && typeof path.handler === 'function') {
+			handler = path.handler;
+			path = path.path;
+		}
+
+		if (typeof path !== 'string' && !(path instanceof RegExp)) {
 			throw new TypeError('Invalid path');
+
 		} else if (typeof handler === 'function' || handler instanceof Dispatcher) {
 			const keys = [];
 			const regexp = pathToRegExp(path, keys, { end: !(handler instanceof Dispatcher) });
@@ -91,6 +99,7 @@ export default class Dispatcher {
 			if (!this.prefix || path !== '/') {
 				logger.debug(`Registered dispatcher route ${highlight(path)}`);
 			}
+
 		} else {
 			throw new TypeError('Invalid handler');
 		}
@@ -116,7 +125,7 @@ export default class Dispatcher {
 			data,
 			path,
 			response: new PassThrough({ objectMode: true }),
-			status: 200
+			status: codes.OK
 		};
 
 		let index = -1;
@@ -135,7 +144,7 @@ export default class Dispatcher {
 			if (!route) {
 				// end of the line
 				logger.debug('Route not found: %s', highlight(path));
-				throw new DispatcherError(404);
+				throw new DispatcherError(codes.NO_ROUTE);
 			}
 
 			logger.trace('Testing route: %s', highlight(route.path));
@@ -225,24 +234,33 @@ export default class Dispatcher {
 				return next();
 			}
 
-			const data = (ctx.method === 'POST' || ctx.method === 'PUT') && ctx.request && ctx.request.body || null;
+			const data = {
+				data: (ctx.method === 'POST' || ctx.method === 'PUT') && ctx.request && ctx.request.body || {},
+				type: 'call'
+			};
 
 			return this.call(ctx.originalUrl, data)
 				.then(result => {
 					ctx.status = result.status;
+
+					//ctx.body = new StringifyStream;
+					//result.response.pipe(ctx.body);
 					ctx.body = result.response;
 				})
 				.catch(err => {
 					if (err instanceof DispatcherError) {
-						if (err.status === 404) {
+						if (err.status === codes.NO_ROUTE) {
 							return next();
 						}
 						ctx.status = err.status;
 						ctx.body = err.toString();
 					} else {
-						ctx.status = 500;
-						ctx.body = `500 - ${StatusCodes[500]}\n${err.toString()}`;
+						const res = statusResponse(codes.SERVER_ERROR);
+						ctx.status = res.status;
+						ctx.body = res.response;
 					}
+
+					logger.error(err);
 
 					return Promise.resolve();
 				});

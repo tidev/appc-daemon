@@ -7,7 +7,7 @@
   "maintainers": [
     "Chris Barber <cbarber@appcelerator.com>"
   ],
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "LicenseRef-LICENSE",
   "scripts": {
     "build": "gulp build",
     "coverage": "gulp coverage",

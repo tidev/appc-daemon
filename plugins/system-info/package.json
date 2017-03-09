@@ -20,7 +20,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "gawk": "^3.0.2"
+    "gawk": "^3.2.2"
   },
   "devDependencies": {
     "babel-eslint": "^7.1.1",

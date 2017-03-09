@@ -1,5 +1,6 @@
 import gawk from 'gawk';
 import os from 'os';
+import Service from 'appcd-service';
 import snooplogg from './logger';
 
 const logger = snooplogg('appcd:status');
@@ -10,14 +11,16 @@ const { filesize } = snooplogg.humanize;
 /**
  * Monitors the Appc Daemon status.
  */
-export default class StatusMonitor {
+export default class StatusMonitor extends Service {
 	/**
 	 * Initalizes the status and kicks off the timers to refresh the dynamic
 	 * status information.
 	 */
 	constructor() {
-		this.initCpu    = process.cpuUsage();
-		this.initHrtime = process.hrtime();
+		super();
+
+		this.initCpu    = this.currentCpu    = process.cpuUsage();
+		this.initHrtime = this.currentHrTime = process.hrtime();
 
 		this.status = gawk({
 			appcd: {
@@ -26,8 +29,6 @@ export default class StatusMonitor {
 				execArgv: process.execArgv,
 				argv:     process.argv,
 				env:      process.env,
-				cpu:      this.initCpu,
-				hrtime:   this.initHrtime,
 				memory:   undefined,
 				uptime:   undefined
 			},
@@ -45,19 +46,52 @@ export default class StatusMonitor {
 			}
 		});
 
+		// start the refresh interval
 		this.refresh();
+
+		// start logging the status
 		this.log();
+
+		// wire up the service handlers
+		this.service.register({
+			path: '/appcd/status/:filter*',
+
+			onCall: ctx => {
+				const filter = ctx.params.filter && ctx.params.filter.replace(/^\//, '').split(/\.|\//) || undefined;
+				const node = this.get(filter);
+				if (!node) {
+					throw new Error(`Invalid request: ${ctx.path}`);
+				}
+				ctx.response = node;
+			},
+
+			onSubscribe: (ctx, publish) => {
+				const filter = ctx.params.filter && ctx.params.filter.replace(/^\//, '').split(/\.|\//) || undefined;
+
+				// write the initial value
+				const node = this.get(filter);
+				publish(node);
+
+				logger.debug('Starting gawk watch: %s', highlight(filter ? filter.join('/') : 'no filter'));
+
+				gawk.watch(this.status, filter, publish);
+			},
+
+			onUnsubscribe: (ctx, publish) => {
+				logger.debug('Removing gawk watch');
+				gawk.unwatch(this.status, publish);
+			}
+		});
 	}
 
 	/**
 	 * Returns the complete or filtered status values.
 	 *
-	 * Important! This function returns an internal reference and it's critical
-	 * that the result is not modified. If you need to modify the status result,
-	 * then clone it first.
+	 * Important! This function returns an internal reference and it's critical that the result is
+	 * not modified. If you need to modify the status result, then clone it first.
 	 *
-	 * @param {Array.<String>} [filter] - An array of namespaces used to filter
-	 * and return a deep object.
+	 * @param {Array.<String>} [filter] - An array of namespaces used to filter and return a deep
+	 * object.
 	 * @return {*}
 	 * @access public
 	 */
@@ -111,7 +145,8 @@ export default class StatusMonitor {
 	 * @access private
 	 */
 	log() {
-		const { cpu, hrtime } = this.status.appcd;
+		const cpu = this.currentCpu;
+		const hrtime = this.currentHrTime;
 		const currentCPUUsage = ((cpu.user + cpu.system) / (hrtime[0] * 1000000 + hrtime[1] / 1000) * 100).toFixed(1);
 
 		let cpuUsage = '';
@@ -160,7 +195,8 @@ export default class StatusMonitor {
 			}
 		}
 
-		this.prevMemory = currentMemoryUsage;
+		// need to clone the object so we don't reference the object that gets updated
+		this.prevMemory = { ...currentMemoryUsage };
 
 		logger.log(
 			`CPU: ${cpuUsage}  ` +
@@ -176,10 +212,11 @@ export default class StatusMonitor {
 	 * @access private
 	 */
 	refresh() {
+		this.currentCpu    = process.cpuUsage(this.initCpu);
+		this.currentHrTime = process.hrtime(this.initHrtime);
+
 		gawk.mergeDeep(this.status, {
 			appcd: {
-				cpu:    process.cpuUsage(this.initCpu),
-				hrtime: process.hrtime(this.initHrtime),
 				memory: process.memoryUsage(),
 				uptime: process.uptime()
 			},

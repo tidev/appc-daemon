@@ -814,9 +814,9 @@ koa-send@^3.3.0:
     mz "^2.3.1"
     resolve-path "^1.3.1"
 
-koa@^2.0.1:
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/koa/-/koa-2.0.1.tgz#c15a0da4d62554c058ae881e76992e3defe45bd8"
+koa@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/koa/-/koa-2.1.0.tgz#59a4ee64984c463502aa9b4f85f1b108453eebbf"
   dependencies:
     accepts "^1.2.2"
     content-disposition "~0.5.0"
@@ -1528,9 +1528,9 @@ wrappy@1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/wrappy/-/wrappy-1.0.2.tgz#b5243d8f3ec1aa35f1364605bc0d1036e30ab69f"
 
-ws@^2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/ws/-/ws-2.1.0.tgz#b24eaed9609f8632dd51e3f7698619a90fddcc92"
+ws@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/ws/-/ws-2.2.0.tgz#3218a7b1ebd15a09c56bb12a3e943a960eb7bde5"
   dependencies:
     ultron "~1.1.0"
 

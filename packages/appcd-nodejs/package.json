@@ -7,7 +7,7 @@
   "maintainers": [
     "Chris Barber <cbarber@appcelerator.com>"
   ],
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "LicenseRef-LICENSE",
   "scripts": {
     "build": "gulp build",
     "coverage": "gulp coverage",
@@ -18,7 +18,7 @@
   "dependencies": {
     "fs-extra": "^2.0.0",
     "progress": "^1.1.8",
-    "request": "^2.79.0",
+    "request": "^2.80.0",
     "snooplogg": "^1.3.0",
     "source-map-support": "^0.4.11",
     "tar-stream": "^1.5.2",

@@ -112,7 +112,7 @@ export default class Server extends HookEmitter {
 		// init the dispatcher
 		this.dispatcher = new Dispatcher()
 			.register('/appcd/config/:key*', ctx => {
-				const filter = ctx.params.key && ctx.params.key.replace(/^\//, '').split('/').join('.') || undefined;
+				const filter = ctx.params.key && ctx.params.key.replace(/^\//, '').split(/\.|\//).join('.') || undefined;
 				const node = this.config.get(filter);
 				if (!node) {
 					throw new Error(`Invalid request: ${ctx.path}`);
@@ -128,22 +128,7 @@ export default class Server extends HookEmitter {
 				ctx.response.end('foo');
 			})
 
-			.register('/appcd/status/:filter*', ctx => {
-				const filter = ctx.params.filter && ctx.params.filter.replace(/^\//, '').split(/\.|\//) || undefined;
-				const node = this.statusMonitor.get(filter);
-				if (!node) {
-					throw new Error(`Invalid request: ${ctx.path}`);
-				}
-
-				if (ctx.data.continuous) {
-					ctx.response.write(node);
-					const off = gawk.watch(node, evt => ctx.response.write(evt.source));
-					ctx.response.once('close', off);
-					ctx.response.once('error', off);
-				} else {
-					ctx.response = node;
-				}
-			});
+			.register(this.statusMonitor.service);
 
 		// init the web server
 		this.webserver = new WebServer({
