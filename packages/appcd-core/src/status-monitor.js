@@ -1,6 +1,6 @@
 import gawk from 'gawk';
 import os from 'os';
-import Service from 'appcd-service';
+import { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
 import snooplogg from './logger';
 
 const logger = snooplogg('appcd:status');
@@ -11,14 +11,12 @@ const { filesize } = snooplogg.humanize;
 /**
  * Monitors the Appc Daemon status.
  */
-export default class StatusMonitor extends Service {
+export default class StatusMonitor {
 	/**
 	 * Initalizes the status and kicks off the timers to refresh the dynamic
 	 * status information.
 	 */
 	constructor() {
-		super();
-
 		this.initCpu    = this.currentCpu    = process.cpuUsage();
 		this.initHrtime = this.currentHrTime = process.hrtime();
 
@@ -53,35 +51,54 @@ export default class StatusMonitor extends Service {
 		this.log();
 
 		// wire up the service handlers
-		this.service.register({
-			path: '/appcd/status/:filter*',
+		this.service = new ServiceDispatcher('/appcd/status/:filter*', this);
+	}
 
-			onCall: ctx => {
-				const filter = ctx.params.filter && ctx.params.filter.replace(/^\//, '').split(/\.|\//) || undefined;
-				const node = this.get(filter);
-				if (!node) {
-					throw new Error(`Invalid request: ${ctx.path}`);
-				}
-				ctx.response = node;
-			},
+	/**
+	 * Responds to "call" service requests.
+	 *
+	 * @param {Object} ctx - A dispatcher request context.
+	 * @access private
+	 */
+	onCall(ctx) {
+		const filter = ctx.params.filter && ctx.params.filter.replace(/^\//, '').split(/\.|\//) || undefined;
+		const node = this.get(filter);
+		if (!node) {
+			throw new DispatcherError(404, `Invalid request: ${ctx.path}`);
+		}
+		ctx.response = node;
+	}
 
-			onSubscribe: (ctx, publish) => {
-				const filter = ctx.params.filter && ctx.params.filter.replace(/^\//, '').split(/\.|\//) || undefined;
+	/**
+	 * Responds to "subscribe" service requests.
+	 *
+	 * @param {Object} ctx - A dispatcher request context.
+	 * @param {Function} publish - A function used to publish data to a dispatcher client.
+	 * @access private
+	 */
+	onSubscribe(ctx, publish) {
+		const filter = ctx.params.filter && ctx.params.filter.replace(/^\//, '').split(/\.|\//) || undefined;
 
-				// write the initial value
-				const node = this.get(filter);
-				publish(node);
+		// write the initial value
+		const node = this.get(filter);
+		publish(node);
 
-				logger.debug('Starting gawk watch: %s', highlight(filter ? filter.join('/') : 'no filter'));
+		logger.debug('Starting gawk watch: %s', highlight(filter ? filter.join('/') : 'no filter'));
 
-				gawk.watch(this.status, filter, publish);
-			},
+		gawk.watch(this.status, filter, publish);
+	}
 
-			onUnsubscribe: (ctx, publish) => {
-				logger.debug('Removing gawk watch');
-				gawk.unwatch(this.status, publish);
-			}
-		});
+	/**
+	 * Responds to "unsubscribe" service requests.
+	 *
+	 * @param {Object} ctx - A dispatcher request context.
+	 * @param {Function} publish - The function used to publish data to a dispatcher client. This is
+	 * the same publish function as the one passed to `onSubscribe()`.
+	 * @access private
+	 */
+	onUnsubscribe(ctx, publish) {
+		logger.debug('Removing gawk watch');
+		gawk.unwatch(this.status, publish);
 	}
 
 	/**

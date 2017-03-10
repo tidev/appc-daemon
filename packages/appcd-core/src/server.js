@@ -48,7 +48,7 @@ export default class Server extends HookEmitter {
 
 		// gawk the internal config values so that we can watch specific props
 		this.config.values = gawk(this.config.values);
-		this.config.watch = listener => gawk.watch(this.config.values, listener);
+		this.config.watch = (filter, listener) => gawk.watch(this.config.values, filter, listener);
 		this.config.unwatch = listener => gawk.unwatch(this.config.values, listener);
 
 		/**

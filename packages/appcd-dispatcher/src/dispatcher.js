@@ -1,17 +1,15 @@
-if (!Error.prepareStackTrace) {
-	require('source-map-support/register');
-}
-
+import DispatcherError from './dispatcher-error';
 import pathToRegExp from 'path-to-regexp';
 import snooplogg, { styles } from 'snooplogg';
 import Stream from 'stream';
 
-import { codes, statuses, statusResponse } from 'appcd-statuses';
+import codes, { statuses } from 'appcd-statuses';
 import { PassThrough, Transform } from 'stream';
 
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:dispatcher');
 const { highlight } = styles;
 
+/*
 class StringifyStream extends Transform {
 	_transform(chunk, encoding, callback) {
 		console.log('stringifying!');
@@ -19,26 +17,7 @@ class StringifyStream extends Transform {
 		callback();
 	}
 }
-
-/**
- * A custom error for dispatcher errors.
- */
-export class DispatcherError extends Error {
-	constructor(status, message) {
-		if (typeof status !== 'number' && !message) {
-			message = status;
-			status = codes.SERVER_ERROR;
-		}
-		super(message);
-		this.message = message || statuses[status] || 'Error';
-		this.status = status;
-		Error.captureStackTrace(this, this.constructor);
-	}
-
-	toString() {
-		return `${this.status} - ${this.message}`;
-	}
-}
+*/
 
 /**
  * Cross between an event emitter and a router.
@@ -236,7 +215,8 @@ export default class Dispatcher {
 
 			const data = {
 				data: (ctx.method === 'POST' || ctx.method === 'PUT') && ctx.request && ctx.request.body || {},
-				type: 'call'
+				type: 'call',
+				sessionId: 'koa'
 			};
 
 			return this.call(ctx.originalUrl, data)
@@ -255,9 +235,8 @@ export default class Dispatcher {
 						ctx.status = err.status;
 						ctx.body = err.toString();
 					} else {
-						const res = statusResponse(codes.SERVER_ERROR);
-						ctx.status = res.status;
-						ctx.body = res.response;
+						ctx.status = codes.SERVER_ERROR;
+						ctx.body = statuses[codes.SERVER_ERROR];
 					}
 
 					logger.error(err);

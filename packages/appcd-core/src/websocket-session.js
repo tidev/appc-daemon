@@ -47,6 +47,9 @@ export class WebSocketError extends Error {
 	}
 }
 
+/**
+ * Tracks the state of a WebSocket session and handles the WebSocket subprotocol.
+ */
 export default class WebSocketSession {
 	/**
 	 * Creates a appcd WebSocket session and wires up the message handler.
@@ -108,6 +111,13 @@ export default class WebSocketSession {
 		});
 	}
 
+	/**
+	 * Handles v1.0 WebSocket subprotocol requests.
+	 *
+	 * @param {Object} req - The WebSocket subprotocol request state.
+	 * @return {Promise}
+	 * @access private
+	 */
 	handle_1_0(req) {
 		if (req.id === undefined) {
 			throw new WebSocketError(400, 'Request "id" required');
@@ -156,6 +166,13 @@ export default class WebSocketSession {
 			});
 	}
 
+	/**
+	 * Ensures the response has an 'id' and a 'type', then sends the response and logs the request.
+	 *
+	 * @param {Object} req - The WebSocket subprotocol request state.
+	 * @param {*} res - The dispatcher response.
+	 * @access private
+	 */
 	respond(req, res) {
 		if (!res.id && req && req.id) {
 			res.id = req.id;
@@ -167,6 +184,12 @@ export default class WebSocketSession {
 		this.log(req, res);
 	}
 
+	/**
+	 * Sends a response back over the WebSocket.
+	 *
+	 * @param {*} res - The dispatcher response.
+	 * @access private
+	 */
 	send(res) {
 		if (this.ws.readyState !== WebSocket.OPEN) {
 			return;
@@ -196,6 +219,13 @@ export default class WebSocketSession {
 		}
 	}
 
+	/**
+	 * Logs a WebSocket subprotocol request.
+	 *
+	 * @param {Object} req - The WebSocket subprotocol request state.
+	 * @param {*} res - The dispatcher response.
+	 * @access private
+	 */
 	log(req, res) {
 		let status = res && res.status || (res instanceof Error ? 500 : 200);
 		const style = status < 400 ? ok : alert;

@@ -1,12 +1,7 @@
-if (!Error.prepareStackTrace) {
-	require('source-map-support/register');
-}
-
+import codes, { statuses } from 'appcd-statuses';
 import snooplogg, { pluralize, styles } from 'snooplogg';
 
-import codes, { statuses } from 'appcd-statuses';
-
-const logger = snooplogg.config({ theme: 'detailed' })('appcd:service');
+const logger = snooplogg.config({ theme: 'detailed' })('appcd:dispatcher:service-dispatcher');
 const { highlight, note } = styles;
 
 /**
@@ -19,33 +14,78 @@ const ServiceHandlerTypes = [
 	'unsubscribe'
 ];
 
-class ServiceHandlerRegistry {
-	constructor() {
+/**
+ * A dispatcher handler designed for exposing an interface for services.
+ */
+export default class ServiceDispatcher {
+	/**
+	 * Constructs the service registry.
+	 *
+	 * @param {String} path - The service path.
+	 * @param {Object} instance - A reference to the object containing service methods.
+	 * @access public
+	 */
+	constructor(path, instance) {
+		if (!path || typeof path !== 'string') {
+			throw new TypeError('Expected path to be a string');
+		}
+		this.path = (path[0] === '/' ? '' : '/') + path;
+
+		if (!instance || typeof instance !== 'object') {
+			throw new TypeError('Expected instance to be an object');
+		}
+		this.instance = instance;
+
 		this.subscriptions = {};
-		this.path          = null;
-		this.handlers      = {};
 
 		// need to bind to this instance
 		this.handler = this.handler.bind(this);
 	}
 
+	/**
+	 * An Appc Dispatcher handler.
+	 *
+	 * @param {Object} ctx - A dispatcher context.
+	 * @param {Function} next - A function to continue to next dispatcher route.
+	 * @returns {Promise}
+	 * @access public
+	 */
 	handler(ctx, next) {
-		const type = ctx.data.type || 'call';
-		const onType = `on${type.substring(0, 1).toUpperCase() + type.substring(1)}`;
+		if (this.path) {
+			const type = ctx.data.type || 'call';
+			const onType = `on${type.substring(0, 1).toUpperCase() + type.substring(1)}`;
 
-		if (ServiceHandlerTypes.indexOf(type) !== -1 && this.handlers[onType]) {
-			logger.log('%s Invoking %s handler: %s', note(`[${ctx.data.sessionId}]`), onType, highlight(this.path));
-			return this[type](ctx);
+			if (ServiceHandlerTypes.indexOf(type) !== -1 && typeof this.instance[onType] === 'function') {
+				logger.log('%s Invoking %s handler: %s', note(`[${ctx.data.sessionId}]`), onType, highlight(this.path));
+				return this[type](ctx);
+			}
+
+			logger.log('%s No %s handler, skipping: %s', note(`[${ctx.data.sessionId}]`), onType, highlight(this.path));
+		} else {
+			logger.error('%s Service not initialized properly with a path, skipping: %s', note(`[${ctx.data.sessionId}]`));
 		}
 
-		logger.log('%s No %s handler, skipping: %s', note(`[${ctx.data.sessionId}]`), onType, highlight(this.path));
 		return next();
 	}
 
+	/**
+	 * Invokes the `onCall()` service handler.
+	 *
+	 * @param {Object} ctx - A dispatcher context.
+	 * @returns {Promise}
+	 * @access private
+	 */
 	call(ctx) {
-		return this.handlers.onCall(ctx);
+		return this.instance.onCall(ctx);
 	}
 
+	/**
+	 * Subscribes the remote session, manages the subscriptions, and invokes the `onSubscribe()`
+	 * service handler.
+	 *
+	 * @param {Object} ctx - A dispatcher context.
+	 * @access private
+	 */
 	subscribe(ctx) {
 		const topic = ctx.path;
 		let descriptor = this.subscriptions[topic];
@@ -62,6 +102,7 @@ class ServiceHandlerRegistry {
 
 		} else {
 			logger.log('%s Initializing new subscription: %s', note(`[${ctx.data.sessionId}]`), highlight(topic));
+
 			descriptor = this.subscriptions[topic] = {
 				sessions: {},
 				publish: message => {
@@ -77,7 +118,7 @@ class ServiceHandlerRegistry {
 				}
 			};
 
-			this.handlers.onSubscribe(ctx, descriptor.publish);
+			this.instance.onSubscribe(ctx, descriptor.publish);
 		}
 
 		descriptor.sessions[ctx.data.sessionId] = message => ctx.response.write({ topic, message });
@@ -93,6 +134,12 @@ class ServiceHandlerRegistry {
 		});
 	}
 
+	/**
+	 * Unsubscribes the remote session and invokes the `onUnsubscribe()` service handler.
+	 *
+	 * @param {Object} ctx - A dispatcher context.
+	 * @access private
+	 */
 	unsubscribe(ctx) {
 		const topic = ctx.path;
 		let descriptor = this.subscriptions[topic];
@@ -103,8 +150,8 @@ class ServiceHandlerRegistry {
 			delete descriptor.sessions[ctx.data.sessionId];
 
 			if (!Object.keys(descriptor.sessions).length) {
-				if (this.handlers.onUnsubscribe) {
-					this.handlers.onUnsubscribe(ctx, descriptor.publish);
+				if (this.instance.onUnsubscribe) {
+					this.instance.onUnsubscribe(ctx, descriptor.publish);
 				}
 				logger.log('%s No more listeners, removing descriptor: %s', note(`[${ctx.data.sessionId}]`), highlight(topic));
 				delete this.subscriptions[topic];
@@ -128,50 +175,5 @@ class ServiceHandlerRegistry {
 				type: 'unsubscribe'
 			});
 		}
-	}
-
-	/**
-	 * Registers service handlers.
-	 *
-	 * @param {Object} params - Various parameters.
-	 * @param {String} params.path - The service path.
-	 * @param {Function} [params.call] - Handler to invoke when this service is called.
-	 * @param {Function} [params.subscribe] - Handler to invoke when this service is subscribed to.
-	 * @param {Function} [params.unsubscribe] - Handler to invoke when this service is unsubscribed
-	 * from.
-	 * @returns {Service}
-	 * @access private
-	 */
-	register(params = {}) {
-		if (!params || typeof params !== 'object') {
-			throw new TypeError('Expected params to be an object');
-		}
-
-		if (!params.path || typeof params.path !== 'string') {
-			throw new TypeError('Expected path to be a string');
-		}
-
-		this.path = (params.path[0] === '/' ? '' : '/') + params.path;
-
-		for (let type of ServiceHandlerTypes) {
-			const onType = `on${type.substring(0, 1).toUpperCase() + type.substring(1)}`;
-			if (params[onType]) {
-				if (typeof params[onType] !== 'function') {
-					throw new TypeError(`Expected '${type}' handler to be a function`);
-				}
-				this.handlers[onType] = params[onType];
-			}
-		}
-
-		return this;
-	}
-}
-
-export default class Service {
-	constructor() {
-		Object.defineProperty(this, 'service', {
-			enumerable: true,
-			value:      new ServiceHandlerRegistry
-		});
 	}
 }

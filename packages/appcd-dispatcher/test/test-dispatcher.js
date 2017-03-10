@@ -1,6 +1,5 @@
 import Dispatcher from '../src/dispatcher';
-
-import { DispatcherError } from '../src/dispatcher';
+import DispatcherError from '../src/dispatcher-error';
 
 describe('dispatcher', () => {
 	describe('register', () => {
