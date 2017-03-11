@@ -80,8 +80,8 @@ describe('nodejs', () => {
 		});
 
 		it('should download Node.js 6.9.5 for Linux', function (done) {
-			this.timeout(10000);
-			this.slow(8000);
+			this.timeout(120000);
+			this.slow(100000);
 
 			const tmpDir = makeTempDir();
 
@@ -101,8 +101,8 @@ describe('nodejs', () => {
 		});
 
 		it('should download Node.js 6.9.5 for Windows', function (done) {
-			this.timeout(10000);
-			this.slow(8000);
+			this.timeout(120000);
+			this.slow(100000);
 
 			const tmpDir = makeTempDir();
 
@@ -122,8 +122,8 @@ describe('nodejs', () => {
 		});
 
 		(process.platform === 'darwin' ? it : it.skip)('should download Node.js 6.9.5 for macOS', function (done) {
-			this.timeout(10000);
-			this.slow(8000);
+			this.timeout(120000);
+			this.slow(100000);
 
 			const tmpDir = makeTempDir();
 
@@ -143,8 +143,8 @@ describe('nodejs', () => {
 		});
 
 		it('should error if version does not exist', function (done) {
-			this.timeout(5000);
-			this.slow(4000);
+			this.timeout(120000);
+			this.slow(100000);
 
 			const tmpDir = makeTempDir();
 
@@ -294,8 +294,8 @@ describe('nodejs', () => {
 
 	describe('spawnNode()', () => {
 		it('should prepare and spawn Node 6.9.5', function (done) {
-			this.timeout(10000);
-			this.slow(8000);
+			this.timeout(120000);
+			this.slow(100000);
 
 			const tmpDir = makeTempDir();
 
