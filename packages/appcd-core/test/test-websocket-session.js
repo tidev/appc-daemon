@@ -6,8 +6,6 @@ import WebSocketSession from '../src/websocket-session';
 
 import { WebSocket } from 'appcd-http';
 
-snooplogg.pipe(new StdioStream, { flush: true });
-
 describe('WebSocketSession', () => {
 	afterEach(function (done) {
 		if (this.server) {
@@ -24,7 +22,7 @@ describe('WebSocketSession', () => {
 		}
 	});
 
-	it('should dispatch WebSocket request', function (done) {
+	it.only('should dispatch WebSocket request', function (done) {
 		this.server = new WebServer({
 			hostname: '127.0.0.1',
 			port:     1337
@@ -56,7 +54,7 @@ describe('WebSocketSession', () => {
 					try {
 						expect(msg).to.be.an.Object;
 						expect(msg.status).to.equal(200);
-						expect(msg.response).to.equal('bar!');
+						expect(msg.message).to.equal('bar!');
 						done();
 					} catch (e) {
 						done(e);
