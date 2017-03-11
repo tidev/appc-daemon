@@ -1,4 +1,4 @@
-import codes, { statuses } from 'appcd-statuses';
+import { codes, statuses } from './statuses';
 
 /**
  * A custom error for dispatcher errors.

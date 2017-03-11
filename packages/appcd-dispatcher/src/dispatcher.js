@@ -1,23 +1,12 @@
 import DispatcherError from './dispatcher-error';
 import pathToRegExp from 'path-to-regexp';
 import snooplogg, { styles } from 'snooplogg';
-import Stream from 'stream';
 
-import codes, { statuses } from 'appcd-statuses';
-import { PassThrough, Transform } from 'stream';
+import { codes, statuses } from './statuses';
+import { PassThrough } from 'stream';
 
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:dispatcher');
 const { highlight } = styles;
-
-/*
-class StringifyStream extends Transform {
-	_transform(chunk, encoding, callback) {
-		console.log('stringifying!');
-		this.push(typeof chunk === 'string' || Buffer.isBuffer(chunk) ? chunk : JSON.stringify(chunk));
-		callback();
-	}
-}
-*/
 
 /**
  * Cross between an event emitter and a router.
@@ -38,8 +27,10 @@ export default class Dispatcher {
 	/**
 	 * Registers a handler to a path.
 	 *
-	 * @param {String|RegExp|Array<String>|Array<RegExp>} path
-	 * @param {Function|Dispatcher} handler
+	 * @param {ServiceDispatcher|Object|String|RegExp|Array<String>|Array<RegExp>} path - The path
+	 * to register the handler to. This can also be a `ServiceDispatcher` instance or any object
+	 * that has a path and a handler.
+	 * @param {Function|Dispatcher} handler - A function to call when the path matches.
 	 * @returns {Dispatcher}
 	 * @access public
 	 */
@@ -51,7 +42,7 @@ export default class Dispatcher {
 			return this;
 		}
 
-		// check if we have a object with a path/handler
+		// check if we have a ServiceDispatcher or any object with a path and handler callback
 		if (path && typeof path === 'object' && path.path && typeof path.handler === 'function') {
 			handler = path.handler;
 			path = path.path;
@@ -91,17 +82,17 @@ export default class Dispatcher {
 	 * returned.
 	 *
 	 * @param {String} path - The dispatch path to request.
-	 * @param {Object} [data={}] - An optional data payload to send.
+	 * @param {Object} [payload={}] - An optional data payload to send.
 	 * @returns {Promise}
 	 * @access public
 	 */
-	call(path, data) {
-		if (!data || typeof data !== 'object') {
-			data = {};
+	call(path, payload) {
+		if (!payload || typeof payload !== 'object') {
+			payload = {};
 		}
 
 		const ctx = {
-			data,
+			payload,
 			path,
 			response: new PassThrough({ objectMode: true }),
 			status: codes.OK
@@ -213,18 +204,13 @@ export default class Dispatcher {
 				return next();
 			}
 
-			const data = {
-				data: (ctx.method === 'POST' || ctx.method === 'PUT') && ctx.request && ctx.request.body || {},
-				type: 'call',
-				sessionId: 'koa'
+			const payload = {
+				data: (ctx.method === 'POST' || ctx.method === 'PUT') && ctx.request && ctx.request.body || {}
 			};
 
-			return this.call(ctx.originalUrl, data)
+			return this.call(ctx.originalUrl, payload)
 				.then(result => {
 					ctx.status = result.status;
-
-					//ctx.body = new StringifyStream;
-					//result.response.pipe(ctx.body);
 					ctx.body = result.response;
 				})
 				.catch(err => {
@@ -233,11 +219,11 @@ export default class Dispatcher {
 							return next();
 						}
 						ctx.status = err.status;
-						ctx.body = err.toString();
 					} else {
 						ctx.status = codes.SERVER_ERROR;
-						ctx.body = statuses[codes.SERVER_ERROR];
 					}
+
+					ctx.body = err.toString();
 
 					logger.error(err);
 

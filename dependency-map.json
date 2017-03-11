@@ -30,8 +30,7 @@
 		"packages/appcd-util"
 	],
 	"packages/appcd-dispatcher": [
-		"packages/appcd-gulp",
-		"packages/appcd-statuses"
+		"packages/appcd-gulp"
 	],
 	"packages/appcd-fs": [
 		"packages/appcd-gulp"
@@ -59,9 +58,6 @@
 		"packages/appcd-fs",
 		"packages/appcd-gulp",
 		"packages/appcd-path"
-	],
-	"packages/appcd-statuses": [
-		"packages/appcd-gulp"
 	],
 	"packages/appcd-subprocess": [
 		"packages/appcd-gulp"

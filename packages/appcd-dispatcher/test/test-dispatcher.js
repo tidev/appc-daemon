@@ -1,5 +1,6 @@
 import Dispatcher from '../src/dispatcher';
 import DispatcherError from '../src/dispatcher-error';
+import ServiceDispatcher from '../src/service-dispatcher';
 
 describe('dispatcher', () => {
 	describe('register', () => {
@@ -46,6 +47,19 @@ describe('dispatcher', () => {
 			const d2 = new Dispatcher;
 			d.register('/bar', () => {});
 			d2.register('/foo', d);
+		});
+
+		it('should accept an object with a path and handler', () => {
+			const d = new Dispatcher;
+			d.register({
+				path: '/foo',
+				handler: () => {}
+			});
+		});
+
+		it('should accept a ServiceDispatcher', () => {
+			const d = new Dispatcher;
+			d.register(new ServiceDispatcher('/foo', {}));
 		});
 	});
 
@@ -97,9 +111,9 @@ describe('dispatcher', () => {
 
 			d.register('/foo', ctx => {
 				count++;
-				expect(ctx.data).to.be.an.object;
-				expect(ctx.data).to.have.property('a');
-				expect(ctx.data.a).to.equal(1);
+				expect(ctx.payload).to.be.an.object;
+				expect(ctx.payload).to.have.property('a');
+				expect(ctx.payload.a).to.equal(1);
 			});
 
 			d.call('/foo', data)
@@ -460,7 +474,7 @@ describe('dispatcher', () => {
 			const d = new Dispatcher;
 
 			d.register('/foo', ctx => {
-				expect(ctx.data).to.deep.equal({ foo: 'bar' });
+				expect(ctx.payload).to.deep.equal({ data: { foo: 'bar' } });
 				ctx.response = 'foo!';
 			});
 
@@ -530,7 +544,7 @@ describe('dispatcher', () => {
 				.then(() => middleware(ctx, Promise.resolve))
 				.then(() => {
 					expect(ctx.status).to.equal(500);
-					expect(ctx.body).to.equal('500 - Server error\nError: foo!');
+					expect(ctx.body).to.equal('Error: foo!');
 					done();
 				})
 				.catch(done);

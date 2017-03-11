@@ -1,7 +1,3 @@
-if (!Error.prepareStackTrace) {
-	require('source-map-support/register');
-}
-
 /**
  * A map of codes and their values.
  * @type {Object}
@@ -19,8 +15,6 @@ export const codes = {
 
 	SERVER_ERROR:       500
 };
-
-export default codes;
 
 /**
  * A map of status codes and their descriptions.

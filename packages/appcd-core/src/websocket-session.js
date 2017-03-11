@@ -243,7 +243,7 @@ export default class WebSocketSession {
 			msg += ` ${style(res.message || res)}`;
 		}
 		if (req && req.startTime && type !== 'publish') {
-			msg += ` ${highlight(`${new Date - req.startTime} ms`)}`;
+			msg += ` ${highlight(`${new Date - req.startTime}ms`)}`;
 		}
 
 		logger.log(msg);
