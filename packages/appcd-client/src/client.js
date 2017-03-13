@@ -3,6 +3,7 @@ if (!Error.prepareStackTrace) {
 }
 
 import fs from 'fs';
+import msgpack from 'msgpack-lite';
 import path from 'path';
 import uuid from 'uuid';
 import WebSocket from 'ws';
@@ -82,20 +83,19 @@ export default class Client {
 				return;
 			}
 
-			const socket = this.socket = new WebSocket('ws://' + this.host + ':' + this.port);
+			const socket = this.socket = new WebSocket(`ws://${this.host}:${this.port}`);
 
 			socket.on('message', (data, flags) => {
-				if (flags.binary) {
-					// unsupported
-					return;
-				}
-
 				let json = null;
-				try {
-					json = JSON.parse(data);
-				} catch (e) {
-					// bad response, shouldn't ever happen
-					return;
+				if (flags.binary) {
+					json = msgpack.decode(data);
+				} else {
+					try {
+						json = JSON.parse(data);
+					} catch (e) {
+						// bad response, shouldn't ever happen
+						return;
+					}
 				}
 
 				if (!json || typeof json !== 'object' || !json.id) {
@@ -138,7 +138,7 @@ export default class Client {
 					this.requests[id] = response => {
 						switch (Math.floor(~~response.status / 100)) {
 							case 2:
-								emitter.emit('response', response.data, response);
+								emitter.emit('response', response.message, response);
 								break;
 
 							case 4:

@@ -22,7 +22,36 @@ describe('WebSocketSession', () => {
 		}
 	});
 
-	it.only('should dispatch WebSocket request', function (done) {
+	it('should fail if constructor args are invalid', () => {
+		expect(() => {
+			new WebSocketSession();
+		}).to.throw(TypeError, 'Expected a WebSocket instance');
+
+		expect(() => {
+			new WebSocketSession(null);
+		}).to.throw(TypeError, 'Expected a WebSocket instance');
+
+		expect(() => {
+			new WebSocketSession({});
+		}).to.throw(TypeError, 'Expected a WebSocket instance');
+
+		expect(() => {
+			const ws = new WebSocket('ws://127.0.0.1:1337');
+			new WebSocketSession(ws);
+		}).to.throw(TypeError, 'Expected a Dispatcher instance');
+
+		expect(() => {
+			const ws = new WebSocket('ws://127.0.0.1:1337');
+			new WebSocketSession(ws, null);
+		}).to.throw(TypeError, 'Expected a Dispatcher instance');
+
+		expect(() => {
+			const ws = new WebSocket('ws://127.0.0.1:1337');
+			new WebSocketSession(ws, {});
+		}).to.throw(TypeError, 'Expected a Dispatcher instance');
+	});
+
+	it('should dispatch WebSocket request', function (done) {
 		this.server = new WebServer({
 			hostname: '127.0.0.1',
 			port:     1337

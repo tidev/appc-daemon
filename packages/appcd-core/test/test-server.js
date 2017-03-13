@@ -1,7 +1,5 @@
-import * as nodejs from '../src/server';
+import Server from '../src/server';
 
-describe('core', () => {
-	describe('server', () => {
-		//
-	});
+describe('Server', () => {
+	//
 });

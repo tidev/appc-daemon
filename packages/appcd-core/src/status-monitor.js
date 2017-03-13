@@ -21,19 +21,22 @@ export default class StatusMonitor {
 		this.initHrtime = this.currentHrTime = process.hrtime();
 
 		this.status = gawk({
-			appcd: {
-				pid:      process.pid,
+			pid:          process.pid,
+			memory:       undefined,
+			uptime:       undefined,
+
+			process: {
 				execPath: process.execPath,
 				execArgv: process.execArgv,
 				argv:     process.argv,
 				env:      process.env,
-				memory:   undefined,
-				uptime:   undefined
 			},
+
 			node: {
 				version:  process.version.replace(/^v/, ''),
 				versions: process.versions
 			},
+
 			system: {
 				platform: process.platform,
 				arch:     process.arch,
@@ -44,11 +47,8 @@ export default class StatusMonitor {
 			}
 		});
 
-		// start the refresh interval
+		// do initial refresh to populate dynamic bits
 		this.refresh();
-
-		// start logging the status
-		this.log();
 
 		// wire up the service handlers
 		this.service = new ServiceDispatcher('/appcd/status/:filter*', this);
@@ -179,7 +179,7 @@ export default class StatusMonitor {
 		}
 		this.prevCPUUsage = currentCPUUsage;
 
-		const currentMemoryUsage = this.status.appcd.memory;
+		const currentMemoryUsage = this.status.memory;
 		const heapUsed  = filesize(currentMemoryUsage.heapUsed).toUpperCase();
 		const heapTotal = filesize(currentMemoryUsage.heapTotal).toUpperCase();
 		const rss       = filesize(currentMemoryUsage.rss).toUpperCase();
@@ -219,7 +219,7 @@ export default class StatusMonitor {
 			`CPU: ${cpuUsage}  ` +
 			`Heap:${heapUsage}  ` + // purposely don't put a space after the ':', heapUsage is already left padded
 			`RSS: ${rssUsage}  ` +
-			`Uptime: ${highlight(this.status.appcd.uptime.toFixed(1) + 's')}`
+			`Uptime: ${highlight(this.status.uptime.toFixed(1) + 's')}`
 		);
 	}
 
@@ -233,10 +233,8 @@ export default class StatusMonitor {
 		this.currentHrTime = process.hrtime(this.initHrtime);
 
 		gawk.mergeDeep(this.status, {
-			appcd: {
-				memory: process.memoryUsage(),
-				uptime: process.uptime()
-			},
+			memory: process.memoryUsage(),
+			uptime: process.uptime(),
 			system: {
 				loadavg: os.loadavg(),
 				memory: {

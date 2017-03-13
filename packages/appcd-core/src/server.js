@@ -97,7 +97,7 @@ export default class Server extends HookEmitter {
 		}
 
 		this.statusMonitor = new StatusMonitor();
-		this.statusMonitor.status.appcd.version = this.version;
+		this.statusMonitor.status.version = this.version;
 		this.statusMonitor.start();
 		this.on('appcd:shutdown', () => this.statusMonitor.stop());
 

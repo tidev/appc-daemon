@@ -22,9 +22,10 @@
     "test": "gulp test"
   },
   "dependencies": {
+    "msgpack-lite": "^0.1.26",
     "source-map-support": "^0.4.11",
     "uuid": "^3.0.1",
-    "ws": "^2.2.0"
+    "ws": "^2.2.1"
   },
   "devDependencies": {
     "gulp": "^3.9.1"

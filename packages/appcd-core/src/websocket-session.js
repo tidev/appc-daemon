@@ -56,11 +56,11 @@ export default class WebSocketSession {
 	 */
 	constructor(ws, dispatcher) {
 		if (!(ws instanceof WebSocket)) {
-			throw new TypeError('Expected a WebSocket object');
+			throw new TypeError('Expected a WebSocket instance');
 		}
 
 		if (!(dispatcher instanceof Dispatcher)) {
-			throw new TypeError('Expected a Dispatcher object');
+			throw new TypeError('Expected a Dispatcher instance');
 		}
 
 		this.sessionId = sessionCounter++;
@@ -196,7 +196,6 @@ export default class WebSocketSession {
 		}
 
 		let data;
-		const opts = {};
 
 		if (res instanceof Error) {
 			data = JSON.stringify({
@@ -206,13 +205,12 @@ export default class WebSocketSession {
 				id:      res.id
 			});
 		} else {
-			opts.binary = true;
 			res.status || (res.status = 200);
 			data = msgpack.encode(res);
 		}
 
 		try {
-			this.ws.send(data, opts);
+			this.ws.send(data);
 		} catch (e) {
 			logger.error('%s Failed to send:', note(`[${this.sessionId}]`));
 			logger.error(e);

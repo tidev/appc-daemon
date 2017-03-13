@@ -22,18 +22,17 @@ const cmd = {
 				}
 				process.exit(2);
 			})
-			.on('response', data => {
+			.on('response', status => {
 				client.disconnect();
 				if (argv.json) {
-					console.info(data);
+					console.info(status);
 				} else {
-					const { appcd, node, system } = JSON.parse(data);
-					console.info(`Version:      ${appcd.version}`);
-					console.info(`PID:          ${appcd.pid}`);
-					console.info(`Uptime:       ${(appcd.uptime / 60).toFixed(2)} minutes`);
-					console.info(`Node.js:      ${node.version}`);
-					console.info(`Memory RSS:   ${system.memory.usage.rss}`);
-					console.info(`Memory Heap:  ${system.memory.usage.heapUsed} / ${system.memory.usage.heapTotal}`);
+					console.info(`Version:      ${status.version}`);
+					console.info(`PID:          ${status.pid}`);
+					console.info(`Uptime:       ${(status.uptime / 60).toFixed(2)} minutes`);
+					console.info(`Node.js:      ${status.node.version}`);
+					console.info(`Memory RSS:   ${status.memory.rss}`);
+					console.info(`Memory Heap:  ${status.memory.heapUsed} / ${status.memory.heapTotal}`);
 				}
 			});
 	}
