@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import Plugin from './plugin';
+import PluginInfo from './plugin-info';
 import snooplogg from 'snooplogg';
 
 import { expandPath } from 'appcd-path';
@@ -46,11 +46,11 @@ export default class PluginManager {
 			}
 		}
 
-		// TODO: start watching paths to trigger redetect
-
 		for (const dir of this.paths) {
 			this.detect(dir);
 		}
+
+		// TODO: start watching paths to trigger redetect
 	}
 
 	/**
@@ -68,20 +68,28 @@ export default class PluginManager {
 
 		const versionRegExp = /^\d\.\d\.\d$/;
 
-		for (const name of fs.readdirSync(dir)) {
-			const subdir = path.join(dir, name);
-			if (isFile(path.join(subdir, 'package.json'))) {
+		const tryPlugin = dir => {
+			if (isFile(path.join(dir, 'package.json'))) {
 				// we have an NPM-style plugin
 				try {
-					this.registry.set(plugin.path, new Plugin(subdir));
-				} catch (e) {}
-			} else {
+					const plugin = new PluginInfo(dir);
+					logger.log('Found plugin: %s', highlight(`${plugin.name}@${plugin.version}`));
+					this.registry.set(plugin.path, plugin);
+					return true;
+				} catch (e) {
+					logger.warn('Invalid plugin: %s', highlight(dir));
+					logger.warn(e.message);
+				}
+			}
+		};
+
+		for (const name of fs.readdirSync(dir)) {
+			const subdir = path.join(dir, name);
+			if (isDir(subdir) && !tryPlugin(subdir)) {
 				// we have a versioned plugin
 				for (const name of fs.readdirSync(subdir)) {
-					if (versionRegExp.test(name) && isFile(path.join(subdir, name, 'package.json'))) {
-						try {
-							this.registry.set(plugin.path, new Plugin(path.join(subdir, name)));
-						} catch (e) {}
+					if (versionRegExp.test(name)) {
+						tryPlugin(path.join(subdir, name));
 					}
 				}
 			}

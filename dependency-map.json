@@ -71,5 +71,8 @@
 	"packages/appcd-util": [
 		"packages/appcd-fs",
 		"packages/appcd-gulp"
+	],
+	"plugins/appc-cli": [
+		"packages/appcd-gulp"
 	]
 }

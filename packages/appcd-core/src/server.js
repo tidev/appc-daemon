@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import gawk from 'gawk';
 import HookEmitter from 'hook-emitter';
 import path from 'path';
-import PluginManager from 'appcd-plugin';
+import PluginManager, { Plugin } from 'appcd-plugin';
 import snooplogg, { StdioStream } from './logger';
 import StatusMonitor from './status-monitor';
 import WebServer from 'appcd-http';
@@ -76,6 +76,15 @@ export default class Server extends HookEmitter {
 			throw new Error(`Server is already running! (pid: ${pid})`);
 		}
 
+		// write the pid file
+		const pidFile = expandPath(this.config.get('server.pidFile'));
+		const pidDir = path.dirname(pidFile);
+		if (!isDir(pidDir)) {
+			fs.mkdirsSync(pidDir);
+		}
+		fs.writeFileSync(pidFile, process.pid);
+
+		// rename the process
 		process.title = 'appcd';
 
 		logger.log(`Appcelerator Daemon v${this.version}`);
@@ -83,6 +92,7 @@ export default class Server extends HookEmitter {
 		logger.log(`PID: ${highlight(process.pid)}`);
 		logger.log(`Node.js ${process.version} (${process.platform}, module v${process.versions.modules})`);
 
+		// listen for CTRL-C and SIGTERM
 		const shutdown = () => this.shutdown()
 			.then(() => process.exit(0))
 			.catch(logger.error);
@@ -96,6 +106,7 @@ export default class Server extends HookEmitter {
 			fs.mkdirsSync(homeDir);
 		}
 
+		// start the status monitor
 		this.statusMonitor = new StatusMonitor();
 		this.statusMonitor.status.version = this.version;
 		this.statusMonitor.start();
@@ -104,7 +115,7 @@ export default class Server extends HookEmitter {
 		// init the plugin manager
 		this.pluginManager = new PluginManager({
 			paths: [
-				path.resolve(__dirname, '..', 'plugins'),
+				path.resolve(__dirname, '..', '..', '..', 'plugins'),
 				path.join(homeDir, 'plugins')
 			]
 		});
@@ -145,25 +156,14 @@ export default class Server extends HookEmitter {
 				return getMachineId(path.join(homeDir, '.mid'))
 					.then(mid => this.mid = mid);
 			})
-			// init analytics
-			// load plugins
-			.then(() => {
-				const pidFile = expandPath(this.config.get('server.pidFile'));
-				const dir = path.dirname(pidFile);
-				if (!isDir(dir)) {
-					fs.mkdirsSync(dir);
-				}
-
-				// since we are not running as a daemon, we have to write the pid file ourselves
-				fs.writeFileSync(pidFile, process.pid);
-			})
-			//  - load in-process and plugins
-			//     - handlers
+			// TODO: init analytics
+			// TODO: load plugins
 			.then(() => this.webserver.listen())
 			.then(() => this.emit('appcd.start'))
 			.then(() => ({
 				dispatcher: this.dispatcher,
-				logger
+				logger,
+				Plugin
 			}));
 	}
 

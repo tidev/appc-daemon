@@ -7,7 +7,7 @@
   "maintainers": [
     "Chris Barber <cbarber@appcelerator.com>"
   ],
-  "license": "LicenseRef-LICENSE",
+  "license": "SEE LICENSE IN LICENSE",
   "dependencies": {
     "babel-eslint": "^7.1.1",
     "babel-plugin-import-node": "^1.0.2",
@@ -39,7 +39,7 @@
     "run-sequence": "^1.2.2",
     "sinon": "^1.17.7",
     "sinon-chai": "^2.8.0",
-    "source-map-support": "^0.4.11"
+    "source-map-support": "^0.4.12"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",

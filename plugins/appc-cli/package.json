@@ -1,8 +1,8 @@
 {
-  "name": "appcd-path",
+  "name": "appcd-plugin-appc-cli",
   "version": "1.0.0",
-  "description": "Various utility functions to support the Appc Daemon",
-  "main": "./dist/path",
+  "description": "The Appc Daemon plugin for controlling the Appc CLI.",
+  "main": "./dist/index",
   "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
     "Chris Barber <cbarber@appcelerator.com>"
@@ -16,7 +16,7 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "source-map-support": "^0.4.12"
+    "source-map-support": "^0.4.11"
   },
   "devDependencies": {
     "gulp": "^3.9.1"
@@ -26,5 +26,11 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/appcelerator/appc-daemon.git"
+  },
+  "appcd": {
+	"type": "external"
+  },
+  "engines": {
+    "node": ">=6.x"
   }
 }

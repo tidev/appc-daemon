@@ -7,7 +7,7 @@
   "maintainers": [
     "Chris Barber <cbarber@appcelerator.com>"
   ],
-  "license": "LicenseRef-LICENSE",
+  "license": "SEE LICENSE IN LICENSE",
   "keywords": [
     "appcelerator",
     "appc",
@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "msgpack-lite": "^0.1.26",
-    "source-map-support": "^0.4.11",
+    "source-map-support": "^0.4.12",
     "uuid": "^3.0.1",
     "ws": "^2.2.1"
   },
