@@ -16,6 +16,7 @@
     "test": "gulp test"
   },
   "dependencies": {
+    "cli-kit": "^0.0.2",
     "source-map-support": "^0.4.11"
   },
   "devDependencies": {
@@ -26,11 +27,5 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/appcelerator/appc-daemon.git"
-  },
-  "appcd": {
-	"type": "external"
-  },
-  "engines": {
-    "node": ">=6.x"
   }
 }

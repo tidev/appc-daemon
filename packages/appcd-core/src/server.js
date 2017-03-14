@@ -120,6 +120,9 @@ export default class Server extends HookEmitter {
 			]
 		});
 
+		// TODO: need a good way to syphon the plugin manager's registry into the status monitor
+		// this.pluginManager.on('change', console.log);
+
 		// init the dispatcher
 		this.dispatcher = new Dispatcher()
 			.register('/appcd/config/:key*', ctx => {

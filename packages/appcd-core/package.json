@@ -20,7 +20,7 @@
     "cli-kit": "*",
     "colors": "^1.1.2",
     "fs-extra": "^2.0.0",
-    "gawk": "^3.2.2",
+    "gawk": "^3.3.0",
     "hook-emitter": "^2.0.0",
     "msgpack-lite": "^0.1.26",
     "path-to-regexp": "^1.7.0",

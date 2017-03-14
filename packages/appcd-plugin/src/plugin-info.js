@@ -4,6 +4,7 @@ import semver from 'semver';
 import snooplogg from 'snooplogg';
 
 import { expandPath } from 'appcd-path';
+import { GawkObject } from 'gawk';
 import { isDir, isFile } from 'appcd-fs';
 
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:plugin:plugin-info');
@@ -12,7 +13,7 @@ const { highlight } = snooplogg.styles;
 /**
  * Contains information about a plugin.
  */
-export default class PluginInfo {
+export default class PluginInfo extends GawkObject {
 	/**
 	 * Determines if the specified directory is a plugin and then loads it's meta data.
 	 *
@@ -51,6 +52,8 @@ export default class PluginInfo {
 			throw new Error(`Unable to find main file: ${main}`);
 		}
 
+		super();
+
 		/**
 		 * The plugin path.
 		 * @type {String}
@@ -70,6 +73,12 @@ export default class PluginInfo {
 		this.version = pkgJson.version;
 
 		/**
+		 * The plugin identifier.
+		 * @type {String}
+		 */
+		this.id = `${this.name}@${this.version}`;
+
+		/**
 		 * The plugin type. Must be either `internal` or `external`.
 		 * @type {String}
 		 */
@@ -79,8 +88,10 @@ export default class PluginInfo {
 		 * The plugin's Node.js version.
 		 * @type {String}
 		 */
-		this.nodeVersion = pkgJson.engines && pkgJson.engines.node || null;
-		if (this.type === 'internal' && this.nodeVersion && !semver.satisfies(process.version, this.nodeVersion)) {
+		this.nodeVersion = pkgJson.engines && pkgJson.engines.node;
+		if (!this.nodeVersion) {
+			this.nodeVersion = process.version;
+		} else if (this.type === 'internal' && !semver.satisfies(process.version, this.nodeVersion)) {
 			throw new Error(`Internal plugin requires Node.js ${this.nodeVersion}, but core is currently running ${process.version}`);
 		}
 

@@ -1,15 +1,17 @@
 import fs from 'fs';
+import gawk from 'gawk';
 import path from 'path';
 import PluginInfo from './plugin-info';
 import snooplogg from 'snooplogg';
 
+import { EventEmitter } from 'events';
 import { expandPath } from 'appcd-path';
 import { isDir, isFile } from 'appcd-fs';
 
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:plugin:manager');
-const { highlight } = snooplogg.styles;
+const { highlight, note } = snooplogg.styles;
 
-export default class PluginManager {
+export default class PluginManager extends EventEmitter {
 	/**
 	 * Creates a plugin manager instance.
 	 *
@@ -18,6 +20,8 @@ export default class PluginManager {
 	 * @access public
 	 */
 	constructor(opts = {}) {
+		super();
+
 		/**
 		 * A list of paths that contain plugin packages.
 		 * @type {Array.<String>}
@@ -26,9 +30,9 @@ export default class PluginManager {
 
 		/**
 		 * A registry of all detected plugins.
-		 * @type {Map.<String,Plugin>}
+		 * @type {Object}
 		 */
-		this.registry = new Map;
+		this.registry = {};
 
 		if (!opts || typeof opts !== 'object') {
 			throw new TypeError('Expected options to be an object');
@@ -73,8 +77,13 @@ export default class PluginManager {
 				// we have an NPM-style plugin
 				try {
 					const plugin = new PluginInfo(dir);
-					logger.log('Found plugin: %s', highlight(`${plugin.name}@${plugin.version}`));
-					this.registry.set(plugin.path, plugin);
+					const key = `${plugin.name}@${plugin.version}`;
+					if (this.registry[key]) {
+						logger.warn('Already found plugin: %s %s', highlight(key), note(plugin.path));
+					} else {
+						logger.log('Found plugin: %s', highlight(key), note(plugin.path));
+						this.register(plugin);
+					}
 					return true;
 				} catch (e) {
 					logger.warn('Invalid plugin: %s', highlight(dir));
@@ -93,6 +102,41 @@ export default class PluginManager {
 					}
 				}
 			}
+		}
+	}
+
+	/**
+	 * Registers a plugin and sends out notifications.
+	 *
+	 * @param {PluginInfo} plugin - The plugin info object.
+	 * @access private
+	 */
+	register(plugin) {
+		if (!(plugin instanceof PluginInfo)) {
+			throw new TypeError('Expected a plugin info object');
+		}
+
+		if (this.registry[plugin.id]) {
+			throw new Error(`Plugin already registered: ${plugin.id}`);
+		}
+
+		this.registry[plugin.id] = plugin;
+		this.emit('register', plugin);
+		gawk.watch(plugin, () => this.emit('change', plugin));
+	}
+
+	/**
+	 * Unregisters a plugin by id and sends out notifications.
+	 *
+	 * @param {String} id - The plugin's identifier.
+	 * @access private
+	 */
+	unregister(id) {
+		const plugin = this.registry[id];
+		if (plugin) {
+			gawk.unwatch(plugin);
+			delete this.registry[id];
+			this.emit('unregister', plugin);
 		}
 	}
 }
