@@ -1,4 +1,12 @@
-import { createRequest, loadConfig } from './common';
+import Table from 'cli-table2';
+
+import { createInstanceWithDefaults, StdioStream } from 'snooplogg';
+import { banner, createRequest, loadConfig } from './common';
+
+const logger = createInstanceWithDefaults().config({ theme: 'compact' }).enable('*').pipe(new StdioStream);
+const { log } = logger;
+const { alert, highlight } = logger.styles;
+const { filesize } = logger.humanize;
 
 const cmd = {
 	options: {
@@ -16,24 +24,73 @@ const cmd = {
 				}
 
 				if (argv.json) {
-					console.log('{}');
+					log('{}');
 				} else {
-					console.log('Server not running (code 2)');
+					log('Server not running (code 2)');
 				}
 				process.exit(2);
 			})
 			.on('response', status => {
 				client.disconnect();
 				if (argv.json) {
-					console.info(status);
-				} else {
-					console.info(`Version:      ${status.version}`);
-					console.info(`PID:          ${status.pid}`);
-					console.info(`Uptime:       ${(status.uptime / 60).toFixed(2)} minutes`);
-					console.info(`Node.js:      ${status.node.version}`);
-					console.info(`Memory RSS:   ${status.memory.rss}`);
-					console.info(`Memory Heap:  ${status.memory.heapUsed} / ${status.memory.heapTotal}`);
+					log(status);
+					return;
 				}
+
+				log(banner());
+
+				const params = {
+					chars: {
+						bottom: '', 'bottom-left': '', 'bottom-mid': '', 'bottom-right': '',
+						left: '', 'left-mid': '',
+						mid: '', 'mid-mid': '', middle: '  ',
+						right: '', 'right-mid': '',
+						top: '', 'top-left': '', 'top-mid': '', 'top-right': ''
+					},
+					style: {
+						head: ['gray'],
+						'padding-left': 0,
+						'padding-right': 0
+					}
+				};
+
+				let table = new Table(params);
+				table.push(['Core Version', highlight(`v${status.version}`)]);
+				table.push(['PID',          highlight(status.pid)]);
+				table.push(['Uptime',       highlight(`${(status.uptime / 60).toFixed(2)} minutes`)]);
+				table.push(['Node Version', highlight(status.node.version)]);
+				table.push(['Memory RSS',   highlight(filesize(status.memory.rss))]);
+				table.push(['Memory Heap',  highlight(`${filesize(status.memory.heapUsed)} / ${filesize(status.memory.heapTotal)}`)]);
+				log(table.toString());
+				log();
+
+				params.head = ['Plugin Name', 'Version', 'Type', 'Path', 'Node Version', 'Status'],
+				table = new Table(params);
+				for (const plugin of status.plugins) {
+					let status = '';
+					if (plugin.error) {
+						status = alert(plugin.error);
+					} else if (plugin.loaded) {
+						if (plugin.type === 'external') {
+							status = `Loaded, PID=${plugin.pid || 'null'}`;
+						} else {
+							status = 'Loaded';
+						}
+					} else {
+						status = 'Unloaded';
+					}
+
+					table.push([
+						highlight(plugin.name),
+						plugin.version ? `v${plugin.version}` : 'null',
+						plugin.type,
+						plugin.path,
+						`v${plugin.nodeVersion}`,
+						status
+					]);
+				}
+				log(table.toString());
+				log();
 			});
 	}
 };

@@ -41,24 +41,7 @@ export default class PluginInfo extends GawkObject {
 			throw new Error(`Plugin package.json doesn't have a name: ${dir}`);
 		}
 
-		// find the main file
-		const main = pkgJson.main || 'index.js';
-		let mainFile = main;
-		if (!/\.js$/.test(mainFile)) {
-			mainFile += '.js';
-		}
-		mainFile = expandPath(dir, mainFile);
-		if (!isFile(mainFile)) {
-			throw new Error(`Unable to find main file: ${main}`);
-		}
-
 		super();
-
-		/**
-		 * The plugin path.
-		 * @type {String}
-		 */
-		this.path = dir;
 
 		/**
 		 * The plugin name.
@@ -70,13 +53,19 @@ export default class PluginInfo extends GawkObject {
 		 * The plugin version.
 		 * @type {String}
 		 */
-		this.version = pkgJson.version;
+		this.version = pkgJson.version || null;
 
 		/**
-		 * The plugin identifier.
+		 * The plugin path.
 		 * @type {String}
 		 */
-		this.id = `${this.name}@${this.version}`;
+		this.path = dir;
+
+		/**
+		 * Indicates if the plugin is loaded.
+		 * @type {Boolean}
+		 */
+		this.loaded = false;
 
 		/**
 		 * The plugin type. Must be either `internal` or `external`.
@@ -89,11 +78,12 @@ export default class PluginInfo extends GawkObject {
 		 * @type {String}
 		 */
 		this.nodeVersion = pkgJson.engines && pkgJson.engines.node;
-		if (!this.nodeVersion) {
-			this.nodeVersion = process.version;
-		} else if (this.type === 'internal' && !semver.satisfies(process.version, this.nodeVersion)) {
-			throw new Error(`Internal plugin requires Node.js ${this.nodeVersion}, but core is currently running ${process.version}`);
-		}
+ 		if (!this.nodeVersion) {
+ 			this.nodeVersion = process.version.replace(/^v/, '');
+ 		} else if (this.type === 'internal' && !semver.satisfies(process.version, this.nodeVersion)) {
+ 			this.error = `Internal plugin requires Node.js ${this.nodeVersion}, but core is currently running ${process.version}`;
+ 			return;
+ 		}
 
 		/**
 		 * The process id of the plugin host child process when the `type` is set to `external`. If
@@ -101,6 +91,24 @@ export default class PluginInfo extends GawkObject {
 		 * @type {?Number}
 		 */
 		this.pid = null;
+
+		/**
+		 * A possible error with this plugin.
+		 * @type {?String}
+		 */
+		this.error = null;
+
+		// find the main file
+		const main = pkgJson.main || 'index.js';
+		let mainFile = main;
+		if (!/\.js$/.test(mainFile)) {
+			mainFile += '.js';
+		}
+		mainFile = expandPath(dir, mainFile);
+		if (!isFile(mainFile)) {
+			this.error = `Unable to find main file: ${main}`;
+			return;
+		}
 	}
 
 	/**

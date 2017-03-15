@@ -106,12 +106,6 @@ export default class Server extends HookEmitter {
 			fs.mkdirsSync(homeDir);
 		}
 
-		// start the status monitor
-		this.statusMonitor = new StatusMonitor();
-		this.statusMonitor.status.version = this.version;
-		this.statusMonitor.start();
-		this.on('appcd:shutdown', () => this.statusMonitor.stop());
-
 		// init the plugin manager
 		this.pluginManager = new PluginManager({
 			paths: [
@@ -120,8 +114,17 @@ export default class Server extends HookEmitter {
 			]
 		});
 
-		// TODO: need a good way to syphon the plugin manager's registry into the status monitor
-		// this.pluginManager.on('change', console.log);
+		// start the status monitor
+		this.statusMonitor = new StatusMonitor();
+		this.statusMonitor.status.version = this.version;
+		this.statusMonitor.status.plugins = this.pluginManager.plugins;
+		this.statusMonitor.start();
+		this.on('appcd:shutdown', () => this.statusMonitor.stop());
+
+		// update the status monitor's plugin info when it changes
+		this.pluginManager.on('change', (plugins, src) => {
+			this.statusMonitor.status.plugins = plugins;
+		});
 
 		// init the dispatcher
 		this.dispatcher = new Dispatcher()

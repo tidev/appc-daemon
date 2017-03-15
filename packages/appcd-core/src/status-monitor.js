@@ -219,7 +219,7 @@ export default class StatusMonitor {
 			`CPU: ${cpuUsage}  ` +
 			`Heap:${heapUsage}  ` + // purposely don't put a space after the ':', heapUsage is already left padded
 			`RSS: ${rssUsage}  ` +
-			`Uptime: ${highlight(this.status.uptime.toFixed(1) + 's')}`
+			`Uptime: ${highlight(`${(this.status.uptime / 60).toFixed(2)}m`)}`
 		);
 	}
 

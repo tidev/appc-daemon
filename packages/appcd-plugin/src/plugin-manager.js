@@ -1,5 +1,5 @@
 import fs from 'fs';
-import gawk from 'gawk';
+import gawk, { GawkArray } from 'gawk';
 import path from 'path';
 import PluginInfo from './plugin-info';
 import snooplogg from 'snooplogg';
@@ -29,10 +29,10 @@ export default class PluginManager extends EventEmitter {
 		this.paths = [];
 
 		/**
-		 * A registry of all detected plugins.
-		 * @type {Object}
+		 * A list of all detected plugins.
+		 * @type {GawkArray}
 		 */
-		this.registry = {};
+		this.plugins = new GawkArray;
 
 		if (!opts || typeof opts !== 'object') {
 			throw new TypeError('Expected options to be an object');
@@ -55,6 +55,8 @@ export default class PluginManager extends EventEmitter {
 		}
 
 		// TODO: start watching paths to trigger redetect
+
+		gawk.watch(this.plugins, (obj, src) => this.emit('change', obj, src));
 	}
 
 	/**
@@ -76,14 +78,7 @@ export default class PluginManager extends EventEmitter {
 			if (isFile(path.join(dir, 'package.json'))) {
 				// we have an NPM-style plugin
 				try {
-					const plugin = new PluginInfo(dir);
-					const key = `${plugin.name}@${plugin.version}`;
-					if (this.registry[key]) {
-						logger.warn('Already found plugin: %s %s', highlight(key), note(plugin.path));
-					} else {
-						logger.log('Found plugin: %s', highlight(key), note(plugin.path));
-						this.register(plugin);
-					}
+					this.register(new PluginInfo(dir));
 					return true;
 				} catch (e) {
 					logger.warn('Invalid plugin: %s', highlight(dir));
@@ -116,27 +111,32 @@ export default class PluginManager extends EventEmitter {
 			throw new TypeError('Expected a plugin info object');
 		}
 
-		if (this.registry[plugin.id]) {
-			throw new Error(`Plugin already registered: ${plugin.id}`);
+		// check to make sure we don't insert the same plugin twice
+		for (const p of this.plugins) {
+			if (p.path === plugin.path) {
+				logger.log('Plugin already registered, skipping: %s', highlight(`${plugin.name}@${plugin.version}`), note(plugin.path));
+				return;
+			}
 		}
 
-		this.registry[plugin.id] = plugin;
-		this.emit('register', plugin);
-		gawk.watch(plugin, () => this.emit('change', plugin));
+		logger.log('Found plugin: %s', highlight(`${plugin.name}@${plugin.version}`), note(plugin.path));
+
+		this.plugins.push(plugin);
 	}
 
 	/**
-	 * Unregisters a plugin by id and sends out notifications.
+	 * Unregisters a plugin and sends out notifications.
 	 *
-	 * @param {String} id - The plugin's identifier.
+	 * @param {PluginInfo} plugin - The plugin info object.
 	 * @access private
 	 */
-	unregister(id) {
-		const plugin = this.registry[id];
+	unregister(plugin) {
 		if (plugin) {
-			gawk.unwatch(plugin);
-			delete this.registry[id];
-			this.emit('unregister', plugin);
+			for (let i = 0; i < this.plugins.length; i++) {
+				if (this.plugins[i] === plugin) {
+					this.plugins.splice(i--, 1);
+				}
+			}
 		}
 	}
 }

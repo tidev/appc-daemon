@@ -11,14 +11,30 @@ import { spawnNode } from 'appcd-nodejs';
 import * as config from 'appcd-config';
 
 const log = snooplogg.config({ theme: 'detailed' })('appcd:common').log;
+const { highlight } = snooplogg.styles;
 
 let appcdVersion = null;
 
+/**
+ * Retrieves the Appc Daemon version.
+ *
+ * @returns {String}
+ */
 export function getAppcdVersion() {
 	if (!appcdVersion) {
 		appcdVersion = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')).version;
 	}
 	return appcdVersion;
+}
+
+/**
+ * Creates the banner that is displayed at the beginning of the command.
+ *
+ * @returns {String}
+ */
+export function banner() {
+	return `${highlight('Appcelerator Daemon')}, version ${getAppcdVersion()}\n` +
+		'Copyright (c) 2016-2017, Appcelerator, Inc. All Rights Reserved.\n';
 }
 
 /**
