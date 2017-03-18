@@ -1,12 +1,27 @@
-import DispatcherError from './dispatcher-error';
 import pathToRegExp from 'path-to-regexp';
 import snooplogg, { styles } from 'snooplogg';
 
-import { codes, statuses } from './statuses';
+import { createErrorClass } from 'appcd-error';
 import { PassThrough } from 'stream';
 
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:dispatcher');
 const { highlight } = styles;
+
+const DispatcherError = createErrorClass('DispatcherError');
+
+/**
+ * A context that contains request information and is routed through the dispatcher.
+ */
+class DispatcherContext {
+	/**
+	 * Mixes the context parameters into this instance.
+	 *
+	 * @param {Object} params - Various context-specific parameters.
+	 */
+	constructor(params) {
+		Object.assign(this, params);
+	}
+}
 
 /**
  * Cross between an event emitter and a router.
@@ -82,25 +97,26 @@ export default class Dispatcher {
 	 * returned.
 	 *
 	 * @param {String} path - The dispatch path to request.
-	 * @param {Object} [payload={}] - An optional data payload to send.
+	 * @param {Object|DispatcherContext} [payload={}] - An optional data payload to send.
 	 * @returns {Promise}
 	 * @access public
 	 */
 	call(path, payload) {
-		if (!payload || typeof payload !== 'object') {
-			payload = {};
+		let ctx;
+		if (payload instanceof DispatcherContext) {
+			ctx = payload;
+		} else {
+			ctx = new DispatcherContext({
+				payload: typeof payload === 'object' && payload || {},
+				response: new PassThrough({ objectMode: true }),
+				status: 200
+			});
 		}
-
-		const ctx = {
-			payload,
-			path,
-			response: new PassThrough({ objectMode: true }),
-			status: codes.OK
-		};
+		ctx.path = path;
 
 		let index = -1;
 
-		logger.debug(`Searching for route handler: ${highlight(path)}`);
+		logger.trace('Searching for route handler: %s', highlight(path));
 
 		const dispatch = i => {
 			if (i <= index) {
@@ -114,7 +130,7 @@ export default class Dispatcher {
 			if (!route) {
 				// end of the line
 				logger.debug('Route not found: %s', highlight(path));
-				throw new DispatcherError(codes.NO_ROUTE);
+				throw new DispatcherError(404);
 			}
 
 			logger.trace('Testing route: %s', highlight(route.path));
@@ -124,7 +140,7 @@ export default class Dispatcher {
 				return dispatch(i + 1);
 			}
 
-			logger.debug('Found matching route: %s', highlight(route.path));
+			logger.trace('Found matching route: %s', highlight(route.path));
 
 			// extract the params from the path
 			delete ctx.params;
@@ -138,13 +154,14 @@ export default class Dispatcher {
 
 			if (route.handler instanceof Dispatcher) {
 				// call the nested dispatcher
+				logger.trace('Calling dispatcher handler %s', highlight(route.prefix));
 				return route.handler.call(path.replace(route.prefix, ''), ctx);
 			}
 
 			return new Promise((resolve, reject) => {
 				let fired = false;
 
-				logger.trace('calling route handler %d', i);
+				logger.trace('Calling route handler %d', i);
 
 				let result = route.handler(ctx, function next(result) {
 					// go to next route
@@ -160,8 +177,6 @@ export default class Dispatcher {
 						.then(result => result || ctx)
 						.catch(reject);
 				});
-
-				logger.trace('listener returned:', result);
 
 				// if we got back a promise, we have to wait
 				if (result instanceof Promise) {
@@ -208,6 +223,11 @@ export default class Dispatcher {
 				data: (ctx.method === 'POST' || ctx.method === 'PUT') && ctx.request && ctx.request.body || {}
 			};
 
+			// console.log(ctx.request.header['accept']); // text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
+			// console.log(ctx.request.header['accept-language']); // en-US,en;q=0.8,cs;q=0.6
+			// ctx.request.accepts('??');
+			console.log(ctx.request.acceptsLanguages());
+
 			return this.call(ctx.originalUrl, payload)
 				.then(result => {
 					ctx.status = result.status;
@@ -215,12 +235,12 @@ export default class Dispatcher {
 				})
 				.catch(err => {
 					if (err instanceof DispatcherError) {
-						if (err.status === codes.NO_ROUTE) {
+						if (err.status === 404) {
 							return next();
 						}
 						ctx.status = err.status;
 					} else {
-						ctx.status = codes.SERVER_ERROR;
+						ctx.status = 500;
 					}
 
 					ctx.body = err.toString();

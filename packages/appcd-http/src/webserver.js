@@ -12,7 +12,7 @@ import { Server as WebSocketServer } from 'ws';
 
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:http:webserver');
 const { pluralize } = snooplogg;
-const { alert, highlight, notice, ok } = snooplogg.styles;
+const { alert, highlight, note, notice, ok, yellow } = snooplogg.styles;
 
 /**
  * The internal web server that serves up API and WebSocket requests.
@@ -104,11 +104,11 @@ export default class WebServer extends EventEmitter {
 
 			logger.log('%s %s %s %s %s%s',
 				highlight(remoteAddress + ':' + remotePort),
-				ctx.method,
-				ctx.url,
+				yellow(ctx.method),
+				highlight(ctx.url),
 				style(ctx.status),
 				err ? (style(err.message || err) + ' ') : '',
-				highlight((new Date - ctx.startTime) + 'ms')
+				note((new Date - ctx.startTime) + 'ms')
 			);
 		}
 

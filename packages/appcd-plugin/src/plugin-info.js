@@ -93,10 +93,17 @@ export default class PluginInfo extends GawkObject {
 		this.pid = null;
 
 		/**
-		 * A possible error with this plugin.
-		 * @type {?String}
+		 * A string containing an error with this plugin or false if the plugin is valid.
+		 * @type {String|Boolean}
 		 */
-		this.error = null;
+		this.error = false;
+
+		/**
+		 * Tracks the number of times an external plugin has been restarted due to the plugin host
+		 * exited unexpectedly or has become unresponsive.
+		 * @type {Number}
+		 */
+		this.restarts = 0;
 
 		// find the main file
 		const main = pkgJson.main || 'index.js';

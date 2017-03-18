@@ -16,10 +16,10 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "fs-extra": "^2.0.0",
+    "fs-extra": "^2.1.2",
     "pluralize": "^4.0.0",
     "snooplogg": "^1.3.0",
-    "source-map-support": "^0.4.12",
+    "source-map-support": "^0.4.13",
     "uuid": "^3.0.1"
   },
   "devDependencies": {

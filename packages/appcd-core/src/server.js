@@ -127,8 +127,8 @@ export default class Server extends HookEmitter {
 		});
 
 		// init the dispatcher
-		this.dispatcher = new Dispatcher()
-			.register('/appcd/config/:key*', ctx => {
+		const appcdDispatcher = new Dispatcher()
+			.register('/config/:key*', ctx => {
 				const filter = ctx.params.key && ctx.params.key.replace(/^\//, '').split(/\.|\//).join('.') || undefined;
 				const node = this.config.get(filter);
 				if (!node) {
@@ -137,15 +137,16 @@ export default class Server extends HookEmitter {
 				ctx.response = node;
 			})
 
-			.register('/appcd/logcat', ctx => {
+			.register('/logcat', ctx => {
 				snooplogg.pipe(ctx.response, { flush: true });
 			})
 
-			.register('/appcd/plugins', ctx => {
-				ctx.response.end('foo');
-			})
+			.register('/plugin', this.pluginManager.dispatcher)
 
-			.register(this.statusMonitor.service);
+			.register('/status', this.statusMonitor.dispatcher);
+
+		this.rootDispatcher = new Dispatcher()
+			.register('/appcd', appcdDispatcher);
 
 		// init the web server
 		this.webserver = new WebServer({
@@ -154,8 +155,8 @@ export default class Server extends HookEmitter {
 			webroot:  path.resolve(__dirname, '..', 'public')
 		});
 
-		this.webserver.use(this.dispatcher.callback());
-		this.webserver.on('websocket', ws => new WebSocketSession(ws, this.dispatcher));
+		this.webserver.use(this.rootDispatcher.callback());
+		this.webserver.on('websocket', ws => new WebSocketSession(ws, this.rootDispatcher));
 
 		return Promise.resolve()
 			.then(() => {
@@ -167,7 +168,7 @@ export default class Server extends HookEmitter {
 			.then(() => this.webserver.listen())
 			.then(() => this.emit('appcd.start'))
 			.then(() => ({
-				dispatcher: this.dispatcher,
+				dispatcher: this.rootDispatcher,
 				logger,
 				Plugin
 			}));

@@ -3,8 +3,10 @@ if (!Error.prepareStackTrace) {
 }
 
 import Dispatcher from './dispatcher';
-import DispatcherError from './dispatcher-error';
 import ServiceDispatcher from './service-dispatcher';
 
 export default Dispatcher;
-export { Dispatcher, DispatcherError, ServiceDispatcher };
+export {
+	Dispatcher,
+	ServiceDispatcher,
+};

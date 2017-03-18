@@ -1,6 +1,6 @@
 import gawk from 'gawk';
 import os from 'os';
-import { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
+import Dispatcher, { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
 import snooplogg from './logger';
 
 const logger = snooplogg('appcd:status');
@@ -17,9 +17,29 @@ export default class StatusMonitor {
 	 * status information.
 	 */
 	constructor() {
-		this.initCpu    = this.currentCpu    = process.cpuUsage();
+		/**
+		 * The status monitor dispatcher.
+		 * @type {Dispatcher}
+		 */
+		this.dispatcher = new Dispatcher()
+			.register(new ServiceDispatcher('/:filter*', this));
+
+		/**
+		 * The user and system time this process has used.
+		 * @type {Object}
+		 */
+		this.initCpu = this.currentCpu = process.cpuUsage();
+
+		/**
+		 * The high resolution timer for the amount of time this process has run.
+		 * @type {Array.<Number>}
+		 */
 		this.initHrtime = this.currentHrTime = process.hrtime();
 
+		/**
+		 * The daemon status wrapped in a gawk object.
+		 * @type {GawkObject}
+		 */
 		this.status = gawk({
 			pid:          process.pid,
 			memory:       undefined,
@@ -49,9 +69,6 @@ export default class StatusMonitor {
 
 		// do initial refresh to populate dynamic bits
 		this.refresh();
-
-		// wire up the service handlers
-		this.service = new ServiceDispatcher('/appcd/status/:filter*', this);
 	}
 
 	/**
@@ -219,7 +236,7 @@ export default class StatusMonitor {
 			`CPU: ${cpuUsage}  ` +
 			`Heap:${heapUsage}  ` + // purposely don't put a space after the ':', heapUsage is already left padded
 			`RSS: ${rssUsage}  ` +
-			`Uptime: ${highlight(`${(this.status.uptime / 60).toFixed(2)}m`)}`
+			`Uptime: ${note(`${(this.status.uptime / 60).toFixed(2)}m`)}`
 		);
 	}
 

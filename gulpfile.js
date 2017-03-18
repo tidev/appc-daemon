@@ -262,19 +262,13 @@ gulp.task('package', ['build'], cb => {
 	globule
 		.find([
 			'packages/*/package.json',
-			'!packages/appcd-gulp/*'
+			'!packages/appcd-gulp/*',
+			'plugins/*/package.json'
 		])
 		.forEach(file => {
 			const json = require(path.resolve(file));
 			copyDeps(json.dependencies, file);
 		});
-
-	// globule
-	// 	.find(['plugins/*/package.json'])
-	// 	.forEach(file => {
-	// 		const json = require(path.resolve(file));
-	// 		copyDeps(json.dependencies, file);
-	// 	});
 
 	Object.keys(found).sort().forEach(dep => pkgJson.dependencies[dep] = found[dep]);
 
@@ -355,7 +349,11 @@ gulp.task('package', ['build'], cb => {
 	pack(path.join(__dirname, 'conf'), 'package/conf');
 
 	globule
-		.find(['packages/*', '!packages/appcd-gulp'])
+		.find([
+			'packages/*',
+			'!packages/appcd-gulp',
+			'plugins/*'
+		])
 		.filter(dir => fs.statSync(dir).isDirectory())
 		.forEach(dir => {
 			pack(dir, 'package/node_modules/' + path.basename(dir));

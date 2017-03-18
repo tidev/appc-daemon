@@ -26,6 +26,7 @@ const cmd = {
 				if (argv.json) {
 					log('{}');
 				} else {
+					log(banner());
 					log('Server not running (code 2)');
 				}
 				process.exit(2);

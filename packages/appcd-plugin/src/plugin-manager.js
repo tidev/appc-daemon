@@ -1,15 +1,19 @@
+import Dispatcher, { ServiceDispatcher } from 'appcd-dispatcher';
 import fs from 'fs';
 import gawk, { GawkArray } from 'gawk';
 import path from 'path';
 import PluginInfo from './plugin-info';
 import snooplogg from 'snooplogg';
 
+import { createErrorClass } from 'appcd-error';
 import { EventEmitter } from 'events';
 import { expandPath } from 'appcd-path';
 import { isDir, isFile } from 'appcd-fs';
 
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:plugin:manager');
 const { highlight, note } = snooplogg.styles;
+
+const PluginError = createErrorClass('PluginError');
 
 export default class PluginManager extends EventEmitter {
 	/**
@@ -49,6 +53,32 @@ export default class PluginManager extends EventEmitter {
 				}
 			}
 		}
+
+		/**
+		 * The plugin manager dispatcher.
+		 * @type {Dispatcher}
+		 */
+		this.dispatcher = new Dispatcher()
+			.register('/register', ctx => {
+				const pluginPath = ctx.payload.data.path;
+
+				this.register(new PluginInfo(pluginPath));
+
+				console.log(ctx);
+				ctx.response = 'REGISTER!';
+			})
+			.register('/unregister', ctx => {
+				ctx.response = 'UNREGISTER!';
+			})
+			.register('/status', ctx => {
+				ctx.response = this.plugins;
+			})
+			.register('/load', ctx => {
+				ctx.response = 'LOAD!';
+			})
+			.register('/unload', ctx => {
+				ctx.response = 'UNLOAD!';
+			});
 
 		for (const dir of this.paths) {
 			this.detect(dir);

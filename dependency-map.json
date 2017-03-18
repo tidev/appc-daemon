@@ -30,7 +30,12 @@
 		"packages/appcd-util"
 	],
 	"packages/appcd-dispatcher": [
+		"packages/appcd-error",
 		"packages/appcd-gulp"
+	],
+	"packages/appcd-error": [
+		"packages/appcd-gulp",
+		"packages/appcd-messages"
 	],
 	"packages/appcd-fs": [
 		"packages/appcd-gulp"
@@ -46,6 +51,10 @@
 		"packages/appcd-subprocess",
 		"packages/appcd-util"
 	],
+	"packages/appcd-messages": [
+		"packages/appcd-fs",
+		"packages/appcd-gulp"
+	],
 	"packages/appcd-nodejs": [
 		"packages/appcd-fs",
 		"packages/appcd-gulp",
@@ -55,6 +64,8 @@
 		"packages/appcd-gulp"
 	],
 	"packages/appcd-plugin": [
+		"packages/appcd-dispatcher",
+		"packages/appcd-error",
 		"packages/appcd-fs",
 		"packages/appcd-gulp",
 		"packages/appcd-path"

@@ -37,9 +37,9 @@
     "gulp-sourcemaps": "^2.4.1",
     "gulp-util": "^3.0.8",
     "run-sequence": "^1.2.2",
-    "sinon": "^1.17.7",
+    "sinon": "^2.0.0",
     "sinon-chai": "^2.8.0",
-    "source-map-support": "^0.4.12"
+    "source-map-support": "^0.4.13"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
