@@ -1,7 +1,7 @@
 import pathToRegExp from 'path-to-regexp';
 import snooplogg, { styles } from 'snooplogg';
 
-import { createErrorClass } from 'appcd-error';
+import { codes, createErrorClass } from 'appcd-error';
 import { PassThrough } from 'stream';
 
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:dispatcher');
@@ -130,7 +130,7 @@ export default class Dispatcher {
 			if (!route) {
 				// end of the line
 				logger.debug('Route not found: %s', highlight(path));
-				throw new DispatcherError(404);
+				throw new DispatcherError(codes.NOT_FOUND);
 			}
 
 			logger.trace('Testing route: %s', highlight(route.path));
@@ -235,12 +235,12 @@ export default class Dispatcher {
 				})
 				.catch(err => {
 					if (err instanceof DispatcherError) {
-						if (err.status === 404) {
+						if (err.status === codes.NOT_FOUND) {
 							return next();
 						}
 						ctx.status = err.status;
 					} else {
-						ctx.status = 500;
+						ctx.status = codes.SERVER_ERROR;
 					}
 
 					ctx.body = err.toString();

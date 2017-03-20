@@ -5,6 +5,8 @@ if (!Error.prepareStackTrace) {
 import loadMessage from 'appcd-messages';
 import util from 'util';
 
+export { codes } from 'appcd-messages';
+
 const codeRegExp = /^(\d+)(?:\.(?:\d+)?)?$/;
 
 export default class AppcdError extends Error {

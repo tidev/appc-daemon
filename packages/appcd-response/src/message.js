@@ -4,11 +4,12 @@ import path from 'path';
 import { lookup } from './codes';
 import { isDir } from 'appcd-fs';
 
-const codes = {};
-const strings = {};
+const codesCache = {};
+const stringsCache = {};
 const messagesDir = path.resolve(__dirname, '..', 'messages');
 const codeRegExp = /^((\d)\d*)(?:\.(\d+)?)?$/;
 const firstLineRegExp = /^#?\s*(.*?)\s*$/m;
+const modulePathCache = {};
 
 /**
  * Attempts to load a message for the given the specific code or message and the locale.
@@ -25,25 +26,25 @@ export default function loadMessage(codeOrMessage, locale='en') {
 	if (m && m[2]) {
 		if (m[3]) {
 			// code and subcode
-			str = loadFile(locale, m[2], m[0]);
+			str = loadCodeFile(locale, m[2], m[0]);
 		}
 
 		if (str === undefined) {
 			// code only
-			str = loadFile(locale, m[2], m[1]);
+			str = loadCodeFile(locale, m[2], m[1]);
 		}
 
 		return str;
 	}
 
 	// must be a string
-	if (!strings[locale]) {
+	if (!stringsCache[locale]) {
 		try {
-			strings[locale] = JSON.parse(fs.readFileSync(path.join(messagesDir, locale, 'strings.json'), 'utf8'));
+			stringsCache[locale] = JSON.parse(fs.readFileSync(path.join(messagesDir, locale, 'strings.json'), 'utf8'));
 		} catch (e) {}
 	}
-	if (strings[locale]) {
-		str = strings[locale][codeOrMessage];
+	if (stringsCache[locale]) {
+		str = stringsCache[locale][codeOrMessage];
 		if (str !== undefined) {
 			return str;
 		}
@@ -51,13 +52,13 @@ export default function loadMessage(codeOrMessage, locale='en') {
 
 	// fallback to english
 	if (locale !== 'en') {
-		if (!strings.en) {
+		if (!stringsCache.en) {
 			try {
-				strings.en = JSON.parse(fs.readFileSync(path.join(messagesDir, 'en', 'strings.json'), 'utf8'));
+				stringsCache.en = JSON.parse(fs.readFileSync(path.join(messagesDir, 'en', 'strings.json'), 'utf8'));
 			} catch (e) {}
 		}
-		if (strings.en) {
-			str = strings.en[codeOrMessage];
+		if (stringsCache.en) {
+			str = stringsCache.en[codeOrMessage];
 			if (str !== undefined) {
 				return str;
 			}
@@ -76,9 +77,9 @@ export default function loadMessage(codeOrMessage, locale='en') {
  * @param {String} code - The code.
  * @returns {String|undefined}
  */
-function loadFile(locale, cls, code) {
-	if (codes[locale] && codes[locale].hasOwnProperty(code)) {
-		return codes[locale][code];
+function loadCodeFile(locale, cls, code) {
+	if (codesCache[locale] && codesCache[locale].hasOwnProperty(code)) {
+		return codesCache[locale][code];
 	}
 
 	// cache miss
@@ -92,7 +93,7 @@ function loadFile(locale, cls, code) {
 	} catch (e) {
 		// fallback to english
 		if (locale !== 'en') {
-			const str = loadFile('en', code);
+			const str = loadCodeFile('en', code);
 			if (str !== undefined) {
 				return str;
 			}
@@ -100,8 +101,8 @@ function loadFile(locale, cls, code) {
 	}
 
 	if (m) {
-		codes[locale] || (codes[locale] = {});
-		codes[locale][code] = m[1];
+		codesCache[locale] || (codesCache[locale] = {});
+		codesCache[locale][code] = m[1];
 		return m[1];
 	}
 }

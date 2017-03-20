@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "cli-kit": "^0.0.2",
-    "source-map-support": "^0.4.13"
+    "source-map-support": "^0.4.14"
   },
   "devDependencies": {
     "gulp": "^3.9.1"

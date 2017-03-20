@@ -2,10 +2,10 @@ import Dispatcher, { ServiceDispatcher } from 'appcd-dispatcher';
 import fs from 'fs';
 import gawk, { GawkArray } from 'gawk';
 import path from 'path';
+import PluginError from './plugin-error';
 import PluginInfo from './plugin-info';
 import snooplogg from 'snooplogg';
 
-import { createErrorClass } from 'appcd-error';
 import { EventEmitter } from 'events';
 import { expandPath } from 'appcd-path';
 import { isDir, isFile } from 'appcd-fs';
@@ -13,8 +13,9 @@ import { isDir, isFile } from 'appcd-fs';
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:plugin:manager');
 const { highlight, note } = snooplogg.styles;
 
-const PluginError = createErrorClass('PluginError');
-
+/**
+ * Detects, starts, and stops Appc Daemon plugins.
+ */
 export default class PluginManager extends EventEmitter {
 	/**
 	 * Creates a plugin manager instance.
@@ -73,11 +74,11 @@ export default class PluginManager extends EventEmitter {
 			.register('/status', ctx => {
 				ctx.response = this.plugins;
 			})
-			.register('/load', ctx => {
-				ctx.response = 'LOAD!';
+			.register('/start', ctx => {
+				ctx.response = 'START!';
 			})
-			.register('/unload', ctx => {
-				ctx.response = 'UNLOAD!';
+			.register('/stop', ctx => {
+				ctx.response = 'STOP!';
 			});
 
 		for (const dir of this.paths) {

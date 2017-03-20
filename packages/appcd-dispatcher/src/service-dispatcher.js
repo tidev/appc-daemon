@@ -1,7 +1,5 @@
 import snooplogg, { pluralize, styles } from 'snooplogg';
 
-import { codes, statuses } from './statuses';
-
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:dispatcher:service-dispatcher');
 const { highlight, note } = styles;
 

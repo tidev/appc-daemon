@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import PluginError from './plugin-error';
 import semver from 'semver';
 import snooplogg from 'snooplogg';
 
@@ -21,24 +22,24 @@ export default class PluginInfo extends GawkObject {
 	 */
 	constructor(dir) {
 		if (!isDir(dir)) {
-			throw new Error(`Plugin directory does not exist: ${dir}`);
+			throw new PluginError(`Plugin directory does not exist: ${dir}`);
 		}
 
 		const pkgJsonFile = path.join(dir, 'package.json');
 		if (!isFile(pkgJsonFile)) {
-			throw new Error(`Plugin directory does not contain a package.json: ${dir}`);
+			throw new PluginError(`Plugin directory does not contain a package.json: ${dir}`);
 		}
 
 		let pkgJson;
 		try {
 			pkgJson = JSON.parse(fs.readFileSync(pkgJsonFile, 'utf8'));
 		} catch (e) {
-			throw new Error(`Error reading plugin ${pkgJsonFile}: ${e.message}`);
+			throw new PluginError(`Error reading plugin ${pkgJsonFile}: ${e.message}`);
 		}
 
 		// make sure package.json has a name
 		if (!pkgJson.name) {
-			throw new Error(`Plugin package.json doesn't have a name: ${dir}`);
+			throw new PluginError(`Plugin package.json doesn't have a name: ${dir}`);
 		}
 
 		super();
@@ -123,7 +124,7 @@ export default class PluginInfo extends GawkObject {
 	 *
 	 * @access public
 	 */
-	load() {
+	start() {
 		if (this.type === 'internal') {
 			// TODO: require()
 		} else {
@@ -136,7 +137,7 @@ export default class PluginInfo extends GawkObject {
 	 *
 	 * @access public
 	 */
-	unload() {
+	stop() {
 		if (this.type === 'internal') {
 			throw new Error('Cannot unload internal plugins');
 		}

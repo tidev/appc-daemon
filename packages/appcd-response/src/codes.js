@@ -1,7 +1,16 @@
 import fs from 'fs';
 import path from 'path';
 
+/**
+ * A map of code names to code numbers.
+ * @type {Object}
+ */
 export const codes = {};
+
+/**
+ * A map of code numbers to code names.
+ * @type {Object}
+ */
 export const lookup = {};
 
 const dir = path.resolve(__dirname, '..', 'messages', 'en');
