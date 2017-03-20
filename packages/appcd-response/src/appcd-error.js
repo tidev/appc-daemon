@@ -1,14 +1,12 @@
-if (!Error.prepareStackTrace) {
-	require('source-map-support/register');
-}
-
-import loadMessage from 'appcd-messages';
 import util from 'util';
 
-export { codes } from 'appcd-messages';
+import { loadMessage } from './message';
 
 const codeRegExp = /^(\d+)(?:\.(?:\d+)?)?$/;
 
+/**
+ * A Appc Daemon error. This class can be extended or used as is.
+ */
 export default class AppcdError extends Error {
 	/**
 	 * Creates an error instance.

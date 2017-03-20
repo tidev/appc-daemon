@@ -23,6 +23,10 @@
   "devDependencies": {
     "gulp": "^3.9.1"
   },
+  "appcdDependencies": [
+    "appcd-gulp",
+    "appcd-response"
+  ],
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
   "repository": {

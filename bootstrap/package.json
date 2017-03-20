@@ -32,6 +32,16 @@
   "devDependencies": {
     "gulp": "^3.9.1"
   },
+  "appcdDependencies": [
+    "appcd-client",
+    "appcd-config",
+    "appcd-core",
+    "appcd-fs",
+    "appcd-gulp",
+    "appcd-nodejs",
+    "appcd-path",
+    "appcd-util"
+  ],
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
   "repository": {

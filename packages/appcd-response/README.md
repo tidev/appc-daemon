@@ -1,3 +1,3 @@
-# appcd-messages
+# appcd-response
 
-Loads language specific messages and error codes.
+Library for responses, including errors, and i18n messages and error codes.

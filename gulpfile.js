@@ -5,7 +5,6 @@ const chug        = require('gulp-chug');
 const david       = require('david');
 const debug       = require('gulp-debug');
 const del         = require('del');
-const depmap      = require('./dependency-map.json');
 const fs          = require('fs-extra');
 const globule     = require('globule');
 const gulp        = require('gulp');
@@ -55,6 +54,7 @@ gulp.task('install-deps', cb => {
 
 	let pkg = pkgs.shift();
 	const packages = [ pkg ];
+	const depmap = getDepMap();
 
 	while (pkg = pkgs.shift()) {
 		const deps = (function getDeps(pkg) {
@@ -512,6 +512,7 @@ gulp.task('default', () => {
  */
 
 function linkDeps() {
+	const depmap = getDepMap();
 	const packagesDir = path.join(__dirname, 'packages');
 	gutil.log('Linking dependencies...');
 
@@ -536,6 +537,7 @@ function linkDeps() {
 }
 
 function buildDepList(pkg) {
+	const depmap = getDepMap();
 	const list = [ pkg ];
 	const paths = {};
 
@@ -751,6 +753,7 @@ function processPackages(packages) {
 		criticalToUpdate: [],
 		stats: computeSloc()
 	};
+	const depmap = getDepMap();
 
 	for (const key of Object.keys(packages)) {
 		const pkg = packages[key];
@@ -1229,4 +1232,26 @@ function exists(file) {
 		}
 	} catch (e) {}
 	return false;
+}
+
+let depmapCache = null;
+
+function getDepMap() {
+	if (depmapCache) {
+		return depmapCache;
+	}
+
+	depmapCache = {};
+
+	globule
+		.find(['./*/package.json', 'packages/*/package.json', 'plugins/*/package.json'])
+		.forEach(pkgJsonFile => {
+			const name = path.relative(__dirname, path.dirname(pkgJsonFile));
+			const pkgJson = JSON.parse(fs.readFileSync(pkgJsonFile));
+			if (Array.isArray(pkgJson.appcdDependencies)) {
+				depmapCache[name] = pkgJson.appcdDependencies.map(d => `packages/${d}`);
+			}
+		});
+
+	return depmapCache;
 }

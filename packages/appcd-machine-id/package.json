@@ -26,6 +26,13 @@
     "gulp": "^3.9.1",
     "tmp": "^0.0.31"
   },
+  "appcdDependencies": [
+    "appcd-fs",
+    "appcd-gulp",
+    "appcd-path",
+    "appcd-subprocess",
+    "appcd-util"
+  ],
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
   "repository": {

@@ -1,4 +1,4 @@
-import loadMessage from '../src/message';
+import { loadMessage } from '../src/message';
 
 describe('message', () => {
 	it('should load a message by code', () => {

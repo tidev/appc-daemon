@@ -18,7 +18,7 @@ const modulePathCache = {};
  * @param {String} locale - The message locale to retrieve. Falls back to 'en' if not found.
  * @returns {String}
  */
-export default function loadMessage(codeOrMessage, locale='en') {
+export function loadMessage(codeOrMessage, locale='en') {
 	codeOrMessage = String(codeOrMessage);
 	const m = codeOrMessage.match(codeRegExp);
 	let str;
