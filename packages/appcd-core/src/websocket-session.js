@@ -1,3 +1,4 @@
+import accepts from 'accepts';
 import Dispatcher from 'appcd-dispatcher';
 import msgpack from 'msgpack-lite';
 import snooplogg, { styles } from './logger';
@@ -179,6 +180,10 @@ export default class WebSocketSession {
 		}
 		if (!res.type && req && req.type) {
 			res.type = req.type;
+		}
+		if (res.message instanceof Response) {
+			res.status = res.message.status;
+			res.message = res.message.toString(accepts(this.ws.upgradeReq).languages());
 		}
 		this.send(res);
 		this.log(req, res);

@@ -1,7 +1,7 @@
 import pathToRegExp from 'path-to-regexp';
+import Response, { codes, createErrorClass } from 'appcd-response';
 import snooplogg, { styles } from 'snooplogg';
 
-import { codes, createErrorClass } from 'appcd-error';
 import { PassThrough } from 'stream';
 
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:dispatcher');
@@ -223,15 +223,15 @@ export default class Dispatcher {
 				data: (ctx.method === 'POST' || ctx.method === 'PUT') && ctx.request && ctx.request.body || {}
 			};
 
-			// console.log(ctx.request.header['accept']); // text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8
-			// console.log(ctx.request.header['accept-language']); // en-US,en;q=0.8,cs;q=0.6
-			// ctx.request.accepts('??');
-			console.log(ctx.request.acceptsLanguages());
-
 			return this.call(ctx.originalUrl, payload)
 				.then(result => {
-					ctx.status = result.status;
-					ctx.body = result.response;
+					if (result.response instanceof Response) {
+						ctx.status = result.response.status;
+						ctx.body = result.response.toString(ctx.request.acceptsLanguages());
+					} else {
+						ctx.status = result.status;
+						ctx.body = result.response;
+					}
 				})
 				.catch(err => {
 					if (err instanceof DispatcherError) {
@@ -243,9 +243,8 @@ export default class Dispatcher {
 						ctx.status = codes.SERVER_ERROR;
 					}
 
-					ctx.body = err.toString();
-
 					logger.error(err);
+					ctx.body = err.toString(ctx.request.acceptsLanguages());
 
 					return Promise.resolve();
 				});

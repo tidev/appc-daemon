@@ -1,4 +1,4 @@
-import { createErrorClass } from 'appcd-error';
+import { createErrorClass } from 'appcd-response';
 
 const PluginError = createErrorClass('PluginError');
 export default PluginError;

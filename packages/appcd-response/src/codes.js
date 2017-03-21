@@ -14,7 +14,7 @@ export const codes = {};
 export const lookup = {};
 
 const dir = path.resolve(__dirname, '..', 'messages', 'en');
-const filenameRegExp = /^(\d+(?:\.\d+)?)\-(.+)\.md$/;
+const filenameRegExp = /^(\d+(\.\d+)?)\-(.+)\.md$/;
 
 for (const name of fs.readdirSync(dir)) {
 	const subdir = path.join(dir, name);
@@ -22,8 +22,9 @@ for (const name of fs.readdirSync(dir)) {
 		for (const name of fs.readdirSync(subdir)) {
 			const m = name.match(filenameRegExp);
 			if (m) {
-				codes[m[2]] = m[1];
-				lookup[m[1]] = m[2];
+				const code = m[2] ? m[1] : parseInt(m[1]);
+				codes[m[3]] = code;
+				lookup[code] = m[3];
 			}
 		}
 	} catch (e) {}

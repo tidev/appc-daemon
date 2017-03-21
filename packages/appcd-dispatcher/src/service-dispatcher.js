@@ -1,3 +1,4 @@
+import Response, { codes } from 'appcd-response';
 import snooplogg, { pluralize, styles } from 'snooplogg';
 
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:dispatcher:service-dispatcher');
@@ -116,8 +117,7 @@ export default class ServiceDispatcher {
 		if (descriptor) {
 			if (descriptor.sessions[ctx.payload.sessionId]) {
 				logger.log('%sSession already subscribed to %s', sessionId(ctx), highlight(topic));
-				ctx.status = codes.ALREADY_SUBSCRIBED;
-				ctx.response = statuses[codes.ALREADY_SUBSCRIBED];
+				ctx.response = new Response(codes.ALREADY_SUBSCRIBED);
 				return;
 			}
 
@@ -150,8 +150,7 @@ export default class ServiceDispatcher {
 		ctx.response.once('error', err => this.unsubscribe(ctx));
 
 		ctx.response.write({
-			status: codes.SUBSCRIBED,
-			message: statuses[codes.SUBSCRIBED],
+			message: new Response(codes.SUBSCRIBED),
 			topic,
 			type: 'subscribe'
 		});
@@ -175,8 +174,7 @@ export default class ServiceDispatcher {
 				logger.log('%sNo subscribers to topic: %s', sessionId(ctx), highlight(topic));
 			}
 
-			ctx.status = codes.NOT_SUBSCRIBED;
-			ctx.response = statuses[codes.NOT_SUBSCRIBED];
+			ctx.response = new Response(codes.NOT_SUBSCRIBED);
 			return;
 		}
 
@@ -191,7 +189,6 @@ export default class ServiceDispatcher {
 			delete this.subscriptions[topic];
 		}
 
-		ctx.status = codes.UNSUBSCRIBED;
-		ctx.response = statuses[codes.UNSUBSCRIBED];
+		ctx.response = new Response(codes.UNSUBSCRIBED);
 	}
 }

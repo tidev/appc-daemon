@@ -4,6 +4,7 @@ import PluginError from './plugin-error';
 import semver from 'semver';
 import snooplogg from 'snooplogg';
 
+import { codes } from 'appcd-response';
 import { expandPath } from 'appcd-path';
 import { GawkObject } from 'gawk';
 import { isDir, isFile } from 'appcd-fs';
@@ -22,7 +23,7 @@ export default class PluginInfo extends GawkObject {
 	 */
 	constructor(dir) {
 		if (!isDir(dir)) {
-			throw new PluginError(`Plugin directory does not exist: ${dir}`);
+			throw new PluginError(codes.INVALID_PLUGIN_PATH, 'Plugin directory does not exist: %s', dir);
 		}
 
 		const pkgJsonFile = path.join(dir, 'package.json');

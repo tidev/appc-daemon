@@ -1,3 +1,4 @@
 {
-	"Appc Daemon": "Appc Daemon"
+	"Appc Daemon": "Appc Daemon",
+	"Plugin directory does not exist: %s": "Plugin directory does not exist: %s"
 }
