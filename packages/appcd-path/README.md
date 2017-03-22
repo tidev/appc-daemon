@@ -1,3 +1,3 @@
 # appcd-path
 
-Extended path-related functions.
+Library for working with file paths.

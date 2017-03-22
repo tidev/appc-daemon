@@ -1,7 +1,7 @@
 {
   "name": "appcd-util",
   "version": "1.0.0",
-  "description": "Various utility functions to support the Appc Daemon",
+  "description": "Various utility functions to support the Appc Daemon.",
   "main": "./dist/util",
   "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
   "maintainers": [

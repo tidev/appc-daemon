@@ -6,7 +6,7 @@ import { banner, createRequest, loadConfig } from './common';
 const logger = createInstanceWithDefaults().config({ theme: 'compact' }).enable('*').pipe(new StdioStream);
 const { log } = logger;
 const { alert, highlight } = logger.styles;
-const { filesize } = logger.humanize;
+const { filesize, numberFormat } = logger.humanize;
 
 const cmd = {
 	options: {
@@ -65,7 +65,7 @@ const cmd = {
 				log(table.toString());
 				log();
 
-				params.head = ['Plugin Name', 'Version', 'Type', 'Path', 'Node Version', 'Status'],
+				params.head = ['Plugin Name', 'Version', 'Type', 'Path', 'Node Version', 'Restarts', 'Status'],
 				table = new Table(params);
 				for (const plugin of status.plugins) {
 					let status = '';
@@ -73,12 +73,12 @@ const cmd = {
 						status = alert(plugin.error);
 					} else if (plugin.loaded) {
 						if (plugin.type === 'external') {
-							status = `Loaded, PID=${plugin.pid || 'null'}`;
+							status = `Started, PID=${plugin.pid || 'null'}`;
 						} else {
-							status = 'Loaded';
+							status = 'Started';
 						}
 					} else {
-						status = 'Unloaded';
+						status = 'Stopped';
 					}
 
 					table.push([
@@ -87,6 +87,7 @@ const cmd = {
 						plugin.type,
 						plugin.path,
 						`v${plugin.nodeVersion}`,
+						{ hAlign: 'center', content: plugin.type === 'external' ? numberFormat(plugin.restarts, 0) : 'n/a' },
 						status
 					]);
 				}

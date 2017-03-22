@@ -1,7 +1,7 @@
 {
   "name": "appcd-path",
   "version": "1.0.0",
-  "description": "Various utility functions to support the Appc Daemon",
+  "description": "Library for working with file paths.",
   "main": "./dist/path",
   "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
   "maintainers": [

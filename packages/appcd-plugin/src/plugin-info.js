@@ -22,6 +22,8 @@ export default class PluginInfo extends GawkObject {
 	 * @param {String} dir - The path to the plugin.
 	 */
 	constructor(dir) {
+		dir = expandPath(dir);
+
 		if (!isDir(dir)) {
 			throw new PluginError('Plugin directory does not exist: %s', dir);
 		}
@@ -116,7 +118,6 @@ export default class PluginInfo extends GawkObject {
 		mainFile = expandPath(dir, mainFile);
 		if (!isFile(mainFile)) {
 			this.error = `Unable to find main file: ${main}`;
-			return;
 		}
 	}
 
@@ -140,7 +141,7 @@ export default class PluginInfo extends GawkObject {
 	 */
 	stop() {
 		if (this.type === 'internal') {
-			throw new PluginError('Cannot unload internal plugins');
+			throw new PluginError('Cannot stop internal plugins');
 		}
 
 		// TODO: kill the child process

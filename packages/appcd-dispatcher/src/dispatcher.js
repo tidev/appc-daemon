@@ -7,6 +7,7 @@ import { PassThrough } from 'stream';
 
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:dispatcher');
 const { highlight } = styles;
+const stripRegExp = /\x1B\[\d+m/g;
 
 /**
  * A context that contains request information and is routed through the dispatcher.
@@ -225,8 +226,8 @@ export default class Dispatcher {
 			return this.call(ctx.originalUrl, payload)
 				.then(result => {
 					if (result.response instanceof Response) {
-						ctx.status = result.response.status;
-						ctx.body = result.response.toString(ctx.request.acceptsLanguages());
+						ctx.status = result.response.status || codes.OK;
+						ctx.body = result.response.toString(ctx.request.acceptsLanguages()).replace(stripRegExp, '');
 					} else {
 						ctx.status = result.status;
 						ctx.body = result.response;

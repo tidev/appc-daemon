@@ -1,7 +1,7 @@
 {
   "name": "appcd-client",
   "version": "1.0.0",
-  "description": "Appcelerator Daemon Client",
+  "description": "The Node.js client for connecting to the Appc Daemon.",
   "main": "./dist/client",
   "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
   "maintainers": [

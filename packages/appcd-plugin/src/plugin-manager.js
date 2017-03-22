@@ -2,7 +2,9 @@ import Dispatcher, { ServiceDispatcher } from 'appcd-dispatcher';
 import fs from 'fs';
 import gawk, { GawkArray } from 'gawk';
 import path from 'path';
+import PluginError from './plugin-error';
 import PluginInfo from './plugin-info';
+import Response, { AppcdError, codes } from 'appcd-response';
 import snooplogg from 'snooplogg';
 
 import { EventEmitter } from 'events';
@@ -12,7 +14,8 @@ import { isDir, isFile } from 'appcd-fs';
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:plugin:manager');
 const { highlight, note } = snooplogg.styles;
 
-// curl -i -X POST -d "path=/Users/chris2" -H "Accept-Language: es-ES;q=0.9, fr-CH,fr;q=0.88, en;q=0.8, de;q=0.72, *;q=0.5"  http://localhost:1732/appcd/plugin/register
+// curl -i -X POST -d "path=/Users/chris2" -H "Accept-Language: es-ES;q=0.9, fr-CH,fr;q=0.88, en;q=0.8, de;q=0.72, *;q=0.5" http://localhost:1732/appcd/plugin/register
+// curl -i -X POST -d "path=/Users/chris2" http://localhost:1732/appcd/plugin/register
 
 /**
  * Detects, starts, and stops Appc Daemon plugins.
@@ -63,14 +66,22 @@ export default class PluginManager extends EventEmitter {
 		this.dispatcher = new Dispatcher()
 			.register('/register', ctx => {
 				const pluginPath = ctx.payload.data.path;
-
-				this.register(new PluginInfo(pluginPath));
-
-				console.log(ctx);
-				ctx.response = 'REGISTER!';
+				const plugin = new PluginInfo(pluginPath);
+				try {
+					this.register(plugin);
+					ctx.response = new Response(codes.PLUGIN_REGISTERED);
+				} catch (e) {
+					logger.warn(e.message);
+					ctx.response = new Response(e);
+				}
 			})
 			.register('/unregister', ctx => {
-				ctx.response = 'UNREGISTER!';
+				const pluginPath = ctx.payload.data.path;
+				if (!pluginPath) {
+					throw new PluginError(codes.PLUGIN_BAD_REQUEST);
+				}
+				this.unregister(pluginPath);
+				ctx.response = new Response(codes.PLUGIN_UNREGISTERED);
 			})
 			.register('/status', ctx => {
 				ctx.response = this.plugins;
@@ -106,11 +117,19 @@ export default class PluginManager extends EventEmitter {
 
 		const versionRegExp = /^\d\.\d\.\d$/;
 
-		const tryPlugin = dir => {
+		const tryRegisterPlugin = dir => {
 			if (isFile(path.join(dir, 'package.json'))) {
 				// we have an NPM-style plugin
+				let plugin;
+
 				try {
-					this.register(new PluginInfo(dir));
+					plugin = new PluginInfo(dir);
+
+					try {
+						this.register(plugin);
+					} catch (e) {
+						logger.warn(e.message);
+					}
 					return true;
 				} catch (e) {
 					logger.warn('Invalid plugin: %s', highlight(dir));
@@ -121,11 +140,11 @@ export default class PluginManager extends EventEmitter {
 
 		for (const name of fs.readdirSync(dir)) {
 			const subdir = path.join(dir, name);
-			if (isDir(subdir) && !tryPlugin(subdir)) {
+			if (isDir(subdir) && !tryRegisterPlugin(subdir)) {
 				// we have a versioned plugin
 				for (const name of fs.readdirSync(subdir)) {
 					if (versionRegExp.test(name)) {
-						tryPlugin(path.join(subdir, name));
+						tryRegisterPlugin(path.join(subdir, name));
 					}
 				}
 			}
@@ -143,11 +162,12 @@ export default class PluginManager extends EventEmitter {
 			throw new TypeError('Expected a plugin info object');
 		}
 
+		logger.log('Registering plugin: %s', highlight(`${plugin.name}@${plugin.version}`));
+
 		// check to make sure we don't insert the same plugin twice
 		for (const p of this.plugins) {
 			if (p.path === plugin.path) {
-				logger.log('Plugin already registered, skipping: %s', highlight(`${plugin.name}@${plugin.version}`), note(plugin.path));
-				return;
+				throw new PluginError(codes.PLUGIN_ALREADY_REGISTERED);
 			}
 		}
 
@@ -159,16 +179,27 @@ export default class PluginManager extends EventEmitter {
 	/**
 	 * Unregisters a plugin and sends out notifications.
 	 *
-	 * @param {PluginInfo} plugin - The plugin info object.
+	 * @param {PluginInfo|String} plugin - The plugin info object or plugin path.
 	 * @access private
 	 */
 	unregister(plugin) {
-		if (plugin) {
+		let pluginPath = plugin instanceof PluginInfo ? plugin.path : plugin;
+
+		if (pluginPath && typeof pluginPath === 'string') {
+			pluginPath = expandPath(pluginPath);
+
 			for (let i = 0; i < this.plugins.length; i++) {
-				if (this.plugins[i] === plugin) {
+				if (this.plugins[i].path === pluginPath) {
+					if (this.plugins[i].type === 'internal') {
+						throw new PluginError('Cannot unregister internal plugins');
+					}
+					this.plugins[i].stop();
 					this.plugins.splice(i--, 1);
+					return;
 				}
 			}
 		}
+
+		throw new PluginError(codes.PLUGIN_NOT_REGISTERED);
 	}
 }
