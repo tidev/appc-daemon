@@ -25,13 +25,14 @@
     "msgpack-lite": "^0.1.26",
     "source-map-support": "^0.4.14",
     "uuid": "^3.0.1",
-    "ws": "^2.2.1"
+    "ws": "^2.2.2"
   },
   "devDependencies": {
     "gulp": "^3.9.1"
   },
   "appcdDependencies": [
     "appcd-gulp",
+    "appcd-response",
     "appcd-util"
   ],
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",

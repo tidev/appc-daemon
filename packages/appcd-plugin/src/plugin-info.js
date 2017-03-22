@@ -23,24 +23,24 @@ export default class PluginInfo extends GawkObject {
 	 */
 	constructor(dir) {
 		if (!isDir(dir)) {
-			throw new PluginError(codes.INVALID_PLUGIN_PATH, 'Plugin directory does not exist: %s', dir);
+			throw new PluginError('Plugin directory does not exist: %s', dir);
 		}
 
 		const pkgJsonFile = path.join(dir, 'package.json');
 		if (!isFile(pkgJsonFile)) {
-			throw new PluginError(`Plugin directory does not contain a package.json: ${dir}`);
+			throw new PluginError('Plugin directory does not contain a package.json: %s', dir);
 		}
 
 		let pkgJson;
 		try {
 			pkgJson = JSON.parse(fs.readFileSync(pkgJsonFile, 'utf8'));
 		} catch (e) {
-			throw new PluginError(`Error reading plugin ${pkgJsonFile}: ${e.message}`);
+			throw new PluginError('Error reading plugin package.json file (%s): %s', pkgJsonFile, e.message);
 		}
 
 		// make sure package.json has a name
 		if (!pkgJson.name) {
-			throw new PluginError(`Plugin package.json doesn't have a name: ${dir}`);
+			throw new PluginError('Plugin package.json missing "name" property: %s', dir);
 		}
 
 		super();
@@ -140,7 +140,7 @@ export default class PluginInfo extends GawkObject {
 	 */
 	stop() {
 		if (this.type === 'internal') {
-			throw new Error('Cannot unload internal plugins');
+			throw new PluginError('Cannot unload internal plugins');
 		}
 
 		// TODO: kill the child process

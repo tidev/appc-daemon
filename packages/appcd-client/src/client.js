@@ -10,6 +10,7 @@ import WebSocket from 'ws';
 
 import { arch } from 'appcd-util';
 import { EventEmitter } from 'events';
+import { locale } from 'appcd-response';
 
 /**
  * The client for connecting to the appcd server.
@@ -83,7 +84,11 @@ export default class Client {
 				return;
 			}
 
-			const socket = this.socket = new WebSocket(`ws://${this.host}:${this.port}`);
+			const socket = this.socket = new WebSocket(`ws://${this.host}:${this.port}`, {
+				headers: {
+					'Accept-Language': process.env.APPCD_LOCALE || locale()
+				}
+			});
 
 			socket.on('message', (data, flags) => {
 				let json = null;

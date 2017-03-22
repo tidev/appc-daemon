@@ -18,8 +18,16 @@ const modulePathCache = {};
  * Encapsulates a message.
  */
 export default class Message {
-	constructor(defaultMsg, msg, ...args) {
+	/**
+	 * Loads a localized message based on the code or message.
+	 *
+	 * @param {String?} defaultFormat - The default format to use when the message is null,
+	 * undefined, or an object.
+	 * @param {*} msg - The code or message.
+	 */
+	constructor(defaultFormat, msg, ...args) {
 		if (msg instanceof AppcdError) {
+			msg         = msg.msg;
 			this.status = msg.status;
 			this.code   = msg.code;
 			this.format = msg.format;
@@ -41,19 +49,29 @@ export default class Message {
 
 		} else if (typeof msg === 'string') {
 			const { status, code } = parseStatusCode(msg);
-			if (status !== null) {
-				this.status = status;
-				this.code   = code;
-				this.format = args.shift();
-			} else {
-				this.format = msg;
-			}
-			this.args = serializeArgs(args);
+			this.status = status;
+			this.code   = code;
+			this.format = status !== null ? args.shift() : msg;
+			this.args   = serializeArgs(args);
 
 		} else if (msg) {
-			this.format = defaultMsg;
-			this.args = serializeArgs([ msg ]);
+			this.status = null;
+			this.code   = null;
+			this.format = defaultFormat || '%s';
+			this.args   = serializeArgs([ msg ]);
 		}
+	}
+
+	/**
+	 * The message's code.
+	 * @type {String}
+	 */
+	get code() {
+		return this._code;
+	}
+
+	set code(value) {
+		this._code = value === null ? null : String(value);
 	}
 
 	/**
@@ -90,15 +108,19 @@ export function loadMessage(codeOrMessage, locales=[]) {
 	const m = codeOrMessage.match(codeRegExp);
 	let str;
 
+	// create the list of preferred locales to try
 	const expandedLocales = [];
-	if (!Array.isArray(locales)) {
+	if (!locales) {
+		locales = [];
+	} else if (!Array.isArray(locales)) {
 		locales = [ locales ];
 	}
 	if (locales.indexOf('en') === -1) {
 		locales.push('en');
 	}
+
 	for (const locale of locales) {
-		const m = locale.match(localeRegExp);
+		const m = locale && locale.match(localeRegExp);
 		if (m) {
 			// add the original locale
 			expandedLocales.push(locale);

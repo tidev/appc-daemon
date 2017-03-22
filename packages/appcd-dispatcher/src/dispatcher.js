@@ -1,13 +1,12 @@
+import DispatcherError from './dispatcher-error';
 import pathToRegExp from 'path-to-regexp';
-import Response, { codes, createErrorClass } from 'appcd-response';
+import Response, { AppcdError, codes } from 'appcd-response';
 import snooplogg, { styles } from 'snooplogg';
 
 import { PassThrough } from 'stream';
 
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:dispatcher');
 const { highlight } = styles;
-
-const DispatcherError = createErrorClass('DispatcherError');
 
 /**
  * A context that contains request information and is routed through the dispatcher.
@@ -234,11 +233,11 @@ export default class Dispatcher {
 					}
 				})
 				.catch(err => {
-					if (err instanceof DispatcherError) {
+					if (err instanceof AppcdError) {
 						if (err.status === codes.NOT_FOUND) {
 							return next();
 						}
-						ctx.status = err.status;
+						ctx.status = err.status || codes.SERVER_ERROR;
 					} else {
 						ctx.status = codes.SERVER_ERROR;
 					}

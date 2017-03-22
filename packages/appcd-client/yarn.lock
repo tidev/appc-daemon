@@ -1016,9 +1016,9 @@ wrappy@1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/wrappy/-/wrappy-1.0.2.tgz#b5243d8f3ec1aa35f1364605bc0d1036e30ab69f"
 
-ws@^2.2.1:
-  version "2.2.1"
-  resolved "https://registry.yarnpkg.com/ws/-/ws-2.2.1.tgz#f5ecbd4d47fb55a251d1a275223d47d693d3a8f2"
+ws@^2.2.2:
+  version "2.2.2"
+  resolved "https://registry.yarnpkg.com/ws/-/ws-2.2.2.tgz#aa26daf39c52b20ed716e3447f8641494a726b01"
   dependencies:
     ultron "~1.1.0"
 

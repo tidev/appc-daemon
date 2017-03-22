@@ -1,13 +1,14 @@
 import accepts from 'accepts';
 import Dispatcher from 'appcd-dispatcher';
 import msgpack from 'msgpack-lite';
+import Response, { codes, createErrorClass } from 'appcd-response';
 import snooplogg, { styles } from './logger';
 import uuid from 'uuid';
 
 import { Readable } from 'stream';
 import { WebSocket } from 'appcd-http';
 
-const logger = snooplogg('appcd:websocket-session');
+const logger = snooplogg('appcd:core:websocket-session');
 const { highlight, magenta, ok, alert, note } = snooplogg.styles;
 
 /**
@@ -17,36 +18,12 @@ const { highlight, magenta, ok, alert, note } = snooplogg.styles;
 let sessionCounter = 0;
 
 /**
- * A map of status codes and their descriptions.
- * @type {Object}
+ * A custom error for WebSocket session errors.
  */
-export const StatusCodes = {
-	'200': 'OK',
-	'400': 'Bad request',
-	'404': 'No route',
-	'500': 'Server error',
-	'505': 'Unsupported version'
-};
-
-/**
- * A custom error for dispatcher errors.
- */
-export class WebSocketError extends Error {
-	constructor(status, message) {
-		if (typeof status !== 'number' && !message) {
-			message = status;
-			status = 500;
-		}
-		super(message);
-		this.status = status;
-		this.message = message || StatusCodes[status] || 'Error';
-		Error.captureStackTrace(this, this.constructor);
-	}
-
-	toString() {
-		return `${this.status} - ${this.message}`;
-	}
-}
+const WebSocketError = createErrorClass('createErrorClass', {
+	defaultStatus: codes.BAD_REQUEST,
+	defaultCode: codes.WEBSOCKET_BAD_REQUEST
+});
 
 /**
  * Tracks the state of a WebSocket session and handles the WebSocket subprotocol.
@@ -79,24 +56,24 @@ export default class WebSocketSession {
 				req = flags.binary ? msgpack.decode(message) : message;
 
 				if (typeof req !== 'string') {
-					throw new WebSocketError(400, 'Message must be a string');
+					throw new WebSocketError('Message must be a string');
 				}
 
 				try {
 					req = JSON.parse(req);
 				} catch (e) {
-					throw new WebSocketError(400, `Invalid request: ${e.message}`);
+					throw new WebSocketError('Invalid JSON message: %s', e.message);
 				}
 
 				if (!req || typeof req !== 'object') {
-					throw new WebSocketError(400, 'Invalid request');
+					throw new WebSocketError('Invalid request');
 				}
 
 				req.sessionId = this.sessionId;
 				req.startTime = startTime;
 
 				if (!req.version) {
-					throw new WebSocketError(400, 'Request "version" required');
+					throw new WebSocketError('Request "version" required');
 				}
 
 				const ver = String(req.version);
@@ -105,7 +82,7 @@ export default class WebSocketSession {
 					return this.handle_1_0(req);
 				}
 
-				throw new WebSocketError(400, `Invalid version "${ver}"`);
+				throw new WebSocketError('Invalid version "%s"', ver);
 			} catch (err) {
 				this.respond(req, err);
 			}
@@ -121,7 +98,7 @@ export default class WebSocketSession {
 	 */
 	handle_1_0(req) {
 		if (req.id === undefined) {
-			throw new WebSocketError(400, 'Request "id" required');
+			throw new WebSocketError('Request "id" required');
 		}
 
 		return this.dispatcher
@@ -181,10 +158,12 @@ export default class WebSocketSession {
 		if (!res.type && req && req.type) {
 			res.type = req.type;
 		}
+
 		if (res.message instanceof Response) {
 			res.status = res.message.status;
 			res.message = res.message.toString(accepts(this.ws.upgradeReq).languages());
 		}
+
 		this.send(res);
 		this.log(req, res);
 	}

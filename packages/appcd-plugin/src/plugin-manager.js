@@ -2,7 +2,6 @@ import Dispatcher, { ServiceDispatcher } from 'appcd-dispatcher';
 import fs from 'fs';
 import gawk, { GawkArray } from 'gawk';
 import path from 'path';
-import PluginError from './plugin-error';
 import PluginInfo from './plugin-info';
 import snooplogg from 'snooplogg';
 
@@ -12,6 +11,8 @@ import { isDir, isFile } from 'appcd-fs';
 
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:plugin:manager');
 const { highlight, note } = snooplogg.styles;
+
+// curl -i -X POST -d "path=/Users/chris2" -H "Accept-Language: es-ES;q=0.9, fr-CH,fr;q=0.88, en;q=0.8, de;q=0.72, *;q=0.5"  http://localhost:1732/appcd/plugin/register
 
 /**
  * Detects, starts, and stops Appc Daemon plugins.

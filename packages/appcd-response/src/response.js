@@ -3,7 +3,7 @@ import Message from './message';
 /**
  * A Appc Daemon response. This class can be extended or used as is.
  */
-export class Response {
+export default class Response {
 	/**
 	 * Creates an response instance.
 	 *

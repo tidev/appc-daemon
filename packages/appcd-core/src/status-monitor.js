@@ -3,7 +3,9 @@ import os from 'os';
 import Dispatcher, { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
 import snooplogg from './logger';
 
-const logger = snooplogg('appcd:status');
+import { codes } from 'appcd-response';
+
+const logger = snooplogg('appcd:core:status');
 const { alert, highlight, note, ok } = snooplogg.styles;
 const { arrowUp, arrowDown } = snooplogg.symbols;
 const { filesize } = snooplogg.humanize;
@@ -81,7 +83,7 @@ export default class StatusMonitor {
 		const filter = ctx.params.filter && ctx.params.filter.replace(/^\//, '').split(/\.|\//) || undefined;
 		const node = this.get(filter);
 		if (!node) {
-			throw new DispatcherError(404, `Invalid request: ${ctx.path}`);
+			throw new DispatcherError(codes.NOT_FOUND);
 		}
 		ctx.response = node;
 	}
