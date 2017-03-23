@@ -15,6 +15,10 @@ export default class Response {
 		});
 	}
 
+	get code() {
+		return this.msg.code;
+	}
+
 	get status() {
 		return this.msg.status;
 	}

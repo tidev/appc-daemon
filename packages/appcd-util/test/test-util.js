@@ -125,6 +125,26 @@ describe('util', () => {
 		});
 	});
 
+	describe('inherits()', () => {
+		it('should detect when a class extends another class', () => {
+			class Foo {}
+			class Bar extends Foo {}
+			expect(util.inherits(Bar, Foo)).to.be.true;
+		});
+
+		it('should detect when a class deeply extends another class', () => {
+			class Foo {}
+			class Bar extends Foo {}
+			class Baz extends Bar {}
+			expect(util.inherits(Baz, Foo)).to.be.true;
+		});
+
+		it('should detect when a class extends null', () => {
+			class Foo extends null {}
+			expect(util.inherits(Foo, null)).to.be.true;
+		});
+	});
+
 	describe('mergeDeep()', () => {
 		it('should merge two objects together', () => {
 			const obj = util.mergeDeep({ a: 1 }, { b: 2 });

@@ -1,7 +1,7 @@
 import Dispatcher from '../src/dispatcher';
 import ServiceDispatcher from '../src/service-dispatcher';
 
-import { codes, statuses } from '../src/statuses';
+import Response, { codes, loadMessage } from 'appcd-response';
 
 describe('ServiceDispatcher', () => {
 	it('should fail if path is invalid', () => {
@@ -131,12 +131,11 @@ describe('ServiceDispatcher', () => {
 						response: {
 							once: () => {},
 							write: response => {
-								expect(response).to.deep.equal({
-									status: codes.SUBSCRIBED,
-									message: statuses[codes.SUBSCRIBED],
-									topic: '/foo',
-									type: 'subscribe'
-								});
+								expect(response.message).to.be.instanceof(Response);
+								expect(response.message.toString()).to.equal('Subscribed');
+								expect(response.message.status).to.equal(201);
+								expect(response.topic).to.equal('/foo');
+								expect(response.type).to.equal('subscribe');
 							}
 						}
 					}, () => Promise.resolve());
@@ -166,12 +165,11 @@ describe('ServiceDispatcher', () => {
 						response: {
 							once: () => {},
 							write: response => {
-								expect(response).to.deep.equal({
-									status: codes.SUBSCRIBED,
-									message: statuses[codes.SUBSCRIBED],
-									topic: '/foo',
-									type: 'subscribe'
-								});
+								expect(response.message).to.be.instanceof(Response);
+								expect(response.message.toString()).to.equal('Subscribed');
+								expect(response.message.status).to.equal(201);
+								expect(response.topic).to.equal('/foo');
+								expect(response.type).to.equal('subscribe');
 							}
 						}
 					}, () => Promise.resolve());
@@ -185,12 +183,11 @@ describe('ServiceDispatcher', () => {
 						response: {
 							once: () => {},
 							write: response => {
-								expect(response).to.deep.equal({
-									status: codes.SUBSCRIBED,
-									message: statuses[codes.SUBSCRIBED],
-									topic: '/foo',
-									type: 'subscribe'
-								});
+								expect(response.message).to.be.instanceof(Response);
+								expect(response.message.toString()).to.equal('Subscribed');
+								expect(response.message.status).to.equal(201);
+								expect(response.topic).to.equal('/foo');
+								expect(response.type).to.equal('subscribe');
 							}
 						}
 					}, () => Promise.resolve());
@@ -220,12 +217,11 @@ describe('ServiceDispatcher', () => {
 						response: {
 							once: () => {},
 							write: response => {
-								expect(response).to.deep.equal({
-									status: codes.SUBSCRIBED,
-									message: statuses[codes.SUBSCRIBED],
-									topic: '/foo',
-									type: 'subscribe'
-								});
+								expect(response.message).to.be.instanceof(Response);
+								expect(response.message.toString()).to.equal('Subscribed');
+								expect(response.message.status).to.equal(201);
+								expect(response.topic).to.equal('/foo');
+								expect(response.type).to.equal('subscribe');
 							}
 						}
 					}, () => Promise.resolve());
@@ -244,8 +240,9 @@ describe('ServiceDispatcher', () => {
 
 					sd.handler(ctx, () => Promise.resolve());
 
-					expect(ctx.status).to.equal(codes.ALREADY_SUBSCRIBED);
-					expect(ctx.response).to.equal(statuses[codes.ALREADY_SUBSCRIBED]);
+					expect(ctx.response).to.be.instanceof(Response);
+					expect(ctx.response.toString()).to.equal('Already Subscribed');
+					expect(ctx.response.status).to.equal(409);
 					expect(count).to.equal(1);
 					done();
 				})
@@ -275,12 +272,11 @@ describe('ServiceDispatcher', () => {
 							once: () => {},
 							write: response => {
 								if (count === 0) {
-									expect(response).to.deep.equal({
-										status: codes.SUBSCRIBED,
-										message: statuses[codes.SUBSCRIBED],
-										topic: '/foo',
-										type: 'subscribe'
-									});
+									expect(response.message).to.be.instanceof(Response);
+									expect(response.message.toString()).to.equal('Subscribed');
+									expect(response.message.status).to.equal(201);
+									expect(response.topic).to.equal('/foo');
+									expect(response.type).to.equal('subscribe');
 								} else {
 									expect(response).to.deep.equal({
 										message: 'foo!',
@@ -322,8 +318,9 @@ describe('ServiceDispatcher', () => {
 
 					sd.handler(ctx, () => Promise.resolve());
 
-					expect(ctx.status).to.equal(codes.NOT_SUBSCRIBED);
-					expect(ctx.response).to.equal(statuses[codes.NOT_SUBSCRIBED]);
+					expect(ctx.response).to.be.instanceof(Response);
+					expect(ctx.response.toString()).to.equal('Not Subscribed');
+					expect(ctx.response.status).to.equal(404);
 					done();
 				})
 				.catch(done);
@@ -346,12 +343,11 @@ describe('ServiceDispatcher', () => {
 						response: {
 							once: () => {},
 							write: response => {
-								expect(response).to.deep.equal({
-									status: codes.SUBSCRIBED,
-									message: statuses[codes.SUBSCRIBED],
-									topic: '/foo',
-									type: 'subscribe'
-								});
+								expect(response.message).to.be.instanceof(Response);
+								expect(response.message.toString()).to.equal('Subscribed');
+								expect(response.message.status).to.equal(201);
+								expect(response.topic).to.equal('/foo');
+								expect(response.type).to.equal('subscribe');
 							}
 						}
 					}, () => Promise.resolve());
@@ -372,8 +368,10 @@ describe('ServiceDispatcher', () => {
 
 					sd.handler(ctx, () => Promise.resolve());
 
-					expect(ctx.status).to.equal(codes.UNSUBSCRIBED);
-					expect(ctx.response).to.equal(statuses[codes.UNSUBSCRIBED]);
+					expect(ctx.response).to.be.instanceof(Response);
+					expect(ctx.response.toString()).to.equal(loadMessage(codes.UNSUBSCRIBED));
+					expect(ctx.response.code).to.equal(codes.UNSUBSCRIBED);
+					expect(ctx.response.status).to.equal(200);
 					expect(Object.keys(sd.subscriptions)).to.have.lengthOf(0);
 					done();
 				})
@@ -397,12 +395,11 @@ describe('ServiceDispatcher', () => {
 						response: {
 							once: () => {},
 							write: response => {
-								expect(response).to.deep.equal({
-									status: codes.SUBSCRIBED,
-									message: statuses[codes.SUBSCRIBED],
-									topic: '/foo',
-									type: 'subscribe'
-								});
+								expect(response.message).to.be.instanceof(Response);
+								expect(response.message.toString()).to.equal('Subscribed');
+								expect(response.message.status).to.equal(201);
+								expect(response.topic).to.equal('/foo');
+								expect(response.type).to.equal('subscribe');
 							}
 						}
 					}, () => Promise.resolve());
@@ -416,12 +413,11 @@ describe('ServiceDispatcher', () => {
 						response: {
 							once: () => {},
 							write: response => {
-								expect(response).to.deep.equal({
-									status: codes.SUBSCRIBED,
-									message: statuses[codes.SUBSCRIBED],
-									topic: '/foo',
-									type: 'subscribe'
-								});
+								expect(response.message).to.be.instanceof(Response);
+								expect(response.message.toString()).to.equal('Subscribed');
+								expect(response.message.status).to.equal(201);
+								expect(response.topic).to.equal('/foo');
+								expect(response.type).to.equal('subscribe');
 							}
 						}
 					}, () => Promise.resolve());
@@ -440,8 +436,10 @@ describe('ServiceDispatcher', () => {
 
 					sd.handler(ctx, () => Promise.resolve());
 
-					expect(ctx.status).to.equal(codes.UNSUBSCRIBED);
-					expect(ctx.response).to.equal(statuses[codes.UNSUBSCRIBED]);
+					expect(ctx.response).to.be.instanceof(Response);
+					expect(ctx.response.toString()).to.equal(loadMessage(codes.UNSUBSCRIBED));
+					expect(ctx.response.code).to.equal(codes.UNSUBSCRIBED);
+					expect(ctx.response.status).to.equal(200);
 
 					ctx = {
 						path: '/foo',
@@ -457,8 +455,10 @@ describe('ServiceDispatcher', () => {
 
 					sd.handler(ctx, () => Promise.resolve());
 
-					expect(ctx.status).to.equal(codes.NOT_SUBSCRIBED);
-					expect(ctx.response).to.equal(statuses[codes.NOT_SUBSCRIBED]);
+					expect(ctx.response).to.be.instanceof(Response);
+					expect(ctx.response.toString()).to.equal(loadMessage(codes.NOT_SUBSCRIBED));
+					expect(ctx.response.code).to.equal(codes.NOT_SUBSCRIBED);
+					expect(ctx.response.status).to.equal(404);
 					done();
 				})
 				.catch(done);
@@ -485,12 +485,11 @@ describe('ServiceDispatcher', () => {
 								unsub[evt] = fn;
 							},
 							write: response => {
-								expect(response).to.deep.equal({
-									status: codes.SUBSCRIBED,
-									message: statuses[codes.SUBSCRIBED],
-									topic: '/foo',
-									type: 'subscribe'
-								});
+								expect(response.message).to.be.instanceof(Response);
+								expect(response.message.toString()).to.equal('Subscribed');
+								expect(response.message.status).to.equal(201);
+								expect(response.topic).to.equal('/foo');
+								expect(response.type).to.equal('subscribe');
 							}
 						}
 					}, () => Promise.resolve());
@@ -525,12 +524,11 @@ describe('ServiceDispatcher', () => {
 								unsub[evt] = fn;
 							},
 							write: response => {
-								expect(response).to.deep.equal({
-									status: codes.SUBSCRIBED,
-									message: statuses[codes.SUBSCRIBED],
-									topic: '/foo',
-									type: 'subscribe'
-								});
+								expect(response.message).to.be.instanceof(Response);
+								expect(response.message.toString()).to.equal('Subscribed');
+								expect(response.message.status).to.equal(201);
+								expect(response.topic).to.equal('/foo');
+								expect(response.type).to.equal('subscribe');
 							}
 						}
 					}, () => Promise.resolve());

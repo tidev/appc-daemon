@@ -244,7 +244,7 @@ export default class Dispatcher {
 					}
 
 					logger.error(err);
-					ctx.body = err.toString(ctx.request.acceptsLanguages());
+					ctx.body = err.toString(ctx.request && ctx.request.acceptsLanguages());
 
 					return Promise.resolve();
 				});

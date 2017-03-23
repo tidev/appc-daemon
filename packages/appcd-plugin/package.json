@@ -29,7 +29,8 @@
     "appcd-fs",
     "appcd-gulp",
     "appcd-path",
-    "appcd-response"
+    "appcd-response",
+    "appcd-util"
   ],
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",

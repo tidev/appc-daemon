@@ -1,4 +1,4 @@
-import PluginManager from '../src/plugin-manager';
+import PluginManager from '../src/index';
 
 describe('PluginManager', () => {
 });

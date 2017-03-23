@@ -7,6 +7,7 @@ import snooplogg from 'snooplogg';
 import { codes } from 'appcd-response';
 import { expandPath } from 'appcd-path';
 import { GawkObject } from 'gawk';
+import { inherits } from 'appcd-util';
 import { isDir, isFile } from 'appcd-fs';
 
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:plugin:plugin-info');
@@ -97,6 +98,18 @@ export default class PluginInfo extends GawkObject {
 		this.pid = null;
 
 		/**
+		 * The reference to the primary exported module of internal plugins.
+		 * @type {Class|Function|Object}
+		 */
+		this.module = null;
+
+		/**
+		 * The reference to the instance of an internal plugin's module.
+		 * @type {Plugin|Object}
+		 */
+		this.instance = null;
+
+		/**
 		 * A string containing an error with this plugin or false if the plugin is valid.
 		 * @type {String|Boolean}
 		 */
@@ -126,12 +139,33 @@ export default class PluginInfo extends GawkObject {
 	 *
 	 * @access public
 	 */
-	start() {
+	async start() {
 		if (this.type === 'internal') {
-			// TODO: require()
-		} else {
-			// TODO: spawn plugin host
+			if (this.module) {
+				throw new PluginError(codes.PLUGIN_ALREADY_STARTED);
+			}
+
+			this.module = require(this.mainFile);
+
+			if (!this.module || (typeof this.module !== 'object' && typeof this.module !== 'function')) {
+				this.error = 'Export not a plugin class or object';
+				throw new PluginError(codes.PLUGIN_BAD_REQUEST);
+			}
+
+			if (typeof this.module === 'function') {
+				this.instance = new (this.module)();
+			} else {
+				this.instance = this.module;
+			}
+
+			if (typeof this.instance.start === 'function') {
+				await this.instance.start();
+			}
+
+			return;
 		}
+
+		// TODO: spawn plugin host
 	}
 
 	/**

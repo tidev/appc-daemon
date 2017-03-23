@@ -131,7 +131,7 @@ describe('Client', () => {
 				conn.send(JSON.stringify({
 					status: 200,
 					id: json.id,
-					data: { baz: 'wiz' }
+					message: { baz: 'wiz' }
 				}));
 			});
 		});
@@ -145,9 +145,9 @@ describe('Client', () => {
 					expect(data).to.deep.equal({ baz: 'wiz' });
 
 					expect(response).to.be.an.Object;
-					expect(response).to.have.keys('id', 'status', 'data');
+					expect(response).to.have.keys('id', 'status', 'message');
 					expect(response.status).to.equal(200);
-					expect(response.data).to.deep.equal({ baz: 'wiz' });
+					expect(response.message).to.deep.equal({ baz: 'wiz' });
 				} catch (e) {
 					result = result || e;
 				}

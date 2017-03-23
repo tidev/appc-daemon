@@ -9,7 +9,7 @@ describe('message', () => {
 	});
 
 	it('should load a message by code and subcode', () => {
-		expect(loadMessage('200.1')).to.equal('Subscribed');
+		expect(loadMessage('201.1')).to.equal('Subscribed');
 	});
 
 	it('should load a message by code for invalid subcode', () => {

@@ -1,6 +1,8 @@
-import Dispatcher from '../src/dispatcher';
+import Dispatcher from '../src/index';
 import DispatcherError from '../src/dispatcher-error';
 import ServiceDispatcher from '../src/service-dispatcher';
+
+import { AppcdError, codes } from 'appcd-response';
 
 describe('dispatcher', () => {
 	describe('register', () => {
@@ -150,7 +152,7 @@ describe('dispatcher', () => {
 				})
 				.catch(err => {
 					expect(err).to.be.instanceof(Error);
-					expect(err.message).to.equal('No route');
+					expect(err.message).to.equal('Not Found');
 					done();
 				})
 				.catch(done);
@@ -207,8 +209,8 @@ describe('dispatcher', () => {
 					done(new Error('Expected error from handler'));
 				})
 				.catch(err => {
-					expect(err).to.be.instanceof(DispatcherError);
-					expect(err.status).to.equal(500);
+					expect(err).to.be.instanceof(AppcdError);
+					expect(err.status).to.be.null;
 					expect(err.message).to.equal('oops');
 					done();
 				})
@@ -229,7 +231,7 @@ describe('dispatcher', () => {
 				.catch(err => {
 					expect(err).to.be.instanceof(DispatcherError);
 					expect(err.status).to.equal(123);
-					expect(err.message).to.equal('Error');
+					expect(err.message).to.equal('Unknown Error');
 					done();
 				})
 				.catch(done);
@@ -290,8 +292,8 @@ describe('dispatcher', () => {
 				})
 				.catch(err => {
 					expect(fooCount).to.equal(1);
-					expect(err).to.be.instanceof(Error);
-					expect(err.message).to.equal('No route');
+					expect(err).to.be.instanceof(AppcdError);
+					expect(err.message).to.equal('Not Found');
 					done();
 				})
 				.catch(done);
@@ -410,8 +412,8 @@ describe('dispatcher', () => {
 					done(new Error('Expected error for no route'));
 				})
 				.catch(err => {
-					expect(err).to.be.instanceof(Error);
-					expect(err.message).to.equal('No route');
+					expect(err).to.be.instanceof(AppcdError);
+					expect(err.message).to.equal('Not Found');
 					done();
 				})
 				.catch(done);
@@ -567,7 +569,7 @@ describe('dispatcher', () => {
 				.then(() => middleware(ctx, Promise.resolve))
 				.then(() => {
 					expect(ctx.status).to.equal(403);
-					expect(ctx.body).to.equal('403 - Not authorized!');
+					expect(ctx.body).to.equal('DispatcherError: Not authorized! (code 403)');
 					done();
 				})
 				.catch(done);
