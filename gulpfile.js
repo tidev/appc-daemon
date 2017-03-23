@@ -751,7 +751,8 @@ function processPackages(packages) {
 		deprecated: 0,
 		packagesToUpdate: [],
 		criticalToUpdate: [],
-		stats: computeSloc()
+		stats: computeSloc(),
+		testStats: computeSloc('test')
 	};
 	const depmap = getDepMap();
 
@@ -975,7 +976,21 @@ function renderPackages(results) {
 
 	console.log(magenta('Source Code Stats') + '\n');
 	table = new Table({ chars: cliTableChars, head: [], style: { head: ['bold'], border: [] } });
-	const stats = results.stats;
+	let stats = results.stats;
+	table.push([ 'Physical lines',       { hAlign: 'right', content: green(formatNumber(stats.total)) }, '' ]);
+	table.push([ 'Lines of source code', { hAlign: 'right', content: green(formatNumber(stats.source)) }, gray(formatPercentage(stats.source / stats.total * 100)) ]);
+	table.push([ 'Total comments',       { hAlign: 'right', content: green(formatNumber(stats.comment)) }, gray(formatPercentage(stats.comment / stats.total * 100)) ]);
+	table.push([ 'Single-lines',         { hAlign: 'right', content: green(formatNumber(stats.single)) }, '' ]);
+	table.push([ 'Blocks',               { hAlign: 'right', content: green(formatNumber(stats.block)) }, '' ]);
+	table.push([ 'Mixed',                { hAlign: 'right', content: green(formatNumber(stats.mixed)) }, '' ]);
+	table.push([ 'Empty lines',          { hAlign: 'right', content: green(formatNumber(stats.empty)) }, '' ]);
+	table.push([ 'Todos',                { hAlign: 'right', content: green(formatNumber(stats.todo)) }, '' ]);
+	table.push([ 'Number of files',      { hAlign: 'right', content: green(formatNumber(stats.files)) }, '' ]);
+	console.log(table.toString() + '\n');
+
+	console.log(magenta('Test Code Stats') + '\n');
+	table = new Table({ chars: cliTableChars, head: [], style: { head: ['bold'], border: [] } });
+	stats = results.testStats;
 	table.push([ 'Physical lines',       { hAlign: 'right', content: green(formatNumber(stats.total)) }, '' ]);
 	table.push([ 'Lines of source code', { hAlign: 'right', content: green(formatNumber(stats.source)) }, gray(formatPercentage(stats.source / stats.total * 100)) ]);
 	table.push([ 'Total comments',       { hAlign: 'right', content: green(formatNumber(stats.comment)) }, gray(formatPercentage(stats.comment / stats.total * 100)) ]);
@@ -1173,7 +1188,7 @@ function upgradeDeps(list) {
 	}, Promise.resolve());
 }
 
-function computeSloc() {
+function computeSloc(type) {
 	const srcDirs = [];
 	const sloc = require('sloc');
 	const supported = sloc.extensions;
@@ -1182,7 +1197,7 @@ function computeSloc() {
 	globule
 		.find(['./*/package.json', 'packages/*/package.json', 'plugins/*/package.json'])
 		.forEach(pkgJson => {
-			const dir = path.join(path.dirname(path.resolve(pkgJson)), 'src');
+			const dir = path.join(path.dirname(path.resolve(pkgJson)), type || 'src');
 			try {
 				if (fs.statSync(dir).isDirectory()) {
 					srcDirs.push(dir + '/*');

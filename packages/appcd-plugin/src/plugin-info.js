@@ -46,6 +46,10 @@ export default class PluginInfo extends GawkObject {
 			throw new PluginError('Plugin package.json missing "name" property: %s', dir);
 		}
 
+		if (pkgJson.name === 'appcd') {
+			throw new PluginError('Forbidden plugin name: %s', 'appcd');
+		}
+
 		super();
 
 		/**

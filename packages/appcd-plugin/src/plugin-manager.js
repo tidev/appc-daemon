@@ -14,6 +14,21 @@ import { isDir, isFile } from 'appcd-fs';
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:plugin:manager');
 const { highlight, note } = snooplogg.styles;
 
+// TODO:
+//   start external plugins
+//   plugin host
+//   stop external plugins
+//   watch external plugin for exit
+//   restart external plugin if crashes
+//   watch fs and reload plugin
+//   namespaced dispatcher?
+//   namespaced router?
+//   plugin specific status
+//   external plugin process stats (mem, etc)
+//   start all registered
+//   stop all registered
+//   unregister all
+
 // curl -i -X POST -d "path=/Users/chris2" -H "Accept-Language: es-ES;q=0.9, fr-CH,fr;q=0.88, en;q=0.8, de;q=0.72, *;q=0.5" http://localhost:1732/appcd/plugin/register
 // curl -i -X POST -d "path=/Users/chris2" http://localhost:1732/appcd/plugin/register
 
@@ -166,7 +181,7 @@ export default class PluginManager extends EventEmitter {
 
 		// check to make sure we don't insert the same plugin twice
 		for (const p of this.plugins) {
-			if (p.path === plugin.path) {
+			if (p.name === plugin.name || p.path === plugin.path) {
 				throw new PluginError(codes.PLUGIN_ALREADY_REGISTERED);
 			}
 		}
