@@ -177,11 +177,17 @@ export default class PluginInfo extends GawkObject {
 	 *
 	 * @access public
 	 */
-	stop() {
+	async stop() {
 		if (this.type === 'internal') {
-			throw new PluginError('Cannot stop internal plugins');
+			if (this.instance) {
+				if (typeof this.instance.stop === 'function') {
+					await this.instance.stop();
+				}
+			} else {
+				throw new PluginError(codes.PLUGIN_ALREADY_STOPPED);
+			}
+		} else {
+			// TODO: kill the child process
 		}
-
-		// TODO: kill the child process
 	}
 }

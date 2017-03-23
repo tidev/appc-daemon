@@ -90,12 +90,12 @@ export default class PluginManager extends EventEmitter {
 					ctx.response = new Response(e);
 				}
 			})
-			.register('/unregister', ctx => {
+			.register('/unregister', async (ctx) => {
 				const pluginPath = ctx.payload.data.path;
 				if (!pluginPath) {
 					throw new PluginError(codes.PLUGIN_BAD_REQUEST);
 				}
-				this.unregister(pluginPath);
+				await this.unregister(pluginPath);
 				ctx.response = new Response(codes.PLUGIN_UNREGISTERED);
 			})
 			.register('/status', ctx => {
@@ -197,7 +197,7 @@ export default class PluginManager extends EventEmitter {
 	 * @param {PluginInfo|String} plugin - The plugin info object or plugin path.
 	 * @access private
 	 */
-	unregister(plugin) {
+	async unregister(plugin) {
 		let pluginPath = plugin instanceof PluginInfo ? plugin.path : plugin;
 
 		if (pluginPath && typeof pluginPath === 'string') {
@@ -208,7 +208,7 @@ export default class PluginManager extends EventEmitter {
 					if (this.plugins[i].type === 'internal') {
 						throw new PluginError('Cannot unregister internal plugins');
 					}
-					this.plugins[i].stop();
+					await this.plugins[i].stop();
 					this.plugins.splice(i--, 1);
 					return;
 				}
