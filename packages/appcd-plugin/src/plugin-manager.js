@@ -1,4 +1,4 @@
-import Dispatcher, { ServiceDispatcher } from 'appcd-dispatcher';
+import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs';
 import gawk, { GawkArray } from 'gawk';
 import path from 'path';
@@ -20,14 +20,13 @@ const { highlight, note } = snooplogg.styles;
 //   stop external plugins
 //   watch external plugin for exit
 //   restart external plugin if crashes
+
+//   plugin specific status
+//   external plugin process stats (mem, etc)
+
 //   watch fs and reload plugin
 //   namespaced dispatcher?
 //   namespaced router?
-//   plugin specific status
-//   external plugin process stats (mem, etc)
-//   start all registered
-//   stop all registered
-//   unregister all
 
 // curl -i -X POST -d "path=/Users/chris2" -H "Accept-Language: es-ES;q=0.9, fr-CH,fr;q=0.88, en;q=0.8, de;q=0.72, *;q=0.5" http://localhost:1732/appcd/plugin/register
 // curl -i -X POST -d "path=/Users/chris2" http://localhost:1732/appcd/plugin/register
@@ -170,7 +169,7 @@ export default class PluginManager extends EventEmitter {
 	 * Registers a plugin and sends out notifications.
 	 *
 	 * @param {PluginInfo} plugin - The plugin info object.
-	 * @access private
+	 * @access public
 	 */
 	register(plugin) {
 		if (!(plugin instanceof PluginInfo)) {
@@ -194,21 +193,23 @@ export default class PluginManager extends EventEmitter {
 	/**
 	 * Unregisters a plugin and sends out notifications.
 	 *
-	 * @param {PluginInfo|String} plugin - The plugin info object or plugin path.
-	 * @access private
+	 * @param {PluginInfo|String} pluginOrPath - The plugin info object or plugin path.
+	 * @access public
 	 */
-	async unregister(plugin) {
-		let pluginPath = plugin instanceof PluginInfo ? plugin.path : plugin;
+	async unregister(pluginOrPath) {
+		let pluginPath = pluginOrPath instanceof PluginInfo ? pluginOrPath.path : pluginOrPath;
 
 		if (pluginPath && typeof pluginPath === 'string') {
 			pluginPath = expandPath(pluginPath);
 
 			for (let i = 0; i < this.plugins.length; i++) {
 				if (this.plugins[i].path === pluginPath) {
-					if (this.plugins[i].type === 'internal') {
-						throw new PluginError('Cannot unregister internal plugins');
+					if (this.plugins[i].loaded) {
+						if (this.plugins[i].type === 'internal') {
+							throw new PluginError('Cannot unregister running internal plugins');
+						}
+						await this.plugins[i].stop();
 					}
-					await this.plugins[i].stop();
 					this.plugins.splice(i--, 1);
 					return;
 				}
@@ -216,5 +217,24 @@ export default class PluginManager extends EventEmitter {
 		}
 
 		throw new PluginError(codes.PLUGIN_NOT_REGISTERED);
+	}
+
+	/**
+	 * Stops all running plugins.
+	 *
+	 * @returns {Promise}
+	 * @access public
+	 */
+	shutdown() {
+		return Promise.all(this.plugins.map(plugin => {
+			logger.log('Stopping %s', highlight(`${plugin.name}@${plugin.version}`));
+			return plugin
+				.stop()
+				.catch(err => {
+					if (err.code !== codes.PLUGIN_ALREADY_STOPPED) {
+						throw err;
+					}
+				});
+		}));
 	}
 }

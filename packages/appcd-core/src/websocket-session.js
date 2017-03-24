@@ -185,6 +185,7 @@ export default class WebSocketSession {
 			data = JSON.stringify({
 				type:    'error',
 				status:  res.status || 500,
+				code:    res.code || '500',
 				message: res.message,
 				id:      res.id
 			});

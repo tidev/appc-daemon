@@ -63,7 +63,7 @@ export default class Client {
 		 * @type {String}
 		 * @access private
 		 */
-		this.userAgent = opts.userAgent || generateUserAgent();
+		this.userAgent = constructUserAgent(opts.userAgent);
 	}
 
 	/**
@@ -86,7 +86,8 @@ export default class Client {
 
 			const socket = this.socket = new WebSocket(`ws://${this.host}:${this.port}`, {
 				headers: {
-					'Accept-Language': process.env.APPCD_LOCALE || locale()
+					'Accept-Language': process.env.APPCD_LOCALE || locale(),
+					'User-Agent': this.userAgent
 				}
 			});
 
@@ -107,7 +108,9 @@ export default class Client {
 					return;
 				}
 
-				this.requests[json.id](json);
+				if (this.requests[json.id]) {
+					this.requests[json.id](json);
+				}
 			});
 
 			socket
@@ -141,15 +144,19 @@ export default class Client {
 			return this.connect()
 				.on('connected', client => {
 					this.requests[id] = response => {
-						switch (Math.floor(~~response.status / 100)) {
+						const status = ~~response.status || 500;
+						const statusClass = Math.floor(status / 100);
+
+						switch (statusClass) {
 							case 2:
 								emitter.emit('response', response.message, response);
 								break;
 
 							case 4:
 							case 5:
-								const err = new Error(response.status + ' ' + (response.error || 'An error occurred'));
-								err.errorCode = response.status;
+								const err = new Error(status + ' ' + (response.message || 'Server Error'));
+								err.errorCode = status;
+								err.code = response.code ? String(response.code) : String(status);
 								emitter.emit('error', err, response);
 						}
 					};
@@ -158,7 +165,6 @@ export default class Client {
 						version:   '1.0',
 						path:      path,
 						id:        id,
-						userAgent: this.userAgent,
 						data:      payload
 					}));
 				})
@@ -191,37 +197,62 @@ export default class Client {
  * Generates a user agent string containing the name of the parent-most script
  * name, Node.js version, platform name, and architecture.
  *
+ * @param {String} [userAgent] - The invoking client's user agent. This simply needs to be the
+ * `name/version`.
  * @returns {String}
  */
-function generateUserAgent() {
-	let entry = module;
-	while (entry.parent) {
-		entry = entry.parent;
+function constructUserAgent(userAgent) {
+	if (userAgent && typeof userAgent !== 'string') {
+		throw new TypeError('Expected user agent to be a string');
 	}
 
-	const name = path.basename(entry.filename);
-	const root = path.resolve('/');
-	let dir = path.dirname(entry.filename);
-	let version = '';
+	const parts = userAgent ? userAgent.split(' ') : [];
 
-	do {
-		const pkgJsonFile = path.join(dir, 'package.json');
-
-		try {
-			if (fs.statSync(pkgJsonFile)) {
-				version = JSON.parse(fs.readFileSync(pkgJsonFile)).version || '';
-				break;
-			}
-		} catch (e) {
-			// either the package.json doesn't exist or the JSON was malformed
-			if (e.code !== 'ENOENT') {
-				// must be malformed JSON, we can stop
-				break;
-			}
+	if (!parts.length) {
+		let entry = module;
+		while (entry.parent) {
+			entry = entry.parent;
 		}
 
-		dir = path.dirname(dir);
-	} while (dir !== root);
+		const name = path.basename(entry.filename);
+		const root = path.resolve('/');
+		let dir = path.dirname(entry.filename);
+		let version = '';
 
-	return `${name}/${version} node/${process.version.replace(/^v/, '')} ${process.platform} ${arch()}`;
+		do {
+			const pkgJsonFile = path.join(dir, 'package.json');
+
+			try {
+				if (fs.statSync(pkgJsonFile)) {
+					parts.push(`${name}/${JSON.parse(fs.readFileSync(pkgJsonFile)).version || ''}`);
+					break;
+				}
+			} catch (e) {
+				// either the package.json doesn't exist or the JSON was malformed
+				if (e.code !== 'ENOENT') {
+					// must be malformed JSON, we can stop
+					break;
+				}
+			}
+
+			dir = path.dirname(dir);
+		} while (dir !== root);
+	}
+
+	parts.push(`appcd-client/${JSON.parse(fs.readFileSync(path.resolve(__dirname, '..', 'package.json'))).version}`);
+
+	if (!parts.some(p => p.indexOf('node/') === 0)) {
+		parts.push(`node/${process.version.replace(/^v/, '')}`);
+	}
+
+	if (!parts.some(p => p === process.platform)) {
+		parts.push(process.platform);
+	}
+
+	const architecture = arch();
+	if (!parts.some(p => p === architecture)) {
+		parts.push(architecture);
+	}
+
+	return parts.join(' ');
 }

@@ -2,7 +2,7 @@
   "name": "appcd-subprocess",
   "version": "1.0.0",
   "description": "Library for spawning and finding subprocesses.",
-  "main": "./dist/subprocess",
+  "main": "./dist/index",
   "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
     "Chris Barber <cbarber@appcelerator.com>"

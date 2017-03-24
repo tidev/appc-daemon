@@ -71,12 +71,6 @@ export default class PluginInfo extends GawkObject {
 		this.path = dir;
 
 		/**
-		 * Indicates if the plugin is loaded.
-		 * @type {Boolean}
-		 */
-		this.loaded = false;
-
-		/**
 		 * The plugin type. Must be either `internal` or `external`.
 		 * @type {String}
 		 */
@@ -139,8 +133,19 @@ export default class PluginInfo extends GawkObject {
 	}
 
 	/**
+	 * Determines if a plugin is running.
+	 *
+	 * @type {Boolean}
+	 * @access public
+	 */
+	get loaded() {
+		return !!(this.type === 'internal' ? (this.module || this.instance) : this.pid);
+	}
+
+	/**
 	 * Loads a plugin.
 	 *
+	 * @returns {Promise}
 	 * @access public
 	 */
 	async start() {
@@ -175,6 +180,7 @@ export default class PluginInfo extends GawkObject {
 	/**
 	 * Unloads an `external` plugin.
 	 *
+	 * @returns {Promise}
 	 * @access public
 	 */
 	async stop() {
@@ -187,7 +193,22 @@ export default class PluginInfo extends GawkObject {
 				throw new PluginError(codes.PLUGIN_ALREADY_STOPPED);
 			}
 		} else {
-			// TODO: kill the child process
+			if (this.pid) {
+				// return new Promise((resolve, reject) => {
+				// 	process.kill(this.pid, 'SIGTERM');
+				//
+				// 	// wait 1 second before killing the plugin host
+				// 	setTimeout(() => {
+				// 		if (this.pid) {
+				// 			process.kill(this.pid, 'SIGKILL');
+				// 		} else {
+				// 			resolve();
+				// 		}
+				// 	}, 1000);
+				// });
+			} else {
+				throw new PluginError(codes.PLUGIN_ALREADY_STOPPED);
+			}
 		}
 	}
 }

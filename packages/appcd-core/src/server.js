@@ -1,4 +1,3 @@
-import debug from 'debug';
 import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs-extra';
 import gawk from 'gawk';
@@ -7,15 +6,20 @@ import path from 'path';
 import PluginManager, { Plugin } from 'appcd-plugin';
 import snooplogg, { StdioStream } from './logger';
 import StatusMonitor from './status-monitor';
+import SubprocessManager from 'appcd-subprocess';
 import WebServer from 'appcd-http';
 import WebSocketSession from './websocket-session';
 
 import { expandPath } from 'appcd-path';
+import { getActiveHandles } from 'double-stack';
 import { getMachineId } from 'appcd-machine-id';
+import { i18n } from 'appcd-response';
 import { isDir, isFile } from 'appcd-fs';
 import { load as loadConfig } from 'appcd-config';
 
-const { highlight } = snooplogg.styles;
+const { __, __n } = i18n();
+
+const { highlight, notice } = snooplogg.styles;
 const logger = snooplogg('appcd:server');
 
 /**
@@ -106,6 +110,8 @@ export default class Server extends HookEmitter {
 			fs.mkdirsSync(homeDir);
 		}
 
+		this.subprocessManager = new SubprocessManager();
+
 		// init the plugin manager
 		this.pluginManager = new PluginManager({
 			paths: [
@@ -118,6 +124,7 @@ export default class Server extends HookEmitter {
 		this.statusMonitor = new StatusMonitor();
 		this.statusMonitor.status.version = this.version;
 		this.statusMonitor.status.plugins = this.pluginManager.plugins;
+		this.statusMonitor.status.subprocesses = this.subprocessManager.status;
 		this.statusMonitor.start();
 		this.on('appcd:shutdown', () => this.statusMonitor.stop());
 
@@ -143,7 +150,9 @@ export default class Server extends HookEmitter {
 
 			.register('/plugin', this.pluginManager.dispatcher)
 
-			.register('/status', this.statusMonitor.dispatcher);
+			.register('/status', this.statusMonitor.dispatcher)
+
+			.register('/subprocess', this.subprocessManager.dispatcher);
 
 		this.rootDispatcher = new Dispatcher()
 			.register('/appcd', appcdDispatcher);
@@ -189,27 +198,30 @@ export default class Server extends HookEmitter {
 			// 	uptime: this.status.get(['appcd', 'uptime']).toJS()
 			// }))
 			.then(() => this.emit('appcd:shutdown'))
-			// TODO: shutdown web server
-			// TODO: shutdown plugin manager
+			.then(() => this.webserver.close())
+			.then(() => this.pluginManager.shutdown())
+			.then(() => this.subprocessManager.shutdown())
 			.then(() => {
 				const pidFile = expandPath(this.config.get('server.pidFile'));
 				logger.log('Removing %s', highlight(pidFile));
 				fs.unlinkSync(pidFile);
 			})
-			// .then(() => {
-			// 	const handles = getActiveHandles();
-			//
-			// 	if (handles.timers.length) {
-			// 		const timers = handles.timers.filter(timer => timer.__stack__);
-			// 		appcd.logger.warn(`Stopping ${appcd.logger.notice(timers.length)} active ${pluralize('timers', timers.length)}:`);
-			// 		let i = 1;
-			// 		for (const timer of timers) {
-			// 			appcd.logger.warn(`${i++}) ${appcd.logger.highlight(timer.__stack__[0] || 'unknown origin')}`);
-			// 		}
-			// 		appcd.logger.warn(`Did you forget to clear these timeouts during the ${appcd.logger.highlight('"appcd.shutdown"')} event?`);
-			// 		handles.timers.forEach(t => clearTimeout(t));
-			// 	}
-			// })
+			.then(() => {
+				const handles = getActiveHandles();
+				const timers = handles.timers.filter(timer => timer.__stack__);
+
+				if (timers.length) {
+					logger.warn(__n(timers.length, 'Stopping %%s active timer', 'Stopping %%s active timers', notice(timers.length)));
+
+					let i = 1;
+					for (const timer of timers) {
+						logger.warn(`${i++}) ${highlight(timer.__stack__[0] || 'unknown origin')}`);
+					}
+
+					logger.warn('Did you forget to clear these timeouts during the %s event?', highlight('"appcd.shutdown"'));
+					handles.timers.forEach(t => clearTimeout(t));
+				}
+			})
 			.then(() => {
 				logger.log('appcd shutdown successfully');
 				return this;

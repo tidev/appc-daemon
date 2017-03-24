@@ -15,14 +15,33 @@ export default class Response {
 		});
 	}
 
+	/**
+	 * Returns the message code. The value can be `null`.
+	 *
+	 * @type {String?}
+	 * @access public
+	 */
 	get code() {
 		return this.msg.code;
 	}
 
+	/**
+	 * Returns the message number. The value can be `null`.
+	 *
+	 * @type {Number?}
+	 * @access public
+	 */
 	get status() {
 		return this.msg.status;
 	}
 
+	/**
+	 * Formats the response for the given locale.
+	 *
+	 * @param {String|Array.<String>} [locales] - A list of preferred locales to format the message.
+	 * @returns {String}
+	 * @access public
+	 */
 	toString(locale) {
 		return this.msg.toString(locale);
 	}

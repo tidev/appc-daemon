@@ -49,7 +49,7 @@ export function createRequest(cfg, path, payload) {
 	const client = new Client({
 		host: cfg.get('server.host'),
 		port: cfg.get('server.post'),
-		userAgent: `appcd/${appcdVersion} node/${process.version.replace(/^v/, '')} ${process.platform} ${arch()}`
+		userAgent: `appcd/${appcdVersion}}`
 	});
 
 	const request = client

@@ -64,7 +64,9 @@ export default class Message {
 
 	/**
 	 * The message's code.
+	 *
 	 * @type {String}
+	 * @access public
 	 */
 	get code() {
 		return this._code;
@@ -77,7 +79,7 @@ export default class Message {
 	/**
 	 * Retrieves this error's message.
 	 *
-	 * @param {String|Array.<String>} [locales] - The locale specific message to return.
+	 * @param {String|Array.<String>} [locales] - A list of preferred locales to format the message.
 	 * @returns {String}
 	 * @access private
 	 */
@@ -96,20 +98,63 @@ export default class Message {
 }
 
 /**
+ * Creates internationalized message functions.
+ *
+ * @param {String|Array.<String>} [locales] - One or more locales that the i18n functions should
+ * try to load the strings from.
+ * @returns {Object}
+ */
+export function i18n(locales) {
+	locales = processLocales(locales);
+
+	return {
+		__: (format, ...args) => {
+			return util.format(loadString(format, locales), ...args);
+		},
+		__n: (count, singular, plural, ...args) => {
+			const format = loadString(count === 1 ? singular : plural, locales);
+			return format ? util.format(util.format(format, count), ...args) : '';
+		}
+	};
+}
+
+/**
  * Attempts to load a message for the given the specific code or message and the locale.
  *
  * @param {String|Number} codeOrMessage - The code or message to look up.
- * @param {String|Array.<String>} locales - The message locale to retrieve. Falls back to `en`
+ * @param {String|Array.<String>} [locales] - The message locale to retrieve. Falls back to `en`
  * (English) if not found.
  * @returns {String}
  */
-export function loadMessage(codeOrMessage, locales=[]) {
+export function loadMessage(codeOrMessage, locales) {
 	codeOrMessage = String(codeOrMessage);
+	locales = processLocales(locales);
+
 	const m = codeOrMessage.match(codeRegExp);
 	let str;
 
+	if (m && m[2]) {
+		if (m[3]) {
+			// code and subcode
+			str = loadCodeFile(locales, m[2], m[0]);
+		}
+
+		if (str === undefined) {
+			// code only
+			str = loadCodeFile(locales, m[2], m[1]);
+		}
+
+		return str;
+	}
+
+	// must be a string
+	return loadString(codeOrMessage, locales);
+}
+
+function processLocales(locales) {
 	// create the list of preferred locales to try
 	const expandedLocales = [];
+
 	if (!locales) {
 		locales = [];
 	} else if (!Array.isArray(locales)) {
@@ -132,23 +177,18 @@ export function loadMessage(codeOrMessage, locales=[]) {
 		}
 	}
 
-	if (m && m[2]) {
-		if (m[3]) {
-			// code and subcode
-			str = loadCodeFile(expandedLocales, m[2], m[0]);
-		}
+	return expandedLocales;
+}
 
-		if (str === undefined) {
-			// code only
-			str = loadCodeFile(expandedLocales, m[2], m[1]);
-		}
-
-		return str;
-	}
-
-	// must be a string
-
-	for (let locale of expandedLocales) {
+/**
+ * Retrieves the translated string based on the list of preferred locales.
+ *
+ * @param {String} message - The message to load.
+ * @param {Array.<String>} locales - An array of one or more locales to try to load the string from.
+ * @returns {String}
+ */
+function loadString(message, locales) {
+	for (let locale of locales) {
 		if (!stringsCache[locale]) {
 			try {
 				stringsCache[locale] = JSON.parse(fs.readFileSync(path.join(messagesDir, locale, 'strings.json'), 'utf8'));
@@ -158,14 +198,14 @@ export function loadMessage(codeOrMessage, locales=[]) {
 		}
 
 		if (stringsCache[locale]) {
-			str = stringsCache[locale][codeOrMessage];
+			str = stringsCache[locale][message];
 			if (str !== undefined) {
 				return str;
 			}
 		}
 	}
 
-	return codeOrMessage;
+	return message;
 }
 
 /**
