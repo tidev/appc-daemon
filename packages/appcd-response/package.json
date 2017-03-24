@@ -16,7 +16,8 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "source-map-support": "^0.4.14"
+    "source-map-support": "^0.4.14",
+    "sprintf-js": "^1.0.3"
   },
   "devDependencies": {
     "gulp": "^3.9.1"

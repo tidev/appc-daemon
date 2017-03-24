@@ -16,6 +16,7 @@
     "test": "gulp test"
   },
   "dependencies": {
+    "gawk": "^3.3.0",
     "snooplogg": "^1.3.0",
     "source-map-support": "^0.4.14",
     "which": "^1.2.14"
@@ -24,6 +25,7 @@
     "gulp": "^3.9.1"
   },
   "appcdDependencies": [
+    "appcd-dispatcher",
     "appcd-gulp"
   ],
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",

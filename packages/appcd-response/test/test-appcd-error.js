@@ -64,6 +64,8 @@ describe('AppcdError', () => {
 	it('should create an error with a unknown code', () => {
 		const err = new AppcdError(123);
 		expect(err.message).to.equal('Unknown Error');
+		expect(err.status).to.equal(123);
+		expect(err.code).to.equal('123');
 		expect(err.toString()).to.equal('AppcdError: Unknown Error (code 123)');
 	});
 
@@ -116,6 +118,19 @@ describe('Custom Errors', () => {
 		expect(err.toString()).to.equal('MyError: Oh no!');
 	});
 
+	it('should create a custom error with default status/code', () => {
+		const MyError = createErrorClass('MyError', {
+			defaultStatus: 599,
+			defaultCode: '599.1'
+		});
+		const err = new MyError(new Error('Oh no!'));
+		expect(err).to.be.instanceof(MyError);
+		expect(err.message).to.equal('Oh no!');
+		expect(err.status).to.equal(599);
+		expect(err.code).to.equal('599.1');
+		expect(err.toString()).to.equal('MyError: Oh no! (code 599.1)');
+	});
+
 	it('should fail if custom error name is invalid', () => {
 		expect(() => {
 			createErrorClass();
@@ -128,5 +143,23 @@ describe('Custom Errors', () => {
 		expect(() => {
 			createErrorClass(function(){});
 		}).to.throw(TypeError, 'Expected custom error name to be a non-empty string');
+	});
+
+	it('should fail if options is invalid', () => {
+		expect(() => {
+			createErrorClass('foo', 'bar');
+		}).to.throw(TypeError, 'Expected options to be an object');
+	});
+
+	it('should fail if default status is invalid', () => {
+		expect(() => {
+			createErrorClass('foo', { defaultStatus: 'bar' });
+		}).to.throw(TypeError, 'Expected default status to be a number');
+	});
+
+	it('should fail if default code is invalid', () => {
+		expect(() => {
+			createErrorClass('foo', { defaultCode: {} });
+		}).to.throw(TypeError, 'Expected default code to be a string or number');
 	});
 });

@@ -5,6 +5,7 @@ import util from 'util';
 
 import { lookup } from './codes';
 import { isDir } from 'appcd-fs';
+import { sprintf } from 'sprintf-js';
 
 const codesCache = {};
 const stringsCache = {};
@@ -112,8 +113,15 @@ export function i18n(locales) {
 			return util.format(loadString(format, locales), ...args);
 		},
 		__n: (count, singular, plural, ...args) => {
-			const format = loadString(count === 1 ? singular : plural, locales);
-			return format ? util.format(util.format(format, count), ...args) : '';
+			let format = loadString(count === 1 ? singular : plural, locales);
+			if (!format) {
+				return '';
+			}
+			format = sprintf(format, count);
+			if (format.indexOf('%') !== -1) {
+				format = sprintf(format, ...args);
+			}
+			return format;
 		}
 	};
 }
@@ -198,7 +206,7 @@ function loadString(message, locales) {
 		}
 
 		if (stringsCache[locale]) {
-			str = stringsCache[locale][message];
+			const str = stringsCache[locale][message];
 			if (str !== undefined) {
 				return str;
 			}

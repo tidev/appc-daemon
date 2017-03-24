@@ -85,7 +85,7 @@ export function createErrorClass(name, opts = {}) {
 		}
 
 		if (opts.hasOwnProperty('defaultCode') && typeof opts.defaultCode !== 'number' && typeof opts.defaultCode !== 'string') {
-			throw new TypeError('Expected default code to be a string');
+			throw new TypeError('Expected default code to be a string or number');
 		}
 	}
 
@@ -97,7 +97,7 @@ export function createErrorClass(name, opts = {}) {
 				this.msg.status = opts.defaultStatus;
 			}
 			if (this.msg.code === null && opts.defaultCode) {
-				this.msg.code = opts.defaultCode;
+				this.msg.code = String(opts.defaultCode);
 			}
 		}
 	}

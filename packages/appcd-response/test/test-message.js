@@ -1,4 +1,4 @@
-import { loadMessage } from '../src/message';
+import { i18n, loadMessage } from '../src/message';
 
 describe('message', () => {
 	it('should load a message by code', () => {
@@ -22,5 +22,21 @@ describe('message', () => {
 
 	it('should return original string if not found', () => {
 		expect(loadMessage('foo bar')).to.equal('foo bar');
+	});
+
+	it('should create localized i18n functions', () => {
+		const { __, __n } = i18n();
+
+		expect(__('foo')).to.equal('foo');
+		expect(__('foo %s', 'bar')).to.equal('foo bar');
+
+		expect(__n(1, 'foo', 'bar')).to.equal('foo');
+		expect(__n(2, 'foo', 'bar')).to.equal('bar');
+
+		expect(__n(1, '%s foo', '%s bar')).to.equal('1 foo');
+		expect(__n(2, '%s foo', '%s bar')).to.equal('2 bar');
+
+		expect(__n(1, '%s foo %%s', '%s bar %%s', 'baz')).to.equal('1 foo baz');
+		expect(__n(2, '%s foo %%s', '%s bar %%s', 'baz')).to.equal('2 bar baz');
 	});
 });
