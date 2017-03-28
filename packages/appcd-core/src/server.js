@@ -124,13 +124,16 @@ export default class Server extends HookEmitter {
 		this.statusMonitor = new StatusMonitor();
 		this.statusMonitor.status.version = this.version;
 		this.statusMonitor.status.plugins = this.pluginManager.plugins;
-		this.statusMonitor.status.subprocesses = this.subprocessManager.status;
+		this.statusMonitor.status.subprocesses = this.subprocessManager.subprocesses;
 		this.statusMonitor.start();
 		this.on('appcd:shutdown', () => this.statusMonitor.stop());
 
 		// update the status monitor's plugin info when it changes
 		this.pluginManager.on('change', (plugins, src) => {
 			this.statusMonitor.status.plugins = plugins;
+		});
+		this.subprocessManager.on('change', (subprocesses, src) => {
+			this.statusMonitor.status.subprocesses = subprocesses;
 		});
 
 		// init the dispatcher

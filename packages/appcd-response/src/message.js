@@ -109,9 +109,27 @@ export function i18n(locales) {
 	locales = processLocales(locales);
 
 	return {
+		/**
+		 * Translates a single message.
+		 *
+		 * @param {String} format - The message.
+		 * @param {...*} args - Zero or more args to inject into the message.
+		 * @returns {String}
+		 */
 		__: (format, ...args) => {
 			return util.format(loadString(format, locales), ...args);
 		},
+
+		/**
+		 * Translates the singular or plural version of a message based on the specified count.
+		 *
+		 * @param {Number} count - The number to check if the singular or plural message should be
+		 * returned.
+		 * @param {String} singular - The singular version of the message.
+		 * @param {String} plural - The plural version of the message.
+		 * @param {...*} args - Zero or more args to inject into the message.
+		 * @returns {String}
+		 */
 		__n: (count, singular, plural, ...args) => {
 			let format = loadString(count === 1 ? singular : plural, locales);
 			if (!format) {

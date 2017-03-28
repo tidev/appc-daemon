@@ -60,6 +60,8 @@ export default class AppcdError extends Error {
 	}
 }
 
+AppcdError.codes = codes;
+
 /**
  * Helper function to create one-off custom error objects. It's equivalent to creating a custom
  * error class that extends `AppcdError`.
@@ -106,6 +108,8 @@ export function createErrorClass(name, opts = {}) {
 		enumerable: true,
 		value: name
 	});
+
+	CustomError.codes = codes;
 
 	return CustomError;
 }

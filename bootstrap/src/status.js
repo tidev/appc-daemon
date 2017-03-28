@@ -6,7 +6,7 @@ import { banner, createRequest, loadConfig } from './common';
 const logger = createInstanceWithDefaults().config({ theme: 'compact' }).enable('*').pipe(new StdioStream);
 const { log } = logger;
 const { alert, highlight } = logger.styles;
-const { filesize, numberFormat } = logger.humanize;
+const { filesize, numberFormat, relativeTime } = logger.humanize;
 
 const cmd = {
 	options: {
@@ -92,6 +92,24 @@ const cmd = {
 					]);
 				}
 				log(table.toString());
+				if (!status.subprocesses.length) {
+					log('No plugins');
+				}
+				log();
+
+				params.head = ['PID', 'Command', 'Started'],
+				table = new Table(params);
+				for (const subprocess of status.subprocesses) {
+					table.push([
+						highlight(subprocess.pid),
+						subprocess.command + (subprocess.args.length ? ` ${subprocess.args.map(a => typeof a === 'string' && a.indexOf(' ') !== -1 ? `"${a}"` : a).join(' ')}` : ''),
+						relativeTime(subprocess.startTime.getTime() / 1000)
+					]);
+				}
+				log(table.toString());
+				if (!status.subprocesses.length) {
+					log('No subprocesses');
+				}
 				log();
 			});
 	}

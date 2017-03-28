@@ -231,11 +231,11 @@ fs-exists-sync@^0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/fs-exists-sync/-/fs-exists-sync-0.1.0.tgz#982d6893af918e72d08dec9e8673ff2b5a8d6add"
 
-gawk@^3.3.0:
-  version "3.3.0"
-  resolved "https://registry.yarnpkg.com/gawk/-/gawk-3.3.0.tgz#07364e3e3de2da21ea7623ea2fa1de42c47d1c70"
+gawk@^3.4.0:
+  version "3.4.0"
+  resolved "https://registry.yarnpkg.com/gawk/-/gawk-3.4.0.tgz#4158ba24be49e9cb31572c0a3f84493235836a19"
   dependencies:
-    source-map-support "^0.4.11"
+    source-map-support "^0.4.14"
 
 gaze@^0.5.1:
   version "0.5.2"
