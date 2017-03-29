@@ -21,7 +21,6 @@ const { highlight, note } = snooplogg.styles;
 //   watch external plugin for exit
 //   restart external plugin if crashes
 
-//   plugin specific status
 //   external plugin process stats (mem, etc)
 
 //   watch fs and reload plugin

@@ -92,7 +92,7 @@ const cmd = {
 					]);
 				}
 				log(table.toString());
-				if (!status.subprocesses.length) {
+				if (!status.plugins.length) {
 					log('No plugins');
 				}
 				log();

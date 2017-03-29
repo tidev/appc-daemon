@@ -1,4 +1,4 @@
-import snooplogg, { createInstanceWithDefaults, StdioStream } from 'snooplogg';
+import snooplogg, { createInstanceWithDefaults, Format, StdioStream } from 'snooplogg';
 
 const instance = createInstanceWithDefaults()
 	.snoop()
@@ -11,3 +11,9 @@ const instance = createInstanceWithDefaults()
 export default instance;
 
 export { StdioStream };
+
+export function logcat(stream) {
+	const formatter = new Format();
+	instance.pipe(formatter, { flush: true });
+	formatter.pipe(stream);
+}

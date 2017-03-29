@@ -4,7 +4,7 @@ import gawk from 'gawk';
 import HookEmitter from 'hook-emitter';
 import path from 'path';
 import PluginManager, { Plugin } from 'appcd-plugin';
-import snooplogg, { StdioStream } from './logger';
+import snooplogg, { logcat, StdioStream } from './logger';
 import StatusMonitor from './status-monitor';
 import SubprocessManager from 'appcd-subprocess';
 import WebServer from 'appcd-http';
@@ -147,9 +147,7 @@ export default class Server extends HookEmitter {
 				ctx.response = node;
 			})
 
-			.register('/logcat', ctx => {
-				snooplogg.pipe(ctx.response, { flush: true });
-			})
+			.register('/logcat', ctx => logcat(ctx.response))
 
 			.register('/plugin', this.pluginManager.dispatcher)
 

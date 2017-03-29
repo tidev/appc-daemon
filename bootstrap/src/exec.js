@@ -11,7 +11,10 @@ const cmd = {
 
 		createRequest(cfg, path, json)
 			.request
-			.on('response', console.log);
+			.on('response', response => {
+				console.log(response);
+				process.exit(0);
+			});
 	}
 };
 

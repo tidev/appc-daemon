@@ -141,6 +141,7 @@ export default class Client {
 		// be wired up
 		setImmediate(() => {
 			const id = uuid.v4();
+
 			return this.connect()
 				.on('connected', client => {
 					this.requests[id] = response => {
@@ -162,10 +163,10 @@ export default class Client {
 					};
 
 					client.socket.send(JSON.stringify({
-						version:   '1.0',
-						path:      path,
-						id:        id,
-						data:      payload
+						version: '1.0',
+						path:    path,
+						id:      id,
+						data:    payload
 					}));
 				})
 				.once('close', () => {

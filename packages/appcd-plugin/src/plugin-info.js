@@ -23,6 +23,10 @@ export default class PluginInfo extends GawkObject {
 	 * @param {String} dir - The path to the plugin.
 	 */
 	constructor(dir) {
+		if (!dir) {
+			throw new PluginError('Missing plugin directory argument');
+		}
+
 		dir = expandPath(dir);
 
 		if (!isDir(dir)) {

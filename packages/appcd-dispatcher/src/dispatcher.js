@@ -220,7 +220,8 @@ export default class Dispatcher {
 			}
 
 			const payload = {
-				data: (ctx.method === 'POST' || ctx.method === 'PUT') && ctx.request && ctx.request.body || {}
+				data: (ctx.method === 'POST' || ctx.method === 'PUT') && ctx.request && ctx.request.body || {},
+				source: 'http'
 			};
 
 			return this.call(ctx.originalUrl, payload)

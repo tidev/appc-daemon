@@ -106,22 +106,57 @@ export default class WebSocketSession {
 				id:        req.id,
 				sessionId: req.sessionId,
 				data:      req.data || {},
-				type:      req.type
+				type:      req.type,
+				source:    'websocket'
 			})
 			.then(({ status, response }) => {
 				if (response instanceof Readable) {
+					// we have a stream
+
+					// listen for the WebSocket being closed and close the response stream so that
+					// whatever is writing to the stream knows that the other end has closed
 					this.ws.once('close', () => response.end());
 
+					// track if this stream is a pubsub stream so we know to send the `fin`
+					let pubsub = false;
+					let first = true;
+
 					response
-						.on('data', message => this.respond(req, {
-							...message,
-							type: message.type || 'publish'
-						}))
-						.once('end', () => this.respond(req, {
-							path: req.path,
-							type: 'publish',
-							fin: true
-						}))
+						.on('data', message => {
+							// data was written to the stream
+
+							if (message.type === 'subscribe') {
+								pubsub = true;
+							}
+
+							let res;
+							const type = message.type || (pubsub ? 'publish' : undefined);
+
+							if (typeof message === 'object') {
+								res = {
+									...message,
+									type
+								};
+							} else {
+								res = {
+									message,
+									type
+								};
+							}
+
+							this.respond(req, res, !pubsub && !first);
+							first = false;
+						})
+						.once('end', () => {
+							// the stream has ended, if pubsub, send `fin`
+							if (pubsub) {
+								this.respond(req, {
+									path: req.path,
+									type: 'publish',
+									fin: true
+								});
+							}
+						})
 						.once('error', err => {
 							logger.error('%s Response stream error:', note(`[${this.sessionId}]`));
 							logger.error(err);
@@ -138,10 +173,7 @@ export default class WebSocketSession {
 					});
 				}
 			})
-			.catch(err => {
-				console.log('ERROR!');
-				console.log(err);
-			});
+			.catch(err => this.respond(req, err));
 	}
 
 	/**
@@ -149,10 +181,12 @@ export default class WebSocketSession {
 	 *
 	 * @param {Object} req - The WebSocket subprotocol request state.
 	 * @param {*} res - The dispatcher response.
+	 * @param {Boolean} [skipLog=false] - When true, does not log the request. This `true` when
+	 * sending new, non-pubsub data from a stream.
 	 * @access private
 	 */
-	respond(req, res) {
-		if (!res.id && req && req.id) {
+	respond(req, res, skipLog) {
+		if (req && req.id) {
 			res.id = req.id;
 		}
 		if (!res.type && req && req.type) {
@@ -165,7 +199,9 @@ export default class WebSocketSession {
 		}
 
 		this.send(res);
-		this.log(req, res);
+		if (!skipLog) {
+			this.log(req, res);
+		}
 	}
 
 	/**

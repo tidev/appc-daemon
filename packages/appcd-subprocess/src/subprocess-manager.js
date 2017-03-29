@@ -1,6 +1,5 @@
 import Dispatcher, { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
 import gawk, { GawkArray } from 'gawk';
-import NanoBuffer from 'nanobuffer';
 import snooplogg from 'snooplogg';
 import SubprocessError from './subprocess-error';
 
@@ -25,58 +24,52 @@ export default class SubprocessManager extends EventEmitter {
 				}
 			}))
 
-			.register(new ServiceDispatcher('/spawn', {
-				onCall(ctx) {
-					return new Promise((resolve, reject) => {
-						const { data } = ctx.payload;
+			.register('/spawn', ctx => new Promise((resolve, reject) => {
+				const { data, source } = ctx.payload;
 
-						if (data.hasOwnProperty('options') && data.options && data.options.hasOwnProperty('maxBuffer') && (typeof data.options.maxBuffer !== 'number' || data.options.maxBuffer < 0)) {
-							throw new SubprocessError(codes.INVALID_ARGUMENT, 'Spawn max buffer must be a positive integer');
-						}
-
-						const { command, args, child } = spawn(data);
-
-						child.on('error', e => reject(new SubprocessError(e)));
-
-						const { pid } = child;
-						logger.log('%s spawned', highlight(pid));
-
-						subprocesses.push({
-							pid,
-							command,
-							args,
-							startTime: new Date
-						});
-
-						const output = (child.stdout || child.stderr) && data.maxBuffer > 0 ? new NanoBuffer(data.maxBuffer) : [];
-
-						if (child.stdout) {
-							child.stdout.on('data', data => output.push([1, data.toString()]));
-						}
-
-						if (child.stderr) {
-							child.stderr.on('data', data => output.push([2, data.toString()]));
-						}
-
-						child.on('close', code => {
-							logger.log('%s exited (code %s)', highlight(pid), code);
-
-							for (const i = 0, l = subprocesses.length; i < l; i++) {
-								if (subprocesses[i].pid === pid) {
-									subprocesses.splice(i, 1);
-									break;
-								}
-							}
-
-							ctx.response = {
-								code,
-								output: Array.from(output)
-							};
-
-							resolve();
-						});
-					});
+				if (source === 'http') { // || source === 'websocket') {
+					throw new SubprocessError(codes.FORBIDDEN, 'Spawn not permitted');
 				}
+
+				const { command, args, child } = spawn(data);
+
+				child.on('error', e => reject(new SubprocessError(e)));
+
+				const { pid } = child;
+				logger.log('%s spawned', highlight(pid));
+
+				subprocesses.push({
+					pid,
+					command,
+					args,
+					startTime: new Date
+				});
+
+				if (child.stdout) {
+					child.stdout.on('data', data => ctx.response.write({ type: 'stdout', output: data.toString() }));
+				}
+
+				if (child.stderr) {
+					child.stdout.on('data', data => ctx.response.write({ type: 'stderr', output: data.toString() }));
+				}
+
+				child.on('close', code => {
+					logger.log('%s exited (code %s)', highlight(pid), code);
+
+					for (const i = 0, l = subprocesses.length; i < l; i++) {
+						if (subprocesses[i].pid === pid) {
+							subprocesses.splice(i, 1);
+							break;
+						}
+					}
+
+					ctx.response.end({
+						type: 'exit',
+						code
+					});
+
+					resolve();
+				});
 			}))
 
 			.register('/kill/:pid', ctx => {

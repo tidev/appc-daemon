@@ -9,7 +9,11 @@ const cmd = {
 
 		createRequest(cfg, '/appcd/logcat', { colors: argv.colors })
 			.request
-			.on('response', process.stdout.write);
+			.on('response', response => process.stdout.write(response))
+			.once('error', err => {
+				console.error(err);
+				process.exit(1);
+			});
 	}
 };
 

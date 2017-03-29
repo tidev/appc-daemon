@@ -467,11 +467,16 @@ gulp.task('watch-only', cb => {
 		})
 	];
 
+	let stopping = false;
+
 	process.on('SIGINT', () => {
-		for (const w of watchers) {
-			w._watcher.close();
+		if (!stopping) {
+			stopping = true;
+			for (const w of watchers) {
+				w._watcher.close();
+			}
+			cb();
 		}
-		cb();
 	});
 });
 
