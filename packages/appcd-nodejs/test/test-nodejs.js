@@ -35,6 +35,10 @@ describe('nodejs', () => {
 
 		it('should error if node home is invalid', () => {
 			expect(() => {
+				prepareNode({});
+			}).to.throw(TypeError, 'Expected Node home to be a non-empty string');
+
+			expect(() => {
 				prepareNode({ arch: 'x64' });
 			}).to.throw(TypeError, 'Expected Node home to be a non-empty string');
 
@@ -326,6 +330,12 @@ describe('nodejs', () => {
 					expect(err.message).to.equal('Expected v8mem to be a number or "auto"');
 					done();
 				});
+		});
+
+		it('should error if arch is invalid', () => {
+			expect(() => {
+				spawnNode({ arch: 'foo' });
+			}).to.throw(Error, 'Expected arch to be "x86" or "x64"');
 		});
 	});
 });

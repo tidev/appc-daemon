@@ -1,4 +1,4 @@
-import Config from '../src/index';
+import Config, { load } from '../src/index';
 import path from 'path';
 
 describe('load()', () => {
@@ -16,8 +16,80 @@ describe('load()', () => {
 	 * @returns {Config}
 	export function load({ config, configFile, defaultConfigFile } = {}) {
 	*/
-	it('should work!', () => {
-		//
+	it('should load without any options', () => {
+		const config = load();
+		expect(config).to.be.instanceof(Config);
+		expect(config.toString(0)).to.equal('{}');
+
+		const config2 = load({});
+		expect(config2).to.be.instanceof(Config);
+		expect(config2.toString(0)).to.equal('{}');
+	});
+
+	it('should fail if config option is invalid', () => {
+		expect(() => {
+			load({ config: 'foo' });
+		}).to.throw(TypeError, 'Expected config to be an object');
+
+		expect(() => {
+			load({ config: [] });
+		}).to.throw(TypeError, 'Expected config to be an object');
+	});
+
+	it('should fail if default config file option is invalid', () => {
+		expect(() => {
+			load({ defaultConfigFile: 123 });
+		}).to.throw(TypeError, 'Expected config file to be a string');
+
+		expect(() => {
+			load({ defaultConfigFile: path.join(__dirname, 'noextension') });
+		}).to.throw(Error, 'Config file must be a JavaScript or JSON file');
+
+		const doesnotexist = path.join(__dirname, 'doesnotexist.js');
+		expect(function () {
+			load({ defaultConfigFile: doesnotexist });
+		}).to.throw(Error, `Config file not found: ${doesnotexist}`);
+	});
+
+	it('should fail if config file option is invalid', () => {
+		expect(() => {
+			load({ configFile: 123 });
+		}).to.throw(TypeError, 'Expected config file to be a string');
+
+		expect(() => {
+			load({ configFile: path.join(__dirname, 'noextension') });
+		}).to.throw(Error, 'Config file must be a JavaScript or JSON file');
+
+		const doesnotexist = path.join(__dirname, 'doesnotexist.js');
+		expect(function () {
+			load({ configFile: doesnotexist });
+		}).to.throw(Error, `Config file not found: ${doesnotexist}`);
+	});
+
+	it('should load a config and default config file', () => {
+		const config = load({
+			configFile: path.join(__dirname, 'fixtures', 'good-load.js'),
+			defaultConfigFile: path.join(__dirname, 'fixtures', 'good-default-load.js')
+		});
+		expect(config.toString(0)).to.equal('{"age":30,"food":["pizza","tacos"],"name":"foo"}');
+	});
+
+	it('should load environment specific config file', () =>  {
+		const config = load({
+			configFile: path.join(__dirname, 'fixtures', 'good-load-foo.js')
+		});
+		expect(config.toString(0)).to.equal('{"name":"baz","environment":{"name":"foo"}}');
+	});
+
+	it('should merge custom config with config file', () => {
+		const config = load({
+			config: {
+				age: 29,
+				food: 'nachos'
+			},
+			configFile: path.join(__dirname, 'fixtures', 'good-load.js')
+		});
+		expect(config.toString(0)).to.equal('{"age":29,"food":"nachos","name":"foo"}');
 	});
 });
 
@@ -53,6 +125,11 @@ describe('Config', () => {
 
 			expect(function () {
 				new Config({ configFile: path.join(__dirname, 'fixtures', 'bad-syntax.js') });
+			}).to.throw(Error, /^Failed to load config file: /);
+
+			// NOTE: this test will pass if Node ever supports ECMAScript 2015 modules
+			expect(function () {
+				new Config({ configFile: path.join(__dirname, 'fixtures', 'bad-es-export.js') });
 			}).to.throw(Error, /^Failed to load config file: /);
 
 			expect(function () {

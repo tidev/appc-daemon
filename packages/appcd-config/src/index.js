@@ -20,6 +20,8 @@ export default Config;
  * will be re-merged since it always takes precedence.
  * @param {String} [opts.configFile] - Path to a config file to load. It may be
  * a JavaScript or JSON file.
+ * @param {String} [opts.defaultConfigFile] - Path to the default config file to load. The default
+ * config file is loaded first before the config file, if specified.
  * @returns {Config}
  */
 export function load({ config, configFile, defaultConfigFile } = {}) {
@@ -27,7 +29,7 @@ export function load({ config, configFile, defaultConfigFile } = {}) {
 	let remerge = false;
 
 	// load the user-defined config file
-	if (configFile && isFile(configFile)) {
+	if (configFile) {
 		cfg.load(configFile);
 		remerge = true;
 	}
