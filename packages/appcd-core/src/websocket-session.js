@@ -112,6 +112,7 @@ export default class WebSocketSession {
 				sessionId: req.sessionId,
 				data:      req.data || {},
 				type:      req.type,
+				headers:   this.ws.upgradeReq.headers,
 				source:    'websocket'
 			})
 			.then(({ status, response }) => {

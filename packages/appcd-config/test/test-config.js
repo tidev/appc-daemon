@@ -1,8 +1,27 @@
 import Config from '../src/index';
 import path from 'path';
 
-describe('Config', () => {
+describe('load()', () => {
+	/**
+	 * Creates a `Config` instance and loads the specified configuration and
+	 * environment specific configuration files.
+	 *
+	 * @param {Object} [opts] - Various options.
+	 * @param {Object} [opts.config] - An object with various config settings. The
+	 * config object will be initialized with these values, however if any user-
+	 * defined or environment specific config files are loaded, then this object
+	 * will be re-merged since it always takes precedence.
+	 * @param {String} [opts.configFile] - Path to a config file to load. It may be
+	 * a JavaScript or JSON file.
+	 * @returns {Config}
+	export function load({ config, configFile, defaultConfigFile } = {}) {
+	*/
+	it('should work!', () => {
+		//
+	});
+});
 
+describe('Config', () => {
 	describe('constructor', () => {
 		it('should load blank config', () => {
 			const config = new Config();
@@ -317,7 +336,6 @@ describe('Config', () => {
 			}).to.throw(Error, 'Config option "id" is readonly');
 		});
 	});
-
 });
 
 function validateMetadata(meta, desc, type, deprecated, readonly) {
