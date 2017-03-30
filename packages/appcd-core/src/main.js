@@ -27,11 +27,4 @@ new CLI({
 			.then(server => new server.default(argv));
 	})
 	.then(server => server.start())
-	.then(appcd => {
-		Object.defineProperty(global, 'appcd', {
-			configurable: false,
-			enumerable: true,
-			value: appcd
-		});
-	})
 	.catch(console.error);

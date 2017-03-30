@@ -37,12 +37,7 @@ describe('WebSocketSession', () => {
 
 		expect(() => {
 			const ws = new WebSocket('ws://127.0.0.1:1337');
-			new WebSocketSession(ws);
-		}).to.throw(TypeError, 'Expected a Dispatcher instance');
-
-		expect(() => {
-			const ws = new WebSocket('ws://127.0.0.1:1337');
-			new WebSocketSession(ws, null);
+			new WebSocketSession(ws, function () {});
 		}).to.throw(TypeError, 'Expected a Dispatcher instance');
 
 		expect(() => {

@@ -83,7 +83,7 @@ export function spawn(params) {
 
 	if (params.hasOwnProperty('options')) {
 		if (!params.options || typeof params.options !== 'object') {
-			throw new DispatcherError(codes.INVALID_ARGUMENT, 'Spawn "options" must be an object');
+			throw new SubprocessError(codes.INVALID_ARGUMENT, 'Spawn "options" must be an object');
 		}
 
 		for (const prop of ['cwd', 'env', 'stdio']) {

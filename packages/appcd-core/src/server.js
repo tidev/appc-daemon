@@ -155,8 +155,7 @@ export default class Server extends HookEmitter {
 
 			.register('/subprocess', this.subprocessManager.dispatcher);
 
-		this.rootDispatcher = new Dispatcher()
-			.register('/appcd', appcdDispatcher);
+		Dispatcher.register('/appcd', appcdDispatcher);
 
 		// init the web server
 		this.webserver = new WebServer({
@@ -165,8 +164,8 @@ export default class Server extends HookEmitter {
 			webroot:  path.resolve(__dirname, '..', 'public')
 		});
 
-		this.webserver.use(this.rootDispatcher.callback());
-		this.webserver.on('websocket', ws => new WebSocketSession(ws, this.rootDispatcher));
+		this.webserver.use(Dispatcher.callback());
+		this.webserver.on('websocket', ws => new WebSocketSession(ws));
 
 		return Promise.resolve()
 			.then(() => {
@@ -176,12 +175,7 @@ export default class Server extends HookEmitter {
 			// TODO: init analytics
 			// TODO: load plugins
 			.then(() => this.webserver.listen())
-			.then(() => this.emit('appcd.start'))
-			.then(() => ({
-				dispatcher: this.rootDispatcher,
-				logger,
-				Plugin
-			}));
+			.then(() => this.emit('appcd.start'));
 	}
 
 	/**

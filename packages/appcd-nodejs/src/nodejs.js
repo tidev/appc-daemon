@@ -33,6 +33,9 @@ const { highlight } = snooplogg.styles;
  * @returns {Promise} Resolves the path to the requested Node.js binary.
  */
 export function prepareNode({ arch, nodeHome, version } = {}) {
+	if (!arch) {
+		arch = getArch();
+	}
 	if (arch !== 'x86' && arch !== 'x64') {
 		throw new Error('Expected arch to be "x86" or "x64"');
 	}
@@ -52,6 +55,8 @@ export function prepareNode({ arch, nodeHome, version } = {}) {
 	const platform = process.env.APPCD_TEST_PLATFORM || process.platform;
 	const binaryPath = path.join(nodeHome, version, platform, arch);
 	const binary = path.join(binaryPath, platform === 'win32' ? 'node.exe' : 'node');
+
+	logger.log('Checking %s', highlight(binary));
 
 	if (isFile(binary) && spawnSync(binary, ['--version'], { encoding: 'utf8' }).stdout.trim() === version) {
 		logger.log(`Node.js ${version} ready`);
@@ -318,6 +323,9 @@ export function spawnNode({ arch, args, detached, nodeHome, nodeArgs, v8mem = 'a
 
 	if (!arch) {
 		arch = getArch();
+	}
+	if (arch !== 'x86' && arch !== 'x64') {
+		throw new Error('Expected arch to be "x86" or "x64"');
 	}
 
 	return Promise.resolve()

@@ -25,11 +25,7 @@ describe('nodejs', () => {
 
 		it('should error if architecture is invalid', () => {
 			expect(() => {
-				prepareNode();
-			}).to.throw(Error, 'Expected arch to be "x86" or "x64"');
-
-			expect(() => {
-				prepareNode({});
+				prepareNode({ arch: {} });
 			}).to.throw(Error, 'Expected arch to be "x86" or "x64"');
 
 			expect(() => {

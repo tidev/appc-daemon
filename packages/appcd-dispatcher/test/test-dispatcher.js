@@ -476,7 +476,7 @@ describe('dispatcher', () => {
 			const d = new Dispatcher;
 
 			d.register('/foo', ctx => {
-				expect(ctx.payload).to.deep.equal({ data: { foo: 'bar' } });
+				expect(ctx.payload).to.deep.equal({ data: { foo: 'bar' }, source: 'http' });
 				ctx.response = 'foo!';
 			});
 

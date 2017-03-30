@@ -20,9 +20,9 @@ let sessionCounter = 0;
 /**
  * A custom error for WebSocket session errors.
  */
-const WebSocketError = createErrorClass('createErrorClass', {
+const WebSocketError = createErrorClass('WebSocketError', {
 	defaultStatus: codes.BAD_REQUEST,
-	defaultCode: codes.WEBSOCKET_BAD_REQUEST
+	defaultCode:   codes.WEBSOCKET_BAD_REQUEST
 });
 
 /**
@@ -31,19 +31,24 @@ const WebSocketError = createErrorClass('createErrorClass', {
 export default class WebSocketSession {
 	/**
 	 * Creates a appcd WebSocket session and wires up the message handler.
+	 *
+	 * @param {WebSocket} ws - The WebSocket instance.
+	 * @param {Dispatcher} [dispatcher] - The dispatcher instance. If not specified, uses the root
+	 * Dispatcher instance.
+	 * @access public
 	 */
 	constructor(ws, dispatcher) {
 		if (!(ws instanceof WebSocket)) {
 			throw new TypeError('Expected a WebSocket instance');
 		}
 
-		if (!(dispatcher instanceof Dispatcher)) {
+		if (dispatcher && !(dispatcher instanceof Dispatcher)) {
 			throw new TypeError('Expected a Dispatcher instance');
 		}
 
 		this.sessionId = sessionCounter++;
 		this.ws = ws;
-		this.dispatcher = dispatcher;
+		this.dispatcher = dispatcher || Dispatcher.root;
 		this.subscriptions = {};
 		this.remoteId = `${ws._socket.remoteAddress}:${ws._socket.remotePort}`;
 
@@ -101,7 +106,7 @@ export default class WebSocketSession {
 			throw new WebSocketError('Request "id" required');
 		}
 
-		return this.dispatcher
+		this.dispatcher
 			.call(req.path, {
 				id:        req.id,
 				sessionId: req.sessionId,
@@ -173,7 +178,10 @@ export default class WebSocketSession {
 					});
 				}
 			})
-			.catch(err => this.respond(req, err));
+			.catch(err => {
+				this.respond(req, err);
+				logger.error(err);
+			});
 	}
 
 	/**

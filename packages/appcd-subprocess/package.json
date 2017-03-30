@@ -27,6 +27,8 @@
   "appcdDependencies": [
     "appcd-dispatcher",
     "appcd-gulp",
+    "appcd-nodejs",
+    "appcd-path",
     "appcd-response"
   ],
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",

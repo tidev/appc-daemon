@@ -23,10 +23,48 @@ class DispatcherContext {
 	}
 }
 
+let rootInstance = null;
+
 /**
  * Cross between an event emitter and a router.
  */
 export default class Dispatcher {
+	/**
+	 * The root dispatcher instance.
+	 * @type {Dispatcher}
+	 * @access {public}
+	 */
+	static get root() {
+		if (!rootInstance) {
+			rootInstance = new Dispatcher;
+		}
+		return rootInstance;
+	}
+
+	/**
+	 * Runs the root dispatcher instance's `call()`.
+	 * @access public
+	 */
+	static call(...args) {
+		return this.root.call(...args);
+	}
+
+	/**
+	 * Runs the root dispatcher instance's `callback()`.
+	 * @access public
+	 */
+	static callback(...args) {
+		return this.root.callback(...args);
+	}
+
+	/**
+	 * Runs the root dispatcher instance's `register()`.
+	 * @access public
+	 */
+	static register(...args) {
+		return this.root.register(...args);
+	}
+
 	/**
 	 * List of registered routes.
 	 * @type {Array}
@@ -38,59 +76,6 @@ export default class Dispatcher {
 	 * @type {String}
 	 */
 	prefix = null;
-
-	/**
-	 * Registers a handler to a path.
-	 *
-	 * @param {ServiceDispatcher|Object|String|RegExp|Array<String>|Array<RegExp>} path - The path
-	 * to register the handler to. This can also be a `ServiceDispatcher` instance or any object
-	 * that has a path and a handler.
-	 * @param {Function|Dispatcher} handler - A function to call when the path matches.
-	 * @returns {Dispatcher}
-	 * @access public
-	 */
-	register(path, handler) {
-		if (Array.isArray(path)) {
-			for (const p of path) {
-				this.register(p, handler);
-			}
-			return this;
-		}
-
-		// check if we have a ServiceDispatcher or any object with a path and handler callback
-		if (path && typeof path === 'object' && path.path && typeof path.handler === 'function') {
-			handler = path.handler;
-			path = path.path;
-		}
-
-		if (typeof path !== 'string' && !(path instanceof RegExp)) {
-			throw new TypeError('Invalid path');
-
-		} else if (typeof handler === 'function' || handler instanceof Dispatcher) {
-			const keys = [];
-			const regexp = pathToRegExp(path, keys, { end: !(handler instanceof Dispatcher) });
-			const prefix = handler instanceof Dispatcher ? path : null;
-
-			this.routes.push({
-				path,
-				prefix,
-				handler,
-				keys,
-				regexp
-			});
-
-			// if this is a scoped dispatcher and the path is /, then suppress the
-			// redundant log message
-			if (!this.prefix || path !== '/') {
-				logger.debug(`Registered dispatcher route ${highlight(path)}`);
-			}
-
-		} else {
-			throw new TypeError('Invalid handler');
-		}
-
-		return this;
-	}
 
 	/**
 	 * Asynchronously dispatch a request. If unable to find a appropriate handler, an error is
@@ -250,5 +235,58 @@ export default class Dispatcher {
 					return Promise.resolve();
 				});
 		};
+	}
+
+	/**
+	 * Registers a handler to a path.
+	 *
+	 * @param {ServiceDispatcher|Object|String|RegExp|Array<String>|Array<RegExp>} path - The path
+	 * to register the handler to. This can also be a `ServiceDispatcher` instance or any object
+	 * that has a path and a handler.
+	 * @param {Function|Dispatcher} handler - A function to call when the path matches.
+	 * @returns {Dispatcher}
+	 * @access public
+	 */
+	register(path, handler) {
+		if (Array.isArray(path)) {
+			for (const p of path) {
+				this.register(p, handler);
+			}
+			return this;
+		}
+
+		// check if we have a ServiceDispatcher or any object with a path and handler callback
+		if (path && typeof path === 'object' && path.path && typeof path.handler === 'function') {
+			handler = path.handler;
+			path = path.path;
+		}
+
+		if (typeof path !== 'string' && !(path instanceof RegExp)) {
+			throw new TypeError('Invalid path');
+
+		} else if (typeof handler === 'function' || handler instanceof Dispatcher) {
+			const keys = [];
+			const regexp = pathToRegExp(path, keys, { end: !(handler instanceof Dispatcher) });
+			const prefix = handler instanceof Dispatcher ? path : null;
+
+			this.routes.push({
+				path,
+				prefix,
+				handler,
+				keys,
+				regexp
+			});
+
+			// if this is a scoped dispatcher and the path is /, then suppress the
+			// redundant log message
+			if (!this.prefix || path !== '/') {
+				logger.debug(`Registered dispatcher route ${highlight(path)}`);
+			}
+
+		} else {
+			throw new TypeError('Invalid handler');
+		}
+
+		return this;
 	}
 }

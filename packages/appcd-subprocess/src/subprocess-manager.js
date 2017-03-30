@@ -1,9 +1,11 @@
-import Dispatcher, { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
+import Dispatcher, { DispatcherError } from 'appcd-dispatcher';
 import gawk, { GawkArray } from 'gawk';
 import snooplogg from 'snooplogg';
 import SubprocessError from './subprocess-error';
 
 import { EventEmitter } from 'events';
+import { expandPath } from 'appcd-path';
+import { prepareNode } from 'appcd-nodejs';
 import { spawn } from './subprocess';
 
 const { codes } = DispatcherError;
@@ -17,59 +19,92 @@ export default class SubprocessManager extends EventEmitter {
 
 		const subprocesses = this.subprocesses = new GawkArray;
 
-		this.dispatcher = new Dispatcher()
-			.register(new ServiceDispatcher('/spawn/node/:version?', {
-				onCall(ctx) {
-					ctx.response = 'spawning node';
+		const dispatcher = this.dispatcher = new Dispatcher()
+			.register('/spawn/node/:version?', ctx => {
+				const { data, source } = ctx.payload;
+
+				// if the source is http, then block the spawn
+				if (source === 'http') {
+					throw new SubprocessError(codes.FORBIDDEN, 'Spawn not permitted');
 				}
-			}))
+
+				return Promise.resolve()
+					.then(() => Dispatcher.call('/appcd/config/home'))
+					.then(({ response }) => expandPath(response, 'node'))
+					.then(nodeHome => prepareNode({ nodeHome, version: ctx.params.version || process.version }))
+					.then(node => dispatcher.call('/spawn', { data: { ...data, command: node } }));
+			})
 
 			.register('/spawn', ctx => new Promise((resolve, reject) => {
 				const { data, source } = ctx.payload;
 
-				if (source === 'http') { // || source === 'websocket') {
+				// if the source is http, then block the spawn
+				if (source === 'http') {
 					throw new SubprocessError(codes.FORBIDDEN, 'Spawn not permitted');
 				}
 
-				const { command, args, child } = spawn(data);
+				let tries = 3;
+				const trySpawn = () => {
+					return Promise.resolve()
+						.then(() => {
+							tries--;
+							return spawn(data);
+						})
+						.catch(err => {
+							console.log('ERROR!', err);
+							if (err.code === 'ETXTBSY' && tries) {
+								logger.log('Spawn threw ETXTBSY, retrying...');
+								return new Promise((resolve, reject) => {
+									setTimeout(() => trySpawn().then(resolve, reject), 50);
+								});
+							}
+							throw err;
+						});
+				};
 
-				child.on('error', e => reject(new SubprocessError(e)));
+				trySpawn()
+					.then(result => {
+						const { command, args, child } = result;
 
-				const { pid } = child;
-				logger.log('%s spawned', highlight(pid));
+						child.on('error', e => reject(new SubprocessError(e)));
 
-				subprocesses.push({
-					pid,
-					command,
-					args,
-					startTime: new Date
-				});
+						const { pid } = child;
+						logger.log('%s spawned', highlight(pid));
 
-				if (child.stdout) {
-					child.stdout.on('data', data => ctx.response.write({ type: 'stdout', output: data.toString() }));
-				}
+						subprocesses.push({
+							pid,
+							command,
+							args,
+							startTime: new Date
+						});
 
-				if (child.stderr) {
-					child.stdout.on('data', data => ctx.response.write({ type: 'stderr', output: data.toString() }));
-				}
-
-				child.on('close', code => {
-					logger.log('%s exited (code %s)', highlight(pid), code);
-
-					for (const i = 0, l = subprocesses.length; i < l; i++) {
-						if (subprocesses[i].pid === pid) {
-							subprocesses.splice(i, 1);
-							break;
+						if (child.stdout) {
+							child.stdout.on('data', data => ctx.response.write({ type: 'stdout', output: data.toString() }));
 						}
-					}
 
-					ctx.response.end({
-						type: 'exit',
-						code
-					});
+						if (child.stderr) {
+							child.stderr.on('data', data => ctx.response.write({ type: 'stderr', output: data.toString() }));
+						}
 
-					resolve();
-				});
+						child.on('close', code => {
+							logger.log('%s exited (code %s)', highlight(pid), code);
+
+							for (const i = 0, l = subprocesses.length; i < l; i++) {
+								if (subprocesses[i].pid === pid) {
+									subprocesses.splice(i, 1);
+									break;
+								}
+							}
+
+							ctx.response.end({
+								type: 'exit',
+								code
+							});
+
+							resolve();
+						});
+					})
+					.catch(err => reject(new SubprocessError(err)));
 			}))
 
 			.register('/kill/:pid', ctx => {
