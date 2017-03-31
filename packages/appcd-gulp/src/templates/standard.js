@@ -138,7 +138,7 @@ module.exports = (opts) => {
 			.pipe($.sourcemaps.write())
 			.pipe($.injectModules())
 			.on('finish', () => {
-				let stream = gulp.src([setupScript, 'test/**/*.js'])
+				let stream = gulp.src([setupScript, 'test/**/test*.js'])
 					.pipe($.plumber())
 					.pipe($.debug({ title: 'test' }))
 					.pipe($.sourcemaps.init())

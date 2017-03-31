@@ -4,7 +4,10 @@ import _which from 'which';
 
 import { spawn as _spawn } from 'child_process';
 
+const { codes } = SubprocessError;
+
 const isWindows = process.platform === 'win32';
+
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:subprocess');
 const { highlight } = snooplogg.styles;
 
@@ -62,7 +65,11 @@ export function run(cmd, args, opts) {
  * @param {Object} [params.options] - Various spawn params. These
  * @returns {ChildProcess}
  */
-export function spawn(params) {
+export function spawn(params = {}) {
+	if (!params || typeof params !== 'object') {
+		throw new TypeError('Expected params to be an object');
+	}
+
 	if (!params.hasOwnProperty('command')) {
 		throw new SubprocessError(codes.MISSING_ARGUMENT, 'Missing required argument "%s"', 'command');
 	}

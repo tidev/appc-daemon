@@ -47,7 +47,6 @@ export default class SubprocessManager extends EventEmitter {
 
 			.register('/spawn', ctx => new Promise((resolve, reject) => {
 				const { data, source } = ctx.payload;
-				console.log(ctx);
 
 				// if the source is http, then block the spawn
 				if (source === 'http') {
@@ -62,7 +61,6 @@ export default class SubprocessManager extends EventEmitter {
 							return spawn(data);
 						})
 						.catch(err => {
-							console.log('ERROR!', err);
 							if (err.code === 'ETXTBSY' && tries) {
 								logger.log('Spawn threw ETXTBSY, retrying...');
 								return new Promise((resolve, reject) => {
@@ -75,19 +73,12 @@ export default class SubprocessManager extends EventEmitter {
 
 				trySpawn()
 					.then(result => {
-						const { command, args, child } = result;
+						const { command, args, options, child } = result;
 
 						child.on('error', e => reject(new SubprocessError(e)));
 
 						const { pid } = child;
 						logger.log('Spawned %s', highlight(pid));
-
-						subprocesses.push({
-							pid,
-							command,
-							args,
-							startTime: new Date
-						});
 
 						if (child.stdout) {
 							child.stdout.on('data', data => ctx.response.write({ type: 'stdout', output: data.toString() }));
@@ -100,7 +91,7 @@ export default class SubprocessManager extends EventEmitter {
 						child.on('close', code => {
 							logger.log('%s exited (code %s)', highlight(pid), code);
 
-							for (const i = 0, l = subprocesses.length; i < l; i++) {
+							for (let i = 0, l = subprocesses.length; i < l; i++) {
 								if (subprocesses[i].pid === pid) {
 									subprocesses.splice(i, 1);
 									break;
@@ -114,6 +105,18 @@ export default class SubprocessManager extends EventEmitter {
 
 							resolve();
 						});
+
+						const desc = {
+							pid,
+							command,
+							args,
+							options,
+							startTime: new Date
+						};
+
+						subprocesses.push(desc);
+
+						this.emit('spawn', desc);
 					})
 					.catch(err => reject(new SubprocessError(err)));
 			}))
@@ -145,6 +148,8 @@ export default class SubprocessManager extends EventEmitter {
 						throw new SubprocessError(e);
 					}
 				}
+
+				this.emit('kill', pid);
 			})
 
 			.register('/status', ctx => {

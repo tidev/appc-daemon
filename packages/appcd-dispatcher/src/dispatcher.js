@@ -87,6 +87,10 @@ export default class Dispatcher {
 	 * @access public
 	 */
 	call(path, payload) {
+		if (!path || typeof path !== 'string') {
+			throw new TypeError('Expected path to be a non-empty string');
+		}
+
 		let ctx;
 		if (payload instanceof DispatcherContext) {
 			ctx = payload;
@@ -145,8 +149,6 @@ export default class Dispatcher {
 
 			return new Promise((resolve, reject) => {
 				let fired = false;
-
-				logger.trace('Calling route handler %d', i);
 
 				let result = route.handler(ctx, function next(result) {
 					// go to next route
@@ -214,7 +216,7 @@ export default class Dispatcher {
 				.then(result => {
 					if (result.response instanceof Response) {
 						ctx.status = result.response.status || codes.OK;
-						ctx.body = result.response.toString(ctx.request.acceptsLanguages()).replace(stripRegExp, '');
+						ctx.body = result.response.toString(ctx.request && ctx.request.acceptsLanguages()).replace(stripRegExp, '');
 					} else {
 						ctx.status = result.status;
 						ctx.body = result.response;

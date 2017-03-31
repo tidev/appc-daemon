@@ -418,6 +418,22 @@ describe('dispatcher', () => {
 				})
 				.catch(done);
 		});
+
+		it('should error if path is invalid', () => {
+			const d = new Dispatcher;
+
+			expect(() => {
+				d.call();
+			}).to.throw(TypeError, 'Expected path to be a non-empty string');
+
+			expect(() => {
+				d.call(123);
+			}).to.throw(TypeError, 'Expected path to be a non-empty string');
+
+			expect(() => {
+				d.call(null);
+			}).to.throw(TypeError, 'Expected path to be a non-empty string');
+		});
 	});
 
 	describe('middleware', () => {
@@ -476,7 +492,7 @@ describe('dispatcher', () => {
 			const d = new Dispatcher;
 
 			d.register('/foo', ctx => {
-				expect(ctx.payload).to.deep.equal({ data: { foo: 'bar' }, source: 'http' });
+				expect(ctx.payload).to.deep.equal({ data: { foo: 'bar' }, headers: {}, source: 'http' });
 				ctx.response = 'foo!';
 			});
 
@@ -487,7 +503,8 @@ describe('dispatcher', () => {
 				request: {
 					body: {
 						foo: 'bar'
-					}
+					},
+					acceptsLanguages: () => {}
 				}
 			};
 
