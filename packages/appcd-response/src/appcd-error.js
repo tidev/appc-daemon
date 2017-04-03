@@ -39,12 +39,20 @@ export default class AppcdError extends Error {
 		return this.msg.status;
 	}
 
+	set status(value) {
+		this.msg.status = value;
+	}
+
 	/**
 	 * The error code.
 	 * @type {String}
 	 */
 	get code() {
 		return this.msg.code;
+	}
+
+	set code(value) {
+		this.msg.code = value;
 	}
 
 	/**

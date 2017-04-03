@@ -12,7 +12,7 @@ export function locale() {
 		return cachedLocale;
 	}
 
-	if (process.platform == 'win32') {
+	if (process.platform === 'win32') {
 		let { stdout } = spawnSync('reg', ['query', 'HKCU\\Control Panel\\International', '/v', 'Locale']);
 		let m = stdout.toString().trim().match(/Locale\s+REG_SZ\s+(.+)/);
 		if (m) {

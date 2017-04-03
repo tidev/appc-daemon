@@ -104,6 +104,16 @@ describe('AppcdError', () => {
 		expect(err.message).to.equal('Unknown Error: true');
 		expect(err.toString()).to.equal('AppcdError: Unknown Error: true');
 	});
+
+	it('should override status and code', () => {
+		const err = new AppcdError();
+		expect(err.status).to.be.null;
+		err.status = 123;
+		expect(err.status).to.equal(123);
+		expect(err.code).to.be.null;
+		err.code = '123';
+		expect(err.code).to.equal('123');
+	});
 });
 
 describe('Custom Errors', () => {

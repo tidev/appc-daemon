@@ -24,7 +24,9 @@ export default class Message {
 	 *
 	 * @param {String?} defaultFormat - The default format to use when the message is null,
 	 * undefined, or an object.
-	 * @param {*} msg - The code or message.
+	 * @param {*} [msg] - The code or message.
+	 * @param {...*} [args] - Additional values to embed in the message.
+	 * @access public
 	 */
 	constructor(defaultFormat, msg, ...args) {
 		if (msg instanceof AppcdError) {
@@ -55,11 +57,13 @@ export default class Message {
 			this.format = status !== null ? args.shift() : msg;
 			this.args   = serializeArgs(args);
 
-		} else if (msg) {
+		} else {
 			this.status = null;
 			this.code   = null;
-			this.format = defaultFormat || '%s';
-			this.args   = serializeArgs([ msg ]);
+			if (msg) {
+				this.format = defaultFormat || '%s';
+			}
+			this.args = serializeArgs(msg ? [ msg, ...args ] : args);
 		}
 	}
 
@@ -78,22 +82,41 @@ export default class Message {
 	}
 
 	/**
+	 * The message's status.
+	 *
+	 * @type {String}
+	 * @access public
+	 */
+	get status() {
+		return this._status;
+	}
+
+	set status(value) {
+		this._status = value === null ? null : parseInt(value);
+	}
+
+	/**
 	 * Retrieves this error's message.
 	 *
 	 * @param {String|Array.<String>} [locales] - A list of preferred locales to format the message.
 	 * @returns {String}
-	 * @access private
+	 * @access public
 	 */
 	toString(locales, defaultMsg) {
 		let msg;
+
 		if (this.format) {
 			msg = loadMessage(this.format, locales);
-			if (Array.isArray(this.args)) {
-				msg = util.format(msg, ...this.args);
-			}
-		} else if (this.code) {
+		}
+
+		if (Array.isArray(this.args) && this.args.length) {
+			msg = util.format(msg || '%s', ...this.args);
+		}
+
+		if (!msg && this.code) {
 			msg = loadMessage(this.code, locales);
 		}
+
 		return msg || (defaultMsg && loadMessage(defaultMsg, locales)) || '';
 	}
 }
@@ -153,6 +176,10 @@ export function i18n(locales) {
  * @returns {String}
  */
 export function loadMessage(codeOrMessage, locales) {
+	if (codeOrMessage === '%s') {
+		return codeOrMessage;
+	}
+
 	codeOrMessage = String(codeOrMessage);
 	locales = processLocales(locales);
 
@@ -214,6 +241,10 @@ function processLocales(locales) {
  * @returns {String}
  */
 function loadString(message, locales) {
+	if (!message) {
+		return '';
+	}
+
 	for (let locale of locales) {
 		if (!stringsCache[locale]) {
 			try {

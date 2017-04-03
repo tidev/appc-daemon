@@ -25,6 +25,10 @@ export default class Response {
 		return this.msg.code;
 	}
 
+	set code(value) {
+		this.msg.code = value;
+	}
+
 	/**
 	 * Returns the message number. The value can be `null`.
 	 *
@@ -33,6 +37,10 @@ export default class Response {
 	 */
 	get status() {
 		return this.msg.status;
+	}
+
+	set status(value) {
+		this.msg.status = value;
 	}
 
 	/**

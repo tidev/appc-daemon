@@ -2,7 +2,7 @@ import Dispatcher from '../src/index';
 import DispatcherError from '../src/dispatcher-error';
 import ServiceDispatcher from '../src/service-dispatcher';
 
-import { AppcdError, codes } from 'appcd-response';
+import Response, { AppcdError, codes } from 'appcd-response';
 
 describe('dispatcher', () => {
 	describe('register', () => {
@@ -401,6 +401,26 @@ describe('dispatcher', () => {
 				.catch(done);
 		});
 
+		it('should route to deeply nested dispatchers', done => {
+			const d = new Dispatcher;
+			const d2 = new Dispatcher;
+			const d3 = new Dispatcher;
+			let count = 0;
+
+			d.register('/foo', d2);
+			d2.register('/bar', d3);
+			d3.register('/baz', () => {
+				count++;
+			});
+
+			d.call('/foo/bar/baz')
+				.then(() => {
+					expect(count).to.equal(1);
+					done();
+				})
+				.catch(done);
+		});
+
 		it('should error if no route to child dispatcher handler', done => {
 			const d = new Dispatcher;
 			const d2 = new Dispatcher;
@@ -476,7 +496,27 @@ describe('dispatcher', () => {
 			let count = 0;
 			const next = () => {
 				count++;
-				return Promise.resolve();
+			};
+
+			Promise.resolve()
+				.then(() => middleware(ctx, next))
+				.then(() => {
+					expect(count).to.equal(1);
+					done();
+				})
+				.catch(done);
+		});
+
+		it('should deeply call next middleware if no route', done => {
+			const d = new Dispatcher;
+			const middleware = d.callback();
+			const ctx = {
+				method: 'GET',
+				originalUrl: '/bar'
+			};
+			let count = 0;
+			const next = () => {
+				count++;
 			};
 
 			Promise.resolve()
@@ -587,6 +627,135 @@ describe('dispatcher', () => {
 				.then(() => {
 					expect(ctx.status).to.equal(403);
 					expect(ctx.body).to.equal('DispatcherError: Not authorized! (code 403)');
+					done();
+				})
+				.catch(done);
+		});
+
+		it('should return dispatcher error with null status', done => {
+			const d = new Dispatcher;
+
+			d.register('/foo', ctx => {
+				const err = new DispatcherError(403, 'Not authorized!');
+				err.status = null;
+				throw err;
+			});
+
+			const middleware = d.callback();
+			const ctx = {
+				method: 'GET',
+				originalUrl: '/foo',
+				request: {
+					acceptsLanguages: () => ''
+				}
+			};
+
+			Promise.resolve()
+				.then(() => middleware(ctx, Promise.resolve))
+				.then(() => {
+					expect(ctx.status).to.equal(500);
+					expect(ctx.body).to.equal('DispatcherError: Not authorized! (code 403)');
+					done();
+				})
+				.catch(done);
+		});
+
+		it('should return a Response object', done => {
+			const d = new Dispatcher;
+
+			d.register('/foo', ctx => {
+				ctx.response = new Response(codes.OK);
+			});
+
+			const middleware = d.callback();
+			const ctx = {
+				method: 'GET',
+				originalUrl: '/foo',
+				req: {
+					headers: {}
+				},
+				request: {
+					acceptsLanguages: () => ''
+				}
+			};
+
+			Promise.resolve()
+				.then(() => middleware(ctx, Promise.resolve))
+				.then(() => {
+					expect(ctx.status).to.equal(200);
+					expect(ctx.body).to.be.a.String;
+					expect(ctx.body).to.equal('OK');
+					done();
+				})
+				.catch(done);
+		});
+
+		it('should return a Response object with null status', done => {
+			const d = new Dispatcher;
+
+			d.register('/foo', ctx => {
+				ctx.response = new Response(codes.OK);
+				ctx.response.status = null;
+			});
+
+			const middleware = d.callback();
+			const ctx = {
+				method: 'GET',
+				originalUrl: '/foo'
+			};
+
+			Promise.resolve()
+				.then(() => middleware(ctx, Promise.resolve))
+				.then(() => {
+					expect(ctx.status).to.equal(200);
+					expect(ctx.body).to.be.a.String;
+					expect(ctx.body).to.equal('OK');
+					done();
+				})
+				.catch(done);
+		});
+	});
+
+	describe('Root Dispatcher', () => {
+		beforeEach(() => {
+			Dispatcher.root.routes = [];
+		});
+
+		afterEach(() => {
+			Dispatcher.root.routes = [];
+		});
+
+		it('should register handler and call it', done => {
+			let count = 0;
+
+			Dispatcher.register('/foo', () => {
+				count++;
+			});
+
+			Dispatcher.call('/foo')
+				.then(() => {
+					expect(count).to.equal(1);
+					done();
+				})
+				.catch(done);
+		});
+
+		it('should dispatch GET request', done => {
+			Dispatcher.register('/foo', ctx => {
+				ctx.response = 'foo!';
+			});
+
+			const middleware = Dispatcher.callback();
+			const ctx = {
+				method: 'GET',
+				originalUrl: '/foo'
+			};
+
+			Promise.resolve()
+				.then(() => middleware(ctx, Promise.resolve))
+				.then(() => {
+					expect(ctx.body).to.be.a.String;
+					expect(ctx.body).to.equal('foo!');
 					done();
 				})
 				.catch(done);

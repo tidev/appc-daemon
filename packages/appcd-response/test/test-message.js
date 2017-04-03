@@ -1,4 +1,4 @@
-import { i18n, loadMessage } from '../src/message';
+import Message, { i18n, loadMessage } from '../src/message';
 
 describe('message', () => {
 	it('should load a message by code', () => {
@@ -24,6 +24,27 @@ describe('message', () => {
 		expect(loadMessage('foo bar')).to.equal('foo bar');
 	});
 
+	it('should load a locale specific message', () => {
+		expect(loadMessage('Appc Daemon', 'es-ES')).to.equal('Appc Daemon');
+	});
+
+	it('should create a message without a default format', () => {
+		const msg = new Message(null, {}, 'foo', 'bar');
+		expect(msg.format).to.equal('%s');
+		expect(msg.toString()).to.equal('{} foo bar');
+	});
+
+	it('should create a message without a default format or message', () => {
+		const msg = new Message(null, null, 'foo', 'bar');
+		expect(msg.format).to.be.undefined;
+		expect(msg.toString()).to.equal('foo bar');
+	});
+
+	it('should return empty string if no message', () => {
+		const msg = new Message();
+		expect(msg.toString()).to.equal('');
+	});
+
 	it('should create localized i18n functions', () => {
 		const { __, __n } = i18n();
 
@@ -38,5 +59,8 @@ describe('message', () => {
 
 		expect(__n(1, '%s foo %%s', '%s bar %%s', 'baz')).to.equal('1 foo baz');
 		expect(__n(2, '%s foo %%s', '%s bar %%s', 'baz')).to.equal('2 bar baz');
+
+		expect(__n(1, '', '%s bar %%s', 'baz')).to.equal('');
+		expect(__n(2, '', '%s bar %%s', 'baz')).to.equal('2 bar baz');
 	});
 });

@@ -72,12 +72,6 @@ export default class Dispatcher {
 	routes = [];
 
 	/**
-	 * The parent's path.
-	 * @type {String}
-	 */
-	prefix = null;
-
-	/**
 	 * Asynchronously dispatch a request. If unable to find a appropriate handler, an error is
 	 * returned.
 	 *
@@ -282,7 +276,7 @@ export default class Dispatcher {
 
 			// if this is a scoped dispatcher and the path is /, then suppress the
 			// redundant log message
-			if (!this.prefix || path !== '/') {
+			if (path !== '/') {
 				logger.debug(`Registered dispatcher route ${highlight(path)}`);
 			}
 
