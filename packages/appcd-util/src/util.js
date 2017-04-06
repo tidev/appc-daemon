@@ -100,16 +100,16 @@ export function formatNumber(n) {
  * Determines if a class extends another class.
  *
  * @param {Class|Function} subject - The class to check.
- * @param {Class|Function} base - The base class to look for.
+ * @param {Class|Function|null} base - The base class to look for.
  * @returns {Boolean}
  */
 export function inherits(subject, base) {
 	if (typeof subject !== 'function') {
-		throw new Error('Expected subject to be a function object');
+		throw new TypeError('Expected subject to be a function object');
 	}
 
 	if (base !== null && typeof base !== 'function') {
-		throw new Error('Expected base class to be a function object');
+		throw new TypeError('Expected base class to be a function object');
 	}
 
 	let proto = Object.getPrototypeOf(subject);

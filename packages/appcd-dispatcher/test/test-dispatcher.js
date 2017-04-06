@@ -209,8 +209,8 @@ describe('dispatcher', () => {
 					done(new Error('Expected error from handler'));
 				})
 				.catch(err => {
-					expect(err).to.be.instanceof(AppcdError);
-					expect(err.status).to.be.null;
+					expect(err).to.be.instanceof(DispatcherError);
+					expect(err.status).to.be.undefined;
 					expect(err.message).to.equal('oops');
 					done();
 				})

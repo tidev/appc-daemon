@@ -2,6 +2,12 @@ import Message from './message';
 
 import { codes } from './codes';
 
+const ignore = {
+	message: 1,
+	msg: 1,
+	name: 1
+};
+
 /**
  * A Appc Daemon error. This class can be extended or used as is.
  */
@@ -9,17 +15,28 @@ export default class AppcdError extends Error {
 	/**
 	 * Creates an error instance.
 	 *
-	 * @param {String|Number|AppcdError|Error|Object} msg - The code, message, or error.
+	 * @param {...*} args - The code, message, or error.
 	 */
 	constructor(...args) {
 		super();
 
+		// must define `msg` before capturing the stack trace since it calls `toString()` and we
+		// need a message to render
 		Object.defineProperties(this, {
 			name: { writable: true, value: 'AppcdError' },
-			msg: { value: new Message('Unknown Error: %s', ...args) }
+			msg: { value: new Message(...args) }
 		});
 
-		Error.captureStackTrace(this, this.constructor);
+		const err = args[0];
+		if (err instanceof Error) {
+			for (const prop of Object.getOwnPropertyNames(err)) {
+				if (!ignore[prop]) {
+					this[prop] = err[prop];
+				}
+			}
+		} else {
+			Error.captureStackTrace(this, this.constructor);
+		}
 	}
 
 	/**
@@ -47,12 +64,12 @@ export default class AppcdError extends Error {
 	 * The error code.
 	 * @type {String}
 	 */
-	get code() {
-		return this.msg.code;
+	get statusCode() {
+		return this.msg.statusCode;
 	}
 
-	set code(value) {
-		this.msg.code = value;
+	set statusCode(value) {
+		this.msg.statusCode = value;
 	}
 
 	/**
@@ -63,7 +80,7 @@ export default class AppcdError extends Error {
 	 * @access public
 	 */
 	toString(locale) {
-		const code = this.msg.code ? ` (code ${this.msg.code})` : '';
+		const code = this.msg.statusCode ? ` (code ${this.msg.statusCode})` : '';
 		return `${this.name}: ${this.msg.toString(locale, 'Unknown Error')}${code}`;
 	}
 }
@@ -74,15 +91,15 @@ AppcdError.codes = codes;
  * Helper function to create one-off custom error objects. It's equivalent to creating a custom
  * error class that extends `AppcdError`.
  *
- * @param {String} name - The name of the custom error.
+ * @param {String} className - The name of the custom error.
  * @param {Object} [opts] - Additional options.
  * @param {Number} [opts.defaultStatus] - A default status if the error doesn't explicitly have one.
- * @param {Number} [opts.defaultCode] - A default code if the error doesn't explicitly have one.
+ * @param {Number} [opts.defaultStatusCode] - A default code if the error doesn't explicitly have one.
  * @returns {Function}
  */
-export function createErrorClass(name, opts = {}) {
-	if (!name || typeof name !== 'string') {
-		throw new TypeError('Expected custom error name to be a non-empty string');
+export function createErrorClass(className, opts = {}) {
+	if (!className || typeof className !== 'string') {
+		throw new TypeError('Expected custom error class name to be a non-empty string');
 	}
 
 	if (opts) {
@@ -102,19 +119,21 @@ export function createErrorClass(name, opts = {}) {
 	class CustomError extends AppcdError {
 		constructor(...args) {
 			super(...args);
-			Object.defineProperty(this, 'name', { value: name });
-			if (this.msg.status === null && opts.defaultStatus) {
+
+			Object.defineProperty(this, 'name', { value: className });
+
+			if (this.msg.status === undefined && opts.defaultStatus) {
 				this.msg.status = opts.defaultStatus;
 			}
-			if (this.msg.code === null && opts.defaultCode) {
-				this.msg.code = String(opts.defaultCode);
+			if (this.msg.statusCode === undefined && opts.defaultStatusCode) {
+				this.msg.statusCode = String(opts.defaultStatusCode);
 			}
 		}
 	}
 
 	Object.defineProperty(CustomError, 'name', {
 		enumerable: true,
-		value: name
+		value: className
 	});
 
 	CustomError.codes = codes;

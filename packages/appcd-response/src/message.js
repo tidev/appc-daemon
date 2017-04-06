@@ -16,108 +16,105 @@ const localeRegExp = /^([a-z]{2})(?:[-_](?:\w+[-_])?([A-Z]{2}))?$/;
 const modulePathCache = {};
 
 /**
- * Encapsulates a message.
+ * An internal message container. It is designed to be used by various response objects and not
+ * directly.
  */
 export default class Message {
 	/**
 	 * Loads a localized message based on the code or message.
 	 *
-	 * @param {String?} defaultFormat - The default format to use when the message is null,
-	 * undefined, or an object.
-	 * @param {*} [msg] - The code or message.
+	 * @param {*} [codeOrMessage] - The code or message.
 	 * @param {...*} [args] - Additional values to embed in the message.
 	 * @access public
 	 */
-	constructor(defaultFormat, msg, ...args) {
-		if (msg instanceof AppcdError) {
-			msg         = msg.msg;
-			this.status = msg.status;
-			this.code   = msg.code;
-			this.format = msg.format;
-			this.args   = msg.args;
+	constructor(codeOrMessage, ...args) {
+		let parsed;
 
-		} else if (msg instanceof Error) {
-			const { status, code } = parseStatusCode(msg.code);
-			this.status = status;
-			this.code   = code;
-			this.format = msg.message;
-
-		} else if (typeof msg === 'number') {
-			this.status = msg;
-			this.code   = String(msg);
-			if (args.length) {
-				this.format = args.shift();
-				this.args   = serializeArgs(args);
-			}
-
-		} else if (typeof msg === 'string') {
-			const { status, code } = parseStatusCode(msg);
-			this.status = status;
-			this.code   = code;
-			this.format = status !== null ? args.shift() : msg;
-			this.args   = serializeArgs(args);
-
+		if (codeOrMessage instanceof Error) {
+			parsed = codeOrMessage;
+			codeOrMessage = codeOrMessage.message;
 		} else {
-			this.status = null;
-			this.code   = null;
-			if (msg) {
-				this.format = defaultFormat || '%s';
-			}
-			this.args = serializeArgs(msg ? [ msg, ...args ] : args);
+			parsed = parseStatusCode(codeOrMessage);
 		}
+
+		this.status     = parsed.status;
+		this.statusCode = parsed.statusCode;
+
+		if (parsed.status === undefined) {
+			if (typeof codeOrMessage === 'string') {
+				this.format = codeOrMessage;
+			} else if (codeOrMessage !== undefined) {
+				args.unshift(codeOrMessage);
+			}
+		} else {
+			this.format = args.shift();
+		}
+
+		this.args = serializeArgs(args);
 	}
 
 	/**
-	 * The message's code.
+	 * The message's status. The value must be either a positive integer or `undefined`.
 	 *
-	 * @type {String}
-	 * @access public
-	 */
-	get code() {
-		return this._code;
-	}
-
-	set code(value) {
-		this._code = value === null ? null : String(value);
-	}
-
-	/**
-	 * The message's status.
-	 *
-	 * @type {String}
+	 * @type {Number}
 	 * @access public
 	 */
 	get status() {
-		return this._status;
+		return this._status === undefined ? undefined : this._status;
 	}
 
 	set status(value) {
-		this._status = value === null ? null : parseInt(value);
+		value = parseInt(value);
+		this._status = isNaN(value) ? undefined : Math.max(value, 0);
 	}
 
 	/**
 	 * Retrieves this error's message.
 	 *
 	 * @param {String|Array.<String>} [locales] - A list of preferred locales to format the message.
+	 * @param {String?} [defaultMsg] - The default message to use when the message is null,
+	 * undefined, or an object.
 	 * @returns {String}
 	 * @access public
 	 */
 	toString(locales, defaultMsg) {
 		let msg;
 
-		if (this.format) {
-			msg = loadMessage(this.format, locales);
-		}
+		// console.log('\nformat', this.format);
+		// console.log('args', this.args);
+		// console.log('status', this.status);
+		// console.log('statusCode', this.statusCode);
+
+		const format = this.format ? (msg = loadMessage(this.format, locales)) : null;
+
+		// console.log('msg', msg);
+		// console.log('format', format);
 
 		if (Array.isArray(this.args) && this.args.length) {
-			msg = util.format(msg || '%s', ...this.args);
+			if (format) {
+				msg = util.format(format, ...this.args);
+			} else if (defaultMsg) {
+				msg = util.format('%s: %s', loadMessage(defaultMsg, locales), ...this.args);
+			} else {
+				msg = util.format('%s', ...this.args);
+			}
 		}
 
-		if (!msg && this.code) {
-			msg = loadMessage(this.code, locales);
+		if (msg === undefined && this.statusCode) {
+			msg = loadMessage(this.statusCode, locales);
 		}
 
-		return msg || (defaultMsg && loadMessage(defaultMsg, locales)) || '';
+		if (msg === undefined) {
+			msg = loadMessage(defaultMsg, locales);
+		}
+
+		if (msg === undefined) {
+			msg = '';
+		}
+
+		// console.log(msg, typeof msg);
+
+		return msg;
 	}
 }
 
@@ -168,6 +165,39 @@ export function i18n(locales) {
 }
 
 /**
+ * Attempts to load a file based on the code. If the locales does not contain 'en', then it will try
+ * to load the 'en' version.
+ *
+ * @param {Array.<String>} locales - The locales to try to look up the code.
+ * @param {String} cls - The code class.
+ * @param {String} code - The code.
+ * @returns {String|undefined}
+ */
+function loadCodeFile(locales, cls, code) {
+	for (let locale of locales) {
+		if (codesCache[locale] && codesCache[locale].hasOwnProperty(code)) {
+			return codesCache[locale][code];
+		}
+
+		// cache miss
+
+		const name = lookup[code];
+		const file = path.join(messagesDir, locale, `${cls}xx`, name ? `${code}-${name}.md` : `${code}.md`);
+
+		try {
+			const m = fs.readFileSync(file, 'utf8').match(firstLineRegExp);
+			if (m) {
+				codesCache[locales] || (codesCache[locales] = {});
+				codesCache[locales][code] = m[1];
+				return m[1];
+			}
+		} catch (e) {
+			// file probably doesn't exist for this locale
+		}
+	}
+}
+
+/**
  * Attempts to load a message for the given the specific code or message and the locale.
  *
  * @param {String|Number} codeOrMessage - The code or message to look up.
@@ -176,14 +206,13 @@ export function i18n(locales) {
  * @returns {String}
  */
 export function loadMessage(codeOrMessage, locales) {
-	if (codeOrMessage === '%s') {
+	if (codeOrMessage === '%s' || (typeof codeOrMessage !== 'string' && typeof codeOrMessage !== 'number')) {
 		return codeOrMessage;
 	}
 
-	codeOrMessage = String(codeOrMessage);
 	locales = processLocales(locales);
 
-	const m = codeOrMessage.match(codeRegExp);
+	const m = String(codeOrMessage).match(codeRegExp);
 	let str;
 
 	if (m && m[2]) {
@@ -202,35 +231,6 @@ export function loadMessage(codeOrMessage, locales) {
 
 	// must be a string
 	return loadString(codeOrMessage, locales);
-}
-
-function processLocales(locales) {
-	// create the list of preferred locales to try
-	const expandedLocales = [];
-
-	if (!locales) {
-		locales = [];
-	} else if (!Array.isArray(locales)) {
-		locales = [ locales ];
-	}
-	if (locales.indexOf('en') === -1) {
-		locales.push('en');
-	}
-
-	for (const locale of locales) {
-		const m = locale && locale.match(localeRegExp);
-		if (m) {
-			// add the original locale
-			expandedLocales.push(locale);
-
-			// if we have a territory, then add just the language
-			if (m[2]) {
-				expandedLocales.push(m[1]);
-			}
-		}
-	}
-
-	return expandedLocales;
 }
 
 /**
@@ -266,66 +266,65 @@ function loadString(message, locales) {
 }
 
 /**
- * Attempts to load a file based on the code. If the locales does not contain 'en', then it will try
- * to load the 'en' version.
+ * Tries to parses the status and status code from the supplied variable.
  *
- * @param {Array.<String>} locales - The locales to try to look up the code.
- * @param {String} cls - The code class.
- * @param {String} code - The code.
- * @returns {String|undefined}
- */
-function loadCodeFile(locales, cls, code) {
-	for (let locale of locales) {
-		if (codesCache[locale] && codesCache[locale].hasOwnProperty(code)) {
-			return codesCache[locale][code];
-		}
-
-		// cache miss
-
-		const name = lookup[code];
-		const file = path.join(messagesDir, locale, `${cls}xx`, name ? `${code}-${name}.md` : `${code}.md`);
-
-		try {
-			const m = fs.readFileSync(file, 'utf8').match(firstLineRegExp);
-			if (m) {
-				codesCache[locales] || (codesCache[locales] = {});
-				codesCache[locales][code] = m[1];
-				return m[1];
-			}
-		} catch (e) {
-			// file probably doesn't exist for this locale
-		}
-	}
-}
-
-/**
- * Tries to parses the status and code from the supplied variable.
- *
- * @param {String|Number} value - The variable to parse.
- * @access private
+ * @param {*} value - The variable to parse.
+ * @returns {Object}
  */
 function parseStatusCode(value) {
 	if (typeof value === 'number') {
 		if (!isNaN(value)) {
 			return {
 				status: value,
-				code: value
+				statusCode: value
 			};
 		}
-	} else if (value) {
-		const m = String(value).match(codeRegExp);
+	} else if (typeof value === 'string' && value) {
+		const m = value.match(codeRegExp);
 		if (m) {
 			return {
 				status: parseInt(m[1]),
-				code: value
+				statusCode: value
 			};
 		}
 	}
 
-	return {
-		status: null,
-		code: null
-	};
+	return {};
+}
+
+/**
+ * Returns an expanded array of locales. If `en-US` is passed in, then it returns `['en-US', 'en']`.
+ *
+ * @param {String|Array.<String>} [locales] - One or more locales to expand.
+ * @return {Array.<String>}
+ */
+function processLocales(locales) {
+	// create the list of preferred locales to try
+	const expandedLocales = [];
+
+	if (!locales) {
+		locales = [];
+	} else if (!Array.isArray(locales)) {
+		locales = [ locales ];
+	}
+	if (locales.indexOf('en') === -1) {
+		locales.push('en');
+	}
+
+	for (const locale of locales) {
+		const m = locale && locale.match(localeRegExp);
+		if (m) {
+			// add the original locale
+			expandedLocales.push(locale);
+
+			// if we have a territory, then add just the language
+			if (m[2]) {
+				expandedLocales.push(m[1]);
+			}
+		}
+	}
+
+	return expandedLocales;
 }
 
 /**
@@ -333,7 +332,6 @@ function parseStatusCode(value) {
  *
  * @param {Array} args - The array of arguments to serialize.
  * @return {Array}
- * @access private
  */
 function serializeArgs(args) {
 	return args.map(s => {

@@ -1,3 +1,4 @@
+import fs from 'fs';
 import path from 'path';
 
 import AppcdError, { createErrorClass } from '../src/appcd-error';
@@ -44,14 +45,26 @@ describe('AppcdError', () => {
 		err.code = 500;
 		const err2 = new AppcdError(err);
 		expect(err2.message).to.equal('Oh no!');
+		expect(err2.code).to.equal(500);
+		expect(err2.toString()).to.equal('AppcdError: Oh no!');
+	});
+
+	it('should create an error with an error object with a status code and message', () => {
+		const err = new Error('Oh no!');
+		err.statusCode = 500;
+		const err2 = new AppcdError(err);
+		expect(err2.message).to.equal('Oh no!');
+		expect(err2.code).to.be.undefined;
+		expect(err2.statusCode).to.equal(500);
 		expect(err2.toString()).to.equal('AppcdError: Oh no! (code 500)');
 	});
 
-	it('should create an error with an error object with a code, subcode, and message', () => {
+	it('should create an error with an error object with a status code, subcode, and message', () => {
 		const err = new Error('Oh no!');
-		err.code = '500.123';
+		err.statusCode = '500.123';
 		const err2 = new AppcdError(err);
 		expect(err2.message).to.equal('Oh no!');
+		expect(err2.statusCode).to.equal('500.123');
 		expect(err2.toString()).to.equal('AppcdError: Oh no! (code 500.123)');
 	});
 
@@ -65,7 +78,7 @@ describe('AppcdError', () => {
 		const err = new AppcdError(123);
 		expect(err.message).to.equal('Unknown Error');
 		expect(err.status).to.equal(123);
-		expect(err.code).to.equal('123');
+		expect(err.statusCode).to.equal(123);
 		expect(err.toString()).to.equal('AppcdError: Unknown Error (code 123)');
 	});
 
@@ -107,12 +120,28 @@ describe('AppcdError', () => {
 
 	it('should override status and code', () => {
 		const err = new AppcdError();
-		expect(err.status).to.be.null;
+		expect(err.status).to.be.undefined;
 		err.status = 123;
 		expect(err.status).to.equal(123);
-		expect(err.code).to.be.null;
-		err.code = '123';
-		expect(err.code).to.equal('123');
+		expect(err.statusCode).to.be.undefined;
+		err.statusCode = '123';
+		expect(err.statusCode).to.equal('123');
+	});
+
+	it('should copy system error details', () => {
+		var file = path.join(__dirname, 'does_not_exist');
+		try {
+			fs.statSync(file);
+		} catch (e) {
+			const err = new AppcdError(e);
+			expect(err.status).to.be.undefined;
+			expect(err.statusCode).to.be.undefined;
+			expect(err.errno).to.equal(-2);
+			expect(err.code).to.equal('ENOENT');
+			expect(err.syscall).to.equal('stat');
+			expect(err.path).to.equal(file);
+			expect(err.toString()).to.match(/^AppcdError\: ENOENT\: no such file or directory/);
+		}
 	});
 });
 
@@ -131,28 +160,28 @@ describe('Custom Errors', () => {
 	it('should create a custom error with default status/code', () => {
 		const MyError = createErrorClass('MyError', {
 			defaultStatus: 599,
-			defaultCode: '599.1'
+			defaultStatusCode: '599.1'
 		});
 		const err = new MyError(new Error('Oh no!'));
 		expect(err).to.be.instanceof(MyError);
 		expect(err.message).to.equal('Oh no!');
 		expect(err.status).to.equal(599);
-		expect(err.code).to.equal('599.1');
+		expect(err.statusCode).to.equal('599.1');
 		expect(err.toString()).to.equal('MyError: Oh no! (code 599.1)');
 	});
 
 	it('should fail if custom error name is invalid', () => {
 		expect(() => {
 			createErrorClass();
-		}).to.throw(TypeError, 'Expected custom error name to be a non-empty string');
+		}).to.throw(TypeError, 'Expected custom error class name to be a non-empty string');
 
 		expect(() => {
 			createErrorClass(true);
-		}).to.throw(TypeError, 'Expected custom error name to be a non-empty string');
+		}).to.throw(TypeError, 'Expected custom error class name to be a non-empty string');
 
 		expect(() => {
 			createErrorClass(function(){});
-		}).to.throw(TypeError, 'Expected custom error name to be a non-empty string');
+		}).to.throw(TypeError, 'Expected custom error class name to be a non-empty string');
 	});
 
 	it('should fail if options is invalid', () => {
@@ -171,5 +200,26 @@ describe('Custom Errors', () => {
 		expect(() => {
 			createErrorClass('foo', { defaultCode: {} });
 		}).to.throw(TypeError, 'Expected default code to be a string or number');
+	});
+
+	it('should copy system error details', () => {
+		const MyError = createErrorClass('MyError', {
+			defaultStatus: 599,
+			defaultStatusCode: '599.1'
+		});
+		var file = path.join(__dirname, 'does_not_exist');
+
+		try {
+			fs.statSync(file);
+		} catch (e) {
+			const err = new MyError(e);
+			expect(err.status).to.equal(599);
+			expect(err.statusCode).to.equal('599.1');
+			expect(err.errno).to.equal(-2);
+			expect(err.code).to.equal('ENOENT');
+			expect(err.syscall).to.equal('stat');
+			expect(err.path).to.equal(file);
+			expect(err.toString()).to.match(/^MyError\: ENOENT\: no such file or directory/);
+		}
 	});
 });

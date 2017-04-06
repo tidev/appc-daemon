@@ -28,23 +28,6 @@ describe('message', () => {
 		expect(loadMessage('Appc Daemon', 'es-ES')).to.equal('Appc Daemon');
 	});
 
-	it('should create a message without a default format', () => {
-		const msg = new Message(null, {}, 'foo', 'bar');
-		expect(msg.format).to.equal('%s');
-		expect(msg.toString()).to.equal('{} foo bar');
-	});
-
-	it('should create a message without a default format or message', () => {
-		const msg = new Message(null, null, 'foo', 'bar');
-		expect(msg.format).to.be.undefined;
-		expect(msg.toString()).to.equal('foo bar');
-	});
-
-	it('should return empty string if no message', () => {
-		const msg = new Message();
-		expect(msg.toString()).to.equal('');
-	});
-
 	it('should create localized i18n functions', () => {
 		const { __, __n } = i18n();
 

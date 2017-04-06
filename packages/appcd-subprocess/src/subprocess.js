@@ -79,10 +79,13 @@ export function spawn(params = {}) {
 
 	let args = [];
 	if (params.hasOwnProperty('args')) {
-		if (!Array.isArray(params.args)) {
+		if (Array.isArray(params.args)) {
+			args = params.args;
+		} else if (params.args) {
+			args = [ params.args ];
+		} else {
 			throw new SubprocessError(codes.INVALID_ARGUMENT, 'Spawn "arguments" must be an array');
 		}
-		args = params.args;
 	}
 
 	// we scrub the supplied options for only allowed options

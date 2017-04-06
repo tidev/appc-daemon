@@ -365,7 +365,7 @@ gulp.task('package', ['build'], cb => {
 /*
  * test tasks
  */
-gulp.task('coverage', cb => {
+gulp.task('coverage', ['build'], cb => {
 	const coverageDir = path.join(__dirname, 'coverage');
 	del.sync([coverageDir]);
 

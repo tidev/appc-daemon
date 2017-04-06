@@ -112,7 +112,7 @@ describe('subprocess', () => {
 			}).to.throw(SubprocessError, 'Spawn "arguments" must be an array');
 
 			expect(() => {
-				subprocess.spawn({ command: 'foo', args: {} });
+				subprocess.spawn({ command: 'foo', args: '' });
 			}).to.throw(SubprocessError, 'Spawn "arguments" must be an array');
 		});
 

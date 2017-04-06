@@ -100,16 +100,15 @@ export default class Client {
 						json = JSON.parse(data);
 					} catch (e) {
 						// bad response, shouldn't ever happen
+						emitter.emit('warning', `Server returned invalid JSON: ${e.message}`);
 						return;
 					}
 				}
 
-				if (!json || typeof json !== 'object' || !json.id) {
-					return;
-				}
-
-				if (this.requests[json.id]) {
+				if (json && typeof json === 'object' && this.requests[json.id]) {
 					this.requests[json.id](json);
+				} else {
+					emitter.emit('warning', 'Server response is not an object or has an invalid id');
 				}
 			});
 
@@ -169,6 +168,7 @@ export default class Client {
 						data:    payload
 					}));
 				})
+				.on('warning', (...args) => emitter.emit('warning', ...args))
 				.once('close', () => {
 					delete this.requests[id];
 				})

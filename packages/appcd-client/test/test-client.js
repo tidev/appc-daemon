@@ -126,7 +126,9 @@ describe('Client', () => {
 				})
 				.on('error', done);
 		});
+	});
 
+	describe('request()', () => {
 		it('should make a request to the mock server', done => {
 			let result = null;
 			let count = 0;
@@ -359,24 +361,113 @@ describe('Client', () => {
 
 			client.request('/foo')
 				.on('response', (data, response) => {
-					try {
-						expect(data).to.be.an.Object;
-						expect(data).to.deep.equal({ baz: 'wiz' });
+					server.close(() => {
+						try {
+							expect(data).to.be.an.Object;
+							expect(data).to.deep.equal({ baz: 'wiz' });
 
-						expect(response).to.be.an.Object;
-						expect(response).to.have.keys('id', 'status', 'message');
-						expect(response.status).to.equal(200);
-						expect(response.message).to.deep.equal({ baz: 'wiz' });
-						server.close(() => done());
-					} catch (e) {
-						server.close(() => done(e));
-					}
+							expect(response).to.be.an.Object;
+							expect(response).to.have.keys('id', 'status', 'message');
+							expect(response.status).to.equal(200);
+							expect(response.message).to.deep.equal({ baz: 'wiz' });
+							done();
+						} catch (e) {
+							done(e);
+						}
+					});
 				})
 				.on('close', () => {
 					server.close(() => done(new Error('Expected response, not close')));
 				})
+				.on('warning', () => {
+					server.close(() => done(new Error('Expected response, not warning')));
+				})
 				.on('error', err => {
 					server.close(() => done(err));
+				});
+		});
+
+		it('should ignore server responses that are invalid', done => {
+			const server = new WebSocketServer({ port: 12345 });
+
+			server.on('connection', conn => {
+				conn.on('message', msg => {
+					conn.send('foo');
+				});
+			});
+
+			const client = new Client({ port: 12345 });
+
+			client.request('/foo')
+				.on('warning', msg => {
+					server.close(() => {
+						try {
+							expect(msg).to.match(/^Server returned invalid JSON\:/);
+							done();
+						} catch (e) {
+							done(e);
+						}
+					});
+				})
+				.on('response', () => {
+					server.close(() => done(new Error('Expected warning, not response')));
+				})
+				.on('close', () => {
+					server.close(() => done(new Error('Expected warning, not close')));
+				})
+				.on('error', err => {
+					server.close(() => done(err));
+				});
+		});
+
+		it('should ignore server responses that has invalid id', done => {
+			const server = new WebSocketServer({ port: 12345 });
+
+			server.on('connection', conn => {
+				conn.on('message', msg => {
+					conn.send('{}');
+				});
+			});
+
+			const client = new Client({ port: 12345 });
+
+			client.request('/foo')
+				.on('warning', msg => {
+					server.close(() => {
+						try {
+							expect(msg).to.equal('Server response is not an object or has an invalid id');
+							done();
+						} catch (e) {
+							done(e);
+						}
+					});
+				})
+				.on('response', () => {
+					server.close(() => done(new Error('Expected warning, not response')));
+				})
+				.on('close', () => {
+					server.close(() => done(new Error('Expected warning, not close')));
+				})
+				.on('error', err => {
+					server.close(() => done(err));
+				});
+		});
+
+		it('should error if server is not running', done => {
+			const client = new Client({ port: 12345 });
+
+			client.request('/foo')
+				.on('warning', msg => {
+					done(new Error('Expected error, not warning'));
+				})
+				.on('response', () => {
+					done(new Error('Expected error, not response'));
+				})
+				.on('close', () => {
+					done(new Error('Expected error, not close'));
+				})
+				.on('error', err => {
+					done();
 				});
 		});
 	});

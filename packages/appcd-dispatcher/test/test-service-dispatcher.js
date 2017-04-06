@@ -370,8 +370,8 @@ describe('ServiceDispatcher', () => {
 
 					expect(ctx.response).to.be.instanceof(Response);
 					expect(ctx.response.toString()).to.equal(loadMessage(codes.UNSUBSCRIBED));
-					expect(ctx.response.code).to.equal(codes.UNSUBSCRIBED);
 					expect(ctx.response.status).to.equal(200);
+					expect(ctx.response.statusCode).to.equal(codes.UNSUBSCRIBED);
 					expect(Object.keys(sd.subscriptions)).to.have.lengthOf(0);
 					done();
 				})
@@ -438,8 +438,8 @@ describe('ServiceDispatcher', () => {
 
 					expect(ctx.response).to.be.instanceof(Response);
 					expect(ctx.response.toString()).to.equal(loadMessage(codes.UNSUBSCRIBED));
-					expect(ctx.response.code).to.equal(codes.UNSUBSCRIBED);
 					expect(ctx.response.status).to.equal(200);
+					expect(ctx.response.statusCode).to.equal(codes.UNSUBSCRIBED);
 
 					ctx = {
 						path: '/foo',
@@ -457,8 +457,8 @@ describe('ServiceDispatcher', () => {
 
 					expect(ctx.response).to.be.instanceof(Response);
 					expect(ctx.response.toString()).to.equal(loadMessage(codes.NOT_SUBSCRIBED));
-					expect(ctx.response.code).to.equal(codes.NOT_SUBSCRIBED);
 					expect(ctx.response.status).to.equal(404);
+					expect(ctx.response.statusCode).to.equal(codes.NOT_SUBSCRIBED);
 					done();
 				})
 				.catch(done);

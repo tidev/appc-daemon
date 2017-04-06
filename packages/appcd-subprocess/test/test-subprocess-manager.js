@@ -1,9 +1,27 @@
+import Dispatcher from 'appcd-dispatcher';
 import path from 'path';
 import SubprocessError from '../src/subprocess-error';
-import SubprocessManager from '../src/subprocess-manager';
+import SubprocessManager from '../src/index';
+import tmp from 'tmp';
+
+tmp.setGracefulCleanup();
+function makeTempDir() {
+	return tmp.dirSync({
+		prefix: 'appcd-subprocess-test-',
+		unsafeCleanup: true
+	}).name;
+}
 
 describe('SubprocessManager', () => {
-	describe('constructor', () => {
+	describe('Spawn', () => {
+		beforeEach(() => {
+			Dispatcher.root.routes = [];
+		});
+
+		afterEach(() => {
+			Dispatcher.root.routes = [];
+		});
+
 		it('should spawn 5 sleep processes', function (done) {
 			this.slow(9000);
 			this.timeout(10000);
@@ -49,7 +67,7 @@ describe('SubprocessManager', () => {
 								.then(ctx => {
 									expect(ctx.response.toString()).to.equal('OK');
 									expect(ctx.response.status).to.equal(200);
-									expect(ctx.response.code).to.equal('200');
+									expect(ctx.response.statusCode).to.equal(200);
 
 									return new Promise((resolve, reject) => {
 										setImmediate(() => {
@@ -97,7 +115,7 @@ describe('SubprocessManager', () => {
 			}
 		});
 
-		it('should fail if call is via http', done => {
+		it('should fail if spawn call is via http', done => {
 			const sm = new SubprocessManager();
 
 			sm.dispatcher
@@ -115,7 +133,7 @@ describe('SubprocessManager', () => {
 					try {
 						expect(err).to.be.instanceof(SubprocessError);
 						expect(err.toString()).to.equal('SubprocessError: Spawn not permitted (code 403)');
-						expect(err.code).to.equal('403');
+						expect(err.statusCode).to.equal(403);
 						done();
 					} catch (e) {
 						done(e);
@@ -123,12 +141,137 @@ describe('SubprocessManager', () => {
 				});
 		});
 
-		// bad spawn call
-		// /spawn/node
-		// /spawn/node/6.9.5
+		it('should fail if command does not exist', done => {
+			const sm = new SubprocessManager();
+			sm.dispatcher
+				.call('/spawn', {
+					data: {
+						command: 'no_way_does_this_exist'
+					}
+				})
+				.then(result => {
+					done(new Error('Expected spawn call to fail'));
+				})
+				.catch(err => {
+					expect(err.code).to.equal('ENOENT');
+					done();
+				});
+		});
 	});
 
-	describe('shutdown()', () => {
+	describe('Spawn Node', () => {
+		beforeEach(() => {
+			Dispatcher.root.routes = [];
+		});
+
+		afterEach(() => {
+			Dispatcher.root.routes = [];
+		});
+
+		it('should spawn current Node version', function (done) {
+			this.slow(120000);
+			this.timeout(240000);
+
+			const tmpDir = makeTempDir();
+			Dispatcher.register('/appcd/config/home', ctx => {
+				ctx.response = tmpDir;
+			});
+
+			const sm = new SubprocessManager();
+			sm.dispatcher
+				.call('/spawn/node', {
+					data: {
+						args: path.join(__dirname, 'fixtures', 'node-version.js')
+					}
+				})
+				.then(result => {
+					let stdout = '';
+					result.response
+						.on('data', data => {
+							if (data.type === 'stdout') {
+								stdout += data.output;
+							}
+						})
+						.on('end', () => {
+							try {
+								expect(stdout.trim()).to.equal(process.version);
+								done();
+							} catch (e) {
+								done(e);
+							}
+						});
+				})
+				.catch(done);
+		});
+
+		it('should spawn Node 6.9.5', function (done) {
+			this.slow(120000);
+			this.timeout(240000);
+
+			const tmpDir = makeTempDir();
+			Dispatcher.register('/appcd/config/home', ctx => {
+				ctx.response = tmpDir;
+			});
+
+			const sm = new SubprocessManager();
+			sm.dispatcher
+				.call('/spawn/node/6.9.5', {
+					data: {
+						args: [ path.join(__dirname, 'fixtures', 'node-version.js') ]
+					}
+				})
+				.then(result => {
+					let stdout = '';
+					result.response
+						.on('data', data => {
+							if (data.type === 'stdout') {
+								stdout += data.output;
+							}
+						})
+						.on('end', () => {
+							try {
+								expect(stdout.trim()).to.equal('v6.9.5');
+								done();
+							} catch (e) {
+								done(e);
+							}
+						});
+				})
+				.catch(done);
+		});
+
+		it('should fail if spawn node call is via http', done => {
+			const sm = new SubprocessManager();
+
+			sm.dispatcher
+				.call('/spawn/node', {
+					source: 'http',
+					data: {
+						command: process.execPath,
+						args: path.join(__dirname, 'fixtures', 'node-version.js')
+					}
+				})
+				.then(() => {
+					done(new Error('Expected call to be forbidden'));
+				})
+				.catch(err => {
+					try {
+						expect(err).to.be.instanceof(SubprocessError);
+						expect(err.toString()).to.equal('SubprocessError: Spawn not permitted (code 403)');
+						expect(err.statusCode).to.equal(403);
+						done();
+					} catch (e) {
+						done(e);
+					}
+				});
+		});
+	});
+
+	describe('Kill', () => {
+		//
+	});
+
+	describe('Shutdown', () => {
 		//
 	});
 });

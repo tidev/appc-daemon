@@ -143,6 +143,34 @@ describe('util', () => {
 			class Foo extends null {}
 			expect(util.inherits(Foo, null)).to.be.true;
 		});
+
+		it('should fail if subject is not a function', () => {
+			expect(() => {
+				util.inherits();
+			}).to.throw(TypeError, 'Expected subject to be a function object');
+
+			expect(() => {
+				util.inherits(null);
+			}).to.throw(TypeError, 'Expected subject to be a function object');
+
+			expect(() => {
+				util.inherits({});
+			}).to.throw(TypeError, 'Expected subject to be a function object');
+		});
+
+		it('should fail if base class is not a function', () => {
+			expect(() => {
+				util.inherits(function () {});
+			}).to.throw(TypeError, 'Expected base class to be a function object');
+
+			expect(() => {
+				util.inherits(function () {}, '');
+			}).to.throw(TypeError, 'Expected base class to be a function object');
+
+			expect(() => {
+				util.inherits(function () {}, {});
+			}).to.throw(TypeError, 'Expected base class to be a function object');
+		});
 	});
 
 	describe('mergeDeep()', () => {
