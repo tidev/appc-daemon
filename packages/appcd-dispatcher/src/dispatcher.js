@@ -81,8 +81,8 @@ export default class Dispatcher {
 	 * @access public
 	 */
 	call(path, payload) {
-		if (!path || typeof path !== 'string') {
-			throw new TypeError('Expected path to be a non-empty string');
+		if (typeof path !== 'string') {
+			throw new TypeError('Expected path to be a string');
 		}
 
 		let ctx;

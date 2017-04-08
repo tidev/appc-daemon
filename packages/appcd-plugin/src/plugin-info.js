@@ -185,31 +185,21 @@ export default class PluginInfo {
 	 * @access public
 	 */
 	async stop() {
-		if (this.type === 'internal') {
-			if (this.instance) {
-				if (typeof this.instance.stop === 'function') {
-					await this.instance.stop();
-				}
-			} else {
-				throw new PluginError(codes.PLUGIN_ALREADY_STOPPED);
-			}
-		} else {
-			if (this.pid) {
-				// return new Promise((resolve, reject) => {
-				// 	process.kill(this.pid, 'SIGTERM');
-				//
-				// 	// wait 1 second before killing the plugin host
-				// 	setTimeout(() => {
-				// 		if (this.pid) {
-				// 			process.kill(this.pid, 'SIGKILL');
-				// 		} else {
-				// 			resolve();
-				// 		}
-				// 	}, 1000);
-				// });
-			} else {
-				throw new PluginError(codes.PLUGIN_ALREADY_STOPPED);
-			}
+		if (this.type === 'internal' && this.instance && typeof this.instance.stop === 'function') {
+			await this.instance.stop();
+		} else if (this.type === 'external' && this.pid) {
+			// return new Promise((resolve, reject) => {
+			// 	process.kill(this.pid, 'SIGTERM');
+			//
+			// 	// wait 1 second before killing the plugin host
+			// 	setTimeout(() => {
+			// 		if (this.pid) {
+			// 			process.kill(this.pid, 'SIGKILL');
+			// 		} else {
+			// 			resolve();
+			// 		}
+			// 	}, 1000);
+			// });
 		}
 	}
 }

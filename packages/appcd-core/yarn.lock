@@ -386,9 +386,9 @@ fs-extra@^2.1.2:
     graceful-fs "^4.1.2"
     jsonfile "^2.1.0"
 
-gawk@^4.0.2:
-  version "4.0.2"
-  resolved "https://registry.yarnpkg.com/gawk/-/gawk-4.0.2.tgz#4eb5b2acf40d938827414b453dfdd94b97f30d99"
+gawk@^4.1.0:
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/gawk/-/gawk-4.1.0.tgz#4c749da6a4c27ab0178f07c72b6051fa605d2448"
   dependencies:
     source-map-support "^0.4.14"
 

@@ -140,15 +140,26 @@ export default class SubprocessManager extends EventEmitter {
 						// note: this will kick off an 'change' event and update any status listeners
 						subprocesses.push(proc);
 
+						let writable = true;
+						ctx.response.on('end', () => { writable = false; });
+
 						logger.log('Spawned %s', highlight(pid));
 						ctx.response.write({ type: 'spawn', pid });
 
 						if (child.stdout) {
-							child.stdout.on('data', data => ctx.response.write({ type: 'stdout', output: data.toString() }));
+							child.stdout.on('data', data => {
+								if (writable) {
+									ctx.response.write({ type: 'stdout', output: data.toString() });
+								}
+							});
 						}
 
 						if (child.stderr) {
-							child.stderr.on('data', data => ctx.response.write({ type: 'stderr', output: data.toString() }));
+							child.stderr.on('data', data => {
+								if (writable) {
+									ctx.response.write({ type: 'stderr', output: data.toString() });
+								}
+							});
 						}
 
 						child.once('close', code => {
@@ -161,10 +172,12 @@ export default class SubprocessManager extends EventEmitter {
 								}
 							}
 
-							ctx.response.end({
-								type: 'exit',
-								code
-							});
+							if (writable) {
+								ctx.response.end({
+									type: 'exit',
+									code
+								});
+							}
 
 							proc.emit('exit', code);
 						});
