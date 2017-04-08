@@ -170,7 +170,13 @@ export default class Dispatcher {
 
 		// start the chain and return its promise
 		return Promise.resolve()
-			.then(() => dispatch(0));
+			.then(() => dispatch(0))
+			.then(ctx => {
+				if (ctx.response instanceof Response) {
+					ctx.status = ctx.response.status;
+				}
+				return ctx;
+			});
 	}
 
 	/**

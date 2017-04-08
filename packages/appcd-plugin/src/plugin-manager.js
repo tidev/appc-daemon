@@ -1,6 +1,6 @@
 import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs';
-import gawk, { GawkArray } from 'gawk';
+import gawk from 'gawk';
 import path from 'path';
 import PluginError from './plugin-error';
 import PluginInfo from './plugin-info';
@@ -54,7 +54,7 @@ export default class PluginManager extends EventEmitter {
 		 * A list of all detected plugins.
 		 * @type {GawkArray}
 		 */
-		this.plugins = new GawkArray;
+		this.plugins = gawk([]);
 
 		if (!opts || typeof opts !== 'object') {
 			throw new TypeError('Expected options to be an object');

@@ -454,6 +454,21 @@ describe('dispatcher', () => {
 				d.call(null);
 			}).to.throw(TypeError, 'Expected path to be a non-empty string');
 		});
+
+		it('should return 404 status if not found', done => {
+			const d = new Dispatcher;
+
+			d.register('/foo', ctx => {
+				ctx.response = new Response(codes.NOT_FOUND);
+			});
+
+			d.call('/foo')
+				.then(result => {
+					expect(result.status).equal(404);
+					done();
+				})
+				.catch(done);
+		});
 	});
 
 	describe('middleware', () => {

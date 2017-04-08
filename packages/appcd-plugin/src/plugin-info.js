@@ -6,7 +6,6 @@ import snooplogg from 'snooplogg';
 
 import { codes } from 'appcd-response';
 import { expandPath } from 'appcd-path';
-import { GawkObject } from 'gawk';
 import { inherits } from 'appcd-util';
 import { isDir, isFile } from 'appcd-fs';
 
@@ -16,7 +15,7 @@ const { highlight } = snooplogg.styles;
 /**
  * Contains information about a plugin.
  */
-export default class PluginInfo extends GawkObject {
+export default class PluginInfo {
 	/**
 	 * Determines if the specified directory is a plugin and then loads it's meta data.
 	 *
@@ -53,8 +52,6 @@ export default class PluginInfo extends GawkObject {
 		if (pkgJson.name === 'appcd') {
 			throw new PluginError('Forbidden plugin name: %s', 'appcd');
 		}
-
-		super();
 
 		/**
 		 * The plugin name.

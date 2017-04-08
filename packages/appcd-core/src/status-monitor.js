@@ -40,7 +40,7 @@ export default class StatusMonitor {
 
 		/**
 		 * The daemon status wrapped in a gawk object.
-		 * @type {GawkObject}
+		 * @type {Object}
 		 */
 		this.status = gawk({
 			pid:          process.pid,

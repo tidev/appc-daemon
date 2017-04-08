@@ -21,15 +21,27 @@ export const bat = (isWindows ? '.bat' : '');
  * @param {String} cmd - The command to spawn.
  * @param {Array} [args] - An array of arguments to pass to the subprocess.
  * @param {Object} [opts] - Spawn options.
+ * @param {Boolean} [opts.ignoreExitCode=false] - When true, resolves the promise even if the
+ * process returns an exit code greater than or equal to one.
  * @returns {Promise} Resolves the stdout and stderr output.
  */
 export function run(cmd, args, opts) {
-	if (args && !Array.isArray(args)) {
-		opts = args;
-		args = [];
-	}
-
 	return new Promise((resolve, reject) => {
+		if (!cmd || typeof cmd !== 'string') {
+			throw new TypeError('Expected command to be a non-empty string');
+		}
+
+		if (opts && typeof opts !== 'object') {
+			throw new TypeError('Expected options to be an object');
+		} else if (!opts && typeof args === 'object' && !Array.isArray(args)) {
+			opts = args;
+			args = [];
+		}
+
+		if (!opts) {
+			opts = {};
+		}
+
 		logger.log('Executing: %s', `${styles.highlight(cmd + (args ? args.map(a => a.indexOf(' ') !== -1 ? ` "${a}"` : ` ${a}`).join('') : ''))}`);
 
 		const child = _spawn(cmd, args, opts);
@@ -41,12 +53,13 @@ export function run(cmd, args, opts) {
 		child.stderr.on('data', data => stderr += data.toString());
 
 		child.on('close', code => {
-			if (!code) {
-				resolve({ stdout, stderr });
+			if (!code || opts.ignoreExitCode) {
+				resolve({ code, stdout, stderr });
 			} else {
 				const err = new Error(`Subprocess exited with code ${code}`);
 				err.command = cmd;
 				err.args    = args;
+				err.opts    = opts;
 				err.code    = code;
 				err.stdout  = stdout;
 				err.stderr  = stderr;

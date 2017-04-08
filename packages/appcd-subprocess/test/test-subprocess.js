@@ -41,6 +41,20 @@ describe('subprocess', () => {
 				});
 		});
 
+		it('should ignore subprocess exit code and resolve successfully', done => {
+			subprocess
+				.run(
+					process.execPath,
+					['-e', 'process.exit(1);'],
+					{ ignoreExitCode: true }
+				)
+				.then(({ code, stdout, stderr }) => {
+					expect(code).to.equal(1);
+					done();
+				})
+				.catch(done);
+		});
+
 		it('should run a subprocess without args and without options', done => {
 			subprocess
 				.run(fullpath)
@@ -71,6 +85,43 @@ describe('subprocess', () => {
 				])
 				.then(({ stdout }) => {
 					expect(stdout.trim()).to.equal('Hello world!');
+					done();
+				})
+				.catch(done);
+		});
+
+		it('should fail if command is invalid', done => {
+			subprocess
+				.run()
+				.then(() => {
+					done(new Error('Expected error'));
+				})
+				.catch(err => {
+					expect(err.message).to.equal('Expected command to be a non-empty string');
+					done();
+				})
+				.catch(done);
+		});
+
+		it('should fail if options is not an object', done => {
+			subprocess
+				.run(process.execPath, [], 'foo')
+				.then(() => {
+					done(new Error('Expected error'));
+				})
+				.catch(err => {
+					expect(err.message).to.equal('Expected options to be an object');
+					done();
+				})
+				.catch(done);
+		});
+
+		it('should run with null options', done => {
+			subprocess
+				.run(fullpath, null)
+				.then(({ code, stdout, stderr }) => {
+					expect(stdout.trim()).to.equal('this is a test');
+					expect(stderr.trim()).to.equal('');
 					done();
 				})
 				.catch(done);

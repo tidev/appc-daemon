@@ -51,6 +51,8 @@ export default class Message {
 		}
 
 		this.args = serializeArgs(args);
+
+		// console.log(this);
 	}
 
 	/**
@@ -108,13 +110,9 @@ export default class Message {
 			msg = loadMessage(defaultMsg, locales);
 		}
 
-		if (msg === undefined) {
-			msg = '';
-		}
-
 		// console.log(msg, typeof msg);
 
-		return msg;
+		return msg === undefined ? '' : msg;
 	}
 }
 

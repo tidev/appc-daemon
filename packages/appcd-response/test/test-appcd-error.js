@@ -8,12 +8,14 @@ describe('AppcdError', () => {
 		const err = new AppcdError();
 		expect(err.message).to.equal('Unknown Error');
 		expect(err.toString()).to.equal('AppcdError: Unknown Error');
+		expect(err.stack).to.match(/^AppcdError\:/);
 	});
 
 	it('should create an error with a string', () => {
 		const err = new AppcdError('Oh no!');
 		expect(err.message).to.equal('Oh no!');
 		expect(err.toString()).to.equal('AppcdError: Oh no!');
+		expect(err.stack).to.match(/^AppcdError\:/);
 	});
 
 	it('should create an error with a string and string args', () => {
@@ -150,11 +152,13 @@ describe('Custom Errors', () => {
 		const MyError = createErrorClass('MyError');
 		expect(MyError).to.be.a.function;
 		expect(MyError.name).to.equal('MyError');
+		expect(MyError.codes).to.be.an.Object;
 
 		const err = new MyError('Oh no!');
 		expect(err).to.be.instanceof(MyError);
 		expect(err.message).to.equal('Oh no!');
 		expect(err.toString()).to.equal('MyError: Oh no!');
+		expect(err.stack).to.match(/^MyError\:/);
 	});
 
 	it('should create a custom error with default status/code', () => {

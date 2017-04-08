@@ -2,12 +2,6 @@ import Message from './message';
 
 import { codes } from './codes';
 
-const ignore = {
-	message: 1,
-	msg: 1,
-	name: 1
-};
-
 /**
  * A Appc Daemon error. This class can be extended or used as is.
  */
@@ -23,16 +17,21 @@ export default class AppcdError extends Error {
 		// must define `msg` before capturing the stack trace since it calls `toString()` and we
 		// need a message to render
 		Object.defineProperties(this, {
-			name: { writable: true, value: 'AppcdError' },
-			msg: { value: new Message(...args) }
+			name: { writable: true, value: this.constructor.name },
+			msg: { writable: true, value: new Message(...args) }
 		});
 
 		const err = args[0];
 		if (err instanceof Error) {
 			for (const prop of Object.getOwnPropertyNames(err)) {
-				if (!ignore[prop]) {
+				if (prop !== 'message' && prop !== 'name') {
 					this[prop] = err[prop];
 				}
+			}
+
+			// the stack may have the wrong class name, so override it
+			if (this.stack) {
+				this.stack = this.stack.replace(/^(\w*Error:)/, `${this.name}:`);
 			}
 		} else {
 			Error.captureStackTrace(this, this.constructor);
@@ -85,6 +84,11 @@ export default class AppcdError extends Error {
 	}
 }
 
+Object.defineProperty(AppcdError, 'name', {
+	enumerable: true,
+	value: 'AppcdError'
+});
+
 AppcdError.codes = codes;
 
 /**
@@ -120,13 +124,12 @@ export function createErrorClass(className, opts = {}) {
 		constructor(...args) {
 			super(...args);
 
-			Object.defineProperty(this, 'name', { value: className });
-
-			if (this.msg.status === undefined && opts.defaultStatus) {
+			if (this.msg.status === undefined && opts && opts.defaultStatus) {
 				this.msg.status = opts.defaultStatus;
 			}
-			if (this.msg.statusCode === undefined && opts.defaultStatusCode) {
-				this.msg.statusCode = String(opts.defaultStatusCode);
+
+			if (this.msg.statusCode === undefined && opts && opts.defaultStatusCode) {
+				this.msg.statusCode = opts.defaultStatusCode;
 			}
 		}
 	}
@@ -135,8 +138,6 @@ export function createErrorClass(className, opts = {}) {
 		enumerable: true,
 		value: className
 	});
-
-	CustomError.codes = codes;
 
 	return CustomError;
 }
