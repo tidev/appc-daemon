@@ -444,15 +444,15 @@ describe('dispatcher', () => {
 
 			expect(() => {
 				d.call();
-			}).to.throw(TypeError, 'Expected path to be a non-empty string');
+			}).to.throw(TypeError, 'Expected path to be a string');
 
 			expect(() => {
 				d.call(123);
-			}).to.throw(TypeError, 'Expected path to be a non-empty string');
+			}).to.throw(TypeError, 'Expected path to be a string');
 
 			expect(() => {
 				d.call(null);
-			}).to.throw(TypeError, 'Expected path to be a non-empty string');
+			}).to.throw(TypeError, 'Expected path to be a string');
 		});
 
 		it('should return 404 status if not found', done => {

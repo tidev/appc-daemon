@@ -11,6 +11,9 @@
 		"appcd"
 	],
 	"parser": "babel-eslint",
+	"plugins": [
+		"security"
+	],
 	"rules": {
 		"indent": [ 2, "tab", { "SwitchCase": 1 } ],
 		"linebreak-style": [ 2, "unix" ],
