@@ -50,6 +50,16 @@ export default class Server extends HookEmitter {
 			defaultConfigFile: path.resolve(__dirname, '../../../conf/default.js')
 		});
 
+		// if we didn't have a `configFile`, then load the user config file
+		if (!configFile && isFile(configFile = expandPath(this.config.get('home'), 'config.json'))) {
+			this.config.load(configFile);
+
+			// if we had a `config` object, then we need to re-merge it on top of the user config
+			if (config) {
+				this.config.merge(config);
+			}
+		}
+
 		// gawk the internal config values so that we can watch specific props
 		this.config.values = gawk(this.config.values);
 		this.config.watch = (filter, listener) => gawk.watch(this.config.values, filter, listener);
