@@ -130,10 +130,11 @@ export default class Client {
 	 *
 	 * @param {String} path - The path to send.
 	 * @param {Object} [payload] - An object to send.
+	 * @param {String} [type]
 	 * @returns {EventEmitter} Emits events `response` and `error`.
 	 * @access public
 	 */
-	request(path, payload) {
+	request({ path, payload, type } = {}) {
 		const emitter = new EventEmitter;
 
 		// need to delay request so event emitter can be returned and events can
@@ -165,7 +166,8 @@ export default class Client {
 						version: '1.0',
 						path:    path,
 						id:      id,
-						data:    payload
+						data:    payload,
+						type
 					}));
 				})
 				.on('warning', (...args) => emitter.emit('warning', ...args))

@@ -45,7 +45,7 @@ export function banner() {
  * @param {Object} [payload] - The data to send along with the request.
  * @returns {Client}
  */
-export function createRequest(cfg, path, payload) {
+export function createRequest(cfg, path, payload, type) {
 	const client = new Client({
 		host: cfg.get('server.host'),
 		port: cfg.get('server.post'),
@@ -53,7 +53,7 @@ export function createRequest(cfg, path, payload) {
 	});
 
 	const request = client
-		.request(path, payload)
+		.request({ path, payload, type })
 		.once('close', () => process.exit(0))
 		.once('error', err => {
 			if (err.code !== 'ECONNREFUSED') {
