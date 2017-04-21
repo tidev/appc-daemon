@@ -3,6 +3,6 @@
   "version": "1.0.0",
   "dependencies": {
     "msgpack-lite": "^0.1.26",
-    "ws": "^2.2.3"
+    "ws": "^2.3.1"
   }
 }

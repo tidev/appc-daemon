@@ -27,6 +27,10 @@ new CLI({
 	help: false
 }).exec()
 	.then(({ argv }) => {
+		process
+			.on('uncaughtException', err => snooplogg.error('Caught exception:', err))
+			.on('unhandledRejection', (reason, p) => snooplogg.error('Unhandled Rejection at: Promise ', p, reason));
+
 		return import('./server')
 			.then(server => new server.default(argv))
 			.then(server => server.start());
