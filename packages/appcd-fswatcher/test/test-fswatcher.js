@@ -1,11 +1,12 @@
 import del from 'del';
 import fs from 'fs-extra';
-import FSWatcher, { reset } from '../src/fswatcher';
+import FSWatcher, { renderTree, reset } from '../src/fswatcher';
 import path from 'path';
 import snooplogg from 'snooplogg';
 import tmp from 'tmp';
 
-const log = snooplogg.config({ theme: 'detailed' })('test:appcd:fswatcher').log;
+const log = snooplogg.config({ theme: 'standard' })('test:appcd:fswatcher').log;
+const { highlight } = snooplogg.styles;
 
 tmp.setGracefulCleanup();
 
@@ -16,18 +17,20 @@ function makeTempName() {
 }
 
 function makeTempDir() {
-	return fs.realpathSync(tmp.dirSync({
+	return tmp.dirSync({
 		prefix: 'appcd-fswatcher-test-',
 		unsafeCleanup: true
-	}).name);
+	}).name;
 }
 
 describe('FSWatcher', () => {
 	beforeEach(function () {
 		this.pathsToCleanup = [];
 	});
+
 	afterEach(function (done) {
 		reset();
+		log(renderTree());
 		del(this.pathsToCleanup, { force: true }).then(() => done()).catch(done);
 	});
 
@@ -59,15 +62,17 @@ describe('FSWatcher', () => {
 		const tmp = makeTempDir();
 		const filename = path.join(tmp, 'foo.txt');
 
-	 	new FSWatcher(tmp)
-			.on('change', evt => {
-				expect(evt).to.be.an.Object;
-				expect(evt.action).to.equal('add');
-				expect(evt.file).to.equal(filename);
-				done();
-			});
+		setTimeout(() => {
+		 	new FSWatcher(tmp)
+				.on('change', evt => {
+					expect(evt).to.be.an.Object;
+					expect(evt.action).to.equal('add');
+					expect(evt.file).to.equal(fs.realpathSync(filename));
+					done();
+				});
 
-		fs.writeFileSync(filename, 'foo!');
+			fs.writeFileSync(filename, 'foo!');
+		}, 100);
 	});
 
 	it('should watch an existing directing for a new file that is changed', done => {
@@ -75,28 +80,30 @@ describe('FSWatcher', () => {
 		const filename = path.join(tmp, 'foo.txt');
 		let counter = 0;
 
-		new FSWatcher(tmp)
-			.on('change', evt => {
-				counter++;
-				if (counter === 1) {
-					// adding the file
-					expect(evt).to.be.an.Object;
-					expect(evt.action).to.equal('add');
-					expect(evt.file).to.equal(filename);
-				} else if (counter === 2) {
-					// updating the file
-					expect(evt).to.be.an.Object;
-					expect(evt.action).to.equal('change');
-					expect(evt.file).to.equal(filename);
-					done();
-				}
-			});
-
-		fs.writeFileSync(filename, 'foo!');
-
 		setTimeout(() => {
-			fs.appendFileSync(filename, '\nbar!');
-		}, 10);
+			new FSWatcher(tmp)
+				.on('change', evt => {
+					counter++;
+					if (counter === 1) {
+						// adding the file
+						expect(evt).to.be.an.Object;
+						expect(evt.action).to.equal('add');
+						expect(evt.file).to.equal(fs.realpathSync(filename));
+					} else if (counter === 2) {
+						// updating the file
+						expect(evt).to.be.an.Object;
+						expect(evt.action).to.equal('change');
+						expect(evt.file).to.equal(fs.realpathSync(filename));
+						done();
+					}
+				});
+
+			fs.writeFileSync(filename, 'foo!');
+
+			setTimeout(() => {
+				fs.appendFileSync(filename, '\nbar!');
+			}, 10);
+		}, 100);
 	});
 
 	it('should watch an existing file for a change', done => {
@@ -108,18 +115,22 @@ describe('FSWatcher', () => {
 			.on('change', evt => {
 				expect(evt).to.be.an.Object;
 				expect(evt.action).to.equal('change');
-				expect(evt.file).to.equal(filename);
+				expect(evt.file).to.equal(fs.realpathSync(filename));
 				done();
 			});
 
+		log(renderTree());
+
 		setTimeout(() => {
+			log(`Appending to ${filename}`);
 			fs.appendFileSync(filename, '\nbar!');
-		}, 10);
+		}, 100);
 	});
 
-	it.only('should watch a directory that does not exist', function (done) {
+	it('should watch a directory that does not exist', function (done) {
 		const tmp = makeTempName();
 		const filename = path.join(tmp, 'foo.txt');
+		let counter = 0;
 
 		log(`Temp dir = ${tmp}`);
 
@@ -127,22 +138,22 @@ describe('FSWatcher', () => {
 			.on('change', evt => {
 				expect(evt).to.be.an.Object;
 				expect(evt.action).to.equal('add');
-				expect(evt.file).to.equal(filename);
-				done();
+				if (counter++ === 0) {
+					expect(evt.file).to.equal(fs.realpathSync(tmp));
+				} else {
+					expect(evt.file).to.equal(fs.realpathSync(filename));
+					done();
+				}
 			});
 
-		// new FSWatcher('/Users/chris/Desktop');
-		// new FSWatcher('/Users/chris/appc/workspace');
+		this.pathsToCleanup.push(tmp);
+		log('Creating %s', highlight(tmp));
+		fs.mkdirsSync(tmp);
 
 		setTimeout(() => {
-			this.pathsToCleanup.push(tmp);
-			fs.mkdirsSync(tmp);
-
-			setTimeout(() => {
-				log(`Writing ${filename}`);
-				fs.writeFileSync(filename, 'foo!');
-			}, 10);
-		}, 10);
+			log('Writing %s', highlight(filename));
+			fs.writeFileSync(filename, 'foo!');
+		}, 100);
 	});
 /*
 	it('should watch a file that does not exist', done => {

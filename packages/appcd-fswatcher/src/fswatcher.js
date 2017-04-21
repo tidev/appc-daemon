@@ -9,8 +9,9 @@ import snooplogg from 'snooplogg';
 import { EventEmitter } from 'events';
 import { inspect } from 'util';
 
-const log = snooplogg.config({ theme: 'detailed' })('appcd:fswatcher').log;
+const log = snooplogg.config({ theme: 'standard' })('appcd:fswatcher').log;
 const { highlight, green } = snooplogg.styles;
+const { pluralize } = snooplogg;
 
 const pathRegExp = /^(\/|[A-Za-z]+\:\\)(.+)$/;
 export const roots = {};
@@ -28,32 +29,46 @@ class Node {
 		this.watchers = new Set;
 		this.type = DOES_NOT_EXIST;
 
+		this.init();
+	}
+
+	init(isAdd) {
 		try {
-			const lstat = fs.lstatSync(path);
+			const lstat = fs.lstatSync(this.path);
+
 			if (lstat.isDirectory()) {
-				log('Initializing fs watcher: %s', highlight(this.path));
-				this.files = new Set(fs.readdirSync(this.path));
-				this.fswatcher = fs.watch(this.path, { persistent: true }, this.onChange.bind(this));
-				this.recursive = 0;
-				this.type = DIRECTORY;
-			} else if (lstat.isSymbolicLink()) {
-				this.type = SYMLINK;
-				try {
-					const stat = fs.statSync(path);
-					this.realPath = fs.realpathSync(path);
-					if (stat.isDirectory()) {
-						this.type |= DIRECTORY;
-						this.link = getNode(this.realPath);
-					} else if (stat.isFile()) {
-						this.type |= FILE;
-					}
-				} catch (e) {
-					// broken symlink, need to read link
-					const link = fs.readlinkSync(path);
-					this.realPath = _path.isAbsolute(link) ? link : _path.join(_path.dirname(path), link);
+				if (!this.fswatcher) {
+					log('Initializing fs watcher: %s', highlight(this.path));
+					this.files = isAdd ? new Set : new Set(fs.readdirSync(this.path));
+					this.fswatcher = fs.watch(this.path, { persistent: true }, this.onChange.bind(this));
+					this.recursive = 0;
 				}
+				this.type = DIRECTORY;
 			} else {
-				this.type = FILE;
+				if (this.fswatcher) {
+					this.fswatcher.close();
+					delete this.fswatcher;
+				}
+
+				if (lstat.isSymbolicLink()) {
+					this.type = SYMLINK;
+					try {
+						const stat = fs.statSync(this.path);
+						this.realPath = fs.realpathSync(this.path);
+						if (stat.isDirectory()) {
+							this.type |= DIRECTORY;
+							this.link = getNode(this.realPath);
+						} else if (stat.isFile()) {
+							this.type |= FILE;
+						}
+					} catch (e) {
+						// broken symlink, need to read link
+						const link = fs.readlinkSync(this.path);
+						this.realPath = _path.isAbsolute(link) ? link : _path.join(_path.dirname(this.path), link);
+					}
+				} else {
+					this.type = FILE;
+				}
 			}
 		} catch(e) {
 			// doesn't exist
@@ -61,7 +76,8 @@ class Node {
 
 		let type = this.type & SYMLINK ? 'l' : '';
 		type += this.type & DIRECTORY ? 'd' : this.type & FILE ? 'f' : '?';
-		log('Created node: %s %s', highlight(path), green(`[${type}]`));
+		const files = this.files ? `(${pluralize('file', this.files.size, true)})` : '';
+		log('Initialized node: %s %s %s', highlight(this.path), green(`[${type}]`), files);
 	}
 
 	addChild(path, basename) {
@@ -80,6 +96,19 @@ class Node {
 
 	addWatcher(watcher) {
 		this.watchers.add(watcher);
+	}
+
+	notify(evt) {
+		log('Notification: %s %s', green(`[${evt.action}]`), highlight(this.path));
+		if (evt.action === 'add') {
+			this.init(true);
+		}
+		if (this.watchers.size) {
+			log('Notifying %s %s: %s %s', green(this.watchers.size), pluralize('watcher', this.watchers.size), green(`[${evt.action}]`), highlight(evt.file));
+			for (const watcher of this.watchers) {
+				watcher.emit('change', evt);
+			}
+		}
 	}
 
 	onChange(event, filename) {
@@ -101,6 +130,33 @@ class Node {
 			filename,
 			file: _path.join(this.path, filename)
 		};
+
+		try {
+			const stat = fs.lstatSync(evt.file);
+			if (evt.action === 'add') {
+				this.files.add(filename);
+			}
+		} catch (e) {
+			// file was deleted
+			evt.action = 'delete';
+			if (this.files) {
+				this.files.delete(filename);
+			}
+		}
+
+		log('%s %s → %s', green(`[${evt.action}]`), highlight(this.path), highlight(filename));
+
+		if (this.children && this.children[filename]) {
+			log('Notifying child node: %s', highlight(filename));
+			this.children[filename].notify(evt);
+		}
+
+		if (this.watchers.size) {
+			log('Notifying %s %s: %s → %s', green(this.watchers.size), pluralize('watcher', this.watchers.size), highlight(this.path), highlight(filename));
+			for (const watcher of this.watchers) {
+				watcher.emit('change', evt);
+			}
+		}
 	}
 
 /*
@@ -110,9 +166,6 @@ class Node {
 		} else {
 			// we need to stat the file to see if it's a link
 		}
-
-
-
 
 		let isDir = false;
 
@@ -269,8 +322,7 @@ export default class FSWatcher extends EventEmitter {
 
 		getNode(path).addWatcher(this);
 
-		//console.log(inspect(roots, false, null, true));
-		print();
+		// print();
 	}
 
 	close() {
@@ -287,6 +339,7 @@ export function reset() {
 					close(node.children[name]);
 				}
 			}
+			log('Destroying node: %s', highlight(node.path));
 			node.fswatcher && node.fswatcher.close();
 			node.files && node.files.clear();
 			node.watchers && node.watchers.clear();
@@ -332,11 +385,17 @@ function getNode(path) {
 	return node;
 }
 
-function print(node, depth=0, parent=[]) {
+export function renderTree(node, depth=0, parent=[]) {
 	let children = node instanceof Node ? node.children : roots;
 	const keys = Object.keys(children).sort((a, b) => a.localeCompare(b));
 	const len = keys.length;
+
+	if (children === roots && len === 0) {
+		return '<empty tree>';
+	}
+
 	let i = 0;
+	let str = '';
 
 	for (const name of keys) {
 		const node = children[name];
@@ -357,15 +416,15 @@ function print(node, depth=0, parent=[]) {
 		if (node.type & DIRECTORY) {
 			const n = node.type & SYMLINK && node.link || node;
 			const c = n.files ? n.files.size : '?';
-			meta.push(` (${c} ${c === 1 ? 'file' : 'files'})`);
+			meta.push(` (${c} ${pluralize('file', c)})`);
 		}
 
-		console.log(` ${indent}${symbol}${!hasChildren ? '─' : !depth && !i ? '┌' : '┬'} ${green(`[${type}]`)} ${highlight(name)}${meta.join(' ')}`);
+		str += ` ${indent}${symbol}${!hasChildren ? '─' : !depth && !i ? '┌' : '┬'} ${green(`[${type}]`)} ${highlight(name)}${meta.join(' ')}\n`;
 
 		i++;
 
 		if (hasChildren) {
-			print(children[name], depth + 1, parent.concat(last));
+			str += renderTree(children[name], depth + 1, parent.concat(last)) + '\n';
 		}
 	}
 
@@ -378,4 +437,6 @@ function print(node, depth=0, parent=[]) {
 	// 	console.log(`  Watching? ${!!node.fswatcher}`);
 	// 	console.log(`  Watchers: ${node.watchers.size}`);
 	// }
+
+	return str.trimRight();
 }
