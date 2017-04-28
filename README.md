@@ -34,18 +34,14 @@ reloaded, but have limited plugin hook capabilities.
 
 In order to build the daemon, you must first install a few dependencies.
 
-* gulp
+```
+sudo npm install -g gulp
+brew update && brew install yarn
 
-  `sudo npm install -g gulp`
-
-* Yarn - https://yarnpkg.com/en/docs/install
-
-  `brew update && brew install yarn`
-
-
-	$ cd appc-daemon
-	$ yarn
-	$ sudo npm link
+cd appc-daemon
+yarn
+sudo npm link
+```
 
 ## Development Workflow
 
