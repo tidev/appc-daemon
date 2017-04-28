@@ -16,7 +16,7 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "source-map-support": "^0.4.14"
+    "source-map-support": "^0.4.15"
   },
   "devDependencies": {
     "gulp": "^3.9.1"

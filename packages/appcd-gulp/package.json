@@ -9,7 +9,7 @@
   ],
   "license": "SEE LICENSE IN LICENSE",
   "dependencies": {
-    "babel-eslint": "^7.2.2",
+    "babel-eslint": "^7.2.3",
     "babel-plugin-import-node": "^1.0.2",
     "babel-plugin-istanbul": "^4.1.1",
     "babel-plugin-transform-async-to-generator": "^6.24.1",
@@ -39,7 +39,7 @@
     "run-sequence": "^1.2.2",
     "sinon": "^2.1.0",
     "sinon-chai": "^2.9.0",
-    "source-map-support": "^0.4.14"
+    "source-map-support": "^0.4.15"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
