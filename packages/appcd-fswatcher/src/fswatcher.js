@@ -111,19 +111,20 @@ export class Node {
 				delete this.fswatcher;
 			}
 
-			if (this.type & SYMLINK && this.type & DIRECTORY) {
+			if (this.type & SYMLINK) {
 				this.link = register(this.realPath);
 				this.link.links.add(this);
 			}
 
 		} else if (!this.fswatcher) {
 			log('Initializing fs watcher: %s', highlight(this.path));
-			this.fswatcher = fs.watch(this.path, { persistent: true }, this.processFSEvent.bind(this));
+			this.fswatcher = fs.watch(this.path, { persistent: true }, this.onFSEvent.bind(this));
 
 			const now = Date.now();
 			this.files = new Map;
 
 			for (const filename of fs.readdirSync(this.path)) {
+				const file = _path.join(this.path, filename);
 				this.files.set(filename, now);
 
 				if (isAdd) {
@@ -136,8 +137,18 @@ export class Node {
 					this.notify({
 						action: 'add',
 						filename,
-						file: _path.join(this.path, filename)
+						file
 					}, true);
+				}
+			}
+
+			if (isAdd) {
+				for (const node of this.links) {
+					node.notify({
+						action: 'change',
+						filename: node.name,
+						file: node.path
+					});
 				}
 			}
 		}
@@ -212,6 +223,7 @@ export class Node {
 	watch(watcher) {
 		if (!this.watchers.has(watcher)) {
 			this.watchers.add(watcher);
+
 			if (watcher.recursive) {
 				this.recursive++;
 				this.recursiveWatch();
@@ -231,7 +243,7 @@ export class Node {
 				let child = this.children[filename];
 				if (!child) {
 					child = new Node(_path.join(this.path, filename), this);
-					if (child.type !== DIRECTORY) {
+					if (child.type !== DIRECTORY && child.type !== SYMLINK) {
 						continue;
 					}
 					this.children[filename] = child.init();
@@ -284,7 +296,7 @@ export class Node {
 	 * @param {String} filename - The name of the file that triggered the event.
 	 * @access private
 	 */
-	processFSEvent(event, filename) {
+	onFSEvent(event, filename) {
 		// check that the changed file hasn't been deleted during notification
 		if (filename === null) {
 			return;
@@ -359,14 +371,6 @@ export class Node {
 				}
 			}
 		}
-
-		// TODO: do we need to notify links??
-		// if (this.links.size) {
-		// 	log('Notifying %s %s: %s → %s', green(this.links.size), pluralize('link', this.links.size), highlight(this.path), highlight(evt.filename));
-		// 	for (const link of this.links) {
-		// 		link.notify(evt);
-		// 	}
-		// }
 
 		if (this.parent) {
 			this.parent.notify(evt);
@@ -453,14 +457,25 @@ export class Node {
 			delete this.files;
 		}
 
-		// TODO: notify all links that whatever they were pointing to has been deleted and now they
-		// need to null 'link' and re-stat
-		// if (this.links.size) {
-		// 	log('Notifying %s %s: %s → %s', green(this.links.size), pluralize('link', this.links.size), highlight(this.path), highlight(evt.filename));
-		// 	for (const link of this.links) {
-		// 		link.notify(evt);
-		// 	}
-		// }
+		if (this.link) {
+			this.link.links.delete(this);
+			this.link = null;
+		}
+
+		if (this.links.size) {
+			log('Notifying %s %s: %s → %s', green(this.links.size), pluralize('link', this.links.size), highlight(this.path), highlight(evt.filename));
+			for (const link of this.links) {
+				const type = link.type;
+				link.stat();
+				if (link.type !== type) {
+					link.notify({
+						action: 'change',
+						filename: link.name,
+						file: link.path
+					});
+				}
+			}
+		}
 	}
 
 	/**
@@ -739,13 +754,17 @@ export function renderTree(node, depth=0, parent=[]) {
 		if (node.type & SYMLINK && node.link) {
 			meta.push(` → ${highlight(node.link.path)}`);
 		}
-		let files = '';
+
+		let details = [];
 		if (node.type & DIRECTORY) {
 			const n = node.type & SYMLINK && node.link || node;
 			const c = n.files ? n.files.size : '?';
-			files = `${c} ${pluralize('file', c)}, `;
+			details.push(`${c} ${pluralize('file', c)}`);
 		}
-		meta.push(` (${files}${pluralize('watcher', node.watchers.size, true)}, ${node.recursive} recursion)`);
+		details.push(pluralize('watcher', node.watchers.size, true));
+		details.push(pluralize('link', node.links.size, true));
+		details.push(`${node.recursive} recursion`);
+		meta.push(` (${details.join(', ')})`);
 
 		str += ` ${indent}${symbol}${!hasChildren ? '─' : !depth && !i ? '┌' : '┬'} ${green(`[${type}]`)} ${highlight(name)}${meta.join(' ')}\n`;
 

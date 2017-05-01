@@ -68,7 +68,8 @@ describe('FSWatcher', () => {
 	});
 
 	describe('watching', () => {
-		afterEach(done => {
+		afterEach(function (done) {
+			this.timeout(10000);
 			reset();
 			log(renderTree());
 			setTimeout(() => done(), 1000);
@@ -757,7 +758,7 @@ describe('FSWatcher', () => {
 			}, 100);
 		});
 
-		(process.platform === 'win32' ? it.skip : it.only)('should', function (done) {
+		it('should handle if symlink to directory is broken', function (done) {
 			this.timeout(10000);
 			this.slow(8000);
 
@@ -781,7 +782,7 @@ describe('FSWatcher', () => {
 				new FSWatcher(bazDir, { recursive: true })
 					.on('change', evt => {
 						if (evt.file.indexOf(tmpDir) === 0) {
-							console.log(evt);
+							// console.log(evt);
 
 							switch (++counter) {
 								case 1:
@@ -795,16 +796,277 @@ describe('FSWatcher', () => {
 
 								case 2:
 									expect(evt.action).to.equal('change');
-									// expect(evt.file).to.equal(realPath(wizDir));
+									expect(evt.file).to.equal(realWizDir);
 									done();
 							}
 						}
 					})
 					.on('error', done);
 
+				log('Creating symlink: %s', highlight(wizDir));
 				fs.symlinkSync(barDir, wizDir);
 			}, 100);
 		});
+
+		it('should handle symlink to directory being deleted', function (done) {
+			this.timeout(10000);
+			this.slow(8000);
+
+			let counter = 0;
+			const tmp = makeTempDir();
+			log('Creating temp directory: %s', highlight(tmp));
+
+			const fooDir = path.join(tmp, 'foo');
+			const barDir = path.join(fooDir, 'bar');
+			log('Creating foo/bar directory: %s', highlight(barDir));
+			fs.mkdirsSync(barDir);
+
+			const bazDir = path.join(tmp, 'baz');
+			log('Creating baz directory: %s', highlight(bazDir));
+			fs.mkdirsSync(bazDir);
+
+			const realWizDir = path.join(realPath(tmp), 'baz', 'wiz');
+			const wizDir = path.join(bazDir, 'wiz');
+
+			setTimeout(() => {
+				new FSWatcher(bazDir, { recursive: true })
+					.on('change', evt => {
+						if (evt.file.indexOf(tmpDir) === 0) {
+							// console.log(evt);
+
+							switch (++counter) {
+								case 1:
+									expect(evt.action).to.equal('add');
+									expect(evt.file).to.equal(realWizDir);
+
+									log(renderTree());
+									log('Unlinking wiz: %s', highlight(wizDir));
+									fs.unlinkSync(wizDir);
+									break;
+
+								case 2:
+									expect(evt.action).to.equal('delete');
+									expect(evt.file).to.equal(realWizDir);
+									done();
+							}
+						}
+					})
+					.on('error', done);
+
+				log('Creating symlink: %s', highlight(wizDir));
+				fs.symlinkSync(barDir, wizDir);
+			}, 100);
+		});
+
+		it('should handle if symlink to file is broken', function (done) {
+			this.timeout(10000);
+			this.slow(8000);
+
+			let counter = 0;
+			const tmp = makeTempDir();
+			log('Creating temp directory: %s', highlight(tmp));
+
+			const fooDir = path.join(tmp, 'foo');
+			log('Creating foo directory: %s', highlight(fooDir));
+			fs.mkdirsSync(fooDir);
+
+			const barFile = path.join(fooDir, 'bar.txt');
+			log('Writing %s', highlight(barFile));
+			fs.writeFileSync(barFile, 'bar!');
+
+			const bazDir = path.join(tmp, 'baz');
+			log('Creating baz directory: %s', highlight(bazDir));
+			fs.mkdirsSync(bazDir);
+
+			const realWizFile = path.join(realPath(tmp), 'baz', 'wiz.txt');
+			const wizFile = path.join(bazDir, 'wiz.txt');
+
+			setTimeout(() => {
+				new FSWatcher(bazDir, { recursive: true })
+					.on('change', evt => {
+						if (evt.file.indexOf(tmpDir) === 0) {
+							// console.log(evt);
+
+							switch (++counter) {
+								case 1:
+									expect(evt.action).to.equal('add');
+									expect(evt.file).to.equal(realWizFile);
+
+									log(renderTree());
+									log('Removing %s', highlight(barFile));
+									fs.removeSync(barFile);
+									break;
+
+								case 2:
+									expect(evt.action).to.equal('change');
+									expect(evt.file).to.equal(realWizFile);
+									done();
+							}
+						}
+					})
+					.on('error', done);
+
+				log('Creating symlink: %s', highlight(wizFile));
+				fs.symlinkSync(barFile, wizFile);
+			}, 100);
+		});
+
+		it('should handle symlink to file being deleted', function (done) {
+			this.timeout(10000);
+			this.slow(8000);
+
+			let counter = 0;
+			const tmp = makeTempDir();
+			log('Creating temp directory: %s', highlight(tmp));
+
+			const fooDir = path.join(tmp, 'foo');
+			log('Creating foo directory: %s', highlight(fooDir));
+			fs.mkdirsSync(fooDir);
+
+			const barFile = path.join(fooDir, 'bar.txt');
+			log('Writing %s', highlight(barFile));
+			fs.writeFileSync(barFile, 'bar!');
+
+			const bazDir = path.join(tmp, 'baz');
+			log('Creating baz directory: %s', highlight(bazDir));
+			fs.mkdirsSync(bazDir);
+
+			const realWizFile = path.join(realPath(tmp), 'baz', 'wiz.txt');
+			const wizFile = path.join(bazDir, 'wiz.txt');
+
+			setTimeout(() => {
+				new FSWatcher(bazDir, { recursive: true })
+					.on('change', evt => {
+						if (evt.file.indexOf(tmpDir) === 0) {
+							// console.log(evt);
+
+							switch (++counter) {
+								case 1:
+									expect(evt.action).to.equal('add');
+									expect(evt.file).to.equal(realWizFile);
+
+									log(renderTree());
+									log('Unlinking wiz: %s', highlight(wizFile));
+									fs.unlinkSync(wizFile);
+									break;
+
+								case 2:
+									expect(evt.action).to.equal('delete');
+									expect(evt.file).to.equal(realWizFile);
+									done();
+							}
+						}
+					})
+					.on('error', done);
+
+				log('Creating symlink: %s', highlight(wizFile));
+				fs.symlinkSync(barFile, wizFile);
+			}, 100);
+		});
+
+		it('should handle if already broken absolute directory symlink', function (done) {
+			this.timeout(10000);
+			this.slow(8000);
+
+			const tmp = makeTempDir();
+			log('Creating temp directory: %s', highlight(tmp));
+
+			const fooDir = path.join(tmp, 'foo');
+			const barDir = path.join(fooDir, 'bar');
+			log('Creating foo/bar directory: %s', highlight(barDir));
+			fs.mkdirsSync(barDir);
+
+			const bazDir = path.join(tmp, 'baz');
+			log('Creating baz directory: %s', highlight(bazDir));
+			fs.mkdirsSync(bazDir);
+
+			const realWizDir = path.join(realPath(tmp), 'baz', 'wiz');
+			const wizDir = path.join(bazDir, 'wiz');
+
+			log('Creating symlink: %s', highlight(wizDir));
+			fs.symlinkSync(barDir, wizDir);
+
+			log('Deleting %s', highlight(barDir));
+			fs.removeSync(barDir);
+
+			setTimeout(() => {
+				new FSWatcher(bazDir, { recursive: true })
+					.on('change', evt => {
+						if (evt.file.indexOf(tmpDir) === 0) {
+							// console.log(evt);
+
+							expect(evt.action).to.equal('change');
+							expect(evt.file).to.equal(realWizDir);
+							done();
+						}
+					})
+					.on('error', done);
+
+				setTimeout(() => {
+					log(renderTree());
+					log('Recreating foo/bar directory: %s', highlight(barDir));
+					fs.mkdirsSync(barDir);
+				}, 100);
+			}, 500);
+		});
+
+		it('should handle if already broken relative directory symlink', function (done) {
+			this.timeout(10000);
+			this.slow(8000);
+
+			const tmp = makeTempDir();
+			log('Creating temp directory: %s', highlight(tmp));
+
+			const fooDir = path.join(tmp, 'foo');
+			const barDir = path.join(fooDir, 'bar');
+			log('Creating foo/bar directory: %s', highlight(barDir));
+			fs.mkdirsSync(barDir);
+
+			const bazDir = path.join(tmp, 'baz');
+			log('Creating baz directory: %s', highlight(bazDir));
+			fs.mkdirsSync(bazDir);
+
+			const realWizDir = path.join(realPath(tmp), 'baz', 'wiz');
+			const wizDir = path.join(bazDir, 'wiz');
+
+			const barRelDir = path.relative(realWizDir, barDir);
+
+			log('Creating symlink: %s → %s', highlight(barRelDir), highlight(wizDir));
+			fs.symlinkSync(barRelDir, wizDir);
+
+			log('Deleting %s', highlight(barDir));
+			fs.removeSync(barDir);
+
+			setTimeout(() => {
+				new FSWatcher(bazDir, { recursive: true })
+					.on('change', evt => {
+						if (evt.file.indexOf(tmpDir) === 0) {
+							// console.log(evt);
+
+							expect(evt.action).to.equal('change');
+							expect(evt.file).to.equal(realWizDir);
+							done();
+						}
+					})
+					.on('error', done);
+
+				setTimeout(() => {
+					log(renderTree());
+					log('Recreating foo/bar directory: %s', highlight(barDir));
+					fs.mkdirsSync(barDir);
+				}, 100);
+			}, 500);
+		});
+
+		// change from a dir to a symlink
+
+		// recursive unwatch
+
+		// recursively watch an existing directory with a file
+
+		// throw exception from eventemitter change handler and listen for 'error' event
+
+		// 2 watchers, one is near root and recursive, the other below that and is closed, but kept open because parent is recursive
 	});
 
 	describe('register', () => {

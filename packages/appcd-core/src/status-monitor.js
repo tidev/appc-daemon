@@ -1,6 +1,6 @@
 import gawk from 'gawk';
 import os from 'os';
-import Dispatcher, { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
+import { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
 import snooplogg from './logger';
 
 import { codes } from 'appcd-response';
@@ -23,8 +23,7 @@ export default class StatusMonitor {
 		 * The status monitor dispatcher.
 		 * @type {Dispatcher}
 		 */
-		this.dispatcher = new Dispatcher()
-			.register(new ServiceDispatcher('/:filter*', this));
+		this.dispatcher = new ServiceDispatcher('/:filter*', this);
 
 		/**
 		 * The user and system time this process has used.

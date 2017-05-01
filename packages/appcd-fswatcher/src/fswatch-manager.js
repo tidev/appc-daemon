@@ -1,5 +1,9 @@
-import Dispatcher, { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
-import snooplogg from './logger';
+import { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
+import FSWatcher, { rootEmitter } from './fswatcher';
+import snooplogg from 'snooplogg';
+
+import { codes } from 'appcd-response';
+import { EventEmitter } from 'events';
 
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:subprocess:manager');
 const { highlight, note } = snooplogg.styles;
@@ -7,15 +11,16 @@ const { highlight, note } = snooplogg.styles;
 /**
  * Starts and stops filesystem watches and sends notifications when a fs event occurs.
  */
-export default class FSWatchManager {
+export default class FSWatchManager extends EventEmitter {
 	/**
 	 * Creates the fs watch manager dispatcher and initializes it as a service dispatcher.
 	 *
 	 * @access public
 	 */
 	constructor() {
-		this.dispatcher = new Dispatcher()
-			.register(new ServiceDispatcher('/:filter*', this));
+		super();
+		this.dispatcher = new ServiceDispatcher(this);
+		rootEmitter.on('change', evt => this.emit('change', evt));
 	}
 
 	/**
@@ -26,7 +31,11 @@ export default class FSWatchManager {
 	 * @access private
 	 */
 	onSubscribe(ctx, publish) {
-		logger.log('onSubscribe');
+		if (!ctx.data.path) {
+			throw new DispatcherError(codes.MISSING_ARGUMENT, 'Missing required parameter "%s"', 'path');
+		}
+		ctx.watcher = new FSWatcher(ctx.data.path, { recursive: !!ctx.data.recursive })
+			.on('change', publish);
 	}
 
 	/**
@@ -38,6 +47,9 @@ export default class FSWatchManager {
 	 * @access private
 	 */
 	onUnsubscribe(ctx, publish) {
-		logger.log('onUnsubscribe');
+		if (ctx.watcher) {
+			ctx.watcher.close();
+			ctx.watcher = null;
+		}
 	}
 }

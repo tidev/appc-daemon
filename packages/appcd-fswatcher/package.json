@@ -26,7 +26,8 @@
   },
   "appcdDependencies": [
     "appcd-dispatcher",
-    "appcd-gulp"
+    "appcd-gulp",
+    "appcd-response"
   ],
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",

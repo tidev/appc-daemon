@@ -36,7 +36,10 @@ export default class ServiceDispatcher {
 	 * @access public
 	 */
 	constructor(path, instance) {
-		if (!path || typeof path !== 'string') {
+		if (instance === undefined && typeof path === 'object') {
+			instance = path;
+			path = null;
+		} else if (!path || typeof path !== 'string') {
 			throw new TypeError('Expected path to be a string');
 		}
 
@@ -48,7 +51,7 @@ export default class ServiceDispatcher {
 		 * The service path to register the handler to.
 		 * @type {String}
 		 */
-		this.path = (path[0] === '/' ? '' : '/') + path;
+		this.path = path ? `${path[0] === '/' ? '' : '/'}${path}` : null;
 
 		/**
 		 * A reference to the object containing service methods.

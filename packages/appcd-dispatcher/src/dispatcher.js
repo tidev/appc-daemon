@@ -1,6 +1,7 @@
 import DispatcherError from './dispatcher-error';
 import pathToRegExp from 'path-to-regexp';
 import Response, { AppcdError, codes } from 'appcd-response';
+import ServiceDispatcher from './service-dispatcher';
 import snooplogg, { styles } from 'snooplogg';
 
 import { PassThrough } from 'stream';
@@ -243,10 +244,28 @@ export default class Dispatcher {
 	/**
 	 * Registers a handler to a path.
 	 *
+	 * @example
+	 * dispatcher.register('/some/path', ctx => {});
+	 *
+	 * @example
+	 * dispatcher.register('/some/path', new Dispatcher(...));
+	 *
+	 * @example
+	 * dispatcher.register(new ServiceDispatcher(...));
+	 *
+	 * @example
+	 * dispatcher.register('/some/path', new ServiceDispatcher(...));
+	 *
+	 * @example
+	 * dispatcher.register({ path: '/some/path', handler: ctx => {} });
+	 *
+	 * @example
+	 * dispatcher.register('/some/path', { handler: ctx => {} });
+	 *
 	 * @param {ServiceDispatcher|Object|String|RegExp|Array<String>|Array<RegExp>} path - The path
 	 * to register the handler to. This can also be a `ServiceDispatcher` instance or any object
 	 * that has a path and a handler.
-	 * @param {Function|Dispatcher} handler - A function to call when the path matches.
+	 * @param {Function|Dispatcher|ServiceDispatcher} handler - A function to call when the path matches.
 	 * @returns {Dispatcher}
 	 * @access public
 	 */
@@ -258,36 +277,40 @@ export default class Dispatcher {
 			return this;
 		}
 
-		// check if we have a ServiceDispatcher or any object with a path and handler callback
-		if (path && typeof path === 'object' && path.path && typeof path.handler === 'function') {
+		// check if the `path` is a ServiceDispatcher or any object with a path and handler callback
+		if (path && typeof path === 'object' && path.hasOwnProperty('path') && typeof path.handler === 'function') {
 			handler = path.handler;
 			path = path.path;
 		}
 
 		if (typeof path !== 'string' && !(path instanceof RegExp)) {
 			throw new TypeError('Invalid path');
+		}
 
-		} else if (typeof handler === 'function' || handler instanceof Dispatcher) {
-			const keys = [];
-			const regexp = pathToRegExp(path, keys, { end: !(handler instanceof Dispatcher) });
-			const prefix = handler instanceof Dispatcher ? path : null;
+		if (handler instanceof ServiceDispatcher) {
+			handler = handler.path ? new Dispatcher(handler) : handler.handler;
+		}
 
-			this.routes.push({
-				path,
-				prefix,
-				handler,
-				keys,
-				regexp
-			});
-
-			// if this is a scoped dispatcher and the path is /, then suppress the
-			// redundant log message
-			if (path !== '/') {
-				logger.debug(`Registered dispatcher route ${highlight(path)}`);
-			}
-
-		} else {
+		if (typeof handler !== 'function' && !(handler instanceof Dispatcher)) {
 			throw new TypeError('Invalid handler');
+		}
+
+		const keys = [];
+		const regexp = pathToRegExp(path, keys, { end: !(handler instanceof Dispatcher) });
+		const prefix = handler instanceof Dispatcher ? path : null;
+
+		this.routes.push({
+			path,
+			prefix,
+			handler,
+			keys,
+			regexp
+		});
+
+		// if this is a scoped dispatcher and the path is /, then suppress the
+		// redundant log message
+		if (path !== '/') {
+			logger.debug(`Registered dispatcher route ${highlight(path)}`);
 		}
 
 		return this;
