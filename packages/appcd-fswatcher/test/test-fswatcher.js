@@ -1,8 +1,17 @@
 import fs from 'fs-extra';
-import FSWatcher, { renderTree, reset, roots, register, unregister } from '../src/fswatcher';
 import path from 'path';
 import snooplogg from 'snooplogg';
 import tmp from 'tmp';
+
+import {
+	FSWatcher,
+	roots,
+	register,
+	unregister,
+	reset,
+	renderTree,
+	status
+} from '../src/index';
 
 const log = snooplogg.config({ theme: 'standard' })('test:appcd:fswatcher').log;
 const { green, highlight } = snooplogg.styles;
@@ -75,998 +84,1114 @@ describe('FSWatcher', () => {
 			setTimeout(() => done(), 1000);
 		});
 
-		it('should watch an existing directory for a new file', done => {
-			const tmp = makeTempDir();
-			const filename = path.join(tmp, 'foo.txt');
+		describe('directories', () => {
+			it('should watch an existing directory for a new file', done => {
+				const tmp = makeTempDir();
+				const filename = path.join(tmp, 'foo.txt');
 
-			setTimeout(() => {
-			 	new FSWatcher(tmp, null)
-					.on('change', evt => {
-						expect(evt).to.be.an.Object;
-						if (evt.file.indexOf(tmpDir) === 0) {
-							expect(evt.action).to.equal('add');
-							expect(evt.file).to.equal(realPath(filename));
-							done();
-						}
-					})
-					.on('error', done);
-
-				log(renderTree());
-				log('Writing %s', highlight(filename));
-				fs.writeFileSync(filename, 'foo!');
-			}, 100);
-		});
-
-		it('should close and re-open watcher', function (done) {
-			this.timeout(10000);
-			this.slow(8000);
-
-			const tmp = makeTempDir();
-			const filename = path.join(tmp, 'foo.txt');
-			let counter = 0;
-
-			setTimeout(() => {
-			 	const watcher = new FSWatcher(tmp)
-					.on('change', evt => {
-						if (evt.file.indexOf(tmpDir) === 0) {
-							switch (++counter) {
-								case 1:
-									expect(evt.action).to.equal('add');
-									expect(evt.file).to.equal(realPath(filename));
-
-									log('Closing watcher');
-									expect(watcher.close()).to.be.true;
-
-									setTimeout(() => {
-										log('Opening watcher');
-										watcher.open();
-
-										setTimeout(() => {
-											log('Appending to %s', highlight(filename));
-											fs.appendFileSync(filename, '\nbar!');
-										}, 1000);
-									}, 1000);
-									break;
-
-								case 2:
-									expect(evt.action).to.equal('change');
-									expect(evt.file).to.equal(realPath(filename));
-
-									expect(() => {
-										log('Re-opening watcher');
-										watcher.open();
-									}).to.throw(Error, 'Already open');
-
-									done();
-							}
-						}
-					})
-					.on('error', done);
-
-				log('Writing %s', highlight(filename));
-				fs.writeFileSync(filename, 'foo!');
-			}, 100);
-		});
-
-		it('should emit error if change handler throws exception', done => {
-			const tmp = makeTempDir();
-			const filename = path.join(tmp, 'foo.txt');
-
-			setTimeout(() => {
-			 	new FSWatcher(tmp)
-					.on('change', evt => {
-						throw new Error('Oh no!');
-					})
-					.on('error', err => {
-						try {
-							expect(err).to.be.an.Error;
-							expect(err.message).to.equal('Oh no!');
-							done();
-						} catch (e) {
-							done(e);
-						}
-					});
-
-				fs.writeFileSync(filename, 'foo!');
-			}, 100);
-		});
-
-		it('should watch an existing directing for a new file that is changed', done => {
-			const tmp = makeTempDir();
-			const filename = path.join(tmp, 'foo.txt');
-			let counter = 0;
-
-			setTimeout(() => {
-				new FSWatcher(tmp)
-					.on('change', evt => {
-						if (evt.file.indexOf(tmpDir) === 0) {
-							counter++;
-							if (counter === 1) {
-								// adding the file
+				setTimeout(() => {
+				 	new FSWatcher(tmp, null)
+						.on('change', evt => {
+							expect(evt).to.be.an.Object;
+							if (evt.file.indexOf(tmpDir) === 0) {
 								expect(evt.action).to.equal('add');
 								expect(evt.file).to.equal(realPath(filename));
-							} else if (counter === 2) {
-								// updating the file
-								expect(evt.action).to.equal('change');
-								expect(evt.file).to.equal(realPath(filename));
+
+								const stats = status();
+								expect(stats.nodes).to.be.above(0);
+								expect(stats.fswatchers).to.be.above(0);
+								expect(stats.watchers).to.equal(1);
+
 								done();
 							}
-						}
-					})
-					.on('error', done);
+						})
+						.on('error', done);
 
-				fs.writeFileSync(filename, 'foo!');
-
-				setTimeout(() => {
-					fs.appendFileSync(filename, '\nbar!');
-				}, 100);
-			}, 100);
-		});
-
-		it('should watch an existing file for a change', done => {
-			const tmp = makeTempDir();
-			const filename = path.join(tmp, 'foo.txt');
-			fs.writeFileSync(filename, 'foo!');
-
-			new FSWatcher(filename)
-				.on('change', evt => {
-					if (evt.file.indexOf(tmpDir) === 0) {
-						expect(evt.action).to.equal('change');
-						expect(evt.file).to.equal(realPath(filename));
-						done();
-					}
-				})
-				.on('error', done);
-
-			log(renderTree());
-
-			setTimeout(() => {
-				log(`Appending to ${filename}`);
-				fs.appendFileSync(filename, '\nbar!');
-			}, 100);
-		});
-
-		it('should watch a directory that does not exist', function (done) {
-			this.timeout(10000);
-			this.slow(8000);
-
-			const tmp = makeTempName();
-			const filename = path.join(tmp, 'foo.txt');
-			let counter = 0;
-
-			log(`Temp dir = ${tmp}`);
-
-			new FSWatcher(tmp)
-				.on('change', evt => {
-					if (evt.file.indexOf(tmpDir) === 0) {
-						log('Change Event: %s %s (counter=%s)', green(`[${evt.action}]`), highlight(evt.file), counter);
-
-						expect(evt.action).to.equal('add');
-						if (counter++ === 0) {
-							expect(evt.file).to.equal(realPath(tmp));
-						} else {
-							expect(evt.file).to.equal(realPath(filename));
-							done();
-						}
-					}
-				})
-				.on('error', done);
-
-			setTimeout(() => {
-				log('Creating %s', highlight(tmp));
-				fs.mkdirsSync(tmp);
-
-				setTimeout(() => {
 					log(renderTree());
 					log('Writing %s', highlight(filename));
 					fs.writeFileSync(filename, 'foo!');
 				}, 100);
-			}, 100);
-		});
+			});
 
-		it('should watch a file that does not exist', done => {
-			const tmp = makeTempDir();
-			const filename = path.join(tmp, 'foo.txt');
-			let counter = 0;
+			it('should close and re-open watcher', function (done) {
+				this.timeout(10000);
+				this.slow(8000);
 
-			new FSWatcher(tmp)
-				.on('change', evt => {
-					if (evt.file.indexOf(tmpDir) === 0) {
-						if (counter) {
-							expect(evt.action).to.equal('add');
-							expect(evt.file).to.equal(realPath(filename));
-							done();
-						}
-					}
-				})
-				.on('error', done);
+				const tmp = makeTempDir();
+				const filename = path.join(tmp, 'foo.txt');
+				let counter = 0;
 
-			setTimeout(() => {
-				counter++;
-				fs.writeFileSync(filename, 'foo!');
-			}, 100);
-		});
-
-		it('should unwatch a directory', function (done) {
-			this.timeout(10000);
-			this.slow(8000);
-
-			const tmp = makeTempDir();
-			log('Creating temp directory: %s', highlight(tmp));
-			const filename = path.join(tmp, 'foo.txt');
-			const filename2 = path.join(tmp, 'bar.txt');
-			let counter = 0;
-
-			const watcher = new FSWatcher(tmp)
-				.on('change', evt => {
-					if (evt.file.indexOf(tmpDir) === 0) {
-						if (counter === 1) {
-							log('Got event!');
-							expect(evt.action).to.equal('add');
-							expect(evt.file).to.equal(realPath(filename));
-
-							log('Closing watcher');
-							watcher.close();
-							log(renderTree());
-
-							setTimeout(() => {
-								log('Writing second file: %s', highlight(filename2));
-								fs.writeFileSync(filename2, 'bar!');
-								setTimeout(() => {
-									expect(roots).to.deep.equal({});
-									done();
-								}, 1000);
-							}, 100);
-							counter++;
-						} else if (counter === 2) {
-							done(new Error('Expected onChange to only fire once'));
-						}
-					}
-				})
-				.on('error', done);
-
-			setTimeout(() => {
-				counter++;
-				log('Writing %s', highlight(filename));
-				fs.writeFileSync(filename, 'foo!');
-			}, 100);
-		});
-
-		it('should unwatch a file', function (done) {
-			this.timeout(10000);
-			this.slow(8000);
-
-			const tmp = makeTempDir();
-			log('Creating temp directory: %s', highlight(tmp));
-			const filename = path.join(tmp, 'foo.txt');
-			let counter = 0;
-
-			const watcher = new FSWatcher(tmp)
-				.on('change', evt => {
-					if (evt.file.indexOf(tmpDir) === 0) {
-						if (counter === 1) {
-							expect(evt.action).to.equal('add');
-							expect(evt.file).to.equal(realPath(filename));
-							setTimeout(() => {
-								fs.appendFileSync(filename, '\nbar!');
-							}, 100);
-						} else if (counter === 2) {
-							expect(evt.action).to.equal('change');
-							expect(evt.file).to.equal(realPath(filename));
-
-							log('Closing watcher');
-							watcher.close();
-							log(renderTree());
-
-							setTimeout(() => {
-								fs.appendFileSync(filename, '\nbaz!');
-								setTimeout(() => {
-									expect(roots).to.deep.equal({});
-									done();
-								}, 1000);
-							}, 100);
-						} else {
-							done(new Error('Expected onChange to only fire once'));
-						}
-						counter++;
-					}
-				})
-				.on('error', done);
-
-			setTimeout(() => {
-				counter++;
-				log('Writing %s', highlight(filename));
-				fs.writeFileSync(filename, 'foo!');
-			}, 100);
-		});
-
-		it('should watch a directory that is deleted and recreated', function (done) {
-			this.timeout(10000);
-			this.slow(8000);
-
-			const tmp = makeTempName();
-			const fooDir = path.join(tmp, 'foo');
-			const barFile = path.join(fooDir, 'bar.txt');
-			let counter = 0;
-
-			log('Creating temp foo directory: %s', highlight(fooDir));
-			fs.mkdirsSync(fooDir);
-
-			setTimeout(() => {
-				new FSWatcher(fooDir)
-					.on('change', evt => {
-						if (evt.file.indexOf(tmpDir) === 0) {
-							log('Change Event: %s %s (counter=%s)', green(`[${evt.action}]`), highlight(evt.file), counter);
-
-							if (evt.action === 'add') {
-								counter++;
-								if (counter === 1) {
-									expect(evt.file).to.equal(realPath(barFile));
-									log(renderTree());
-									log('Deleting temp directory: %s', highlight(tmp));
-									fs.removeSync(tmp);
-								} else if (counter === 2) {
-									expect(evt.file).to.equal(realPath(barFile));
-									log(renderTree());
-									done();
-								}
-							} else if (evt.action === 'delete') {
-								expect(evt.file).to.equal(realPath(barFile));
-
-								setTimeout(() => {
-									log(renderTree());
-									log('Creating temp foo directory: %s', highlight(fooDir));
-									fs.mkdirsSync(fooDir);
-
-									log('Writing %s', highlight(barFile));
-									fs.writeFileSync(barFile, 'bar again!');
-								}, 1000);
-							}
-						}
-					})
-					.on('error', done);
-
-				fs.writeFileSync(barFile, 'bar!');
-			}, 100);
-		});
-
-		it('should watch a file that is deleted and recreated', function (done) {
-			this.timeout(10000);
-			this.slow(8000);
-
-			const tmp = makeTempDir();
-			log('Creating temp directory: %s', highlight(tmp));
-
-			const filename = path.join(tmp, 'foo.txt');
-			log('Writing %s', highlight(filename));
-			fs.writeFileSync(filename, 'foo!');
-
-			let counter = 0;
-
-			setTimeout(() => {
-				new FSWatcher(filename)
-					.on('change', evt => {
-						if (evt.file.indexOf(tmpDir) === 0) {
-							counter++;
-
-							if (counter === 1) {
-								expect(evt.action).to.equal('change');
-								expect(evt.file).to.equal(realPath(filename));
-
-								fs.unlinkSync(filename);
-
-							} else if (counter === 2) {
-								expect(evt.action).to.equal('delete');
-								expect(evt.file).to.equal(realPath(filename));
-
-								setTimeout(() => {
-									fs.writeFileSync(filename, 'bar again!');
-								}, 100);
-
-							} else if (counter === 3) {
-								expect(evt.action).to.equal('add');
-								expect(evt.file).to.equal(realPath(filename));
-								done();
-							}
-						}
-					})
-					.on('error', done);
-
-				log('Appending to %s', highlight(filename));
-				fs.appendFileSync(filename, '\nbar!');
-			}, 100);
-		});
-
-		it('should have two watchers watching the same directory and unwatch them', function (done) {
-			this.timeout(10000);
-			this.slow(8000);
-
-			const tmp = makeTempDir();
-			log('Creating temp directory: %s', highlight(tmp));
-
-			const filename = path.join(tmp, 'foo.txt');
-			let counter = 0;
-
-			setTimeout(() => {
-				const watcher1 = new FSWatcher(tmp)
-					.on('change', evt => {
-						if (evt.file === realPath(filename)) {
-							expect(evt.action).to.equal('add');
-							unwatch();
-						}
-					})
-					.on('error', done);
-
-				const watcher2 = new FSWatcher(tmp)
-					.on('change', evt => {
-						if (evt.file === realPath(filename)) {
-							expect(evt.action).to.equal('add');
-							unwatch();
-						}
-					})
-					.on('error', done);
-
-				function unwatch() {
-					if (++counter === 2) {
-						log(renderTree());
-						expect(roots).to.not.deep.equal({});
-						log('Closing watcher 1');
-						watcher1.close();
-
-						setTimeout(() => {
-							try {
-								log(renderTree());
-								expect(roots).to.not.deep.equal({});
-								log('Closing watcher 2');
-								watcher2.close();
-
-								setTimeout(() => {
-									try {
-										log(renderTree());
-										expect(roots).to.deep.equal({});
-										done();
-									} catch (e) {
-										done(e);
-									}
-								}, 1000);
-							} catch (e) {
-								done(e);
-							}
-						}, 1000);
-					}
-				}
-
-				log('Writing %s', highlight(filename));
-				fs.writeFileSync(filename, 'foo!');
-			}, 100);
-		});
-
-		it('should close and re-watch a directory', function (done) {
-			this.timeout(10000);
-			this.slow(8000);
-
-			const tmp = makeTempDir();
-			log('Creating temp directory: %s', highlight(tmp));
-
-			const filename = path.join(tmp, 'foo.txt');
-
-			const watcher = new FSWatcher(tmp)
-				.on('change', evt => {
-					if (evt.file === realPath(filename)) {
-						done(new Error('First watcher was invoked'));
-					}
-				})
-				.on('error', done);
-
-			setTimeout(() => {
-				try {
-					watcher.close();
-
-					expect(roots).to.deep.equal({});
-
-					new FSWatcher(tmp)
+				setTimeout(() => {
+				 	const watcher = new FSWatcher(tmp)
 						.on('change', evt => {
 							if (evt.file.indexOf(tmpDir) === 0) {
-								expect(evt.action).to.equal('add');
-								expect(evt.file).to.equal(realPath(filename));
-								done();
+								switch (++counter) {
+									case 1:
+										expect(evt.action).to.equal('add');
+										expect(evt.file).to.equal(realPath(filename));
+
+										log('Closing watcher');
+										expect(watcher.close()).to.be.true;
+
+										setTimeout(() => {
+											log('Opening watcher');
+											watcher.open();
+
+											setTimeout(() => {
+												log('Appending to %s', highlight(filename));
+												fs.appendFileSync(filename, '\nbar!');
+											}, 1000);
+										}, 1000);
+										break;
+
+									case 2:
+										expect(evt.action).to.equal('change');
+										expect(evt.file).to.equal(realPath(filename));
+
+										expect(() => {
+											log('Re-opening watcher');
+											watcher.open();
+										}).to.throw(Error, 'Already open');
+
+										done();
+								}
 							}
 						})
 						.on('error', done);
 
 					log('Writing %s', highlight(filename));
 					fs.writeFileSync(filename, 'foo!');
-				} catch (e) {
-					done(e);
-				}
-			}, 100);
-		});
+				}, 100);
+			});
 
-		it('should recursively watch for changes in existing nested directories', function (done) {
-			this.timeout(10000);
-			this.slow(8000);
+			it('should watch an existing directing for a new file that is changed', done => {
+				const tmp = makeTempDir();
+				const filename = path.join(tmp, 'foo.txt');
+				let counter = 0;
 
-			const tmp = makeTempDir();
-			log('Creating temp directory: %s', highlight(tmp));
+				setTimeout(() => {
+					new FSWatcher(tmp)
+						.on('change', evt => {
+							if (evt.file.indexOf(tmpDir) === 0) {
+								counter++;
+								if (counter === 1) {
+									// adding the file
+									expect(evt.action).to.equal('add');
+									expect(evt.file).to.equal(realPath(filename));
+								} else if (counter === 2) {
+									// updating the file
+									expect(evt.action).to.equal('change');
+									expect(evt.file).to.equal(realPath(filename));
+									done();
+								}
+							}
+						})
+						.on('error', done);
 
-			const fooDir = path.join(tmp, 'foo');
-			log('Creating foo directory: %s', highlight(fooDir));
-			fs.mkdirSync(fooDir);
+					fs.writeFileSync(filename, 'foo!');
 
-			const barDir = path.join(fooDir, 'bar');
-			const filename = path.join(barDir, 'baz.txt');
-			let counter = 0;
+					setTimeout(() => {
+						fs.appendFileSync(filename, '\nbar!');
+					}, 100);
+				}, 100);
+			});
 
-			setTimeout(() => {
-				new FSWatcher(tmp, { recursive: true })
+			it('should watch a directory that does not exist', function (done) {
+				this.timeout(10000);
+				this.slow(8000);
+
+				const tmp = makeTempName();
+				const filename = path.join(tmp, 'foo.txt');
+				let counter = 0;
+
+				log(`Temp dir = ${tmp}`);
+
+				new FSWatcher(tmp)
 					.on('change', evt => {
 						if (evt.file.indexOf(tmpDir) === 0) {
-							switch (++counter) {
-								case 1:
-									expect(evt.action).to.equal('add');
-									expect(evt.file).to.equal(realPath(barDir));
+							log('Change Event: %s %s (counter=%s)', green(`[${evt.action}]`), highlight(evt.file), counter);
 
-									log('Writing %s', highlight(filename));
-									fs.writeFileSync(filename, 'foo!');
-									break;
-
-								case 2:
-									expect(evt.action).to.equal('add');
-									expect(evt.file).to.equal(realPath(filename));
-
-									log('Deleting %s', highlight(barDir));
-									fs.removeSync(barDir);
-									break;
-
-								case 3:
-									expect(evt.action).to.equal('delete');
-									expect(evt.file).to.equal(realPath(filename));
-									break;
-
-								case 4:
-									expect(evt.action).to.equal('delete');
-									expect(evt.file).to.equal(realPath(barDir));
-									done();
-									break;
+							expect(evt.action).to.equal('add');
+							if (counter++ === 0) {
+								expect(evt.file).to.equal(realPath(tmp));
+							} else {
+								expect(evt.file).to.equal(realPath(filename));
+								done();
 							}
 						}
 					})
 					.on('error', done);
 
+				setTimeout(() => {
+					log('Creating %s', highlight(tmp));
+					fs.mkdirsSync(tmp);
+
+					setTimeout(() => {
+						log(renderTree());
+						log('Writing %s', highlight(filename));
+						fs.writeFileSync(filename, 'foo!');
+					}, 100);
+				}, 100);
+			});
+
+			it('should unwatch a directory', function (done) {
+				this.timeout(10000);
+				this.slow(8000);
+
+				const tmp = makeTempDir();
+				log('Creating temp directory: %s', highlight(tmp));
+				const filename = path.join(tmp, 'foo.txt');
+				const filename2 = path.join(tmp, 'bar.txt');
+				let counter = 0;
+
+				const watcher = new FSWatcher(tmp)
+					.on('change', evt => {
+						if (evt.file.indexOf(tmpDir) === 0) {
+							if (counter === 1) {
+								log('Got event!');
+								expect(evt.action).to.equal('add');
+								expect(evt.file).to.equal(realPath(filename));
+
+								log('Closing watcher');
+								watcher.close();
+								log(renderTree());
+
+								setTimeout(() => {
+									log('Writing second file: %s', highlight(filename2));
+									fs.writeFileSync(filename2, 'bar!');
+									setTimeout(() => {
+										expect(roots).to.deep.equal({});
+										done();
+									}, 1000);
+								}, 100);
+								counter++;
+							} else if (counter === 2) {
+								done(new Error('Expected onChange to only fire once'));
+							}
+						}
+					})
+					.on('error', done);
+
+				setTimeout(() => {
+					counter++;
+					log('Writing %s', highlight(filename));
+					fs.writeFileSync(filename, 'foo!');
+				}, 100);
+			});
+
+			it('should watch a directory that is deleted and recreated', function (done) {
+				this.timeout(10000);
+				this.slow(8000);
+
+				const tmp = makeTempName();
+				const fooDir = path.join(tmp, 'foo');
+				const barFile = path.join(fooDir, 'bar.txt');
+				let counter = 0;
+
+				log('Creating temp foo directory: %s', highlight(fooDir));
+				fs.mkdirsSync(fooDir);
+
+				setTimeout(() => {
+					new FSWatcher(fooDir)
+						.on('change', evt => {
+							if (evt.file.indexOf(tmpDir) === 0) {
+								log('Change Event: %s %s (counter=%s)', green(`[${evt.action}]`), highlight(evt.file), counter);
+
+								if (evt.action === 'add') {
+									counter++;
+									if (counter === 1) {
+										expect(evt.file).to.equal(realPath(barFile));
+										log(renderTree());
+										log('Deleting temp directory: %s', highlight(tmp));
+										fs.removeSync(tmp);
+									} else if (counter === 2) {
+										expect(evt.file).to.equal(realPath(barFile));
+										log(renderTree());
+										done();
+									}
+								} else if (evt.action === 'delete') {
+									expect(evt.file).to.equal(realPath(barFile));
+
+									setTimeout(() => {
+										log(renderTree());
+										log('Creating temp foo directory: %s', highlight(fooDir));
+										fs.mkdirsSync(fooDir);
+
+										log('Writing %s', highlight(barFile));
+										fs.writeFileSync(barFile, 'bar again!');
+									}, 1000);
+								}
+							}
+						})
+						.on('error', done);
+
+					fs.writeFileSync(barFile, 'bar!');
+				}, 100);
+			});
+
+			it('should have two watchers watching the same directory and unwatch them', function (done) {
+				this.timeout(10000);
+				this.slow(8000);
+
+				const tmp = makeTempDir();
+				log('Creating temp directory: %s', highlight(tmp));
+
+				const filename = path.join(tmp, 'foo.txt');
+				let counter = 0;
+
+				setTimeout(() => {
+					const watcher1 = new FSWatcher(tmp)
+						.on('change', evt => {
+							if (evt.file === realPath(filename)) {
+								expect(evt.action).to.equal('add');
+								unwatch();
+							}
+						})
+						.on('error', done);
+
+					const watcher2 = new FSWatcher(tmp)
+						.on('change', evt => {
+							if (evt.file === realPath(filename)) {
+								expect(evt.action).to.equal('add');
+								unwatch();
+							}
+						})
+						.on('error', done);
+
+					function unwatch() {
+						if (++counter === 2) {
+							log(renderTree());
+							expect(roots).to.not.deep.equal({});
+							log('Closing watcher 1');
+							watcher1.close();
+
+							setTimeout(() => {
+								try {
+									log(renderTree());
+									expect(roots).to.not.deep.equal({});
+									log('Closing watcher 2');
+									watcher2.close();
+
+									setTimeout(() => {
+										try {
+											log(renderTree());
+											expect(roots).to.deep.equal({});
+											done();
+										} catch (e) {
+											done(e);
+										}
+									}, 1000);
+								} catch (e) {
+									done(e);
+								}
+							}, 1000);
+						}
+					}
+
+					log('Writing %s', highlight(filename));
+					fs.writeFileSync(filename, 'foo!');
+				}, 100);
+			});
+
+			it('should close and re-watch a directory', function (done) {
+				this.timeout(10000);
+				this.slow(8000);
+
+				const tmp = makeTempDir();
+				log('Creating temp directory: %s', highlight(tmp));
+
+				const filename = path.join(tmp, 'foo.txt');
+
+				const watcher = new FSWatcher(tmp)
+					.on('change', evt => {
+						if (evt.file === realPath(filename)) {
+							done(new Error('First watcher was invoked'));
+						}
+					})
+					.on('error', done);
+
+				setTimeout(() => {
+					try {
+						watcher.close();
+
+						expect(roots).to.deep.equal({});
+
+						new FSWatcher(tmp)
+							.on('change', evt => {
+								if (evt.file.indexOf(tmpDir) === 0) {
+									expect(evt.action).to.equal('add');
+									expect(evt.file).to.equal(realPath(filename));
+									done();
+								}
+							})
+							.on('error', done);
+
+						log('Writing %s', highlight(filename));
+						fs.writeFileSync(filename, 'foo!');
+					} catch (e) {
+						done(e);
+					}
+				}, 100);
+			});
+		});
+
+		describe('files', () => {
+			it('should watch an existing file for a change', done => {
+				const tmp = makeTempDir();
+				const filename = path.join(tmp, 'foo.txt');
+				fs.writeFileSync(filename, 'foo!');
+
+				new FSWatcher(filename)
+					.on('change', evt => {
+						if (evt.file.indexOf(tmpDir) === 0) {
+							expect(evt.action).to.equal('change');
+							expect(evt.file).to.equal(realPath(filename));
+							done();
+						}
+					})
+					.on('error', done);
+
 				log(renderTree());
-				log('Creating bar directory: %s', highlight(barDir));
+
+				setTimeout(() => {
+					log(`Appending to ${filename}`);
+					fs.appendFileSync(filename, '\nbar!');
+				}, 100);
+			});
+
+			it('should watch a file that does not exist', done => {
+				const tmp = makeTempDir();
+				const filename = path.join(tmp, 'foo.txt');
+				let counter = 0;
+
+				new FSWatcher(tmp)
+					.on('change', evt => {
+						if (evt.file.indexOf(tmpDir) === 0) {
+							if (counter) {
+								expect(evt.action).to.equal('add');
+								expect(evt.file).to.equal(realPath(filename));
+								done();
+							}
+						}
+					})
+					.on('error', done);
+
+				setTimeout(() => {
+					counter++;
+					fs.writeFileSync(filename, 'foo!');
+				}, 100);
+			});
+
+			it('should unwatch a file', function (done) {
+				this.timeout(10000);
+				this.slow(8000);
+
+				const tmp = makeTempDir();
+				log('Creating temp directory: %s', highlight(tmp));
+				const filename = path.join(tmp, 'foo.txt');
+				let counter = 0;
+
+				const watcher = new FSWatcher(tmp)
+					.on('change', evt => {
+						if (evt.file.indexOf(tmpDir) === 0) {
+							if (counter === 1) {
+								expect(evt.action).to.equal('add');
+								expect(evt.file).to.equal(realPath(filename));
+								setTimeout(() => {
+									fs.appendFileSync(filename, '\nbar!');
+								}, 100);
+							} else if (counter === 2) {
+								expect(evt.action).to.equal('change');
+								expect(evt.file).to.equal(realPath(filename));
+
+								log('Closing watcher');
+								watcher.close();
+								log(renderTree());
+
+								setTimeout(() => {
+									fs.appendFileSync(filename, '\nbaz!');
+									setTimeout(() => {
+										expect(roots).to.deep.equal({});
+										done();
+									}, 1000);
+								}, 100);
+							} else {
+								done(new Error('Expected onChange to only fire once'));
+							}
+							counter++;
+						}
+					})
+					.on('error', done);
+
+				setTimeout(() => {
+					counter++;
+					log('Writing %s', highlight(filename));
+					fs.writeFileSync(filename, 'foo!');
+				}, 100);
+			});
+
+			it('should watch a file that is deleted and recreated', function (done) {
+				this.timeout(10000);
+				this.slow(8000);
+
+				const tmp = makeTempDir();
+				log('Creating temp directory: %s', highlight(tmp));
+
+				const filename = path.join(tmp, 'foo.txt');
+				log('Writing %s', highlight(filename));
+				fs.writeFileSync(filename, 'foo!');
+
+				let counter = 0;
+
+				setTimeout(() => {
+					new FSWatcher(filename)
+						.on('change', evt => {
+							if (evt.file.indexOf(tmpDir) === 0) {
+								counter++;
+
+								if (counter === 1) {
+									expect(evt.action).to.equal('change');
+									expect(evt.file).to.equal(realPath(filename));
+
+									fs.unlinkSync(filename);
+
+								} else if (counter === 2) {
+									expect(evt.action).to.equal('delete');
+									expect(evt.file).to.equal(realPath(filename));
+
+									setTimeout(() => {
+										fs.writeFileSync(filename, 'bar again!');
+									}, 100);
+
+								} else if (counter === 3) {
+									expect(evt.action).to.equal('add');
+									expect(evt.file).to.equal(realPath(filename));
+									done();
+								}
+							}
+						})
+						.on('error', done);
+
+					log('Appending to %s', highlight(filename));
+					fs.appendFileSync(filename, '\nbar!');
+				}, 100);
+			});
+		});
+
+		describe('recursive', () => {
+			it('should recursively watch for changes in existing nested directories', function (done) {
+				this.timeout(10000);
+				this.slow(8000);
+
+				const tmp = makeTempDir();
+				log('Creating temp directory: %s', highlight(tmp));
+
+				const fooDir = path.join(tmp, 'foo');
+				log('Creating foo directory: %s', highlight(fooDir));
+				fs.mkdirSync(fooDir);
+
+				const barDir = path.join(fooDir, 'bar');
+				const filename = path.join(barDir, 'baz.txt');
+				let counter = 0;
+
+				setTimeout(() => {
+					new FSWatcher(tmp, { recursive: true })
+						.on('change', evt => {
+							if (evt.file.indexOf(tmpDir) === 0) {
+								switch (++counter) {
+									case 1:
+										expect(evt.action).to.equal('add');
+										expect(evt.file).to.equal(realPath(barDir));
+
+										log('Writing %s', highlight(filename));
+										fs.writeFileSync(filename, 'foo!');
+										break;
+
+									case 2:
+										expect(evt.action).to.equal('add');
+										expect(evt.file).to.equal(realPath(filename));
+
+										log('Deleting %s', highlight(barDir));
+										fs.removeSync(barDir);
+										break;
+
+									case 3:
+										expect(evt.action).to.equal('delete');
+										expect(evt.file).to.equal(realPath(filename));
+										break;
+
+									case 4:
+										expect(evt.action).to.equal('delete');
+										expect(evt.file).to.equal(realPath(barDir));
+										done();
+										break;
+								}
+							}
+						})
+						.on('error', done);
+
+					log(renderTree());
+					log('Creating bar directory: %s', highlight(barDir));
+					fs.mkdirsSync(barDir);
+				}, 100);
+			});
+
+			it('should recursively watch for changes in new nested directories', function (done) {
+				this.timeout(10000);
+				this.slow(8000);
+
+				const tmp = makeTempDir();
+				log('Creating temp directory: %s', highlight(tmp));
+
+				const fooDir = path.join(tmp, 'foo');
+				const barDir = path.join(fooDir, 'bar');
+				const filename = path.join(barDir, 'baz.txt');
+				let counter = 0;
+
+				setTimeout(() => {
+					new FSWatcher(tmp, { recursive: true })
+						.on('change', evt => {
+							if (evt.file.indexOf(tmpDir) === 0) {
+								switch (++counter) {
+									case 1:
+										expect(evt.action).to.equal('add');
+										expect(evt.file).to.equal(realPath(fooDir));
+
+										log('Creating directory: %s', highlight(barDir));
+										fs.mkdirSync(barDir);
+										break;
+
+									case 2:
+										expect(evt.action).to.equal('add');
+										expect(evt.file).to.equal(realPath(barDir));
+
+										log('Writing %s', highlight(filename));
+										fs.writeFileSync(filename, 'foo!');
+										break;
+
+									case 3:
+										expect(evt.action).to.equal('add');
+										expect(evt.file).to.equal(realPath(filename));
+
+										log('Deleting %s', highlight(barDir));
+										fs.removeSync(barDir);
+										break;
+
+									case 4:
+										expect(evt.action).to.equal('delete');
+										expect(evt.file).to.equal(realPath(filename));
+										break;
+
+									case 5:
+										expect(evt.action).to.equal('delete');
+										expect(evt.file).to.equal(realPath(barDir));
+										done();
+										break;
+								}
+							}
+						})
+						.on('error', done);
+
+					log(renderTree());
+					log('Creating foo directory: %s', highlight(fooDir));
+					fs.mkdirsSync(fooDir);
+				}, 100);
+			});
+
+			it('should recursively watch for changes in existing nested directories', function (done) {
+				this.timeout(10000);
+				this.slow(8000);
+
+				const tmp = makeTempDir();
+				log('Creating temp directory: %s', highlight(tmp));
+
+				const fooDir = path.join(tmp, 'foo');
+				log('Creating foo directory: %s', highlight(fooDir));
+				fs.mkdirSync(fooDir);
+
+				const barDir = path.join(fooDir, 'bar');
+				const filename = path.join(barDir, 'baz.txt');
+				let counter = 0;
+
+				setTimeout(() => {
+					new FSWatcher(tmp, { recursive: true })
+						.on('change', evt => {
+							if (evt.file.indexOf(tmpDir) === 0) {
+								switch (++counter) {
+									case 1:
+										expect(evt.action).to.equal('add');
+										expect(evt.file).to.equal(realPath(barDir));
+
+										log('Writing %s', highlight(filename));
+										fs.writeFileSync(filename, 'foo!');
+										break;
+
+									case 2:
+										expect(evt.action).to.equal('add');
+										expect(evt.file).to.equal(realPath(filename));
+
+										log('Deleting %s', highlight(barDir));
+										fs.removeSync(barDir);
+										break;
+
+									case 3:
+										expect(evt.action).to.equal('delete');
+										expect(evt.file).to.equal(realPath(filename));
+										break;
+
+									case 4:
+										expect(evt.action).to.equal('delete');
+										expect(evt.file).to.equal(realPath(barDir));
+										done();
+										break;
+								}
+							}
+						})
+						.on('error', done);
+
+					// create a subdirectory "bar" to kick off the watch
+					log('Creating bar directory: %s', highlight(barDir));
+					fs.mkdirSync(barDir);
+				}, 100);
+			});
+
+			it('should fire an event for two watcher down same path', function (done) {
+				this.timeout(10000);
+				this.slow(8000);
+
+				const tmp = makeTempDir();
+				log('Creating temp directory: %s', highlight(tmp));
+
+				const barDir = path.join(tmp, 'foo', 'bar');
+				log('Creating foo/bar directory: %s', highlight(barDir));
 				fs.mkdirsSync(barDir);
-			}, 100);
+
+				let counter = 0;
+				const bazFile = path.join(barDir, 'baz.txt');
+
+				setTimeout(() => {
+					function check() {
+						if (++counter === 3) {
+							done();
+						}
+					}
+
+					const watcher1 = new FSWatcher(tmp, { recursive: true })
+						.on('change', evt => {
+							check();
+							setTimeout(() => {
+								fs.appendFileSync(bazFile, 'more baz!');
+							}, 100);
+						})
+						.on('error', done);
+
+					const watcher2 = new FSWatcher(barDir)
+						.on('change', evt => {
+							log('Closing watcher 2');
+							watcher2.close();
+							log(renderTree());
+							check();
+						})
+						.on('error', done);
+
+					log(renderTree());
+					log('Writing %s', highlight(bazFile));
+					fs.writeFileSync(bazFile, 'baz!');
+				}, 100);
+			});
+
+			it('should unwatch recursive directory watcher', function (done) {
+				this.timeout(10000);
+				this.slow(8000);
+
+				const tmp = makeTempDir();
+				log('Creating temp directory: %s', highlight(tmp));
+
+				const barDir = path.join(tmp, 'foo', 'bar');
+				log('Creating foo/bar directory: %s', highlight(barDir));
+				fs.mkdirsSync(barDir);
+
+				const filename = path.join(barDir, 'baz.txt');
+				log('Writing %s', highlight(filename));
+				fs.writeFileSync(filename, 'baz!');
+				let counter = 0;
+
+				setTimeout(() => {
+					const watcher = new FSWatcher(tmp, { recursive: true })
+						.on('change', evt => {
+							if (evt.file.indexOf(tmpDir) === 0) {
+								expect(evt.action).to.equal('change');
+								expect(evt.file).to.equal(realPath(filename));
+								watcher.close();
+								expect(roots).to.deep.equal({});
+								done();
+							}
+						})
+						.on('error', done);
+
+					log(renderTree());
+					log('Appending to %s', highlight(filename));
+					fs.appendFileSync(filename, 'more baz!');
+				}, 100);
+			});
+
+			it('should throw error if trying to recursively watch root', () => {
+				expect(() => {
+					new FSWatcher('/', { recursive: true });
+				}).to.throw(Error, 'Recursively watching root is not permitted');
+			});
 		});
 
-		it('should recursively watch for changes in new nested directories', function (done) {
-			this.timeout(10000);
-			this.slow(8000);
+		describe('symlinks', () => {
+			it('should handle if symlink to directory is broken', function (done) {
+				this.timeout(10000);
+				this.slow(8000);
 
-			const tmp = makeTempDir();
-			log('Creating temp directory: %s', highlight(tmp));
+				let counter = 0;
+				const tmp = makeTempDir();
+				log('Creating temp directory: %s', highlight(tmp));
 
-			const fooDir = path.join(tmp, 'foo');
-			const barDir = path.join(fooDir, 'bar');
-			const filename = path.join(barDir, 'baz.txt');
-			let counter = 0;
+				const fooDir = path.join(tmp, 'foo');
+				const barDir = path.join(fooDir, 'bar');
+				log('Creating foo/bar directory: %s', highlight(barDir));
+				fs.mkdirsSync(barDir);
 
-			setTimeout(() => {
-				new FSWatcher(tmp, { recursive: true })
-					.on('change', evt => {
-						if (evt.file.indexOf(tmpDir) === 0) {
-							switch (++counter) {
-								case 1:
-									expect(evt.action).to.equal('add');
-									expect(evt.file).to.equal(realPath(fooDir));
+				const bazDir = path.join(tmp, 'baz');
+				log('Creating baz directory: %s', highlight(bazDir));
+				fs.mkdirsSync(bazDir);
 
-									log('Creating directory: %s', highlight(barDir));
-									fs.mkdirSync(barDir);
-									break;
+				const realWizDir = path.join(realPath(tmp), 'baz', 'wiz');
+				const wizDir = path.join(bazDir, 'wiz');
 
-								case 2:
-									expect(evt.action).to.equal('add');
-									expect(evt.file).to.equal(realPath(barDir));
+				setTimeout(() => {
+					new FSWatcher(bazDir, { recursive: true })
+						.on('change', evt => {
+							if (evt.file.indexOf(tmpDir) === 0) {
+								// console.log(evt);
 
-									log('Writing %s', highlight(filename));
-									fs.writeFileSync(filename, 'foo!');
-									break;
+								switch (++counter) {
+									case 1:
+										expect(evt.action).to.equal('add');
+										expect(evt.file).to.equal(realWizDir);
 
-								case 3:
-									expect(evt.action).to.equal('add');
-									expect(evt.file).to.equal(realPath(filename));
+										log(renderTree());
+										log('Removing bar: %s', highlight(barDir));
+										fs.removeSync(barDir);
+										break;
 
-									log('Deleting %s', highlight(barDir));
-									fs.removeSync(barDir);
-									break;
-
-								case 4:
-									expect(evt.action).to.equal('delete');
-									expect(evt.file).to.equal(realPath(filename));
-									break;
-
-								case 5:
-									expect(evt.action).to.equal('delete');
-									expect(evt.file).to.equal(realPath(barDir));
-									done();
-									break;
+									case 2:
+										expect(evt.action).to.equal('change');
+										expect(evt.file).to.equal(realWizDir);
+										done();
+								}
 							}
-						}
-					})
-					.on('error', done);
+						})
+						.on('error', done);
 
-				log(renderTree());
+					log('Creating symlink: %s', highlight(wizDir));
+					fs.symlinkSync(barDir, wizDir);
+				}, 100);
+			});
+
+			it('should handle symlink to directory being deleted', function (done) {
+				this.timeout(10000);
+				this.slow(8000);
+
+				let counter = 0;
+				const tmp = makeTempDir();
+				log('Creating temp directory: %s', highlight(tmp));
+
+				const fooDir = path.join(tmp, 'foo');
+				const barDir = path.join(fooDir, 'bar');
+				log('Creating foo/bar directory: %s', highlight(barDir));
+				fs.mkdirsSync(barDir);
+
+				const bazDir = path.join(tmp, 'baz');
+				log('Creating baz directory: %s', highlight(bazDir));
+				fs.mkdirsSync(bazDir);
+
+				const realWizDir = path.join(realPath(tmp), 'baz', 'wiz');
+				const wizDir = path.join(bazDir, 'wiz');
+
+				setTimeout(() => {
+					new FSWatcher(bazDir, { recursive: true })
+						.on('change', evt => {
+							if (evt.file.indexOf(tmpDir) === 0) {
+								// console.log(evt);
+
+								switch (++counter) {
+									case 1:
+										expect(evt.action).to.equal('add');
+										expect(evt.file).to.equal(realWizDir);
+
+										log(renderTree());
+										log('Unlinking wiz: %s', highlight(wizDir));
+										fs.unlinkSync(wizDir);
+										break;
+
+									case 2:
+										expect(evt.action).to.equal('delete');
+										expect(evt.file).to.equal(realWizDir);
+										done();
+								}
+							}
+						})
+						.on('error', done);
+
+					log('Creating symlink: %s', highlight(wizDir));
+					fs.symlinkSync(barDir, wizDir);
+				}, 100);
+			});
+
+			it('should handle if symlink to file is broken', function (done) {
+				this.timeout(10000);
+				this.slow(8000);
+
+				let counter = 0;
+				const tmp = makeTempDir();
+				log('Creating temp directory: %s', highlight(tmp));
+
+				const fooDir = path.join(tmp, 'foo');
 				log('Creating foo directory: %s', highlight(fooDir));
 				fs.mkdirsSync(fooDir);
-			}, 100);
-		});
 
-		it('should recursively watch for changes in existing nested directories', function (done) {
-			this.timeout(10000);
-			this.slow(8000);
+				const barFile = path.join(fooDir, 'bar.txt');
+				log('Writing %s', highlight(barFile));
+				fs.writeFileSync(barFile, 'bar!');
 
-			const tmp = makeTempDir();
-			log('Creating temp directory: %s', highlight(tmp));
+				const bazDir = path.join(tmp, 'baz');
+				log('Creating baz directory: %s', highlight(bazDir));
+				fs.mkdirsSync(bazDir);
 
-			const fooDir = path.join(tmp, 'foo');
-			log('Creating foo directory: %s', highlight(fooDir));
-			fs.mkdirSync(fooDir);
+				const realWizFile = path.join(realPath(tmp), 'baz', 'wiz.txt');
+				const wizFile = path.join(bazDir, 'wiz.txt');
 
-			const barDir = path.join(fooDir, 'bar');
-			const filename = path.join(barDir, 'baz.txt');
-			let counter = 0;
+				setTimeout(() => {
+					new FSWatcher(bazDir, { recursive: true })
+						.on('change', evt => {
+							if (evt.file.indexOf(tmpDir) === 0) {
+								// console.log(evt);
 
-			setTimeout(() => {
-				new FSWatcher(tmp, { recursive: true })
-					.on('change', evt => {
-						if (evt.file.indexOf(tmpDir) === 0) {
-							switch (++counter) {
-								case 1:
-									expect(evt.action).to.equal('add');
-									expect(evt.file).to.equal(realPath(barDir));
+								switch (++counter) {
+									case 1:
+										expect(evt.action).to.equal('add');
+										expect(evt.file).to.equal(realWizFile);
 
-									log('Writing %s', highlight(filename));
-									fs.writeFileSync(filename, 'foo!');
-									break;
+										log(renderTree());
+										log('Removing %s', highlight(barFile));
+										fs.removeSync(barFile);
+										break;
 
-								case 2:
-									expect(evt.action).to.equal('add');
-									expect(evt.file).to.equal(realPath(filename));
-
-									log('Deleting %s', highlight(barDir));
-									fs.removeSync(barDir);
-									break;
-
-								case 3:
-									expect(evt.action).to.equal('delete');
-									expect(evt.file).to.equal(realPath(filename));
-									break;
-
-								case 4:
-									expect(evt.action).to.equal('delete');
-									expect(evt.file).to.equal(realPath(barDir));
-									done();
-									break;
+									case 2:
+										expect(evt.action).to.equal('change');
+										expect(evt.file).to.equal(realWizFile);
+										done();
+								}
 							}
-						}
-					})
-					.on('error', done);
+						})
+						.on('error', done);
 
-				// create a subdirectory "bar" to kick off the watch
-				log('Creating bar directory: %s', highlight(barDir));
-				fs.mkdirSync(barDir);
-			}, 100);
-		});
+					log('Creating symlink: %s', highlight(wizFile));
+					fs.symlinkSync(barFile, wizFile);
+				}, 100);
+			});
 
-		it('should handle if symlink to directory is broken', function (done) {
-			this.timeout(10000);
-			this.slow(8000);
+			it('should handle symlink to file being deleted', function (done) {
+				this.timeout(10000);
+				this.slow(8000);
 
-			let counter = 0;
-			const tmp = makeTempDir();
-			log('Creating temp directory: %s', highlight(tmp));
+				let counter = 0;
+				const tmp = makeTempDir();
+				log('Creating temp directory: %s', highlight(tmp));
 
-			const fooDir = path.join(tmp, 'foo');
-			const barDir = path.join(fooDir, 'bar');
-			log('Creating foo/bar directory: %s', highlight(barDir));
-			fs.mkdirsSync(barDir);
+				const fooDir = path.join(tmp, 'foo');
+				log('Creating foo directory: %s', highlight(fooDir));
+				fs.mkdirsSync(fooDir);
 
-			const bazDir = path.join(tmp, 'baz');
-			log('Creating baz directory: %s', highlight(bazDir));
-			fs.mkdirsSync(bazDir);
+				const barFile = path.join(fooDir, 'bar.txt');
+				log('Writing %s', highlight(barFile));
+				fs.writeFileSync(barFile, 'bar!');
 
-			const realWizDir = path.join(realPath(tmp), 'baz', 'wiz');
-			const wizDir = path.join(bazDir, 'wiz');
+				const bazDir = path.join(tmp, 'baz');
+				log('Creating baz directory: %s', highlight(bazDir));
+				fs.mkdirsSync(bazDir);
 
-			setTimeout(() => {
-				new FSWatcher(bazDir, { recursive: true })
-					.on('change', evt => {
-						if (evt.file.indexOf(tmpDir) === 0) {
-							// console.log(evt);
+				const realWizFile = path.join(realPath(tmp), 'baz', 'wiz.txt');
+				const wizFile = path.join(bazDir, 'wiz.txt');
 
-							switch (++counter) {
-								case 1:
-									expect(evt.action).to.equal('add');
-									expect(evt.file).to.equal(realWizDir);
+				setTimeout(() => {
+					new FSWatcher(bazDir, { recursive: true })
+						.on('change', evt => {
+							if (evt.file.indexOf(tmpDir) === 0) {
+								// console.log(evt);
 
-									log(renderTree());
-									log('Removing bar: %s', highlight(barDir));
-									fs.removeSync(barDir);
-									break;
+								switch (++counter) {
+									case 1:
+										expect(evt.action).to.equal('add');
+										expect(evt.file).to.equal(realWizFile);
 
-								case 2:
-									expect(evt.action).to.equal('change');
-									expect(evt.file).to.equal(realWizDir);
-									done();
+										log(renderTree());
+										log('Unlinking wiz: %s', highlight(wizFile));
+										fs.unlinkSync(wizFile);
+										break;
+
+									case 2:
+										expect(evt.action).to.equal('delete');
+										expect(evt.file).to.equal(realWizFile);
+										done();
+								}
 							}
-						}
-					})
-					.on('error', done);
+						})
+						.on('error', done);
+
+					log('Creating symlink: %s', highlight(wizFile));
+					fs.symlinkSync(barFile, wizFile);
+				}, 100);
+			});
+
+			it('should handle if already broken absolute directory symlink', function (done) {
+				this.timeout(10000);
+				this.slow(8000);
+
+				const tmp = makeTempDir();
+				log('Creating temp directory: %s', highlight(tmp));
+
+				const fooDir = path.join(tmp, 'foo');
+				const barDir = path.join(fooDir, 'bar');
+				log('Creating foo/bar directory: %s', highlight(barDir));
+				fs.mkdirsSync(barDir);
+
+				const bazDir = path.join(tmp, 'baz');
+				log('Creating baz directory: %s', highlight(bazDir));
+				fs.mkdirsSync(bazDir);
+
+				const realWizDir = path.join(realPath(tmp), 'baz', 'wiz');
+				const wizDir = path.join(bazDir, 'wiz');
 
 				log('Creating symlink: %s', highlight(wizDir));
 				fs.symlinkSync(barDir, wizDir);
-			}, 100);
-		});
 
-		it('should handle symlink to directory being deleted', function (done) {
-			this.timeout(10000);
-			this.slow(8000);
-
-			let counter = 0;
-			const tmp = makeTempDir();
-			log('Creating temp directory: %s', highlight(tmp));
-
-			const fooDir = path.join(tmp, 'foo');
-			const barDir = path.join(fooDir, 'bar');
-			log('Creating foo/bar directory: %s', highlight(barDir));
-			fs.mkdirsSync(barDir);
-
-			const bazDir = path.join(tmp, 'baz');
-			log('Creating baz directory: %s', highlight(bazDir));
-			fs.mkdirsSync(bazDir);
-
-			const realWizDir = path.join(realPath(tmp), 'baz', 'wiz');
-			const wizDir = path.join(bazDir, 'wiz');
-
-			setTimeout(() => {
-				new FSWatcher(bazDir, { recursive: true })
-					.on('change', evt => {
-						if (evt.file.indexOf(tmpDir) === 0) {
-							// console.log(evt);
-
-							switch (++counter) {
-								case 1:
-									expect(evt.action).to.equal('add');
-									expect(evt.file).to.equal(realWizDir);
-
-									log(renderTree());
-									log('Unlinking wiz: %s', highlight(wizDir));
-									fs.unlinkSync(wizDir);
-									break;
-
-								case 2:
-									expect(evt.action).to.equal('delete');
-									expect(evt.file).to.equal(realWizDir);
-									done();
-							}
-						}
-					})
-					.on('error', done);
-
-				log('Creating symlink: %s', highlight(wizDir));
-				fs.symlinkSync(barDir, wizDir);
-			}, 100);
-		});
-
-		it('should handle if symlink to file is broken', function (done) {
-			this.timeout(10000);
-			this.slow(8000);
-
-			let counter = 0;
-			const tmp = makeTempDir();
-			log('Creating temp directory: %s', highlight(tmp));
-
-			const fooDir = path.join(tmp, 'foo');
-			log('Creating foo directory: %s', highlight(fooDir));
-			fs.mkdirsSync(fooDir);
-
-			const barFile = path.join(fooDir, 'bar.txt');
-			log('Writing %s', highlight(barFile));
-			fs.writeFileSync(barFile, 'bar!');
-
-			const bazDir = path.join(tmp, 'baz');
-			log('Creating baz directory: %s', highlight(bazDir));
-			fs.mkdirsSync(bazDir);
-
-			const realWizFile = path.join(realPath(tmp), 'baz', 'wiz.txt');
-			const wizFile = path.join(bazDir, 'wiz.txt');
-
-			setTimeout(() => {
-				new FSWatcher(bazDir, { recursive: true })
-					.on('change', evt => {
-						if (evt.file.indexOf(tmpDir) === 0) {
-							// console.log(evt);
-
-							switch (++counter) {
-								case 1:
-									expect(evt.action).to.equal('add');
-									expect(evt.file).to.equal(realWizFile);
-
-									log(renderTree());
-									log('Removing %s', highlight(barFile));
-									fs.removeSync(barFile);
-									break;
-
-								case 2:
-									expect(evt.action).to.equal('change');
-									expect(evt.file).to.equal(realWizFile);
-									done();
-							}
-						}
-					})
-					.on('error', done);
-
-				log('Creating symlink: %s', highlight(wizFile));
-				fs.symlinkSync(barFile, wizFile);
-			}, 100);
-		});
-
-		it('should handle symlink to file being deleted', function (done) {
-			this.timeout(10000);
-			this.slow(8000);
-
-			let counter = 0;
-			const tmp = makeTempDir();
-			log('Creating temp directory: %s', highlight(tmp));
-
-			const fooDir = path.join(tmp, 'foo');
-			log('Creating foo directory: %s', highlight(fooDir));
-			fs.mkdirsSync(fooDir);
-
-			const barFile = path.join(fooDir, 'bar.txt');
-			log('Writing %s', highlight(barFile));
-			fs.writeFileSync(barFile, 'bar!');
-
-			const bazDir = path.join(tmp, 'baz');
-			log('Creating baz directory: %s', highlight(bazDir));
-			fs.mkdirsSync(bazDir);
-
-			const realWizFile = path.join(realPath(tmp), 'baz', 'wiz.txt');
-			const wizFile = path.join(bazDir, 'wiz.txt');
-
-			setTimeout(() => {
-				new FSWatcher(bazDir, { recursive: true })
-					.on('change', evt => {
-						if (evt.file.indexOf(tmpDir) === 0) {
-							// console.log(evt);
-
-							switch (++counter) {
-								case 1:
-									expect(evt.action).to.equal('add');
-									expect(evt.file).to.equal(realWizFile);
-
-									log(renderTree());
-									log('Unlinking wiz: %s', highlight(wizFile));
-									fs.unlinkSync(wizFile);
-									break;
-
-								case 2:
-									expect(evt.action).to.equal('delete');
-									expect(evt.file).to.equal(realWizFile);
-									done();
-							}
-						}
-					})
-					.on('error', done);
-
-				log('Creating symlink: %s', highlight(wizFile));
-				fs.symlinkSync(barFile, wizFile);
-			}, 100);
-		});
-
-		it('should handle if already broken absolute directory symlink', function (done) {
-			this.timeout(10000);
-			this.slow(8000);
-
-			const tmp = makeTempDir();
-			log('Creating temp directory: %s', highlight(tmp));
-
-			const fooDir = path.join(tmp, 'foo');
-			const barDir = path.join(fooDir, 'bar');
-			log('Creating foo/bar directory: %s', highlight(barDir));
-			fs.mkdirsSync(barDir);
-
-			const bazDir = path.join(tmp, 'baz');
-			log('Creating baz directory: %s', highlight(bazDir));
-			fs.mkdirsSync(bazDir);
-
-			const realWizDir = path.join(realPath(tmp), 'baz', 'wiz');
-			const wizDir = path.join(bazDir, 'wiz');
-
-			log('Creating symlink: %s', highlight(wizDir));
-			fs.symlinkSync(barDir, wizDir);
-
-			log('Deleting %s', highlight(barDir));
-			fs.removeSync(barDir);
-
-			setTimeout(() => {
-				new FSWatcher(bazDir, { recursive: true })
-					.on('change', evt => {
-						if (evt.file.indexOf(tmpDir) === 0) {
-							// console.log(evt);
-
-							expect(evt.action).to.equal('change');
-							expect(evt.file).to.equal(realWizDir);
-							done();
-						}
-					})
-					.on('error', done);
+				log('Deleting %s', highlight(barDir));
+				fs.removeSync(barDir);
 
 				setTimeout(() => {
-					log(renderTree());
-					log('Recreating foo/bar directory: %s', highlight(barDir));
-					fs.mkdirsSync(barDir);
-				}, 100);
-			}, 500);
-		});
+					new FSWatcher(bazDir, { recursive: true })
+						.on('change', evt => {
+							if (evt.file.indexOf(tmpDir) === 0) {
+								// console.log(evt);
 
-		it('should handle if already broken relative directory symlink', function (done) {
-			this.timeout(10000);
-			this.slow(8000);
+								expect(evt.action).to.equal('change');
+								expect(evt.file).to.equal(realWizDir);
+								done();
+							}
+						})
+						.on('error', done);
 
-			const tmp = makeTempDir();
-			log('Creating temp directory: %s', highlight(tmp));
+					setTimeout(() => {
+						log(renderTree());
+						log('Recreating foo/bar directory: %s', highlight(barDir));
+						fs.mkdirsSync(barDir);
+					}, 100);
+				}, 500);
+			});
 
-			const fooDir = path.join(tmp, 'foo');
-			const barDir = path.join(fooDir, 'bar');
-			log('Creating foo/bar directory: %s', highlight(barDir));
-			fs.mkdirsSync(barDir);
+			it('should handle if already broken relative directory symlink', function (done) {
+				this.timeout(10000);
+				this.slow(8000);
 
-			const bazDir = path.join(tmp, 'baz');
-			log('Creating baz directory: %s', highlight(bazDir));
-			fs.mkdirsSync(bazDir);
+				const tmp = makeTempDir();
+				log('Creating temp directory: %s', highlight(tmp));
 
-			const realWizDir = path.join(realPath(tmp), 'baz', 'wiz');
-			const wizDir = path.join(bazDir, 'wiz');
+				const fooDir = path.join(tmp, 'foo');
+				const barDir = path.join(fooDir, 'bar');
+				log('Creating foo/bar directory: %s', highlight(barDir));
+				fs.mkdirsSync(barDir);
 
-			const barRelDir = path.relative(realWizDir, barDir);
+				const bazDir = path.join(tmp, 'baz');
+				log('Creating baz directory: %s', highlight(bazDir));
+				fs.mkdirsSync(bazDir);
 
-			log('Creating symlink: %s → %s', highlight(barRelDir), highlight(wizDir));
-			fs.symlinkSync(barRelDir, wizDir);
+				const realWizDir = path.join(realPath(tmp), 'baz', 'wiz');
+				const wizDir = path.join(bazDir, 'wiz');
 
-			log('Deleting %s', highlight(barDir));
-			fs.removeSync(barDir);
+				const barRelDir = path.relative(realWizDir, barDir);
 
-			setTimeout(() => {
-				new FSWatcher(bazDir, { recursive: true })
-					.on('change', evt => {
-						if (evt.file.indexOf(tmpDir) === 0) {
-							// console.log(evt);
+				log('Creating symlink: %s → %s', highlight(barRelDir), highlight(wizDir));
+				fs.symlinkSync(barRelDir, wizDir);
 
-							expect(evt.action).to.equal('change');
-							expect(evt.file).to.equal(realWizDir);
-							done();
-						}
-					})
-					.on('error', done);
+				log('Deleting %s', highlight(barDir));
+				fs.removeSync(barDir);
 
 				setTimeout(() => {
-					log(renderTree());
-					log('Recreating foo/bar directory: %s', highlight(barDir));
-					fs.mkdirsSync(barDir);
-				}, 100);
-			}, 500);
+					new FSWatcher(bazDir, { recursive: true })
+						.on('change', evt => {
+							if (evt.file.indexOf(tmpDir) === 0) {
+								// console.log(evt);
+
+								expect(evt.action).to.equal('change');
+								expect(evt.file).to.equal(realWizDir);
+								done();
+							}
+						})
+						.on('error', done);
+
+					setTimeout(() => {
+						log(renderTree());
+						log('Recreating foo/bar directory: %s', highlight(barDir));
+						fs.mkdirsSync(barDir);
+					}, 100);
+				}, 500);
+			});
 		});
 
-		// change from a dir to a symlink
+		describe('errors', () => {
+			it('should emit error if directory watch handler throws exception', done => {
+				const tmp = makeTempDir();
+				const filename = path.join(tmp, 'foo.txt');
 
-		// recursive unwatch
+				setTimeout(() => {
+				 	new FSWatcher(tmp)
+						.on('change', evt => {
+							throw new Error('Oh no!');
+						})
+						.on('error', err => {
+							try {
+								expect(err).to.be.an.Error;
+								expect(err.message).to.equal('Oh no!');
+								done();
+							} catch (e) {
+								done(e);
+							}
+						});
 
-		// recursively watch an existing directory with a file
+					fs.writeFileSync(filename, 'foo!');
+				}, 100);
+			});
 
-		// throw exception from eventemitter change handler and listen for 'error' event
+			it('should emit error if file watch handler throws exception', done => {
+				const tmp = makeTempDir();
+				const filename = path.join(tmp, 'foo.txt');
+				fs.writeFileSync(filename, 'foo!');
 
-		// 2 watchers, one is near root and recursive, the other below that and is closed, but kept open because parent is recursive
+				setTimeout(() => {
+				 	new FSWatcher(filename)
+						.on('change', evt => {
+							throw new Error('Oh no!');
+						})
+						.on('error', err => {
+							try {
+								expect(err).to.be.an.Error;
+								expect(err.message).to.equal('Oh no!');
+								done();
+							} catch (e) {
+								done(e);
+							}
+						});
+
+					fs.appendFileSync(filename, 'more foo!');
+				}, 100);
+			});
+		});
 	});
 
 	describe('register', () => {

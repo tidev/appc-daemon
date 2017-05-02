@@ -1,9 +1,9 @@
 import { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
-import FSWatcher, { rootEmitter } from './fswatcher';
 import snooplogg from 'snooplogg';
 
 import { codes } from 'appcd-response';
 import { EventEmitter } from 'events';
+import { FSWatcher, rootEmitter, status } from './fswatcher';
 
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:subprocess:manager');
 const { highlight, note } = snooplogg.styles;
@@ -22,6 +22,8 @@ export default class FSWatchManager extends EventEmitter {
 		this.dispatcher = new ServiceDispatcher(this);
 		rootEmitter.on('change', evt => this.emit('change', evt));
 	}
+
+	// TODO: expose status()
 
 	/**
 	 * Responds to "subscribe" service requests.

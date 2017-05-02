@@ -28,6 +28,16 @@ export const rootEmitter = new EventEmitter;
 export const roots = {};
 
 /**
+ * Stat counters.
+ * @type {Object}
+ */
+const stats = {
+	nodes:      0,
+	fswatchers: 0,
+	watchers:   0
+};
+
+/**
  * @constant
  * @type {Number}
  * @default
@@ -51,6 +61,7 @@ export class Node {
 	 * @access public
 	 */
 	constructor(path, parent) {
+		stats.nodes++;
 		this.children = {};
 		this.links = new Set;
 		this.name = _path.basename(path) || path;
@@ -106,9 +117,15 @@ export class Node {
 	init(isAdd) {
 		if (this.type !== DIRECTORY) {
 			if (this.fswatcher) {
-				// log('init() Closing fs watcher: %s', highlight(this.path));
+				// NOTE: This should never happen and is very difficult to reproduce in a unit test
+				// because there should never be a time where the `type` changes from a directory to
+				// a file or symlink without it first being deleted. If there was a glitch and the
+				// delete fs event was dropped or there was a race condition with another process,
+				// then it's possible that the fswatcher is still active and then this code will
+				// save the day.
 				this.fswatcher.close();
 				delete this.fswatcher;
+				stats.fswatchers--;
 			}
 
 			if (this.type & SYMLINK) {
@@ -119,6 +136,7 @@ export class Node {
 		} else if (!this.fswatcher) {
 			log('Initializing fs watcher: %s', highlight(this.path));
 			this.fswatcher = fs.watch(this.path, { persistent: true }, this.onFSEvent.bind(this));
+			stats.fswatchers++;
 
 			const now = Date.now();
 			this.files = new Map;
@@ -170,10 +188,12 @@ export class Node {
 	 * @access public
 	 */
 	destroy() {
+		stats.nodes--;
 		if (this.fswatcher) {
 			// log('destroy() Closing fs watcher: %s', highlight(this.path));
 			this.fswatcher.close();
 			delete this.fswatcher;
+			stats.fswatchers--;
 		}
 		if (this.files) {
 			this.files.clear();
@@ -183,6 +203,7 @@ export class Node {
 			delete node.link;
 		}
 		this.links.clear();
+		stats.watchers -= this.watchers.size;
 		this.watchers.clear();
 		for (const name of Object.keys(this.children)) {
 			this.children[name].destroy();
@@ -222,6 +243,7 @@ export class Node {
 	 */
 	watch(watcher) {
 		if (!this.watchers.has(watcher)) {
+			stats.watchers++;
 			this.watchers.add(watcher);
 
 			if (watcher.recursive) {
@@ -262,6 +284,7 @@ export class Node {
 	 */
 	unwatch(watcher) {
 		if (this.watchers.has(watcher)) {
+			stats.watchers--;
 			this.watchers.delete(watcher);
 
 			if (watcher.recursive) {
@@ -343,7 +366,7 @@ export class Node {
 		let child = this.children[filename];
 		if (child) {
 			log('Notifying child node: %s', highlight(filename));
-			child.onParentChange(evt);
+			child.notifyChild(evt);
 		} else if (evt.action === 'add' && !isFile && (this.recursive > 0 || this.isParentRecursive())) {
 			this.children[filename] = new Node(evt.file, this).init();
 		}
@@ -387,7 +410,7 @@ export class Node {
 	 * @param {Object} evt - The fs event object.
 	 * @access private
 	 */
-	onParentChange(evt) {
+	notifyChild(evt) {
 		if (evt.action === 'add') {
 			this.stat();
 			this.init(true);
@@ -423,6 +446,7 @@ export class Node {
 			// log('onDeleted() Closing fs watcher: %s', highlight(this.path));
 			this.fswatcher.close();
 			delete this.fswatcher;
+			stats.fswatchers--;
 		}
 
 		this.type = DOES_NOT_EXIST;
@@ -519,7 +543,7 @@ export class Node {
  *
  * If the `change` handler throws an error, then it will emit an `error` event.
  */
-export default class FSWatcher extends EventEmitter {
+export class FSWatcher extends EventEmitter {
 	/**
 	 * Creates an instance and registers it with the specified path.
 	 *
@@ -573,16 +597,6 @@ export default class FSWatcher extends EventEmitter {
 }
 
 /**
- * Resets the entire FSWatcher system. All active watchers will be destroyed.
- */
-export function reset() {
-	for (const root of Object.keys(roots)) {
-		roots[root].destroy();
-		delete roots[root];
-	}
-}
-
-/**
  * Helper function that parses the root and path segments from the specified path.
  *
  * @param {String} path - The path to parse.
@@ -599,8 +613,8 @@ function parsePath(path) {
 	const m = rpath.match(rootRegExp);
 	const root = m && m[1] ? m[1].toUpperCase() : null;
 	if (!root) {
-		// this line is really hard to unit test since `path.resolve()` seems to always return a
-		// valid path
+		// NOTE: This line is really hard to unit test since `path.resolve()` seems to always return
+		// a valid path.
 		throw new Error(`Invalid path "${path}"`);
 	}
 
@@ -617,8 +631,14 @@ function parsePath(path) {
 export function register(path, watcher) {
 	const { rpath, root, segments } = parsePath(path);
 
-	if (watcher && !(watcher instanceof FSWatcher)) {
-		throw new TypeError('Expected watcher to be a FSWatcher instance');
+	if (watcher) {
+		if (!(watcher instanceof FSWatcher)) {
+			throw new TypeError('Expected watcher to be a FSWatcher instance');
+		}
+
+		if (watcher.recursive && !segments.length) {
+			throw new Error('Recursively watching root is not permitted');
+		}
 	}
 
 	// init the root node
@@ -776,4 +796,23 @@ export function renderTree(node, depth=0, parent=[]) {
 	}
 
 	return str.trimRight();
+}
+
+/**
+ * Resets the entire FSWatcher system. All active watchers will be destroyed.
+ */
+export function reset() {
+	for (const root of Object.keys(roots)) {
+		roots[root].destroy();
+		delete roots[root];
+	}
+}
+
+/**
+ * Returns stats about the fs watchers.
+ *
+ * @returns {Object}
+ */
+export function status() {
+	return { ...stats };
 }
