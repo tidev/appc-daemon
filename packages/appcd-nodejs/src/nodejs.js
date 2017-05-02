@@ -58,7 +58,7 @@ export function prepareNode({ arch, nodeHome, version } = {}) {
 
 	logger.log('Checking %s', highlight(binary));
 
-	if (isFile(binary) && spawnSync(binary, ['--version'], { encoding: 'utf8' }).stdout.trim() === version) {
+	if (isFile(binary) && spawnSync(binary, [ '--version' ], { encoding: 'utf8' }).stdout.trim() === version) {
 		logger.log(`Node.js ${version} ready`);
 		return Promise.resolve(binary);
 	}

@@ -109,6 +109,23 @@ describe('ServiceDispatcher', () => {
 				})
 				.catch(done);
 		});
+
+		it('should invoke service that doesn\'t have a path', done => {
+			let count = 0;
+			const sd = new ServiceDispatcher({
+				onCall: ctx => {
+					count++;
+				}
+			});
+
+			Promise.resolve()
+				.then(() => sd.handler({}, () => Promise.resolve()))
+				.then(() => {
+					expect(count).to.equal(1);
+					done();
+				})
+				.catch(done);
+		});
 	});
 
 	describe('subscribe', () => {

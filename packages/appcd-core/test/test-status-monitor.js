@@ -32,7 +32,7 @@ describe('StatusMonitor', () => {
 
 		setTimeout(() => {
 			try {
-				sm.stop();
+				sm.shutdown();
 				const uptime2 = sm.get(['uptime']);
 				expect(uptime2).to.be.above(uptime);
 				done();

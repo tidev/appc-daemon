@@ -34,7 +34,7 @@ export function getMachineId(midFile) {
 			const platform = process.env.APPCD_TEST_PLATFORM || process.platform;
 
 			if (platform === 'darwin') {
-				return run('ioreg', ['-ard1', '-c', 'IOPlatformExpertDevice'])
+				return run('ioreg', [ '-ard1', '-c', 'IOPlatformExpertDevice' ])
 					.then(result => {
 						return import('simple-plist')
 							.then(plist => {
@@ -45,7 +45,7 @@ export function getMachineId(midFile) {
 			}
 
 			if (/^win/.test(platform)) {
-				return run('reg', ['query', 'HKLM\\Software\\Microsoft\\Cryptography', '/v', 'MachineGuid'])
+				return run('reg', [ 'query', 'HKLM\\Software\\Microsoft\\Cryptography', '/v', 'MachineGuid' ])
 					.then(result => {
 						const m = result.stdout.trim().match(/MachineGuid\s+REG_SZ\s+(.+)/i);
 						if (m) {

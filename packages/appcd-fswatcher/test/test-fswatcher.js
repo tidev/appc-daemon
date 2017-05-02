@@ -130,10 +130,20 @@ describe('FSWatcher', () => {
 										expect(evt.action).to.equal('add');
 										expect(evt.file).to.equal(realPath(filename));
 
+										const stats = status();
+										expect(stats.nodes).to.be.above(0);
+										expect(stats.fswatchers).to.be.above(0);
+										expect(stats.watchers).to.equal(1);
+
 										log('Closing watcher');
 										expect(watcher.close()).to.be.true;
 
 										setTimeout(() => {
+											const stats = status();
+											expect(stats.nodes).to.equal(0);
+											expect(stats.fswatchers).to.equal(0);
+											expect(stats.watchers).to.equal(0);
+
 											log('Opening watcher');
 											watcher.open();
 

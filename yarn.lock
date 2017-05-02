@@ -25,8 +25,8 @@ agent-base@2:
     semver "~5.0.1"
 
 ajv@^4.9.1:
-  version "4.11.7"
-  resolved "https://registry.yarnpkg.com/ajv/-/ajv-4.11.7.tgz#8655a5d86d0824985cc471a1d913fb6729a0ec48"
+  version "4.11.8"
+  resolved "https://registry.yarnpkg.com/ajv/-/ajv-4.11.8.tgz#82ffb02b29e662ae53bdc20af15947706739c536"
   dependencies:
     co "^4.6.0"
     json-stable-stringify "^1.0.1"
@@ -164,8 +164,8 @@ async@1.x, async@^1.4.0:
   resolved "https://registry.yarnpkg.com/async/-/async-1.5.2.tgz#ec6a61ae56480c0c3cb241c95618e20892f9672a"
 
 async@^2.0.0, async@^2.0.1:
-  version "2.3.0"
-  resolved "https://registry.yarnpkg.com/async/-/async-2.3.0.tgz#1013d1051047dd320fe24e494d5c66ecaf6147d9"
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/async/-/async-2.4.0.tgz#4990200f18ea5b837c2cc4f8c031a6985c385611"
   dependencies:
     lodash "^4.14.0"
 
@@ -202,8 +202,8 @@ beeper@^1.0.0:
   resolved "https://registry.yarnpkg.com/beeper/-/beeper-1.1.1.tgz#e6d5ea8c5dad001304a70b22638447f69cb2f809"
 
 bl@^1.0.0:
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/bl/-/bl-1.2.0.tgz#1397e7ec42c5f5dc387470c500e34a9f6be9ea98"
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/bl/-/bl-1.2.1.tgz#cac328f7bee45730d404b692203fcb590e172d5e"
   dependencies:
     readable-stream "^2.0.5"
 
@@ -784,8 +784,8 @@ fast-levenshtein@~2.0.4:
   resolved "https://registry.yarnpkg.com/fast-levenshtein/-/fast-levenshtein-2.0.6.tgz#3d8a5c66883a16a30ca8643e851f19baa7797917"
 
 filename-regex@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/filename-regex/-/filename-regex-2.0.0.tgz#996e3e80479b98b9897f15a8a58b3d084e926775"
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/filename-regex/-/filename-regex-2.0.1.tgz#c1c4b9bee3e09725ddb106b75c1e301fe2f18b26"
 
 fill-range@^2.1.0:
   version "2.2.3"
@@ -1188,8 +1188,8 @@ gulplog@^1.0.0:
     glogg "^1.0.0"
 
 handlebars@^4.0.1:
-  version "4.0.6"
-  resolved "https://registry.yarnpkg.com/handlebars/-/handlebars-4.0.6.tgz#2ce4484850537f9c97a8026d5399b935c4ed4ed7"
+  version "4.0.7"
+  resolved "https://registry.yarnpkg.com/handlebars/-/handlebars-4.0.7.tgz#e97325aeb8ea0b9e12b9c4dd73c4c312ad0ede59"
   dependencies:
     async "^1.4.0"
     optimist "^0.6.1"
@@ -1271,9 +1271,9 @@ iferr@^0.1.5, iferr@~0.1.5:
   version "0.1.5"
   resolved "https://registry.yarnpkg.com/iferr/-/iferr-0.1.5.tgz#c60eed69e6d8fdb6b3104a1fcbca1c192dc5b501"
 
-ignore@^3.2.7:
-  version "3.2.7"
-  resolved "https://registry.yarnpkg.com/ignore/-/ignore-3.2.7.tgz#4810ca5f1d8eca5595213a34b94f2eb4ed926bbd"
+ignore@^3.3.0:
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/ignore/-/ignore-3.3.0.tgz#3812d22cbe9125f2c2b4915755a1b8abd745a001"
 
 imurmurhash@*, imurmurhash@^0.1.4:
   version "0.1.4"
@@ -1945,8 +1945,8 @@ next-tick@1:
   resolved "https://registry.yarnpkg.com/next-tick/-/next-tick-1.0.0.tgz#ca86d1fe8828169b0120208e3dc8424b9db8342c"
 
 node-gyp@~3.6.0:
-  version "3.6.0"
-  resolved "https://registry.yarnpkg.com/node-gyp/-/node-gyp-3.6.0.tgz#7474f63a3a0501161dda0b6341f022f14c423fa6"
+  version "3.6.1"
+  resolved "https://registry.yarnpkg.com/node-gyp/-/node-gyp-3.6.1.tgz#19561067ff185464aded478212681f47fd578cbc"
   dependencies:
     fstream "^1.0.0"
     glob "^7.0.3"

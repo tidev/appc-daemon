@@ -156,7 +156,7 @@ export default class StatusMonitor {
 	 * @access public
 	 */
 	start() {
-		this.stop();
+		this.shutdown();
 		this.logTimer     = setInterval(this.log.bind(this), 2000);
 		this.refreshTimer = setInterval(this.refresh.bind(this), 1000);
 		return this;
@@ -168,7 +168,7 @@ export default class StatusMonitor {
 	 * @returns {StatusMonitor}
 	 * @access public
 	 */
-	stop() {
+	shutdown() {
 		clearTimeout(this.logTimer);
 		clearTimeout(this.refreshTimer);
 		return this;

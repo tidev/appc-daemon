@@ -37,7 +37,7 @@
     "gulp-sourcemaps": "^2.6.0",
     "gulp-util": "^3.0.8",
     "run-sequence": "^1.2.2",
-    "sinon": "^2.1.0",
+    "sinon": "^2.2.0",
     "sinon-chai": "^2.10.0",
     "source-map-support": "^0.4.15"
   },

@@ -109,7 +109,7 @@ export function spawn(params = {}) {
 			throw new SubprocessError(codes.INVALID_ARGUMENT, 'Spawn "options" must be an object');
 		}
 
-		for (const prop of ['cwd', 'env', 'stdio']) {
+		for (const prop of [ 'cwd', 'env', 'stdio' ]) {
 			if (params.options.hasOwnProperty(prop)) {
 				options[prop] = params.options[prop];
 			}

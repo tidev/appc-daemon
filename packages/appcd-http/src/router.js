@@ -273,7 +273,7 @@ for (const method of methods) {
 		if (typeof args[0] !== 'string' && !(args[0] instanceof RegExp)) {
 			args.unshift('/');
 		}
-		args.unshift([method]);
+		args.unshift([ method ]);
 		return this.register(...args);
 	};
 }

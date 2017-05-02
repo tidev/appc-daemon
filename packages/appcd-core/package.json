@@ -38,6 +38,7 @@
     "appcd-config",
     "appcd-dispatcher",
     "appcd-fs",
+    "appcd-fswatcher",
     "appcd-gulp",
     "appcd-http",
     "appcd-machine-id",

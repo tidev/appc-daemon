@@ -179,7 +179,7 @@ describe('Client', () => {
 
 			const client = new Client({ port: 12345 });
 
-			client.request('/foo', { foo: 'bar' })
+			client.request({ path: '/foo', payload: { foo: 'bar' } })
 				.on('response', (data, response) => {
 					try {
 						expect(data).to.be.an.Object;

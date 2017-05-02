@@ -2,7 +2,7 @@
   "name": "appcd-fswatcher",
   "version": "1.0.0",
   "description": "A filesystem watcher that actually works.",
-  "main": "./dist/fs",
+  "main": "./dist/index",
   "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
     "Chris Barber <cbarber@appcelerator.com>"
@@ -16,6 +16,7 @@
     "test": "gulp test"
   },
   "dependencies": {
+    "gawk": "^4.2.0",
     "snooplogg": "^1.3.0",
     "source-map-support": "^0.4.15"
   },
@@ -27,7 +28,8 @@
   "appcdDependencies": [
     "appcd-dispatcher",
     "appcd-gulp",
-    "appcd-response"
+    "appcd-response",
+    "appcd-util"
   ],
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",

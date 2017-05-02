@@ -87,11 +87,11 @@ export default class ServiceDispatcher {
 		const onType = `on${type.substring(0, 1).toUpperCase() + type.substring(1)}`;
 
 		if (typeof this.instance[onType] === 'function') {
-			logger.log('%sInvoking %s handler: %s', sessionId(ctx), onType, highlight(this.path));
+			logger.log('%sInvoking %s handler: %s', sessionId(ctx), onType, highlight(this.path || 'no path'));
 			return this[type](ctx);
 		}
 
-		logger.log('%sNo %s handler, skipping: %s', sessionId(ctx), onType, highlight(this.path));
+		logger.log('%sNo %s handler: %s', sessionId(ctx), onType, highlight(this.path || 'no path'));
 		return next();
 	}
 
@@ -114,7 +114,7 @@ export default class ServiceDispatcher {
 	 * @access private
 	 */
 	subscribe(ctx) {
-		const topic = ctx.path;
+		const topic = typeof this.instance.getTopic === 'function' && this.instance.getTopic(ctx) || ctx.path;
 		let descriptor = this.subscriptions[topic];
 
 		if (descriptor) {
@@ -166,7 +166,7 @@ export default class ServiceDispatcher {
 	 * @access private
 	 */
 	unsubscribe(ctx) {
-		const topic = ctx.path;
+		const topic = typeof this.instance.getTopic === 'function' && this.instance.getTopic(ctx) || ctx.path;
 		let descriptor = this.subscriptions[topic];
 
 		if (!descriptor || !descriptor.sessions[ctx.payload.sessionId]) {

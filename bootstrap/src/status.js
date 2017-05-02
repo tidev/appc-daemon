@@ -49,23 +49,32 @@ const cmd = {
 						top: '', 'top-left': '', 'top-mid': '', 'top-right': ''
 					},
 					style: {
-						head: ['gray'],
+						head: [ 'gray' ],
 						'padding-left': 0,
 						'padding-right': 0
 					}
 				};
 
 				let table = new Table(params);
-				table.push(['Core Version', highlight(`v${status.version}`)]);
-				table.push(['PID',          highlight(status.pid)]);
-				table.push(['Uptime',       highlight(`${(status.uptime / 60).toFixed(2)} minutes`)]);
-				table.push(['Node Version', highlight(status.node.version)]);
-				table.push(['Memory RSS',   highlight(filesize(status.memory.rss))]);
-				table.push(['Memory Heap',  highlight(`${filesize(status.memory.heapUsed)} / ${filesize(status.memory.heapTotal)}`)]);
+				table.push([ 'Core Version', highlight(`v${status.version}`) ]);
+				table.push([ 'PID',          highlight(status.pid) ]);
+				table.push([ 'Uptime',       highlight(`${(status.uptime / 60).toFixed(2)} minutes`) ]);
+				table.push([ 'Node Version', highlight(status.node.version) ]);
+				table.push([ 'Memory RSS',   highlight(filesize(status.memory.rss)) ]);
+				table.push([ 'Memory Heap',  highlight(`${filesize(status.memory.heapUsed)} / ${filesize(status.memory.heapTotal)}`) ]);
 				log(table.toString());
 				log();
 
-				params.head = ['Plugin Name', 'Version', 'Type', 'Path', 'Node Version', 'Restarts', 'Status'],
+				params.head = [ 'Filesystem Watch System' ];
+				table = new Table(params);
+				table.push([ 'Nodes',               highlight(status.fswatch.nodes) ]);
+				table.push([ 'Node.js FS Watchers', highlight(status.fswatch.fswatchers) ]);
+				table.push([ 'Client Watchers',     highlight(status.fswatch.watchers) ]);
+				log(table.toString());
+				log(status.fswatch.tree);
+				log();
+
+				params.head = [ 'Plugin Name', 'Version', 'Type', 'Path', 'Node Version', 'Restarts', 'Status' ],
 				table = new Table(params);
 				for (const plugin of status.plugins) {
 					let status = '';
@@ -97,7 +106,7 @@ const cmd = {
 				}
 				log();
 
-				params.head = ['PID', 'Command', 'Started'],
+				params.head = [ 'PID', 'Command', 'Started' ],
 				table = new Table(params);
 				for (const subprocess of status.subprocesses) {
 					table.push([

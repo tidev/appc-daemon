@@ -1,7 +1,9 @@
 import fs from 'fs';
+import gawk from 'gawk';
 import _path from 'path';
 import snooplogg from 'snooplogg';
 
+import { debounce } from 'appcd-util';
 import { EventEmitter } from 'events';
 import { inspect } from 'util';
 
@@ -28,14 +30,24 @@ export const rootEmitter = new EventEmitter;
 export const roots = {};
 
 /**
+ * The rendered fs watch tree.
+ * @type {String}
+ */
+export let tree = '<empty tree>';
+
+/**
  * Stat counters.
  * @type {Object}
  */
-const stats = {
+export const stats = gawk.watch(gawk({
 	nodes:      0,
 	fswatchers: 0,
 	watchers:   0
-};
+}), debounce(obj => {
+	const stats = JSON.parse(JSON.stringify(obj));
+	stats.tree = tree = renderTree();
+	rootEmitter.emit('stats', stats);
+}));
 
 /**
  * @constant
@@ -100,7 +112,7 @@ export class Node {
 			} else {
 				this.type = FILE;
 			}
-		} catch(e) {
+		} catch (e) {
 			this.type = DOES_NOT_EXIST;
 		}
 	}
@@ -188,26 +200,29 @@ export class Node {
 	 * @access public
 	 */
 	destroy() {
-		stats.nodes--;
-		if (this.fswatcher) {
-			// log('destroy() Closing fs watcher: %s', highlight(this.path));
-			this.fswatcher.close();
-			delete this.fswatcher;
-			stats.fswatchers--;
-		}
-		if (this.files) {
-			this.files.clear();
-		}
-		this.parent = null;
-		for (const node of this.links) {
-			delete node.link;
-		}
-		this.links.clear();
-		stats.watchers -= this.watchers.size;
-		this.watchers.clear();
-		for (const name of Object.keys(this.children)) {
-			this.children[name].destroy();
-			delete this.children[name];
+		if (!this.destroyed) {
+			this.destroyed = true;
+			stats.nodes--;
+			if (this.fswatcher) {
+				// log('destroy() Closing fs watcher: %s', highlight(this.path));
+				this.fswatcher.close();
+				delete this.fswatcher;
+				stats.fswatchers--;
+			}
+			if (this.files) {
+				this.files.clear();
+			}
+			this.parent = null;
+			for (const node of this.links) {
+				delete node.link;
+			}
+			this.links.clear();
+			stats.watchers -= this.watchers.size;
+			this.watchers.clear();
+			for (const name of Object.keys(this.children)) {
+				this.children[name].destroy();
+				delete this.children[name];
+			}
 		}
 	}
 
@@ -814,5 +829,5 @@ export function reset() {
  * @returns {Object}
  */
 export function status() {
-	return { ...stats };
+	return JSON.parse(JSON.stringify(stats));
 }

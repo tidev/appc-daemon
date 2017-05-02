@@ -3,9 +3,9 @@ import snooplogg from 'snooplogg';
 
 import { codes } from 'appcd-response';
 import { EventEmitter } from 'events';
-import { FSWatcher, rootEmitter, status } from './fswatcher';
+import { FSWatcher, renderTree, rootEmitter, status, tree } from './fswatcher';
 
-const logger = snooplogg.config({ theme: 'detailed' })('appcd:subprocess:manager');
+const log = snooplogg.config({ theme: 'detailed' })('appcd:fswatcher:manager').log;
 const { highlight, note } = snooplogg.styles;
 
 /**
@@ -21,9 +21,20 @@ export default class FSWatchManager extends EventEmitter {
 		super();
 		this.dispatcher = new ServiceDispatcher(this);
 		rootEmitter.on('change', evt => this.emit('change', evt));
+		rootEmitter.on('stats', stats => this.emit('stats', stats));
+		this.watchers = {};
 	}
 
-	// TODO: expose status()
+	/**
+	 * Determines the topic for the incoming request.
+	 *
+	 * @param {DispatcherContext} ctx - The dispatcher request context object.
+	 * @returns {String}
+	 * @access private
+	 */
+	getTopic(ctx) {
+		return ctx.payload.topic || ctx.payload.data && ctx.payload.data.path;
+	}
 
 	/**
 	 * Responds to "subscribe" service requests.
@@ -33,11 +44,20 @@ export default class FSWatchManager extends EventEmitter {
 	 * @access private
 	 */
 	onSubscribe(ctx, publish) {
-		if (!ctx.data.path) {
+		const path = this.getTopic(ctx);
+
+		if (!path) {
 			throw new DispatcherError(codes.MISSING_ARGUMENT, 'Missing required parameter "%s"', 'path');
 		}
-		ctx.watcher = new FSWatcher(ctx.data.path, { recursive: !!ctx.data.recursive })
+
+		if (this.watchers[path]) {
+			throw new DispatcherError(codes.ALREADY_SUBSCRIBED);
+		}
+
+		log('Starting FSWatcher: %s', highlight(path));
+		this.watchers[path] = new FSWatcher(path, { recursive: !!ctx.payload.recursive })
 			.on('change', publish);
+		log(renderTree());
 	}
 
 	/**
@@ -49,9 +69,43 @@ export default class FSWatchManager extends EventEmitter {
 	 * @access private
 	 */
 	onUnsubscribe(ctx, publish) {
-		if (ctx.watcher) {
-			ctx.watcher.close();
-			ctx.watcher = null;
+		const path = this.getTopic(ctx);
+		const watcher = path && this.watchers[path];
+		if (watcher) {
+			log('Stopping FSWatcher: %s', highlight(path));
+			watcher.close();
+			delete this.watchers[path];
+			log(renderTree());
 		}
+	}
+
+	/**
+	 * Stops all active filesystem watchers.
+	 */
+	shutdown() {
+		for (const path of Object.keys(this.watchers)) {
+			this.watchers[path].close();
+			delete this.watchers[path];
+		}
+	}
+
+	/**
+	 * Returns the FSWatcher internal statistics.
+	 *
+	 * @returns @Object
+	 * @access public
+	 */
+	status() {
+		return status();
+	}
+
+	/**
+	 * Returns a rendered string of the current state of the fs watcher tree.
+	 *
+	 * @returns {String}
+	 * @access public
+	 */
+	get tree() {
+		return tree;
 	}
 }

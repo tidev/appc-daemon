@@ -59,9 +59,19 @@ describe('dispatcher', () => {
 			});
 		});
 
-		it('should accept a ServiceDispatcher', () => {
+		it('should accept a ServiceDispatcher without any paths', () => {
 			const d = new Dispatcher;
 			d.register(new ServiceDispatcher('/foo', {}));
+		});
+
+		it('should accept a path and a ServiceDispatcher with a path', () => {
+			const d = new Dispatcher;
+			d.register('/foo', new ServiceDispatcher('/bar', {}));
+		});
+
+		it('should accept a path and ServiceDispatcher without a path', () => {
+			const d = new Dispatcher;
+			d.register('/foo', new ServiceDispatcher({}));
 		});
 	});
 

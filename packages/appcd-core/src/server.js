@@ -1,5 +1,6 @@
 import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs-extra';
+import FSWatchManager from 'appcd-fswatcher';
 import gawk from 'gawk';
 import HookEmitter from 'hook-emitter';
 import path from 'path';
@@ -120,31 +121,33 @@ export default class Server extends HookEmitter {
 			fs.mkdirsSync(homeDir);
 		}
 
-		this.subprocessManager = new SubprocessManager();
+		// init the status monitor
+		this.statusMonitor = new StatusMonitor();
+		const { status } = this.statusMonitor;
+		status.version = this.version;
+
+		// init the fs watch manager
+		const fm = this.fswatchManager = new FSWatchManager();
+		fm.on('stats', stats => status.fswatch = stats);
+		status.fswatch = fm.status();
+
+		// init the subprocess manager
+		const sm = this.subprocessManager = new SubprocessManager();
+		sm.on('change', subprocesses => status.subprocesses = subprocesses);
+		status.subprocesses = sm.subprocesses;
 
 		// init the plugin manager
-		this.pluginManager = new PluginManager({
+		const pm = this.pluginManager = new PluginManager({
 			paths: [
 				path.resolve(__dirname, '..', '..', '..', 'plugins'),
 				path.join(homeDir, 'plugins')
 			]
 		});
+		pm.on('change', plugins => status.plugins = plugins);
+		status.plugins = pm.plugins;
 
 		// start the status monitor
-		this.statusMonitor = new StatusMonitor();
-		this.statusMonitor.status.version = this.version;
-		this.statusMonitor.status.plugins = this.pluginManager.plugins;
-		this.statusMonitor.status.subprocesses = this.subprocessManager.subprocesses;
 		this.statusMonitor.start();
-		this.on('appcd:shutdown', () => this.statusMonitor.stop());
-
-		// update the status monitor's plugin info when it changes
-		this.pluginManager.on('change', (plugins, src) => {
-			this.statusMonitor.status.plugins = plugins;
-		});
-		this.subprocessManager.on('change', (subprocesses, src) => {
-			this.statusMonitor.status.subprocesses = subprocesses;
-		});
 
 		// init the dispatcher
 		const appcdDispatcher = new Dispatcher()
@@ -156,6 +159,8 @@ export default class Server extends HookEmitter {
 				}
 				ctx.response = node;
 			})
+
+			.register('/fswatch', this.fswatchManager.dispatcher)
 
 			.register('/logcat', ctx => logcat(ctx.response))
 
@@ -206,6 +211,8 @@ export default class Server extends HookEmitter {
 			.then(() => this.webserver.close())
 			.then(() => this.pluginManager.shutdown())
 			.then(() => this.subprocessManager.shutdown())
+			.then(() => this.fswatchManager.shutdown())
+			.then(() => this.statusMonitor.shutdown())
 			.then(() => {
 				const pidFile = expandPath(this.config.get('server.pidFile'));
 				logger.log('Removing %s', highlight(pidFile));

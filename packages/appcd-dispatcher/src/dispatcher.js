@@ -248,7 +248,7 @@ export default class Dispatcher {
 	 * dispatcher.register('/some/path', ctx => {});
 	 *
 	 * @example
-	 * dispatcher.register('/some/path', new Dispatcher(...));
+	 * dispatcher.register('/some/path', new Dispatcher());
 	 *
 	 * @example
 	 * dispatcher.register(new ServiceDispatcher(...));
@@ -288,7 +288,11 @@ export default class Dispatcher {
 		}
 
 		if (handler instanceof ServiceDispatcher) {
-			handler = handler.path ? new Dispatcher(handler) : handler.handler;
+			if (handler.path) {
+				handler = new Dispatcher().register(handler);
+			} else {
+				handler = handler.handler;
+			}
 		}
 
 		if (typeof handler !== 'function' && !(handler instanceof Dispatcher)) {

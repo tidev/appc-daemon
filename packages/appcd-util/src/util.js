@@ -87,6 +87,28 @@ export function assertNodeEngineVersion(pkgJson) {
 }
 
 /**
+ * Prevents a function from being called too many times.
+ *
+ * @param {Function} fn - The function to debounce.
+ * @param {Number} [wait=200] - The number of milliseconds to wait between calls
+ * to the returned function before firing the specified `fn`.
+ * @returns {Function}
+ */
+export function debounce(fn, wait=200) {
+	let timer;
+	wait = Math.max(~~wait, 0);
+
+	return function debouncer(...args) {
+		const ctx = this;
+		clearTimeout(timer);
+		timer = setTimeout(() => {
+			timer = null;
+			fn.apply(ctx, args);
+		}, wait);
+	};
+}
+
+/**
  * Formats a number using commas.
  *
  * @param {Number} - The number to format.

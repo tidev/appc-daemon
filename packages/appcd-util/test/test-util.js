@@ -107,6 +107,40 @@ describe('util', () => {
 		});
 	});
 
+	describe('debounce()', () => {
+		it('should debounce multiple calls', function (done) {
+			this.slow(2000);
+
+			let count = 0;
+			const fn = util.debounce(() => {
+				count++;
+			});
+
+			fn();
+			fn();
+			fn();
+
+			setTimeout(() => {
+				try {
+					expect(count).to.equal(0);
+
+					fn();
+
+					setTimeout(() => {
+						try {
+							expect(count).to.equal(1);
+							done();
+						} catch (e) {
+							done(e);
+						}
+					}, 500);
+				} catch (e) {
+					done(e);
+				}
+			}, 0);
+		});
+	});
+
 	describe('formatNumber()', () => {
 		it('should format a small integer', () => {
 			expect(util.formatNumber(12)).to.equal('12');
@@ -130,6 +164,13 @@ describe('util', () => {
 			class Foo {}
 			class Bar extends Foo {}
 			expect(util.inherits(Bar, Foo)).to.be.true;
+		});
+
+		it('should detect when a class does not extend another class', () => {
+			class Foo {}
+			class Bar extends Foo {}
+			class Wiz {}
+			expect(util.inherits(Bar, Wiz)).to.be.false;
 		});
 
 		it('should detect when a class deeply extends another class', () => {
