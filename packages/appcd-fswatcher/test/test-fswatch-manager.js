@@ -104,11 +104,10 @@ describe('FSWatchManager', () => {
 			const manager = new FSWatchManager;
 			let counter = 0;
 
-			expect(manager.status()).to.deep.equal({
-				nodes:      0,
-				fswatchers: 0,
-				watchers:   0
-			});
+			const stats = manager.status();
+			expect(stats.nodes).to.equal(0);
+			expect(stats.fswatchers).to.equal(0);
+			expect(stats.watchers).to.equal(0);
 
 			setTimeout(() => {
 				Promise.resolve()
@@ -144,7 +143,7 @@ describe('FSWatchManager', () => {
 											const stats = manager.status();
 											expect(stats.nodes).to.be.above(0);
 											expect(stats.fswatchers).to.be.above(0);
-											expect(stats.watchers).to.be.equal(1);
+											expect(stats.watchers).to.equal(1);
 
 											log('Unsubscribing');
 											const ctx = {

@@ -202,7 +202,7 @@ export default class Server extends HookEmitter {
 				return getMachineId(path.join(homeDir, '.mid'))
 					.then(mid => this.mid = mid);
 			})
-			// TODO: init analytics
+			// TODO: init telemetry
 			// TODO: load plugins
 			.then(() => this.webserver.listen())
 			.then(() => this.emit('appcd.start'));
