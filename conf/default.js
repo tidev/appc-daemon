@@ -128,6 +128,13 @@ module.exports = {
 		daemonize: true,
 
 		/**
+		 * The group to switch to when the daemon is started as root on a POSIX system.
+		 * @type {String|Number}
+		 * @readonly
+		 */
+		group: null,
+
+		/**
 		 * The hostname or IP address to listen on.
 		 * @type {String}
 		 * @readonly
@@ -146,6 +153,13 @@ module.exports = {
 		 * @type {Number}
 		 * @readonly
 		 */
-		port: 1732
+		port: 1732,
+
+		/**
+		 * The user to switch to when the daemon is started as root on a POSIX system.
+		 * @type {?String|Number}
+		 * @readonly
+		 */
+		user: null
 	}
 };

@@ -85,6 +85,21 @@ export default class Server extends HookEmitter {
 			.enable('*')
 			.pipe(new StdioStream, { flush: true });
 
+		// check if the current user is root
+		let uid, gid;
+		if (process.getuid && process.getuid() === 0) {
+			// we are on a posix system and we're root, so we need to switch to a non-root user
+			uid = this.config.get('server.user');
+ 			gid = this.config.get('server.group');
+			if (!uid) {
+				throw new Error('The daemon cannot be run as root. You must run as a non-root user or set a user in the config.');
+			}
+			process.setuid(uid);
+			if (gid) {
+				process.setgid(gid);
+			}
+		}
+
 		// check if appcd is already running
 		const pid = this.isRunning();
 		if (pid) {
@@ -104,8 +119,8 @@ export default class Server extends HookEmitter {
 
 		logger.log(`Appcelerator Daemon v${this.version}`);
 		logger.log('Environment: %s', highlight(this.config.get('environment.title')));
-		logger.log(`PID: ${highlight(process.pid)}`);
 		logger.log(`Node.js ${process.version} (${process.platform}, module v${process.versions.modules})`);
+		logger.log(`PID: ${highlight(process.pid)}`);
 
 		// listen for CTRL-C and SIGTERM
 		const shutdown = () => this.shutdown()

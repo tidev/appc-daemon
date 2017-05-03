@@ -1,7 +1,8 @@
-import { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
+import path from 'path';
 import snooplogg from 'snooplogg';
 
 import { codes } from 'appcd-response';
+import { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
 import { EventEmitter } from 'events';
 import { FSWatcher, renderTree, rootEmitter, status, tree } from './fswatcher';
 
@@ -33,7 +34,8 @@ export default class FSWatchManager extends EventEmitter {
 	 * @access private
 	 */
 	getTopic(ctx) {
-		return ctx.payload.topic || ctx.payload.data && ctx.payload.data.path;
+		const { topic, data } = ctx.payload;
+		return topic || (data && data.path && path.resolve(data.path));
 	}
 
 	/**

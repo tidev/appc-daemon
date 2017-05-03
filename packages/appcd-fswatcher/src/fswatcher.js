@@ -829,5 +829,8 @@ export function reset() {
  * @returns {Object}
  */
 export function status() {
-	return JSON.parse(JSON.stringify(stats));
+	return {
+		...JSON.parse(JSON.stringify(stats)),
+		tree
+	};
 }
