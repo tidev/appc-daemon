@@ -1,0 +1,35 @@
+{
+  "name": "appcd-util",
+  "version": "1.0.0",
+  "description": "Various utility functions to support the Appc Daemon.",
+  "main": "./dist/util",
+  "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
+  "maintainers": [
+    "Chris Barber <cbarber@appcelerator.com>"
+  ],
+  "license": "SEE LICENSE IN LICENSE",
+  "scripts": {
+    "build": "gulp build",
+    "coverage": "gulp coverage",
+    "docs": "gulp docs",
+    "prepublish": "gulp build",
+    "test": "gulp test"
+  },
+  "dependencies": {
+    "semver": "^5.3.0",
+    "source-map-support": "^0.4.15"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1"
+  },
+  "appcdDependencies": [
+    "appcd-fs",
+    "appcd-gulp"
+  ],
+  "homepage": "https://github.com/appcelerator/appc-daemon#readme",
+  "bugs": "https://github.com/appcelerator/appc-daemon/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/appcelerator/appc-daemon.git"
+  }
+}

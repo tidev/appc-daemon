@@ -1,0 +1,33 @@
+{
+  "name": "appcd-path",
+  "version": "1.0.0",
+  "description": "Library for working with file paths.",
+  "main": "./dist/path",
+  "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
+  "maintainers": [
+    "Chris Barber <cbarber@appcelerator.com>"
+  ],
+  "license": "SEE LICENSE IN LICENSE",
+  "scripts": {
+    "build": "gulp build",
+    "coverage": "gulp coverage",
+    "docs": "gulp docs",
+    "prepublish": "gulp build",
+    "test": "gulp test"
+  },
+  "dependencies": {
+    "source-map-support": "^0.4.15"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1"
+  },
+  "appcdDependencies": [
+    "appcd-gulp"
+  ],
+  "homepage": "https://github.com/appcelerator/appc-daemon#readme",
+  "bugs": "https://github.com/appcelerator/appc-daemon/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/appcelerator/appc-daemon.git"
+  }
+}

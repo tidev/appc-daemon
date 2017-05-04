@@ -1,0 +1,47 @@
+{
+  "name": "appcd-client",
+  "version": "1.0.0",
+  "description": "The Node.js client for connecting to the Appc Daemon.",
+  "main": "./dist/client",
+  "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
+  "maintainers": [
+    "Chris Barber <cbarber@appcelerator.com>"
+  ],
+  "license": "SEE LICENSE IN LICENSE",
+  "keywords": [
+    "appcelerator",
+    "appc",
+    "appcd",
+    "daemon"
+  ],
+  "scripts": {
+    "build": "gulp build",
+    "coverage": "gulp coverage",
+    "docs": "gulp docs",
+    "prepublish": "gulp build",
+    "test": "gulp test"
+  },
+  "dependencies": {
+    "msgpack-lite": "^0.1.26",
+    "source-map-support": "^0.4.15",
+    "uuid": "^3.0.1",
+    "ws": "^2.3.1"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1"
+  },
+  "appcdDependencies": [
+    "appcd-gulp",
+    "appcd-response",
+    "appcd-util"
+  ],
+  "homepage": "https://github.com/appcelerator/appc-daemon#readme",
+  "bugs": "https://github.com/appcelerator/appc-daemon/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/appcelerator/appc-daemon.git"
+  },
+  "engines": {
+    "node": ">=4.0.0"
+  }
+}

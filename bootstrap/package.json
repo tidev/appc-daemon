@@ -1,70 +1,47 @@
 {
-  "name": "appcd",
+  "name": "appc-daemon",
   "version": "1.0.0",
-  "description": "Appcelerator Daemon",
-  "main": "./dist/index",
-  "author": {
-    "name": "Appcelerator, Inc.",
-    "email": "npmjs@appcelerator.com"
-  },
+  "description": "A daemon that powers Appcelerator tooling and makes the impossible possible.",
+  "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
-    {
-      "name": "Chris Barber",
-      "email": "cbarber@appcelerator.com"
-    }
+    "Chris Barber <cbarber@appcelerator.com>"
   ],
   "license": "SEE LICENSE IN LICENSE",
   "keywords": [
     "appcelerator",
     "appc",
-    "daemon",
-    "hyperloop",
-    "titanium",
-    "alloy"
+    "daemon"
   ],
   "bin": {
     "appcd": "./bin/appcd"
   },
+  "preferGlobal": true,
   "scripts": {
     "build": "gulp build",
     "coverage": "gulp coverage",
     "docs": "gulp docs",
     "prepublish": "gulp build",
-    "test": "gulp test",
-    "watch": "gulp watch"
+    "test": "gulp test"
   },
   "dependencies": {
-    "appcd-client": "*",
-    "commander": "^2.9.0",
-    "mkdirp": "^0.5.1",
-    "node-appc": "2.0.0-alpha39",
-    "resolve-path": "^1.3.2",
-    "semver": "^5.3.0",
-    "source-map-support": "^0.4.5"
+    "cli-kit": "*",
+    "cli-table2": "^0.2.0",
+    "snooplogg": "^1.3.0",
+    "source-map-support": "^0.4.15"
   },
   "devDependencies": {
-    "babel-eslint": "^7.0.0",
-    "babel-preset-es2015": "^6.18.0",
-    "chai": "^3.5.0",
-    "del": "^2.2.2",
-    "esdoc-es7-plugin": "^0.0.3",
-    "gulp": "^3.9.1",
-    "gulp-babel": "^6.1.2",
-    "gulp-babel-istanbul": "^1.5.0",
-    "gulp-chug": "^0.5.1",
-    "gulp-debug": "^2.1.2",
-    "gulp-esdoc": "^0.3.0",
-    "gulp-eslint": "^3.0.1",
-    "gulp-filter": "^4.0.0",
-    "gulp-inject-modules": "^1.0.0",
-    "gulp-load-plugins": "^1.3.0",
-    "gulp-mocha": "^3.0.1",
-    "gulp-plumber": "^1.1.0",
-    "gulp-sourcemaps": "^2.2.0",
-    "run-sequence": "^1.2.2",
-    "sinon": "^1.17.6",
-    "sinon-chai": "^2.8.0"
+    "gulp": "^3.9.1"
   },
+  "appcdDependencies": [
+    "appcd-client",
+    "appcd-config",
+    "appcd-core",
+    "appcd-fs",
+    "appcd-gulp",
+    "appcd-nodejs",
+    "appcd-path",
+    "appcd-util"
+  ],
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
   "repository": {

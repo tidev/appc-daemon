@@ -1,0 +1,85 @@
+{
+	"name": {
+		"desc": "Everybody has a name.",
+		"type": "String"
+	},
+
+	"age": {
+		"desc": "How old are you?",
+		"type": "Number",
+		"deprecated": "Age ain't nothing but a number"
+	},
+
+	"id": {
+		"desc": "A unique id.",
+		"type": "String",
+		"readonly": true
+	},
+
+	"arrays.simple": {
+		"desc": "A simple array with no datatype.",
+		"type": "Array"
+	},
+
+	"arrays.arrayNums": {
+		"desc": "Array of numbers",
+		"type": "Array<Number>"
+	},
+
+	"arrays.arrayNums2": {
+		"desc": "Another array of numbers.",
+		"type": "Array.<Number>"
+	},
+
+	"arrays.arrayNums3": {
+		"desc": "Yet another array of numbers.",
+		"type": "Number[]"
+	},
+
+	"arrays.multi": {
+		"desc": "Array of numbers or strings.",
+		"type": "Array<number|string>"
+	},
+
+	"arrays.multiUnknown": {
+		"desc": "Multiple unknown types.",
+		"type": "Array<foo|bar>"
+	},
+
+	"multi": {
+		"desc": "Multiple types.",
+		"type": "number|string"
+	},
+
+	"couldBeNull": {
+		"desc": "Could be null.",
+		"type": "?number"
+	},
+
+	"couldBeNull2": {
+		"desc": "Could be null.",
+		"type": "number|null"
+	},
+
+	"couldBeNull3": {
+		"type": "number",
+		"nullable": true
+	},
+
+	"cantBeNull": {
+		"desc": "Cannot be null.",
+		"type": "!number"
+	},
+
+	"couldBeUndef": {
+		"desc": "Could be undefined.",
+		"type": "number|undefined"
+	},
+
+	"job.title": {
+		"desc": "Job title.",
+		"type": "String"
+	},
+
+	"notype": {}
+}
