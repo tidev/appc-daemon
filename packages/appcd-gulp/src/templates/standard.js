@@ -10,9 +10,10 @@ module.exports = (opts) => {
 	const Module = require('module');
 	const path = require('path');
 
-	const coverageDir = path.join(opts.projectDir, 'coverage');
-	const distDir = path.join(opts.projectDir, 'dist');
-	const docsDir = path.join(opts.projectDir, 'docs');
+	const projectDir = opts.projectDir;
+	const coverageDir = path.join(projectDir, 'coverage');
+	const distDir = path.join(projectDir, 'dist');
+	const docsDir = path.join(projectDir, 'docs');
 
 	/*
 	 * Inject appcd-gulp into require() search path
@@ -155,10 +156,17 @@ module.exports = (opts) => {
 				}
 
 				p = process.argv.indexOf('--grep');
+				let mochaOpts = {
+					reporter: 'mocha-jenkins-reporter',
+					reporterOptions: {
+						junit_report_path: path.join(projectDir, 'junit.xml'),
+						junit_report_name: path.basename(projectDir),
+					}
+				};
 				if (p !== -1 && p + 1 < process.argv.length) {
-					stream = stream.pipe($.mocha({ grep: process.argv[p + 1] }));
+					stream = stream.pipe($.mocha(Object.assign(mochaOpts, { grep: process.argv[p + 1] })));
 				} else {
-					stream = stream.pipe($.mocha());
+					stream = stream.pipe($.mocha(mochaOpts));
 				}
 
 				let error = null;
