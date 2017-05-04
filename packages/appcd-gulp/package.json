@@ -36,6 +36,7 @@
     "gulp-plumber": "^1.1.0",
     "gulp-sourcemaps": "^2.6.0",
     "gulp-util": "^3.0.8",
+    "mocha-jenkins-reporter": "^0.3.7",
     "run-sequence": "^1.2.2",
     "sinon": "^2.2.0",
     "sinon-chai": "^2.10.0",

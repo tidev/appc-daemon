@@ -410,7 +410,7 @@ gulp.task('coverage', ['build'], cb => {
 		.then(() => {
 			fs.mkdirsSync(coverageDir);
 
-			for (const type of [ 'lcov', 'json', 'text', 'text-summary' ]) {
+			for (const type of [ 'lcov', 'json', 'text', 'text-summary', 'cobertura' ]) {
 				istanbul.Report.create(type, { dir: coverageDir }).writeReport(collector, true);
 			}
 
