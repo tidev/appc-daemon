@@ -156,7 +156,7 @@ module.exports = (opts) => {
 				}
 
 				p = process.argv.indexOf('--grep');
-				let mochaOpts = {
+				const mochaOpts = {
 					reporter: 'mocha-jenkins-reporter',
 					reporterOptions: {
 						junit_report_path: path.join(projectDir, 'junit.xml'),
@@ -164,10 +164,9 @@ module.exports = (opts) => {
 					}
 				};
 				if (p !== -1 && p + 1 < process.argv.length) {
-					stream = stream.pipe($.mocha(Object.assign(mochaOpts, { grep: process.argv[p + 1] })));
-				} else {
-					stream = stream.pipe($.mocha(mochaOpts));
+					mochaOpts.grep = process.argv[p + 1];
 				}
+				stream = stream.pipe($.mocha(mochaOpts));
 
 				let error = null;
 
