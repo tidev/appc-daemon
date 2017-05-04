@@ -115,7 +115,7 @@ module.exports = {
 
 	/**
 	 * A list of plugins to load. Internal plugins are always loaded.
-	 * @type {Array}
+	 * @type {Array.<Object>}
 	 */
 	plugins: [],
 
