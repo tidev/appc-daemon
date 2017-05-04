@@ -144,7 +144,7 @@ gulp.task('fix', cb => {
 				}
 			});
 			for (const pkg of Object.keys(results.needsFixing)) {
-				let rel = path.relative(__dirname, pkg) || path.basename(pkg);
+				const rel = path.relative(__dirname, pkg) || path.basename(pkg);
 				table.push([rel, fixReasons[results.needsFixing[pkg]] || 'unknown']);
 				if (results.needsFixing[pkg] === 'nuke') {
 					nuke.push(pkg);
@@ -1053,7 +1053,7 @@ function renderPackages(results) {
 				}
 			});
 			for (const pkg of results.criticalToUpdate) {
-				let rel = path.relative(__dirname, pkg.path) || path.basename(pkg.path);
+				const rel = path.relative(__dirname, pkg.path) || path.basename(pkg.path);
 				table.push([rel, pkg.name, pkg.current, '→', hlVer(pkg.updated, pkg.current)]);
 			}
 			console.log(table.toString() + '\n');
@@ -1070,7 +1070,7 @@ function renderPackages(results) {
 				}
 			});
 			for (const pkg of results.packagesToUpdate) {
-				let rel = path.relative(__dirname, pkg.path) || path.basename(pkg.path);
+				const rel = path.relative(__dirname, pkg.path) || path.basename(pkg.path);
 				table.push([rel, pkg.name, pkg.current, '→', hlVer(pkg.updated, pkg.current)]);
 			}
 			console.log(table.toString() + '\n');
@@ -1087,7 +1087,7 @@ function renderPackages(results) {
 				}
 			});
 			for (const pkg of Object.keys(results.needsFixing)) {
-				let rel = path.relative(__dirname, pkg) || path.basename(pkg);
+				const rel = path.relative(__dirname, pkg) || path.basename(pkg);
 				table.push([rel, fixReasons[results.needsFixing[pkg]] || 'unknown']);
 			}
 			console.log(table.toString() + '\n');
