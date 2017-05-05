@@ -27,7 +27,13 @@ describe('util', () => {
 			process.env.APPCD_TEST_ARCH = 'ia32';
 			expect(util.arch()).to.equal('x64');
 
-			expect(util.arch(true)).to.equal('x86');
+			if (process.platform === 'linux') {
+				// on linux it actually subprocesses getconf to get the arch, so it's not easy to
+				// force the arch to x86
+				expect(util.arch(true)).to.be.oneOf([ 'x86', 'x64' ]);
+			} else {
+				expect(util.arch(true)).to.equal('x86');
+			}
 		});
 
 		it('should correct ia32 for 64-bit systems (Windows)', () => {
