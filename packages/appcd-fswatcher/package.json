@@ -21,7 +21,7 @@
     "source-map-support": "^0.4.15"
   },
   "devDependencies": {
-    "fs-extra": "^3.0.0",
+    "fs-extra": "^3.0.1",
     "gulp": "^3.9.1",
     "tmp": "^0.0.31"
   },
