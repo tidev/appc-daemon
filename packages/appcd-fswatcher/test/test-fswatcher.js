@@ -1124,13 +1124,13 @@ describe('FSWatcher', () => {
 				const realWizDir = path.join(realPath(tmp), 'baz', 'wiz');
 				const wizDir = path.join(bazDir, 'wiz');
 
-				const barRelDir = path.relative(realWizDir, barDir);
+				const barRelDir = '../foo/bar';
 
 				log('Creating symlink: %s → %s', highlight(barRelDir), highlight(wizDir));
 				fs.symlinkSync(barRelDir, wizDir);
 
 				log('Deleting %s', highlight(barDir));
-				fs.removeSync(barDir);
+				fs.rmdirSync(barDir);
 
 				setTimeout(() => {
 					new FSWatcher(bazDir, { recursive: true })

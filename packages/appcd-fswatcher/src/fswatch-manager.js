@@ -52,10 +52,6 @@ export default class FSWatchManager extends EventEmitter {
 			throw new DispatcherError(codes.MISSING_ARGUMENT, 'Missing required parameter "%s"', 'path');
 		}
 
-		if (this.watchers[path]) {
-			throw new DispatcherError(codes.ALREADY_SUBSCRIBED);
-		}
-
 		log('Starting FSWatcher: %s', highlight(path));
 		this.watchers[path] = new FSWatcher(path, { recursive: !!ctx.payload.recursive })
 			.on('change', publish);

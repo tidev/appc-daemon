@@ -360,9 +360,7 @@ export class Node {
 		try {
 			const stat = fs.lstatSync(evt.file);
 			isFile = stat.isFile();
-			if (evt.action === 'add') {
-				this.files.set(filename, now);
-			}
+			this.files.set(filename, [ evt.action, now ]);
 		} catch (e) {
 			// file was deleted
 			evt.action = 'delete';
@@ -371,8 +369,8 @@ export class Node {
 			}
 		}
 
-		if (prev > 0 && (now - prev) < 10) {
-			log('Dropping redundant event');
+		if (prev && evt.action !== 'delete' && (prev[1] > 0 && (now - prev[1]) < 16)) {
+			log('Dropping redundant event: %s %s → %s', green(`[${evt.action}]`), highlight(this.path), highlight(filename));
 			return;
 		}
 
