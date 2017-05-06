@@ -23,6 +23,10 @@ const cmd = {
 				if (response.type === 'publish') {
 					console.log(message);
 				}
+			})
+			.on('error', err => {
+				console.error(err.message);
+				process.exit(1);
 			});
 	}
 };

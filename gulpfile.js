@@ -193,6 +193,13 @@ gulp.task('fix', cb => {
 		.catch(cb);
 });
 
+gulp.task('stats', () => {
+	displayStats({
+		stats: computeSloc(),
+		testStats: computeSloc('test')
+	});
+});
+
 gulp.task('upgrade-all', cb => {
 	Promise.resolve()
 		.then(() => checkPackages())
@@ -502,6 +509,7 @@ gulp.task('default', () => {
 	table.push([cyan('watch-only'),       'starts watching all packages to perform build']);
 	table.push([cyan('check'),            'checks missing/outdated dependencies/link, security issues, and code stats']);
 	table.push([cyan('fix'),              'fixes any missing dependencies or links']);
+	table.push([cyan('stats'),            'displays stats about the code']);
 	table.push([cyan('install'),          'links/installs dependencies, then does a full build']);
 	table.push([cyan('install-deps'),     'installs each package\'s npm dependencies']);
 	table.push([cyan('link'),             'ensures all links are wired up']);
@@ -979,33 +987,7 @@ function renderPackages(results) {
 		console.log();
 	}
 
-	console.log(magenta('Source Code Stats') + '\n');
-	table = new Table({ chars: cliTableChars, head: [], style: { head: ['bold'], border: [] } });
-	let stats = results.stats;
-	table.push([ 'Physical lines',       { hAlign: 'right', content: green(formatNumber(stats.total)) }, '' ]);
-	table.push([ 'Lines of source code', { hAlign: 'right', content: green(formatNumber(stats.source)) }, gray(formatPercentage(stats.source / stats.total * 100)) ]);
-	table.push([ 'Total comments',       { hAlign: 'right', content: green(formatNumber(stats.comment)) }, gray(formatPercentage(stats.comment / stats.total * 100)) ]);
-	table.push([ 'Single-lines',         { hAlign: 'right', content: green(formatNumber(stats.single)) }, '' ]);
-	table.push([ 'Blocks',               { hAlign: 'right', content: green(formatNumber(stats.block)) }, '' ]);
-	table.push([ 'Mixed',                { hAlign: 'right', content: green(formatNumber(stats.mixed)) }, '' ]);
-	table.push([ 'Empty lines',          { hAlign: 'right', content: green(formatNumber(stats.empty)) }, '' ]);
-	table.push([ 'Todos',                { hAlign: 'right', content: green(formatNumber(stats.todo)) }, '' ]);
-	table.push([ 'Number of files',      { hAlign: 'right', content: green(formatNumber(stats.files)) }, '' ]);
-	console.log(table.toString() + '\n');
-
-	console.log(magenta('Test Code Stats') + '\n');
-	table = new Table({ chars: cliTableChars, head: [], style: { head: ['bold'], border: [] } });
-	stats = results.testStats;
-	table.push([ 'Physical lines',       { hAlign: 'right', content: green(formatNumber(stats.total)) }, '' ]);
-	table.push([ 'Lines of source code', { hAlign: 'right', content: green(formatNumber(stats.source)) }, gray(formatPercentage(stats.source / stats.total * 100)) ]);
-	table.push([ 'Total comments',       { hAlign: 'right', content: green(formatNumber(stats.comment)) }, gray(formatPercentage(stats.comment / stats.total * 100)) ]);
-	table.push([ 'Single-lines',         { hAlign: 'right', content: green(formatNumber(stats.single)) }, '' ]);
-	table.push([ 'Blocks',               { hAlign: 'right', content: green(formatNumber(stats.block)) }, '' ]);
-	table.push([ 'Mixed',                { hAlign: 'right', content: green(formatNumber(stats.mixed)) }, '' ]);
-	table.push([ 'Empty lines',          { hAlign: 'right', content: green(formatNumber(stats.empty)) }, '' ]);
-	table.push([ 'Todos',                { hAlign: 'right', content: green(formatNumber(stats.todo)) }, '' ]);
-	table.push([ 'Number of files',      { hAlign: 'right', content: green(formatNumber(stats.files)) }, '' ]);
-	console.log(table.toString() + '\n');
+	displayStats(results);
 
 	console.log(magenta('Summary') + '\n');
 	table = new Table({ chars: cliTableChars, head: [], style: { head: ['bold'], border: [] } });
@@ -1093,6 +1075,40 @@ function renderPackages(results) {
 			console.log(table.toString() + '\n');
 		}
 	}
+}
+
+function displayStats(results) {
+	const gray = gutil.colors.gray;
+	const green = gutil.colors.green;
+	const magenta = gutil.colors.magenta;
+	console.log(magenta('Source Code Stats') + '\n');
+
+	let table = new Table({ chars: cliTableChars, head: [], style: { head: ['bold'], border: [] } });
+	let stats = results.stats;
+	table.push([ 'Physical lines',       { hAlign: 'right', content: green(formatNumber(stats.total)) }, '' ]);
+	table.push([ 'Lines of source code', { hAlign: 'right', content: green(formatNumber(stats.source)) }, gray(formatPercentage(stats.source / stats.total * 100)) ]);
+	table.push([ 'Total comments',       { hAlign: 'right', content: green(formatNumber(stats.comment)) }, gray(formatPercentage(stats.comment / stats.total * 100)) ]);
+	table.push([ 'Single-lines',         { hAlign: 'right', content: green(formatNumber(stats.single)) }, '' ]);
+	table.push([ 'Blocks',               { hAlign: 'right', content: green(formatNumber(stats.block)) }, '' ]);
+	table.push([ 'Mixed',                { hAlign: 'right', content: green(formatNumber(stats.mixed)) }, '' ]);
+	table.push([ 'Empty lines',          { hAlign: 'right', content: green(formatNumber(stats.empty)) }, '' ]);
+	table.push([ 'Todos',                { hAlign: 'right', content: green(formatNumber(stats.todo)) }, '' ]);
+	table.push([ 'Number of files',      { hAlign: 'right', content: green(formatNumber(stats.files)) }, '' ]);
+	console.log(table.toString() + '\n');
+
+	console.log(magenta('Test Code Stats') + '\n');
+	table = new Table({ chars: cliTableChars, head: [], style: { head: ['bold'], border: [] } });
+	stats = results.testStats;
+	table.push([ 'Physical lines',       { hAlign: 'right', content: green(formatNumber(stats.total)) }, '' ]);
+	table.push([ 'Lines of source code', { hAlign: 'right', content: green(formatNumber(stats.source)) }, gray(formatPercentage(stats.source / stats.total * 100)) ]);
+	table.push([ 'Total comments',       { hAlign: 'right', content: green(formatNumber(stats.comment)) }, gray(formatPercentage(stats.comment / stats.total * 100)) ]);
+	table.push([ 'Single-lines',         { hAlign: 'right', content: green(formatNumber(stats.single)) }, '' ]);
+	table.push([ 'Blocks',               { hAlign: 'right', content: green(formatNumber(stats.block)) }, '' ]);
+	table.push([ 'Mixed',                { hAlign: 'right', content: green(formatNumber(stats.mixed)) }, '' ]);
+	table.push([ 'Empty lines',          { hAlign: 'right', content: green(formatNumber(stats.empty)) }, '' ]);
+	table.push([ 'Todos',                { hAlign: 'right', content: green(formatNumber(stats.todo)) }, '' ]);
+	table.push([ 'Number of files',      { hAlign: 'right', content: green(formatNumber(stats.files)) }, '' ]);
+	console.log(table.toString() + '\n');
 }
 
 function hlVer(ver, ref) {

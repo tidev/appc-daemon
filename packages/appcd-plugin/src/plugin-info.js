@@ -1,3 +1,4 @@
+import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs';
 import path from 'path';
 import PluginError from './plugin-error';
@@ -60,6 +61,14 @@ export default class PluginInfo {
 		this.name = pkgJson.name;
 
 		/**
+		 * The dispatcher namespace.
+		 */
+		this.namespace = pkgJson.appcd && pkgJson.appcd.namespace || pkgJson.name.replace(/^appcd-plugin-/, '');
+		if (this.namespace === 'appcd') {
+			throw new PluginError('Forbidden plugin namespace: %s', 'appcd');
+		}
+
+		/**
 		 * The plugin version.
 		 * @type {String}
 		 */
@@ -114,13 +123,6 @@ export default class PluginInfo {
 		 */
 		this.error = false;
 
-		/**
-		 * Tracks the number of times an external plugin has been restarted due to the plugin host
-		 * exited unexpectedly or has become unresponsive.
-		 * @type {Number}
-		 */
-		this.restarts = 0;
-
 		// find the main file
 		const main = pkgJson.main || 'index.js';
 		let mainFile = main;
@@ -149,7 +151,7 @@ export default class PluginInfo {
 	 * @returns {Promise}
 	 * @access public
 	 */
-	async start() {
+	async load() {
 		if (this.type === 'internal') {
 			if (this.module) {
 				throw new PluginError(codes.PLUGIN_ALREADY_STARTED);
@@ -184,9 +186,10 @@ export default class PluginInfo {
 	 * @returns {Promise}
 	 * @access public
 	 */
-	async stop() {
+	async unload() {
 		if (this.type === 'internal' && this.instance && typeof this.instance.stop === 'function') {
-			await this.instance.stop();
+			await this.instance.unload();
+			// TODO: freeze cache
 		} else if (this.type === 'external' && this.pid) {
 			// return new Promise((resolve, reject) => {
 			// 	process.kill(this.pid, 'SIGTERM');

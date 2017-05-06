@@ -203,7 +203,6 @@ export default class Server extends HookEmitter {
 					.then(mid => this.mid = mid);
 			})
 			// TODO: init telemetry
-			// TODO: load plugins
 			.then(() => this.webserver.listen())
 			.then(() => this.emit('appcd.start'));
 	}

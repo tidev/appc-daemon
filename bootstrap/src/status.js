@@ -74,7 +74,7 @@ const cmd = {
 				log(status.fswatch.tree);
 				log();
 
-				params.head = [ 'Plugin Name', 'Version', 'Type', 'Path', 'Node Version', 'Restarts', 'Status' ],
+				params.head = [ 'Plugin Name', 'Version', 'Type', 'Path', 'Node Version', 'Status' ],
 				table = new Table(params);
 				for (const plugin of status.plugins) {
 					let status = '';
@@ -96,7 +96,6 @@ const cmd = {
 						plugin.type,
 						plugin.path,
 						`v${plugin.nodeVersion}`,
-						{ hAlign: 'center', content: plugin.type === 'external' ? numberFormat(plugin.restarts, 0) : 'n/a' },
 						status
 					]);
 				}
