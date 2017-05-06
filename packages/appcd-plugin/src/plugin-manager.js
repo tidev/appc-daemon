@@ -4,7 +4,8 @@ import gawk from 'gawk';
 import path from 'path';
 import PluginError from './plugin-error';
 import PluginInfo from './plugin-info';
-import Response, { AppcdError, codes } from 'appcd-response';
+import Response, { codes } from 'appcd-response';
+import semver from 'semver';
 import snooplogg from 'snooplogg';
 
 import { EventEmitter } from 'events';
@@ -26,9 +27,6 @@ const { highlight, note } = snooplogg.styles;
 //   watch fs and reload plugin
 //   namespaced dispatcher?
 //   namespaced router?
-
-// curl -i -X POST -d "path=/Users/chris2" -H "Accept-Language: es-ES;q=0.9, fr-CH,fr;q=0.88, en;q=0.8, de;q=0.72, *;q=0.5" http://localhost:1732/appcd/plugin/register
-// curl -i -X POST -d "path=/Users/chris2" http://localhost:1732/appcd/plugin/register
 
 /**
  * Detects, starts, and stops Appc Daemon plugins.
@@ -73,15 +71,18 @@ export default class PluginManager extends EventEmitter {
 		}
 
 		/**
+		 * A map of plugin namespaces to plugin version dispatchers.
+		 */
+		this.namespaces = {};
+
+		/**
 		 * The plugin manager dispatcher.
 		 * @type {Dispatcher}
 		 */
 		this.dispatcher = new Dispatcher()
 			.register('/register', ctx => {
-				const pluginPath = ctx.payload.data.path;
-				const plugin = new PluginInfo(pluginPath);
 				try {
-					this.register(plugin);
+					this.register(new PluginInfo(ctx.payload.data.path));
 					ctx.response = new Response(codes.PLUGIN_REGISTERED);
 				} catch (e) {
 					logger.warn(e.message);
@@ -98,12 +99,6 @@ export default class PluginManager extends EventEmitter {
 			})
 			.register('/status', ctx => {
 				ctx.response = this.plugins;
-			})
-			.register('/start', ctx => {
-				ctx.response = 'START!';
-			})
-			.register('/stop', ctx => {
-				ctx.response = 'STOP!';
 			});
 
 		for (const dir of this.paths) {
@@ -133,13 +128,9 @@ export default class PluginManager extends EventEmitter {
 		const tryRegisterPlugin = dir => {
 			if (isFile(path.join(dir, 'package.json'))) {
 				// we have an NPM-style plugin
-				let plugin;
-
 				try {
-					plugin = new PluginInfo(dir);
-
 					try {
-						this.register(plugin);
+						this.register(new PluginInfo(dir));
 					} catch (e) {
 						logger.warn(e.message);
 					}
@@ -179,10 +170,24 @@ export default class PluginManager extends EventEmitter {
 
 		// check to make sure we don't insert the same plugin twice
 		for (const p of this.plugins) {
-			if (p.name === plugin.name || p.path === plugin.path) {
+			if (p.name === plugin.name || p.path === plugin.path || p.version === plugin.version) {
 				throw new PluginError(codes.PLUGIN_ALREADY_REGISTERED);
 			}
 		}
+
+		// initialize the namespace dispatcher
+		let ns = this.namespaces[plugin.namespace];
+		if (!ns) {
+			ns = this.namespaces[plugin.namespace] = {
+				dispatcher: this.createNamespaceDispatcher(plugin.namespace),
+				versions: {}
+			};
+			Dispatcher.register(`/${plugin.namespace}`, ns.dispatcher);
+		}
+
+		// TODO: the Dispatcher below should probably go in the PluginInfo instance, but should
+		// really be the dispatcher in the plugin host... not sure how to do that
+		ns.versions[plugin.version] = new Dispatcher().register('/', ctx => { ctx.response = 'whoo!'; });
 
 		logger.log('Found plugin: %s', highlight(`${plugin.name}@${plugin.version}`), note(plugin.path));
 
@@ -228,12 +233,56 @@ export default class PluginManager extends EventEmitter {
 		return Promise.all(this.plugins.map(plugin => {
 			logger.log('Stopping %s', highlight(`${plugin.name}@${plugin.version}`));
 			return plugin
-				.stop()
+				.unload()
 				.catch(err => {
 					if (err.code !== codes.PLUGIN_ALREADY_STOPPED) {
 						throw err;
 					}
 				});
 		}));
+	}
+
+	/**
+	 * Creates a dispatcher for the given namespace and wires up the default version routes.
+	 *
+	 * @param {String} namespace - The namespace to tie the dispatcher to.
+	 * @returns {Dispatcher}
+	 * @access private
+	 */
+	createNamespaceDispatcher(namespace) {
+		return new Dispatcher()
+			.register('/:version?/:path*', async (ctx, next) => {
+				const ns = this.namespaces[namespace];
+				const versions = Object.keys(ns.versions).sort(semver.rcompare);
+				let version = ctx.params.version || null;
+
+				if (version === null) {
+					// if just the plugin namespace is requested, return an object with all valid
+					// versions
+					logger.log('No version specified, return list of versions');
+					ctx.response = {
+						latest: `/${namespace}/latest`
+					};
+					for (const version of versions) {
+						ctx.response[version] = `/${namespace}/${version}`;
+					}
+					return;
+				}
+
+				logger.log('Version = %s', highlight(version));
+				if (version === 'latest') {
+					version = versions[0];
+					logger.log('Remapping latest version as %s', highlight(version));
+				}
+
+				if (ns.versions[version]) {
+					logger.log('Dispatching to plugin version %s', highlight(version));
+					return ns.versions[version].call(`/${ctx.params.path || ''}`, ctx);
+				}
+
+				// no match, continue
+				logger.log('No version match');
+				await next();
+			});
 	}
 }

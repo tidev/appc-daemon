@@ -52,6 +52,7 @@ export function createRequest(cfg, path, payload, type) {
 		userAgent: `appcd/${appcdVersion}}`
 	});
 
+	log('Creating request: %s', highlight(`${type || 'call'}://${client.host}:${client.port}${path}`));
 	const request = client
 		.request({ path, payload, type })
 		.once('close', () => process.exit(0))
