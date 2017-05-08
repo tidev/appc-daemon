@@ -257,7 +257,7 @@ export default class Metadata {
 		}
 
 		if (!opts.overrideReadonly && meta.readonly) {
-			throw new Error(`Config option "${key}" is readonly`);
+			throw new Error(`Config option "${key}" is read-only`);
 		}
 
 		if ((meta.nullable && value === null) || meta.validate(value)) {

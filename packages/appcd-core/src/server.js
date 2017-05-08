@@ -14,7 +14,7 @@ import WebSocketSession from './websocket-session';
 import { expandPath } from 'appcd-path';
 import { getActiveHandles } from 'double-stack';
 import { getMachineId } from 'appcd-machine-id';
-import { i18n } from 'appcd-response';
+import Response, { codes, i18n } from 'appcd-response';
 import { isDir, isFile } from 'appcd-fs';
 import { load as loadConfig } from 'appcd-config';
 
@@ -206,15 +206,42 @@ export default class Server extends HookEmitter {
 		}
 		return this._configDispatcher = new Dispatcher()
 			.register('/:key*', ctx => {
-				/*
-					/appcd/config - returns entire config
-					/appcd/config/get
-				*/
+				const { data } = ctx.payload;
+				let { key } = ctx.params;
 
-				// TODO: how do we handle deletes? there's no "method"
-				console.log(ctx.params.key);
-				console.log(ctx.payload.data);
-				const filter = ctx.params.key && ctx.params.key.replace(/^\//, '').split(/\.|\//).join('.') || undefined;
+				console.log(key);
+				console.log(data);
+
+				if (data && data.action) {
+					if (data.key && typeof data.key !== 'string') {
+						throw new TypeError('Expected the key to be a non-empty string');
+					}
+
+					switch (data.action) {
+						case 'get':
+							key = data.key || key;
+							break;
+
+						case 'set':
+							this.config.set(data.key, data.value);
+							ctx.response = new Response(codes.OK);
+							return;
+
+						case 'delete':
+							if (this.config.delete(data.key)) {
+								ctx.response = new Response(codes.OK);
+							} else {
+								ctx.response = new Response(codes.NOT_FOUND);
+							}
+							return;
+
+						default:
+							throw new Error(`Invalid action: ${data.action}`);
+					}
+				}
+
+				const filter = key && key.replace(/^\//, '').split(/\.|\//).join('.') || undefined;
+				console.log(filter);
 				const node = this.config.get(filter);
 				if (!node) {
 					throw new Error(`Invalid request: ${ctx.path}`);
