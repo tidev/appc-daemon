@@ -164,25 +164,13 @@ export default class Server extends HookEmitter {
 		// start the status monitor
 		this.statusMonitor.start();
 
-		// init the dispatcher
+		// init the appcd dispatcher
 		const appcdDispatcher = new Dispatcher()
-			.register('/config/:key*', ctx => {
-				const filter = ctx.params.key && ctx.params.key.replace(/^\//, '').split(/\.|\//).join('.') || undefined;
-				const node = this.config.get(filter);
-				if (!node) {
-					throw new Error(`Invalid request: ${ctx.path}`);
-				}
-				ctx.response = node;
-			})
-
+			.register('/config', this.configDispatcher)
 			.register('/fswatch', this.fswatchManager.dispatcher)
-
 			.register('/logcat', ctx => logcat(ctx.response))
-
 			.register('/plugin', this.pluginManager.dispatcher)
-
 			.register('/status', this.statusMonitor.dispatcher)
-
 			.register('/subprocess', this.subprocessManager.dispatcher);
 
 		Dispatcher.register('/appcd', appcdDispatcher);
@@ -205,6 +193,34 @@ export default class Server extends HookEmitter {
 			// TODO: init telemetry
 			.then(() => this.webserver.listen())
 			.then(() => this.emit('appcd.start'));
+	}
+
+	/**
+	 * Creates and returns the config dispatcher.
+	 *
+	 * @returns {Dispatcher}
+	 */
+	get configDispatcher() {
+		if (this._configDispatcher) {
+			return this._configDispatcher;
+		}
+		return this._configDispatcher = new Dispatcher()
+			.register('/:key*', ctx => {
+				/*
+					/appcd/config - returns entire config
+					/appcd/config/get
+				*/
+
+				// TODO: how do we handle deletes? there's no "method"
+				console.log(ctx.params.key);
+				console.log(ctx.payload.data);
+				const filter = ctx.params.key && ctx.params.key.replace(/^\//, '').split(/\.|\//).join('.') || undefined;
+				const node = this.config.get(filter);
+				if (!node) {
+					throw new Error(`Invalid request: ${ctx.path}`);
+				}
+				ctx.response = node;
+			});
 	}
 
 	/**

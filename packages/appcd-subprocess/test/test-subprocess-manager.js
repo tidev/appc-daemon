@@ -278,6 +278,179 @@ describe('SubprocessManager', () => {
 		});
 	});
 
+	describe('ipc', () => {
+		it('should spawn a command with ipc', done => {
+			const sm = new SubprocessManager();
+			sm.dispatcher
+				.call('/spawn', {
+					data: {
+						command: process.execPath,
+						args: [ path.join(__dirname, 'fixtures', 'ipc.js') ],
+						ipc: true
+					}
+				})
+				.then(result => {
+					let counter = 0;
+
+					function finish(e) {
+						result.proc.kill();
+						done(e);
+					}
+
+					result.proc.on('message', msg => {
+						try {
+							expect(msg).to.equal('bar!');
+							finish();
+						} catch (e) {
+							finish(e);
+						}
+					});
+
+					result.response
+						.on('data', data => {
+							try {
+								switch (++counter) {
+									case 1:
+										expect(data.type).to.equal('spawn');
+										break;
+
+									case 2:
+										expect(data.type).to.equal('stdout');
+										expect(data.output).to.equal('hello from an ipc-enabled subprocess!\n');
+										result.proc.send('foo!');
+										break;
+
+									case 3:
+										expect(data.type).to.equal('stdout');
+										expect(data.output).to.equal('got ipc message!\n');
+										break;
+
+									case 4:
+										expect(data.type).to.equal('stdout');
+										expect(data.output).to.equal('foo!\n');
+								}
+							} catch (e) {
+								finish(e);
+							}
+						});
+				})
+				.catch(done);
+		});
+
+		it('should throw error if sending without ipc', done => {
+			const sm = new SubprocessManager();
+			sm.dispatcher
+				.call('/spawn', {
+					data: {
+						command: process.execPath,
+						args: [ path.join(__dirname, 'fixtures', 'node-version.js') ]
+					}
+				})
+				.then(result => {
+					expect(() => {
+						result.proc.send('test!');
+					}).to.throw(Error, 'IPC not enabled for this process');
+
+					done();
+				})
+				.catch(done);
+		});
+
+		it('should spawn a command with ipc and ignore stdout/stderr', done => {
+			const sm = new SubprocessManager();
+			sm.dispatcher
+				.call('/spawn', {
+					data: {
+						command: process.execPath,
+						args: [ path.join(__dirname, 'fixtures', 'ipc.js') ],
+						options: {
+							stdio: 'ignore'
+						},
+						ipc: true
+					}
+				})
+				.then(result => {
+					let counter = 0;
+
+					function finish(e) {
+						result.proc.kill();
+						done(e);
+					}
+
+					result.proc.on('message', msg => {
+						try {
+							expect(msg).to.equal('bar!');
+							finish();
+						} catch (e) {
+							finish(e);
+						}
+					});
+
+					result.response
+						.on('data', data => {
+							try {
+								switch (++counter) {
+									case 1:
+										expect(data.type).to.equal('spawn');
+										result.proc.send('foo!');
+										break;
+								}
+							} catch (e) {
+								finish(e);
+							}
+						});
+				})
+				.catch(done);
+		});
+
+		it('should spawn a command with ipc and custom stdio', done => {
+			const sm = new SubprocessManager();
+			sm.dispatcher
+				.call('/spawn', {
+					data: {
+						command: process.execPath,
+						args: [ path.join(__dirname, 'fixtures', 'ipc.js') ],
+						options: {
+							stdio: [ 'ignore', 'pipe' ]
+						},
+						ipc: true
+					}
+				})
+				.then(result => {
+					let counter = 0;
+
+					function finish(e) {
+						result.proc.kill();
+						done(e);
+					}
+
+					result.proc.on('message', msg => {
+						try {
+							expect(msg).to.equal('bar!');
+							finish();
+						} catch (e) {
+							finish(e);
+						}
+					});
+
+					result.response
+						.on('data', data => {
+							try {
+								switch (++counter) {
+									case 1:
+										expect(data.type).to.equal('spawn');
+										result.proc.send('foo!');
+										break;
+								}
+							} catch (e) {
+								finish(e);
+							}
+						});
+				})
+				.catch(done);
+		});
+	});
+
 	describe('Spawn Node', () => {
 		beforeEach(() => {
 			Dispatcher.root.routes = [];
