@@ -3,4 +3,3 @@ if (!Error.prepareStackTrace) {
 }
 
 export { default } from './plugin-manager';
-export { Plugin } from './plugin';

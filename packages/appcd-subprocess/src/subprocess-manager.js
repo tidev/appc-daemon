@@ -13,7 +13,7 @@ import { spawn } from './subprocess';
 const { __, __n } = i18n();
 const { codes } = SubprocessError;
 
-const logger = snooplogg.config({ theme: 'detailed' })('appcd:subprocess:manager');
+const log = snooplogg.config({ theme: 'detailed' })('appcd:subprocess:manager').log;
 const { highlight, note } = snooplogg.styles;
 
 /**
@@ -47,11 +47,25 @@ export default class SubprocessManager extends EventEmitter {
 			})
 
 			.register('/spawn', ctx => new Promise((resolve, reject) => {
-				const { data, source } = ctx.payload;
-
 				// if the source is http, then block the spawn
-				if (source === 'http') {
+				if (ctx.payload.source === 'http') {
 					throw new SubprocessError(codes.FORBIDDEN, 'Spawn not permitted');
+				}
+
+				const data = ctx.payload.data || {};
+				data.options || (data.options = {});
+
+				const { ipc } = data;
+
+				if (ipc) {
+					const { stdio } = data && data.options;
+					if (typeof stdio === 'string') {
+						data.options.stdio = [ stdio, stdio, stdio, 'ipc' ];
+					} else if (!Array.isArray(stdio)) {
+						data.options.stdio = [ 'pipe', 'pipe', 'pipe', 'ipc' ];
+					} else if (stdio.indexOf('ipc') === -1) {
+						data.options.stdio = [ 'ignore', 'ignore', 'ignore', 'ipc' ].map((s, i) => stdio[i] || s);
+					}
 				}
 
 				// if we are on Linux, it's possible to see an ETXTBSY, so we wait 100ms then try
@@ -66,7 +80,9 @@ export default class SubprocessManager extends EventEmitter {
 						})
 						.catch(err => {
 							if (err.code === 'ETXTBSY' && tries) {
-								logger.log('Spawn threw ETXTBSY, retrying...');
+								// this error happens on Linux when the executable was just written
+								// and is not ready to be called
+								log('Spawn threw ETXTBSY, retrying...');
 								return new Promise((resolve, reject) => {
 									setTimeout(() => trySpawn().then(resolve, reject), 100);
 								});
@@ -87,7 +103,7 @@ export default class SubprocessManager extends EventEmitter {
 						}
 
 						// create the subprocess descriptor
-						const proc = Object.assign(new EventEmitter, {
+						const proc = ctx.proc = Object.assign(new EventEmitter, {
 							pid,
 							command,
 							args,
@@ -95,46 +111,60 @@ export default class SubprocessManager extends EventEmitter {
 							startTime: new Date
 						});
 
-						Object.defineProperty(proc, 'kill', {
-							value: forceTimeout => new Promise((resolve, reject) => {
-								let timer;
+						Object.defineProperties(proc, {
+							kill: {
+								value: forceTimeout => new Promise((resolve, reject) => {
+									let timer;
 
-								// listen for a graceful exit
-								proc.once('exit', code => {
-									clearTimeout(timer);
-									resolve();
-								});
-
-								this.kill(pid, 'SIGTERM')
-									.then(code => {
-										// only need to resolve if the process is not running,
-										// otherwise the `once('exit')` call above will resolve it
-										if (code === codes.PROCESS_NOT_FOUND) {
-											clearTimeout(timer);
-											resolve();
-										}
-									})
-									.catch(err => {
-										// this error callback will probably never get called since
-										// `kill()` will only reject if `process.kill()` fails and
-										// since we gracefully handle ESRCH and never pass in an
-										// invalid signal, it would take a catostraphic exception
-										// for this callback to fire
+									// listen for a graceful exit
+									proc.on('exit', code => {
 										clearTimeout(timer);
-										reject(err);
+										resolve();
 									});
 
-								// if we have a `forceTimeout`, wait, then kill the process with a
-								// sigkill
-								if (forceTimeout && (forceTimeout = Math.max(forceTimeout, 0))) {
-									timer = setTimeout(() => {
-										this.kill(pid, 'SIGKILL')
-											.then(resolve)
-											.catch(reject);
-									}, forceTimeout);
+									this.kill(pid, 'SIGTERM')
+										.then(code => {
+											// only need to resolve if the process is not running,
+											// otherwise the `once('exit')` call above will resolve it
+											if (code === codes.PROCESS_NOT_FOUND) {
+												clearTimeout(timer);
+												resolve();
+											}
+										})
+										.catch(err => {
+											// this error callback will probably never get called since
+											// `kill()` will only reject if `process.kill()` fails and
+											// since we gracefully handle ESRCH and never pass in an
+											// invalid signal, it would take a catostraphic exception
+											// for this callback to fire
+											clearTimeout(timer);
+											reject(err);
+										});
+
+									// if we have a `forceTimeout`, wait, then kill the process with a
+									// sigkill
+									if (forceTimeout && (forceTimeout = Math.max(forceTimeout, 0))) {
+										timer = setTimeout(() => {
+											this.kill(pid, 'SIGKILL')
+												.then(resolve)
+												.catch(reject);
+										}, forceTimeout);
+									}
+								})
+							},
+
+							send: {
+								value: value => {
+									if (!ipc) {
+										throw new Error('IPC not enabled for this process');
+									}
+									child.send(value);
 								}
-							})
+							}
 						});
+
+						// wire up ipc
+						child.on('message', msg => proc.emit('message', msg));
 
 						// add it to our list of subprocesses
 						// note: this will kick off an 'change' event and update any status listeners
@@ -143,7 +173,7 @@ export default class SubprocessManager extends EventEmitter {
 						let writable = true;
 						ctx.response.on('end', () => { writable = false; });
 
-						logger.log('Spawned %s', highlight(pid));
+						log('Spawned %s', highlight(pid));
 						ctx.response.write({ type: 'spawn', pid });
 
 						if (child.stdout) {
@@ -163,7 +193,7 @@ export default class SubprocessManager extends EventEmitter {
 						}
 
 						child.once('close', code => {
-							logger.log('%s exited (code %s)', highlight(pid), code);
+							log('%s exited (code %s)', highlight(pid), code);
 
 							for (let i = 0, l = subprocesses.length; i < l; i++) {
 								if (subprocesses[i].pid === pid) {
@@ -233,12 +263,12 @@ export default class SubprocessManager extends EventEmitter {
 				let result = codes.OK;
 
 				try {
-					logger.log('Killing subprocess %s with %s', highlight(pid), signal);
+					log('Killing subprocess %s with %s', highlight(pid), signal);
 					process.kill(pid, signal);
 				} catch (e) {
 					if (e.code === 'ESRCH') {
 						// already dead
-						logger.log('Subprocess %s appears to already be dead', highlight(pid));
+						log('Subprocess %s appears to already be dead', highlight(pid));
 						result = codes.PROCESS_NOT_FOUND;
 					} else {
 						return reject(new SubprocessError(e));
@@ -247,16 +277,16 @@ export default class SubprocessManager extends EventEmitter {
 
 				if (err) {
 					// getting ps-tree to fail isn't easy, but just in case...
-					logger.log('Error getting subprocess %s children: %s', highlight(pid), err.toString());
+					log('Error getting subprocess %s children: %s', highlight(pid), err.toString());
 				} else if (children.length) {
-					logger.log('Killing subprocess %s children with SIGTERM: %s', highlight(pid), children.map(c => highlight(c.PID)).join(', '));
+					log('Killing subprocess %s children with SIGTERM: %s', highlight(pid), children.map(c => highlight(c.PID)).join(', '));
 					for (const child of children) {
 						try {
 							process.kill(child.PID, signal);
 						} catch (e) {}
 					}
 				} else {
-					logger.log('Subprocess %s did not have any children', highlight(pid));
+					log('Subprocess %s did not have any children', highlight(pid));
 				}
 
 				resolve(result);
@@ -273,7 +303,7 @@ export default class SubprocessManager extends EventEmitter {
 	 * @access public
 	 */
 	shutdown(forceTimeout = 2000) {
-		logger.log(__n(this.subprocesses.length, 'Shutting down %d subprocess', 'Shutting down %d subprocesses'));
+		log(__n(this.subprocesses.length, 'Shutting down %d subprocess', 'Shutting down %d subprocesses'));
 		return Promise
 			.all(this.subprocesses.map(subprocess => subprocess.kill(forceTimeout)))
 			.then(() => {
