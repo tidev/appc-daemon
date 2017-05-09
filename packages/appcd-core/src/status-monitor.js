@@ -102,7 +102,6 @@ export default class StatusMonitor {
 		publish(node);
 
 		logger.debug('Starting gawk watch: %s', highlight(filter ? filter.join('/') : 'no filter'));
-
 		gawk.watch(this.status, filter, publish);
 	}
 

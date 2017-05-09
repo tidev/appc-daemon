@@ -4,6 +4,7 @@ import snooplogg from 'snooplogg';
 import { codes } from 'appcd-response';
 import { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
 import { EventEmitter } from 'events';
+import { expandPath } from 'appcd-path';
 import { FSWatcher, renderTree, rootEmitter, status, tree } from './fswatcher';
 
 const log = snooplogg.config({ theme: 'detailed' })('appcd:fswatcher:manager').log;
@@ -35,7 +36,7 @@ export default class FSWatchManager extends EventEmitter {
 	 */
 	getTopic(ctx) {
 		const { topic, data } = ctx.payload;
-		return topic || (data && data.path && path.resolve(data.path));
+		return topic || (data && data.path && expandPath(data.path));
 	}
 
 	/**
@@ -53,7 +54,8 @@ export default class FSWatchManager extends EventEmitter {
 		}
 
 		log('Starting FSWatcher: %s', highlight(path));
-		this.watchers[path] = new FSWatcher(path, { recursive: !!ctx.payload.recursive })
+		const { data } = ctx.payload;
+		this.watchers[path] = new FSWatcher(path, { recursive: data && !!data.recursive })
 			.on('change', publish);
 		log(renderTree());
 	}

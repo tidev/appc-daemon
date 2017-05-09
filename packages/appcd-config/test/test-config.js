@@ -238,9 +238,11 @@ describe('Config', () => {
 			expect(() => {
 				config.set();
 			}).to.throw(TypeError, 'Expected key to be a string');
+
 			expect(() => {
 				config.set(123);
 			}).to.throw(TypeError, 'Expected key to be a string');
+
 			expect(() => {
 				config.set([]);
 			}).to.throw(TypeError, 'Expected key to be a string');
@@ -275,6 +277,32 @@ describe('Config', () => {
 			config.set('foo', 'bar');
 			expect(fired).to.be.true;
 		});
+
+		it('should error if trying to set read-only property', () => {
+			const config = new Config();
+			config.set('foo', 'bar');
+			expect(config.values).to.deep.equal({ foo: 'bar' });
+			config.meta.set('foo', { readonly: true });
+
+			expect(() => {
+				config.set('foo', 'baz');
+			}).to.throw(Error, 'Not allowed to set read-only property');
+
+			expect(config.values).to.deep.equal({ foo: 'bar' });
+		});
+
+		it('should error if trying to set object with nested read-only property', () => {
+			const config = new Config();
+			config.set('foo', { bar: 'baz' });
+			expect(config.values).to.deep.equal({ foo: { bar: 'baz' } });
+			config.meta.set('foo.bar', { readonly: true });
+
+			expect(() => {
+				config.set('foo', 'wiz');
+			}).to.throw(Error, 'Not allowed to set property with nested read-only property');
+
+			expect(config.values).to.deep.equal({ foo: { bar: 'baz' } });
+		});
 	});
 
 	describe('delete()', () => {
@@ -302,6 +330,48 @@ describe('Config', () => {
 		it('should return false if deleting non-existent key', () => {
 			const config = new Config();
 			expect(config.delete('foo')).to.be.false;
+		});
+
+		it('should error if calling delete without a key', () => {
+			const config = new Config();
+
+			expect(() => {
+				config.delete();
+			}).to.throw(Error, 'Expected key to be a string');
+
+			expect(() => {
+				config.delete('');
+			}).to.throw(Error, 'Expected key to be a string');
+
+			expect(() => {
+				config.delete(null);
+			}).to.throw(Error, 'Expected key to be a string');
+		});
+
+		it('should error if trying to delete read-only property', () => {
+			const config = new Config();
+			config.set('foo', 'bar');
+			expect(config.values).to.deep.equal({ foo: 'bar' });
+			config.meta.set('foo', { readonly: true });
+
+			expect(() => {
+				config.delete('foo');
+			}).to.throw(Error, 'Not allowed to delete read-only property');
+
+			expect(config.values).to.deep.equal({ foo: 'bar' });
+		});
+
+		it('should error if trying to delete object with nested read-only property', () => {
+			const config = new Config();
+			config.set('foo', { bar: 'baz' });
+			expect(config.values).to.deep.equal({ foo: { bar: 'baz' } });
+			config.meta.set('foo.bar', { readonly: true });
+
+			expect(() => {
+				config.delete('foo');
+			}).to.throw(Error, 'Not allowed to delete property with nested read-only property');
+
+			expect(config.values).to.deep.equal({ foo: { bar: 'baz' } });
 		});
 	});
 
@@ -410,7 +480,7 @@ describe('Config', () => {
 			const config = new Config({ configFile: path.join(__dirname, 'fixtures', 'good-meta.js') });
 			expect(() => {
 				config.set('id', 'foo');
-			}).to.throw(Error, 'Config option "id" is readonly');
+			}).to.throw(Error, 'Not allowed to set read-only property');
 		});
 	});
 });

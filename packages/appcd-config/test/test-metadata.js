@@ -298,7 +298,7 @@ describe('Metadata', () => {
 				const md = new Metadata();
 				md.load(path.join(__dirname, 'fixtures', 'good.json.metadata'));
 				expect(md.validate('id', 'hello')).to.be.false;
-			}).to.throw(Error, 'Config option "id" is readonly');
+			}).to.throw(Error, 'Config option "id" is read-only');
 		});
 
 		it('should validate array of union type', () => {
@@ -413,7 +413,7 @@ describe('Metadata', () => {
 			});
 			expect(() => {
 				md.validate('foo', 'baz');
-			}).to.throw(Error, 'Config option "foo" is readonly');
+			}).to.throw(Error, 'Config option "foo" is read-only');
 			expect(() => {
 				md.validate('foo', 'baz', { overrideReadonly: true });
 			}).to.not.throw;

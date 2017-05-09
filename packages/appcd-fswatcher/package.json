@@ -28,6 +28,7 @@
   "appcdDependencies": [
     "appcd-dispatcher",
     "appcd-gulp",
+    "appcd-path",
     "appcd-response",
     "appcd-util"
   ],
