@@ -45,7 +45,7 @@ timestamps {
             sh 'node ./node_modules/.bin/gulp coverage'
           } finally {
             // record results even if tests/coverage 'fails'
-            junit '**/junit.xml'
+            junit 'bootstrap/junit.xml,packages/*/junit.xml'
             step([$class: 'CoberturaPublisher', autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: 'coverage/cobertura-coverage.xml', failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 0, onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false])
           }
         }
