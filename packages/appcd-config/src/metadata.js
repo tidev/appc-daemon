@@ -73,12 +73,12 @@ export default class Metadata {
 				}
 
 				this._map.set(key, {
-					desc: entry.description || entry.desc || '',
+					desc:       entry.description || entry.desc || '',
 					deprecated: entry.deprecated || false,
-					nullable: entry.nullable !== undefined ? entry.nullable !== false : result ? result.nullable : true,
-					readonly: entry.readonly || false,
-					type: result && result.type || type,
-					validate: result && result.validate || (it => true)
+					nullable:   entry.nullable !== undefined ? entry.nullable !== false : result ? result.nullable : true,
+					readonly:   entry.readonly || false,
+					type:       result && result.type || type,
+					validate:   result && result.validate || (it => true)
 				});
 			}
 		} catch (e) {
@@ -257,7 +257,9 @@ export default class Metadata {
 		}
 
 		if (!opts.overrideReadonly && meta.readonly) {
-			throw new Error(`Config option "${key}" is read-only`);
+			throw new Error(opts.action
+				? `Not allowed to ${opts.action} read-only property`
+				: `Config option "${key}" is read-only`);
 		}
 
 		if ((meta.nullable && value === null) || meta.validate(value)) {

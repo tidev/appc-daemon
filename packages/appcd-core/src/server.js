@@ -1,3 +1,4 @@
+import ConfigService from './config-service';
 import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs-extra';
 import FSWatchManager from 'appcd-fswatcher';
@@ -14,7 +15,7 @@ import WebSocketSession from './websocket-session';
 import { expandPath } from 'appcd-path';
 import { getActiveHandles } from 'double-stack';
 import { getMachineId } from 'appcd-machine-id';
-import Response, { codes, i18n } from 'appcd-response';
+import { i18n } from 'appcd-response';
 import { isDir, isFile } from 'appcd-fs';
 import { load as loadConfig } from 'appcd-config';
 
@@ -166,7 +167,7 @@ export default class Server extends HookEmitter {
 
 		// init the appcd dispatcher
 		const appcdDispatcher = new Dispatcher()
-			.register('/config', this.configDispatcher)
+			.register('/config', new ConfigService(this.config).dispatcher)
 			.register('/fswatch', this.fswatchManager.dispatcher)
 			.register('/logcat', ctx => logcat(ctx.response))
 			.register('/plugin', this.pluginManager.dispatcher)
@@ -193,61 +194,6 @@ export default class Server extends HookEmitter {
 			// TODO: init telemetry
 			.then(() => this.webserver.listen())
 			.then(() => this.emit('appcd.start'));
-	}
-
-	/**
-	 * Creates and returns the config dispatcher.
-	 *
-	 * @returns {Dispatcher}
-	 */
-	get configDispatcher() {
-		if (this._configDispatcher) {
-			return this._configDispatcher;
-		}
-		return this._configDispatcher = new Dispatcher()
-			.register('/:key*', ctx => {
-				const { data } = ctx.payload;
-				let { key } = ctx.params;
-
-				console.log(key);
-				console.log(data);
-
-				if (data && data.action) {
-					if (data.key && typeof data.key !== 'string') {
-						throw new TypeError('Expected the key to be a non-empty string');
-					}
-
-					switch (data.action) {
-						case 'get':
-							key = data.key || key;
-							break;
-
-						case 'set':
-							this.config.set(data.key, data.value);
-							ctx.response = new Response(codes.OK);
-							return;
-
-						case 'delete':
-							if (this.config.delete(data.key)) {
-								ctx.response = new Response(codes.OK);
-							} else {
-								ctx.response = new Response(codes.NOT_FOUND);
-							}
-							return;
-
-						default:
-							throw new Error(`Invalid action: ${data.action}`);
-					}
-				}
-
-				const filter = key && key.replace(/^\//, '').split(/\.|\//).join('.') || undefined;
-				console.log(filter);
-				const node = this.config.get(filter);
-				if (!node) {
-					throw new Error(`Invalid request: ${ctx.path}`);
-				}
-				ctx.response = node;
-			});
 	}
 
 	/**

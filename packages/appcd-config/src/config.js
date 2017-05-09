@@ -223,17 +223,18 @@ export default class Config extends EventEmitter {
 		}
 
 		if (typeof key === 'string') {
-			if (this.meta) {
-				this.meta.validate(key, value);
-			}
+			this.meta.validate(key, value, { action: 'set' });
 
-			key.split('.').reduce((obj, key, i, arr) => {
+			key.split('.').reduce((obj, part, i, arr) => {
 				if (i + 1 === arr.length) {
-					obj[key] = value;
-				} else if (typeof obj[key] !== 'object' || Array.isArray(obj[key])) {
-					obj[key] = {};
+					// check if any descendant is read-only
+					this.hasReadonlyDescendant(obj[part], key, 'set');
+					obj[part] = value;
+				} else if (typeof obj[part] !== 'object' || Array.isArray(obj[part])) {
+					this.hasReadonlyDescendant(obj[part], key, 'set');
+					obj[part] = {};
 				}
-				return obj[key];
+				return obj[part];
 			}, this.values);
 		} else {
 			// key is an object object
@@ -241,7 +242,6 @@ export default class Config extends EventEmitter {
 		}
 
 		this.emit('change');
-
 		return this;
 	}
 
@@ -253,22 +253,55 @@ export default class Config extends EventEmitter {
 	 * @access public
 	 */
 	delete(key) {
-		return (function walk(keys, obj) {
-			const key = keys.shift();
-			if (keys.length) {
-				if (obj.hasOwnProperty(key)) {
-					const result = walk(keys, obj[key]);
-					if (result && Object.keys(obj[key]).length === 0) {
-						delete obj[key];
+		const _t = this;
+		const m = this.meta.get(key);
+		if (m && m.readonly) {
+			throw Error('Not allowed to delete read-only property');
+		}
+
+		return (function walk(parts, obj) {
+			const part = parts.shift();
+			if (parts.length) {
+				if (obj.hasOwnProperty(part)) {
+					const result = walk(parts, obj[part]);
+					if (result && Object.keys(obj[part]).length === 0) {
+						delete obj[part];
 					}
 					return result;
 				}
-			} else if (obj[key]) {
-				delete obj[key];
+			} else if (obj[part]) {
+				// check if any descendant is read-only
+				_t.hasReadonlyDescendant(obj[part], key, 'delete');
+
+				delete obj[part];
+				_t.emit('change');
 				return true;
 			}
 			return false;
 		}(key.split('.'), this.values));
+	}
+
+	/**
+	 * Determines if an object contains any properties that are read-only. If it does, then an error
+	 * is thrown.
+	 *
+	 * @param {Object} obj - The object to scan.
+	 * @param {String} key - The current key to use when looking up the object's metadata.
+	 * @param {String} action - The action to use in the exception message. This is either `set` or
+	 * `delete`.
+	 * @access private
+	 */
+	hasReadonlyDescendant(obj, key, action) {
+		const m = this.meta.get(key);
+		if (m && m.readonly) {
+			throw Error(`Not allowed to ${action} property with nested read-only property`);
+		}
+
+		if (obj && typeof obj === 'object') {
+			for (const k of Object.keys(obj)) {
+				this.hasReadonlyDescendant(obj[k], `${key}.${k}`, action);
+			}
+		}
 	}
 
 	/**
