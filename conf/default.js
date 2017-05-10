@@ -37,6 +37,7 @@ module.exports = {
 			 * or the string `auto`, which will automatically select a sensible
 			 * size based on the system architecture and installed memory.
 			 * @type {Number|String}
+			 * @readonly
 			 */
 			memory: 'auto'
 		}
