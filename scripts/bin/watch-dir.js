@@ -27,7 +27,8 @@ const ws = new WebSocket('ws://127.0.0.1:1732', {
 		path: '/appcd/fswatch',
 		id: '1',
 		data: {
-			path: process.argv[2] || process.cwd()
+			path: process.argv[2] || process.cwd(),
+			recursive: true
 		},
 		type: 'subscribe'
 	})));
