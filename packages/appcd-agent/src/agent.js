@@ -21,11 +21,34 @@ export default class Agent extends EventEmitter {
 
 		super();
 
-		this.pollInterval = opts.pollInterval || 1000;
+		/**
+		 * The number of milliseconds to wait before polling.
+		 * @type {Number}
+		 */
+		this.pollInterval = Math.max(~~opts.pollInterval || 1000, 1);
 
+		/**
+		 * A map of names to collections.
+		 * @type {Object}
+		 */
 		this.buckets = {};
 
-		this.collectors = new Set;
+		/**
+		 * A list of functions to call when polling for stats.
+		 * @type {Array}
+		 */
+		this.collectors = [];
+	}
+
+	/**
+	 * Fetches the stats for the given bucket name.
+	 *
+	 * @param {String} name - The bucket name.
+	 * @returns {Object}
+	 * @access public
+	 */
+	getStats(name) {
+		return this.buckets[name] ? this.buckets[name].stats : null;
 	}
 
 	/**
@@ -67,7 +90,7 @@ export default class Agent extends EventEmitter {
 		if (!fn || typeof fn !== 'function') {
 			throw new TypeError('Expected collector to be a function');
 		}
-		this.collectors.add(fn);
+		this.collectors.push(fn);
 		return this;
 	}
 
@@ -81,7 +104,13 @@ export default class Agent extends EventEmitter {
 		if (!fn || typeof fn !== 'function') {
 			throw new TypeError('Expected collector to be a function');
 		}
-		this.collectors.delete(fn);
+
+		for (let i = 0; i < this.collectors.length; i++) {
+			if (this.collectors[i] === fn) {
+				this.collectors.splice(i--, 1);
+			}
+		}
+
 		return this;
 	}
 
@@ -95,14 +124,14 @@ export default class Agent extends EventEmitter {
 		const hrtime = process.hrtime(this.initHrtime);
 		const mem    = process.memoryUsage();
 		const stats = {
-			cpu:       ((cpu.user + cpu.system) / (hrtime[0] * 1000000 + hrtime[1] / 1000) * 100).toFixed(1),
+			cpu:       (cpu.user + cpu.system) / (hrtime[0] * 1000000 + hrtime[1] / 1000) * 100,
 			freemem:   os.freemem(),
 			heapTotal: mem.heapTotal,
 			heapUsed:  mem.heapUsed,
 			rss:       mem.rss
 		};
 
-		Process
+		Promise
 			.all(this.collectors.map(fn => Promise.resolve()
 				.then(() => fn())
 				.then(result => {
@@ -113,16 +142,16 @@ export default class Agent extends EventEmitter {
 			))
 			.then(() => {
 				// make sure we have collections for all the data we want to store
-				for (const key of Object.keys(stats)) {
-					if (!this.buckets[key]) {
-						this.buckets[key] = new Collection(60 * 15); // 15 minutes worth of data
+				for (const name of Object.keys(stats)) {
+					if (!this.buckets[name]) {
+						this.buckets[name] = new Collection(60 * 15); // 15 minutes worth of data
 					}
 				}
 
 				// add the values for each stat to its bucket, or set zero if we don't have a value
 				// for this poll
-				for (const key of Object.keys(this.buckets)) {
-					this.buckets[key].add(stats[key] || 0);
+				for (const name of Object.keys(this.buckets)) {
+					this.buckets[name].add(stats[name] || 0);
 				}
 
 				// add in the timestamp
@@ -130,6 +159,7 @@ export default class Agent extends EventEmitter {
 
 				// emit the stats!
 				this.emit('stats', stats);
-			});
+			})
+			.catch(err => this.emit('error', err));
 	}
 }

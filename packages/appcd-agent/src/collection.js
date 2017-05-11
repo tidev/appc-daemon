@@ -12,9 +12,9 @@ export default class Collection {
 	 */
 	constructor(size) {
 		this.values = new NanoBuffer(size);
-		this.min = 0;
-		this.max = 0;
-		this.avg = 0;
+		this.min = null;
+		this.max = null;
+		this.avg = null;
 	}
 
 	/**
@@ -29,24 +29,43 @@ export default class Collection {
 			throw TypeError('Expected value to be a number');
 		}
 
-		let avg = 0;
-
 		this.values.push(value);
 
-		for (const counter of this.values) {
-			avg += counter;
+		if (this.values.size === 1) {
+			this.min = this.max = this.avg = value;
+		} else {
+			let total = 0;
 
-			if (counter < this.min) {
-				this.min = counter;
+			for (const counter of this.values) {
+				total += counter;
+
+				if (counter < this.min) {
+					this.min = counter;
+				}
+
+				if (counter > this.max) {
+					this.max = counter;
+				}
 			}
 
-			if (counter > this.max) {
-				this.min = counter;
-			}
+			this.avg = total / this.values.size;
 		}
 
-		this.avg = avg / this.values.size;
-
 		return this;
+	}
+
+	/**
+	 * ?
+	 *
+	 * @returns {Object}
+	 * @access public
+	 */
+	get stats() {
+		return {
+			values: Array.from(this.values),
+			min: this.min,
+			max: this.max,
+			avg: this.avg
+		};
 	}
 }
