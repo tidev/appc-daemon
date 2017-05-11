@@ -1,9 +1,10 @@
+import Agent from 'appcd-agent';
 import gawk from 'gawk';
 import os from 'os';
-import { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
 import snooplogg from './logger';
 
 import { codes } from 'appcd-response';
+import { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
 
 const logger = snooplogg('appcd:core:status');
 const { alert, highlight, note, ok } = snooplogg.styles;
@@ -68,8 +69,37 @@ export default class StatusMonitor {
 			}
 		});
 
-		// do initial refresh to populate dynamic bits
-		this.refresh();
+		/**
+		 * The latest stats from the agent.
+		 * @type {Object}
+		 */
+		this.stats = null;
+
+		/**
+		 * The Node.js process agent.
+		 * @type {Agent}
+		 */
+		this.agent = new Agent()
+			.on('stats', stats => {
+				this.stats = stats;
+
+				gawk.mergeDeep(this.status, {
+					memory: {
+						heapTotal: stats.heapTotal,
+						heapUsed:  stats.heapUsed,
+						rss:       stats.rss
+					},
+					uptime: process.uptime(),
+					system: {
+						loadavg: os.loadavg(),
+						memory: {
+							free:  stats.freemem,
+							total: os.totalmem()
+						}
+					}
+				});
+			})
+			.on('error', () => {}); // suppress uncaught exceptions
 	}
 
 	/**
@@ -155,9 +185,9 @@ export default class StatusMonitor {
 	 * @access public
 	 */
 	start() {
-		this.shutdown();
-		this.logTimer     = setInterval(this.log.bind(this), 2000);
-		this.refreshTimer = setInterval(this.refresh.bind(this), 1000);
+		clearTimeout(this.logTimer);
+		this.logTimer = setInterval(this.log.bind(this), 2000);
+		this.agent.start();
 		return this;
 	}
 
@@ -169,7 +199,7 @@ export default class StatusMonitor {
 	 */
 	shutdown() {
 		clearTimeout(this.logTimer);
-		clearTimeout(this.refreshTimer);
+		this.agent.stop();
 		return this;
 	}
 
@@ -179,9 +209,12 @@ export default class StatusMonitor {
 	 * @access private
 	 */
 	log() {
-		const cpu = this.currentCpu;
-		const hrtime = this.currentHrTime;
-		const currentCPUUsage = ((cpu.user + cpu.system) / (hrtime[0] * 1000000 + hrtime[1] / 1000) * 100).toFixed(1);
+		if (!this.stats) {
+			return;
+		}
+
+		const { cpu } = this.stats;
+		const currentCPUUsage = cpu.toFixed(1);
 
 		let cpuUsage = '';
 		if (currentCPUUsage && this.prevCPUUsage) {
@@ -238,27 +271,5 @@ export default class StatusMonitor {
 			`RSS: ${rssUsage}  ` +
 			`Uptime: ${note(`${(this.status.uptime / 60).toFixed(2)}m`)}`
 		);
-	}
-
-	/**
-	 * Refreshes dynamic status information.
-	 *
-	 * @access private
-	 */
-	refresh() {
-		this.currentCpu    = process.cpuUsage(this.initCpu);
-		this.currentHrTime = process.hrtime(this.initHrtime);
-
-		gawk.mergeDeep(this.status, {
-			memory: process.memoryUsage(),
-			uptime: process.uptime(),
-			system: {
-				loadavg: os.loadavg(),
-				memory: {
-					free:  os.freemem(),
-					total: os.totalmem()
-				}
-			}
-		});
 	}
 }

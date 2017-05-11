@@ -48,7 +48,7 @@ export default class Agent extends EventEmitter {
 	 * @access public
 	 */
 	getStats(name) {
-		return this.buckets[name] ? this.buckets[name].stats : null;
+		return this.buckets[name] ? this.buckets[name].collection.stats : null;
 	}
 
 	/**
@@ -61,10 +61,8 @@ export default class Agent extends EventEmitter {
 		this.initCpu = this.currentCpu = process.cpuUsage();
 		this.initHrtime = this.currentHrTime = process.hrtime();
 
-		this.poll();
-
 		clearTimeout(this.pollTimer);
-		this.pollTimer = setInterval(this.poll.bind(this), this.pollInterval);
+		this.poll();
 
 		return this;
 	}
@@ -141,17 +139,50 @@ export default class Agent extends EventEmitter {
 				})
 			))
 			.then(() => {
+				// figure out how long it's been since we started the last poll
+				const now = Date.now();
+				const delta = this.lastTimestamp ? (now - this.lastTimestamp) : 0;
+				this.lastTimestamp = now;
+
+				// schedule the next poll
+				const next = this.pollInterval - (delta % this.pollInterval);
+				this.pollTimer = setTimeout(this.poll.bind(this), next);
+
+				// figure out how many intervals we missed, we'll interpolate the values later
+				const missed = Math.floor((delta - this.pollInterval) / this.pollInterval) + 1;
+
 				// make sure we have collections for all the data we want to store
 				for (const name of Object.keys(stats)) {
 					if (!this.buckets[name]) {
-						this.buckets[name] = new Collection(60 * 15); // 15 minutes worth of data
+						this.buckets[name] = {
+							collection: new Collection(60 * 15), // 15 minutes worth of data
+							last:       null
+						};
 					}
 				}
 
 				// add the values for each stat to its bucket, or set zero if we don't have a value
 				// for this poll
 				for (const name of Object.keys(this.buckets)) {
-					this.buckets[name].add(stats[name] || 0);
+					if (stats.hasOwnProperty(name)) {
+						const value = stats[name];
+						const bucket = this.buckets[name];
+						let last = bucket.last || 0;
+
+						// if we missed any intervals, interpolate the values
+						// note that we don't emit stats for missed intervals
+						for (let i = 1; i < missed; i++) {
+							bucket.collection.add((value - last) * i / missed + last);
+						}
+
+						// add the value and set it as the last value
+						bucket.collection.add(value);
+						bucket.last = value;
+					} else {
+						// the bucket didn't receive a value so that probably means the collector
+						// was removed or the bucket is no longer monitored, so remove the bucket
+						delete this.buckets[name];
+					}
 				}
 
 				// add in the timestamp
