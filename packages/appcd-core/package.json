@@ -35,6 +35,7 @@
     "gulp": "^3.9.1"
   },
   "appcdDependencies": [
+    "appcd-agent",
     "appcd-config",
     "appcd-dispatcher",
     "appcd-fs",

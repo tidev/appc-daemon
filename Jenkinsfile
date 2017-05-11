@@ -24,7 +24,7 @@ timestamps {
 
     nodejs(nodeJSInstallationName: 'node 7.10.0') {
       ansiColor('xterm') {
-        stage('Build') {
+        stage('Install') {
           timeout(15) {
             // Install yarn if not installed
             if (sh(returnStatus: true, script: 'where yarn') != 0) {

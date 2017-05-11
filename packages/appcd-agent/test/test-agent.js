@@ -104,6 +104,7 @@ describe('agent', () => {
 							this.agent.removeCollector(collector);
 						} else {
 							expect(this.agent.collectors).to.have.lengthOf(0);
+							expect(stats).to.not.have.property('foo');
 							done();
 						}
 					} catch (e) {
@@ -140,6 +141,46 @@ describe('agent', () => {
 								max: 4,
 								avg: 2.5
 							});
+
+							done();
+						} catch (e) {
+							done(e);
+						}
+					}
+				})
+				.on('error', err => done(err))
+				.start();
+		});
+
+		it('should interpolate missing values', function (done) {
+			this.timeout(10000);
+			this.slow(8000);
+
+			let counter = 1;
+
+			this.agent
+				.addCollector(() => new Promise((resolve, reject) => {
+					setTimeout(() => {
+						resolve({
+							foo: counter++
+						});
+					}, counter === 1 ? 0 : 2500);
+				}))
+				.on('stats', stats => {
+					if (counter === 3) {
+						this.agent.stop();
+
+						try {
+							const fooStats = this.agent.getStats('foo');
+							expect(fooStats.min).to.equal(1);
+							expect(fooStats.max).to.equal(2);
+							expect(fooStats.avg).to.equal(1.5);
+
+							expect(fooStats.values).to.have.length(4);
+							expect(fooStats.values[0]).to.equal(1);
+							expect(Math.floor(fooStats.values[1] * 1e6)).to.equal(1333333);
+							expect(Math.floor(fooStats.values[2] * 1e6)).to.equal(1666666);
+							expect(fooStats.values[3]).to.equal(2);
 
 							done();
 						} catch (e) {
