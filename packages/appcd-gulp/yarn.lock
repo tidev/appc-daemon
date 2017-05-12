@@ -637,8 +637,8 @@ babylon@6.14.1:
   resolved "https://registry.yarnpkg.com/babylon/-/babylon-6.14.1.tgz#956275fab72753ad9b3435d7afe58f8bf0a29815"
 
 babylon@^6.11.0, babylon@^6.13.0, babylon@^6.15.0, babylon@^6.17.0, babylon@^6.7.0:
-  version "6.17.0"
-  resolved "https://registry.yarnpkg.com/babylon/-/babylon-6.17.0.tgz#37da948878488b9c4e3c4038893fa3314b3fc932"
+  version "6.17.1"
+  resolved "https://registry.yarnpkg.com/babylon/-/babylon-6.17.1.tgz#17f14fddf361b695981fe679385e4f1c01ebd86f"
 
 balanced-match@^0.4.1:
   version "0.4.2"
@@ -664,7 +664,7 @@ boom@2.x.x:
   dependencies:
     hoek "2.x.x"
 
-brace-expansion@^1.0.0:
+brace-expansion@^1.0.0, brace-expansion@^1.1.7:
   version "1.1.7"
   resolved "https://registry.yarnpkg.com/brace-expansion/-/brace-expansion-1.1.7.tgz#3effc3c50e000531fb720eaff80f0ae8ef23cf59"
   dependencies:
@@ -1012,9 +1012,15 @@ domelementtype@~1.1.1:
   version "1.1.3"
   resolved "https://registry.yarnpkg.com/domelementtype/-/domelementtype-1.1.3.tgz#bd28773e2642881aec51544924299c5cd822185b"
 
-domhandler@2.3, domhandler@^2.3.0:
+domhandler@2.3:
   version "2.3.0"
   resolved "https://registry.yarnpkg.com/domhandler/-/domhandler-2.3.0.tgz#2de59a0822d5027fabff6f032c2b25a2a8abe738"
+  dependencies:
+    domelementtype "1"
+
+domhandler@^2.3.0:
+  version "2.4.1"
+  resolved "https://registry.yarnpkg.com/domhandler/-/domhandler-2.4.1.tgz#892e47000a99be55bbf3774ffea0561d8879c259"
   dependencies:
     domelementtype "1"
 
@@ -1052,8 +1058,8 @@ error-ex@^1.2.0:
     is-arrayish "^0.2.1"
 
 es5-ext@^0.10.14, es5-ext@^0.10.9, es5-ext@~0.10.14:
-  version "0.10.15"
-  resolved "https://registry.yarnpkg.com/es5-ext/-/es5-ext-0.10.15.tgz#c330a5934c1ee21284a7c081a86e5fd937c91ea6"
+  version "0.10.16"
+  resolved "https://registry.yarnpkg.com/es5-ext/-/es5-ext-0.10.16.tgz#1ef1b04f3d09db6a5d630226d62202f2e425e45a"
   dependencies:
     es6-iterator "2"
     es6-symbol "~3.1"
@@ -1213,8 +1219,8 @@ eslint@^3.0.0:
     user-home "^2.0.0"
 
 espree@^3.4.0:
-  version "3.4.2"
-  resolved "https://registry.yarnpkg.com/espree/-/espree-3.4.2.tgz#38dbdedbedc95b8961a1fbf04734a8f6a9c8c592"
+  version "3.4.3"
+  resolved "https://registry.yarnpkg.com/espree/-/espree-3.4.3.tgz#2910b5ccd49ce893c2ffffaab4fd8b3a31b82374"
   dependencies:
     acorn "^5.0.1"
     acorn-jsx "^3.0.0"
@@ -1565,9 +1571,9 @@ gulp-debug@^3.1.0:
     through2 "^2.0.0"
     tildify "^1.1.2"
 
-gulp-esdoc@^0.4.0:
-  version "0.4.0"
-  resolved "https://registry.yarnpkg.com/gulp-esdoc/-/gulp-esdoc-0.4.0.tgz#6836601e658b621fe843a8cfcba782c56f4dd7e1"
+gulp-esdoc@^0.4.1:
+  version "0.4.1"
+  resolved "https://registry.yarnpkg.com/gulp-esdoc/-/gulp-esdoc-0.4.1.tgz#36269e5fcffef0d20fa6baa08de97f90009c3243"
   dependencies:
     esdoc "^0.5.2"
     gulp-util "^3.0.8"
@@ -1684,8 +1690,8 @@ gulplog@^1.0.0:
     glogg "^1.0.0"
 
 handlebars@^4.0.1:
-  version "4.0.7"
-  resolved "https://registry.yarnpkg.com/handlebars/-/handlebars-4.0.7.tgz#e97325aeb8ea0b9e12b9c4dd73c4c312ad0ede59"
+  version "4.0.8"
+  resolved "https://registry.yarnpkg.com/handlebars/-/handlebars-4.0.8.tgz#22b875cd3f0e6cbea30314f144e82bc7a72ff420"
   dependencies:
     async "^1.4.0"
     optimist "^0.6.1"
@@ -2058,8 +2064,8 @@ js-tokens@^3.0.0:
   resolved "https://registry.yarnpkg.com/js-tokens/-/js-tokens-3.0.1.tgz#08e9f132484a2c45a30907e9dc4d5567b7f114d7"
 
 js-yaml@3.x, js-yaml@^3.5.1:
-  version "3.8.3"
-  resolved "https://registry.yarnpkg.com/js-yaml/-/js-yaml-3.8.3.tgz#33a05ec481c850c8875929166fe1beb61c728766"
+  version "3.8.4"
+  resolved "https://registry.yarnpkg.com/js-yaml/-/js-yaml-3.8.4.tgz#520b4564f86573ba96662af85a8cafa7b4b5a6f6"
   dependencies:
     argparse "^1.0.7"
     esprima "^3.1.1"
@@ -2093,8 +2099,8 @@ jsesc@^1.3.0:
   resolved "https://registry.yarnpkg.com/jsesc/-/jsesc-1.3.0.tgz#46c3fec8c1892b12b0833db9bc7622176dbab34b"
 
 jsesc@^2.4.0:
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/jsesc/-/jsesc-2.5.0.tgz#ce895de28feb034dcbf55fbeeabbcaeb63d73086"
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/jsesc/-/jsesc-2.5.1.tgz#e421a2a8e20d6b0819df28908f782526b96dd1fe"
 
 json-schema@0.2.3:
   version "0.2.3"
@@ -2397,10 +2403,10 @@ mime-types@^2.1.12, mime-types@~2.1.7:
     mime-db "~1.27.0"
 
 "minimatch@2 || 3", minimatch@^3.0.0, minimatch@^3.0.2:
-  version "3.0.3"
-  resolved "https://registry.yarnpkg.com/minimatch/-/minimatch-3.0.3.tgz#2a4e4090b96b2db06a9d7df01055a62a77c9b774"
+  version "3.0.4"
+  resolved "https://registry.yarnpkg.com/minimatch/-/minimatch-3.0.4.tgz#5166e286457f03306064be5497e8dbb0c3d32083"
   dependencies:
-    brace-expansion "^1.0.0"
+    brace-expansion "^1.1.7"
 
 minimatch@2.x:
   version "2.0.10"
@@ -3137,7 +3143,7 @@ strip-json-comments@~2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/strip-json-comments/-/strip-json-comments-2.0.1.tgz#3c531942e908c2697c0ec344858c286c7ca0a60a"
 
-supports-color@3.1.2:
+supports-color@3.1.2, supports-color@^3.1.0:
   version "3.1.2"
   resolved "https://registry.yarnpkg.com/supports-color/-/supports-color-3.1.2.tgz#72a262894d9d408b956ca05ff37b2ed8a6e2a2d5"
   dependencies:
@@ -3146,12 +3152,6 @@ supports-color@3.1.2:
 supports-color@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/supports-color/-/supports-color-2.0.0.tgz#535d045ce6b6363fa40117084629995e9df324c7"
-
-supports-color@^3.1.0:
-  version "3.2.3"
-  resolved "https://registry.yarnpkg.com/supports-color/-/supports-color-3.2.3.tgz#65ac0504b3954171d8a64946b2ae3cbb8a5f54f6"
-  dependencies:
-    has-flag "^1.0.0"
 
 "symbol-tree@>= 3.1.0 < 4.0.0":
   version "3.2.2"
@@ -3273,8 +3273,8 @@ typedarray@^0.0.6:
   resolved "https://registry.yarnpkg.com/typedarray/-/typedarray-0.0.6.tgz#867ac74e3864187b1d3d47d996a78ec5c8830777"
 
 uglify-js@^2.6:
-  version "2.8.22"
-  resolved "https://registry.yarnpkg.com/uglify-js/-/uglify-js-2.8.22.tgz#d54934778a8da14903fa29a326fb24c0ab51a1a0"
+  version "2.8.23"
+  resolved "https://registry.yarnpkg.com/uglify-js/-/uglify-js-2.8.23.tgz#8230dd9783371232d62a7821e2cf9a817270a8a0"
   dependencies:
     source-map "~0.5.1"
     yargs "~3.10.0"

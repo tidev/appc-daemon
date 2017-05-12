@@ -45,7 +45,7 @@ export default class StatusMonitor {
 		this.status = gawk({
 			pid:          process.pid,
 			memory:       undefined,
-			uptime:       undefined,
+			uptime:       process.uptime(),
 
 			process: {
 				execPath: process.execPath,
