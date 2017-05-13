@@ -2,7 +2,7 @@
 library 'pipeline-library'
 
 timestamps {
-  def isPR = false
+  def isMaster = false
   def packageVersion
 
   node('osx || linux') {
@@ -17,7 +17,7 @@ timestamps {
         userRemoteConfigs: scm.userRemoteConfigs
       ])
 
-      isPR = env.BRANCH_NAME.startsWith('PR-')
+      isMaster = env.BRANCH_NAME.equals('master')
       packageVersion = jsonParse(readFile('package.json'))['version']
       currentBuild.displayName = "#${packageVersion}-${currentBuild.number}"
     }

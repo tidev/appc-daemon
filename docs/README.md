@@ -31,8 +31,14 @@
 			1. [appcd-client](Appcd-appcd-client.md)
 			2. [http](Appcd-http.md)
 			3. [WebSocket](Appcd-WebSocket.md)
+		10. [Distribution](Appcd-Distribution.md)
 	2. [appc - Appc CLI](Appc-CLI.md)
-		1. [Commands](Appc-Commands.md)
+		1. [Getting Started](Appc-Getting-Started.md)
+		2. [Architecture Overview](Appc-Architecture-Overview.md)
+		3. [Configuration](Appc-Configuration.md)
+		4. Commands
+			1. ?
+		5. [Distribution](Appc-Distribution.md)
 6. Plugins
 	1. [Appc Platform](Plugin-Appc-Platform.md)
 	2. [System Info](Plugin-System-Info.md)

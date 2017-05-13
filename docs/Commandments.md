@@ -75,3 +75,9 @@ dependencies. Node.js native addons are generally compiled for the given Node.js
 and CPU architecture during installation. This requires a compiler to be present. Since the Appc
 Daemon's Node.js version is locked down, we can pre-compile these native addons, speed up installs,
 and eliminate the need for a compiler on end user machines.
+
+### Must be written using best practices
+
+The Appc Daemon code must be written using best practices including latest ECMAScript standards,
+unit tests, linted coding style, and inline ESDoc API docs. The code should use as few NPM
+dependencies as possible, be as memory efficient as possible, and follow best security practices.
