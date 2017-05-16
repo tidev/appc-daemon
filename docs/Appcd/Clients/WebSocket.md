@@ -8,7 +8,8 @@ port `1732`.
 WebSocket clients can make service requests or subscribe to service events, but cannot
 make application endpoint or static file requests.
 
-Requests can be made by any WebSocket client such as a web browser or a library.
+Requests can be made by any WebSocket client such as a web browser. The URL to connect to the Appc
+Daemon should be `"ws://127.0.0.1:1732"`. The script path is ignored.
 
 Multiple requests can be made simulataneously over the same WebSocket connection. WebSocket
 connections will only ever be dropped if an internal error occurs or the Appc Daemon is shutting

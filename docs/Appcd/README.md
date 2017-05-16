@@ -35,7 +35,7 @@ appcd is the name of the NPM package that contains the Appc Daemon bootstrap, co
 	5. [/appcd/status](Services/status.md)
 	6. [/appcd/subprocess](Services/subprocess.md)
 7. [Clients](Clients/README.md)
-	1. [http](Clients/HTTP.md)
+	1. [HTTP](Clients/HTTP.md)
 	2. [WebSocket](Clients/WebSocket.md)
 	3. [Node.js](Clients/Nodejs.md)
 8. [Distribution](Distribution.md)

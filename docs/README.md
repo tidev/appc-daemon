@@ -39,7 +39,7 @@
 			5. [/appcd/status](Appcd/Services/status.md)
 			6. [/appcd/subprocess](Appcd/Services/subprocess.md)
 		7. [Clients](Appcd/Clients/README.md)
-			1. [http](Appcd/Clients/HTTP.md)
+			1. [HTTP](Appcd/Clients/HTTP.md)
 			2. [WebSocket](Appcd/Clients/WebSocket.md)
 			3. [Node.js](Appcd/Clients/Nodejs.md)
 		8. [Distribution](Appcd/Distribution.md)

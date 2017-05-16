@@ -35,4 +35,7 @@ new CLI({
 			.then(server => new server.default(argv))
 			.then(server => server.start());
 	})
-	.catch(console.error);
+	.catch(err => {
+		console.error(err);
+		process.exit(err.code || 1);
+	});
