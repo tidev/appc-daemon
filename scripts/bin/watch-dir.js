@@ -24,7 +24,7 @@ const ws = new WebSocket('ws://127.0.0.1:1732', {
 	.on('close', () => console.log('CLOSED'))
 	.on('open', () => ws.send(JSON.stringify({
 		version: '1.0',
-		path: '/appcd/fswatch',
+		path: '/appcd/fs/watch',
 		id: '1',
 		data: {
 			path: process.argv[2] || process.cwd(),

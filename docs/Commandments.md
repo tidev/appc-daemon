@@ -24,12 +24,9 @@ and treat every plugin equally.
 
 ### Must have a decoupled architecture
 
-The Appc Daemon must allow a decoupled architecture that allows plugins to communicate with each
-other.
-
-### Must include a CLI for controlling the Appc Daemon
-
-An "appcd" CLI will be used to start, stop, and query the status of the Appc Daemon.
+All Appc Daemon services must be loosely coupled. Services can depend on other services, but
+gracefully handle when those dependencies are unavailable and allow those dependencies to be
+upgraded.
 
 ### Must work on all platforms
 
@@ -80,4 +77,5 @@ and eliminate the need for a compiler on end user machines.
 
 The Appc Daemon code must be written using best practices including latest ECMAScript standards,
 unit tests, linted coding style, and inline ESDoc API docs. The code should use as few NPM
-dependencies as possible, be as memory efficient as possible, and follow best security practices.
+dependencies as possible, be as small and memory efficient as possible, and follow best security
+practices.

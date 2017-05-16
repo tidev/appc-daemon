@@ -1,5 +1,5 @@
 {
-  "name": "appc-daemon",
+  "name": "appcd",
   "version": "1.0.0",
   "description": "A daemon that powers Appcelerator tooling and makes the impossible possible.",
   "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",

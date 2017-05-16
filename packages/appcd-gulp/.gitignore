@@ -1,5 +1,6 @@
 ._*
 .DS_Store*
+junit.xml
 node_modules
 npm-debug.log
 yarn-error.log

@@ -168,7 +168,7 @@ export default class Server extends HookEmitter {
 		// init the appcd dispatcher
 		const appcdDispatcher = new Dispatcher()
 			.register('/config', new ConfigService(this.config).dispatcher)
-			.register('/fswatch', this.fswatchManager.dispatcher)
+			.register('/fs', new Dispatcher().register('/watch', this.fswatchManager.dispatcher))
 			.register('/logcat', ctx => logcat(ctx.response))
 			.register('/plugin', this.pluginManager.dispatcher)
 			.register('/status', this.statusMonitor.dispatcher)
