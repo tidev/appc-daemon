@@ -93,7 +93,9 @@ export default class Server extends HookEmitter {
 			uid = this.config.get('server.user');
  			gid = this.config.get('server.group');
 			if (!uid) {
-				throw new Error('The daemon cannot be run as root. You must run as a non-root user or set a user in the config.');
+				const err = new Error('The daemon cannot be run as root. You must run as a non-root user or set a user in the config.');
+				err.code = 5;
+				throw err;
 			}
 			process.setuid(uid);
 			if (gid) {
@@ -104,7 +106,9 @@ export default class Server extends HookEmitter {
 		// check if appcd is already running
 		const pid = this.isRunning();
 		if (pid) {
-			throw new Error(`Server is already running! (pid: ${pid})`);
+			const err = new Error(`Server is already running! (pid: ${pid})`);
+			err.code = 4;
+			throw err;
 		}
 
 		// write the pid file
@@ -168,7 +172,7 @@ export default class Server extends HookEmitter {
 		// init the appcd dispatcher
 		const appcdDispatcher = new Dispatcher()
 			.register('/config', new ConfigService(this.config).dispatcher)
-			.register('/fswatch', this.fswatchManager.dispatcher)
+			.register('/fs', new Dispatcher().register('/watch', this.fswatchManager.dispatcher))
 			.register('/logcat', ctx => logcat(ctx.response))
 			.register('/plugin', this.pluginManager.dispatcher)
 			.register('/status', this.statusMonitor.dispatcher)

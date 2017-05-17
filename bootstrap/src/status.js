@@ -18,18 +18,18 @@ const cmd = {
 
 		request
 			.once('error', err => {
-				if (err.code !== 'ECONNREFUSED') {
+				if (err.code === 'ECONNREFUSED') {
+					if (argv.json) {
+						log('{}');
+					} else {
+						log(banner());
+						log('Server not running');
+					}
+					process.exit(3);
+				} else {
 					console.error(err.toString());
 					process.exit(1);
 				}
-
-				if (argv.json) {
-					log('{}');
-				} else {
-					log(banner());
-					log('Server not running (code 2)');
-				}
-				process.exit(2);
 			})
 			.on('response', status => {
 				client.disconnect();

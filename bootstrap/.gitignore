@@ -7,3 +7,4 @@ gulpfile.tmp.*
 node_modules
 npm-debug.log
 yarn-error.log
+junit.xml

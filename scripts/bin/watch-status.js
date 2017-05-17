@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 const msgpack = require('msgpack-lite');
-const WebSocket = require('ws');
 const util = require('util');
+const WebSocket = require('ws');
 
 const ws = new WebSocket('ws://127.0.0.1:1732', {
 		headers: {

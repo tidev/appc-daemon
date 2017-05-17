@@ -1,0 +1,43 @@
+# ![Appc Daemon logo](../images/appc-daemon.png) Daemon Project
+
+## appcd
+
+appcd is the name of the NPM package that contains the Appc Daemon bootstrap, command line interface
+(CLI), core, and supporting packages.
+
+1. [Getting Started](Getting-Started.md)
+2. [Architecture Overview](Architecture-Overview.md)
+3. [Components](Components/README.md)
+	1. [Configuration System](Components/Configuration-System.md)
+	2. [Dispatcher](Components/Dispatcher.md)
+	3. [Filesystem Watcher](Components/Filesystem-Watcher.md)
+	4. [Hook System](Components/Hook-System.md)
+	5. [Logging](Components/Logging.md)
+	6. [Plugin System](Components/Plugin-System.md)
+	7. [Status Monitor](Components/Status-Monitor.md)
+	8. [Subprocess Manager](Components/Subprocess-Manager.md)
+	9. [Telemetry](Components/Telemetry.md)
+	10. [Web Server](Components/Web-Server.md)
+4. [Configuration](Configuration.md)
+5. [Commands](Commands/README.md)
+	1. [start](Commands/start.md)
+	2. [stop](Commands/stop.md)
+	3. [restart](Commands/restart.md)
+	4. [status](Commands/status.md)
+	5. [logcat](Commands/logcat.md)
+	6. [config](Commands/config.md)
+	7. [exec](Commands/exec.md)
+	8. [help](Commands/help.md)
+6. [Exit Codes](Exit-Codes.md)
+7. [Core Services](Services/README.md)
+	1. [/appcd/config](Services/config.md)
+	2. [/appcd/fs](Services/fs.md)
+	3. [/appcd/logcat](Services/logcat.md)
+	4. [/appcd/plugin](Services/plugin.md)
+	5. [/appcd/status](Services/status.md)
+	6. [/appcd/subprocess](Services/subprocess.md)
+8. [Clients](Clients/README.md)
+	1. [HTTP](Clients/HTTP.md)
+	2. [WebSocket](Clients/WebSocket.md)
+	3. [Node.js](Clients/Nodejs.md)
+9. [Distribution](Distribution.md)

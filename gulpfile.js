@@ -265,6 +265,7 @@ gulp.task('package', ['build'], cb => {
 
 	copyDeps(pkgJson.dependencies);
 	pkgJson.dependencies = {};
+	pkgJson.bundledDependencies = [];
 
 	globule
 		.find([
@@ -274,9 +275,12 @@ gulp.task('package', ['build'], cb => {
 		])
 		.forEach(file => {
 			const json = require(path.resolve(file));
+			pkgJson.bundledDependencies.push(json.name);
+			pkgJson.dependencies[json.name] = './node_modules/' + json.name;
 			copyDeps(json.dependencies, file);
 		});
 
+	pkgJson.bundledDependencies.sort();
 	Object.keys(found).sort().forEach(dep => pkgJson.dependencies[dep] = found[dep]);
 
 	const distDir = path.join(__dirname, 'dist');
@@ -348,6 +352,19 @@ gulp.task('package', ['build'], cb => {
 		for (const file of Object.keys(files)) {
 			const dest = `${relPath}/${file}`;
 			gutil.log(` + ${dir}/${file} => ${dest}`);
+			if (/package\.json$/.test(file)) {
+				const pkgJson = JSON.parse(fs.readFileSync(path.join(dir, file)));
+				if (/^appcd/.test(pkgJson.name)) {
+					delete pkgJson.dependencies;
+					delete pkgJson.devDependencies;
+					delete pkgJson.bundledDependencies;
+					delete pkgJson.optionalDependencies;
+					delete pkgJson.appcdDependencies;
+					delete pkgJson.scripts;
+					archive.append(JSON.stringify(pkgJson, null, '  '), { name: dest });
+					continue;
+				}
+			}
 			archive.append(fs.createReadStream(path.join(dir, file)), { name: dest, mode: files[file] });
 		}
 	}

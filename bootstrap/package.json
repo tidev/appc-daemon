@@ -1,5 +1,5 @@
 {
-  "name": "appc-daemon",
+  "name": "appcd",
   "version": "1.0.0",
   "description": "A daemon that powers Appcelerator tooling and makes the impossible possible.",
   "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
@@ -26,7 +26,7 @@
   "dependencies": {
     "cli-kit": "^0.0.3",
     "cli-table2": "^0.2.0",
-    "snooplogg": "^1.3.0",
+    "snooplogg": "^1.4.0",
     "source-map-support": "^0.4.15"
   },
   "devDependencies": {
