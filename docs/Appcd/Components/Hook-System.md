@@ -1,5 +1,5 @@
-# ![Appc Daemon logo](images/appc-daemon.png) Daemon Project
+# ![Appc Daemon logo](../../images/appc-daemon.png) Daemon Project
 
-## `stop`
+## Hook System
 
 ?

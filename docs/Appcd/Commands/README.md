@@ -9,3 +9,4 @@
 * [logcat](logcat.md)
 * [config](config.md)
 * [exec](exec.md)
+* [help](help.md)

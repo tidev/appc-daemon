@@ -25,8 +25,13 @@ const cmd = {
 				}
 			})
 			.on('error', err => {
-				console.error(err.message);
-				process.exit(1);
+				if (err.code === 'ECONNREFUSED') {
+					console.log('Server not running');
+					process.exit(3);
+				} else {
+					console.error(err);
+					process.exit(1);
+				}
 			});
 	}
 };

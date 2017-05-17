@@ -3,32 +3,6 @@
 const path = require('path');
 
 module.exports = {
-	analytics: {
-		/**
-		 * Turns on analytics.
-		 * @type {Boolean}
-		 */
-		enabled: true,
-
-		/**
-		 * The path to the analytics cache directory.
-		 * @type {String}
-		 */
-		eventsDir: '~/.appcelerator/appcd/analytics',
-
-		/**
-		 * The number of events to queue up before sending.
-		 * @type {Number}
-		 */
-		sendBatchSize: 10,
-
-		/**
-		 * The URL to post the analytics events to.
-		 * @type {String}
-		 */
-		url: 'https://api.appcelerator.net/p/v2/partner-track'
-	},
-
 	core: {
 		v8: {
 			/**
@@ -49,20 +23,6 @@ module.exports = {
 	 * @readonly
 	 */
 	home: '~/.appcelerator/appcd',
-
-	logger: {
-		/**
-		 * Enables colors in the logging.
-		 * @type {Boolean}
-		 */
-		colors: true,
-
-		/**
-		 * Silences all log output.
-		 * @type {Boolean}
-		 */
-		silent: false
-	},
 
 	network: {
 		/**
@@ -162,5 +122,31 @@ module.exports = {
 		 * @readonly
 		 */
 		user: null
+	},
+
+	telemetry: {
+		/**
+		 * Turns on telemetry recording and submitting.
+		 * @type {Boolean}
+		 */
+		enabled: true,
+
+		/**
+		 * The path to the telemetry cache directory.
+		 * @type {String}
+		 */
+		eventsDir: '~/.appcelerator/appcd/analytics',
+
+		/**
+		 * The number of events to queue up before sending.
+		 * @type {Number}
+		 */
+		sendBatchSize: 10,
+
+		/**
+		 * The URL to post the telemetry events to.
+		 * @type {String}
+		 */
+		url: 'https://api.appcelerator.net/p/v2/partner-track'
 	}
 };

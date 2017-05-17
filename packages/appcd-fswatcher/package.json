@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "gawk": "^4.2.0",
-    "snooplogg": "^1.3.0",
+    "snooplogg": "^1.4.0",
     "source-map-support": "^0.4.15"
   },
   "devDependencies": {

@@ -8,6 +8,9 @@ application endpoints, and static resources.
 Requests can be made by any HTTP client such as `curl`, a web browser, Node.js "http" module,
 `fetch()`, or `XMLHttpRequest`.
 
+Whenever possible, the client should set the `User-Agent` header to the name of the application or
+library calling the Appc Daemon.
+
 If the Appc Daemon is not running, it is the responsibility of the calling application to start the
 Appc Daemon.
 

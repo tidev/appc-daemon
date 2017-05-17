@@ -11,8 +11,13 @@ const cmd = {
 			.request
 			.on('response', response => process.stdout.write(response))
 			.once('error', err => {
-				console.error(err);
-				process.exit(1);
+				if (err.code === 'ECONNREFUSED') {
+					console.log('Server not running');
+					process.exit(3);
+				} else {
+					console.error(err);
+					process.exit(1);
+				}
 			});
 	}
 };

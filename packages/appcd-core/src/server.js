@@ -94,7 +94,7 @@ export default class Server extends HookEmitter {
  			gid = this.config.get('server.group');
 			if (!uid) {
 				const err = new Error('The daemon cannot be run as root. You must run as a non-root user or set a user in the config.');
-				err.code = 2;
+				err.code = 5;
 				throw err;
 			}
 			process.setuid(uid);
@@ -107,7 +107,7 @@ export default class Server extends HookEmitter {
 		const pid = this.isRunning();
 		if (pid) {
 			const err = new Error(`Server is already running! (pid: ${pid})`);
-			err.code = 3;
+			err.code = 4;
 			throw err;
 		}
 

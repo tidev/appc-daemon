@@ -11,8 +11,8 @@ const cmd = {
 		});
 
 		if (!wasRunning) {
-			console.log('Server not running (code 2)');
-			process.exit(2);
+			console.log('Appc Daemon not running');
+			process.exit(3);
 		}
 	}
 };
