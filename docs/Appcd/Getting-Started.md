@@ -48,7 +48,7 @@ npm install -g gulp
 		</tr>
 		<tr>
 			<td>Windows</td>
-			<td>Download from [https://yarnpkg.com/latest.msi :link:](https://yarnpkg.com/latest.msi)</td>
+			<td>Download from <a href="https://yarnpkg.com/latest.msi">https://yarnpkg.com/latest.msi</a></td>
 		</tr>
 		<tr>
 			<td>Ubuntu</td>
