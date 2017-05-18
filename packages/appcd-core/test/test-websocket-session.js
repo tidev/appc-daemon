@@ -1,10 +1,10 @@
 import Dispatcher from 'appcd-dispatcher';
 import msgpack from 'msgpack-lite';
 import snooplogg, { StdioStream } from '../src/logger';
-import WebServer from 'appcd-http';
+import WebServer, { WebSocket } from 'appcd-http';
 import WebSocketSession from '../src/websocket-session';
 
-import { WebSocket } from 'appcd-http';
+import { IncomingMessage } from 'http';
 
 describe('WebSocketSession', () => {
 	afterEach(function (done) {
@@ -37,12 +37,24 @@ describe('WebSocketSession', () => {
 
 		expect(() => {
 			const ws = new WebSocket('ws://127.0.0.1:1337');
-			new WebSocketSession(ws, function () {});
-		}).to.throw(TypeError, 'Expected a Dispatcher instance');
+			new WebSocketSession(ws);
+		}).to.throw(TypeError, 'Expected a IncomingMessage instance');
 
 		expect(() => {
 			const ws = new WebSocket('ws://127.0.0.1:1337');
 			new WebSocketSession(ws, {});
+		}).to.throw(TypeError, 'Expected a IncomingMessage instance');
+
+		expect(() => {
+			const ws = new WebSocket('ws://127.0.0.1:1337');
+			const msg = new IncomingMessage;
+			new WebSocketSession(ws, msg, function () {});
+		}).to.throw(TypeError, 'Expected a Dispatcher instance');
+
+		expect(() => {
+			const ws = new WebSocket('ws://127.0.0.1:1337');
+			const msg = new IncomingMessage;
+			new WebSocketSession(ws, msg, {});
 		}).to.throw(TypeError, 'Expected a Dispatcher instance');
 	});
 
@@ -60,19 +72,19 @@ describe('WebSocketSession', () => {
 		});
 
 		this.server
-			.on('websocket', ws => new WebSocketSession(ws, dispatcher))
+			.on('websocket', (ws, msg) => new WebSocketSession(ws, msg, dispatcher))
 			.listen()
 			.then(() => {
 				// call the websocket
 				const socket = new WebSocket('ws://127.0.0.1:1337');
 
 				socket.on('message', (msg, flags) => {
-					if (flags.binary) {
-						msg = msgpack.decode(msg);
-					} else if (typeof msg === 'string') {
+					if (typeof msg === 'string') {
 						try {
 							msg = JSON.parse(msg);
 						} catch (e) {}
+					} else {
+						msg = msgpack.decode(msg);
 					}
 
 					try {

@@ -9,8 +9,8 @@ const ws = new WebSocket('ws://127.0.0.1:1732', {
 			'User-Agent': __filename
 		}
 	})
-	.on('message', (msg, flags) => {
-		msg = flags.binary ? msgpack.decode(msg) : JSON.parse(msg);
+	.on('message', msg => {
+		msg = typeof msg === 'string' ? JSON.parse(msg) : msgpack.decode(msg);
 		console.log(util.inspect(msg, false, null, true));
 		if (msg.type === 'exit') {
 			process.exit(0);

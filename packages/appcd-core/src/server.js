@@ -188,7 +188,7 @@ export default class Server extends HookEmitter {
 		});
 
 		this.webserver.use(Dispatcher.callback());
-		this.webserver.on('websocket', ws => new WebSocketSession(ws));
+		this.webserver.on('websocket', (ws, req) => new WebSocketSession(ws, req));
 
 		return Promise.resolve()
 			.then(() => {

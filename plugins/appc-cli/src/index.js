@@ -3,8 +3,3 @@ if (!Error.prepareStackTrace) {
 }
 
 console.log('hi from appcd-plugin-appc-cli');
-
-export default class AppcCLI extends appcd.Plugin {
-	constructor() {
-	}
-}

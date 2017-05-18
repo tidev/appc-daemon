@@ -91,11 +91,9 @@ export default class Client {
 				}
 			});
 
-			socket.on('message', (data, flags) => {
+			socket.on('message', data => {
 				let json = null;
-				if (flags.binary) {
-					json = msgpack.decode(data);
-				} else {
+				if (typeof data === 'string') {
 					try {
 						json = JSON.parse(data);
 					} catch (e) {
@@ -103,6 +101,8 @@ export default class Client {
 						emitter.emit('warning', `Server returned invalid JSON: ${e.message}`);
 						return;
 					}
+				} else {
+					json = msgpack.decode(data);
 				}
 
 				if (json && typeof json === 'object' && this.requests[json.id]) {

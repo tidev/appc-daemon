@@ -180,8 +180,8 @@ export default class WebServer extends EventEmitter {
 						server: this.httpServer
 					});
 
-					this.websocketServer.on('connection', conn => {
-						const { remoteAddress, remotePort } = conn.upgradeReq.socket;
+					this.websocketServer.on('connection', (conn, req) => {
+						const { remoteAddress, remotePort } = req.socket;
 						const key = remoteAddress + ':' + remotePort;
 						logger.log('%s upgraded to WebSocket', highlight(key));
 
@@ -189,7 +189,7 @@ export default class WebServer extends EventEmitter {
 							logger.log('%s closed WebSocket', highlight(key));
 						});
 
-						this.emit('websocket', conn);
+						this.emit('websocket', conn, req);
 					});
 				});
 			});
