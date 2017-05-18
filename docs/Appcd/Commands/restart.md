@@ -28,7 +28,7 @@ A path to a config file to load. Defaults to `~/.appcelerator/appcd/config.js`.
 Starts the Appc Daemon in debug mode where the spawned Core subprocess is not detached and stdout
 and stderr are inherited allowing the Core to render log output directly to the terminal.
 
-Simply press `CTRL-C` to quit the Appc Daemon
+Simply press <kbd>CTRL-C</kbd> to quit the Appc Daemon
 
 ### Exit Codes
 

@@ -19,6 +19,10 @@ import 'babel-polyfill';
 import CLI from 'cli-kit';
 import snooplogg from './logger';
 
+process
+	.on('uncaughtException', err => snooplogg.error('Caught exception:', err))
+	.on('unhandledRejection', (reason, p) => snooplogg.error('Unhandled Rejection at: Promise ', p, reason));
+
 new CLI({
 	options: {
 		'--config <json>':      { type: 'json', desc: 'serialized JSON string to mix into the appcd config' },
@@ -27,10 +31,6 @@ new CLI({
 	help: false
 }).exec()
 	.then(({ argv }) => {
-		process
-			.on('uncaughtException', err => snooplogg.error('Caught exception:', err))
-			.on('unhandledRejection', (reason, p) => snooplogg.error('Unhandled Rejection at: Promise ', p, reason));
-
 		return import('./server')
 			.then(server => new server.default(argv))
 			.then(server => server.start());

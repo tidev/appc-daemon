@@ -103,9 +103,20 @@ export default class PluginManager extends EventEmitter {
 
 		for (const dir of this.paths) {
 			this.detect(dir);
-		}
 
-		// TODO: start watching paths to trigger redetect
+			Dispatcher
+				.call('/appcd/fs/watch', { data: { path: dir }, type: 'subscribe' })
+				.then(ctx => {
+					ctx.response.on('data', evt => {
+						// TODO: re-detect
+						// figure out what changed, then register/unregister
+						console.log(evt);
+					});
+				})
+				.catch(err => {
+					logger.error(err);
+				});
+		}
 
 		gawk.watch(this.plugins, (obj, src) => this.emit('change', obj, src));
 	}
