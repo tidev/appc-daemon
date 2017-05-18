@@ -20,7 +20,7 @@ The Appc Daemon requires Node.js 7.6.0 or newer, Gulp 3.9, and Yarn.
 
 ##### Node.js
 
-You can download Node.js from [https://nodejs.org :link:]([https://nodejs.org]).
+You can download Node.js from [https://nodejs.org]([https://nodejs.org]).
 
 ##### Gulp
 
@@ -67,7 +67,7 @@ npm install -g gulp
 	</tbody>
 </table>
 
-Please refer to [Yarn's Installation documentation :link:](https://yarnpkg.com/en/docs/install) for
+Please refer to [Yarn's Installation documentation](https://yarnpkg.com/en/docs/install) for
 additional information.
 
 #### First Time Initialization
