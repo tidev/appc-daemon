@@ -101,7 +101,7 @@ Starts the Appc Daemon, but does not background the Appc Daemon Core process or 
 appcd start --debug
 ```
 
-Press `CTRL-C` to stop the Appc Daemon.
+Press <kbd>CTRL-C</kbd> to stop the Appc Daemon.
 
 ### Developing the Appc Daemon
 

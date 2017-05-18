@@ -7,6 +7,8 @@ the latest 250 lines of log output.
 
 All log messages are written to stdout.
 
+Press <kbd>CTRL-C</kbd> to quit.
+
 ### Usage
 
 ```
