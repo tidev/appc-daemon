@@ -141,7 +141,7 @@ export default class PluginInfo {
 	 * @type {Boolean}
 	 * @access public
 	 */
-	get loaded() {
+	get active() {
 		return !!(this.type === 'internal' ? (this.module || this.instance) : this.pid);
 	}
 

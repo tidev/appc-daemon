@@ -98,8 +98,8 @@ During shutdown, it will:
 
 #### pid File
 
-Only one instance of the Appc Daemon can be running at a time. The Core does by using a "pid" file
-which contains the process id for an existing Appc Daemon instance.
+Only one instance of the Appc Daemon can be running at a time. The Core does this by using a "pid"
+file which contains the process id for an existing Appc Daemon instance.
 
 If the pid file does not exist, then it assumes there are no running instances of the Appc Daemon.
 However, if for some reason the pid file was removed while the Appc Daemon is running, then any new
