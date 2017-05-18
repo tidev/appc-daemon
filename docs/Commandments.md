@@ -4,13 +4,13 @@
 
 ### Must be invisible to users
 
-Users will not need to worry about starting the Appc Daemon. Clients such as the Appc CLI or Axway
+Users should not need to worry about starting the Appc Daemon. Clients such as the Appc CLI or Axway
 Appcelerator Studio will be responsible for ensuring that the Appc Daemon is running.
 
 ### Must not require root privileges
 
-The Appc Daemon must be able to run as an unprivileged user. The Appc Daemon, nor any of its
-plugins, are allowed to listen on privileged ports or write to system files.
+The Appc Daemon must be able to run as an unprivileged user. The Appc Daemon and its plugins are not
+permitted to listen on privileged ports or write to system files.
 
 ### Must be crashable
 
@@ -19,8 +19,8 @@ data that is important must be persisted to disk immediately.
 
 ### Must be extensible
 
-All specific logic must be implemented in a plugin. There must be a strict plugin lifecycle policy
-and treat every plugin equally.
+All specific logic must be implemented in a plugin. Each plugin must be isolated and properly handle
+unresolved services.
 
 ### Must have a decoupled architecture
 

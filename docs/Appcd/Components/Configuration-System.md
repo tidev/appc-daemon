@@ -23,7 +23,7 @@ file is ok, it will be evaluated in a virtual sandbox and the exported config is
 merged into the config object.
 
 `.json` config files are simple and safe, but lack support for comments and metadata. A `.json`
-config file may have an accompanying .json.metadata file that contains each config setting's
+config file may have an accompanying `.json.metadata` file that contains each config setting's
 metadata.
 
 ### Metadata
@@ -56,7 +56,7 @@ module.exports = {
         /**
          * The port to listen on.
          * @type {Number}
-		 * @readonly
+         * @readonly
          */
         port: 1337
     }
@@ -93,7 +93,7 @@ module.exports = {
         "desc": "The port to listen on.",
         "type": "Number",
         "nullable": true,
-		"readonly": true
+        "readonly": true
     }
 }
 ```

@@ -170,7 +170,7 @@ export default class PluginManager extends EventEmitter {
 
 		// check to make sure we don't insert the same plugin twice
 		for (const p of this.plugins) {
-			if (p.name === plugin.name || p.path === plugin.path || p.version === plugin.version) {
+			if ((p.name === plugin.name || p.path === plugin.path) && p.version === plugin.version) {
 				throw new PluginError(codes.PLUGIN_ALREADY_REGISTERED);
 			}
 		}
@@ -208,7 +208,7 @@ export default class PluginManager extends EventEmitter {
 
 			for (let i = 0; i < this.plugins.length; i++) {
 				if (this.plugins[i].path === pluginPath) {
-					if (this.plugins[i].loaded) {
+					if (this.plugins[i].active) {
 						if (this.plugins[i].type === 'internal') {
 							throw new PluginError('Cannot unregister running internal plugins');
 						}

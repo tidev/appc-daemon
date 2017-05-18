@@ -40,11 +40,11 @@ npm install -g gulp
 	<tbody>
 		<tr>
 			<td>macOS</td>
-			<td>`brew install yarn`<br>
-				_or_<br>
-				`port install yarn`<br>
-				_or_<br>
-				`curl -o- -L https://yarnpkg.com/install.sh | bash`</td>
+			<td><code>brew install yarn</code><br>
+				or<br>
+				<code>port install yarn</code><br>
+				or<br>
+				<code>curl -o- -L https://yarnpkg.com/install.sh | bash</code></td>
 		</tr>
 		<tr>
 			<td>Windows</td>
@@ -52,17 +52,17 @@ npm install -g gulp
 		</tr>
 		<tr>
 			<td>Ubuntu</td>
-			<td>`curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add - echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list`<br>
-				`sudo apt-get update && sudo apt-get install yarn`<br>
-				_or_<br>
-				`curl -o- -L https://yarnpkg.com/install.sh | bash`</td>
+			<td><code>curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add - echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list</code><br>
+				<code>sudo apt-get update && sudo apt-get install yarn</code><br>
+				or<br>
+				<code>curl -o- -L https://yarnpkg.com/install.sh | bash</code></td>
 		</tr>
 		<tr>
 			<td>CentOS / Fedora / RHEL</td>
-			<td>`sudo wget https://dl.yarnpkg.com/rpm/yarn.repo -O /etc/yum.repos.d/yarn.repo`<br>
-				`sudo yum install yarn`<br>
-				_or_<br>
-				`curl -o- -L https://yarnpkg.com/install.sh | bash`</td>
+			<td><code>sudo wget https://dl.yarnpkg.com/rpm/yarn.repo -O /etc/yum.repos.d/yarn.repo</code><br>
+				<code>sudo yum install yarn</code><br>
+				or<br>
+				<code>curl -o- -L https://yarnpkg.com/install.sh | bash</code></td>
 		</tr>
 	</tbody>
 </table>

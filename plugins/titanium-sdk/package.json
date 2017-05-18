@@ -1,7 +1,7 @@
 {
-  "name": "appcd-plugin-system-info",
+  "name": "appcd-plugin-titanium-sdk",
   "version": "1.0.0",
-  "description": "The Appc Daemon plugin for detecting system info.",
+  "description": "The Appc Daemon plugin for the Axway Titanium SDK.",
   "main": "./dist/index",
   "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
@@ -16,13 +16,12 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "source-map-support": "^0.4.14"
+    "source-map-support": "^0.4.15"
   },
   "devDependencies": {
     "gulp": "^3.9.1"
   },
   "appcdDependencies": [
-    "appcd-fs",
     "appcd-gulp"
   ],
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",

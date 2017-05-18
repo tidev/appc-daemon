@@ -453,8 +453,11 @@ gulp.task('coverage', ['build'], cb => {
  * watch/debug tasks
  */
 function startDaemon() {
-	spawnSync(process.execPath, ['bootstrap/bin/appcd', 'stop', '--force']);
 	spawn(process.execPath, ['bootstrap/bin/appcd', 'start', '--debug'], { stdio: 'inherit' });
+}
+
+function stopDaemon() {
+	spawnSync(process.execPath, ['bootstrap/bin/appcd', 'stop'], { stdio: 'inherit' });
 }
 
 gulp.task('start-daemon', () => {
@@ -472,6 +475,7 @@ gulp.task('watch-only', cb => {
 			const m = evt.path.match(new RegExp('^(' + __dirname + '/(packages/([^\/]+)))'));
 			if (m) {
 				gutil.log('Detected change: ' + gutil.colors.cyan(evt.path));
+				stopDaemon();
 				buildDepList(m[2])
 					.reduce((promise, dir) => {
 						return promise.then(() => new Promise((resolve, reject) => {
@@ -487,6 +491,7 @@ gulp.task('watch-only', cb => {
 			}
 		}),
 		gulp.watch(__dirname + '/plugins/*/src/**/*.js', () => {
+			stopDaemon();
 			runSequence('build-plugins', startDaemon);
 		})
 	];

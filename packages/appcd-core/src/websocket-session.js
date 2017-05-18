@@ -5,6 +5,7 @@ import Response, { codes, createErrorClass } from 'appcd-response';
 import snooplogg, { styles } from './logger';
 import uuid from 'uuid';
 
+import { IncomingMessage } from 'http';
 import { Readable } from 'stream';
 import { WebSocket } from 'appcd-http';
 
@@ -33,13 +34,18 @@ export default class WebSocketSession {
 	 * Creates a appcd WebSocket session and wires up the message handler.
 	 *
 	 * @param {WebSocket} ws - The WebSocket instance.
+	 * @param {Request} msg - The Request object from the incoming connection.
 	 * @param {Dispatcher} [dispatcher] - The dispatcher instance. If not specified, uses the root
 	 * Dispatcher instance.
 	 * @access public
 	 */
-	constructor(ws, dispatcher) {
+	constructor(ws, msg, dispatcher) {
 		if (!(ws instanceof WebSocket)) {
 			throw new TypeError('Expected a WebSocket instance');
+		}
+
+		if (!(msg instanceof IncomingMessage)) {
+			throw new TypeError('Expected a IncomingMessage instance');
 		}
 
 		if (dispatcher && !(dispatcher instanceof Dispatcher)) {
@@ -48,6 +54,7 @@ export default class WebSocketSession {
 
 		this.sessionId = sessionCounter++;
 		this.ws = ws;
+		this.msg = msg;
 		this.dispatcher = dispatcher || Dispatcher.root;
 		this.subscriptions = {};
 		this.remoteId = `${ws._socket.remoteAddress}:${ws._socket.remotePort}`;
@@ -58,7 +65,7 @@ export default class WebSocketSession {
 			const startTime = new Date;
 
 			try {
-				req = flags.binary ? msgpack.decode(message) : message;
+				req = typeof message === 'string' ? message : msgpack.decode(message);
 
 				if (typeof req !== 'string') {
 					throw new WebSocketError('Message must be a string');
@@ -112,7 +119,7 @@ export default class WebSocketSession {
 				sessionId: req.sessionId,
 				data:      req.data || {},
 				type:      req.type,
-				headers:   this.ws.upgradeReq.headers,
+				headers:   this.msg.headers,
 				source:    'websocket'
 			})
 			.then(({ status, response }) => {

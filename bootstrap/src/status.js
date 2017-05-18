@@ -55,6 +55,7 @@ const cmd = {
 					}
 				};
 
+				// general information
 				let table = new Table(params);
 				table.push([ 'Core Version', highlight(`v${status.version}`) ]);
 				table.push([ 'PID',          highlight(status.pid) ]);
@@ -65,6 +66,7 @@ const cmd = {
 				log(table.toString());
 				log();
 
+				// fs watcher information
 				params.head = [ 'Filesystem Watch System' ];
 				table = new Table(params);
 				table.push([ 'Nodes',               highlight(status.fswatch.nodes) ]);
@@ -74,48 +76,52 @@ const cmd = {
 				log(status.fswatch.tree);
 				log();
 
-				params.head = [ 'Plugin Name', 'Version', 'Type', 'Path', 'Node Version', 'Status' ],
-				table = new Table(params);
-				for (const plugin of status.plugins) {
-					let status = '';
-					if (plugin.error) {
-						status = alert(plugin.error);
-					} else if (plugin.loaded) {
-						if (plugin.type === 'external') {
-							status = `Started, PID=${plugin.pid || 'null'}`;
+				// plugin information
+				if (status.plugins.length) {
+					params.head = [ 'Plugin Name', 'Version', 'Type', 'Path', 'Node.js', 'Status' ],
+					table = new Table(params);
+					for (const plugin of status.plugins) {
+						let status = '';
+						if (plugin.error) {
+							status = alert(plugin.error);
+						} else if (plugin.active) {
+							if (plugin.type === 'external') {
+								status = `Active, PID=${plugin.pid || 'null'}`;
+							} else {
+								status = 'Active';
+							}
 						} else {
-							status = 'Started';
+							status = 'Suspended';
 						}
-					} else {
-						status = 'Stopped';
-					}
 
-					table.push([
-						highlight(plugin.name),
-						plugin.version ? `v${plugin.version}` : 'null',
-						plugin.type,
-						plugin.path,
-						`v${plugin.nodeVersion}`,
-						status
-					]);
-				}
-				log(table.toString());
-				if (!status.plugins.length) {
+						table.push([
+							highlight(plugin.name),
+							plugin.version ? `v${plugin.version}` : 'null',
+							plugin.type,
+							plugin.path,
+							`v${plugin.nodeVersion}`,
+							status
+						]);
+					}
+					log(table.toString());
+				} else {
 					log('No plugins');
 				}
 				log();
 
-				params.head = [ 'PID', 'Command', 'Started' ],
-				table = new Table(params);
-				for (const subprocess of status.subprocesses) {
-					table.push([
-						highlight(subprocess.pid),
-						subprocess.command + (subprocess.args.length ? ` ${subprocess.args.map(a => typeof a === 'string' && a.indexOf(' ') !== -1 ? `"${a}"` : a).join(' ')}` : ''),
-						relativeTime(subprocess.startTime.getTime() / 1000)
-					]);
-				}
-				log(table.toString());
-				if (!status.subprocesses.length) {
+				// subprocess information
+				if (status.subprocesses.length) {
+					params.head = [ 'PID', 'Command', 'Started' ],
+					table = new Table(params);
+					for (const subprocess of status.subprocesses) {
+						table.push([
+							highlight(subprocess.pid),
+							subprocess.command + (subprocess.args.length ? ` ${subprocess.args.map(a => typeof a === 'string' && a.indexOf(' ') !== -1 ? `"${a}"` : a).join(' ')}` : ''),
+							relativeTime(subprocess.startTime.getTime() / 1000)
+						]);
+					}
+					log(table.toString());
+				} else {
 					log('No subprocesses');
 				}
 				log();

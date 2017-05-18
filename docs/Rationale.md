@@ -38,9 +38,9 @@ The following products will be replaced:
 | Titanium CLI | Completely deprecated. |
 | Appc CLI | Split into the client CLI and Appc Daemon plugin. The client CLI loads the config and dispatches a request to the daemon, then displays the result. The plugin fulfills the Appc CLI request whether it be creating a project, changing the configuration, or building a project. |
 | Titanium SDK Build | This will become a streamlined, platform independent pipeline that automatically manages the state of the builds and exposes hooks for platform specific logic to be performed. |
-| Alloy | This will become apart of the Titanium SDK build. |
-| LiveView | This will become apart of the Titanium SDK build. |
-| Hyperloop  | This will become apart of the Titanium SDK build. |
+| Alloy | This will become a part of the Titanium SDK build. |
+| LiveView | This will become a part of the Titanium SDK build. |
+| Hyperloop  | This will become a part of the Titanium SDK build. |
 | Appc/Titanium Verify | This will be baked into the Appc Platform entitlements framework. |
 
 This will result in the following Git repositories being archived:
