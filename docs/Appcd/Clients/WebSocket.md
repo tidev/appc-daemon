@@ -47,7 +47,7 @@ optionally a `data` payload.
 | :-------- | :--------------- | :------: | :----------------------------------------------- |
 | `version` | String           | Yes      | The version of the subprotocol. Must be `"1.0"`. |
 | `type`    | String           | No       | The request type. Must be either `"call"` (default), `"subscribe"`, or `"unsubscribe"`. |
-| `id`      | String or Number | Yes      | A unique request id. Used by the client to match the response id. A UUID or `Date.now()` is recommended. |
+| `id`      | String or Number | Yes      | A unique request id. Used by the client to match the response id. A UUID is highly recommended. |
 | `path`    | String           | Yes      | The service path. Paths can, but don't have to, begin with a forward slash `/`. |
 | `data`    | Object           | No       | An optional data payload. Data cannot contain functions or circular references. |
 
@@ -67,7 +67,7 @@ optionally a `data` payload.
 | :-------- | :--------------- | :----------------------------------------------- |
 | `status`  | Number           | The status code for the request which is based on HTTP status codes. |
 | `id`      | String or Number | The unique request id. Used by the client to match the response id. |
-| `message` | Object           | When the status is 2xx, then `message` contains the result. When the status is 4xx or 5xx, then `error` contains an error message. |
+| `message` | Object           | When the status is 2xx, then `message` contains the result. When the status is 4xx or 5xx, then `message` contains an error message. |
 | `type`    | String           | When the request `type` is `"subscribe"` or `"unsubscribe"`, then the response `type` will be `"subscribe"`, `"publish"`, or `"unsubscribe"`. If status is 4xx or 5xx, then `type` is `"error"`. |
 | `topic`   | String           | When the request `type` is `"subscribe"`, all responses will include the topic name that is used to unsubscribe. |
 
