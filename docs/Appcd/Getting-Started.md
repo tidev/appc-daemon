@@ -140,6 +140,9 @@ gulp build
 node inspect package/appcd-core/dist/main.js
 ```
 
+Next, go to [chrome://inspect/](chrome://inspect/) in Google Chrome and you'll see the Node.js
+process is ready to be inspected.
+
 ### Checking the Source Code
 
 Periodically, run the check task to make sure all of the NPM dependencies are up-to-date and that
