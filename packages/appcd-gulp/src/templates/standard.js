@@ -3,17 +3,19 @@
 module.exports = (opts) => {
 	const gulp = opts.gulp;
 
-	const $ = require('gulp-load-plugins')();
-	const babelConfs = require('../babel.json');
-	const del = require('del');
-	const fs = require('fs');
-	const Module = require('module');
-	const path = require('path');
+	const $           = require('gulp-load-plugins')();
+	const babelConfs  = require('../babel.json');
+	const del         = require('del');
+	const fs          = require('fs');
+	const Module      = require('module');
+	const path        = require('path');
+	const runSequence = require('run-sequence').use(gulp);
+	const spawnSync   = require('child_process').spawnSync;
 
-	const projectDir = opts.projectDir;
+	const projectDir  = opts.projectDir;
 	const coverageDir = path.join(projectDir, 'coverage');
-	const distDir = path.join(projectDir, 'dist');
-	const docsDir = path.join(projectDir, 'docs');
+	const distDir     = path.join(projectDir, 'dist');
+	const docsDir     = path.join(projectDir, 'docs');
 
 	/*
 	 * Inject appcd-gulp into require() search path
@@ -27,6 +29,8 @@ module.exports = (opts) => {
 	/*
 	 * Wire up Babel
 	 */
+	process.env.APPCD_BABEL_CONF = babelConfs[opts.babel] ? opts.babel : 'node4';
+
 	const babelConf = babelConfs[opts.babel] || babelConfs.node4;
 	for (let plugin of babelConf.plugins) {
 		plugin = `babel-plugin-${plugin}`;
@@ -64,11 +68,25 @@ module.exports = (opts) => {
 	gulp.task('clean-docs', done => { del([docsDir]).then(() => done()) });
 
 	/*
+	 * lint tasks
+	 */
+	function lint(pattern, eslintFile='eslint.json') {
+		return gulp.src(pattern)
+			.pipe($.plumber())
+			.pipe($.eslint(require(path.resolve(__dirname, '..', eslintFile))))
+			.pipe($.eslint.format())
+			.pipe($.eslint.failAfterError());
+	}
+
+	gulp.task('lint-src', () => lint('src/**/*.js'));
+
+	gulp.task('lint-test', () => lint('test/**/test-*.js', 'eslint-tests.json'));
+
+	/*
 	 * build tasks
 	 */
 	gulp.task('build', ['clean-dist', 'lint-src'], () => {
-		return gulp
-			.src('src/**/*.js')
+		return gulp.src('src/**/*.js')
 			.pipe($.plumber())
 			.pipe($.debug({ title: 'build' }))
 			.pipe($.sourcemaps.init())
@@ -76,7 +94,7 @@ module.exports = (opts) => {
 				plugins: babelConf.plugins,
 				presets: babelConf.presets
 			}))
-			.pipe($.sourcemaps.write('.'))
+			.pipe($.sourcemaps.write())
 			.pipe(gulp.dest(distDir));
 	});
 
@@ -95,96 +113,45 @@ module.exports = (opts) => {
 	});
 
 	/*
-	 * lint tasks
-	 */
-	function lint(pattern, eslintFile='eslint.json') {
-		return gulp.src(pattern)
-			.pipe($.plumber())
-			.pipe($.eslint(require(path.resolve(__dirname, '..', eslintFile))))
-			.pipe($.eslint.format())
-			.pipe($.eslint.failAfterError());
-	}
-
-	gulp.task('lint-src', () => lint('src/**/*.js'));
-
-	gulp.task('lint-test', () => lint('test/**/test-*.js', 'eslint-tests.json'));
-
-	/*
 	 * test tasks
 	 */
-	gulp.task('test', ['lint-src', 'lint-test'], cb => {
-		runTests({
-			callback: cb
-		});
-	});
-
-	gulp.task('coverage', ['lint-src', 'lint-test', 'clean-coverage'], cb => {
-		runTests({
-			cover: true,
-			callback: cb
-		});
-	});
+	gulp.task('test', ['lint-src', 'lint-test'], cb => runTests({ callback: cb }));
+	gulp.task('coverage', ['lint-src', 'lint-test', 'clean-coverage'], cb => runTests({ cover: true, callback: cb }));
 
 	function runTests(opts) {
-		const setupScript = path.resolve(__dirname, '../test-setup.js');
+		const args = [];
 
-		gulp.src('src/**/*.js')
-			.pipe($.plumber())
-			.pipe($.debug({ title: 'build' }))
-			.pipe($.sourcemaps.init())
-			.pipe($.babel({
-				plugins: opts.cover ? babelConf.plugins.concat('istanbul') : babelConf.plugins,
-				presets: babelConf.presets
-			}))
-			.pipe($.sourcemaps.write())
-			.pipe($.injectModules())
-			.on('finish', () => {
-				let stream = gulp.src([setupScript, 'test/**/test*.js'])
-					.pipe($.plumber())
-					.pipe($.debug({ title: 'test' }))
-					.pipe($.sourcemaps.init())
-					.pipe($.babel({
-						plugins: babelConf.plugins,
-						presets: babelConf.presets
-					}))
-					.pipe($.sourcemaps.write())
-					.pipe($.injectModules());
+		if (opts.cover) {
+			args.push(path.join(appcdGulpNodeModulesPath, '.bin', 'nyc'));
+			args.push('--reporter=text', '--reporter=html');
+			args.push('mocha');
+		} else {
+			args.push(path.join(appcdGulpNodeModulesPath, '.bin', 'mocha'));
+		}
 
-				let p = process.argv.indexOf('--suite');
-				if (p !== -1 && p + 1 < process.argv.length) {
-					stream = stream.pipe($.filter([ setupScript ].concat(process.argv[p + 1].split(',').map(s => 'test/**/test-' + s + '.js'))));
-				}
+		args.push('--reporter=' + path.join(appcdGulpNodeModulesPath, 'mocha-jenkins-reporter'));
+		process.env.JUNIT_REPORT_PATH = path.join(projectDir, 'junit.xml');
+		process.env.JUNIT_REPORT_NAME = path.basename(projectDir);
 
-				p = process.argv.indexOf('--grep');
-				const mochaOpts = {
-					reporter: 'mocha-jenkins-reporter',
-					reporterOptions: {
-						junit_report_path: path.join(projectDir, 'junit.xml'),
-						junit_report_name: path.basename(projectDir),
-					}
-				};
-				if (p !== -1 && p + 1 < process.argv.length) {
-					mochaOpts.grep = process.argv[p + 1];
-				}
-				stream = stream.pipe($.mocha(mochaOpts));
+		let p = process.argv.indexOf('--grep');
+		if (p !== -1 && p + 1 < process.argv.length) {
+			args.push('--grep', process.argv[p + 1]);
+		}
 
-				let error = null;
+		args.push(path.resolve(__dirname, '../test-setup.js'));
 
-				stream.once('error', err => {
-					error = err;
-					opts.callback(err);
-				});
+		p = process.argv.indexOf('--suite');
+		if (p !== -1 && p + 1 < process.argv.length) {
+			args.push.apply(args, process.argv[p + 1].split(',').map(s => 'test/**/test-' + s + '.js'));
+		} else {
+			args.push('test/**/test-*.js');
+		}
 
-				if (opts.cover) {
-					stream = stream.pipe($.istanbul.writeReports({ coverageVariable: '__coverage__' }));
-				}
+		// console.log(args);
 
-				stream.once('end', () => {
-					if (!error) {
-						opts.callback();
-					}
-				});
-			});
+		spawnSync(process.execPath, args, { stdio: 'inherit' });
+
+		opts.callback();
 	}
 
 	gulp.task('default', ['build']);

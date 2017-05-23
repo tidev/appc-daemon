@@ -142,7 +142,7 @@ describe('Client', () => {
 				}
 			}
 
-			server.on('connection', conn => {
+			server.on('connection', (conn, req) => {
 				conn.on('message', msg => {
 					let json;
 					try {
@@ -153,8 +153,8 @@ describe('Client', () => {
 					}
 
 					try {
-						expect(conn.upgradeReq.headers).to.have.property('user-agent');
-						expect(conn.upgradeReq.headers['user-agent']).to.match(/ appcd-client\//);
+						expect(req.headers).to.have.property('user-agent');
+						expect(req.headers['user-agent']).to.match(/ appcd-client\//);
 						expect(json).to.be.an.Object;
 						expect(json).to.have.keys('version', 'path', 'id', 'data');
 						expect(json.version).to.be.a.String;

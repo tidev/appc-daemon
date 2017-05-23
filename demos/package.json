@@ -1,5 +1,5 @@
 {
-  "name": "scripts",
+  "name": "demos",
   "version": "1.0.0",
   "dependencies": {
     "msgpack-lite": "^0.1.26",

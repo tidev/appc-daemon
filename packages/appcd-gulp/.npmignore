@@ -1,6 +1,7 @@
 ._*
 .DS_Store
 .git*
+.nyc_output
 .travis.yml
 junit.xml
 node_modules
