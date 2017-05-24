@@ -1,6 +1,6 @@
-import Response from '../src/response';
+import Response from '../dist/response';
 
-import { codes } from '../src/codes';
+import { codes } from '../dist/codes';
 
 describe('Response', () => {
 	it('should create a message without a default format', () => {

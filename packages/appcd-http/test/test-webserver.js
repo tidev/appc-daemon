@@ -1,6 +1,6 @@
 import path from 'path';
 import request from 'supertest';
-import WebServer from '../src/index';
+import WebServer from '../dist/index';
 import WebSocket from 'ws';
 
 describe('webserver', () => {

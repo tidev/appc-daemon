@@ -7,7 +7,7 @@
 
 import Koa from 'koa';
 import request from 'supertest';
-import Router, { methods } from '../src/router';
+import Router, { methods } from '../dist/router';
 
 describe('router', () => {
 	describe('core', () => {

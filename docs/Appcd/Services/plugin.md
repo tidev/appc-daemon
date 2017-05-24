@@ -1,5 +1,5 @@
 # ![Appc Daemon logo](images/appc-daemon.png) Daemon Project
 
-## `stop`
+## `/appcd/plugin`
 
-?
+> :warning: Under construction.

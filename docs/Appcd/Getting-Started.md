@@ -161,26 +161,3 @@ yarn
 ```
 
 This will ensure all dependencies for each package match those in the `package.json` files.
-
-### Running Tests
-
-To run all tests, run:
-
-```bash
-gulp coverage
-```
-
-You may also run unit tests for a specific package:
-
-```bash
-cd packages/<name>
-gulp coverage
-# or
-gulp test
-```
-
-To display debug logging while running unit tests, run:
-
-```bash
-SNOOPLOGG=* gulp test
-```

@@ -10,11 +10,8 @@ try {
 	process.exit(1);
 }
 
-if (!Error.prepareStackTrace) {
-	require('source-map-support/register');
-}
-
 import 'babel-polyfill';
+import 'double-stack';
 
 import CLI from 'cli-kit';
 import snooplogg from './logger';

@@ -1,4 +1,4 @@
-import * as path from '../src/path';
+import * as path from '../dist/path';
 
 describe('path', () => {
 	describe('expandPath()', () => {

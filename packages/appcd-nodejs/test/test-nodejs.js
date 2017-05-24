@@ -7,7 +7,7 @@ import {
 	downloadNode,
 	extractNode,
 	spawnNode
-} from '../src/nodejs';
+} from '../dist/nodejs';
 
 tmp.setGracefulCleanup();
 function makeTempDir() {

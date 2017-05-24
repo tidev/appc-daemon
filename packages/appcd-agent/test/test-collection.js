@@ -1,4 +1,4 @@
-import Collection from '../src/collection';
+import Collection from '../dist/collection';
 
 describe('collection', () => {
 	it('should add values to a collection and compute stats', () => {

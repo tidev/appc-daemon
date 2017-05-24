@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 
-import AppcdError, { createErrorClass } from '../src/appcd-error';
+import AppcdError, { createErrorClass } from '../dist/appcd-error';
 
 describe('AppcdError', () => {
 	it('should create an error without args', () => {
