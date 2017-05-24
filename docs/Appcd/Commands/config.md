@@ -74,7 +74,7 @@ exists, then it is overwritten by the new value.
 ##### `<key>`
 
 A dot-notation config setting to get such as `telemetry.enabled`. If there is no `key` specified,
-then the entire configuration is returned.
+then the command errors.
 
 ##### `<value>`
 
@@ -110,7 +110,7 @@ pruned.
 ##### `<key>`
 
 A dot-notation config setting to get such as `telemetry.enabled`. If there is no `key` specified,
-then the entire configuration is returned.
+then the command errors.
 
 #### Options
 
@@ -145,7 +145,7 @@ array containing the existing value.
 ##### `<key>`
 
 A dot-notation config setting to get such as `telemetry.enabled`. If there is no `key` specified,
-then the entire configuration is returned.
+then the command errors.
 
 ##### `<value>`
 

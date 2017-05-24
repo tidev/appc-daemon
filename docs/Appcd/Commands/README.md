@@ -2,11 +2,11 @@
 
 ## Commands
 
-* [start](start.md)
-* [stop](stop.md)
-* [restart](restart.md)
-* [status](status.md)
-* [logcat](logcat.md)
 * [config](config.md)
 * [exec](exec.md)
 * [help](help.md)
+* [logcat](logcat.md)
+* [restart](restart.md)
+* [start](start.md)
+* [status](status.md)
+* [stop](stop.md)
