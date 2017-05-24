@@ -433,9 +433,12 @@ gulp.task('coverage', ['build'], cb => {
 		}, Promise.resolve())
 		.then(() => {
 			fs.mkdirsSync(coverageDir);
+			console.log();
 
 			for (const type of [ 'lcov', 'json', 'text', 'text-summary', 'cobertura' ]) {
-				istanbul.Report.create(type, { dir: coverageDir }).writeReport(collector, true);
+				istanbul.Report
+					.create(type, { dir: coverageDir })
+					.writeReport(collector, true);
 			}
 
 			if (projectsFailed === 1) {

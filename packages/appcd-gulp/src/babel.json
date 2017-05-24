@@ -10,7 +10,7 @@
 			"transform-es2015-parameters",
 			"transform-object-rest-spread"
 		],
-		"presets": [
+		"xpresets": [
 			"babili"
 		]
 	},
@@ -25,7 +25,7 @@
 			"transform-es2015-modules-commonjs",
 			"transform-object-rest-spread"
 		],
-		"presets": [
+		"xpresets": [
 			"babili"
 		]
 	},
@@ -38,7 +38,7 @@
 			"transform-es2015-modules-commonjs",
 			"transform-object-rest-spread"
 		],
-		"presets": [
+		"xpresets": [
 			"babili"
 		]
 	}

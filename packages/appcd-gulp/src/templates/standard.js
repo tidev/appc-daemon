@@ -127,8 +127,8 @@ module.exports = (opts) => {
 	/*
 	 * test tasks
 	 */
-	gulp.task('test', ['lint-src', 'lint-test', 'check-deps'], cb => runTests(false, cb));
-	gulp.task('coverage', ['lint-test', 'build-coverage', 'clean-coverage', 'check-deps'], cb => runTests(true, cb));
+	gulp.task('test', ['build', 'check-deps', 'lint-test'], cb => runTests(false, cb));
+	gulp.task('coverage', ['build-coverage', 'check-deps', 'clean-coverage', 'lint-test'], cb => runTests(true, cb));
 
 	gulp.task('check-deps', cb => {
 		if (!opts.pkgJson || !Array.isArray(opts.pkgJson.appcdDependencies)) {
@@ -207,7 +207,7 @@ module.exports = (opts) => {
 		}
 
 		$.util.log('Following dependencies must be re-built:');
-		needsBuild.forEach(p => $.util.log('  ' + p));
+		needsBuild.forEach(p => $.util.log('  ' + $.util.colors.cyan(p)));
 
 		gulp
 			.src(needsBuild)
@@ -218,11 +218,19 @@ module.exports = (opts) => {
 	function runTests(cover, callback) {
 		const args = [];
 		if (cover) {
-			args.push(path.join(appcdGulpNodeModulesPath, '.bin', 'nyc'));
-			args.push('--exclude', 'dist');
-			args.push('--exclude', 'test');
-			args.push('--reporter=text', '--reporter=html', '--reporter=json');
-			args.push('mocha');
+			args.push(
+				path.resolve(__dirname, '..', 'run-nyc.js'),
+				path.join(appcdGulpNodeModulesPath, '.bin', 'nyc'),
+				'--exclude', 'dist',
+				'--exclude', 'test',
+				'--reporter=text',
+				'--reporter=html',
+				'--reporter=json',
+				'--show-process-tree',
+				process.execPath,
+				path.join(appcdGulpNodeModulesPath, '.bin', 'mocha')
+			);
+			process.env.FORCE_COLOR = 1;
 		} else {
 			args.push(path.join(appcdGulpNodeModulesPath, '.bin', 'mocha'));
 		}
