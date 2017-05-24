@@ -1,4 +1,4 @@
-import { locale } from '../src/locale';
+import { locale } from '../dist/locale';
 
 describe('locale', () => {
 	it('should detect the system\'s locale', () => {

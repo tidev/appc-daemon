@@ -1,4 +1,4 @@
-import Config, { load } from '../src/index';
+import Config, { load } from '../dist/index';
 import path from 'path';
 
 describe('load()', () => {

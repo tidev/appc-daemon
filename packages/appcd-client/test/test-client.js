@@ -1,4 +1,4 @@
-import Client from '../src/client';
+import Client from '../dist/client';
 import msgpack from 'msgpack-lite';
 
 import { Server as WebSocketServer } from 'ws';

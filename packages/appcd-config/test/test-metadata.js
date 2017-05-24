@@ -1,4 +1,4 @@
-import Metadata from '../src/metadata';
+import Metadata from '../dist/metadata';
 import path from 'path';
 
 import { parse } from 'babylon';

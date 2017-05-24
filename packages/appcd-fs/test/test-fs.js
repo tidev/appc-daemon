@@ -5,7 +5,7 @@ import {
 	isDir,
 	isFile,
 	locate
-} from '../src/fs';
+} from '../dist/fs';
 
 describe('fs', () => {
 	describe('existsSync()', () => {

@@ -11,7 +11,7 @@ import {
 	reset,
 	renderTree,
 	status
-} from '../src/index';
+} from '../dist/index';
 
 const log = snooplogg.config({ theme: 'standard' })('test:appcd:fswatcher').log;
 const { green, highlight } = snooplogg.styles;

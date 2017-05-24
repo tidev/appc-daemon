@@ -1,4 +1,4 @@
-import Agent from '../src/index';
+import Agent from '../dist/index';
 
 describe('agent', () => {
 	describe('poll', () => {

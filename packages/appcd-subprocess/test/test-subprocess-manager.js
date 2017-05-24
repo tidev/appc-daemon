@@ -1,8 +1,8 @@
 import Dispatcher from 'appcd-dispatcher';
 import path from 'path';
 import snooplogg from 'snooplogg';
-import SubprocessError from '../src/subprocess-error';
-import SubprocessManager from '../src/index';
+import SubprocessError from '../dist/subprocess-error';
+import SubprocessManager from '../dist/index';
 import tmp from 'tmp';
 
 const logger = snooplogg.config({ theme: 'detailed' })('test');

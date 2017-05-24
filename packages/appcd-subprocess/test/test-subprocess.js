@@ -1,6 +1,6 @@
-import * as subprocess from '../src/subprocess';
+import * as subprocess from '../dist/subprocess';
 import path from 'path';
-import SubprocessError from '../src/subprocess-error';
+import SubprocessError from '../dist/subprocess-error';
 
 const executable = `test${subprocess.exe}`;
 const dir = path.join(__dirname, 'fixtures');

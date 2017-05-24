@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import FSWatchManager, { renderTree, reset, roots } from '../src/index';
+import FSWatchManager, { renderTree, reset, roots } from '../dist/index';
 import path from 'path';
 import snooplogg from 'snooplogg';
 import tmp from 'tmp';

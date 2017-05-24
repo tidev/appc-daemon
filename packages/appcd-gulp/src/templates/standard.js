@@ -7,9 +7,9 @@ module.exports = (opts) => {
 	const babelConfs  = require('../babel.json');
 	const del         = require('del');
 	const fs          = require('fs');
+	const globule     = require('globule');
 	const Module      = require('module');
 	const path        = require('path');
-	const runSequence = require('run-sequence').use(gulp);
 	const spawnSync   = require('child_process').spawnSync;
 
 	const projectDir  = opts.projectDir;
@@ -85,18 +85,30 @@ module.exports = (opts) => {
 	/*
 	 * build tasks
 	 */
-	gulp.task('build', ['clean-dist', 'lint-src'], () => {
+	gulp.task('build', ['clean-dist', 'lint-src'], () => build());
+	gulp.task('build-coverage', ['clean-dist', 'lint-src'], () => build(true));
+
+	function build(cover) {
+		const plugins = babelConf.plugins;
+		if (cover) {
+			plugins.push('istanbul');
+			try {
+				fs.mkdirSync(distDir);
+			} catch (e) {}
+			fs.writeFileSync(path.join(distDir, '.covered'), '');
+		}
+
 		return gulp.src('src/**/*.js')
 			.pipe($.plumber())
 			.pipe($.debug({ title: 'build' }))
 			.pipe($.sourcemaps.init())
 			.pipe($.babel({
-				plugins: babelConf.plugins,
+				plugins: plugins,
 				presets: babelConf.presets
 			}))
 			.pipe($.sourcemaps.write())
 			.pipe(gulp.dest(distDir));
-	});
+	}
 
 	gulp.task('docs', ['lint-src', 'clean-docs'], () => {
 		return gulp.src('src')
@@ -115,15 +127,101 @@ module.exports = (opts) => {
 	/*
 	 * test tasks
 	 */
-	gulp.task('test', ['lint-src', 'lint-test'], cb => runTests({ callback: cb }));
-	gulp.task('coverage', ['lint-src', 'lint-test', 'clean-coverage'], cb => runTests({ cover: true, callback: cb }));
+	gulp.task('test', ['lint-src', 'lint-test', 'check-deps'], cb => runTests(false, cb));
+	gulp.task('coverage', ['lint-test', 'build-coverage', 'clean-coverage', 'check-deps'], cb => runTests(true, cb));
 
-	function runTests(opts) {
+	gulp.task('check-deps', cb => {
+		if (!opts.pkgJson || !Array.isArray(opts.pkgJson.appcdDependencies)) {
+			return cb();
+		}
+
+		const depmap = {};
+		const root = path.resolve(__dirname, '..', '..', '..', '..');
+		let pkg;
+		const pkgs = [];
+		const packages = [];
+
+		// build the dependency map
+		globule
+			.find(['./*/package.json', 'packages/*/package.json', '!packages/appcd-gulp/*', 'plugins/*/package.json'], { srcBase: '../..' })
+			.forEach(pkgJsonFile => {
+				pkgJsonFile = path.resolve('..', '..', pkgJsonFile);
+				const dir = path.dirname(pkgJsonFile);
+				let name = path.relative(root, dir);
+				const pkgJson = JSON.parse(fs.readFileSync(pkgJsonFile));
+				if (opts.pkgJson.appcdDependencies.indexOf(pkgJson.name) !== -1) {
+					pkgs.push(name);
+				}
+				if (Array.isArray(pkgJson.appcdDependencies)) {
+					depmap[name] = pkgJson.appcdDependencies.map(d => `packages/${d}`);
+				}
+			});
+
+		// sort the list of appcd dependencies
+		while (pkg = pkgs.shift()) {
+			const deps = (function getDeps(pkg) {
+				const list = depmap[pkg] || [];
+				for (const dep of list) {
+					for (const depdep of getDeps(dep)) {
+						if (list.indexOf(depdep) === -1) {
+							list.push(depdep);
+						}
+					}
+				}
+				return list;
+			}(pkg));
+
+			let insertAt = -1;
+			for (let i = 0; i < deps.length; i++) {
+				const p = packages.indexOf(deps[i]);
+				if (p !== -1 && p > insertAt) {
+					insertAt = p + 1;
+				}
+			}
+
+			insertAt = Math.max(insertAt, 0);
+			packages.splice(insertAt, 0, pkg);
+		}
+
+		const needsBuild = [];
+
+		for (pkg of packages) {
+			const distDir = path.join(root, pkg, 'dist');
+			try {
+				fs.statSync(distDir);
+
+				try {
+					fs.statSync(path.join(distDir, '.covered'))
+				} catch (e) {
+					continue;
+				}
+
+				throw new Error();
+			} catch (e) {
+				needsBuild.push(path.join(root, pkg, 'gulpfile.js'));
+			}
+		}
+
+		if (!needsBuild.length) {
+			return cb();
+		}
+
+		$.util.log('Following dependencies must be re-built:');
+		needsBuild.forEach(p => $.util.log('  ' + p));
+
+		gulp
+			.src(needsBuild)
+			.pipe($.chug({ tasks: ['build'] }))
+			.on('finish', () => cb());
+	});
+
+	function runTests(cover, callback) {
 		const args = [];
-
-		if (opts.cover) {
+		if (cover) {
 			args.push(path.join(appcdGulpNodeModulesPath, '.bin', 'nyc'));
-			args.push('--reporter=text', '--reporter=html');
+			args.push('--exclude', 'dist');
+			args.push('--exclude', 'test');
+			args.push('--reporter=text', '--reporter=html', '--reporter=json');
 			args.push('mocha');
 		} else {
 			args.push(path.join(appcdGulpNodeModulesPath, '.bin', 'mocha'));
@@ -151,7 +249,7 @@ module.exports = (opts) => {
 
 		spawnSync(process.execPath, args, { stdio: 'inherit' });
 
-		opts.callback();
+		callback();
 	}
 
 	gulp.task('default', ['build']);

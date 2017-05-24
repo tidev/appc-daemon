@@ -34,7 +34,7 @@ const fixReasons = {
 };
 
 const dontUpdate = [
-	'gulp-mocha'
+	// add npm packages to ignore when upgrading to latest version
 ];
 
 if (process.argv.indexOf('--silent') !== -1) {

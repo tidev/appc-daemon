@@ -1,6 +1,6 @@
 import path from 'path';
 
-import * as util from '../src/util';
+import * as util from '../dist/util';
 
 describe('util', () => {
 
@@ -310,6 +310,30 @@ describe('util', () => {
 			expect(h1).to.have.lengthOf(40);
 
 			const h2 = util.sha1('bar');
+			expect(h2).to.be.a.String;
+			expect(h2).to.have.lengthOf(40);
+
+			expect(h1).to.not.equal(h2);
+		});
+
+		it('should hash a number', () => {
+			const h1 = util.sha1(123);
+			expect(h1).to.be.a.String;
+			expect(h1).to.have.lengthOf(40);
+
+			const h2 = util.sha1(456);
+			expect(h2).to.be.a.String;
+			expect(h2).to.have.lengthOf(40);
+
+			expect(h1).to.not.equal(h2);
+		});
+
+		it('should hash an object', () => {
+			const h1 = util.sha1({ foo: 'bar' });
+			expect(h1).to.be.a.String;
+			expect(h1).to.have.lengthOf(40);
+
+			const h2 = util.sha1({ baz: 'wiz' });
 			expect(h2).to.be.a.String;
 			expect(h2).to.have.lengthOf(40);
 

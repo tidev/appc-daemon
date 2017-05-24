@@ -3,7 +3,7 @@ import snooplogg from 'snooplogg';
 
 import { spawn } from 'child_process';
 
-const log = snooplogg.config({ theme: 'standard' })('test:appcd:plugin:host').log;
+const log = snooplogg.config({ theme: 'detailed' })('test:appcd:plugin:host').log;
 const { green, highlight } = snooplogg.styles;
 
 describe('Plugin Host', () => {

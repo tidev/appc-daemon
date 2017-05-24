@@ -1,6 +1,6 @@
-import Dispatcher from '../src/index';
-import DispatcherError from '../src/dispatcher-error';
-import ServiceDispatcher from '../src/service-dispatcher';
+import Dispatcher from '../dist/index';
+import DispatcherError from '../dist/dispatcher-error';
+import ServiceDispatcher from '../dist/service-dispatcher';
 
 import Response, { AppcdError, codes } from 'appcd-response';
 

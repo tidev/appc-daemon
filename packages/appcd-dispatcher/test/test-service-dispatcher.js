@@ -1,5 +1,5 @@
-import Dispatcher from '../src/dispatcher';
-import ServiceDispatcher from '../src/service-dispatcher';
+import Dispatcher from '../dist/dispatcher';
+import ServiceDispatcher from '../dist/service-dispatcher';
 
 import Response, { codes, loadMessage } from 'appcd-response';
 

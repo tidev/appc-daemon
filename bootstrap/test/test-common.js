@@ -1,4 +1,4 @@
-import * as nodejs from '../src/common';
+import * as nodejs from '../dist/common';
 
 describe('bootstrap', () => {
 	describe('common', () => {

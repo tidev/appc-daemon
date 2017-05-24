@@ -1,4 +1,4 @@
-import StatusMonitor from '../src/status-monitor';
+import StatusMonitor from '../dist/status-monitor';
 
 describe('StatusMonitor', () => {
 	it('should get uptime', () => {
