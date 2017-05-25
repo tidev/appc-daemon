@@ -131,83 +131,52 @@ module.exports = (opts) => {
 	gulp.task('coverage', ['build-coverage', 'check-deps', 'clean-coverage', 'lint-test'], cb => runTests(true, cb));
 
 	gulp.task('check-deps', cb => {
-		if (!opts.pkgJson || !Array.isArray(opts.pkgJson.appcdDependencies)) {
+		if (!opts.pkgJson) {
 			return cb();
 		}
 
-		const depmap = {};
-		const root = path.resolve(__dirname, '..', '..', '..', '..');
-		let pkg;
-		const pkgs = [];
-		const packages = [];
+		const needsBuild = [];
+		let baseDir = path.dirname(opts.projectDir);
+		try {
+			fs.statSync(path.join(baseDir, 'package.json'));
+		} catch (e) {
+			baseDir = path.dirname(baseDir);
+		}
 
-		// build the dependency map
 		globule
-			.find(['./*/package.json', 'packages/*/package.json', '!packages/appcd-gulp/*', 'plugins/*/package.json'], { srcBase: '../..' })
+			.find(['./*/package.json', '!./demos/*', 'packages/*/package.json', '!packages/appcd-gulp/*', 'plugins/*/package.json'], { srcBase: baseDir })
 			.forEach(pkgJsonFile => {
-				pkgJsonFile = path.resolve('..', '..', pkgJsonFile);
-				const dir = path.dirname(pkgJsonFile);
-				let name = path.relative(root, dir);
-				const pkgJson = JSON.parse(fs.readFileSync(pkgJsonFile));
-				if (opts.pkgJson.appcdDependencies.indexOf(pkgJson.name) !== -1) {
-					pkgs.push(name);
+				pkgJsonFile = path.join(baseDir, pkgJsonFile);
+
+				if (JSON.parse(fs.readFileSync(pkgJsonFile)).name === opts.pkgJson.name) {
+					return;
 				}
-				if (Array.isArray(pkgJson.appcdDependencies)) {
-					depmap[name] = pkgJson.appcdDependencies.map(d => `packages/${d}`);
+
+				const dir = path.dirname(pkgJsonFile);
+				const distDir = path.join(dir, 'dist');
+				try {
+					fs.statSync(distDir);
+
+					try {
+						fs.statSync(path.join(distDir, '.covered'))
+					} catch (e) {
+						return;
+					}
+
+					throw new Error();
+				} catch (e) {
+					needsBuild.push(path.join(dir, 'gulpfile.js'));
 				}
 			});
-
-		// sort the list of appcd dependencies
-		while (pkg = pkgs.shift()) {
-			const deps = (function getDeps(pkg) {
-				const list = depmap[pkg] || [];
-				for (const dep of list) {
-					for (const depdep of getDeps(dep)) {
-						if (list.indexOf(depdep) === -1) {
-							list.push(depdep);
-						}
-					}
-				}
-				return list;
-			}(pkg));
-
-			let insertAt = -1;
-			for (let i = 0; i < deps.length; i++) {
-				const p = packages.indexOf(deps[i]);
-				if (p !== -1 && p > insertAt) {
-					insertAt = p + 1;
-				}
-			}
-
-			insertAt = Math.max(insertAt, 0);
-			packages.splice(insertAt, 0, pkg);
-		}
-
-		const needsBuild = [];
-
-		for (pkg of packages) {
-			const distDir = path.join(root, pkg, 'dist');
-			try {
-				fs.statSync(distDir);
-
-				try {
-					fs.statSync(path.join(distDir, '.covered'))
-				} catch (e) {
-					continue;
-				}
-
-				throw new Error();
-			} catch (e) {
-				needsBuild.push(path.join(root, pkg, 'gulpfile.js'));
-			}
-		}
 
 		if (!needsBuild.length) {
 			return cb();
 		}
 
+		$.util.log('--------------------------------------------------------------------------------');
 		$.util.log('Following dependencies must be re-built:');
-		needsBuild.forEach(p => $.util.log('  ' + $.util.colors.cyan(p)));
+		needsBuild.forEach(p => $.util.log($.util.colors.cyan(p)));
+		$.util.log('--------------------------------------------------------------------------------');
 
 		gulp
 			.src(needsBuild)
