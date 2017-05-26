@@ -2,7 +2,7 @@
 
 ## appc - Appc CLI
 
-appc is the name of the Appc CLI product. The current Appc CLI is published on NPM using the
+appc is the name of the Appc CLI product. The current Appc CLI is published on npm using the
 [appcelerator](https://npmjs.org/package/appcelerator) name, however we also own
 [appc](https://npmjs.org/package/appc).
 

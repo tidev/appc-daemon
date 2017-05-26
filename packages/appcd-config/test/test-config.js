@@ -486,11 +486,11 @@ describe('Config', () => {
 });
 
 function validateMetadata(meta, desc, type, deprecated, readonly) {
-	expect(meta).to.be.an.object;
+	expect(meta).to.be.an('object');
 	expect(meta).to.have.property('desc', desc);
 	expect(meta).to.have.property('type', type);
 	expect(meta).to.have.property('deprecated', deprecated);
 	expect(meta).to.have.property('readonly', readonly);
 	expect(meta).to.have.property('validate');
-	expect(meta.validate).to.be.a.function;
+	expect(meta.validate).to.be.a('function');
 }

@@ -12,6 +12,10 @@ coverage for all packages and plugins. It will merge all the individual coverage
 single report and put it in the `/path/to/appc-daemon/coverage` directory.
 
 ```bash
+gulp test
+```
+
+```bash
 gulp coverage
 ```
 
@@ -25,9 +29,9 @@ Each package and plugin depends on the `appcd-gulp` package. This package provid
 The `test` task will:
 
 * Lint the source and the tests.
-* Check the appcd dependencies to make sure they have been built and that they aren't covered
-  builds.
-    * It will rebuild the appcd dependency if needed.
+* Builds the source
+* All tests are transpiled on-the-fly using
+  [`babel-register`](https://www.npmjs.com/package/babel-register)
 * Runs [mocha](https://mochajs.org/)
 
 ```bash
@@ -63,16 +67,11 @@ gulp test --grep foo
 
 The `coverage` task will:
 
-* Lints the tests
-* Builds the source with coverage
-    * Lints the source
-	* Transpile the code using Babel
-	* Instruments the code using [babel-plugin-istanbul](https://github.com/istanbuljs/babel-plugin-istanbul)
-* Check the appcd dependencies to make sure they have been built and that they aren't covered
-  builds.
-    * It will rebuild the appcd dependency if needed.
+* Lints the source and tests
 * Runs [nyc](https://github.com/istanbuljs/nyc)
 	* `nyc` wraps subprocess calls so that it can track them
+	* All source and tests are transpiled and instrumented on-the-fly using
+      [`babel-register`](https://www.npmjs.com/package/babel-register)
 	* Runs [mocha](https://mochajs.org/)
 	* Writes coverage reports to `<package>/coverage`
 
@@ -82,17 +81,13 @@ gulp coverage
 
 ### Babel Transpilation
 
-It's important to note that the unit tests are testing the package's transpiled code from the `dist`
-directory. This is so you can test the exact same code that is shipping.
-
-However, since appcd packages have dependencies on other appcd packages, it's possible for the
-dependency's `dist` directory to contain instrumented transpiled code. That's why the `test` and
-`coverage` tasks have to check all appcd dependencies to make sure they are built and they aren't
-code coverage builds. If a dependency is left as a covered build, then it will skew the coverage
-report. A simple check will rebuild the dependency before running the coverage tests.
+It's important to note that the `test` task will test the actual distribution source in the `dist`
+directory. The `coverage` task does not build the source, but rather transpiles and instruments it
+on-the-fly.
 
 ECMAScript features are available to unit tests. The unit tests are transpiled on-the-fly using
-[babel-register](https://www.npmjs.com/package/babel-register). babel-register wraps `require()`
-and if a module being required is a test file, then it will be transpiled and cached in Node's
-module cache. This means that transpiled tests are _not_ written to disk and they can continue to
-reference fixtures and resouces in the `test` directory.
+[`babel-register`](https://www.npmjs.com/package/babel-register).
+[`babel-register`](https://www.npmjs.com/package/babel-register) wraps `require()` and if a module
+being required is a test file, then it will be transpiled and cached in Node's module cache. This
+means that transpiled tests are _not_ written to disk and they can continue to reference fixtures
+and resouces in the `test` directory.

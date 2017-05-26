@@ -2,7 +2,7 @@
 
 ## Distribution
 
-The Appc Daemon is intended to be distributed via NPM under the `appcd` package name.
+The Appc Daemon is intended to be distributed via npm under the `appcd` package name.
 
 ### License
 

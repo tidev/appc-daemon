@@ -4,7 +4,7 @@
 
 > :key: The use of _sudo_ below only applies to certain macOS and Linux machines.
 
-### Installing via NPM
+### Installing via npm
 
 > :no_entry: _appcd_ has not yet been publically released.
 
@@ -145,7 +145,7 @@ process is ready to be inspected.
 
 ### Checking the Source Code
 
-Periodically, run the check task to make sure all of the NPM dependencies are up-to-date and that
+Periodically, run the check task to make sure all of the npm dependencies are up-to-date and that
 there is no security issues. If there are any issues, follow the recommended actions.
 
 ```bash

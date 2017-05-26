@@ -24,7 +24,7 @@ The data that is captured includes:
 * Software information:
 	* Operating system and architecture
 	* Node.js
-	* NPM
+	* npm
 	* Yarn
 	* Xcode
 	* iOS SDKs

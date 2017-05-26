@@ -48,7 +48,6 @@ module.exports = (opts) => {
 							paths: resolvedModule[1]
 						});
 						Module._pathCache[cacheKey] = require.resolve(plugin);
-
 						// inject(subdir);
 					}
 				} catch (e) {}
@@ -85,30 +84,18 @@ module.exports = (opts) => {
 	/*
 	 * build tasks
 	 */
-	gulp.task('build', ['clean-dist', 'lint-src'], () => build());
-	gulp.task('build-coverage', ['clean-dist', 'lint-src'], () => build(true));
-
-	function build(cover) {
-		const plugins = babelConf.plugins;
-		if (cover) {
-			plugins.push('istanbul');
-			try {
-				fs.mkdirSync(distDir);
-			} catch (e) {}
-			fs.writeFileSync(path.join(distDir, '.covered'), '');
-		}
-
+	gulp.task('build', ['clean-dist', 'lint-src'], () => {
 		return gulp.src('src/**/*.js')
 			.pipe($.plumber())
 			.pipe($.debug({ title: 'build' }))
-			.pipe($.sourcemaps.init())
 			.pipe($.babel({
-				plugins: plugins,
-				presets: babelConf.presets
+				plugins: babelConf.plugins,
+				presets: babelConf.presets,
+				sourceMaps: 'inline',
+				sourceRoot: path.join(opts.projectDir, 'src')
 			}))
-			.pipe($.sourcemaps.write())
 			.pipe(gulp.dest(distDir));
-	}
+	})
 
 	gulp.task('docs', ['lint-src', 'clean-docs'], () => {
 		return gulp.src('src')
@@ -127,94 +114,55 @@ module.exports = (opts) => {
 	/*
 	 * test tasks
 	 */
-	gulp.task('test', ['build', 'check-deps', 'lint-test'], cb => runTests(false, cb));
-	gulp.task('coverage', ['build-coverage', 'check-deps', 'clean-coverage', 'lint-test'], cb => runTests(true, cb));
+	gulp.task('test', ['build', 'lint-test'], () => runTests());
+	gulp.task('test-only', ['lint-test'], () => runTests());
+	gulp.task('coverage', ['clean-coverage', 'lint-src', 'lint-test'], () => runTests(true));
+	gulp.task('coverage-only', ['clean-coverage', 'lint-test'], () => runTests(true));
 
-	gulp.task('check-deps', cb => {
-		if (!opts.pkgJson) {
-			return cb();
-		}
-
-		const needsBuild = [];
-		let baseDir = path.dirname(opts.projectDir);
-		try {
-			fs.statSync(path.join(baseDir, 'package.json'));
-		} catch (e) {
-			baseDir = path.dirname(baseDir);
-		}
-
-		globule
-			.find(['./*/package.json', '!./demos/*', 'packages/*/package.json', '!packages/appcd-gulp/*', 'plugins/*/package.json'], { srcBase: baseDir })
-			.forEach(pkgJsonFile => {
-				pkgJsonFile = path.join(baseDir, pkgJsonFile);
-
-				if (JSON.parse(fs.readFileSync(pkgJsonFile)).name === opts.pkgJson.name) {
-					return;
-				}
-
-				const dir = path.dirname(pkgJsonFile);
-				const distDir = path.join(dir, 'dist');
-				try {
-					fs.statSync(distDir);
-
-					try {
-						fs.statSync(path.join(distDir, '.covered'))
-					} catch (e) {
-						return;
-					}
-
-					throw new Error();
-				} catch (e) {
-					needsBuild.push(path.join(dir, 'gulpfile.js'));
-				}
-			});
-
-		if (!needsBuild.length) {
-			return cb();
-		}
-
-		$.util.log('--------------------------------------------------------------------------------');
-		$.util.log('Following dependencies must be re-built:');
-		needsBuild.forEach(p => $.util.log($.util.colors.cyan(p)));
-		$.util.log('--------------------------------------------------------------------------------');
-
-		gulp
-			.src(needsBuild)
-			.pipe($.chug({ tasks: ['build'] }))
-			.on('finish', () => cb());
-	});
-
-	function runTests(cover, callback) {
+	function runTests(cover) {
 		const args = [];
+
+		// add nyc
 		if (cover) {
 			args.push(
 				path.resolve(__dirname, '..', 'run-nyc.js'),
 				path.join(appcdGulpNodeModulesPath, '.bin', 'nyc'),
-				'--exclude', 'dist',
+				'--cache', 'false',
 				'--exclude', 'test',
-				'--reporter=text',
+				'--instrument', 'false',
+				'--source-map', 'false',
 				'--reporter=html',
 				'--reporter=json',
+				'--reporter=text',
+				'--require', path.resolve(__dirname, '../test-transpile.js'),
 				'--show-process-tree',
-				process.execPath,
-				path.join(appcdGulpNodeModulesPath, '.bin', 'mocha')
+				process.execPath // need to specify node here so that spawn-wrap works
 			);
 			process.env.FORCE_COLOR = 1;
-		} else {
-			args.push(path.join(appcdGulpNodeModulesPath, '.bin', 'mocha'));
+			process.env.APPCD_COVERAGE = 1;
 		}
 
+		// add mocha
+		args.push(path.join(appcdGulpNodeModulesPath, '.bin', 'mocha'));
 		args.push('--reporter=' + path.join(appcdGulpNodeModulesPath, 'mocha-jenkins-reporter'));
 		process.env.JUNIT_REPORT_PATH = path.join(projectDir, 'junit.xml');
 		process.env.JUNIT_REPORT_NAME = path.basename(projectDir);
 
+		// add grep
 		let p = process.argv.indexOf('--grep');
 		if (p !== -1 && p + 1 < process.argv.length) {
 			args.push('--grep', process.argv[p + 1]);
 		}
 
+		// add transpile setup
+		if (!cover) {
+			args.push(path.resolve(__dirname, '../test-transpile.js'));
+		}
+
+		// add unit test setup
 		args.push(path.resolve(__dirname, '../test-setup.js'));
 
+		// add suite
 		p = process.argv.indexOf('--suite');
 		if (p !== -1 && p + 1 < process.argv.length) {
 			args.push.apply(args, process.argv[p + 1].split(',').map(s => 'test/**/test-' + s + '.js'));
@@ -224,9 +172,8 @@ module.exports = (opts) => {
 
 		// console.log(args);
 
+		// run!
 		spawnSync(process.execPath, args, { stdio: 'inherit' });
-
-		callback();
 	}
 
 	gulp.task('default', ['build']);

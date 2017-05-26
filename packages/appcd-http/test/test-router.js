@@ -35,10 +35,10 @@ describe('router', () => {
 
 		it('.routes() should be a valid middleware factory', done => {
 			const router = new Router();
-			expect(router.routes).to.be.a.function;
+			expect(router.routes).to.be.a('function');
 			const middleware = router.routes();
 			expect(middleware).to.be.ok;
-			expect(middleware).to.be.a.function;
+			expect(middleware).to.be.a('function');
 			done();
 		});
 

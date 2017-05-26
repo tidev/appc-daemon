@@ -1,7 +1,3 @@
-if (module.parent) {
-	throw new Error('appcd-core is meant to be run directly, not require()\'d');
-}
-
 /* istanbul ignore if */
 if (!Error.prepareStackTrace) {
 	require('source-map-support/register');
@@ -20,8 +16,6 @@ import vm from 'vm';
 import { expandPath } from 'appcd-path';
 import { isDir, isFile } from 'appcd-fs';
 import { wrap } from 'module';
-
-process.title = 'appcd-plugin-host';
 
 const logger = snooplogg.stdio.config({ theme: 'detailed' })('appcd:plugin:host');
 const { highlight, note } = snooplogg.styles;

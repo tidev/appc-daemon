@@ -157,7 +157,7 @@ describe('nodejs', () => {
 			}).then(binary => {
 				done(new Error('Expected 404'));
 			}).catch(err => {
-				expect(err).to.be.an.Error;
+				expect(err).to.be.an.instanceof(Error);
 				expect(err.message).to.match(/^Failed to download Node\.js: 404/);
 				done();
 			});
@@ -182,7 +182,7 @@ describe('nodejs', () => {
 			}).then(binary => {
 				done(new Error('Expected bad dest error'));
 			}).catch(err => {
-				expect(err).to.be.an.Error;
+				expect(err).to.be.an.instanceof(Error);
 				done();
 			});
 		});
@@ -194,7 +194,7 @@ describe('nodejs', () => {
 			}).then(binary => {
 				done(new Error('Expected bad dest error'));
 			}).catch(err => {
-				expect(err).to.be.an.Error;
+				expect(err).to.be.an.instanceof(Error);
 				done();
 			});
 		});
@@ -206,7 +206,7 @@ describe('nodejs', () => {
 			}).then(binary => {
 				done(new Error('Expected bad dest error'));
 			}).catch(err => {
-				expect(err).to.be.an.Error;
+				expect(err).to.be.an.instanceof(Error);
 				done();
 			});
 		});
@@ -222,7 +222,7 @@ describe('nodejs', () => {
 				done(new Error('Expected bad zip to not be extracted'));
 			}).catch(err => {
 				fs.removeSync(tmpDir);
-				expect(err).to.be.an.Error;
+				expect(err).to.be.an.instanceof(Error);
 				done();
 			});
 		});
@@ -238,7 +238,7 @@ describe('nodejs', () => {
 				done(new Error('Expected bad tarball to not be extracted'));
 			}).catch(err => {
 				fs.removeSync(tmpDir);
-				expect(err).to.be.an.Error;
+				expect(err).to.be.an.instanceof(Error);
 				done();
 			});
 		});
@@ -254,7 +254,7 @@ describe('nodejs', () => {
 				done(new Error('Expected bad pkg to not be extracted'));
 			}).catch(err => {
 				fs.removeSync(tmpDir);
-				expect(err).to.be.an.Error;
+				expect(err).to.be.an.instanceof(Error);
 				done();
 			});
 		});
@@ -270,7 +270,7 @@ describe('nodejs', () => {
 				done(new Error('Expected invalid node zip to not be extracted'));
 			}).catch(err => {
 				fs.removeSync(tmpDir);
-				expect(err).to.be.an.Error;
+				expect(err).to.be.an.instanceof(Error);
 				done();
 			});
 		});
@@ -286,7 +286,7 @@ describe('nodejs', () => {
 				done(new Error('Expected invalid node tarball to not be extracted'));
 			}).catch(err => {
 				fs.removeSync(tmpDir);
-				expect(err).to.be.an.Error;
+				expect(err).to.be.an.instanceof(Error);
 				done();
 			});
 		});
@@ -326,7 +326,7 @@ describe('nodejs', () => {
 			spawnNode({ v8mem: 'foo' })
 				.then(() => done(new Error('Expected v8mem error')))
 				.catch(err => {
-					expect(err).to.be.a.TypeError;
+					expect(err).to.be.an.instanceof(TypeError);
 					expect(err.message).to.equal('Expected v8mem to be a number or "auto"');
 					done();
 				});

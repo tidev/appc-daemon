@@ -40,6 +40,10 @@ export default class PluginManager extends EventEmitter {
 	 * @access public
 	 */
 	constructor(opts = {}) {
+		if (!opts || typeof opts !== 'object') {
+			throw new TypeError('Expected options to be an object');
+		}
+
 		super();
 
 		/**
@@ -48,19 +52,9 @@ export default class PluginManager extends EventEmitter {
 		 */
 		this.paths = [];
 
-		/**
-		 * A list of all detected plugins.
-		 * @type {GawkArray}
-		 */
-		this.plugins = gawk([]);
-
-		if (!opts || typeof opts !== 'object') {
-			throw new TypeError('Expected options to be an object');
-		}
-
 		if (opts.paths) {
 			if (!Array.isArray(opts.paths)) {
-				throw new TypeError('Expected paths to be an array');
+				throw new TypeError('Expected paths option to be an array');
 			}
 
 			for (const dir of opts.paths) {
@@ -69,6 +63,12 @@ export default class PluginManager extends EventEmitter {
 				}
 			}
 		}
+
+		/**
+		 * A list of all detected plugins.
+		 * @type {GawkArray}
+		 */
+		this.plugins = gawk([]);
 
 		/**
 		 * A map of plugin namespaces to plugin version dispatchers.
@@ -101,24 +101,31 @@ export default class PluginManager extends EventEmitter {
 				ctx.response = this.plugins;
 			});
 
-		for (const dir of this.paths) {
+		gawk.watch(this.plugins, (obj, src) => this.emit('change', obj, src));
+	}
+
+	/**
+	 * Scans each path for a plugin and registers them.
+	 *
+	 * @returns {Promise}
+	 * @access public
+	 */
+	start() {
+		return Promise.all(this.paths.map(dir => {
 			this.detect(dir);
 
-			Dispatcher
+			return Dispatcher
 				.call('/appcd/fs/watch', { data: { path: dir }, type: 'subscribe' })
 				.then(ctx => {
 					ctx.response.on('data', evt => {
-						// TODO: re-detect
-						// figure out what changed, then register/unregister
-						console.log(evt);
+						if (evt.type === 'publish') {
+							// TODO: re-detect
+							// figure out what changed, then register/unregister
+							console.log(evt);
+						}
 					});
-				})
-				.catch(err => {
-					logger.error(err);
 				});
-		}
-
-		gawk.watch(this.plugins, (obj, src) => this.emit('change', obj, src));
+		}));
 	}
 
 	/**
@@ -153,13 +160,15 @@ export default class PluginManager extends EventEmitter {
 			}
 		};
 
-		for (const name of fs.readdirSync(dir)) {
-			const subdir = path.join(dir, name);
-			if (isDir(subdir) && !tryRegisterPlugin(subdir)) {
-				// we have a versioned plugin
-				for (const name of fs.readdirSync(subdir)) {
-					if (versionRegExp.test(name)) {
-						tryRegisterPlugin(path.join(subdir, name));
+		if (!tryRegisterPlugin(dir)) {
+			for (const name of fs.readdirSync(dir)) {
+				const subdir = path.join(dir, name);
+				if (isDir(subdir) && !tryRegisterPlugin(subdir)) {
+					// we have a versioned plugin
+					for (const name of fs.readdirSync(subdir)) {
+						if (versionRegExp.test(name)) {
+							tryRegisterPlugin(path.join(subdir, name));
+						}
 					}
 				}
 			}
@@ -241,16 +250,27 @@ export default class PluginManager extends EventEmitter {
 	 * @access public
 	 */
 	shutdown() {
-		return Promise.all(this.plugins.map(plugin => {
-			logger.log('Stopping %s', highlight(`${plugin.name}@${plugin.version}`));
-			return plugin
-				.unload()
-				.catch(err => {
-					if (err.code !== codes.PLUGIN_ALREADY_STOPPED) {
-						throw err;
+		return Promise
+			// stop all fs watchers
+			.all(this.paths.map(topic => {
+				return Dispatcher.call('/appcd/fs/watch', { topic, type: 'unsubscribe' });
+			}))
+
+			// unload all plugins
+			.then(async () => {
+				for (let i = 0; i < this.plugins; i++) {
+					const plugin = this.plugins[i];
+					logger.log('Stopping %s', highlight(`${plugin.name}@${plugin.version}`));
+					try {
+						await plug.unload();
+					} catch (e) {
+						if (err.code !== codes.PLUGIN_ALREADY_STOPPED) {
+							throw err;
+						}
 					}
-				});
-		}));
+					this.plugins.splice(i--, 1);
+				}
+			});
 	}
 
 	/**

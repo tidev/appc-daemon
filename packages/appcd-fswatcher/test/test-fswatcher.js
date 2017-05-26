@@ -92,7 +92,7 @@ describe('FSWatcher', () => {
 				setTimeout(() => {
 				 	new FSWatcher(tmp, null)
 						.on('change', evt => {
-							expect(evt).to.be.an.Object;
+							expect(evt).to.be.an('object');
 							if (evt.file.indexOf(tmpDir) === 0) {
 								expect(evt.action).to.equal('add');
 								expect(evt.file).to.equal(realPath(filename));
@@ -1166,7 +1166,7 @@ describe('FSWatcher', () => {
 						})
 						.on('error', err => {
 							try {
-								expect(err).to.be.an.Error;
+								expect(err).to.be.an.instanceof(Error);
 								expect(err.message).to.equal('Oh no!');
 								done();
 							} catch (e) {
@@ -1190,7 +1190,7 @@ describe('FSWatcher', () => {
 						})
 						.on('error', err => {
 							try {
-								expect(err).to.be.an.Error;
+								expect(err).to.be.an.instanceof(Error);
 								expect(err.message).to.equal('Oh no!');
 								done();
 							} catch (e) {

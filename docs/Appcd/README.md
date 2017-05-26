@@ -2,7 +2,7 @@
 
 ## appcd
 
-appcd is the name of the NPM package that contains the Appc Daemon bootstrap, command line interface
+appcd is the name of the npm package that contains the Appc Daemon bootstrap, command line interface
 (CLI), core, and supporting packages.
 
 1. [Getting Started](Getting-Started.md)

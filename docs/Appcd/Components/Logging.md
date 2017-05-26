@@ -15,7 +15,7 @@ While technically possible, the Appc Daemon currently does not persist logs to d
 
 ### SnoopLogg
 
-The logger is built on top of the [SnoopLogg](https://www.npmjs.com/package/snooplogg) NPM module.
+The logger is built on top of the [SnoopLogg](https://www.npmjs.com/package/snooplogg) npm module.
 
 Each Appc Daemon package uses a SnoopLogg logger. By default, SnoopLogg suppresses all messages, but
 output can be enable for debugging purposes by setting the `SNOOPLOGG` (or `DEBUG`) environment

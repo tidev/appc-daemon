@@ -54,13 +54,13 @@ describe('Metadata', () => {
 			expect(md._map.has('name')).to.be.true;
 
 			const meta = md.get('name');
-			expect(meta).to.be.an.object;
+			expect(meta).to.be.an('object');
 			expect(meta).to.have.property('desc', '');
 			expect(meta).to.have.property('type', null);
 			expect(meta).to.have.property('deprecated', false);
 			expect(meta).to.have.property('readonly', false);
 			expect(meta).to.have.property('validate');
-			expect(meta.validate).to.be.a.function;
+			expect(meta.validate).to.be.a('function');
 		});
 
 		it('should error if type is bad', () => {
@@ -202,7 +202,7 @@ describe('Metadata', () => {
 			const md = new Metadata();
 			md.load(path.join(__dirname, 'fixtures', 'good.json.metadata'));
 			const meta = md.get('name');
-			expect(meta).to.be.an.object;
+			expect(meta).to.be.an('object');
 		});
 
 		it('should error if key is not a string', () => {

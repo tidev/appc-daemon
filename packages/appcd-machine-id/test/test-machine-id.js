@@ -24,7 +24,7 @@ describe('machine-id', () => {
 	it('should get or generate a mid', done => {
 		getMachineId()
 			.then(mid => {
-				expect(mid).to.be.a.String;
+				expect(mid).to.be.a('string');
 				expect(mid).to.have.lengthOf(40);
 				done();
 			})
@@ -39,7 +39,7 @@ describe('machine-id', () => {
 
 		getMachineId(file)
 			.then(mid => {
-				expect(mid).to.be.a.String;
+				expect(mid).to.be.a('string');
 				expect(mid).to.have.lengthOf(40);
 				expect(mid).to.equal(fs.readFileSync(file, 'utf8').split('\n')[0]);
 				done();
@@ -53,7 +53,7 @@ describe('machine-id', () => {
 
 		getMachineId(file)
 			.then(mid => {
-				expect(mid).to.be.a.String;
+				expect(mid).to.be.a('string');
 				expect(mid).to.have.lengthOf(40);
 				expect(mid).to.equal(fs.readFileSync(file, 'utf8').split('\n')[0]);
 				done();
@@ -67,7 +67,7 @@ describe('machine-id', () => {
 
 		getMachineId(file)
 			.then(mid => {
-				expect(mid).to.be.a.String;
+				expect(mid).to.be.a('string');
 				expect(mid).to.have.lengthOf(40);
 				expect(mid).to.equal(fs.readFileSync(file, 'utf8').split('\n')[0]);
 				done();
@@ -80,7 +80,7 @@ describe('machine-id', () => {
 
 		getMachineId(file)
 			.then(mid => {
-				expect(mid).to.be.a.String;
+				expect(mid).to.be.a('string');
 				expect(mid).to.have.lengthOf(40);
 				expect(mid).to.equal(fs.readFileSync(file, 'utf8').split('\n')[0]);
 				done();
@@ -98,7 +98,7 @@ describe('machine-id', () => {
 		process.env.APPCD_TEST_PLATFORM = 'linux';
 		getMachineId()
 			.then(mid => {
-				expect(mid).to.be.a.String;
+				expect(mid).to.be.a('string');
 				expect(mid).to.have.lengthOf(40);
 				done();
 			})

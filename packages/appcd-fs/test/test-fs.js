@@ -53,27 +53,27 @@ describe('fs', () => {
 
 		it('should find a file with no depth', () => {
 			let result = locate(baseDir, 'foo.txt');
-			expect(result).to.be.a.String;
+			expect(result).to.be.a('string');
 			expect(result).to.equal(path.join(baseDir, 'subdir1', 'foo.txt'));
 
 			result = locate(baseDir, 'bar.txt');
-			expect(result).to.be.a.String;
+			expect(result).to.be.a('string');
 			expect(result).to.equal(path.join(baseDir, 'subdir1', 'subdir2', 'bar.txt'));
 		});
 
 		it('should find a file using a regex', () => {
 			let result = locate(baseDir, /foo\.txt/);
-			expect(result).to.be.a.String;
+			expect(result).to.be.a('string');
 			expect(result).to.equal(path.join(baseDir, 'subdir1', 'foo.txt'));
 
 			result = locate(baseDir, /bar\.txt/);
-			expect(result).to.be.a.String;
+			expect(result).to.be.a('string');
 			expect(result).to.equal(path.join(baseDir, 'subdir1', 'subdir2', 'bar.txt'));
 		});
 
 		it('should find a file with depth', () => {
 			const result = locate(baseDir, 'foo.txt', 1);
-			expect(result).to.be.a.String;
+			expect(result).to.be.a('string');
 			expect(result).to.equal(path.join(baseDir, 'subdir1', 'foo.txt'));
 		});
 

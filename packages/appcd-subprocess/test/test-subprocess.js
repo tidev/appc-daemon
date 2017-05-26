@@ -187,7 +187,7 @@ describe('subprocess', () => {
 				options: { cwd: __dirname }
 			});
 
-			expect(desc).to.be.an.Object;
+			expect(desc).to.be.an('object');
 			expect(desc).to.have.keys('command', 'args', 'options', 'child');
 
 			let stdout = '';
@@ -214,7 +214,7 @@ describe('subprocess', () => {
 			process.env.PATH = path.join(__dirname, 'fixtures');
 			subprocess.which(executable)
 				.then(result => {
-					expect(result).to.be.a.String;
+					expect(result).to.be.a('string');
 					expect(result).to.equal(fullpath);
 					done();
 				})
@@ -236,7 +236,7 @@ describe('subprocess', () => {
 			process.env.PATH = path.join(__dirname, 'fixtures');
 			subprocess.which(['no_way_does_this_already_exist', executable])
 				.then(result => {
-					expect(result).to.be.a.String;
+					expect(result).to.be.a('string');
 					expect(result).to.equal(fullpath);
 					done();
 				})

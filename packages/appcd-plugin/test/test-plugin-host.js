@@ -4,7 +4,7 @@ import snooplogg from 'snooplogg';
 import { spawn } from 'child_process';
 
 const log = snooplogg.config({ theme: 'detailed' })('test:appcd:plugin:host').log;
-const { green, highlight } = snooplogg.styles;
+const { highlight } = snooplogg.styles;
 
 describe('Plugin Host', () => {
 	it('should initialize and activate a plugin', done => {
@@ -12,7 +12,7 @@ describe('Plugin Host', () => {
 		let finished = false;
 		const child = spawn(
 			process.execPath,
-			[ path.resolve(__dirname, '..', 'dist', 'plugin-host.js') ],
+			[ path.resolve(__dirname, '..', 'bin', 'appcd-plugin-host') ],
 			{ stdio: [ 'ignore', 'inherit', 'inherit', 'ipc' ] }
 		);
 

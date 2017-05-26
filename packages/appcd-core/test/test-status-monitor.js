@@ -4,7 +4,7 @@ describe('StatusMonitor', () => {
 	it('should get uptime', () => {
 		const sm = new StatusMonitor;
 		const uptime = sm.get(['uptime']);
-		expect(uptime).to.be.a.Number;
+		expect(uptime).to.be.a('number');
 		expect(uptime).to.be.at.least(0);
 	});
 

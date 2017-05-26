@@ -25,9 +25,11 @@
   "devDependencies": {
     "gulp": "^3.9.1"
   },
+  "note!": "appcd-fswatcher is a dev dependency",
   "appcdDependencies": [
     "appcd-dispatcher",
     "appcd-fs",
+	"appcd-fswatcher",
     "appcd-gulp",
     "appcd-path",
     "appcd-response",

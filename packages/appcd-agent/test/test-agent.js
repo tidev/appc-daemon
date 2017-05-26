@@ -15,22 +15,22 @@ describe('agent', () => {
 			this.agent
 				.on('stats', stats => {
 					try {
-						expect(stats).to.be.an.Object;
+						expect(stats).to.be.an('object');
 
 						expect(stats).to.have.property('cpu');
-						expect(stats.cpu).to.be.a.Number;
+						expect(stats.cpu).to.be.a('number');
 
 						expect(stats).to.have.property('freemem');
-						expect(stats.freemem).to.be.a.Number;
+						expect(stats.freemem).to.be.a('number');
 
 						expect(stats).to.have.property('heapTotal');
-						expect(stats.heapTotal).to.be.a.Number;
+						expect(stats.heapTotal).to.be.a('number');
 
 						expect(stats).to.have.property('heapUsed');
-						expect(stats.heapUsed).to.be.a.Number;
+						expect(stats.heapUsed).to.be.a('number');
 
 						expect(stats).to.have.property('rss');
-						expect(stats.rss).to.be.a.Number;
+						expect(stats.rss).to.be.a('number');
 
 						done();
 					} catch (e) {
@@ -51,22 +51,22 @@ describe('agent', () => {
 				})
 				.on('stats', stats => {
 					try {
-						expect(stats).to.be.an.Object;
+						expect(stats).to.be.an('object');
 
 						expect(stats).to.have.property('cpu');
-						expect(stats.cpu).to.be.a.Number;
+						expect(stats.cpu).to.be.a('number');
 
 						expect(stats).to.have.property('freemem');
-						expect(stats.freemem).to.be.a.Number;
+						expect(stats.freemem).to.be.a('number');
 
 						expect(stats).to.have.property('heapTotal');
-						expect(stats.heapTotal).to.be.a.Number;
+						expect(stats.heapTotal).to.be.a('number');
 
 						expect(stats).to.have.property('heapUsed');
-						expect(stats.heapUsed).to.be.a.Number;
+						expect(stats.heapUsed).to.be.a('number');
 
 						expect(stats).to.have.property('rss');
-						expect(stats.rss).to.be.a.Number;
+						expect(stats.rss).to.be.a('number');
 
 						expect(stats).to.have.property('foo');
 						expect(stats.foo).to.equal(5);

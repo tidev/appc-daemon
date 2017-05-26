@@ -50,18 +50,18 @@ describe('SubprocessManager', () => {
 					sm.dispatcher
 						.call('/status')
 						.then(ctx => {
-							expect(ctx.response).to.be.an.Array;
+							expect(ctx.response).to.be.an.instanceof(Array);
 							expect(ctx.response).to.have.lengthOf(5);
 
 							for (const desc of ctx.response) {
-								expect(desc).to.be.an.Object;
+								expect(desc).to.be.an('object');
 								expect(desc).to.have.any.keys('pid', 'command', 'args', 'options', 'startTime');
-								expect(desc.pid).to.be.a.Number;
+								expect(desc.pid).to.be.a('number');
 								expect(desc.pid).to.be.at.least(1);
 								expect(desc.command).to.equal(process.execPath);
 								expect(desc.args).to.deep.equal(args);
 								expect(desc.options).to.deep.equal(options);
-								expect(desc.startTime).to.be.a.Date;
+								expect(desc.startTime).to.be.an.instanceof(Date);
 							}
 
 							const { pid } = ctx.response[0];
@@ -80,7 +80,7 @@ describe('SubprocessManager', () => {
 											sm.dispatcher
 												.call('/status')
 												.then(ctx => {
-													expect(ctx.response).to.be.an.Array;
+													expect(ctx.response).to.be.an.instanceof(Array);
 													expect(ctx.response).to.have.lengthOf(4);
 
 													// wait for the other 4 child processes to exit

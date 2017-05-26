@@ -33,7 +33,7 @@ describe('Client', () => {
 	describe('User Agent', () => {
 		it('should autogenerate a user agent', () => {
 			const client = new Client;
-			expect(client.userAgent).to.be.a.String;
+			expect(client.userAgent).to.be.a('string');
 			expect(client.userAgent).to.not.equal('');
 
 			const parts = client.userAgent.split(' ');
@@ -155,15 +155,15 @@ describe('Client', () => {
 					try {
 						expect(req.headers).to.have.property('user-agent');
 						expect(req.headers['user-agent']).to.match(/ appcd-client\//);
-						expect(json).to.be.an.Object;
+						expect(json).to.be.an('object');
 						expect(json).to.have.keys('version', 'path', 'id', 'data');
-						expect(json.version).to.be.a.String;
+						expect(json.version).to.be.a('string');
 						expect(json.version).to.equal('1.0');
-						expect(json.path).to.be.a.String;
+						expect(json.path).to.be.a('string');
 						expect(json.path).to.equal('/foo');
-						expect(json.id).to.be.a.String;
+						expect(json.id).to.be.a('string');
 						expect(json.id).to.not.equal('');
-						expect(json.data).to.be.an.Object;
+						expect(json.data).to.be.an('object');
 						expect(json.data.foo).to.equal('bar');
 					} catch (e) {
 						result = result || e;
@@ -182,10 +182,10 @@ describe('Client', () => {
 			client.request({ path: '/foo', payload: { foo: 'bar' } })
 				.on('response', (data, response) => {
 					try {
-						expect(data).to.be.an.Object;
+						expect(data).to.be.an('object');
 						expect(data).to.deep.equal({ baz: 'wiz' });
 
-						expect(response).to.be.an.Object;
+						expect(response).to.be.an('object');
 						expect(response).to.have.keys('id', 'status', 'message');
 						expect(response.status).to.equal(200);
 						expect(response.message).to.deep.equal({ baz: 'wiz' });
@@ -363,10 +363,10 @@ describe('Client', () => {
 				.on('response', (data, response) => {
 					server.close(() => {
 						try {
-							expect(data).to.be.an.Object;
+							expect(data).to.be.an('object');
 							expect(data).to.deep.equal({ baz: 'wiz' });
 
-							expect(response).to.be.an.Object;
+							expect(response).to.be.an('object');
 							expect(response).to.have.keys('id', 'status', 'message');
 							expect(response.status).to.equal(200);
 							expect(response.message).to.deep.equal({ baz: 'wiz' });

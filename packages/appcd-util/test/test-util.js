@@ -114,13 +114,45 @@ describe('util', () => {
 	});
 
 	describe('debounce()', () => {
-		it('should debounce multiple calls', function (done) {
+		it('should debounce multiple calls using default timeout', function (done) {
 			this.slow(2000);
 
 			let count = 0;
 			const fn = util.debounce(() => {
 				count++;
 			});
+
+			fn();
+			fn();
+			fn();
+
+			setTimeout(() => {
+				try {
+					expect(count).to.equal(0);
+
+					fn();
+
+					setTimeout(() => {
+						try {
+							expect(count).to.equal(1);
+							done();
+						} catch (e) {
+							done(e);
+						}
+					}, 500);
+				} catch (e) {
+					done(e);
+				}
+			}, 0);
+		});
+
+		it('should debounce multiple calls using 250ms timeout', function (done) {
+			this.slow(2000);
+
+			let count = 0;
+			const fn = util.debounce(() => {
+				count++;
+			}, 250);
 
 			fn();
 			fn();
@@ -280,25 +312,25 @@ describe('util', () => {
 	describe('randomBytes()', () => {
 		it('should return 0 random bytes', () => {
 			const r = util.randomBytes(0);
-			expect(r).to.be.a.String;
+			expect(r).to.be.a('string');
 			expect(r).to.have.lengthOf(0);
 		});
 
 		it('should return 1 random byte', () => {
 			const r = util.randomBytes(1);
-			expect(r).to.be.a.String;
+			expect(r).to.be.a('string');
 			expect(r).to.have.lengthOf(2);
 		});
 
 		it('should return 2 random bytes', () => {
 			const r = util.randomBytes(2);
-			expect(r).to.be.a.String;
+			expect(r).to.be.a('string');
 			expect(r).to.have.lengthOf(4);
 		});
 
 		it('should return 20 random bytes', () => {
 			const r = util.randomBytes(20);
-			expect(r).to.be.a.String;
+			expect(r).to.be.a('string');
 			expect(r).to.have.lengthOf(40);
 		});
 	});
@@ -306,11 +338,11 @@ describe('util', () => {
 	describe('sha1()', () => {
 		it('should hash a string', () => {
 			const h1 = util.sha1('foo');
-			expect(h1).to.be.a.String;
+			expect(h1).to.be.a('string');
 			expect(h1).to.have.lengthOf(40);
 
 			const h2 = util.sha1('bar');
-			expect(h2).to.be.a.String;
+			expect(h2).to.be.a('string');
 			expect(h2).to.have.lengthOf(40);
 
 			expect(h1).to.not.equal(h2);
@@ -318,11 +350,11 @@ describe('util', () => {
 
 		it('should hash a number', () => {
 			const h1 = util.sha1(123);
-			expect(h1).to.be.a.String;
+			expect(h1).to.be.a('string');
 			expect(h1).to.have.lengthOf(40);
 
 			const h2 = util.sha1(456);
-			expect(h2).to.be.a.String;
+			expect(h2).to.be.a('string');
 			expect(h2).to.have.lengthOf(40);
 
 			expect(h1).to.not.equal(h2);
@@ -330,11 +362,11 @@ describe('util', () => {
 
 		it('should hash an object', () => {
 			const h1 = util.sha1({ foo: 'bar' });
-			expect(h1).to.be.a.String;
+			expect(h1).to.be.a('string');
 			expect(h1).to.have.lengthOf(40);
 
 			const h2 = util.sha1({ baz: 'wiz' });
-			expect(h2).to.be.a.String;
+			expect(h2).to.be.a('string');
 			expect(h2).to.have.lengthOf(40);
 
 			expect(h1).to.not.equal(h2);
