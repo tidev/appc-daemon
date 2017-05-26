@@ -6,7 +6,7 @@ The Appc Daemon is comprised of two main components: the bootstrap and the core.
 
 ### Bootstrap
 
-The Bootstrap defines the appcd CLI and the distributable NPM package. It is responsible for
+The Bootstrap defines the appcd CLI and the distributable npm package. It is responsible for
 making sure the Appc Daemon Core's required Node.js version is installed and then invokes the Core.
 
 #### appcd CLI
@@ -31,8 +31,8 @@ install it.
 
 No compiler or root privileges are required.
 
-> Note that NPM (or Yarn) are only required for installing the Appc Daemon and development. The Appc
-> Daemon does not use NPM beyond reporting what version is installed.
+> Note that npm (or Yarn) are only required for installing the Appc Daemon and development. The Appc
+> Daemon does not use npm beyond reporting what version is installed.
 
 #### Daemon Mode
 

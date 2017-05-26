@@ -49,7 +49,7 @@ gulp.task('install', cb => runSequence('link', 'install-deps', 'build', cb));
 
 gulp.task('install-deps', cb => {
 	const pkgs = globule
-		.find(['./*/package.json', 'packages/*/package.json', 'plugins/*/package.json'])
+		.find([ './*/package.json', 'packages/*/package.json', 'plugins/*/package.json' ])
 		.map(pkgJson => path.relative(__dirname, path.dirname(path.resolve(pkgJson))).replace(/\\/g, '/'));
 
 	let pkg = pkgs.shift();
@@ -137,9 +137,9 @@ gulp.task('fix', cb => {
 
 			const table = new Table({
 				chars: cliTableChars,
-				head: ['Component', 'Action'],
+				head: [ 'Component', 'Action' ],
 				style: {
-					head: ['bold', 'gray'],
+					head: [ 'bold', 'gray' ],
 					border: []
 				}
 			});
@@ -228,12 +228,12 @@ gulp.task('build-plugins', buildTask('plugins/*/gulpfile.js'));
 function buildTask(pattern) {
 	return () => gulp
 		.src(path.join(__dirname, pattern))
-		.pipe(chug({ tasks: ['build'] }));
+		.pipe(chug({ tasks: [ 'build' ] }));
 }
 
-gulp.task('package', ['build'], cb => {
+gulp.task('package', [ 'build' ], cb => {
 	const pkgJson = require('./bootstrap/package.json');
-	const keepers = ['name', 'version', 'description', 'author', 'maintainers', 'license', 'keyword', 'bin', 'preferGlobal', 'dependencies', 'homepage', 'bugs', 'repository'];
+	const keepers = [ 'name', 'version', 'description', 'author', 'maintainers', 'license', 'keyword', 'bin', 'preferGlobal', 'dependencies', 'homepage', 'bugs', 'repository' ];
 
 	for (const key of Object.keys(pkgJson)) {
 		if (keepers.indexOf(key) === -1) {
@@ -242,7 +242,7 @@ gulp.task('package', ['build'], cb => {
 	}
 
 	pkgJson.build = {
-		gitHash:   spawnSync('git', ['log', '--pretty=oneline', '-n', '1', '--no-color'], { shell: true }).stdout.toString().split(' ')[0],
+		gitHash:   spawnSync('git', [ 'log', '--pretty=oneline', '-n', '1', '--no-color' ], { shell: true }).stdout.toString().split(' ')[0],
 		hostname:  require('os').hostname(),
 		platform:  process.platform,
 		timestamp: new Date().toISOString()
@@ -389,14 +389,24 @@ gulp.task('package', ['build'], cb => {
 /*
  * test tasks
  */
-gulp.task('coverage', ['build'], cb => {
-	const coverageDir = path.join(__dirname, 'coverage');
-	del.sync([coverageDir]);
+gulp.task('test', [ 'build' ], cb => runTests(false, cb));
+gulp.task('coverage', [ 'build' ], cb => runTests(true, cb));
 
-	const collector = new istanbul.Collector();
+function runTests(cover, cb) {
+	let task = cover ? 'coverage-only' : 'test-only';
+	let coverageDir;
+	let collector;
+
+	if (cover) {
+		coverageDir = path.join(__dirname, 'coverage');
+		collector = new istanbul.Collector();
+	}
+
+	process.env.FORCE_COLOR = 1;
+
 	const gulp = path.join(path.dirname(require.resolve('gulp')), 'bin', 'gulp.js');
-	const gulpfiles = globule.find(['./*/gulpfile.js', 'packages/*/gulpfile.js', 'plugins/*/gulpfile.js']);
-	let projectsFailed = 0;
+	const gulpfiles = globule.find([ './*/gulpfile.js', 'packages/*/gulpfile.js', 'plugins/*/gulpfile.js' ]);
+	const failedProjects = [];
 
 	gulpfiles
 		.reduce((promise, gulpfile) => {
@@ -406,7 +416,7 @@ gulp.task('coverage', ['build'], cb => {
 					const dir = path.dirname(gulpfile);
 
 					gutil.log(`Spawning: ${process.execPath} ${gulp} coverage # CWD=${dir}`);
-					const child = spawn(process.execPath, [ gulp, 'coverage', '--colors' ], { cwd: dir, stdio: ['inherit', 'pipe', 'inherit'] });
+					const child = spawn(process.execPath, [ gulp, task, '--colors' ], { cwd: dir, stdio: [ 'inherit', 'pipe', 'inherit' ] });
 
 					let out = '';
 					child.stdout.on('data', data => {
@@ -417,14 +427,16 @@ gulp.task('coverage', ['build'], cb => {
 					child.on('close', code => {
 						if (!code) {
 							gutil.log(`Exit code: ${code}`);
-							for (let coverageFile of globule.find(dir + '/coverage/coverage*.json')) {
-								collector.add(JSON.parse(fs.readFileSync(path.resolve(coverageFile), 'utf8')));
+							if (cover) {
+								for (let coverageFile of globule.find(dir + '/coverage/coverage*.json')) {
+									collector.add(JSON.parse(fs.readFileSync(path.resolve(coverageFile), 'utf8')));
+								}
 							}
-						} else if (out.indexOf('Task \'coverage\' is not in your gulpfile') === -1) {
+						} else if (out.indexOf(`Task '${task}' is not in your gulpfile`) === -1) {
 							gutil.log(`Exit code: ${code}`);
-							projectsFailed++;
+							failedProjects.push(path.basename(dir));
 						} else {
-							gutil.log(`Exit code: ${code}, no coverage task, continuing`);
+							gutil.log(`Exit code: ${code}, no '${task}' task, continuing`);
 						}
 
 						resolve();
@@ -432,35 +444,46 @@ gulp.task('coverage', ['build'], cb => {
 				}));
 		}, Promise.resolve())
 		.then(() => {
-			fs.mkdirsSync(coverageDir);
-			console.log();
+			if (cover) {
+				del.sync([ coverageDir ]);
+				fs.mkdirsSync(coverageDir);
+				console.log();
 
-			for (const type of [ 'lcov', 'json', 'text', 'text-summary', 'cobertura' ]) {
-				istanbul.Report
-					.create(type, { dir: coverageDir })
-					.writeReport(collector, true);
+				for (const type of [ 'lcov', 'json', 'text', 'text-summary', 'cobertura' ]) {
+					istanbul.Report
+						.create(type, { dir: coverageDir })
+						.writeReport(collector, true);
+				}
 			}
 
-			if (projectsFailed === 1) {
+			if (failedProjects.length) {
+				gutil.log(gutil.colors.red('Failured projects:'));
+				failedProjects.forEach(p => {
+					gutil.log(gutil.colors.red(p));
+				});
+				console.log();
+			}
+
+			if (failedProjects.length === 1) {
 				cb(new Error('1 project had test failures'));
-			} else if (projectsFailed) {
-				cb(new Error(`${projectsFailed} projects had test failures`));
+			} else if (failedProjects) {
+				cb(new Error(`${failedProjects.length} projects had test failures`));
 			} else {
 				cb();
 			}
 		})
 		.catch(cb);
-});
+}
 
 /*
  * watch/debug tasks
  */
 function startDaemon() {
-	spawn(process.execPath, ['bootstrap/bin/appcd', 'start', '--debug'], { stdio: 'inherit' });
+	spawn(process.execPath, [ 'bootstrap/bin/appcd', 'start', '--debug' ], { stdio: 'inherit' });
 }
 
 function stopDaemon() {
-	spawnSync(process.execPath, ['bootstrap/bin/appcd', 'stop'], { stdio: 'inherit' });
+	spawnSync(process.execPath, [ 'bootstrap/bin/appcd', 'stop' ], { stdio: 'inherit' });
 }
 
 gulp.task('start-daemon', () => {
@@ -486,7 +509,7 @@ gulp.task('watch-only', cb => {
 							gutil.log(gutil.colors.cyan('Rebuilding ' + dir));
 							gulp
 								.src(__dirname + '/' + dir + '/gulpfile.js')
-								.pipe(chug({ tasks: ['build'] }))
+								.pipe(chug({ tasks: [ 'build' ] }))
 								.on('finish', () => resolve());
 						}));
 					}, Promise.resolve())
@@ -521,7 +544,7 @@ gulp.task('default', () => {
 		chars: cliTableChars,
 		head: [],
 		style: {
-			head: ['bold'],
+			head: [ 'bold' ],
 			border: []
 		}
 	});
@@ -653,7 +676,7 @@ function runDavid(pkgJson, type, dest) {
 }
 
 function checkPackages() {
-	const paths = globule.find(['./package.json', './*/package.json', 'packages/*/package.json', 'plugins/*/package.json']).map(p => path.resolve(p));
+	const paths = globule.find([ './package.json', './*/package.json', 'packages/*/package.json', 'plugins/*/package.json' ]).map(p => path.resolve(p));
 	const packages = {};
 	const deprecatedMap = {};
 
@@ -683,7 +706,7 @@ function checkPackages() {
 					optionalDependencies: {}
 				};
 
-				['dependencies', 'devDependencies', 'optionalDependencies'].forEach(type => {
+				[ 'dependencies', 'devDependencies', 'optionalDependencies' ].forEach(type => {
 					if (pkgJson[type]) {
 						packages[packagePath][type] = {};
 						for (const dep of Object.keys(pkgJson[type])) {
@@ -761,7 +784,7 @@ function checkPackages() {
 				.then(() => {
 					// update the package information object
 					for (const packagePath of Object.keys(packages)) {
-						for (const type of ['dependencies', 'devDependencies', 'optionalDependencies']) {
+						for (const type of [ 'dependencies', 'devDependencies', 'optionalDependencies' ]) {
 							if (packages[packagePath][type]) {
 								for (const dep of Object.keys(packages[packagePath][type])) {
 									if (deprecatedMap[dep]) {
@@ -836,7 +859,7 @@ function processPackages(packages) {
 			}
 		}
 
-		['dependencies', 'devDependencies', 'optionalDependencies'].forEach(type => {
+		[ 'dependencies', 'devDependencies', 'optionalDependencies' ].forEach(type => {
 			if (pkg[type] && Object.keys(pkg[type]).length) {
 				for (const name of Object.keys(pkg[type])) {
 					const dep = pkg[type][name];
@@ -931,14 +954,14 @@ function renderPackages(results) {
 
 		table = new Table({
 			chars: cliTableChars,
-			head: ['Name', 'Required', 'Installed', 'Stable', 'Latest', 'Status'],
+			head: [ 'Name', 'Required', 'Installed', 'Stable', 'Latest', 'Status' ],
 			style: {
-				head: ['bold'],
+				head: [ 'bold' ],
 				border: []
 			}
 		});
 
-		['dependencies', 'devDependencies', 'optionalDependencies'].forEach(type => {
+		[ 'dependencies', 'devDependencies', 'optionalDependencies' ].forEach(type => {
 			if (pkg[type] && Object.keys(pkg[type]).length) {
 				table.push([{ colSpan: 6, content: gray(typeLabels[type]) }]);
 
@@ -970,9 +993,9 @@ function renderPackages(results) {
 				console.log('     ' + red(issue.title + ' <' + issue.advisory + '>'));
 				table = new Table({
 					chars: cliTableChars,
-					head: [gray('Installed'), gray('Vulnerable'), gray('Patched'), gray('Path'), gray('Published'), gray('Updated')],
+					head: [ gray('Installed'), gray('Vulnerable'), gray('Patched'), gray('Path'), gray('Published'), gray('Updated') ],
 					style: {
-						head: ['bold'],
+						head: [ 'bold' ],
 						border: []
 					}
 				});
@@ -997,9 +1020,9 @@ function renderPackages(results) {
 			console.log('\n' + gray(' Deprecations:'));
 			table = new Table({
 				chars: cliTableChars,
-				head: [gray('Package'), gray('Note')],
+				head: [ gray('Package'), gray('Note') ],
 				style: {
-					head: ['bold'],
+					head: [ 'bold' ],
 					border: []
 				}
 			});
@@ -1015,7 +1038,7 @@ function renderPackages(results) {
 	displayStats(results);
 
 	console.log(magenta('Summary') + '\n');
-	table = new Table({ chars: cliTableChars, head: [], style: { head: ['bold'], border: [] } });
+	table = new Table({ chars: cliTableChars, head: [], style: { head: [ 'bold' ], border: [] } });
 	table.push([
 		'Missing dependencies',
 		results.missingDeps > 0 ? red(results.missingDeps) : green(results.missingDeps)
@@ -1055,7 +1078,7 @@ function renderPackages(results) {
 				chars: cliTableChars,
 				head: [],
 				style: {
-					head: ['bold', 'gray'],
+					head: [ 'bold', 'gray' ],
 					border: []
 				}
 			});
@@ -1070,9 +1093,9 @@ function renderPackages(results) {
 			console.log(`Run ${cyan('gulp upgrade-all')} to update:`);
 			table = new Table({
 				chars: cliTableChars,
-				head: ['Component', 'Package', 'From', 'To'],
+				head: [ 'Component', 'Package', 'From', 'To' ],
 				style: {
-					head: ['bold', 'gray'],
+					head: [ 'bold', 'gray' ],
 					border: []
 				}
 			});
@@ -1087,9 +1110,9 @@ function renderPackages(results) {
 			console.log(`Run ${cyan('gulp fix')} to fix node_modules:`);
 			table = new Table({
 				chars: cliTableChars,
-				head: ['Component', 'Action'],
+				head: [ 'Component', 'Action' ],
 				style: {
-					head: ['bold', 'gray'],
+					head: [ 'bold', 'gray' ],
 					border: []
 				}
 			});
@@ -1108,7 +1131,7 @@ function displayStats(results) {
 	const magenta = gutil.colors.magenta;
 	console.log(magenta('Source Code Stats') + '\n');
 
-	let table = new Table({ chars: cliTableChars, head: [], style: { head: ['bold'], border: [] } });
+	let table = new Table({ chars: cliTableChars, head: [], style: { head: [ 'bold' ], border: [] } });
 	let stats = results.stats;
 	table.push([ 'Physical lines',       { hAlign: 'right', content: green(formatNumber(stats.total)) }, '' ]);
 	table.push([ 'Lines of source code', { hAlign: 'right', content: green(formatNumber(stats.source)) }, gray(formatPercentage(stats.source / stats.total * 100)) ]);
@@ -1122,7 +1145,7 @@ function displayStats(results) {
 	console.log(table.toString() + '\n');
 
 	console.log(magenta('Test Code Stats') + '\n');
-	table = new Table({ chars: cliTableChars, head: [], style: { head: ['bold'], border: [] } });
+	table = new Table({ chars: cliTableChars, head: [], style: { head: [ 'bold' ], border: [] } });
 	stats = results.testStats;
 	table.push([ 'Physical lines',       { hAlign: 'right', content: green(formatNumber(stats.total)) }, '' ]);
 	table.push([ 'Lines of source code', { hAlign: 'right', content: green(formatNumber(stats.source)) }, gray(formatPercentage(stats.source / stats.total * 100)) ]);
@@ -1204,7 +1227,7 @@ function upgradeDeps(list) {
 		});
 
 		for (const packageName of Object.keys(components[pkgJsonFile])) {
-			['dependencies', 'devDependencies', 'optionalDependencies'].forEach(type => {
+			[ 'dependencies', 'devDependencies', 'optionalDependencies' ].forEach(type => {
 				if (pkgJson[type] && pkgJson[type].hasOwnProperty(packageName)) {
 					table.push([packageName, pkgJson[type][packageName], '→', hlVer(components[pkgJsonFile][packageName], pkgJson[type][packageName])]);
 					pkgJson[type][packageName] = components[pkgJsonFile][packageName];
@@ -1241,7 +1264,7 @@ function computeSloc(type) {
 	const counters = { total: 0, source: 0, comment: 0, single: 0, block: 0, mixed: 0, empty: 0, todo: 0, files: 0 };
 
 	globule
-		.find(['./*/package.json', 'packages/*/package.json', 'plugins/*/package.json'])
+		.find([ './*/package.json', 'packages/*/package.json', 'plugins/*/package.json' ])
 		.forEach(pkgJson => {
 			const dir = path.join(path.dirname(path.resolve(pkgJson)), type || 'src');
 			try {
@@ -1305,7 +1328,7 @@ function getDepMap() {
 	depmapCache = {};
 
 	globule
-		.find(['./*/package.json', 'packages/*/package.json', 'plugins/*/package.json'])
+		.find([ './*/package.json', 'packages/*/package.json', 'plugins/*/package.json' ])
 		.forEach(pkgJsonFile => {
 			const name = path.relative(__dirname, path.dirname(pkgJsonFile));
 			const pkgJson = JSON.parse(fs.readFileSync(pkgJsonFile));

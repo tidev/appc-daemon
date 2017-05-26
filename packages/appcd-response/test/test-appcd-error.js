@@ -150,9 +150,9 @@ describe('AppcdError', () => {
 describe('Custom Errors', () => {
 	it('should create a custom error', () => {
 		const MyError = createErrorClass('MyError');
-		expect(MyError).to.be.a.function;
+		expect(MyError).to.be.a('function');
 		expect(MyError.name).to.equal('MyError');
-		expect(MyError.codes).to.be.an.Object;
+		expect(MyError.codes).to.be.an('object');
 
 		const err = new MyError('Oh no!');
 		expect(err).to.be.instanceof(MyError);

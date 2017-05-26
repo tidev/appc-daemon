@@ -77,10 +77,10 @@ export default class Server extends HookEmitter {
 	/**
 	 * Starts the server.
 	 *
-	 * @returns {Object} An object containing a public API for interacting with the server instance.
+	 * @returns {Promise} An object containing a public API for interacting with the server instance.
 	 * @access public
 	 */
-	start() {
+	async start() {
 		// enable logging
 		snooplogg
 			.enable('*')
@@ -163,6 +163,7 @@ export default class Server extends HookEmitter {
 				path.join(homeDir, 'plugins')
 			]
 		});
+		await pm.start();
 		pm.on('change', plugins => status.plugins = plugins);
 		status.plugins = pm.plugins;
 
@@ -190,14 +191,12 @@ export default class Server extends HookEmitter {
 		this.webserver.use(Dispatcher.callback());
 		this.webserver.on('websocket', (ws, req) => new WebSocketSession(ws, req));
 
-		return Promise.resolve()
-			.then(() => {
-				return getMachineId(path.join(homeDir, '.mid'))
-					.then(mid => this.mid = mid);
-			})
-			// TODO: init telemetry
-			.then(() => this.webserver.listen())
-			.then(() => this.emit('appcd.start'));
+		this.mid = await getMachineId(path.join(homeDir, '.mid'));
+
+		// TODO: init telemetry
+
+		await this.webserver.listen();
+		await this.emit('appcd.start');
 	}
 
 	/**

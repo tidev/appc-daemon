@@ -67,7 +67,7 @@ crash reports, build times, code metrics, API usage, plugin information, and so 
 ### Must be able to lock down Node.js and dependency's versions
 
 To reduce the amount of testing and improve the quality, the Appc Daemon core and its plugins must
-be able to lockdown the Node.js version so that we can lockdown any Node.js native addons and NPM
+be able to lockdown the Node.js version so that we can lockdown any Node.js native addons and npm
 dependencies. Node.js native addons are generally compiled for the given Node.js version, platform,
 and CPU architecture during installation. This requires a compiler to be present. Since the Appc
 Daemon's Node.js version is locked down, we can pre-compile these native addons, speed up installs,
@@ -76,6 +76,6 @@ and eliminate the need for a compiler on end user machines.
 ### Must be written using best practices
 
 The Appc Daemon code must be written using best practices including latest ECMAScript standards,
-unit tests, linted coding style, and inline ESDoc API docs. The code should use as few NPM
+unit tests, linted coding style, and inline ESDoc API docs. The code should use as few npm
 dependencies as possible, be as small and memory efficient as possible, and follow best security
 practices.

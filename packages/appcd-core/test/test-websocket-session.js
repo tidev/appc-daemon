@@ -96,7 +96,7 @@ describe('WebSocketSession', () => {
 						log('Got message from server:', msg);
 
 						try {
-							expect(msg).to.be.an.Object;
+							expect(msg).to.be.an('object');
 							expect(msg.status).to.equal(200);
 							expect(msg.message).to.equal('bar!');
 							done();

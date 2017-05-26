@@ -1,0 +1,8 @@
+#!/usr/bin/env node
+
+process.title = 'appcd-plugin-host';
+
+const path = require('path');
+const main = path.resolve(__dirname, '..', (process.env.APPCD_COVERAGE ? 'src' : 'dist'), 'plugin-host.js');
+
+require(main);

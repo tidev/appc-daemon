@@ -123,7 +123,7 @@ describe('dispatcher', () => {
 
 			d.register('/foo', ctx => {
 				count++;
-				expect(ctx.payload).to.be.an.object;
+				expect(ctx.payload).to.be.an('object');
 				expect(ctx.payload).to.have.property('a');
 				expect(ctx.payload.a).to.equal(1);
 			});
@@ -140,7 +140,7 @@ describe('dispatcher', () => {
 			const d = new Dispatcher;
 
 			d.register('/foo/:bar', data => {
-				expect(data).to.be.an.object;
+				expect(data).to.be.an('object');
 				expect(data).to.have.property('params');
 				expect(data.params).to.have.property('bar');
 				expect(data.params.bar).to.equal('abc');
@@ -485,7 +485,7 @@ describe('dispatcher', () => {
 		it('should return a middleware callback function', () => {
 			const d = new Dispatcher;
 			const middleware = d.callback();
-			expect(middleware).to.be.a.Function;
+			expect(middleware).to.be.a('function');
 		});
 
 		it('should dispatch GET request', done => {
@@ -504,7 +504,7 @@ describe('dispatcher', () => {
 			Promise.resolve()
 				.then(() => middleware(ctx, Promise.resolve))
 				.then(() => {
-					expect(ctx.body).to.be.a.String;
+					expect(ctx.body).to.be.a('string');
 					expect(ctx.body).to.equal('foo!');
 					done();
 				})
@@ -576,7 +576,7 @@ describe('dispatcher', () => {
 			Promise.resolve()
 				.then(() => middleware(ctx, Promise.resolve))
 				.then(() => {
-					expect(ctx.body).to.be.a.String;
+					expect(ctx.body).to.be.a('string');
 					expect(ctx.body).to.equal('foo!');
 					done();
 				})
@@ -708,7 +708,7 @@ describe('dispatcher', () => {
 				.then(() => middleware(ctx, Promise.resolve))
 				.then(() => {
 					expect(ctx.status).to.equal(200);
-					expect(ctx.body).to.be.a.String;
+					expect(ctx.body).to.be.a('string');
 					expect(ctx.body).to.equal('OK');
 					done();
 				})
@@ -733,7 +733,7 @@ describe('dispatcher', () => {
 				.then(() => middleware(ctx, Promise.resolve))
 				.then(() => {
 					expect(ctx.status).to.equal(200);
-					expect(ctx.body).to.be.a.String;
+					expect(ctx.body).to.be.a('string');
 					expect(ctx.body).to.equal('OK');
 					done();
 				})
@@ -779,7 +779,7 @@ describe('dispatcher', () => {
 			Promise.resolve()
 				.then(() => middleware(ctx, Promise.resolve))
 				.then(() => {
-					expect(ctx.body).to.be.a.String;
+					expect(ctx.body).to.be.a('string');
 					expect(ctx.body).to.equal('foo!');
 					done();
 				})
