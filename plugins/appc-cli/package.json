@@ -31,8 +31,8 @@
     "type": "git",
     "url": "git+https://github.com/appcelerator/appc-daemon.git"
   },
-  "appcd": {
-    "host": "external",
-    "type": "service"
+  "appcd-plugin": {
+    "name": "appc-cli",
+    "type": "external"
   }
 }

@@ -33,5 +33,8 @@
   "appcd": {
     "host": "external",
     "type": "service"
+  },
+  "engines": {
+    "node": ">=8.0.0"
   }
 }

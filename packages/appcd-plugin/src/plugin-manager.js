@@ -3,7 +3,7 @@ import fs from 'fs';
 import gawk from 'gawk';
 import path from 'path';
 import PluginError from './plugin-error';
-import PluginInfo from './plugin-info';
+import Plugin from './plugin';
 import Response, { codes } from 'appcd-response';
 import semver from 'semver';
 import snooplogg from 'snooplogg';
@@ -72,6 +72,7 @@ export default class PluginManager extends EventEmitter {
 
 		/**
 		 * A map of plugin namespaces to plugin version dispatchers.
+		 * @type {Object}
 		 */
 		this.namespaces = {};
 
@@ -82,7 +83,7 @@ export default class PluginManager extends EventEmitter {
 		this.dispatcher = new Dispatcher()
 			.register('/register', ctx => {
 				try {
-					this.register(new PluginInfo(ctx.payload.data.path));
+					this.register(ctx.payload.data.path);
 					ctx.response = new Response(codes.PLUGIN_REGISTERED);
 				} catch (e) {
 					logger.warn(e.message);
@@ -112,8 +113,10 @@ export default class PluginManager extends EventEmitter {
 	 */
 	start() {
 		return Promise.all(this.paths.map(dir => {
+			// detect and register all plugins in `dir`
 			this.detect(dir);
 
+			// start watching the directory for changes
 			return Dispatcher
 				.call('/appcd/fs/watch', { data: { path: dir }, type: 'subscribe' })
 				.then(ctx => {
@@ -129,7 +132,7 @@ export default class PluginManager extends EventEmitter {
 	}
 
 	/**
-	 * Detects all plugins in the given directory.
+	 * Detect and register all plugins in the given directory.
 	 *
 	 * @param {String} dir - The directory to scan for plugins.
 	 * @access private
@@ -148,7 +151,7 @@ export default class PluginManager extends EventEmitter {
 				// we have an NPM-style plugin
 				try {
 					try {
-						this.register(new PluginInfo(dir));
+						this.register(dir);
 					} catch (e) {
 						logger.warn(e.message);
 					}
@@ -178,19 +181,17 @@ export default class PluginManager extends EventEmitter {
 	/**
 	 * Registers a plugin and sends out notifications.
 	 *
-	 * @param {PluginInfo} plugin - The plugin info object.
+	 * @param {String} plugin - The path to the plugin to register.
 	 * @access public
 	 */
-	register(plugin) {
-		if (!(plugin instanceof PluginInfo)) {
-			throw new TypeError('Expected a plugin info object');
-		}
+	register(pluginPath) {
+		const plugin = new Plugin(pluginPath);
 
 		logger.log('Registering plugin: %s', highlight(`${plugin.name}@${plugin.version}`));
 
 		// check to make sure we don't insert the same plugin twice
 		for (const p of this.plugins) {
-			if ((p.name === plugin.name || p.path === plugin.path) && p.version === plugin.version) {
+			if (p.namespace === plugin.namespace && p.version === plugin.version) {
 				throw new PluginError(codes.PLUGIN_ALREADY_REGISTERED);
 			}
 		}
@@ -205,7 +206,7 @@ export default class PluginManager extends EventEmitter {
 			Dispatcher.register(`/${plugin.namespace}`, ns.dispatcher);
 		}
 
-		// TODO: the Dispatcher below should probably go in the PluginInfo instance, but should
+		// TODO: the Dispatcher below should probably go in the Plugin instance, but should
 		// really be the dispatcher in the plugin host... not sure how to do that
 		ns.versions[plugin.version] = new Dispatcher().register('/', ctx => { ctx.response = 'whoo!'; });
 
@@ -217,23 +218,23 @@ export default class PluginManager extends EventEmitter {
 	/**
 	 * Unregisters a plugin and sends out notifications.
 	 *
-	 * @param {PluginInfo|String} pluginOrPath - The plugin info object or plugin path.
+	 * @param {Plugin|String} pluginOrPath - The plugin info object or plugin path.
 	 * @access public
 	 */
 	async unregister(pluginOrPath) {
-		let pluginPath = pluginOrPath instanceof PluginInfo ? pluginOrPath.path : pluginOrPath;
+		let pluginPath = pluginOrPath instanceof Plugin ? pluginOrPath.path : pluginOrPath;
 
 		if (pluginPath && typeof pluginPath === 'string') {
 			pluginPath = expandPath(pluginPath);
 
 			for (let i = 0; i < this.plugins.length; i++) {
 				if (this.plugins[i].path === pluginPath) {
-					if (this.plugins[i].active) {
-						if (this.plugins[i].type === 'internal') {
-							throw new PluginError('Cannot unregister running internal plugins');
-						}
-						await this.plugins[i].stop();
-					}
+					// if (this.plugins[i].active) {
+					// 	if (this.plugins[i].type === 'internal') {
+					// 		throw new PluginError('Cannot unregister running internal plugins');
+					// 	}
+					// 	await this.plugins[i].stop();
+					// }
 					this.plugins.splice(i--, 1);
 					return;
 				}
@@ -262,7 +263,7 @@ export default class PluginManager extends EventEmitter {
 					const plugin = this.plugins[i];
 					logger.log('Stopping %s', highlight(`${plugin.name}@${plugin.version}`));
 					try {
-						await plug.unload();
+						// await plug.unload();
 					} catch (e) {
 						if (err.code !== codes.PLUGIN_ALREADY_STOPPED) {
 							throw err;

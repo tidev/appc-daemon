@@ -7,7 +7,7 @@ import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs';
 import path from 'path';
 import PluginError from './plugin-error';
-import Response, { codes } from 'appcd-response';
+import Response, { AppcdError, codes } from 'appcd-response';
 import snooplogg from 'snooplogg';
 import Stream from 'stream';
 import uuid from 'uuid';

@@ -7,7 +7,6 @@ module.exports = (opts) => {
 	const babelConfs  = require('../babel.json');
 	const del         = require('del');
 	const fs          = require('fs');
-	const globule     = require('globule');
 	const Module      = require('module');
 	const path        = require('path');
 	const spawnSync   = require('child_process').spawnSync;
@@ -131,9 +130,12 @@ module.exports = (opts) => {
 				'--exclude', 'test',
 				'--instrument', 'false',
 				'--source-map', 'false',
+				// supported reporters:
+				// https://github.com/istanbuljs/istanbuljs/tree/master/packages/istanbul-reports/lib
 				'--reporter=html',
 				'--reporter=json',
 				'--reporter=text',
+				'--reporter=text-summary',
 				'--require', path.resolve(__dirname, '../test-transpile.js'),
 				'--show-process-tree',
 				process.execPath // need to specify node here so that spawn-wrap works
@@ -170,7 +172,7 @@ module.exports = (opts) => {
 			args.push('test/**/test-*.js');
 		}
 
-		// console.log(args);
+		$.util.log('Running: ' + $.util.colors.cyan(process.execPath + ' ' + args.join(' ')));
 
 		// run!
 		spawnSync(process.execPath, args, { stdio: 'inherit' });
