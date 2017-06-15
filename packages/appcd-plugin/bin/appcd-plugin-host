@@ -2,6 +2,10 @@
 
 process.title = 'appcd-plugin-host';
 
+/* istanbul ignore if */
+if (!Error.prepareStackTrace) {
+	require('source-map-support/register');
+}
 const path = require('path');
 const main = path.resolve(__dirname, '..', (process.env.APPCD_COVERAGE ? 'src' : 'dist'), 'plugin-host.js');
 

@@ -74,6 +74,8 @@ export class Node {
 	 */
 	constructor(path, parent) {
 		stats.nodes++;
+		log('Incrementing stats.nodes to ' + stats.nodes);
+
 		this.children = {};
 		this.links = new Set;
 		this.name = _path.basename(path) || path;
@@ -128,6 +130,7 @@ export class Node {
 	 */
 	init(isAdd) {
 		if (this.type !== DIRECTORY) {
+			/* istanbul ignore if */
 			if (this.fswatcher) {
 				// NOTE: This should never happen and is very difficult to reproduce in a unit test
 				// because there should never be a time where the `type` changes from a directory to
@@ -202,27 +205,44 @@ export class Node {
 	destroy() {
 		if (!this.destroyed) {
 			this.destroyed = true;
+
+			if (this.link) {
+				log('Destroying %s → %s', highlight(this.path), highlight(this.link.path));
+			} else {
+				log('Destroying %s', highlight(this.path));
+			}
+
 			stats.nodes--;
+			log('Decrementing stats.nodes to ' + stats.nodes);
+
 			if (this.fswatcher) {
 				// log('destroy() Closing fs watcher: %s', highlight(this.path));
 				this.fswatcher.close();
 				delete this.fswatcher;
 				stats.fswatchers--;
 			}
+
 			if (this.files) {
 				this.files.clear();
 			}
+
 			this.parent = null;
+
 			for (const node of this.links) {
 				delete node.link;
 			}
+
 			this.links.clear();
+
 			stats.watchers -= this.watchers.size;
 			this.watchers.clear();
+
 			for (const name of Object.keys(this.children)) {
 				this.children[name].destroy();
 				delete this.children[name];
 			}
+
+			// log(renderTree());
 		}
 	}
 
@@ -263,7 +283,7 @@ export class Node {
 
 			if (watcher.recursive) {
 				this.recursive++;
-				this.recursiveWatch();
+				this.recursiveWatch(watcher.recursive === Infinity ? Infinity : watcher.recursive - 1);
 			}
 		}
 		return this;
@@ -272,20 +292,27 @@ export class Node {
 	/**
 	 * Recursively descends all child nodes and increments the recursive counter.
 	 *
+	 * @param {Number} depth - The depth to stop recursively watching.
 	 * @access private
 	 */
-	recursiveWatch() {
-		if (this.type & DIRECTORY && this.files) {
+	recursiveWatch(depth) {
+		if (this.type & DIRECTORY && this.files && depth > 0) {
+			if (depth !== Infinity) {
+				depth--;
+			}
+
 			for (const [ filename ] of this.files) {
 				let child = this.children[filename];
 				if (!child) {
 					child = new Node(_path.join(this.path, filename), this);
 					if (child.type !== DIRECTORY && child.type !== SYMLINK) {
+						stats.nodes--;
+						log('Decrementing stats.nodes to ' + stats.nodes);
 						continue;
 					}
 					this.children[filename] = child.init();
 				}
-				child.recursiveWatch();
+				child.recursiveWatch(depth);
 			}
 		}
 	}
@@ -303,7 +330,8 @@ export class Node {
 			this.watchers.delete(watcher);
 
 			if (watcher.recursive) {
-				this.recursiveUnwatch();
+				this.recursive--;
+				this.recursiveUnwatch(watcher.recursive === Infinity ? Infinity : watcher.recursive - 1);
 			}
 		}
 		return this;
@@ -312,15 +340,15 @@ export class Node {
 	/**
 	 * Recursively descends all child nodes and decrements the recursive counter.
 	 *
+	 * @param {Number} depth - The depth to stop recursively watching.
 	 * @access private
 	 */
-	recursiveUnwatch() {
-		this.recursive--;
+	recursiveUnwatch(depth) {
 		if (this.type & DIRECTORY && this.files) {
 			for (const [ filename ] of this.files) {
 				let child = this.children[filename];
 				if (child) {
-					child.recursiveWatch();
+					child.recursiveUnwatch(depth === Infinity ? Infinity : depth - 1);
 				}
 			}
 		}
@@ -381,6 +409,7 @@ export class Node {
 			log('Notifying child node: %s', highlight(filename));
 			child.notifyChild(evt);
 		} else if (evt.action === 'add' && !isFile && (this.recursive > 0 || this.isParentRecursive())) {
+			log('Creating node for %s', highlight(evt.file));
 			this.children[filename] = new Node(evt.file, this).init();
 		}
 
@@ -394,22 +423,27 @@ export class Node {
 	 * @param {Boolean} isCurrentNode - When `true`, notifies all watchers of this node, otherwise
 	 * it assumes it's a parent node and watchers should only be notified if the parent is watching
 	 * recursively.
+	 * @param {Number} [depth=0] - The depth from which the event originated.
 	 * @access private
 	 */
-	notify(evt, isCurrentNode) {
+	notify(evt, isCurrentNode, depth = 0) {
 		if ((isCurrentNode && this.watchers.size) || (!isCurrentNode && this.recursive > 0)) {
 			log('Notifying %s %s: %s → %s', green(this.watchers.size), pluralize('watcher', this.watchers.size), highlight(this.path), highlight(evt.filename));
 			for (const watcher of this.watchers) {
-				try {
-					watcher.emit('change', evt);
-				} catch (err) {
-					watcher.emit('error', err, evt);
+				if (watcher.recursive === 0 || watcher.recursive === Infinity || watcher.recursive > depth) {
+					try {
+						watcher.emit('change', evt);
+					} catch (err) {
+						watcher.emit('error', err, evt);
+					}
 				}
 			}
 		}
 
 		if (this.parent) {
-			this.parent.notify(evt);
+			// Note: this is a pretty chatty log message
+			// log('Notifying parent: %s', highlight(this.parent.path));
+			this.parent.notify(evt, false, depth + 1);
 		} else {
 			rootEmitter.emit('change', evt);
 		}
@@ -562,6 +596,8 @@ export class FSWatcher extends EventEmitter {
 	 *
 	 * @param {String} path - The path to watch.
 	 * @param {Object} [opts] - Various options.
+	 * @param {Number} [opts.depth] - The maximum depth to recurse. Only used when `opts.recursive`
+	 * is set.
 	 * @param {Boolean} [opts.recursive] - When true, any changes to the path or its children emit
 	 * a change event.
 	 * @access public
@@ -579,8 +615,31 @@ export class FSWatcher extends EventEmitter {
 
 		super();
 
+		/**
+		 * The path to watch.
+		 * @type {String}
+		 */
 		this.path = path;
-		this.recursive = !!opts.recursive;
+
+		/**
+		 * The path to watch.
+		 * @type {Number}
+		 */
+		this.recursive = 0;
+		if (opts.recursive) {
+			this.recursive = Infinity;
+
+			if (opts.depth !== undefined) {
+				if (typeof opts.depth !== 'number' || isNaN(opts.depth)) {
+					throw new TypeError('Expected recursion depth to be a number');
+				}
+				if (opts.depth < 0) {
+					throw new TypeError('Recursion depth must be greater than or equal to zero');
+				}
+				this.recursive = opts.depth;
+			}
+		}
+
 		this.opened = !!register(path, this);
 	}
 
@@ -625,6 +684,8 @@ function parsePath(path) {
 
 	const m = rpath.match(rootRegExp);
 	const root = m && m[1] ? m[1].toUpperCase() : null;
+
+	/* istanbul ignore if */
 	if (!root) {
 		// NOTE: This line is really hard to unit test since `path.resolve()` seems to always return
 		// a valid path.
@@ -726,10 +787,7 @@ export function unregister(path, watcher) {
 
 			if ((result || child.link) && !child.isActive()) {
 				if (child.link) {
-					log('Destroying %s → %s', highlight(child.path), highlight(child.link.path));
 					unregister(child.link.path);
-				} else {
-					log('Destroying %s', highlight(child.path));
 				}
 
 				child.destroy();

@@ -13,7 +13,8 @@ import { spawn } from './subprocess';
 const { __, __n } = i18n();
 const { codes } = SubprocessError;
 
-const log = snooplogg.config({ theme: 'detailed' })('appcd:subprocess:manager').log;
+const logger = snooplogg.config({ theme: 'detailed' })('appcd:subprocess:manager');
+const { log } = logger;
 const { highlight, note } = snooplogg.styles;
 
 /**
@@ -32,7 +33,7 @@ export default class SubprocessManager extends EventEmitter {
 
 		const dispatcher = this.dispatcher = new Dispatcher()
 			.register('/spawn/node/:version?', ctx => {
-				const { data, source } = ctx.payload;
+				const { data, source } = ctx.request;
 
 				// if the source is http, then block the spawn
 				if (source === 'http') {
@@ -48,11 +49,11 @@ export default class SubprocessManager extends EventEmitter {
 
 			.register('/spawn', ctx => new Promise((resolve, reject) => {
 				// if the source is http, then block the spawn
-				if (ctx.payload.source === 'http') {
+				if (ctx.request.source === 'http') {
 					throw new SubprocessError(codes.FORBIDDEN, 'Spawn not permitted');
 				}
 
-				const data = ctx.payload.data || {};
+				const data = ctx.request.data || {};
 				data.options || (data.options = {});
 
 				const { ipc } = data;
@@ -230,7 +231,8 @@ export default class SubprocessManager extends EventEmitter {
 					throw new SubprocessError(codes.INVALID_PARAMETER, 'The "%s" parameter must be a positive integer', 'pid');
 				}
 
-				let signal = ctx.payload.data && ctx.payload.data.signal !== undefined ? ctx.payload.data.signal : 'SIGTERM';
+				const { data } = ctx.request;
+				let signal = data && data.signal !== undefined ? data.signal : 'SIGTERM';
 				if (signal === '0') {
 					signal = 0;
 				}
@@ -246,7 +248,15 @@ export default class SubprocessManager extends EventEmitter {
 				ctx.response = this.subprocesses;
 			});
 
-		gawk.watch(this.subprocesses, (obj, src) => this.emit('change', obj, src));
+		gawk.watch(this.subprocesses, (subprocesses, src) => {
+			this.emit('change', subprocesses, src);
+			Dispatcher
+				.call('/appcd/status', { data: { subprocesses } })
+				.catch(err => {
+					logger.warn('Failed to update status');
+					logger.warn(err);
+				});
+		});
 	}
 
 	/**

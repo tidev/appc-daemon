@@ -41,9 +41,8 @@ describe('PluginManager', () => {
 
 	it('should not watch when no paths specified', async function () {
 		this.pm = new PluginManager();
-		await this.pm.start();
 
-		expect(this.pm.paths).to.have.lengthOf(0);
+		expect(Object.keys(this.pm.pluginPaths)).to.have.lengthOf(0);
 		expect(this.pm.plugins).to.have.lengthOf(0);
 
 		let stats = this.fm.status();
@@ -54,18 +53,23 @@ describe('PluginManager', () => {
 
 		stats = this.fm.status();
 		expect(stats.nodes).to.equal(0);
+	});
+
+	it('should error if paths option contains an invalid path', () => {
+		expect(() => {
+			new PluginManager({ paths: [ {} ] });
+		}).to.throw(PluginError, 'Invalid plugin path');
 	});
 
 	it('should watch empty path for plugins and shutdown', async function () {
 		const dir = path.join(__dirname, 'fixtures', 'empty');
 		this.pm = new PluginManager({ paths: [ '', null, dir ] });
-		await this.pm.start();
 
-		expect(this.pm.paths).to.have.lengthOf(1);
+		expect(Object.keys(this.pm.pluginPaths)).to.have.lengthOf(1);
 		expect(this.pm.plugins).to.have.lengthOf(0);
 
 		let stats = this.fm.status();
-		expect(stats.nodes).to.be.above(0);
+		expect(stats.nodes).to.be.equal(0);
 
 		await this.pm.shutdown();
 		this.pm = null;
@@ -74,7 +78,7 @@ describe('PluginManager', () => {
 		expect(stats.nodes).to.equal(0);
 	});
 
-	it('should skip plugin detection if plugin path does not exist', async function () {
+/*	it('should skip plugin detection if plugin path does not exist', async function () {
 		const dir = path.join(__dirname, 'does_not_exist');
 		this.pm = new PluginManager({ paths: [ dir ] });
 		await this.pm.start();
@@ -122,4 +126,5 @@ describe('PluginManager', () => {
 		await this.pm.shutdown();
 		this.pm = null;
 	});
+	*/
 });

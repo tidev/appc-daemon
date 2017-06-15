@@ -22,6 +22,9 @@
 		"sinon"
 	],
 	"parser": "babel-eslint",
+	"parserOptions": {
+		"sourceType": "module"
+	},
 	"rules": {
 		"indent": [ 2, "tab", { "SwitchCase": 1 } ],
 		"linebreak-style": [ 2, "unix" ],

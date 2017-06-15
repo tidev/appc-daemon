@@ -12,7 +12,7 @@ const { highlight } = snooplogg.styles;
 describe('WebSocketSession', () => {
 	afterEach(function (done) {
 		if (this.server) {
-			this.server.close()
+			this.server.shutdown()
 				.then(() => {
 					this.server = null;
 					done();

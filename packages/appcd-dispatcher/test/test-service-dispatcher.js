@@ -6,23 +6,11 @@ import Response, { codes, loadMessage } from 'appcd-response';
 describe('ServiceDispatcher', () => {
 	it('should fail if path is invalid', () => {
 		expect(() => {
-			new ServiceDispatcher();
-		}).to.throw(TypeError, 'Expected path to be a string');
-
-		expect(() => {
-			new ServiceDispatcher('');
-		}).to.throw(TypeError, 'Expected path to be a string');
-
-		expect(() => {
 			new ServiceDispatcher(123);
 		}).to.throw(TypeError, 'Expected path to be a string');
 	});
 
 	it('should fail if instance is invalid', () => {
-		expect(() => {
-			new ServiceDispatcher('/foo');
-		}).to.throw(TypeError, 'Expected instance to be an object');
-
 		expect(() => {
 			new ServiceDispatcher('/foo', '');
 		}).to.throw(TypeError, 'Expected instance to be an object');
@@ -78,7 +66,7 @@ describe('ServiceDispatcher', () => {
 
 			Promise.resolve()
 				.then(() => sd.handler({
-					payload: {
+					request: {
 						type: 'call'
 					}
 				}, () => Promise.resolve()))
@@ -95,7 +83,7 @@ describe('ServiceDispatcher', () => {
 			Promise.resolve()
 				.then(() => {
 					sd.handler({
-						payload: {
+						request: {
 							type: 'foo'
 						}
 					}, () => Promise.resolve());
@@ -141,7 +129,7 @@ describe('ServiceDispatcher', () => {
 				.then(() => {
 					sd.handler({
 						path: '/foo',
-						payload: {
+						request: {
 							sessionId: 0,
 							type: 'subscribe'
 						},
@@ -175,7 +163,7 @@ describe('ServiceDispatcher', () => {
 				.then(() => {
 					sd.handler({
 						path: '/foo',
-						payload: {
+						request: {
 							sessionId: 0,
 							type: 'subscribe'
 						},
@@ -193,7 +181,7 @@ describe('ServiceDispatcher', () => {
 
 					sd.handler({
 						path: '/foo',
-						payload: {
+						request: {
 							sessionId: 1,
 							type: 'subscribe'
 						},
@@ -227,7 +215,7 @@ describe('ServiceDispatcher', () => {
 				.then(() => {
 					sd.handler({
 						path: '/foo',
-						payload: {
+						request: {
 							sessionId: 0,
 							type: 'subscribe'
 						},
@@ -245,7 +233,7 @@ describe('ServiceDispatcher', () => {
 
 					const ctx = {
 						path: '/foo',
-						payload: {
+						request: {
 							sessionId: 0,
 							type: 'subscribe'
 						},
@@ -281,7 +269,7 @@ describe('ServiceDispatcher', () => {
 				.then(() => new Promise((resolve, reject) => {
 					sd.handler({
 						path: '/foo',
-						payload: {
+						request: {
 							sessionId: 0,
 							type: 'subscribe'
 						},
@@ -297,7 +285,8 @@ describe('ServiceDispatcher', () => {
 								} else {
 									expect(response).to.deep.equal({
 										message: 'foo!',
-										topic: '/foo'
+										topic: '/foo',
+										type: 'event'
 									});
 									resolve();
 								}
@@ -323,7 +312,7 @@ describe('ServiceDispatcher', () => {
 				.then(() => {
 					const ctx = {
 						path: '/foo',
-						payload: {
+						request: {
 							sessionId: 0,
 							type: 'unsubscribe'
 						},
@@ -353,7 +342,7 @@ describe('ServiceDispatcher', () => {
 				.then(() => {
 					sd.handler({
 						path: '/foo',
-						payload: {
+						request: {
 							sessionId: 0,
 							type: 'subscribe'
 						},
@@ -373,7 +362,7 @@ describe('ServiceDispatcher', () => {
 
 					let ctx = {
 						path: '/foo',
-						payload: {
+						request: {
 							sessionId: 0,
 							type: 'unsubscribe'
 						},
@@ -405,7 +394,7 @@ describe('ServiceDispatcher', () => {
 				.then(() => {
 					sd.handler({
 						path: '/foo',
-						payload: {
+						request: {
 							sessionId: 0,
 							type: 'subscribe'
 						},
@@ -423,7 +412,7 @@ describe('ServiceDispatcher', () => {
 
 					sd.handler({
 						path: '/foo',
-						payload: {
+						request: {
 							sessionId: 1,
 							type: 'subscribe'
 						},
@@ -441,7 +430,7 @@ describe('ServiceDispatcher', () => {
 
 					let ctx = {
 						path: '/foo',
-						payload: {
+						request: {
 							sessionId: 0,
 							type: 'unsubscribe'
 						},
@@ -460,7 +449,7 @@ describe('ServiceDispatcher', () => {
 
 					ctx = {
 						path: '/foo',
-						payload: {
+						request: {
 							sessionId: 0,
 							type: 'unsubscribe'
 						},
@@ -493,7 +482,7 @@ describe('ServiceDispatcher', () => {
 
 					sd.handler({
 						path: '/foo',
-						payload: {
+						request: {
 							sessionId: 0,
 							type: 'subscribe'
 						},
@@ -532,7 +521,7 @@ describe('ServiceDispatcher', () => {
 
 					sd.handler({
 						path: '/foo',
-						payload: {
+						request: {
 							sessionId: 0,
 							type: 'subscribe'
 						},

@@ -2,12 +2,12 @@ import path from 'path';
 import snooplogg from 'snooplogg';
 
 import { codes } from 'appcd-response';
-import { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
+import Dispatcher, { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
 import { EventEmitter } from 'events';
 import { expandPath } from 'appcd-path';
 import { FSWatcher, renderTree, rootEmitter, status, tree } from './fswatcher';
 
-const log = snooplogg.config({ theme: 'detailed' })('appcd:fswatcher:manager').log;
+const logger = snooplogg.config({ theme: 'detailed' })('appcd:fswatcher:manager');
 const { highlight, note } = snooplogg.styles;
 
 /**
@@ -22,8 +22,23 @@ export default class FSWatchManager extends EventEmitter {
 	constructor() {
 		super();
 		this.dispatcher = new ServiceDispatcher(this);
-		rootEmitter.on('change', evt => this.emit('change', evt));
-		rootEmitter.on('stats', stats => this.emit('stats', stats));
+
+		rootEmitter
+			.on('change', evt => this.emit('change', evt))
+			.on('stats', stats => {
+				this.emit('stats', stats);
+				Dispatcher
+					.call('/appcd/status', { data: { fs: stats } })
+					.catch(err => {
+						logger.warn('Failed to update status');
+						logger.warn(err);
+					});
+			});
+
+		/**
+		 * A map of paths to `FSWatcher` instances.
+		 * @type {Object}
+		 */
 		this.watchers = {};
 	}
 
@@ -35,7 +50,7 @@ export default class FSWatchManager extends EventEmitter {
 	 * @access private
 	 */
 	getTopic(ctx) {
-		const { topic, data } = ctx.payload;
+		const { topic, data } = ctx.request;
 		return topic || (data && data.path && expandPath(data.path));
 	}
 
@@ -53,11 +68,11 @@ export default class FSWatchManager extends EventEmitter {
 			throw new DispatcherError(codes.MISSING_ARGUMENT, 'Missing required parameter "%s"', 'path');
 		}
 
-		log('Starting FSWatcher: %s', highlight(path));
-		const { data } = ctx.payload;
+		logger.log('Starting FSWatcher: %s', highlight(path));
+		const { data } = ctx.request;
 		this.watchers[path] = new FSWatcher(path, { recursive: data && !!data.recursive })
 			.on('change', publish);
-		log(renderTree());
+		logger.log(renderTree());
 	}
 
 	/**
@@ -72,10 +87,10 @@ export default class FSWatchManager extends EventEmitter {
 		const path = this.getTopic(ctx);
 		const watcher = path && this.watchers[path];
 		if (watcher) {
-			log('Stopping FSWatcher: %s', highlight(path));
+			logger.log('Stopping FSWatcher: %s', highlight(path));
 			watcher.close();
 			delete this.watchers[path];
-			log(renderTree());
+			logger.log(renderTree());
 		}
 	}
 

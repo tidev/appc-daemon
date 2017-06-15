@@ -30,11 +30,11 @@
     "type": "git",
     "url": "git+https://github.com/appcelerator/appc-daemon.git"
   },
-  "appcd": {
-    "host": "external",
-    "type": "service"
-  },
   "engines": {
     "node": ">=8.0.0"
+  },
+  "appcd-plugin": {
+    "name": "titanium-sdk",
+    "type": "external"
   }
 }

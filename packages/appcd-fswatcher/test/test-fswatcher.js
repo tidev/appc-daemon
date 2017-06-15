@@ -13,7 +13,8 @@ import {
 	status
 } from '../dist/index';
 
-const log = snooplogg.config({ theme: 'standard' })('test:appcd:fswatcher').log;
+const logger = snooplogg.config({ theme: 'standard' })('test:appcd:fswatcher');
+const { log } = logger;
 const { green, highlight } = snooplogg.styles;
 
 const _tmpDir = tmp.dirSync({
@@ -74,13 +75,52 @@ describe('FSWatcher', () => {
 				new FSWatcher('foo', 123);
 			}).to.throw(TypeError, 'Expected options to be an object');
 		});
+
+		it('should throw error if recursion depth is invalid', () => {
+			expect(() => {
+				new FSWatcher('foo', {
+					recursive: true,
+					depth: 'foo'
+				});
+			}).to.throw(TypeError, 'Expected recursion depth to be a number');
+
+			expect(() => {
+				new FSWatcher('foo', {
+					recursive: true,
+					depth: NaN
+				});
+			}).to.throw(TypeError, 'Expected recursion depth to be a number');
+
+			expect(() => {
+				new FSWatcher('foo', {
+					recursive: true,
+					depth: -1
+				});
+			}).to.throw(TypeError, 'Recursion depth must be greater than or equal to zero');
+		});
 	});
 
 	describe('watching', () => {
+		beforeEach(done => {
+			const stats = status();
+			try {
+				expect(stats.nodes).to.equal(0);
+				expect(stats.fswatchers).to.equal(0);
+				expect(stats.watchers).to.equal(0);
+				done();
+			} catch (e) {
+				console.log(stats);
+				done(e);
+			}
+		});
+
 		afterEach(function (done) {
 			this.timeout(10000);
 			reset();
 			log(renderTree());
+			if (logger.enabled) {
+				console.log('\n**********************************************************************************\n');
+			}
 			setTimeout(() => done(), 1000);
 		});
 
@@ -188,6 +228,7 @@ describe('FSWatcher', () => {
 									// adding the file
 									expect(evt.action).to.equal('add');
 									expect(evt.file).to.equal(realPath(filename));
+									log(renderTree());
 								} else if (counter === 2) {
 									// updating the file
 									expect(evt.action).to.equal('change');
@@ -349,55 +390,55 @@ describe('FSWatcher', () => {
 				const filename = path.join(tmp, 'foo.txt');
 				let counter = 0;
 
-				setTimeout(() => {
-					const watcher1 = new FSWatcher(tmp)
-						.on('change', evt => {
-							if (evt.file === realPath(filename)) {
-								expect(evt.action).to.equal('add');
-								unwatch();
-							}
-						})
-						.on('error', done);
-
-					const watcher2 = new FSWatcher(tmp)
-						.on('change', evt => {
-							if (evt.file === realPath(filename)) {
-								expect(evt.action).to.equal('add');
-								unwatch();
-							}
-						})
-						.on('error', done);
-
-					function unwatch() {
-						if (++counter === 2) {
-							log(renderTree());
-							expect(roots).to.not.deep.equal({});
-							log('Closing watcher 1');
-							watcher1.close();
-
-							setTimeout(() => {
-								try {
-									log(renderTree());
-									expect(roots).to.not.deep.equal({});
-									log('Closing watcher 2');
-									watcher2.close();
-
-									setTimeout(() => {
-										try {
-											log(renderTree());
-											expect(roots).to.deep.equal({});
-											done();
-										} catch (e) {
-											done(e);
-										}
-									}, 1000);
-								} catch (e) {
-									done(e);
-								}
-							}, 1000);
+				const watcher1 = new FSWatcher(tmp)
+					.on('change', evt => {
+						if (evt.file === realPath(filename)) {
+							expect(evt.action).to.equal('add');
+							unwatch();
 						}
-					}
+					})
+					.on('error', done);
 
+				const watcher2 = new FSWatcher(tmp)
+					.on('change', evt => {
+						if (evt.file === realPath(filename)) {
+							expect(evt.action).to.equal('add');
+							unwatch();
+						}
+					})
+					.on('error', done);
+
+				function unwatch() {
+					if (++counter === 2) {
+						log(renderTree());
+						expect(roots).to.not.deep.equal({});
+						log('Closing watcher 1');
+						watcher1.close();
+
+						setTimeout(() => {
+							try {
+								log(renderTree());
+								expect(roots).to.not.deep.equal({});
+								log('Closing watcher 2');
+								watcher2.close();
+
+								setTimeout(() => {
+									try {
+										log(renderTree());
+										expect(roots).to.deep.equal({});
+										done();
+									} catch (e) {
+										done(e);
+									}
+								}, 1000);
+							} catch (e) {
+								done(e);
+							}
+						}, 1000);
+					}
+				}
+
+				setTimeout(() => {
 					log('Writing %s', highlight(filename));
 					fs.writeFileSync(filename, 'foo!');
 				}, 100);
@@ -476,11 +517,13 @@ describe('FSWatcher', () => {
 
 				new FSWatcher(tmp)
 					.on('change', evt => {
-						if (evt.file.indexOf(tmpDir) === 0) {
-							if (counter) {
+						if (counter && evt.file.indexOf(tmpDir) === 0) {
+							try {
 								expect(evt.action).to.equal('add');
 								expect(evt.file).to.equal(realPath(filename));
 								done();
+							} catch (e) {
+								done(e);
 							}
 						}
 					})
@@ -503,7 +546,9 @@ describe('FSWatcher', () => {
 
 				const watcher = new FSWatcher(tmp)
 					.on('change', evt => {
-						if (evt.file.indexOf(tmpDir) === 0) {
+						// console.log(counter, evt);
+
+						if (counter && evt.file.indexOf(tmpDir) === 0) {
 							if (counter === 1) {
 								expect(evt.action).to.equal('add');
 								expect(evt.file).to.equal(realPath(filename));
@@ -521,8 +566,12 @@ describe('FSWatcher', () => {
 								setTimeout(() => {
 									fs.appendFileSync(filename, '\nbaz!');
 									setTimeout(() => {
-										expect(roots).to.deep.equal({});
-										done();
+										try {
+											expect(roots).to.deep.equal({});
+											done();
+										} catch (e) {
+											done(e);
+										}
 									}, 1000);
 								}, 100);
 							} else {
@@ -788,19 +837,23 @@ describe('FSWatcher', () => {
 
 					const watcher1 = new FSWatcher(tmp, { recursive: true })
 						.on('change', evt => {
-							check();
-							setTimeout(() => {
-								fs.appendFileSync(bazFile, 'more baz!');
-							}, 100);
+							if (evt.file.indexOf(tmpDir) === 0) {
+								check();
+								setTimeout(() => {
+									fs.appendFileSync(bazFile, 'more baz!');
+								}, 1000);
+							}
 						})
 						.on('error', done);
 
 					const watcher2 = new FSWatcher(barDir)
 						.on('change', evt => {
-							log('Closing watcher 2');
-							watcher2.close();
-							log(renderTree());
-							check();
+							if (evt.file.indexOf(tmpDir) === 0) {
+								log('Closing watcher 2');
+								watcher2.close();
+								log(renderTree());
+								check();
+							}
 						})
 						.on('error', done);
 
@@ -849,6 +902,258 @@ describe('FSWatcher', () => {
 				expect(() => {
 					new FSWatcher('/', { recursive: true });
 				}).to.throw(Error, 'Recursively watching root is not permitted');
+			});
+
+			// it('should only recursively watch 2 directories deep', function (done) {
+			// 	this.timeout(10000);
+			// 	this.slow(8000);
+			//
+			// 	const tmp = makeTempDir();
+			// 	log('Creating temp directory: %s', highlight(tmp));
+			//
+			// 	const wizDir = path.join(tmp, 'foo', 'bar', 'baz', 'wiz');
+			// 	log('Creating wiz directory: %s', highlight(wizDir));
+			// 	fs.mkdirsSync(wizDir);
+			//
+			// 	const files = [
+			// 		path.join(tmp, 'test.txt'),
+			// 		path.join(tmp, 'foo', 'foo-test.txt'),
+			// 		path.join(tmp, 'foo', 'bar', 'bar-test.txt'),
+			// 		path.join(tmp, 'foo', 'bar', 'baz', 'baz-test.txt'),
+			// 		path.join(tmp, 'foo', 'bar', 'baz', 'wiz', 'wiz-test.txt')
+			// 	];
+			// 	let index = 0;
+			// 	let lastEvt;
+			// 	let timer;
+			//
+			// 	setTimeout(() => {
+			// 		new FSWatcher(tmp, { recursive: true, depth: 2 })
+			// 			.on('change', evt => {
+			// 				if (evt.file.indexOf(tmpDir) === 0) {
+			// 					clearTimeout(timer);
+			// 					lastEvt = evt;
+			// 					checkEvent();
+			// 				}
+			// 			})
+			// 			.on('error', done);
+			//
+			// 		function writeFile() {
+			// 			log(renderTree());
+			// 			const file = files[index];
+			// 			log('Writing: %s', highlight(file));
+			// 			fs.writeFileSync(file, 'test');
+			//
+			// 			timer = setTimeout(() => {
+			// 				// timed out
+			// 				log('Timed out');
+			// 				checkEvent();
+			// 			}, 1000);
+			// 		}
+			//
+			// 		function checkEvent() {
+			// 			try {
+			// 				if (index < 2) {
+			// 					if (!lastEvt) {
+			// 						throw new Error('Didn\'t get the fs event!');
+			// 					}
+			// 					expect(lastEvt.action).to.equal('add');
+			// 					expect(lastEvt.file).to.equal(realPath(files[index]));
+			// 				} else if (lastEvt) {
+			// 					throw new Error(`Should not have got ${lastEvt.action} for ${lastEvt.file} (depth=${index})`);
+			// 				}
+			// 			} catch (e) {
+			// 				return done(e);
+			// 			}
+			//
+			// 			lastEvt = null;
+			//
+			// 			if (++index < files.length) {
+			// 				writeFile();
+			// 			} else {
+			// 				done();
+			// 			}
+			// 		}
+			//
+			// 		writeFile();
+			// 	}, 100);
+			// });
+
+			it('should only recursively watch 2 directories deep and then unwatch', function (done) {
+				this.timeout(10000);
+				this.slow(8000);
+
+				const tmp = makeTempDir();
+				log('Creating temp directory: %s', highlight(tmp));
+
+				const wizDir = path.join(tmp, 'foo', 'bar', 'baz', 'wiz');
+				log('Creating wiz directory: %s', highlight(wizDir));
+				fs.mkdirsSync(wizDir);
+
+				const files = [
+					path.join(tmp, 'test.txt'),
+					path.join(tmp, 'foo', 'foo-test.txt'),
+					path.join(tmp, 'foo', 'bar', 'bar-test.txt'),
+					path.join(tmp, 'foo', 'bar', 'baz', 'baz-test.txt'),
+					path.join(tmp, 'foo', 'bar', 'baz', 'wiz', 'wiz-test.txt')
+				];
+				let index = 0;
+				let lastEvt;
+				let timer;
+
+				setTimeout(() => {
+					const watcher = new FSWatcher(tmp, { recursive: true, depth: 2 })
+						.on('change', evt => {
+							if (evt.file.indexOf(tmpDir) === 0) {
+								clearTimeout(timer);
+								lastEvt = evt;
+								checkEvent();
+							}
+						})
+						.on('error', done);
+
+					function writeFile() {
+						log(renderTree());
+						const file = files[index];
+						log('Writing: %s', highlight(file));
+						fs.writeFileSync(file, 'test');
+
+						timer = setTimeout(() => {
+							// timed out
+							log('Timed out');
+							checkEvent();
+						}, 1000);
+					}
+
+					function checkEvent() {
+						try {
+							if (index < 2) {
+								if (!lastEvt) {
+									throw new Error('Didn\'t get the fs event!');
+								}
+								expect(lastEvt.action).to.equal('add');
+								expect(lastEvt.file).to.equal(realPath(files[index]));
+							} else if (lastEvt) {
+								throw new Error(`Should not have got ${lastEvt.action} for ${lastEvt.file} (depth=${index})`);
+							}
+						} catch (e) {
+							return done(e);
+						}
+
+						lastEvt = null;
+
+						if (++index < files.length) {
+							writeFile();
+						} else {
+							log('Closing watcher');
+							expect(watcher.close()).to.be.true;
+
+							setTimeout(() => {
+								const stats = status();
+								expect(stats.nodes).to.equal(0);
+								expect(stats.fswatchers).to.equal(0);
+								expect(stats.watchers).to.equal(0);
+								done();
+							}, 1000);
+						}
+					}
+
+					writeFile();
+				}, 100);
+			});
+
+			it('should recursively watch with two watchers; one with depth of 2', function (done) {
+				this.timeout(10000);
+				this.slow(8000);
+
+				const tmp = makeTempDir();
+				log('Creating temp directory: %s', highlight(tmp));
+
+				const wizDir = path.join(tmp, 'foo', 'bar', 'baz', 'wiz');
+				log('Creating wiz directory: %s', highlight(wizDir));
+				fs.mkdirsSync(wizDir);
+
+				const files = [
+					path.join(tmp, 'test.txt'),
+					path.join(tmp, 'foo', 'foo-test.txt'),
+					path.join(tmp, 'foo', 'bar', 'bar-test.txt'),
+					path.join(tmp, 'foo', 'bar', 'baz', 'baz-test.txt'),
+					path.join(tmp, 'foo', 'bar', 'baz', 'wiz', 'wiz-test.txt')
+				];
+				let index = 0;
+				let lastEvt;
+				let timer;
+				let counter = 0;
+				let firstCounter = 0;
+				let secondCounter = 0;
+
+				setTimeout(() => {
+					new FSWatcher(tmp, { recursive: true })
+						.on('change', evt => {
+							if (evt.file.indexOf(tmpDir) === 0) {
+								firstCounter++;
+								if (++firstCounter >= files.length) {
+									finalize();
+								}
+							}
+						})
+						.on('error', done);
+
+					new FSWatcher(tmp, { recursive: true, depth: 2 })
+						.on('change', evt => {
+							if (evt.file.indexOf(tmpDir) === 0) {
+								clearTimeout(timer);
+								lastEvt = evt;
+								checkEvent();
+							}
+						})
+						.on('error', done);
+
+					function writeFile() {
+						log(renderTree());
+						const file = files[index];
+						log('Writing: %s', highlight(file));
+						fs.writeFileSync(file, 'test');
+
+						timer = setTimeout(() => {
+							// timed out
+							log('Timed out');
+							checkEvent();
+						}, 1000);
+					}
+
+					function checkEvent() {
+						try {
+							if (index < 2) {
+								if (!lastEvt) {
+									throw new Error('Didn\'t get the fs event!');
+								}
+								expect(lastEvt.action).to.equal('add');
+								expect(lastEvt.file).to.equal(realPath(files[index]));
+							} else if (lastEvt) {
+								throw new Error(`Should not have got ${lastEvt.action} for ${lastEvt.file} (depth=${index})`);
+							}
+						} catch (e) {
+							return done(e);
+						}
+
+						lastEvt = null;
+						secondCounter++;
+
+						if (++index < files.length) {
+							writeFile();
+						} else {
+							finalize();
+						}
+					}
+
+					function finalize() {
+						if (++counter === 2) {
+							done();
+						}
+					}
+
+					writeFile();
+				}, 100);
 			});
 		});
 

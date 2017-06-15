@@ -124,13 +124,13 @@ describe('webserver', () => {
 			})
 			.then(() => {
 				server
-					.close()
+					.shutdown()
 					.then(() => done())
 					.catch(err2 => done());
 			})
 			.catch(err => {
 				server
-					.close()
+					.shutdown()
 					.then(() => done(err))
 					.catch(err2 => done(err));
 			});
@@ -168,13 +168,13 @@ describe('webserver', () => {
 			}))
 			.then(() => {
 				server
-					.close()
+					.shutdown()
 					.then(() => done())
 					.catch(err2 => done());
 			})
 			.catch(err => {
 				server
-					.close()
+					.shutdown()
 					.then(() => done(err))
 					.catch(err2 => done(err));
 			});
@@ -202,13 +202,13 @@ describe('webserver', () => {
 			})
 			.then(() => {
 				server
-					.close()
+					.shutdown()
 					.then(() => done())
 					.catch(err2 => done());
 			})
 			.catch(err => {
 				server
-					.close()
+					.shutdown()
 					.then(() => done(err))
 					.catch(err2 => done(err));
 			});
@@ -239,13 +239,13 @@ describe('webserver', () => {
 			})
 			.then(() => {
 				server
-					.close()
+					.shutdown()
 					.then(() => done())
 					.catch(err2 => done());
 			})
 			.catch(err => {
 				server
-					.close()
+					.shutdown()
 					.then(() => done(err))
 					.catch(err2 => done(err));
 			});
@@ -275,13 +275,13 @@ describe('webserver', () => {
 			})
 			.then(() => {
 				server
-					.close()
+					.shutdown()
 					.then(() => done())
 					.catch(err2 => done());
 			})
 			.catch(err => {
 				server
-					.close()
+					.shutdown()
 					.then(() => done(err))
 					.catch(err2 => done(err));
 			});

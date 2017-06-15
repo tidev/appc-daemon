@@ -130,12 +130,12 @@ export default class Client {
 	 * Issues a request to the server over a websocket.
 	 *
 	 * @param {String} path - The path to send.
-	 * @param {Object} [payload] - An object to send.
+	 * @param {Object} [data] - An object to send.
 	 * @param {String} [type]
 	 * @returns {EventEmitter} Emits events `response` and `error`.
 	 * @access public
 	 */
-	request({ path, payload, type } = {}) {
+	request({ path, data, type } = {}) {
 		const emitter = new EventEmitter;
 
 		// need to delay request so event emitter can be returned and events can
@@ -167,7 +167,7 @@ export default class Client {
 						version: '1.0',
 						path:    path,
 						id:      id,
-						data:    payload,
+						data,
 						type
 					}));
 				})

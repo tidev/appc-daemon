@@ -143,7 +143,7 @@ export default class WebSocketSession {
 							}
 
 							let res;
-							const type = message.type || (pubsub ? 'publish' : undefined);
+							const type = message.type || (pubsub ? 'event' : undefined);
 
 							if (typeof message === 'object') {
 								res = {
@@ -173,7 +173,7 @@ export default class WebSocketSession {
 						.once('error', err => {
 							logger.error('%s Response stream error:', note(`[${this.sessionId}]`));
 							logger.error(err);
-							this.send({ type: 'event', message: err.message || err, status: err.status || 500, fin: true });
+							this.send({ type: 'error', message: err.message || err, status: err.status || 500, fin: true });
 						});
 
 				} else if (response instanceof Error) {

@@ -124,14 +124,13 @@ module.exports = (opts) => {
 		// add nyc
 		if (cover) {
 			args.push(
-				path.resolve(__dirname, '..', 'run-nyc.js'),
 				path.join(appcdGulpNodeModulesPath, '.bin', 'nyc'),
 				'--cache', 'false',
 				'--exclude', 'test',
 				'--instrument', 'false',
 				'--source-map', 'false',
 				// supported reporters:
-				// https://github.com/istanbuljs/istanbuljs/tree/master/packages/istanbul-reports/lib
+				//   https://github.com/istanbuljs/istanbuljs/tree/master/packages/istanbul-reports/lib
 				'--reporter=html',
 				'--reporter=json',
 				'--reporter=text',
@@ -146,6 +145,12 @@ module.exports = (opts) => {
 
 		// add mocha
 		args.push(path.join(appcdGulpNodeModulesPath, '.bin', 'mocha'));
+
+		// add --inspect
+		if (process.argv.indexOf('--inspect') !== -1 || process.argv.indexOf('--inspect-brk') !== -1) {
+			args.push('--inspect-brk');
+		}
+
 		args.push('--reporter=' + path.join(appcdGulpNodeModulesPath, 'mocha-jenkins-reporter'));
 		process.env.JUNIT_REPORT_PATH = path.join(projectDir, 'junit.xml');
 		process.env.JUNIT_REPORT_NAME = path.basename(projectDir);

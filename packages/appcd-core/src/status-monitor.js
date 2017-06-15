@@ -109,12 +109,20 @@ export default class StatusMonitor {
 	 * @access private
 	 */
 	onCall(ctx) {
-		const filter = ctx.params.filter && ctx.params.filter.replace(/^\//, '').split(/\.|\//) || undefined;
-		const node = this.get(filter);
-		if (!node) {
-			throw new DispatcherError(codes.NOT_FOUND);
+		if (ctx.data) {
+			if (typeof data !== 'object') {
+				throw new DispatcherError(codes.BAD_REQUEST);
+			}
+			this.merge(ctx.data);
+			ctx.response = new Response(codes.OK);
+		} else {
+			const filter = ctx.params.filter && ctx.params.filter.replace(/^\//, '').split(/\.|\//) || undefined;
+			const node = this.get(filter);
+			if (!node) {
+				throw new DispatcherError(codes.NOT_FOUND);
+			}
+			ctx.response = node;
 		}
-		ctx.response = node;
 	}
 
 	/**
@@ -176,6 +184,18 @@ export default class StatusMonitor {
 		}
 
 		return obj;
+	}
+
+	/**
+	 * Mixes an object into the status.
+	 *
+	 * @param {Object} obj - An object of values to merge into the status object.
+	 * @returns {StatusMonitor}
+	 * @access public
+	 */
+	merge(obj) {
+		gawk.mergeDeep(this.status, obj);
+		return this;
 	}
 
 	/**

@@ -151,7 +151,7 @@ export default class WebServer extends EventEmitter {
 	listen() {
 		return Promise.resolve()
 			// make sure that if there is a previous websocket server, it's shutdown to free up the port
-			.then(() => this.close())
+			.then(() => this.shutdown())
 			.then(() => {
 				const webroot = this.webroot || path.resolve(__dirname, '..', 'public');
 
@@ -201,7 +201,7 @@ export default class WebServer extends EventEmitter {
 	 * @returns {Promise}
 	 * @access public
 	 */
-	close() {
+	shutdown() {
 		return Promise.resolve()
 			.then(() => {
 				if (this.websocketServer) {

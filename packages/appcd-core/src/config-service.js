@@ -11,23 +11,19 @@ const { highlight } = snooplogg.styles;
 /**
  * Exposes a dispatcher service handler for observing and manipulating the config.
  */
-export default class ConfigService {
+export default class ConfigService extends ServiceDispatcher {
 	/**
 	 * Initalizes the status and kicks off the timers to refresh the dynamic
 	 * status information.
 	 */
 	constructor(cfg) {
+		super('/:key*');
+
 		/**
 		 * The daemon config instance.
 		 * @type {Config}
 		 */
 		this.config = cfg;
-
-		/**
-		 * The status monitor dispatcher.
-		 * @type {Dispatcher}
-		 */
-		this.dispatcher = new ServiceDispatcher('/:key*', this);
 	}
 
 	/**
@@ -37,7 +33,7 @@ export default class ConfigService {
 	 * @access private
 	 */
 	onCall(ctx) {
-		const { data } = ctx.payload;
+		const { data } = ctx.request;
 		let key = (ctx.params.key || '').replace(/^\//, '').split(/\.|\//).join('.');
 
 		if (data && data.action) {
@@ -93,13 +89,13 @@ export default class ConfigService {
 	 * @access private
 	 */
 	onSubscribe(ctx, publish) {
-		const filter = ctx.params.key && ctx.params.key.replace(/^\//, '').split(/\.|\//) || undefined;
+		const filter = (ctx.params.key || '').replace(/^\//, '').split(/\.|\//).join('.');
 
 		// write the initial value
 		const node = this.config.get(filter);
 		publish(node);
 
-		logger.debug('Starting config watch: %s', highlight(filter ? filter.join('/') : 'no filter'));
+		logger.debug('Starting config watch: %s', highlight(filter || 'no filter'));
 		this.config.watch(filter, publish);
 	}
 

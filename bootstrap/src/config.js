@@ -1,7 +1,7 @@
 import { createRequest, loadConfig } from './common';
 
 const cmd = {
-	action: ({ argv, _ }) => {
+	action({ argv, _ }) {
 		// const cfg = loadConfig(argv);
 		// const [ path, json ] = _;
 		//

@@ -13,7 +13,7 @@ const stripRegExp = /\x1B\[\d+m/g;
 /**
  * A context that contains request information and is routed through the dispatcher.
  */
-class DispatcherContext {
+export class DispatcherContext {
 	/**
 	 * Mixes the context parameters into this instance.
 	 *
@@ -47,7 +47,7 @@ export default class Dispatcher {
 	 * @access public
 	 */
 	static call(...args) {
-		return this.root.call(...args);
+		return Dispatcher.root.call(...args);
 	}
 
 	/**
@@ -55,7 +55,7 @@ export default class Dispatcher {
 	 * @access public
 	 */
 	static callback(...args) {
-		return this.root.callback(...args);
+		return Dispatcher.root.callback(...args);
 	}
 
 	/**
@@ -63,12 +63,12 @@ export default class Dispatcher {
 	 * @access public
 	 */
 	static register(...args) {
-		return this.root.register(...args);
+		return Dispatcher.root.register(...args);
 	}
 
 	/**
 	 * List of registered routes.
-	 * @type {Array}
+	 * @type {Array.<Object>}
 	 */
 	routes = [];
 
@@ -91,7 +91,7 @@ export default class Dispatcher {
 			ctx = payload;
 		} else {
 			ctx = new DispatcherContext({
-				payload: typeof payload === 'object' && payload || {},
+				request: typeof payload === 'object' && payload || {},
 				response: new PassThrough({ objectMode: true }),
 				status: 200
 			});
@@ -207,13 +207,15 @@ export default class Dispatcher {
 				return next();
 			}
 
-			const payload = {
-				data: (ctx.method === 'POST' || ctx.method === 'PUT') && ctx.request && ctx.request.body || {},
+			const dispatcherCtx = new DispatcherContext({
 				headers: ctx.req && ctx.req.headers || {},
+				request: (ctx.method === 'POST' || ctx.method === 'PUT') && ctx.request && ctx.request.body || {},
+				response: new PassThrough({ objectMode: true }),
+				status: 200,
 				source: 'http'
-			};
+			});
 
-			return this.call(ctx.originalUrl, payload)
+			return this.call(ctx.originalUrl, dispatcherCtx)
 				.then(result => {
 					if (result.response instanceof Response) {
 						ctx.status = result.response.status || codes.OK;

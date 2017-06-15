@@ -4,7 +4,7 @@ const cmd = {
 	options: {
 		'--no-colors': { desc: 'disables colors' }
 	},
-	action: ({ argv }) => {
+	action({ argv }) {
 		const cfg = loadConfig(argv);
 
 		createRequest(cfg, '/appcd/logcat', { colors: argv.colors })

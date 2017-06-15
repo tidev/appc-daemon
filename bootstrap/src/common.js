@@ -42,10 +42,10 @@ export function banner() {
  *
  * @param {Config} cfg - A config instance.
  * @param {String} path - The path to request.
- * @param {Object} [payload] - The data to send along with the request.
+ * @param {Object} [data] - The data to send along with the request.
  * @returns {Client}
  */
-export function createRequest(cfg, path, payload, type) {
+export function createRequest(cfg, path, data, type) {
 	const client = new Client({
 		host: cfg.get('server.host'),
 		port: cfg.get('server.post'),
@@ -54,7 +54,7 @@ export function createRequest(cfg, path, payload, type) {
 
 	log('Creating request: %s', highlight(`${type || 'call'}://${client.host}:${client.port}${path}`));
 	const request = client
-		.request({ path, payload, type })
+		.request({ path, data, type })
 		.once('close', () => process.exit(0))
 		.once('error', err => {
 			if (err.code !== 'ECONNREFUSED') {
@@ -122,7 +122,11 @@ export function startServer({ cfg, argv }) {
 	}
 
 	const { config, configFile, debug } = argv;
-	const args = [ require.resolve('appcd-core') ];
+	const args = [];
+	if (debug) {
+		args.push('--inspect');
+	}
+	args.push(require.resolve('appcd-core'));
 	if (config) {
 		args.push('--config', JSON.stringify(config));
 	}
@@ -198,28 +202,39 @@ export function stopServer({ cfg, force }) {
 	let tries = 5;
 	let wasRunning = false;
 
-	return (function check() {
+	function sendKill(pid) {
 		return new Promise((resolve, reject) => {
-			isRunning().then(pid => {
-				if (pid) {
-					if (!wasRunning) {
-						log('Daemon was running, attempting to stop');
-					}
-					wasRunning = true;
-					if (--tries < 0) {
-						return reject(new Error('Unable to stop the server'));
-					}
-					if (tries === 0) {
-						force = true;
-					}
-					const signal = force ? 'SIGKILL' : 'SIGTERM';
-					log(`Server is running, sending ${signal}`);
-					process.kill(pid, signal);
-					setTimeout(() => check().then(resolve, reject), 1000);
-				} else {
-					resolve(wasRunning);
-				}
-			});
+			if (!pid) {
+				return reject(wasRunning);
+			}
+			if (!wasRunning) {
+				log('Daemon was running, attempting to stop');
+			}
+			wasRunning = true;
+			if (--tries < 0) {
+				return reject(new Error('Unable to stop the server'));
+			}
+			if (tries === 0) {
+				force = true;
+			}
+
+			const signal = force ? 'SIGKILL' : 'SIGTERM';
+			log(`Server is running, sending ${signal}`);
+			process.kill(pid, signal);
+
+			setTimeout(() => {
+				try {
+					process.kill(pid, 0);
+					// daemon didn't die, force!
+					force = true;
+					sendKill(pid).then(resolve, reject);
+					return;
+				} catch (e) {}
+
+				resolve();
+			}, 1000);
 		});
-	}());
+	}
+
+	return isRunning().then(pid => sendKill(pid));
 }

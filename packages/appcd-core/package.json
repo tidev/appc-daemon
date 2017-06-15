@@ -20,7 +20,7 @@
     "babel-polyfill": "^6.23.0",
     "cli-kit": "^0.0.3",
     "colors": "^1.1.2",
-    "double-stack": "^2.0.0",
+    "double-stack": "^2.1.0",
     "fs-extra": "^3.0.1",
     "gawk": "^4.2.0",
     "hook-emitter": "^2.1.0",
@@ -55,6 +55,6 @@
     "url": "git+https://github.com/appcelerator/appc-daemon.git"
   },
   "engines": {
-    "node": "8.0.0"
+    "node": "8.1.1"
   }
 }

@@ -7,7 +7,7 @@ import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
 import progress from 'progress';
-import request from 'request';
+import request from 'appcd-request';
 import snooplogg from 'snooplogg';
 import tar from 'tar-stream';
 import tmp from 'tmp';
@@ -103,22 +103,22 @@ export function downloadNode({ arch, nodeHome, version } = {}) {
 
 	logger.log('Downloading %s => %s', highlight(url), highlight(outFile));
 
+	const {
+		APPCD_NETWORK_CA_FILE,
+		APPCD_NETWORK_PROXY,
+		APPCD_NETWORK_STRICT_SSL
+	} = process.env;
+
 	// download node
 	return Promise.resolve()
-		.then(() => new Promise((resolve, reject) => {
-			const {
-				APPCD_NETWORK_CA_FILE,
-				APPCD_NETWORK_PROXY,
-				APPCD_NETWORK_STRICT_SSL
-			} = process.env;
-
+		.then(() => request({
+			url,
+			ca: APPCD_NETWORK_CA_FILE && isFile(APPCD_NETWORK_CA_FILE) ? fs.readFileSync(APPCD_NETWORK_CA_FILE).toString() : null,
+			proxy: APPCD_NETWORK_PROXY,
+			strictSSL: APPCD_NETWORK_STRICT_SSL !== 'false'
+		}))
+		.then(request => new Promise((resolve, reject) => {
 			request
-				.get({
-					url,
-					ca: APPCD_NETWORK_CA_FILE && isFile(APPCD_NETWORK_CA_FILE) ? fs.readFileSync(APPCD_NETWORK_CA_FILE).toString() : null,
-					proxy: APPCD_NETWORK_PROXY,
-					strictSSL: APPCD_NETWORK_STRICT_SSL !== 'false'
-				})
 				.on('response', response => {
 					if (response.statusCode !== 200) {
 						return reject(new Error(`Failed to download Node.js: ${response.statusCode} - ${STATUS_CODES[response.statusCode]}`));

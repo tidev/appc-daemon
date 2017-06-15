@@ -47,7 +47,7 @@ const { highlight } = snooplogg.styles;
 // 			id,
 // 			type: 'init',
 // 			data: {
-// 				pluginPath: path.join(__dirname, 'fixtures', 'good-plugin')
+// 				path: path.join(__dirname, 'fixtures', 'good-plugin')
 // 			}
 // 		};
 // 		log('Sending request:');

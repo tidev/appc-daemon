@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import FSWatchManager, { renderTree, reset, roots } from '../dist/index';
 import path from 'path';
+import Response from 'appcd-response';
 import snooplogg from 'snooplogg';
 import tmp from 'tmp';
 
@@ -46,7 +47,12 @@ describe('FSWatchManager', () => {
 			Promise.resolve()
 				.then(() => new Promise((resolve, reject) => {
 					manager.dispatcher.handler({
-						path: '/'
+						path: '/',
+						request: {},
+						response: {
+							once: () => {},
+							write: response => {}
+						}
 					}, () => {
 						done();
 						return Promise.resolve();
@@ -62,9 +68,13 @@ describe('FSWatchManager', () => {
 				.then(() => new Promise((resolve, reject) => {
 					manager.dispatcher.handler({
 						path: '/',
-						payload: {
+						request: {
 							sessionId: 0,
 							type: 'subscribe'
+						},
+						response: {
+							once: () => {},
+							write: response => {}
 						}
 					}, () => Promise.resolve());
 				}))
@@ -116,7 +126,7 @@ describe('FSWatchManager', () => {
 					.then(() => new Promise((resolve, reject) => {
 						log('Subscribing');
 						manager.dispatcher.handler({
-							payload: {
+							request: {
 								data: { path: tmp },
 								sessionId: 0,
 								type: 'subscribe'
@@ -139,7 +149,8 @@ describe('FSWatchManager', () => {
 													filename: 'foo.txt',
 													file: realPath(filename)
 												},
-												topic: tmp
+												topic: tmp,
+												type: 'event'
 											});
 
 											const stats = manager.status();
@@ -154,7 +165,7 @@ describe('FSWatchManager', () => {
 
 													log('Unsubscribing');
 													const ctx = {
-														payload: {
+														request: {
 															sessionId: 0,
 															topic: tmp,
 															type: 'unsubscribe'
@@ -204,10 +215,11 @@ describe('FSWatchManager', () => {
 			log('Creating tmp directory: %s', highlight(tmp));
 
 			const manager = new FSWatchManager;
+			let finished = false;
 
 			log('Subscribing first time');
 			manager.dispatcher.handler({
-				payload: {
+				request: {
 					data: { path: tmp },
 					sessionId: 0,
 					type: 'subscribe'
@@ -215,35 +227,39 @@ describe('FSWatchManager', () => {
 				response: {
 					once: () => {},
 					write: response => {
-						try {
-							expect(response.message.toString()).to.equal('Subscribed');
-							expect(response.message.status).to.equal(201);
-							expect(response.topic).to.equal(tmp);
-							expect(response.type).to.equal('subscribe');
+						if (!finished) {
+							try {
+								expect(response.message).to.be.instanceof(Response);
+								expect(response.message.toString()).to.equal('Subscribed');
+								expect(response.message.status).to.equal(201);
+								expect(response.topic).to.equal(tmp);
+								expect(response.type).to.equal('subscribe');
 
-							log('Subscribing second time');
-							const ctx = {
-								payload: {
-									data: { path: tmp },
-									sessionId: 0,
-									type: 'subscribe'
-								},
-								response: {
-									once: () => {},
-									write: response => {}
-								}
-							};
-							manager.dispatcher.handler(ctx);
-							expect(ctx.response.status).to.equal(409);
-							expect(ctx.response.statusCode).to.equal('409.1');
-							expect(ctx.response.toString()).to.equal('Already Subscribed');
-							done();
-						} catch (e) {
-							done(e);
+								log('Subscribing second time');
+								const ctx = {
+									request: {
+										data: { path: tmp },
+										sessionId: 0,
+										type: 'subscribe'
+									},
+									response: {
+										once: () => {},
+										write: response => {}
+									}
+								};
+								manager.dispatcher.handler(ctx, () => Promise.resolve());
+								expect(ctx.response.status).to.equal(409);
+								expect(ctx.response.statusCode).to.equal('409.1');
+								expect(ctx.response.toString()).to.equal('Already Subscribed');
+								finished = true;
+								done();
+							} catch (e) {
+								done(e);
+							}
 						}
 					}
 				}
-			});
+			}, () => Promise.resolve());
 		});
 
 		it('should shutdown all watchers', function (done) {
@@ -264,7 +280,7 @@ describe('FSWatchManager', () => {
 			const manager = new FSWatchManager;
 
 			manager.dispatcher.handler({
-				payload: {
+				request: {
 					data: { path: fooDir },
 					sessionId: 0,
 					type: 'subscribe'
@@ -276,7 +292,7 @@ describe('FSWatchManager', () => {
 			}, () => Promise.resolve());
 
 			manager.dispatcher.handler({
-				payload: {
+				request: {
 					data: { path: barDir },
 					sessionId: 1,
 					type: 'subscribe'

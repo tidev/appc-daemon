@@ -29,6 +29,7 @@
     "appcd-fs",
     "appcd-gulp",
     "appcd-path",
+    "appcd-request",
     "appcd-util"
   ],
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",

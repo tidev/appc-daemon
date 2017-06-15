@@ -197,6 +197,15 @@ describe('util', () => {
 		});
 	});
 
+	describe('getActiveHandles()', () => {
+		it('should return the active handles', done => {
+			const handles = util.getActiveHandles();
+			expect(handles).to.be.an.instanceof(Object);
+			expect(handles.timers).to.have.length.above(0);
+			done();
+		});
+	});
+
 	describe('inherits()', () => {
 		it('should detect when a class extends another class', () => {
 			class Foo {}

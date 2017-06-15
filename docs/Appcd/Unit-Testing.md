@@ -47,6 +47,14 @@ To display debug logging while running unit tests, run:
 SNOOPLOGG=* gulp test
 ```
 
+##### Debugging Tests
+
+To enable debugging, pass in the `--inspect` flag:
+
+```bash
+SNOOPLOGG=* gulp test --inspect
+```
+
 ##### Running a Suite
 
 To run tests for a specific suite (`test/test-<suite>.js`), run:

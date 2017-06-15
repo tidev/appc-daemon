@@ -123,9 +123,9 @@ describe('dispatcher', () => {
 
 			d.register('/foo', ctx => {
 				count++;
-				expect(ctx.payload).to.be.an('object');
-				expect(ctx.payload).to.have.property('a');
-				expect(ctx.payload.a).to.equal(1);
+				expect(ctx.request).to.be.an('object');
+				expect(ctx.request).to.have.property('a');
+				expect(ctx.request.a).to.equal(1);
 			});
 
 			d.call('/foo', data)
@@ -557,7 +557,9 @@ describe('dispatcher', () => {
 			const d = new Dispatcher;
 
 			d.register('/foo', ctx => {
-				expect(ctx.payload).to.deep.equal({ data: { foo: 'bar' }, headers: {}, source: 'http' });
+				expect(ctx.request).to.deep.equal({ foo: 'bar' });
+				expect(ctx.headers).to.deep.equal({});
+				expect(ctx.source).to.equal('http');
 				ctx.response = 'foo!';
 			});
 

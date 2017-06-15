@@ -1,6 +1,6 @@
 import path from 'path';
 import PluginError from '../dist/plugin-error';
-import Plugin from '../dist/plugin';
+import Plugin, { state } from '../dist/plugin';
 import snooplogg from 'snooplogg';
 
 const log = snooplogg.config({ theme: 'detailed' })('test:appcd:plugin').log;
@@ -39,11 +39,12 @@ describe('Plugin', () => {
 		}).to.throw(PluginError, /^Error parsing /);
 	});
 
-	it('should error if package.json doesn\'t have a "name" property', () => {
+	it('should error if package.json has an invalid name', () => {
 		expect(() => {
-			new Plugin(path.join(__dirname, 'fixtures', 'no-name'));
-		}).to.throw(PluginError, /^Missing "name" property in /);
+			new Plugin(path.join(__dirname, 'fixtures', 'bad-name'));
+		}).to.throw(PluginError, /^Invalid "name" property in /);
 	});
+
 
 	it('should error if package.json doesn\'t have a "version" property', () => {
 		expect(() => {
@@ -69,28 +70,34 @@ describe('Plugin', () => {
 		}).to.throw(PluginError, 'Unable to find main file "index.js"');
 	});
 
-	it('should error if package.json doesn\'t have an "appcd-plugin" property', () => {
+	it('should error if package.json has an invalid "appcd-plugin" property', () => {
 		expect(() => {
-			new Plugin(path.join(__dirname, 'fixtures', 'no-appcd'));
-		}).to.throw(PluginError, /^Missing "appcd-plugin" section in /);
+			new Plugin(path.join(__dirname, 'fixtures', 'bad-appcd'));
+		}).to.throw(PluginError, /^Expected "appcd-plugin" section to be an object in /);
 	});
 
-	it('should error if package.json missing appcd "name" property', () => {
-		expect(() => {
-			new Plugin(path.join(__dirname, 'fixtures', 'no-appcd-name'));
-		}).to.throw(PluginError, /^Missing "name" property in the "appcd-plugin" section of /);
-	});
-
-	it('should error if package.json has appcd "name" of "appcd"', () => {
+	it('should error if package.json has an invalid appcd "name" property', () => {
 		expect(() => {
 			new Plugin(path.join(__dirname, 'fixtures', 'bad-appcd-name'));
-		}).to.throw(PluginError, 'Plugin forbidden from using the name "appcd"');
+		}).to.throw(PluginError, /^Invalid "name" property in the "appcd-plugin" section of /);
 	});
 
 	it('should error if package.json has appcd "type" is invalid', () => {
 		expect(() => {
 			new Plugin(path.join(__dirname, 'fixtures', 'bad-appcd-type'));
 		}).to.throw(PluginError, /^Invalid type "foo" in "appcd-plugin" section of /);
+	});
+
+	it('should error if plugin has an invalid name', () => {
+		expect(() => {
+			new Plugin(path.join(__dirname, 'fixtures', 'no-name'));
+		}).to.throw(PluginError, /^Invalid "name" property in the "appcd-plugin" section of /);
+	});
+
+	it('should error if package.json has appcd "name" of "appcd"', () => {
+		expect(() => {
+			new Plugin(path.join(__dirname, 'fixtures', 'bad-appcd-name2'));
+		}).to.throw(PluginError, 'Plugin forbidden from using the name "appcd"');
 	});
 
 	it('should capture error if node.js version is incorrect', () => {
@@ -101,6 +108,46 @@ describe('Plugin', () => {
 	it('should find main if no .js extension is specified', () => {
 		const pluginPath = path.join(__dirname, 'fixtures', 'good-main-nojs');
 		const p = new Plugin(pluginPath);
+		const nodeVersion = process.version.replace(/^v/, '');
+
+		expect(p.path).to.equal(pluginPath);
+		expect(p.name).to.equal('good-main-nojs');
+		expect(p.version).to.equal('1.2.3');
 		expect(p.main).to.equal(path.join(pluginPath, 'foo.js'));
+		expect(p.type).to.equal('external');
+		expect(p.pid).to.be.undefined;
+		expect(p.nodeVersion).to.equal(nodeVersion);
+		expect(p.error).to.be.false;
+		expect(p.state).to.equal(state.STOPPED);
+
+		expect(p.info).to.deep.equal({
+			path:    pluginPath,
+			name:    'good-main-nojs',
+			version: '1.2.3',
+			main:    path.join(pluginPath, 'foo.js'),
+			type:    'external',
+			pid:     undefined,
+			nodeVersion,
+			error:   false,
+			state:   state.STOPPED
+		});
+	});
+
+	it('should error if trying to set plugin info prop', () => {
+		expect(() => {
+			const p = new Plugin(path.join(__dirname, 'fixtures', 'good'));
+			p.info = 'foo';
+		}).to.throw(Error, 'The "info" property is readonly');
+	});
+
+	it('should build a list of directories to watch', () => {
+		const pluginPath = path.join(__dirname, 'fixtures', 'good-dirs');
+		const p = new Plugin(pluginPath);
+		const dirs = Array.from(p.directories);
+		expect(dirs).to.deep.equal([
+			pluginPath,
+			path.join(pluginPath, 'src'),
+			path.join(pluginPath, 'lib')
+		]);
 	});
 });
