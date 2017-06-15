@@ -11,7 +11,6 @@ try {
 }
 
 import 'babel-polyfill';
-import 'double-stack';
 
 import CLI from 'cli-kit';
 import snooplogg from './logger';

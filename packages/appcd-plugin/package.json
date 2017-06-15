@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "gawk": "^4.2.0",
+    "globule": "^1.2.0",
     "semver": "^5.3.0",
     "snooplogg": "^1.4.0",
     "source-map-support": "^0.4.15",
@@ -29,7 +30,7 @@
   "appcdDependencies": [
     "appcd-dispatcher",
     "appcd-fs",
-	"appcd-fswatcher",
+    "appcd-fswatcher",
     "appcd-gulp",
     "appcd-path",
     "appcd-response",
@@ -42,6 +43,6 @@
     "url": "git+https://github.com/appcelerator/appc-daemon.git"
   },
   "engines": {
-    "node": ">=6.0.0"
+    "node": ">=8.0.0"
   }
 }

@@ -81,6 +81,7 @@ export default class Agent extends EventEmitter {
 	/**
 	 * Adds a new collector.
 	 *
+	 * @param {Function} fn - The collector callback to add.
 	 * @returns {Agent}
 	 * @access public
 	 */
@@ -95,6 +96,7 @@ export default class Agent extends EventEmitter {
 	/**
 	 * Removes a collector.
 	 *
+	 * @param {Function} fn - The collector callback to remove.
 	 * @returns {Agent}
 	 * @access public
 	 */

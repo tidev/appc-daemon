@@ -21,7 +21,7 @@ const ServiceHandlerTypes = new Set([
  * @returns {String}
  */
 function sessionId(ctx) {
-	return ctx.payload && ctx.payload.hasOwnProperty('sessionId') ? note(`[${ctx.payload.sessionId}] `) : '';
+	return ctx.request && ctx.request.hasOwnProperty('sessionId') ? note(`[${ctx.request.sessionId}] `) : '';
 }
 
 /**
@@ -31,19 +31,27 @@ export default class ServiceDispatcher {
 	/**
 	 * Constructs the service registry.
 	 *
-	 * @param {String} path - The service path to register the handler to.
+	 * @param {String} [path] - The service path to register the handler to.
 	 * @param {Object} instance - A reference to the object containing service methods.
 	 * @access public
 	 */
 	constructor(path, instance) {
-		if (instance === undefined && typeof path === 'object') {
-			instance = path;
-			path = null;
-		} else if (!path || typeof path !== 'string') {
-			throw new TypeError('Expected path to be a string');
+		if (instance === undefined) {
+			if (typeof path === 'object') {
+				instance = path;
+				path = null;
+			} else if (path === undefined) {
+				instance = this;
+			}
 		}
 
-		if (!instance || typeof instance !== 'object') {
+		if (path && typeof path !== 'string' && !(path instanceof RegExp)) {
+			throw new TypeError('Expected path to be a string or regexp');
+		}
+
+		if (instance === undefined) {
+			instance = this;
+		} else if (instance === null || typeof instance !== 'object') {
 			throw new TypeError('Expected instance to be an object');
 		}
 
@@ -51,7 +59,7 @@ export default class ServiceDispatcher {
 		 * The service path to register the handler to.
 		 * @type {String}
 		 */
-		this.path = path ? `${path[0] === '/' ? '' : '/'}${path}` : null;
+		this.path = path instanceof RegExp ? path : (path ? `${path[0] === '/' ? '' : '/'}${path}` : null);
 
 		/**
 		 * A reference to the object containing service methods.
@@ -79,7 +87,7 @@ export default class ServiceDispatcher {
 	 * @access public
 	 */
 	handler(ctx, next) {
-		const type = ctx.payload && ctx.payload.type || 'call';
+		const type = ctx.request && ctx.request.type || 'call';
 		if (!ServiceHandlerTypes.has(type)) {
 			throw new Error(`Invalid service handler type "${type}"`);
 		}
@@ -116,13 +124,16 @@ export default class ServiceDispatcher {
 	subscribe(ctx) {
 		const topic = typeof this.instance.getTopic === 'function' && this.instance.getTopic(ctx) || ctx.path;
 		let descriptor = this.subscriptions[topic];
+		let callOnSubscribe = true;
 
 		if (descriptor) {
-			if (descriptor.sessions[ctx.payload.sessionId]) {
+			if (descriptor.sessions[ctx.request.sessionId]) {
 				logger.log('%sSession already subscribed to %s', sessionId(ctx), highlight(topic));
 				ctx.response = new Response(codes.ALREADY_SUBSCRIBED);
 				return;
 			}
+
+			callOnSubscribe = false;
 
 			logger.log('%sAdding subscription: %s', sessionId(ctx), highlight(topic));
 
@@ -143,11 +154,9 @@ export default class ServiceDispatcher {
 					}
 				}
 			};
-
-			this.instance.onSubscribe(ctx, descriptor.publish);
 		}
 
-		descriptor.sessions[ctx.payload.sessionId] = message => ctx.response.write({ topic, message });
+		descriptor.sessions[ctx.request.sessionId] = message => ctx.response.write({ message, topic, type: 'event' });
 
 		ctx.response.once('end', () => this.unsubscribe(ctx));
 		ctx.response.once('error', err => this.unsubscribe(ctx));
@@ -157,6 +166,11 @@ export default class ServiceDispatcher {
 			topic,
 			type: 'subscribe'
 		});
+
+		// this has to be done AFTER we send the "subscribe" response
+		if (callOnSubscribe) {
+			this.instance.onSubscribe(ctx, descriptor.publish);
+		}
 	}
 
 	/**
@@ -169,7 +183,7 @@ export default class ServiceDispatcher {
 		const topic = typeof this.instance.getTopic === 'function' && this.instance.getTopic(ctx) || ctx.path;
 		let descriptor = this.subscriptions[topic];
 
-		if (!descriptor || !descriptor.sessions[ctx.payload.sessionId]) {
+		if (!descriptor || !descriptor.sessions[ctx.request.sessionId]) {
 			// not subscribed
 			if (descriptor) {
 				logger.log('%sSession not subscribed to %s', sessionId(ctx), highlight(topic));
@@ -182,7 +196,7 @@ export default class ServiceDispatcher {
 		}
 
 		logger.log('%sUnsubscribing session: %s', sessionId(ctx), highlight(topic));
-		delete descriptor.sessions[ctx.payload.sessionId];
+		delete descriptor.sessions[ctx.request.sessionId];
 
 		if (!Object.keys(descriptor.sessions).length) {
 			if (this.instance.onUnsubscribe) {

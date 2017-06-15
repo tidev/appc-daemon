@@ -12,7 +12,7 @@ const cmd = {
 	options: {
 		'--json': { desc: 'outputs the status as JSON' }
 	},
-	action: ({ argv }) => {
+	action({ argv }) {
 		const cfg = loadConfig(argv);
 		const { client, request } = createRequest(cfg, '/appcd/status');
 
@@ -69,16 +69,16 @@ const cmd = {
 				// fs watcher information
 				params.head = [ 'Filesystem Watch System' ];
 				table = new Table(params);
-				table.push([ 'Nodes',               highlight(status.fswatch.nodes) ]);
-				table.push([ 'Node.js FS Watchers', highlight(status.fswatch.fswatchers) ]);
-				table.push([ 'Client Watchers',     highlight(status.fswatch.watchers) ]);
+				table.push([ 'Nodes',               highlight(status.fs.nodes) ]);
+				table.push([ 'Node.js FS Watchers', highlight(status.fs.fswatchers) ]);
+				table.push([ 'Client Watchers',     highlight(status.fs.watchers) ]);
 				log(table.toString());
-				log(status.fswatch.tree);
+				log(status.fs.tree);
 				log();
 
 				// plugin information
 				if (status.plugins.length) {
-					params.head = [ 'Plugin Name', 'Version', 'Type', 'Path', 'Node.js', 'Status' ],
+					params.head = [ 'Plugin Name', 'Endpoint', 'Type', 'Path', 'Node.js', 'Status' ],
 					table = new Table(params);
 					for (const plugin of status.plugins) {
 						let status = '';
@@ -96,10 +96,10 @@ const cmd = {
 
 						table.push([
 							highlight(plugin.name),
-							plugin.version ? `v${plugin.version}` : 'null',
+							`/${plugin.namespace}/${plugin.version}`,
 							plugin.type,
 							plugin.path,
-							`v${plugin.nodeVersion}`,
+							plugin.nodeVersion,
 							status
 						]);
 					}

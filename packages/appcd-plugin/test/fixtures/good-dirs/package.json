@@ -1,0 +1,11 @@
+{
+	"name": "good plugin",
+	"version": "1.2.3",
+	"main": "./src",
+	"directories": {
+		"lib": "./lib"
+	},
+	"appcd-plugin": {
+		"name": "good"
+	}
+}

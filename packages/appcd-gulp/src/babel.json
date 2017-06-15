@@ -41,5 +41,18 @@
 		"xpresets": [
 			"babili"
 		]
+	},
+
+	"node8": {
+		"plugins": [
+			"import-node",
+			"transform-class-properties",
+			"transform-decorators-legacy",
+			"transform-es2015-modules-commonjs",
+			"transform-object-rest-spread"
+		],
+		"xpresets": [
+			"babili"
+		]
 	}
 }

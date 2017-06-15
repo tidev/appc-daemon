@@ -13,7 +13,7 @@ import WebServer from 'appcd-http';
 import WebSocketSession from './websocket-session';
 
 import { expandPath } from 'appcd-path';
-import { getActiveHandles } from 'double-stack';
+import { getActiveHandles } from 'appcd-util';
 import { getMachineId } from 'appcd-machine-id';
 import { i18n } from 'appcd-response';
 import { isDir, isFile } from 'appcd-fs';
@@ -70,8 +70,14 @@ export default class Server extends HookEmitter {
 		/**
 		 * The appcd version.
 		 * @type {String}
+		 * @access private
 		 */
 		this.version = JSON.parse(fs.readFileSync(path.resolve(__dirname, '..', 'package.json'), 'utf8')).version;
+
+		/**
+		 * A list of systems.
+		 */
+		this.systems = {};
 	}
 
 	/**
@@ -141,61 +147,65 @@ export default class Server extends HookEmitter {
 			fs.mkdirsSync(homeDir);
 		}
 
+		// init the config service
+		Dispatcher.register('/appcd/config', new ConfigService(this.config));
+
+		// init logcat
+		Dispatcher.register('/appcd/logcat', ctx => logcat(ctx.response));
+
 		// init the status monitor
-		this.statusMonitor = new StatusMonitor();
-		const { status } = this.statusMonitor;
-		status.version = this.version;
+		this.systems.statusMonitor = new StatusMonitor();
+		Dispatcher.register('/appcd/status', this.systems.statusMonitor.dispatcher);
 
 		// init the fs watch manager
-		const fm = this.fswatchManager = new FSWatchManager();
-		fm.on('stats', stats => status.fswatch = stats);
-		status.fswatch = fm.status();
+		this.systems.fswatchManager = new FSWatchManager();
+		Dispatcher.register('/appcd/fs/watch', this.systems.fswatchManager.dispatcher);
 
 		// init the subprocess manager
-		const sm = this.subprocessManager = new SubprocessManager();
-		sm.on('change', subprocesses => status.subprocesses = subprocesses);
-		status.subprocesses = sm.subprocesses;
+		this.systems.subprocessManager = new SubprocessManager();
+		Dispatcher.register('/appcd/subprocess', this.systems.subprocessManager.dispatcher);
 
 		// init the plugin manager
-		const pm = this.pluginManager = new PluginManager({
+		this.systems.pluginManager = new PluginManager({
 			paths: [
+				// built-in plugins
 				path.resolve(__dirname, '..', '..', '..', 'plugins'),
+
+				// globally installed plugins
 				path.join(homeDir, 'plugins')
 			]
-		});
-		await pm.start();
-		pm.on('change', plugins => status.plugins = plugins);
-		status.plugins = pm.plugins;
+		}); //.on('change', plugins => this.systems.statusMonitor.merge({ plugins }));
+		Dispatcher.register('/appcd/plugin', this.systems.pluginManager.dispatcher);
 
 		// start the status monitor
-		this.statusMonitor.start();
+		this.systems.statusMonitor
+			.merge({
+				version:      this.version,
+				fs:           this.systems.fswatchManager.status(),
+				subprocesses: this.systems.subprocessManager.subprocesses,
+				plugins:      this.systems.pluginManager.plugins
+			})
+			.start();
 
-		// init the appcd dispatcher
-		const appcdDispatcher = new Dispatcher()
-			.register('/config', new ConfigService(this.config).dispatcher)
-			.register('/fs', new Dispatcher().register('/watch', this.fswatchManager.dispatcher))
-			.register('/logcat', ctx => logcat(ctx.response))
-			.register('/plugin', this.pluginManager.dispatcher)
-			.register('/status', this.statusMonitor.dispatcher)
-			.register('/subprocess', this.subprocessManager.dispatcher);
-
-		Dispatcher.register('/appcd', appcdDispatcher);
+		// start the plugin manager
+		// this.systems.pluginManager.start();
 
 		// init the web server
-		this.webserver = new WebServer({
+		this.systems.webserver = new WebServer({
 			hostname: this.config.get('server.host', '127.0.0.1'),
 			port:     this.config.get('server.port'),
 			webroot:  path.resolve(__dirname, '..', 'public')
 		});
 
-		this.webserver.use(Dispatcher.callback());
-		this.webserver.on('websocket', (ws, req) => new WebSocketSession(ws, req));
+		this.systems.webserver
+			.use(Dispatcher.callback())
+			.on('websocket', (ws, req) => new WebSocketSession(ws, req));
 
 		this.mid = await getMachineId(path.join(homeDir, '.mid'));
 
 		// TODO: init telemetry
 
-		await this.webserver.listen();
+		await this.systems.webserver.listen();
 		await this.emit('appcd.start');
 	}
 
@@ -214,11 +224,13 @@ export default class Server extends HookEmitter {
 			// 	uptime: this.status.get(['appcd', 'uptime']).toJS()
 			// }))
 			.then(() => this.emit('appcd:shutdown'))
-			.then(() => this.webserver.close())
-			.then(() => this.pluginManager.shutdown())
-			.then(() => this.subprocessManager.shutdown())
-			.then(() => this.fswatchManager.shutdown())
-			.then(() => this.statusMonitor.shutdown())
+			.then(async () => {
+				for (const system of Object.values(this.systems)) {
+					if (typeof system.shutdown === 'function') {
+						await system.shutdown();
+					}
+				}
+			})
 			.then(() => {
 				const pidFile = expandPath(this.config.get('server.pidFile'));
 				logger.log('Removing %s', highlight(pidFile));
@@ -227,17 +239,11 @@ export default class Server extends HookEmitter {
 			.then(() => {
 				const handles = getActiveHandles();
 				const timers = handles.timers.filter(timer => timer.__stack__);
-
 				if (timers.length) {
 					logger.warn(__n(timers.length, 'Stopping %%s active timer', 'Stopping %%s active timers', notice(timers.length)));
-
-					let i = 1;
-					for (const timer of timers) {
-						logger.warn(`${i++}) ${highlight(timer.__stack__[0] || 'unknown origin')}`);
+					for (const timer of handles.timers) {
+						clearTimeout(timer);
 					}
-
-					logger.warn('Did you forget to clear these timeouts during the %s event?', highlight('"appcd.shutdown"'));
-					handles.timers.forEach(t => clearTimeout(t));
 				}
 			})
 			.then(() => {

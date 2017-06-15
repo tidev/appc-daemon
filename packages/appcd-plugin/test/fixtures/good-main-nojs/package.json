@@ -1,0 +1,8 @@
+{
+	"name": "good-main-nojs",
+	"version": "1.2.3",
+	"main": "foo",
+	"appcd-plugin": {
+		"name": "good-main-nojs"
+	}
+}

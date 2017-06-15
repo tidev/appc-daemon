@@ -134,7 +134,7 @@ export function i18n(locales) {
 		 * @param {...*} args - Zero or more args to inject into the message.
 		 * @returns {String}
 		 */
-		__: (format, ...args) => {
+		__(format, ...args) {
 			return util.format(loadString(format, locales), ...args);
 		},
 
@@ -148,7 +148,7 @@ export function i18n(locales) {
 		 * @param {...*} args - Zero or more args to inject into the message.
 		 * @returns {String}
 		 */
-		__n: (count, singular, plural, ...args) => {
+		__n(count, singular, plural, ...args) {
 			let format = loadString(count === 1 ? singular : plural, locales);
 			if (!format) {
 				return '';

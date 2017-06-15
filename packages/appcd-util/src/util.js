@@ -8,8 +8,14 @@ import fs from 'fs';
 import path from 'path';
 import semver from 'semver';
 
+import { ChildProcess } from 'child_process';
+import { EventEmitter } from 'events';
 import { execSync } from 'child_process';
 import { isFile } from 'appcd-fs';
+import { Socket, Server } from 'net';
+
+const Timer = process.binding('timer_wrap').Timer;
+const FSEvent = process.binding('fs_event_wrap').FSEvent;
 
 let archCache = null;
 
@@ -117,6 +123,38 @@ export function debounce(fn, wait=200) {
  */
 export function formatNumber(n) {
 	return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+/**
+ * Returns an object with active socket, server, timer, and other handles.
+ *
+ * @returns {Object}
+ */
+export function getActiveHandles() {
+	const handles = { sockets: [], servers: [], timers: [], childProcesses: [], fsWatchers: [], other: [] };
+
+	for (let handle of process._getActiveHandles()) {
+		if (handle instanceof Timer) {
+			const timerList = handle._list || handle;
+			let t = timerList._idleNext;
+			while (t !== timerList) {
+				handles.timers.push(t);
+				t = t._idleNext;
+			}
+		} else if (handle instanceof Socket) {
+			handles.sockets.push(handle);
+		} else if (handle instanceof Server) {
+			handles.servers.push(handle);
+		} else if (handle instanceof ChildProcess) {
+			handles.childProcesses.push(handle);
+		} else if (handle instanceof EventEmitter && typeof handle.start === 'function' && typeof handle.close === 'function' && handle._handle instanceof FSEvent) {
+			handles.fsWatchers.push(handle);
+		} else {
+			handles.other.push(handle);
+		}
+	}
+
+	return handles;
 }
 
 /**

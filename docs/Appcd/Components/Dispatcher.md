@@ -114,7 +114,13 @@ Dispatcher
 Dispatcher
     .call('/myservice', { type: 'subscribe' })
     .then(result => {
-		result.response.on('data', data => {
+		result.response.on('data', msg => {
+			switch (msg.type) {
+				case 'subscribe':
+					break;
+				case 'unsubscribe':
+					break;
+			}
         	console.log(data);
 		});
     });

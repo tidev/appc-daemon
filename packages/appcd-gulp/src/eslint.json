@@ -11,6 +11,9 @@
 		"appcd"
 	],
 	"parser": "babel-eslint",
+	"parserOptions": {
+		"sourceType": "module"
+	},
 	"plugins": [
 		"security"
 	],

@@ -18,7 +18,6 @@
   "dependencies": {
     "fs-extra": "^3.0.1",
     "progress": "^2.0.0",
-    "request": "^2.81.0",
     "snooplogg": "^1.4.0",
     "source-map-support": "^0.4.15",
     "tar-stream": "^1.5.4",
@@ -31,6 +30,7 @@
   "appcdDependencies": [
     "appcd-fs",
     "appcd-gulp",
+    "appcd-request",
     "appcd-util"
   ],
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",

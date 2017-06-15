@@ -7,7 +7,6 @@ module.exports = (opts) => {
 	const babelConfs  = require('../babel.json');
 	const del         = require('del');
 	const fs          = require('fs');
-	const globule     = require('globule');
 	const Module      = require('module');
 	const path        = require('path');
 	const spawnSync   = require('child_process').spawnSync;
@@ -125,15 +124,17 @@ module.exports = (opts) => {
 		// add nyc
 		if (cover) {
 			args.push(
-				path.resolve(__dirname, '..', 'run-nyc.js'),
 				path.join(appcdGulpNodeModulesPath, '.bin', 'nyc'),
 				'--cache', 'false',
 				'--exclude', 'test',
 				'--instrument', 'false',
 				'--source-map', 'false',
+				// supported reporters:
+				//   https://github.com/istanbuljs/istanbuljs/tree/master/packages/istanbul-reports/lib
 				'--reporter=html',
 				'--reporter=json',
 				'--reporter=text',
+				'--reporter=text-summary',
 				'--require', path.resolve(__dirname, '../test-transpile.js'),
 				'--show-process-tree',
 				process.execPath // need to specify node here so that spawn-wrap works
@@ -144,6 +145,12 @@ module.exports = (opts) => {
 
 		// add mocha
 		args.push(path.join(appcdGulpNodeModulesPath, '.bin', 'mocha'));
+
+		// add --inspect
+		if (process.argv.indexOf('--inspect') !== -1 || process.argv.indexOf('--inspect-brk') !== -1) {
+			args.push('--inspect-brk');
+		}
+
 		args.push('--reporter=' + path.join(appcdGulpNodeModulesPath, 'mocha-jenkins-reporter'));
 		process.env.JUNIT_REPORT_PATH = path.join(projectDir, 'junit.xml');
 		process.env.JUNIT_REPORT_NAME = path.basename(projectDir);
@@ -170,7 +177,7 @@ module.exports = (opts) => {
 			args.push('test/**/test-*.js');
 		}
 
-		// console.log(args);
+		$.util.log('Running: ' + $.util.colors.cyan(process.execPath + ' ' + args.join(' ')));
 
 		// run!
 		spawnSync(process.execPath, args, { stdio: 'inherit' });

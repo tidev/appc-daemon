@@ -4,7 +4,7 @@ const cmd = {
 	options: {
 		'--force': { desc: 'force the daemon to stop' }
 	},
-	action: async ({ argv }) => {
+	async action({ argv }) {
 		const wasRunning = await stopServer({
 			cfg: loadConfig(argv),
 			force: argv.force

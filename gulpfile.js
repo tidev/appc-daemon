@@ -456,21 +456,17 @@ function runTests(cover, cb) {
 				}
 			}
 
-			if (failedProjects.length) {
-				gutil.log(gutil.colors.red('Failured projects:'));
-				failedProjects.forEach(p => {
-					gutil.log(gutil.colors.red(p));
-				});
-				console.log();
+			if (!failedProjects.length) {
+				return cb();
 			}
 
 			if (failedProjects.length === 1) {
-				cb(new Error('1 project had test failures'));
-			} else if (failedProjects) {
-				cb(new Error(`${failedProjects.length} projects had test failures`));
+				gutil.log(gutil.colors.red('1 failured project:'));
 			} else {
-				cb();
+				gutil.log(gutil.colors.red(`${failedProjects.length} failured projects:`));
 			}
+			failedProjects.forEach(p => gutil.log(gutil.colors.red(p)));
+			process.exit(1);
 		})
 		.catch(cb);
 }
@@ -497,6 +493,7 @@ gulp.task('watch-only', cb => {
 		gulp.watch(__dirname + '/bootstrap/src/**/*.js', () => {
 			runSequence('build-bootstrap');
 		}),
+
 		gulp.watch(__dirname + '/packages/*/src/**/*.js', evt => {
 			const m = evt.path.match(new RegExp('^(' + __dirname + '/(packages/([^\/]+)))'));
 			if (m) {
@@ -516,9 +513,25 @@ gulp.task('watch-only', cb => {
 					.then(startDaemon);
 			}
 		}),
-		gulp.watch(__dirname + '/plugins/*/src/**/*.js', () => {
-			stopDaemon();
-			runSequence('build-plugins', startDaemon);
+
+		gulp.watch(__dirname + '/plugins/*/src/**/*.js', evt => {
+			let p = path.dirname(evt.path);
+			while (true) {
+				try {
+					let pkgJson = JSON.parse(fs.readFileSync(path.join(p, 'package.json'), 'utf-8'));
+					if (pkgJson['appcd-plugin'] && pkgJson['appcd-plugin'].type === 'internal') {
+						stopDaemon();
+						runSequence('build-plugins', startDaemon);
+					}
+					break;
+				} catch (e) {
+					const q = path.dirname(p);
+					if (p === q) {
+						break;
+					}
+					p = q;
+				}
+			}
 		})
 	];
 

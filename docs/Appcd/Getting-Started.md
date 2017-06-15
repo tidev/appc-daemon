@@ -126,22 +126,40 @@ will rebuild that package and all parent packages, then restart the Appc Daemon.
 
 ### Debugging the Appc Daemon
 
-Since the Appc Daemon is written using ECMAScript 6+ features not yet supported by Node.js, the
-source must first be transpiled. With the slow build times and obfuscated code, interactively
-debugging can very cumbersome.
+To debug the Appc Daemon, you can:
 
-The easiest solution is to simply log debug messages.
+* Debug the Appc Daemon in debug mode
+* Debug the appcd-core directly
 
-If you absolutely need to interactively debug the Appc Daemon, then you MUST use the exact Node.js
-version required by the Appc Daemon Core. Run the following to build and debug the Appc Daemon:
+> :bulb: Before debugging, make sure you have the NIM (Node Inspector Manager) Chrome Extension
+> installed:
+>
+> https://chrome.google.com/webstore/detail/nim-node-inspector-manage/gnhhdgbaldcilmgcpfddgdbkhjohddkj
+>
+> The NIM extension will detect when the Appc Daemon has been started in debug mode and
+> automatically connect to it.
+
+#### Debug the Appc Daemon in Debug Mode
+
+```bash
+appcd start --debug
+```
+
+For continuous development, run the `watch` task:
+
+```bash
+gulp watch
+```
+
+#### Debug the appcd-core directly
+
+If for some reason the appcd Bootstrap is getting in the way of debugging, you can debug the
+appcd-core directly:
 
 ```bash
 gulp build
-node inspect package/appcd-core/dist/main.js
+node --inspect package/appcd-core/dist/main.js
 ```
-
-Next, go to [chrome://inspect/](chrome://inspect/) in Google Chrome and you'll see the Node.js
-process is ready to be inspected.
 
 ### Checking the Source Code
 
