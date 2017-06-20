@@ -6,6 +6,7 @@ import snooplogg from 'snooplogg';
 import tmp from 'tmp';
 
 import { DispatcherError } from 'appcd-dispatcher';
+import { real } from 'appcd-path';
 
 const log = snooplogg.config({ theme: 'standard' })('test:appcd:fswatcher:manager').log;
 const { highlight } = snooplogg.styles;
@@ -14,7 +15,7 @@ const _tmpDir = tmp.dirSync({
 	prefix: 'appcd-fswatcher-test-',
 	unsafeCleanup: true
 }).name;
-const tmpDir = realPath(_tmpDir);
+const tmpDir = real(_tmpDir);
 
 function makeTempName() {
 	return path.join(_tmpDir, Math.random().toString(36).substring(7));
@@ -24,19 +25,6 @@ function makeTempDir() {
 	const dir = makeTempName();
 	fs.mkdirsSync(dir);
 	return dir;
-}
-
-function realPath(p) {
-	try {
-		return fs.realpathSync(p);
-	} catch (e) {
-		const basename = path.basename(p);
-		p = path.dirname(p);
-		if (p === path.dirname(p)) {
-			return p;
-		}
-		return path.join(realPath(p), basename);
-	}
 }
 
 describe('FSWatchManager', () => {
@@ -147,7 +135,7 @@ describe('FSWatchManager', () => {
 												message: {
 													action: 'add',
 													filename: 'foo.txt',
-													file: realPath(filename)
+													file: real(filename)
 												},
 												topic: tmp,
 												type: 'event'

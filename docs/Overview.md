@@ -16,4 +16,5 @@ which are exposed via the built-in web server to any HTTP, WebSocket, Node.js cl
 script.
 
 It is designed to be highly decoupled. All product-specific logic is run inside a plugin. The Appc
-Daemon provides core functionality to plugins such as filesystem watching and spawning subprocesses.
+Daemon provides core functionality to plugins such as file system watching and spawning
+subprocesses.

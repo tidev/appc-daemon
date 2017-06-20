@@ -3,6 +3,8 @@ import path from 'path';
 import snooplogg from 'snooplogg';
 import tmp from 'tmp';
 
+import { real } from 'appcd-path';
+
 import {
 	FSWatcher,
 	roots,
@@ -21,7 +23,7 @@ const _tmpDir = tmp.dirSync({
 	prefix: 'appcd-fswatcher-test-',
 	unsafeCleanup: true
 }).name;
-const tmpDir = realPath(_tmpDir);
+const tmpDir = real(_tmpDir);
 
 function makeTempName() {
 	return path.join(_tmpDir, Math.random().toString(36).substring(7));
@@ -31,19 +33,6 @@ function makeTempDir() {
 	const dir = makeTempName();
 	fs.mkdirsSync(dir);
 	return dir;
-}
-
-function realPath(p) {
-	try {
-		return fs.realpathSync(p);
-	} catch (e) {
-		const basename = path.basename(p);
-		p = path.dirname(p);
-		if (p === path.dirname(p)) {
-			return p;
-		}
-		return path.join(realPath(p), basename);
-	}
 }
 
 describe('FSWatcher', () => {
@@ -135,7 +124,7 @@ describe('FSWatcher', () => {
 							expect(evt).to.be.an('object');
 							if (evt.file.indexOf(tmpDir) === 0) {
 								expect(evt.action).to.equal('add');
-								expect(evt.file).to.equal(realPath(filename));
+								expect(evt.file).to.equal(real(filename));
 
 								const stats = status();
 								expect(stats.nodes).to.be.above(0);
@@ -168,7 +157,7 @@ describe('FSWatcher', () => {
 								switch (++counter) {
 									case 1:
 										expect(evt.action).to.equal('add');
-										expect(evt.file).to.equal(realPath(filename));
+										expect(evt.file).to.equal(real(filename));
 
 										const stats = status();
 										expect(stats.nodes).to.be.above(0);
@@ -196,7 +185,7 @@ describe('FSWatcher', () => {
 
 									case 2:
 										expect(evt.action).to.equal('change');
-										expect(evt.file).to.equal(realPath(filename));
+										expect(evt.file).to.equal(real(filename));
 
 										expect(() => {
 											log('Re-opening watcher');
@@ -227,12 +216,12 @@ describe('FSWatcher', () => {
 								if (counter === 1) {
 									// adding the file
 									expect(evt.action).to.equal('add');
-									expect(evt.file).to.equal(realPath(filename));
+									expect(evt.file).to.equal(real(filename));
 									log(renderTree());
 								} else if (counter === 2) {
 									// updating the file
 									expect(evt.action).to.equal('change');
-									expect(evt.file).to.equal(realPath(filename));
+									expect(evt.file).to.equal(real(filename));
 									done();
 								}
 							}
@@ -264,9 +253,9 @@ describe('FSWatcher', () => {
 
 							expect(evt.action).to.equal('add');
 							if (counter++ === 0) {
-								expect(evt.file).to.equal(realPath(tmp));
+								expect(evt.file).to.equal(real(tmp));
 							} else {
-								expect(evt.file).to.equal(realPath(filename));
+								expect(evt.file).to.equal(real(filename));
 								done();
 							}
 						}
@@ -301,7 +290,7 @@ describe('FSWatcher', () => {
 							if (counter === 1) {
 								log('Got event!');
 								expect(evt.action).to.equal('add');
-								expect(evt.file).to.equal(realPath(filename));
+								expect(evt.file).to.equal(real(filename));
 
 								log('Closing watcher');
 								watcher.close();
@@ -351,17 +340,17 @@ describe('FSWatcher', () => {
 								if (evt.action === 'add') {
 									counter++;
 									if (counter === 1) {
-										expect(evt.file).to.equal(realPath(barFile));
+										expect(evt.file).to.equal(real(barFile));
 										log(renderTree());
 										log('Deleting temp directory: %s', highlight(tmp));
 										fs.removeSync(tmp);
 									} else if (counter === 2) {
-										expect(evt.file).to.equal(realPath(barFile));
+										expect(evt.file).to.equal(real(barFile));
 										log(renderTree());
 										done();
 									}
 								} else if (evt.action === 'delete') {
-									expect(evt.file).to.equal(realPath(barFile));
+									expect(evt.file).to.equal(real(barFile));
 
 									setTimeout(() => {
 										log(renderTree());
@@ -392,7 +381,7 @@ describe('FSWatcher', () => {
 
 				const watcher1 = new FSWatcher(tmp)
 					.on('change', evt => {
-						if (evt.file === realPath(filename)) {
+						if (evt.file === real(filename)) {
 							expect(evt.action).to.equal('add');
 							unwatch();
 						}
@@ -401,7 +390,7 @@ describe('FSWatcher', () => {
 
 				const watcher2 = new FSWatcher(tmp)
 					.on('change', evt => {
-						if (evt.file === realPath(filename)) {
+						if (evt.file === real(filename)) {
 							expect(evt.action).to.equal('add');
 							unwatch();
 						}
@@ -455,7 +444,7 @@ describe('FSWatcher', () => {
 
 				const watcher = new FSWatcher(tmp)
 					.on('change', evt => {
-						if (evt.file === realPath(filename)) {
+						if (evt.file === real(filename)) {
 							done(new Error('First watcher was invoked'));
 						}
 					})
@@ -471,7 +460,7 @@ describe('FSWatcher', () => {
 							.on('change', evt => {
 								if (evt.file.indexOf(tmpDir) === 0) {
 									expect(evt.action).to.equal('add');
-									expect(evt.file).to.equal(realPath(filename));
+									expect(evt.file).to.equal(real(filename));
 									done();
 								}
 							})
@@ -496,7 +485,7 @@ describe('FSWatcher', () => {
 					.on('change', evt => {
 						if (evt.file.indexOf(tmpDir) === 0) {
 							expect(evt.action).to.equal('change');
-							expect(evt.file).to.equal(realPath(filename));
+							expect(evt.file).to.equal(real(filename));
 							done();
 						}
 					})
@@ -520,7 +509,7 @@ describe('FSWatcher', () => {
 						if (counter && evt.file.indexOf(tmpDir) === 0) {
 							try {
 								expect(evt.action).to.equal('add');
-								expect(evt.file).to.equal(realPath(filename));
+								expect(evt.file).to.equal(real(filename));
 								done();
 							} catch (e) {
 								done(e);
@@ -551,13 +540,13 @@ describe('FSWatcher', () => {
 						if (counter && evt.file.indexOf(tmpDir) === 0) {
 							if (counter === 1) {
 								expect(evt.action).to.equal('add');
-								expect(evt.file).to.equal(realPath(filename));
+								expect(evt.file).to.equal(real(filename));
 								setTimeout(() => {
 									fs.appendFileSync(filename, '\nbar!');
 								}, 100);
 							} else if (counter === 2) {
 								expect(evt.action).to.equal('change');
-								expect(evt.file).to.equal(realPath(filename));
+								expect(evt.file).to.equal(real(filename));
 
 								log('Closing watcher');
 								watcher.close();
@@ -610,13 +599,13 @@ describe('FSWatcher', () => {
 
 								if (counter === 1) {
 									expect(evt.action).to.equal('change');
-									expect(evt.file).to.equal(realPath(filename));
+									expect(evt.file).to.equal(real(filename));
 
 									fs.unlinkSync(filename);
 
 								} else if (counter === 2) {
 									expect(evt.action).to.equal('delete');
-									expect(evt.file).to.equal(realPath(filename));
+									expect(evt.file).to.equal(real(filename));
 
 									setTimeout(() => {
 										fs.writeFileSync(filename, 'bar again!');
@@ -624,7 +613,7 @@ describe('FSWatcher', () => {
 
 								} else if (counter === 3) {
 									expect(evt.action).to.equal('add');
-									expect(evt.file).to.equal(realPath(filename));
+									expect(evt.file).to.equal(real(filename));
 									done();
 								}
 							}
@@ -660,7 +649,7 @@ describe('FSWatcher', () => {
 								switch (++counter) {
 									case 1:
 										expect(evt.action).to.equal('add');
-										expect(evt.file).to.equal(realPath(barDir));
+										expect(evt.file).to.equal(real(barDir));
 
 										log('Writing %s', highlight(filename));
 										fs.writeFileSync(filename, 'foo!');
@@ -668,7 +657,7 @@ describe('FSWatcher', () => {
 
 									case 2:
 										expect(evt.action).to.equal('add');
-										expect(evt.file).to.equal(realPath(filename));
+										expect(evt.file).to.equal(real(filename));
 
 										log('Deleting %s', highlight(barDir));
 										fs.removeSync(barDir);
@@ -676,12 +665,12 @@ describe('FSWatcher', () => {
 
 									case 3:
 										expect(evt.action).to.equal('delete');
-										expect(evt.file).to.equal(realPath(filename));
+										expect(evt.file).to.equal(real(filename));
 										break;
 
 									case 4:
 										expect(evt.action).to.equal('delete');
-										expect(evt.file).to.equal(realPath(barDir));
+										expect(evt.file).to.equal(real(barDir));
 										done();
 										break;
 								}
@@ -714,7 +703,7 @@ describe('FSWatcher', () => {
 								switch (++counter) {
 									case 1:
 										expect(evt.action).to.equal('add');
-										expect(evt.file).to.equal(realPath(fooDir));
+										expect(evt.file).to.equal(real(fooDir));
 
 										log('Creating directory: %s', highlight(barDir));
 										fs.mkdirSync(barDir);
@@ -722,7 +711,7 @@ describe('FSWatcher', () => {
 
 									case 2:
 										expect(evt.action).to.equal('add');
-										expect(evt.file).to.equal(realPath(barDir));
+										expect(evt.file).to.equal(real(barDir));
 
 										log('Writing %s', highlight(filename));
 										fs.writeFileSync(filename, 'foo!');
@@ -730,7 +719,7 @@ describe('FSWatcher', () => {
 
 									case 3:
 										expect(evt.action).to.equal('add');
-										expect(evt.file).to.equal(realPath(filename));
+										expect(evt.file).to.equal(real(filename));
 
 										log('Deleting %s', highlight(barDir));
 										fs.removeSync(barDir);
@@ -738,12 +727,12 @@ describe('FSWatcher', () => {
 
 									case 4:
 										expect(evt.action).to.equal('delete');
-										expect(evt.file).to.equal(realPath(filename));
+										expect(evt.file).to.equal(real(filename));
 										break;
 
 									case 5:
 										expect(evt.action).to.equal('delete');
-										expect(evt.file).to.equal(realPath(barDir));
+										expect(evt.file).to.equal(real(barDir));
 										done();
 										break;
 								}
@@ -779,7 +768,7 @@ describe('FSWatcher', () => {
 								switch (++counter) {
 									case 1:
 										expect(evt.action).to.equal('add');
-										expect(evt.file).to.equal(realPath(barDir));
+										expect(evt.file).to.equal(real(barDir));
 
 										log('Writing %s', highlight(filename));
 										fs.writeFileSync(filename, 'foo!');
@@ -787,7 +776,7 @@ describe('FSWatcher', () => {
 
 									case 2:
 										expect(evt.action).to.equal('add');
-										expect(evt.file).to.equal(realPath(filename));
+										expect(evt.file).to.equal(real(filename));
 
 										log('Deleting %s', highlight(barDir));
 										fs.removeSync(barDir);
@@ -795,12 +784,12 @@ describe('FSWatcher', () => {
 
 									case 3:
 										expect(evt.action).to.equal('delete');
-										expect(evt.file).to.equal(realPath(filename));
+										expect(evt.file).to.equal(real(filename));
 										break;
 
 									case 4:
 										expect(evt.action).to.equal('delete');
-										expect(evt.file).to.equal(realPath(barDir));
+										expect(evt.file).to.equal(real(barDir));
 										done();
 										break;
 								}
@@ -884,7 +873,7 @@ describe('FSWatcher', () => {
 						.on('change', evt => {
 							if (evt.file.indexOf(tmpDir) === 0) {
 								expect(evt.action).to.equal('change');
-								expect(evt.file).to.equal(realPath(filename));
+								expect(evt.file).to.equal(real(filename));
 								watcher.close();
 								expect(roots).to.deep.equal({});
 								done();
@@ -957,7 +946,7 @@ describe('FSWatcher', () => {
 			// 						throw new Error('Didn\'t get the fs event!');
 			// 					}
 			// 					expect(lastEvt.action).to.equal('add');
-			// 					expect(lastEvt.file).to.equal(realPath(files[index]));
+			// 					expect(lastEvt.file).to.equal(real(files[index]));
 			// 				} else if (lastEvt) {
 			// 					throw new Error(`Should not have got ${lastEvt.action} for ${lastEvt.file} (depth=${index})`);
 			// 				}
@@ -1031,7 +1020,7 @@ describe('FSWatcher', () => {
 									throw new Error('Didn\'t get the fs event!');
 								}
 								expect(lastEvt.action).to.equal('add');
-								expect(lastEvt.file).to.equal(realPath(files[index]));
+								expect(lastEvt.file).to.equal(real(files[index]));
 							} else if (lastEvt) {
 								throw new Error(`Should not have got ${lastEvt.action} for ${lastEvt.file} (depth=${index})`);
 							}
@@ -1128,7 +1117,7 @@ describe('FSWatcher', () => {
 									throw new Error('Didn\'t get the fs event!');
 								}
 								expect(lastEvt.action).to.equal('add');
-								expect(lastEvt.file).to.equal(realPath(files[index]));
+								expect(lastEvt.file).to.equal(real(files[index]));
 							} else if (lastEvt) {
 								throw new Error(`Should not have got ${lastEvt.action} for ${lastEvt.file} (depth=${index})`);
 							}
@@ -1175,7 +1164,7 @@ describe('FSWatcher', () => {
 				log('Creating baz directory: %s', highlight(bazDir));
 				fs.mkdirsSync(bazDir);
 
-				const realWizDir = path.join(realPath(tmp), 'baz', 'wiz');
+				const realWizDir = path.join(real(tmp), 'baz', 'wiz');
 				const wizDir = path.join(bazDir, 'wiz');
 
 				setTimeout(() => {
@@ -1225,7 +1214,7 @@ describe('FSWatcher', () => {
 				log('Creating baz directory: %s', highlight(bazDir));
 				fs.mkdirsSync(bazDir);
 
-				const realWizDir = path.join(realPath(tmp), 'baz', 'wiz');
+				const realWizDir = path.join(real(tmp), 'baz', 'wiz');
 				const wizDir = path.join(bazDir, 'wiz');
 
 				setTimeout(() => {
@@ -1278,7 +1267,7 @@ describe('FSWatcher', () => {
 				log('Creating baz directory: %s', highlight(bazDir));
 				fs.mkdirsSync(bazDir);
 
-				const realWizFile = path.join(realPath(tmp), 'baz', 'wiz.txt');
+				const realWizFile = path.join(real(tmp), 'baz', 'wiz.txt');
 				const wizFile = path.join(bazDir, 'wiz.txt');
 
 				setTimeout(() => {
@@ -1331,7 +1320,7 @@ describe('FSWatcher', () => {
 				log('Creating baz directory: %s', highlight(bazDir));
 				fs.mkdirsSync(bazDir);
 
-				const realWizFile = path.join(realPath(tmp), 'baz', 'wiz.txt');
+				const realWizFile = path.join(real(tmp), 'baz', 'wiz.txt');
 				const wizFile = path.join(bazDir, 'wiz.txt');
 
 				setTimeout(() => {
@@ -1380,7 +1369,7 @@ describe('FSWatcher', () => {
 				log('Creating baz directory: %s', highlight(bazDir));
 				fs.mkdirsSync(bazDir);
 
-				const realWizDir = path.join(realPath(tmp), 'baz', 'wiz');
+				const realWizDir = path.join(real(tmp), 'baz', 'wiz');
 				const wizDir = path.join(bazDir, 'wiz');
 
 				log('Creating symlink: %s', highlight(wizDir));
@@ -1426,7 +1415,7 @@ describe('FSWatcher', () => {
 				log('Creating baz directory: %s', highlight(bazDir));
 				fs.mkdirsSync(bazDir);
 
-				const realWizDir = path.join(realPath(tmp), 'baz', 'wiz');
+				const realWizDir = path.join(real(tmp), 'baz', 'wiz');
 				const wizDir = path.join(bazDir, 'wiz');
 
 				const barRelDir = '../foo/bar';

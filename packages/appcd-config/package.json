@@ -18,7 +18,7 @@
   "dependencies": {
     "babel-traverse": "^6.25.0",
     "babel-types": "^6.25.0",
-    "babylon": "^6.17.3",
+    "babylon": "^6.17.4",
     "doctrine": "^2.0.0",
     "snooplogg": "^1.4.0",
     "source-map-support": "^0.4.15"

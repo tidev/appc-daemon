@@ -4,7 +4,7 @@
 
 * [Configuration System](Configuration-System.md)
 * [Dispatcher](Dispatcher.md)
-* [Filesystem Watcher](Filesystem-Watcher.md)
+* [File System Watcher](File-System-Watcher.md)
 * [Hook System](Hook-System.md)
 * [Logging](Logging.md)
 * [Plugin System](Plugin-System.md)

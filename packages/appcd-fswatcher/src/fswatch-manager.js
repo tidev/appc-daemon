@@ -11,7 +11,7 @@ const logger = snooplogg.config({ theme: 'detailed' })('appcd:fswatcher:manager'
 const { highlight, note } = snooplogg.styles;
 
 /**
- * Starts and stops filesystem watches and sends notifications when a fs event occurs.
+ * Starts and stops file system watches and sends notifications when a fs event occurs.
  */
 export default class FSWatchManager extends EventEmitter {
 	/**
@@ -95,7 +95,7 @@ export default class FSWatchManager extends EventEmitter {
 	}
 
 	/**
-	 * Stops all active filesystem watchers.
+	 * Stops all active file system watchers.
 	 */
 	shutdown() {
 		for (const path of Object.keys(this.watchers)) {
