@@ -1,3 +1,7 @@
+import fs from 'fs';
+import tmp from 'tmp';
+import _path from 'path';
+
 import * as path from '../dist/path';
 
 describe('path', () => {
@@ -43,6 +47,50 @@ describe('path', () => {
 			process.env.SystemRoot = 'C:\\WINDOWS';
 			const p = path.expandPath('%SystemRoot%\\foo');
 			expect(isWin ? p : p.substring(process.cwd().length + 1)).to.equal('C:\\WINDOWS\\foo');
+		});
+	});
+
+	describe('real()', () => {
+		it('should figure out the real path for a non-symlinked existing file', () => {
+			expect(path.real(__filename)).to.equal(__filename);
+		});
+
+		it('should figure out the real path for a symlinked existing file', done => {
+			const tmpObj = tmp.dirSync({
+				prefix: 'appcd-path-test-'
+			});
+			const dir = _path.join(tmpObj.name, 'bar');
+			const filename = _path.join(tmpObj.name, 'foo.txt');
+			const symFilename = _path.join(tmpObj.name, 'bar', 'foo.txt');
+
+			fs.writeFileSync(filename, 'foo!');
+			fs.mkdirSync(dir);
+			fs.symlinkSync(filename, symFilename);
+
+			try {
+				expect(path.real(symFilename)).to.equal(fs.realpathSync(filename));
+				done();
+			} catch (e) {
+				done(e);
+			} finally {
+				tmpObj.removeCallback();
+			}
+		});
+
+		it('should figure out the real path for a non-symlinked non-existent file', done => {
+			const tmpObj = tmp.dirSync({
+				prefix: 'appcd-path-test-'
+			});
+			const filename = _path.join(tmpObj.name, 'foo.txt');
+
+			try {
+				expect(path.real(filename)).to.equal(_path.join(fs.realpathSync(tmpObj.name), 'foo.txt'));
+				done();
+			} catch (e) {
+				done(e);
+			} finally {
+				tmpObj.removeCallback();
+			}
 		});
 	});
 });

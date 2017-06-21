@@ -12,7 +12,7 @@
 		3. [Components](Appcd/Components/README.md)
 			1. [Configuration System](Appcd/Components/Configuration-System.md)
 			2. [Dispatcher](Appcd/Components/Dispatcher.md)
-			3. [Filesystem Watcher](Appcd/Components/Filesystem-Watcher.md)
+			3. [File System Watcher](Appcd/Components/File-System-Watcher.md)
 			4. [Hook System](Appcd/Components/Hook-System.md)
 			5. [Logging](Appcd/Components/Logging.md)
 			6. [Plugin System](Appcd/Components/Plugin-System.md)

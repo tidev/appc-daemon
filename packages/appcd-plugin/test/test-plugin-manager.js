@@ -68,63 +68,59 @@ describe('PluginManager', () => {
 		expect(Object.keys(this.pm.pluginPaths)).to.have.lengthOf(1);
 		expect(this.pm.plugins).to.have.lengthOf(0);
 
-		let stats = this.fm.status();
-		expect(stats.nodes).to.be.equal(0);
-
 		await this.pm.shutdown();
 		this.pm = null;
 
-		stats = this.fm.status();
+		const stats = this.fm.status();
 		expect(stats.nodes).to.equal(0);
 	});
 
-/*	it('should skip plugin detection if plugin path does not exist', async function () {
-		const dir = path.join(__dirname, 'does_not_exist');
-		this.pm = new PluginManager({ paths: [ dir ] });
-		await this.pm.start();
+	it('should error if plugin path is already registered', async function () {
+		const dir = path.join(__dirname, 'fixtures', 'empty');
+		this.pm = new PluginManager({ paths: [ '', null, dir ] });
 
-		expect(this.pm.paths).to.have.lengthOf(1);
+		expect(Object.keys(this.pm.pluginPaths)).to.have.lengthOf(1);
 		expect(this.pm.plugins).to.have.lengthOf(0);
-
-		let stats = this.fm.status();
-		expect(stats.nodes).to.be.above(0);
-
-		await this.pm.shutdown();
-		this.pm = null;
-
-		stats = this.fm.status();
-		expect(stats.nodes).to.equal(0);
-	});
-
-	it('should register a valid plugin', async function () {
-		const dir = path.join(__dirname, 'fixtures', 'good');
-		this.pm = new PluginManager({ paths: [ dir ] });
-		await this.pm.start();
-
-		expect(this.pm.paths).to.have.lengthOf(1);
-		expect(this.pm.plugins).to.have.lengthOf(1);
-
-		expect(this.pm.namespaces).to.have.property('good');
-		expect(this.pm.namespaces.good).to.be.an('object');
-
-		await this.pm.shutdown();
-		this.pm = null;
-	});
-
-	it('should error if plugin is already registered', async function () {
-		const dir = path.join(__dirname, 'fixtures', 'good');
-		this.pm = new PluginManager({ paths: [ dir ] });
-		await this.pm.start();
-
-		expect(this.pm.paths).to.have.lengthOf(1);
-		expect(this.pm.plugins).to.have.lengthOf(1);
 
 		expect(() => {
 			this.pm.register(dir);
-		}).to.throw(PluginError);
+		}).to.throw(PluginError, 'Plugin Path Already Registered');
 
 		await this.pm.shutdown();
 		this.pm = null;
+
+		const stats = this.fm.status();
+		expect(stats.nodes).to.equal(0);
 	});
-	*/
+
+	it('should error unregistering if plugin path is invalid', function (done) {
+		this.pm = new PluginManager;
+
+		this.pm.unregister(null)
+			.then(() => {
+				done(new Error('Expected error'));
+			})
+			.catch(err => {
+				expect(err).to.be.instanceof(PluginError);
+				expect(err.message).to.equal('Invalid plugin path');
+				done();
+			})
+			.catch(done);
+	});
+
+	it('should error unregistering if plugin path is not registered', function (done) {
+		const dir = path.join(__dirname, 'fixtures', 'empty');
+		this.pm = new PluginManager;
+
+		this.pm.unregister(dir)
+			.then(() => {
+				done(new Error('Expected error'));
+			})
+			.catch(err => {
+				expect(err).to.be.instanceof(PluginError);
+				expect(err.message).to.equal('Plugin Path Not Registered');
+				done();
+			})
+			.catch(done);
+	});
 });

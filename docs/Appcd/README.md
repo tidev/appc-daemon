@@ -10,7 +10,7 @@ appcd is the name of the npm package that contains the Appc Daemon bootstrap, co
 3. [Components](Components/README.md)
 	1. [Configuration System](Components/Configuration-System.md)
 	2. [Dispatcher](Components/Dispatcher.md)
-	3. [Filesystem Watcher](Components/Filesystem-Watcher.md)
+	3. [File System Watcher](Components/File-System-Watcher.md)
 	4. [Hook System](Components/Hook-System.md)
 	5. [Logging](Components/Logging.md)
 	6. [Plugin System](Components/Plugin-System.md)

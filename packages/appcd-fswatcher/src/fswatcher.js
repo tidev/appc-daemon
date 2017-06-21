@@ -7,7 +7,7 @@ import { debounce } from 'appcd-util';
 import { EventEmitter } from 'events';
 import { inspect } from 'util';
 
-const log = snooplogg.config({ theme: 'standard' })('appcd:fswatcher').log;
+const { log } = snooplogg.config({ theme: 'standard' })('appcd:fswatcher');
 const { highlight, green } = snooplogg.styles;
 const { pluralize } = snooplogg;
 
@@ -50,6 +50,7 @@ export const stats = gawk.watch(gawk({
 }));
 
 /**
+ * `Node` types.
  * @constant
  * @type {Number}
  * @default
@@ -61,7 +62,7 @@ export const SYMLINK = 4;
 
 /**
  * Tracks the state for a directory, file, symlink, or non-existent file and notifies watchers of
- * filesystem changes for a given node.
+ * file system changes for a given node.
  */
 export class Node {
 	/**
@@ -195,7 +196,7 @@ export class Node {
 	}
 
 	/**
-	 * Destroys the current node by stopping the filesystem watcher, clearing all files, links, and
+	 * Destroys the current node by stopping the file system watcher, clearing all files, links, and
 	 * watchers. Once this has been called, this node can be removed from the parent node.
 	 *
 	 * Once `destroy()` is called, it is not advised to attempt to re-initialize it.
@@ -458,13 +459,23 @@ export class Node {
 	 * @access private
 	 */
 	notifyChild(evt) {
-		if (evt.action === 'add') {
-			this.stat();
-			this.init(true);
-		} else if (evt.action === 'delete') {
+		if (evt.action === 'delete') {
 			this.onDeleted(evt);
+			this.notifyChildWatchers(evt);
+		} else {
+			this.notifyChildWatchers(evt);
+			this.stat();
+			this.init(evt.action === 'add');
 		}
+	}
 
+	/**
+	 * Notifies all child watchers about the `add` or `delete` event.
+	 *
+	 * @param {Object} evt - The fs event object.
+	 * @access private
+	 */
+	notifyChildWatchers(evt) {
 		if (this.watchers.size) {
 			log('Notifying %s child %s: %s %s → %s',
 				green(this.watchers.size),
@@ -484,7 +495,7 @@ export class Node {
 	}
 
 	/**
-	 * Recursively stops filesystem watching on this node and all its descendents.
+	 * Recursively stops file system watching on this node and all its descendents.
 	 *
 	 * @access private
 	 */
@@ -586,7 +597,7 @@ export class Node {
 }
 
 /**
- * A filesystem watcher handle that emits `change` events.
+ * A file system watcher handle that emits `change` events.
  *
  * If the `change` handler throws an error, then it will emit an `error` event.
  */
@@ -597,8 +608,8 @@ export class FSWatcher extends EventEmitter {
 	 * @param {String} path - The path to watch.
 	 * @param {Object} [opts] - Various options.
 	 * @param {Number} [opts.depth] - The maximum depth to recurse. Only used when `opts.recursive`
-	 * is set.
-	 * @param {Boolean} [opts.recursive] - When true, any changes to the path or its children emit
+	 * is `true`.
+	 * @param {Boolean} [opts.recursive] - When `true`, any changes to the path or its children emit
 	 * a change event.
 	 * @access public
 	 */
