@@ -80,7 +80,7 @@ describe('PluginPath', () => {
 		}, 1000);
 	});
 
-	it.only('should watch existing file to become a plugin', function (done) {
+	it('should watch existing file to become a plugin', function (done) {
 		this.timeout(10000);
 		this.slow(9000);
 
@@ -103,6 +103,8 @@ describe('PluginPath', () => {
 		setTimeout(() => {
 			log('Deleting %s', highlight(file));
 			fs.unlinkSync(file);
+
+			log(renderTree());
 
 			const good = path.join(__dirname, 'fixtures', 'good');
 			log('Copying %s => %s', highlight(good), highlight(file));
@@ -162,7 +164,7 @@ describe('PluginPath', () => {
 		}, 1000);
 	});
 
-	it('should watch existing directory to become a directory of directories of plugins', function (done) {
+	it.only('should watch existing directory to become a directory of directories of plugins', function (done) {
 		this.timeout(10000);
 		this.slow(9000);
 
@@ -171,6 +173,7 @@ describe('PluginPath', () => {
 		this.pp = new PluginPath(tmp)
 			.on('added', plugin => {
 				try {
+					console.log(plugin.name + '@' + plugin.version);
 					switch (++counter) {
 						// case 1:
 						// 	expect(plugin.name).to.equal('good');
@@ -187,7 +190,7 @@ describe('PluginPath', () => {
 			});
 
 		setTimeout(() => {
-			const good = path.join(__dirname, 'fixtures', 'plugin-dir2');
+			const good = path.join(__dirname, 'fixtures', 'nested-plugin-dir');
 			log('Copying %s => %s', highlight(good), highlight(tmp));
 			fs.copySync(good, tmp);
 		}, 1000);

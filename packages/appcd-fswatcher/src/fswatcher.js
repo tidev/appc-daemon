@@ -7,7 +7,7 @@ import { debounce } from 'appcd-util';
 import { EventEmitter } from 'events';
 import { inspect } from 'util';
 
-const log = snooplogg.config({ theme: 'standard' })('appcd:fswatcher').log;
+const { log } = snooplogg.config({ theme: 'standard' })('appcd:fswatcher');
 const { highlight, green } = snooplogg.styles;
 const { pluralize } = snooplogg;
 
@@ -459,17 +459,13 @@ export class Node {
 	 * @access private
 	 */
 	notifyChild(evt) {
-		const notifyWatchers = () => {
-
-		};
-
-		if (evt.action === 'add') {
-			this.notifyChildWatchers(evt);
-			this.stat();
-			this.init(true);
-		} else if (evt.action === 'delete') {
+		if (evt.action === 'delete') {
 			this.onDeleted(evt);
 			this.notifyChildWatchers(evt);
+		} else {
+			this.notifyChildWatchers(evt);
+			this.stat();
+			this.init(evt.action === 'add');
 		}
 	}
 

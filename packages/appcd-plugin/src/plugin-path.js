@@ -1,13 +1,7 @@
-// import fs from 'fs';
-// import globule from 'globule';
-// import path from 'path';
-// import Plugin from './plugin';
 import snooplogg from 'snooplogg';
 
 import { EventEmitter } from 'events';
 import { expandPath } from 'appcd-path';
-// import { FSWatcher } from 'appcd-fswatcher';
-// import { isDir, isFile } from 'appcd-fs';
 import { detectScheme } from './schemes';
 
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:plugin:path');

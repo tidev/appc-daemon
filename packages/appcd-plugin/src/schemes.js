@@ -1,9 +1,17 @@
+import fs from 'fs';
 import globule from 'globule';
+import _path from 'path';
 import Plugin from './plugin';
+import snooplogg from 'snooplogg';
 
+import { debounce } from 'appcd-util';
 import { EventEmitter } from 'events';
 import { FSWatcher } from 'appcd-fswatcher';
+import { isDir } from 'appcd-fs';
 import { real } from 'appcd-path';
+
+const { log } = snooplogg.config({ theme: 'detailed' })('appcd:plugin:scheme');
+const { highlight } = snooplogg.styles;
 
 /**
  * Base class for a plugin path scheme.
@@ -17,8 +25,24 @@ export class Scheme extends EventEmitter {
 	 */
 	constructor(path) {
 		super();
+
+		/**
+		 * The path to watch and detect plugins in.
+		 * @type {String}
+		 */
 		this.path = real(path);
+
+		/**
+		 * The file system watcher for this scheme's path.
+		 * @type {FSWatcher}
+		 */
 		this.watchers = {};
+
+		/**
+		 * A function to call when a file system event occurs that will emit the `change` event.
+		 * @type {Function}
+		 */
+		this.onChange = debounce(() => this.emit('change'));
 	}
 
 	/**
@@ -49,24 +73,22 @@ export class InvalidScheme extends Scheme {
 	 */
 	constructor(path) {
 		super(path);
+
+		log('Watching invalid scheme: %s', highlight(this.path));
 		this.watchers[this.path] = new FSWatcher(this.path);
 	}
 
 	/**
-	 * Starts listening for file system changes.
+	 * Starts listening for file system changes. This is split up from the FSWatcher instantiation
+	 * so that the caller (i.e. `PluginPath`) can destroy a previous scheme before calling this
+	 * function which will only twiddle watcher counts and not have to stop and restart Node.js
+	 * FSWatch instances.
 	 *
+	 * @returns {InvalidScheme}
 	 * @access public
-	 * @returns {Scheme}
 	 */
 	watch() {
-		this.watchers[this.path]
-			.on('change', evt => {
-				// we only care if the directory we're watching is added
-				if (evt.action === 'add' && evt.file === this.path) {
-					this.emit('change');
-				}
-			});
-
+		this.watchers[this.path].on('change', evt => this.onChange());
 		return this;
 	}
 }
@@ -83,28 +105,40 @@ export class PluginScheme extends Scheme {
 	 */
 	constructor(path) {
 		super(path);
+
+		log('Watching plugin scheme: %s', highlight(this.path));
 		this.watchers[this.path] = new FSWatcher(this.path);
+
+		/**
+		 * A reference to the plugin descriptor for the plugin found in this scheme's path.
+		 * @type {Plugin}
+		 */
+		this.plugin = null;
 	}
 
 	/**
-	 * Starts listening for file system changes and detects a plugin in the path.
+	 * Starts listening for file system changes and detects a plugin in the path. This is split up
+	 * from the FSWatcher instantiation so that the caller (i.e. `PluginPath`) can destroy a
+	 * previous scheme before calling this function which will only twiddle watcher counts and not
+	 * have to stop and restart Node.js FSWatch instances.
 	 *
+	 * @returns {PluginScheme}
 	 * @access public
-	 * @returns {Scheme}
 	 */
 	watch() {
 		this.watchers[this.path]
 			.on('change', evt => {
-				// we only care if the directory we're watching is added or deleted
-				if ((evt.action === 'add' || evt.action === 'delete') && evt.file === this.path) {
-					this.emit('change');
+				if (evt.file === this.path && evt.action === 'delete') {
+					this.emit('plugin-deleted', this.plugin);
+					this.plugin = null;
 				}
+				this.onChange();
 			});
 
 		try {
 			this.emit('plugin-added', new Plugin(this.path));
 		} catch (e) {
-			logger.warn(e);
+			warn(e);
 		}
 
 		return this;
@@ -114,7 +148,7 @@ export class PluginScheme extends Scheme {
 /**
  * Watches a directory containing plugins.
  */
-export class PluginsDirScheme extends EventEmitter {
+export class PluginsDirScheme extends Scheme {
 	/**
 	 * Initializes the scheme and starts watching the file system.
 	 *
@@ -123,27 +157,103 @@ export class PluginsDirScheme extends EventEmitter {
 	 */
 	constructor(path) {
 		super(path);
+
+		log('Watching plugins dir scheme: %s', highlight(this.path));
+		this.watchers[this.path] = new FSWatcher(this.path);
+
+		/**
+		 * A map of directories to plugin schemes.
+		 * @type {Object}
+		 */
+		this.pluginSchemes = {};
+
+		if (isDir(this.path)) {
+			for (const name of fs.readdirSync(this.path)) {
+				const dir = _path.join(this.path, name);
+				if (isDir(dir)) {
+					this.pluginSchemes[dir] = this.createPluginScheme(dir);
+				}
+			}
+		}
 	}
 
 	/**
-	 * Starts listening for file system changes and detects plugins.
+	 * Creates a plugin scheme and wires up the event handlers.
 	 *
+	 * @param {String} path - The path to assign to the plugin scheme.
+	 * @returns {PluginScheme}
+	 * @access private
+	 */
+	createPluginScheme(path) {
+		return new PluginScheme(path)
+			.on('change', evt => this.onChange())
+			.on('plugin-added', plugin => this.emit('plugin-added', plugin))
+			.on('plugin-deleted', plugin => this.emit('plugin-deleted', plugin));
+	}
+
+	/**
+	 * Starts listening for file system changes and detects plugins in the path. This is split up
+	 * from the FSWatcher instantiation so that the caller (i.e. `PluginPath`) can destroy a
+	 * previous scheme before calling this function which will only twiddle watcher counts and not
+	 * have to stop and restart Node.js FSWatch instances.
+	 *
+	 * @returns {PluginsDirScheme}
 	 * @access public
-	 * @returns {Scheme}
 	 */
 	watch() {
-		// TODO: watch for new plugin dirs
+		this.watchers[this.path]
+			.on('change', evt => {
+				if (evt.file === this.path) {
+					if (evt.action === 'delete') {
+						for (const dir of Object.keys(this.pluginSchemes)) {
+							this.pluginSchemes[dir].destroy();
+							delete this.pluginSchemes[dir];
+						}
+					}
+					this.onChange();
+					return;
+				}
 
-		// TODO: scan for plugins
+				switch (evt.action) {
+					case 'add':
+						if (isDir(evt.file)) {
+							this.pluginSchemes[evt.file] = this.createPluginScheme(evt.file).watch();
+						}
+						break;
+
+					case 'delete':
+						if (this.pluginSchemes[evt.file]) {
+							this.pluginSchemes[evt.file].destroy();
+							delete this.pluginSchemes[evt.file];
+						}
+						break;
+				}
+			});
+
+		for (const scheme of Object.values(this.pluginSchemes)) {
+			scheme.watch();
+		}
 
 		return this;
+	}
+
+	/**
+	 * Closes all file system watchers and plugin schemes.
+	 *
+	 * @access public
+	 */
+	destroy() {
+		super.destroy();
+		for (const scheme of Object.values(this.pluginSchemes)) {
+			scheme.destroy();
+		}
 	}
 }
 
 /**
  * Watches a directory containing directories of plugins.
  */
-export class NestedPluginsDirScheme extends EventEmitter {
+export class NestedPluginsDirScheme extends Scheme {
 	/**
 	 * Initializes the scheme and starts watching the file system.
 	 *
@@ -152,20 +262,96 @@ export class NestedPluginsDirScheme extends EventEmitter {
 	 */
 	constructor(path) {
 		super(path);
+
+		log('Watching nested plugins dir scheme: %s', highlight(this.path));
+		this.watchers[this.path] = new FSWatcher(this.path);
+
+		/**
+		 * A map of directories to plugin schemes.
+		 * @type {Object}
+		 */
+		this.pluginSchemes = {};
+
+		if (isDir(this.path)) {
+			for (const name of fs.readdirSync(this.path)) {
+				const dir = _path.join(this.path, name);
+				if (isDir(dir)) {
+					this.pluginSchemes[dir] = this.createPluginsDirScheme(dir);
+				}
+			}
+		}
 	}
 
 	/**
-	 * Starts listening for file system changes and detects nested plugins.
+	 * Creates a plugins dir scheme and wires up the event handlers.
 	 *
+	 * @param {String} path - The path to assign to the plugin scheme.
+	 * @returns {PluginScheme}
+	 * @access private
+	 */
+	createPluginsDirScheme(path) {
+		return new PluginsDirScheme(path)
+			.on('change', evt => this.onChange())
+			.on('plugin-added', plugin => this.emit('plugin-added', plugin))
+			.on('plugin-deleted', plugin => this.emit('plugin-deleted', plugin));
+	}
+
+	/**
+	 * Starts listening for file system changes and detects nested plugins in the path. This is split
+	 * up from the FSWatcher instantiation so that the caller (i.e. `PluginPath`) can destroy a
+	 * previous scheme before calling this function which will only twiddle watcher counts and not
+	 * have to stop and restart Node.js FSWatch instances.
+	 *
+	 * @returns {NestedPluginsDirScheme}
 	 * @access public
-	 * @returns {Scheme}
 	 */
 	watch() {
-		// TODO: watch for new nested plugin dirs
+		this.watchers[this.path]
+			.on('change', evt => {
+				if (evt.file === this.path) {
+					if (evt.action === 'delete') {
+						for (const dir of Object.keys(this.pluginSchemes)) {
+							this.pluginSchemes[dir].destroy();
+							delete this.pluginSchemes[dir];
+						}
+					}
+					this.onChange();
+					return;
+				}
 
-		// TODO: scan for plugins
+				switch (evt.action) {
+					case 'add':
+						if (isDir(evt.file)) {
+							this.pluginSchemes[evt.file] = this.createPluginsDirScheme(evt.file).watch();
+						}
+						break;
+
+					case 'delete':
+						if (this.pluginSchemes[evt.file]) {
+							this.pluginSchemes[evt.file].destroy();
+							delete this.pluginSchemes[evt.file];
+						}
+						break;
+				}
+			});
+
+		for (const scheme of Object.values(this.pluginSchemes)) {
+			scheme.watch();
+		}
 
 		return this;
+	}
+
+	/**
+	 * Closes all file system watchers and plugin schemes.
+	 *
+	 * @access public
+	 */
+	destroy() {
+		super.destroy();
+		for (const scheme of Object.values(this.pluginSchemes)) {
+			scheme.destroy();
+		}
 	}
 }
 
