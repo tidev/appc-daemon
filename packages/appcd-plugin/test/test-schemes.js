@@ -22,6 +22,6 @@ describe('Scheme', () => {
 	});
 
 	it('should detect path as directory of directories of plugin directories', () => {
-		expect(detectScheme(path.join(__dirname, 'fixtures', 'plugin-dir2'))).to.equal(NestedPluginsDirScheme);
+		expect(detectScheme(path.join(__dirname, 'fixtures', 'nested-plugin-dir'))).to.equal(NestedPluginsDirScheme);
 	});
 });

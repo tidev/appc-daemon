@@ -164,7 +164,7 @@ describe('PluginPath', () => {
 		}, 1000);
 	});
 
-	it.only('should watch existing directory to become a directory of directories of plugins', function (done) {
+	it('should watch existing directory to become a directory of directories of plugins', function (done) {
 		this.timeout(10000);
 		this.slow(9000);
 
@@ -173,14 +173,22 @@ describe('PluginPath', () => {
 		this.pp = new PluginPath(tmp)
 			.on('added', plugin => {
 				try {
-					console.log(plugin.name + '@' + plugin.version);
 					switch (++counter) {
-						// case 1:
-						// 	expect(plugin.name).to.equal('good');
-						// 	break;
-						// case 2:
-						// 	expect(plugin.name).to.equal('good2');
+						case 1:
+							expect(plugin.name).to.equal('good');
+							expect(plugin.version).to.equal('1.0.0');
+							break;
+						case 2:
+							expect(plugin.name).to.equal('good');
+							expect(plugin.version).to.equal('1.1.0');
+							break;
+						case 3:
+							expect(plugin.name).to.equal('good2');
+							expect(plugin.version).to.equal('1.0.0');
+							break;
 						case 4:
+							expect(plugin.name).to.equal('good2');
+							expect(plugin.version).to.equal('1.1.0');
 							done();
 							break;
 					}
@@ -194,5 +202,14 @@ describe('PluginPath', () => {
 			log('Copying %s => %s', highlight(good), highlight(tmp));
 			fs.copySync(good, tmp);
 		}, 1000);
+	});
+
+	it('should switch between schemes', function (done) {
+		this.timeout(10000);
+		this.slow(9000);
+
+		// TODO
+
+		done();
 	});
 });
