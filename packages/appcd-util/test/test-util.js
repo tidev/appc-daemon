@@ -382,4 +382,18 @@ describe('util', () => {
 		});
 	});
 
+	describe('sleep', () => {
+		it('should wait 1 second', function (done) {
+			this.slow(3000);
+			this.timeout(3000);
+
+			const start = Date.now();
+			util.sleep(1000)
+				.then(() => {
+					expect(Date.now() - start).to.be.at.least(1000);
+					done();
+				})
+				.catch(done);
+		});
+	});
 });

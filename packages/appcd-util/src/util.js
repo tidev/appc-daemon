@@ -245,3 +245,14 @@ export function randomBytes(howMany) {
 export function sha1(str) {
 	return crypto.createHash('sha1').update(typeof str === 'string' ? str : JSON.stringify(str)).digest('hex');
 }
+
+/**
+ * Waits a number of milliseconds, then resolves the promise.
+ *
+ * @returns {Promise}
+ */
+export function sleep(ms) {
+	return new Promise(resolve => {
+		setTimeout(() => resolve(), ms);
+	});
+}

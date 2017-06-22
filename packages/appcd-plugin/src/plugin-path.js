@@ -4,37 +4,8 @@ import { EventEmitter } from 'events';
 import { expandPath } from 'appcd-path';
 import { detectScheme } from './schemes';
 
-const logger = snooplogg.config({ theme: 'detailed' })('appcd:plugin:path');
-
-/*
-is dir a plugin?
-	yes
-		make sure it's not already registered
-		add plugin to list of registered plugins
-		add plugin to list of path plugins
-		watch dir
-			if change
-				if external
-					stop and reinit plugin
-				else
-					warn
-			else if delete
-				if external
-					stop plugin
-				else
-					warn
-	no
-		read dir and for each subdir
-			is subdir a plugin?    note: subdir could be a version dir
-				yes
-					do steps above
-				no
-					read subdir and for each sub-subdir
-						is sub-subdir a plugin?
-							yes
-								do steps above
-*/
-
+const { log } = snooplogg.config({ theme: 'detailed' })('appcd:plugin:path');
+const { highlight } = snooplogg.styles;
 
 /**
  * Scans and watches a path for plugins, then emits events when plugins are added or removed.
@@ -59,8 +30,16 @@ export default class PluginPath extends EventEmitter {
 		 */
 		this.path = expandPath(pluginPath);
 
+		/**
+		 * A map of plugin paths to plugin descriptor objects.
+		 * @type {Object}
+		 */
 		this.plugins = {};
 
+		/**
+		 * The active plugin path scheme.
+		 * @type {Scheme}
+		 */
 		this.scheme = null;
 
 		this.detect();
@@ -68,41 +47,38 @@ export default class PluginPath extends EventEmitter {
 
 	/**
 	 * Detects the scheme and listens for possible scheme changes and plugins.
+	 *
+	 * @access private
 	 */
 	detect() {
 		const SchemeClass = detectScheme(this.path);
 
 		if (this.scheme instanceof SchemeClass) {
-			logger.log(`Detecting no scheme change (${SchemeClass.name})`);
+			log(`Detecting no scheme change (${SchemeClass.name})`);
 			return;
 		}
 
-		logger.log(`Detecting scheme change (${this.scheme ? Object.getPrototypeOf(this.scheme).constructor.name : null} => ${SchemeClass.name})`);
-
-		// remove all plugins
-		for (const dir of Object.keys(this.plugins)) {
-			this.emit('removed', this.plugins[dir]);
-			delete this.plugins[dir];
-		}
+		log('Detecting scheme change (%s => %s)', highlight(this.scheme ? Object.getPrototypeOf(this.scheme).constructor.name : null), highlight(SchemeClass.name));
 
 		const scheme = new SchemeClass(this.path)
 			.on('change', () => {
-				logger.log('File system change, re-detecting scheme');
+				log('File system change, re-detecting scheme');
 				this.detect();
 			})
 			.on('plugin-added', plugin => {
+				log('Plugin added: %s', highlight(`${plugin.name}@${plugin.version}`));
 				this.plugins[plugin.path] = plugin;
 				this.emit('added', plugin);
 			})
 			.on('plugin-deleted', plugin => {
+				log('Plugin deleted: %s', highlight(`${plugin.name}@${plugin.version}`));
 				delete this.plugins[plugin.path];
-				this.emit('deleted', plugin);
+				this.emit('removed', plugin);
 			});
 
 		if (this.scheme) {
-			// nuke the old scheme
 			this.scheme.destroy();
-			delete this.scheme;
+			this.scheme = null;
 		}
 
 		this.scheme = scheme.watch();
@@ -112,15 +88,12 @@ export default class PluginPath extends EventEmitter {
 	 * Removes all plugins and stops file system watchers.
 	 *
 	 * @returns {Promise}
+	 * @access public
 	 */
 	async destroy() {
 		if (this.scheme) {
 			this.scheme.destroy();
-		}
-
-		for (const dir of Object.keys(this.plugins)) {
-			this.emit('removed', this.plugins[dir]);
-			delete this.plugins[dir];
+			this.scheme = null;
 		}
 	}
 }
