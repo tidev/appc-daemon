@@ -119,7 +119,7 @@ export default class PluginManager extends EventEmitter {
 					// }
 				}
 			})
-			.on('deleted', plugin => {
+			.on('removed', plugin => {
 				const p = this.plugins.indexOf(plugin);
 				if (p !== -1) {
 					this.plugins.splice(p, 1);

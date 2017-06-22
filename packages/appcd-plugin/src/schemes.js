@@ -10,7 +10,7 @@ import { FSWatcher } from 'appcd-fswatcher';
 import { isDir } from 'appcd-fs';
 import { real } from 'appcd-path';
 
-const { log } = snooplogg.config({ theme: 'detailed' })('appcd:plugin:scheme');
+const { log, warn } = snooplogg.config({ theme: 'detailed' })('appcd:plugin:scheme');
 const { highlight } = snooplogg.styles;
 
 /**
@@ -128,7 +128,7 @@ export class PluginScheme extends Scheme {
 	watch() {
 		this.watchers[this.path]
 			.on('change', evt => {
-				if (evt.file === this.path && evt.action === 'delete') {
+				if (this.plugin && evt.file === this.path && evt.action === 'delete') {
 					this.emit('plugin-deleted', this.plugin);
 					this.plugin = null;
 				}
@@ -136,12 +136,26 @@ export class PluginScheme extends Scheme {
 			});
 
 		try {
-			this.emit('plugin-added', new Plugin(this.path));
+			this.plugin = new Plugin(this.path);
+			this.emit('plugin-added', this.plugin);
 		} catch (e) {
 			warn(e);
 		}
 
 		return this;
+	}
+
+	/**
+	 * Closes all file system watchers and plugin schemes.
+	 *
+	 * @access public
+	 */
+	destroy() {
+		super.destroy();
+		if (this.plugin) {
+			this.emit('plugin-deleted', this.plugin);
+			this.plugin = null;
+		}
 	}
 }
 
@@ -203,17 +217,13 @@ export class PluginsDirScheme extends Scheme {
 	watch() {
 		this.watchers[this.path]
 			.on('change', evt => {
+				// if this path is being changed, then emit the change event
 				if (evt.file === this.path) {
-					if (evt.action === 'delete') {
-						for (const dir of Object.keys(this.pluginSchemes)) {
-							this.pluginSchemes[dir].destroy();
-							delete this.pluginSchemes[dir];
-						}
-					}
 					this.onChange();
 					return;
 				}
 
+				// some other file is being changed, so wire up the "add" and unwire the "delete"
 				switch (evt.action) {
 					case 'add':
 						if (isDir(evt.file)) {
@@ -227,6 +237,11 @@ export class PluginsDirScheme extends Scheme {
 							delete this.pluginSchemes[evt.file];
 						}
 						break;
+				}
+
+				// some file or directory in the path changed, so emit the change event
+				if (_path.dirname(evt.file) === this.path) {
+					this.onChange();
 				}
 			});
 
@@ -308,17 +323,13 @@ export class NestedPluginsDirScheme extends Scheme {
 	watch() {
 		this.watchers[this.path]
 			.on('change', evt => {
+				// if this path is being changed, then emit the change event
 				if (evt.file === this.path) {
-					if (evt.action === 'delete') {
-						for (const dir of Object.keys(this.pluginSchemes)) {
-							this.pluginSchemes[dir].destroy();
-							delete this.pluginSchemes[dir];
-						}
-					}
 					this.onChange();
 					return;
 				}
 
+				// some other file is being changed, so wire up the "add" and unwire the "delete"
 				switch (evt.action) {
 					case 'add':
 						if (isDir(evt.file)) {
@@ -332,6 +343,11 @@ export class NestedPluginsDirScheme extends Scheme {
 							delete this.pluginSchemes[evt.file];
 						}
 						break;
+				}
+
+				// some file or directory in the path changed, so emit the change event
+				if (_path.dirname(evt.file) === this.path) {
+					this.onChange();
 				}
 			});
 
