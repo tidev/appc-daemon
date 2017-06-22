@@ -114,6 +114,23 @@ export class PluginScheme extends Scheme {
 		 * @type {Plugin}
 		 */
 		this.plugin = null;
+
+		/**
+		 * A function to call when a file system event occurs that will emit the `change` event.
+		 * @type {Function}
+		 */
+		this.checkIfPlugin = debounce(() => {
+			try {
+				this.plugin = new Plugin(this.path);
+				this.emit('plugin-added', this.plugin);
+				return;
+			} catch (e) {
+				warn(e);
+			}
+
+			// not a plugin or a bad plugin, emit change and allow redetect
+			this.emit('change');
+		});
 	}
 
 	/**
@@ -131,8 +148,12 @@ export class PluginScheme extends Scheme {
 				if (this.plugin && evt.file === this.path && evt.action === 'delete') {
 					this.emit('plugin-deleted', this.plugin);
 					this.plugin = null;
+					this.onChange();
+				} else if (!this.plugin) {
+					this.checkIfPlugin();
+				} else {
+					this.onChange();
 				}
-				this.onChange();
 			});
 
 		try {

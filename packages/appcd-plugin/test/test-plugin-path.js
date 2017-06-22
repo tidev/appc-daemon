@@ -615,4 +615,47 @@ describe('PluginPath', () => {
 			}, 1000);
 		}, 1000);
 	});
+
+	it('should detect bad plugin and watch when plugin becomes valid', function (done) {
+		this.timeout(10000);
+		this.slow(9000);
+
+		const tmp = makeTempDir();
+		this.pp = new PluginPath(tmp)
+			.on('added', plugin => {
+				try {
+					expect(plugin.name).to.equal('good');
+					done();
+				} catch (e) {
+					done(e);
+				}
+			});
+
+		setTimeout(() => {
+			// 1. Write a bad plugin
+			const pkgJsonFile = path.join(tmp, 'package.json');
+			log('Writing bad %s', highlight(pkgJsonFile));
+			fs.writeFileSync(pkgJsonFile, '{}');
+
+			setTimeout(() => {
+				// 2. Update bad plugin, but it is still bad
+				log('Writing bad again %s', highlight(pkgJsonFile));
+				fs.writeFileSync(pkgJsonFile, '{"name":""}');
+
+				setTimeout(() => {
+					try {
+						expect(this.pp.scheme).to.be.instanceof(PluginScheme);
+						expect(Object.keys(this.pp.plugins)).to.have.lengthOf(0);
+
+						// 3. Write good plugin and redetect it
+						const good = path.join(__dirname, 'fixtures', 'good');
+						log('Copying %s => %s', highlight(good), highlight(tmp));
+						fs.copySync(good, tmp);
+					} catch (e) {
+						done(e);
+					}
+				}, 1000);
+			}, 1000);
+		}, 1000);
+	});
 });
