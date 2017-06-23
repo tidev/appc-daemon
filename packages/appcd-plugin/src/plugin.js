@@ -19,7 +19,7 @@ export const state = {
 	STOPPING: 'stopping'
 };
 
-const log = snooplogg.config({ theme: 'detailed' })('appcd:plugin:plugin').log;
+const { log } = snooplogg.config({ theme: 'detailed' })('appcd:plugin:plugin');
 const { highlight } = snooplogg.styles;
 
 const urlSafeRegExp = /[^\w$\-_.+!*'(),]/g;
@@ -211,7 +211,9 @@ export default class Plugin {
 			// spawn the plugin host
 		} else {
 			// internal or hook
-			this.container = new PluginContainer();
+			this.container = new PluginContainer({
+				path: this.path
+			});
 		}
 	}
 

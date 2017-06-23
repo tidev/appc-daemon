@@ -41,14 +41,13 @@ export default class PluginPath extends EventEmitter {
 		 * @type {Scheme}
 		 */
 		this.scheme = null;
-
-		this.detect();
 	}
 
 	/**
 	 * Detects the scheme and listens for possible scheme changes and plugins.
 	 *
-	 * @access private
+	 * @returns {PluginPath}
+	 * @access public
 	 */
 	detect() {
 		const SchemeClass = detectScheme(this.path);
@@ -82,15 +81,16 @@ export default class PluginPath extends EventEmitter {
 		}
 
 		this.scheme = scheme.watch();
+
+		return this;
 	}
 
 	/**
 	 * Removes all plugins and stops file system watchers.
 	 *
-	 * @returns {Promise}
 	 * @access public
 	 */
-	async destroy() {
+	destroy() {
 		if (this.scheme) {
 			this.scheme.destroy();
 			this.scheme = null;

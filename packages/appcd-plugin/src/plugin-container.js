@@ -11,8 +11,11 @@ import { expandPath } from 'appcd-path';
 import { isDir, isFile } from 'appcd-fs';
 import { wrap } from 'module';
 
+const log = snooplogg.config({ theme: 'detailed' })('appcd:plugin:container').log;
+const { highlight } = snooplogg.styles;
+
 /**
- *
+ * Loads the plugin in a sandbox and wires up the plugin's dispatcher.
  */
 export default class PluginContainer {
 	/**

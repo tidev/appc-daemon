@@ -93,6 +93,30 @@ describe('PluginManager', () => {
 		expect(stats.nodes).to.equal(0);
 	});
 
+	it('should error if registering a subdirectory of already registered path', async function () {
+		const dir = path.join(__dirname, 'fixtures', 'empty');
+		this.pm = new PluginManager({ paths: [ dir ] });
+
+		expect(() => {
+			this.pm.register(__dirname);
+		}).to.throw(PluginError, 'Plugin Path Subdirectory Already Registered');
+
+		await this.pm.shutdown();
+		this.pm = null;
+	});
+
+	it('should error if registering a parent directory of already registered path', async function () {
+		const dir = path.join(__dirname, 'fixtures', 'empty');
+		this.pm = new PluginManager({ paths: [ dir ] });
+
+		expect(() => {
+			this.pm.register(path.join(dir, 'foo'));
+		}).to.throw(PluginError, 'Plugin Path Parent Directory Already Registered');
+
+		await this.pm.shutdown();
+		this.pm = null;
+	});
+
 	it('should error unregistering if plugin path is invalid', function (done) {
 		this.pm = new PluginManager;
 
@@ -122,5 +146,20 @@ describe('PluginManager', () => {
 				done();
 			})
 			.catch(done);
+	});
+
+	it.skip('should register a plugin and start it', async function () {
+		this.timeout(10000);
+		this.slow(9000);
+
+		this.pm = new PluginManager({
+			paths: [ path.join(__dirname, 'fixtures', 'good') ]
+		});
+
+		await this.pm.shutdown();
+		this.pm = null;
+
+		const stats = this.fm.status();
+		expect(stats.nodes).to.equal(0);
 	});
 });

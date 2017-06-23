@@ -6,6 +6,7 @@ process.title = 'appcd-plugin-host';
 if (!Error.prepareStackTrace) {
 	require('source-map-support/register');
 }
+
 const path = require('path');
 const main = path.resolve(__dirname, '..', (process.env.APPCD_COVERAGE ? 'src' : 'dist'), 'plugin-host.js');
 
