@@ -105,13 +105,22 @@ export function debounce(fn, wait=200) {
 	let timer;
 	wait = Math.max(~~wait, 0);
 
+	let resolveFn;
+	const promise = new Promise(resolve => {
+		resolveFn = resolve;
+	});
+
 	return function debouncer(...args) {
 		const ctx = this;
 		clearTimeout(timer);
+
 		timer = setTimeout(() => {
 			timer = null;
 			fn.apply(ctx, args);
+			resolveFn();
 		}, wait);
+
+		return promise;
 	};
 }
 

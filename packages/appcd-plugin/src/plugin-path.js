@@ -1,6 +1,6 @@
+import HookEmitter from 'hook-emitter';
 import snooplogg from 'snooplogg';
 
-import { EventEmitter } from 'events';
 import { expandPath } from 'appcd-path';
 import { detectScheme } from './schemes';
 
@@ -10,7 +10,7 @@ const { highlight } = snooplogg.styles;
 /**
  * Scans and watches a path for plugins, then emits events when plugins are added or removed.
  */
-export default class PluginPath extends EventEmitter {
+export default class PluginPath extends HookEmitter {
 	/**
 	 * Initializes the instance and scans the path for plugins.
 	 *
@@ -44,12 +44,13 @@ export default class PluginPath extends EventEmitter {
 	}
 
 	/**
-	 * Detects the scheme and listens for possible scheme changes and plugins.
+	 * Detects the scheme and listens for possible scheme changes and plugins. This function should
+	 * should be invoked after the caller has added event listeners.
 	 *
-	 * @returns {PluginPath}
+	 * @returns {Promise}
 	 * @access public
 	 */
-	detect() {
+	async detect() {
 		const SchemeClass = detectScheme(this.path);
 
 		if (this.scheme instanceof SchemeClass) {
@@ -60,23 +61,23 @@ export default class PluginPath extends EventEmitter {
 		log('Detecting scheme change (%s => %s)', highlight(this.scheme ? Object.getPrototypeOf(this.scheme).constructor.name : null), highlight(SchemeClass.name));
 
 		const scheme = new SchemeClass(this.path)
-			.on('change', () => {
+			.on('change', async () => {
 				log('File system change, re-detecting scheme');
-				this.detect();
+				await this.detect();
 			})
-			.on('plugin-added', plugin => {
+			.on('plugin-added', async (plugin) => {
 				log('Plugin added: %s', highlight(`${plugin.name}@${plugin.version}`));
 				this.plugins[plugin.path] = plugin;
-				this.emit('added', plugin);
+				await this.emit('added', plugin);
 			})
-			.on('plugin-deleted', plugin => {
+			.on('plugin-deleted', async (plugin) => {
 				log('Plugin deleted: %s', highlight(`${plugin.name}@${plugin.version}`));
 				delete this.plugins[plugin.path];
-				this.emit('removed', plugin);
+				await this.emit('removed', plugin);
 			});
 
 		if (this.scheme) {
-			this.scheme.destroy();
+			await this.scheme.destroy();
 			this.scheme = null;
 		}
 
@@ -88,11 +89,12 @@ export default class PluginPath extends EventEmitter {
 	/**
 	 * Removes all plugins and stops file system watchers.
 	 *
+	 * @returns {Promise}
 	 * @access public
 	 */
-	destroy() {
+	async destroy() {
 		if (this.scheme) {
-			this.scheme.destroy();
+			await this.scheme.destroy();
 			this.scheme = null;
 		}
 	}

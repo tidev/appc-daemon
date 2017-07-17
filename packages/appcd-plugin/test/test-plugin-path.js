@@ -75,8 +75,9 @@ describe('PluginPath', () => {
 				} catch (e) {
 					done(e);
 				}
-			})
-			.detect();
+			});
+
+		this.pp.detect();
 
 		log(renderTree());
 
@@ -105,8 +106,9 @@ describe('PluginPath', () => {
 				} catch (e) {
 					done(e);
 				}
-			})
-			.detect();
+			});
+
+		this.pp.detect();
 
 		setTimeout(() => {
 			log('Deleting %s', highlight(file));
@@ -133,8 +135,9 @@ describe('PluginPath', () => {
 				} catch (e) {
 					done(e);
 				}
-			})
-			.detect();
+			});
+
+		this.pp.detect();
 
 		setTimeout(() => {
 			const good = path.join(__dirname, 'fixtures', 'good');
@@ -149,6 +152,7 @@ describe('PluginPath', () => {
 
 		let counter = 0;
 		const tmp = makeTempDir();
+
 		this.pp = new PluginPath(tmp)
 			.on('added', plugin => {
 				try {
@@ -164,8 +168,9 @@ describe('PluginPath', () => {
 				} catch (e) {
 					done(e);
 				}
-			})
-			.detect();
+			});
+
+		this.pp.detect();
 
 		setTimeout(() => {
 			const good = path.join(__dirname, 'fixtures', 'plugin-dir');
@@ -205,8 +210,9 @@ describe('PluginPath', () => {
 				} catch (e) {
 					done(e);
 				}
-			})
-			.detect();
+			});
+
+		this.pp.detect();
 
 		setTimeout(() => {
 			const good = path.join(__dirname, 'fixtures', 'nested-plugin-dir');
@@ -322,8 +328,9 @@ describe('PluginPath', () => {
 				} catch (e) {
 					done(e);
 				}
-			})
-			.detect();
+			});
+
+		this.pp.detect();
 
 		Promise.resolve()
 			.then(() => sleep(1000))
@@ -606,8 +613,9 @@ describe('PluginPath', () => {
 				} catch (e) {
 					done(e);
 				}
-			})
-			.detect();
+			});
+
+		this.pp.detect();
 
 		setTimeout(() => {
 			const good = path.join(__dirname, 'fixtures', 'good');
@@ -636,8 +644,9 @@ describe('PluginPath', () => {
 				} catch (e) {
 					done(e);
 				}
-			})
-			.detect();
+			});
+
+		this.pp.detect();
 
 		setTimeout(() => {
 			// 1. Write a bad plugin

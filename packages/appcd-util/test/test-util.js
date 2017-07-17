@@ -177,6 +177,31 @@ describe('util', () => {
 				}
 			}, 0);
 		});
+
+		it('should resolve a promise when bouncing has stopped', function (done) {
+			this.slow(2000);
+
+			let count = 0;
+			const fn = util.debounce(() => {
+				count++;
+			});
+
+			Promise
+				.all([
+					fn(),
+					fn(),
+					fn(),
+					fn(),
+					fn(),
+					fn(),
+					fn()
+				])
+				.then(() => {
+					expect(count).to.equal(1);
+					done();
+				})
+				.catch(done);
+		});
 	});
 
 	describe('formatNumber()', () => {

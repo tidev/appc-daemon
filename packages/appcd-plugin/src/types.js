@@ -4,7 +4,6 @@
  */
 const types = [
 	'internal',
-	'external',
-	'hook'
+	'external'
 ];
 export default types;

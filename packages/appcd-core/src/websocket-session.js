@@ -165,7 +165,7 @@ export default class WebSocketSession {
 							if (pubsub) {
 								this.respond(req, {
 									path: req.path,
-									type: 'publish',
+									type: 'event',
 									fin: true
 								});
 							}
@@ -242,7 +242,9 @@ export default class WebSocketSession {
 				id:      res.id
 			});
 		} else {
-			res.status || (res.status = 200);
+			if (!res.status) {
+				res.status = 200;
+			}
 			data = msgpack.encode(res);
 		}
 

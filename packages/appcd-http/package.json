@@ -21,7 +21,7 @@
     "koa-helmet": "^3.2.0",
     "koa-send": "^4.1.0",
     "path-to-regexp": "^1.7.0",
-    "snooplogg": "^1.4.0",
+    "snooplogg": "^1.6.0",
     "source-map-support": "^0.4.15",
     "ws": "^3.0.0"
   },

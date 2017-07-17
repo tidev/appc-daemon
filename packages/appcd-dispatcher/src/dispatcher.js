@@ -1,3 +1,4 @@
+import DispatcherContext from './dispatcher-context';
 import DispatcherError from './dispatcher-error';
 import pathToRegExp from 'path-to-regexp';
 import Response, { AppcdError, codes } from 'appcd-response';
@@ -9,20 +10,6 @@ import { PassThrough } from 'stream';
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:dispatcher');
 const { highlight } = styles;
 const stripRegExp = /\x1B\[\d+m/g;
-
-/**
- * A context that contains request information and is routed through the dispatcher.
- */
-export class DispatcherContext {
-	/**
-	 * Mixes the context parameters into this instance.
-	 *
-	 * @param {Object} params - Various context-specific parameters.
-	 */
-	constructor(params) {
-		Object.assign(this, params);
-	}
-}
 
 let rootInstance = null;
 
@@ -64,6 +51,14 @@ export default class Dispatcher {
 	 */
 	static register(...args) {
 		return Dispatcher.root.register(...args);
+	}
+
+	/**
+	 * Runs the root dispatcher instance's `unregister()`.
+	 * @access public
+	 */
+	static unregister(...args) {
+		return Dispatcher.root.unregister(...args);
 	}
 
 	/**
@@ -276,9 +271,62 @@ export default class Dispatcher {
 			for (const p of path) {
 				this.register(p, handler);
 			}
-			return this;
+		} else {
+			const handle = this.normalize(path, handler);
+			handle.keys = [];
+			handle.regexp = pathToRegExp(handle.path, handle.keys, { end: !(handle.handler instanceof Dispatcher) });
+			handle.prefix = handle.handler instanceof Dispatcher ? handle.path : null;
+			this.routes.push(handle);
+
+			// if this is a scoped dispatcher and the path is /, then suppress the
+			// redundant log message
+			if (path !== '/') {
+				logger.debug(`Registered dispatcher route ${highlight(handle.path)}`);
+			}
 		}
 
+		return this;
+	}
+
+	/**
+	 * Unregisters a dispatch handler.
+	 *
+	 * @param {ServiceDispatcher|Object|String|RegExp|Array<String>|Array<RegExp>} path - The path
+	 * to register the handler to. This can also be a `ServiceDispatcher` instance or any object
+	 * that has a path and a handler.
+	 * @param {Function|Dispatcher|ServiceDispatcher} handler - A function to call when the path matches.
+	 * @returns {Dispatcher}
+	 * @access public
+	 */
+	unregister(path, handler) {
+		if (Array.isArray(path)) {
+			for (const p of path) {
+				this.unregister(p, handler);
+			}
+		} else {
+			const handle = this.normalize(path, handler);
+			for (let i = 0; i < this.routes.length; i++) {
+				if (this.routes[i].path === handle.path && this.routes[i].origHandler === handle.handler) {
+					this.routes.splice(i, 1);
+					break;
+				}
+			}
+		}
+
+		return this;
+	}
+
+	/**
+	 * Normalizes the arguments to `register()` and `unregister()`.
+	 *
+	 * @param {ServiceDispatcher|Object|String|RegExp|Array<String>|Array<RegExp>} path - The path
+	 * to register the handler to. This can also be a `ServiceDispatcher` instance or any object
+	 * that has a path and a handler.
+	 * @param {Function|Dispatcher|ServiceDispatcher} handler - A function to call when the path matches.
+	 * @returns {Object}
+	 * @access private
+	 */
+	normalize(path, handler) {
 		// check if the `path` is a ServiceDispatcher or any object with a path and handler callback
 		if (path && typeof path === 'object' && path.hasOwnProperty('path') && typeof path.handler === 'function') {
 			handler = path.handler;
@@ -288,6 +336,9 @@ export default class Dispatcher {
 		if (typeof path !== 'string' && !(path instanceof RegExp)) {
 			throw new TypeError('Invalid path');
 		}
+
+		// need to keep a reference to the original handler just in case it's a ServiceDispatcher
+		const origHandler = handler;
 
 		if (handler instanceof ServiceDispatcher) {
 			if (handler.path) {
@@ -301,24 +352,10 @@ export default class Dispatcher {
 			throw new TypeError('Invalid handler');
 		}
 
-		const keys = [];
-		const regexp = pathToRegExp(path, keys, { end: !(handler instanceof Dispatcher) });
-		const prefix = handler instanceof Dispatcher ? path : null;
-
-		this.routes.push({
+		return {
 			path,
-			prefix,
 			handler,
-			keys,
-			regexp
-		});
-
-		// if this is a scoped dispatcher and the path is /, then suppress the
-		// redundant log message
-		if (path !== '/') {
-			logger.debug(`Registered dispatcher route ${highlight(path)}`);
-		}
-
-		return this;
+			origHandler
+		};
 	}
 }
