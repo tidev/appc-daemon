@@ -1,11 +1,11 @@
-console.log('good external plugin required');
+console.log('good internal plugin required');
 
 module.exports = {
 	activate() {
 		console.log('hi from activate!');
 
 		appcd.register('/square', ctx => {
-			return appcd.call('/appcd/config/home', { foo: 'bar' })
+			return appcd.call('/appcd/config/home')
 				.then(result => {
 					console.log('appcd home = ' + result.response);
 

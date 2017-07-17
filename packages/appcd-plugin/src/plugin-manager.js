@@ -4,6 +4,7 @@ import Response, { codes } from 'appcd-response';
 import path from 'path';
 import PluginError from './plugin-error';
 import PluginPath from './plugin-path';
+import semver from 'semver';
 import snooplogg from 'snooplogg';
 
 import { EventEmitter } from 'events';
@@ -37,16 +38,16 @@ export default class PluginManager extends EventEmitter {
 		this.dispatcher = new Dispatcher()
 			.register('/register', ctx => {
 				try {
-					this.registry.register(ctx.request.data.path, ctx.request.data.start);
+					this.register(ctx.request.data.path, ctx.request.data.start);
 					ctx.response = new Response(codes.PLUGIN_REGISTERED);
 				} catch (e) {
 					logger.warn(e);
 					throw e;
 				}
 			})
-			.register('/unregister', async (ctx) => {
+			.register('/unregister', ctx => {
 				try {
-					await this.unregister(ctx.request.data.path);
+					this.unregister(ctx.request.data.path);
 					ctx.response = new Response(codes.PLUGIN_UNREGISTERED);
 				} catch (e) {
 					logger.warn(e);
@@ -56,6 +57,12 @@ export default class PluginManager extends EventEmitter {
 			.register('/status', ctx => {
 				ctx.response = this.plugins;
 			});
+
+		/**
+		 * A map of namespaces to versions to plugins
+		 * @access private
+		 */
+		this.namespaces = {};
 
 		/**
 		 * A list of all detected plugins. Plugins are added and removed automatically.
@@ -79,7 +86,7 @@ export default class PluginManager extends EventEmitter {
 
 			for (let dir of opts.paths) {
 				if (dir) {
-					this.register(dir, true);
+					this.register(dir);
 				}
 			}
 		}
@@ -89,11 +96,10 @@ export default class PluginManager extends EventEmitter {
 	 * Registers a plugin path and all of the plugins contained.
 	 *
 	 * @param {String} pluginPath - The plugin path to register and all contained plugins.
-	 * @param {Boolean} start - When `true`, starts all plugins foudn in the path.
-	 * @returns {PluginPath}
+	 * @returns {Promise}
 	 * @access public
 	 */
-	register(pluginPath, start) {
+	async register(pluginPath) {
 		if (!pluginPath || typeof pluginPath !== 'string') {
 			throw new PluginError('Invalid plugin path');
 		}
@@ -130,22 +136,95 @@ export default class PluginManager extends EventEmitter {
 			.on('added', plugin => {
 				if (this.plugins.indexOf(plugin) === -1) {
 					logger.log('Plugin added: %s', highlight(`${plugin.name}@${plugin.version}`));
+
+					// sanity check the plugin hasn't been added twice
+					for (let i = 0; i < this.plugins.length; i++) {
+						if (this.plugins[i].path === plugin.path || (this.plugins[i].name === plugin.name && this.plugins[i].version === plugin.version)) {
+							logger.error('Plugin already registered: %s', highlight(plugin.toString()));
+							return;
+						}
+					}
+
 					this.plugins.push(plugin.info);
-					if (start) {
-						plugin.start();
+
+					let ns = this.namespaces[plugin.name];
+					if (!ns) {
+						ns = this.namespaces[plugin.name] = {
+							handler: async (ctx, next) => {
+								const versions = Object.keys(ns.versions).sort(semver.rcompare);
+								let version = ctx.params.version || null;
+
+								if (!version) {
+									logger.log('No version specified, return list of versions');
+									ctx.response = versions;
+									return;
+								}
+
+								let plugin = ns.versions[version];
+								if (!plugin) {
+									if (version === 'latest') {
+										version = versions[0];
+										logger.log('Remapping plugin version %s -> %s', highlight('latest'), highlight(version));
+									} else {
+										for (const v of versions) {
+											if (semver.satisfies(v, version)) {
+												logger.log('Remapping plugin version %s -> %s', highlight(version), highlight(v));
+												version = v;
+												break;
+											}
+										}
+									}
+
+									plugin = version && ns.versions[version];
+								}
+
+								if (plugin) {
+									// forward request to the plugin's dispatcher
+									ctx.path = '/' + ctx.params.path;
+									await plugin.start();
+									logger.log('Plugin %s started', highlight(plugin.toString()));
+									return await plugin.dispatch(ctx, next);
+								}
+
+								// not found, continue
+								return await next();
+							},
+							path: `/${plugin.name}/:version?/:path*`,
+							versions: {}
+						};
+
+						Dispatcher.register(ns.path, ns.handler);
+					}
+
+					// add this version to the namespace
+					ns.versions[plugin.version] = plugin;
+				}
+			})
+			.on('removed', async (plugin) => {
+				for (let i = 0; i < this.plugins.length; i++) {
+					if (this.plugins[i].path === plugin.path) {
+						try {
+							logger.log('Stopping plugin: %s', highlight(`${plugin.name}@${plugin.version}`));
+							await plugin.stop();
+							this.plugins.splice(i--, 1);
+						} catch (e) {
+							logger.error(e);
+						}
 					}
 				}
-			})
-			.on('removed', plugin => {
-				const p = this.plugins.indexOf(plugin);
-				if (p !== -1) {
-					logger.log('Plugin removed: %s', highlight(`${plugin.name}@${plugin.version}`));
-					this.plugins.splice(p, 1);
-				}
-			})
-			.detect();
 
-		return this.pluginPaths[pluginPath];
+				let ns = this.namespaces[plugin.name];
+				if (ns && ns.versions[plugin.version]) {
+					delete ns.versions[plugin.version];
+
+					if (Object.keys(ns.versions).length === 0) {
+						Dispatcher.unregister(ns.path, ns.handler);
+						delete this.namespaces[plugin.name];
+					}
+				}
+			});
+
+		await this.pluginPaths[pluginPath].detect();
 	}
 
 	/**
@@ -153,7 +232,6 @@ export default class PluginManager extends EventEmitter {
 	 * `PluginPath` instance as long as it has no internal plugins.
 	 *
 	 * @param {String} pluginPath - The plugin path to unregister.
-	 * @returns {Promise}
 	 * @access public
 	 */
 	async unregister(pluginPath) {
@@ -168,12 +246,8 @@ export default class PluginManager extends EventEmitter {
 			throw new PluginError(codes.PLUGIN_PATH_NOT_REGISTERED);
 		}
 
-		try {
-			await this.pluginPaths[pluginPath].destroy();
-			delete this.pluginPaths[pluginPath];
-		} catch (e) {
-			logger.warn(e);
-		}
+		await this.pluginPaths[pluginPath].destroy();
+		delete this.pluginPaths[pluginPath];
 	}
 
 	/**

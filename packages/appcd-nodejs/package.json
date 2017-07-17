@@ -16,9 +16,9 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "fs-extra": "^3.0.1",
+    "fs-extra": "^4.0.0",
     "progress": "^2.0.0",
-    "snooplogg": "^1.4.0",
+    "snooplogg": "^1.6.0",
     "source-map-support": "^0.4.15",
     "tar-stream": "^1.5.4",
     "tmp": "^0.0.31",

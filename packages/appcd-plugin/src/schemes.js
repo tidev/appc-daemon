@@ -1,11 +1,11 @@
 import fs from 'fs';
 import globule from 'globule';
+import HookEmitter from 'hook-emitter';
 import _path from 'path';
 import Plugin from './plugin';
 import snooplogg from 'snooplogg';
 
 import { debounce } from 'appcd-util';
-import { EventEmitter } from 'events';
 import { FSWatcher } from 'appcd-fswatcher';
 import { isDir } from 'appcd-fs';
 import { real } from 'appcd-path';
@@ -16,7 +16,7 @@ const { highlight } = snooplogg.styles;
 /**
  * Base class for a plugin path scheme.
  */
-export class Scheme extends EventEmitter {
+export class Scheme extends HookEmitter {
 	/**
 	 * Initializes the scheme.
 	 *
@@ -169,12 +169,13 @@ export class PluginScheme extends Scheme {
 	/**
 	 * Closes all file system watchers and plugin schemes.
 	 *
+	 * @returns {Promise}
 	 * @access public
 	 */
-	destroy() {
+	async destroy() {
 		super.destroy();
 		if (this.plugin) {
-			this.emit('plugin-deleted', this.plugin);
+			await this.emit('plugin-deleted', this.plugin);
 			this.plugin = null;
 		}
 	}
@@ -276,13 +277,16 @@ export class PluginsDirScheme extends Scheme {
 	/**
 	 * Closes all file system watchers and plugin schemes.
 	 *
+	 * @returns {Promise}
 	 * @access public
 	 */
 	destroy() {
 		super.destroy();
-		for (const scheme of Object.values(this.pluginSchemes)) {
-			scheme.destroy();
-		}
+		return Promise.all(
+			Object
+				.values(this.pluginSchemes)
+				.map(scheme => scheme.destroy())
+		);
 	}
 }
 
@@ -382,13 +386,16 @@ export class NestedPluginsDirScheme extends Scheme {
 	/**
 	 * Closes all file system watchers and plugin schemes.
 	 *
+	 * @returns {Promise}
 	 * @access public
 	 */
 	destroy() {
 		super.destroy();
-		for (const scheme of Object.values(this.pluginSchemes)) {
-			scheme.destroy();
-		}
+		return Promise.all(
+			Object
+				.values(this.pluginSchemes)
+				.map(scheme => scheme.destroy())
+		);
 	}
 }
 

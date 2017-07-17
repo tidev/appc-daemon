@@ -17,7 +17,7 @@ const ServiceHandlerTypes = new Set([
 /**
  * Formats the request's session id for logging.
  *
- * @param {Object} ctx - A dispatcher context.
+ * @param {DispatcherContext} ctx - A dispatcher context.
  * @returns {String}
  */
 function sessionId(ctx) {
@@ -81,7 +81,7 @@ export default class ServiceDispatcher {
 	/**
 	 * An Appc Dispatcher handler.
 	 *
-	 * @param {Object} ctx - A dispatcher context.
+	 * @param {DispatcherContext} ctx - A dispatcher context.
 	 * @param {Function} next - A function to continue to next dispatcher route.
 	 * @returns {Promise}
 	 * @access public
@@ -106,7 +106,7 @@ export default class ServiceDispatcher {
 	/**
 	 * Invokes the service's `onCall()` handler.
 	 *
-	 * @param {Object} ctx - A dispatcher context.
+	 * @param {DispatcherContext} ctx - A dispatcher context.
 	 * @returns {Promise}
 	 * @access private
 	 */
@@ -118,7 +118,7 @@ export default class ServiceDispatcher {
 	 * Subscribes the remote session, manages the subscriptions, and invokes the service's
 	 * `onSubscribe()` handler.
 	 *
-	 * @param {Object} ctx - A dispatcher context.
+	 * @param {DispatcherContext} ctx - A dispatcher context.
 	 * @access private
 	 */
 	subscribe(ctx) {
@@ -156,7 +156,14 @@ export default class ServiceDispatcher {
 			};
 		}
 
-		descriptor.sessions[ctx.request.sessionId] = message => ctx.response.write({ message, topic, type: 'event' });
+		descriptor.sessions[ctx.request.sessionId] = (message, type, fin) => {
+			ctx.response.write({
+				message,
+				topic,
+				type: type || 'event',
+				fin
+			});
+		};
 
 		ctx.response.once('end', () => this.unsubscribe(ctx));
 		ctx.response.once('error', err => this.unsubscribe(ctx));
@@ -176,7 +183,7 @@ export default class ServiceDispatcher {
 	/**
 	 * Unsubscribes the remote session and invokes the service's `onUnsubscribe()` handler.
 	 *
-	 * @param {Object} ctx - A dispatcher context.
+	 * @param {DispatcherContext} ctx - A dispatcher context.
 	 * @access private
 	 */
 	unsubscribe(ctx) {
@@ -195,7 +202,10 @@ export default class ServiceDispatcher {
 			return;
 		}
 
+		ctx.response = new Response(codes.UNSUBSCRIBED);
+
 		logger.log('%sUnsubscribing session: %s', sessionId(ctx), highlight(topic));
+		descriptor.sessions[ctx.request.sessionId](ctx.response.message, 'unsubscribe', true);
 		delete descriptor.sessions[ctx.request.sessionId];
 
 		if (!Object.keys(descriptor.sessions).length) {
@@ -205,7 +215,5 @@ export default class ServiceDispatcher {
 			logger.log('%sNo more listeners, removing descriptor: %s', sessionId(ctx), highlight(topic));
 			delete this.subscriptions[topic];
 		}
-
-		ctx.response = new Response(codes.UNSUBSCRIBED);
 	}
 }

@@ -1,33 +1,42 @@
+import ExternalPlugin from './external-plugin';
 import fs from 'fs';
 import gawk from 'gawk';
+import InternalPlugin from './internal-plugin';
 import path from 'path';
-import PluginContainer from './plugin-container';
 import PluginError from './plugin-error';
 import semver from 'semver';
 import snooplogg from 'snooplogg';
 import types from './types';
 
-import { codes } from 'appcd-response';
+import { EventEmitter } from 'events';
 import { expandPath } from 'appcd-path';
 import { isDir, isFile } from 'appcd-fs';
-import { ServiceDispatcher } from 'appcd-dispatcher';
 
-export const state = {
-	STOPPED:  'stopped',
-	STARTING: 'starting',
-	STARTED:  'started',
-	STOPPING: 'stopping'
-};
+/*
+wire up agent
+- external only
+- updates usage in plugin instance (in parent process)
 
-const { log } = snooplogg.config({ theme: 'detailed' })('appcd:plugin:plugin');
-const { highlight } = snooplogg.styles;
+deactivate after timeout
 
+restart watchdog
+
+reload external plugin
+*/
+
+const logger = snooplogg.config({ theme: 'detailed' })(process.connected ? 'appcd:plugin:host:plugin' : 'appcd:plugin');
+
+/**
+ * A regular expression that removes all invalid characters from the plugin's name so that it is
+ * safe to use in a URL.
+ * @type {RegExp}
+ */
 const urlSafeRegExp = /[^\w$\-_.+!*'(),]/g;
 
 /**
  * Contains information about a plugin.
  */
-export default class Plugin {
+export default class Plugin extends EventEmitter {
 	/**
 	 * Determines if the specified directory is a plugin and then loads it's meta data.
 	 *
@@ -35,6 +44,8 @@ export default class Plugin {
 	 * @access public
 	 */
 	constructor(pluginPath) {
+		super();
+
 		/**
 		 * Internal plugin information storage. Since a `Plugin` object cannot be gawked, we store
 		 * just the properties that can be gawked in a private object, then define setters to make
@@ -47,10 +58,8 @@ export default class Plugin {
 			version:     undefined,
 			main:        undefined,
 			type:        'external',
-			pid:         undefined,
 			nodeVersion: undefined,
-			error:       false,
-			state:       'stopped'
+			error:       false
 		});
 
 		return new Proxy(this, {
@@ -167,7 +176,6 @@ export default class Plugin {
 
 		this.nodeVersion = pkgJson.engines && pkgJson.engines.node || process.version.replace(/^v/, '');
 
-		// error checking
 		if (this.type === 'internal' && this.nodeVersion && !semver.satisfies(process.version, this.nodeVersion)) {
  			this.error = `Internal plugin requires Node.js ${this.nodeVersion}, but currently running ${process.version}`;
 		}
@@ -188,124 +196,54 @@ export default class Plugin {
 			}
 		}
 
-		/**
-		 * The dispatcher that interfaces with the plugin service.
-		 * @type {ServiceDispatcher}
-		 */
-		this.dispatcher = new ServiceDispatcher(
-			// new RegExp(`^\/${this.namespace.replace(/\./g, '\\.')}\/v?${version.replace(/\./g, '\\.')}(?:(?:\/.*)|$)`),
-			this
-		);
-
-		this.container = null;
+		if (this.type === 'external') {
+			this.impl = new ExternalPlugin(this);
+		} else {
+			this.impl = new InternalPlugin(this);
+		}
 
 		return this;
 	}
 
+	/**
+	 * Starts the plugin. This is called from the main process and not the plugin host process.
+	 *
+	 * @return {Promise}
+	 * @access public
+	 */
 	start() {
-		if (this.state !== state.STOPPED) {
-			throw new Error(`Cannot start plugin when state is "${this.state}"`);
-		}
-
-		if (this.type === 'external') {
-			// spawn the plugin host
-		} else {
-			// internal or hook
-			this.container = new PluginContainer({
-				path: this.path
-			});
-		}
+		return this.impl.start();
 	}
 
+	/**
+	 * Stops the plugin.
+	 *
+	 * @returns {Promise}
+	 * @access public
+	 */
 	stop() {
+		return this.impl.stop();
 	}
 
 	/**
-	 * Responds to "call" service requests.
+	 * Dispatches a request to the plugin's dispatcher.
 	 *
-	 * @param {Object} ctx - A dispatcher request context.
-	 * @access private
+	 * @param {Object} ctx - A dispatcher context.
+	 * @param {Function} next - A function to continue to next dispatcher route.
+	 * @returns {Promise}
+	 * @access public
 	 */
-	onCall(ctx) {
-		log(ctx.path);
-		ctx.response = JSON.stringify(this._info);
+	dispatch(ctx, next) {
+		return this.impl.dispatch(ctx, next);
 	}
 
 	/**
-	 * Responds to "subscribe" service requests.
+	 * Returns a string with this plugin's name and version.
 	 *
-	 * @param {Object} ctx - A dispatcher request context.
-	 * @param {Function} publish - A function used to publish data to a dispatcher client.
-	 * @access private
+	 * @returns {String}
+	 * @access public
 	 */
-	onSubscribe(ctx, publish) {
-		//
+	toString() {
+		return `${this.name}@${this.version}`;
 	}
-
-	/**
-	 * Responds to "unsubscribe" service requests.
-	 *
-	 * @param {Object} ctx - A dispatcher request context.
-	 * @param {Function} publish - The function used to publish data to a dispatcher client. This is
-	 * the same publish function as the one passed to `onSubscribe()`.
-	 * @access private
-	 */
-	onUnsubscribe(ctx, publish) {
-		//
-	}
-
-	// async load() {
-	// 	if (this.type === 'internal') {
-	// 		if (this.module) {
-	// 			throw new PluginError(codes.PLUGIN_ALREADY_STARTED);
-	// 		}
-	//
-	// 		this.module = require(this.mainFile);
-	//
-	// 		if (!this.module || (typeof this.module !== 'object' && typeof this.module !== 'function')) {
-	// 			this.error = 'Export not a plugin class or object';
-	// 			throw new PluginError(codes.PLUGIN_BAD_REQUEST);
-	// 		}
-	//
-	// 		if (typeof this.module === 'function') {
-	// 			this.instance = new (this.module)();
-	// 		} else {
-	// 			this.instance = this.module;
-	// 		}
-	//
-	// 		if (typeof this.instance.start === 'function') {
-	// 			await this.instance.start();
-	// 		}
-	//
-	// 		return;
-	// 	}
-	//
-	// 	// TODO: spawn plugin host
-	// }
-
-	// /**
-	//  * Unloads an `external` plugin.
-	//  *
-	//  * @returns {Promise}
-	//  * @access public
-	//  */
-	// async unload() {
-	// 	if (this.type === 'internal' && this.instance && typeof this.instance.stop === 'function') {
-	// 		await this.instance.unload();
-	// 		// TODO: freeze cache
-	// 	} else if (this.type === 'external' && this.pid) {
-	// 		// return new Promise((resolve, reject) => {
-	// 		// 	process.kill(this.pid, 'SIGTERM');
-	// 		//
-	// 		// 	// wait 1 second before killing the plugin host
-	// 		// 	setTimeout(() => {
-	// 		// 		if (this.pid) {
-	// 		// 			process.kill(this.pid, 'SIGKILL');
-	// 		// 		} else {
-	// 		// 			resolve();
-	// 		// 		}
-	// 		// 	}, 1000);
-	// 		// });
-	// 	}
-	// }
 }

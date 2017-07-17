@@ -164,9 +164,6 @@ export default class SubprocessManager extends EventEmitter {
 							}
 						});
 
-						// wire up ipc
-						child.on('message', msg => proc.emit('message', msg));
-
 						// add it to our list of subprocesses
 						// note: this will kick off an 'change' event and update any status listeners
 						subprocesses.push(proc);
@@ -176,6 +173,14 @@ export default class SubprocessManager extends EventEmitter {
 
 						log('Spawned %s', highlight(pid));
 						ctx.response.write({ type: 'spawn', pid });
+
+						// wire up ipc
+						if (ipc) {
+							child.on('message', msg => {
+								proc.emit('message', msg);
+								ctx.response.write({ type: 'ipc', msg });
+							});
+						}
 
 						if (child.stdout) {
 							child.stdout.on('data', data => {

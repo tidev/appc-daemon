@@ -4,6 +4,8 @@ const instance = createInstanceWithDefaults()
 	.snoop()
 	.config({
 		maxBufferSize: 250,
+		minBrightness: 80,
+		maxBrightness: 210,
 		theme: 'detailed'
 	})
 	.enable(process.env.SNOOPLOGG || process.env.DEBUG);

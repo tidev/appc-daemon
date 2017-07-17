@@ -1,6 +1,6 @@
 import path from 'path';
 import PluginError from '../dist/plugin-error';
-import Plugin, { state } from '../dist/plugin';
+import Plugin, { states } from '../dist/plugin';
 import snooplogg from 'snooplogg';
 
 const log = snooplogg.config({ theme: 'detailed' })('test:appcd:plugin').log;
@@ -44,7 +44,6 @@ describe('Plugin', () => {
 			new Plugin(path.join(__dirname, 'fixtures', 'bad-name'));
 		}).to.throw(PluginError, /^Invalid "name" property in /);
 	});
-
 
 	it('should error if package.json doesn\'t have a "version" property', () => {
 		expect(() => {
@@ -118,7 +117,6 @@ describe('Plugin', () => {
 		expect(p.pid).to.be.undefined;
 		expect(p.nodeVersion).to.equal(nodeVersion);
 		expect(p.error).to.be.false;
-		expect(p.state).to.equal(state.STOPPED);
 
 		expect(p.info).to.deep.equal({
 			path:    pluginPath,
@@ -126,10 +124,8 @@ describe('Plugin', () => {
 			version: '1.2.3',
 			main:    path.join(pluginPath, 'foo.js'),
 			type:    'external',
-			pid:     undefined,
 			nodeVersion,
-			error:   false,
-			state:   state.STOPPED
+			error:   false
 		});
 	});
 
