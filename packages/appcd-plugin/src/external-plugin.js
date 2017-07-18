@@ -1,7 +1,7 @@
 import Agent from 'appcd-agent';
 import Dispatcher from 'appcd-dispatcher';
 import path from 'path';
-import PluginImplBase from './plugin-impl-base';
+import PluginImplBase, { states } from './plugin-impl-base';
 import Response, { codes } from 'appcd-response';
 import snooplogg from 'snooplogg';
 import Tunnel from './tunnel';
@@ -58,8 +58,8 @@ export default class ExternalPlugin extends PluginImplBase {
 
 		return this.tunnel
 			.send(ctx)
-			.then(ctx => {
-				const { status } = ctx;
+			.then(res => {
+				const { status } = res;
 				const style = status < 400 ? ok : alert;
 				let msg = `Plugin dispatcher: ${highlight(`/${this.plugin.name}/${this.plugin.version}${ctx.path}`)} ${style(status)}`;
 				if (ctx.type !== 'event') {
@@ -70,6 +70,9 @@ export default class ExternalPlugin extends PluginImplBase {
 				if (status === 404) {
 					return next();
 				}
+
+				ctx.status = status;
+				ctx.response = res.response;
 
 				return ctx;
 			})
@@ -101,8 +104,8 @@ export default class ExternalPlugin extends PluginImplBase {
 	}
 
 	/**
-	 * Starts the plugin from the child process' perspective. Wires up the tunnel to the parent,
-	 * then activates the
+	 * Starts the plugin from the child process, wires up the tunnel to the parent, then
+	 * activates it.
 	 *
 	 * @returns {Promise}
 	 * @access private
@@ -202,13 +205,14 @@ export default class ExternalPlugin extends PluginImplBase {
 	}
 
 	/**
-	 * ?
+	 * Spawns the plugin host and sets up the tunnel.
 	 *
 	 * @returns {Promise}
 	 * @access private
 	 */
 	startParent() {
 		logger.log('Spawning plugin host');
+
 		return Dispatcher
 			.call(`/appcd/subprocess/spawn/node/${this.plugin.nodeVersion}`, {
 				data: {
@@ -244,12 +248,17 @@ export default class ExternalPlugin extends PluginImplBase {
 							.then(result => {
 								const { status } = result;
 								const style = status < 400 ? ok : alert;
-								let msg = `Plugin dispatcher: ${highlight(`/${this.plugin.name}/${this.plugin.version}${ctx.path}`)} ${style(status)}`;
+
+								let msg = `Plugin dispatcher: ${highlight(req.data.path || '/')} ${style(status)}`;
 								if (ctx.type !== 'event') {
 									msg += ` ${highlight(`${new Date - startTime}ms`)}`;
 								}
 								logger.log(msg);
-								send(result);
+
+								send({
+									message: result.response,
+									status:  result.status
+								});
 							})
 							.catch(send);
 					}
@@ -274,11 +283,9 @@ export default class ExternalPlugin extends PluginImplBase {
 								logger.log('Plugin host exited: %s', highlight(data.code));
 								this.tunnel = null;
 								this.pid = null;
-								// this.emit('stopped');
-								// this.setState(states.STOPPED);
+								this.setState(states.STOPPED);
 
 								if (data.code) {
-									logger.log('Restarting plugin host');
 									// TODO
 								}
 						}
@@ -287,7 +294,7 @@ export default class ExternalPlugin extends PluginImplBase {
 			.catch(err => {
 				logger.error('Failed to launch plugin host');
 				logger.error(err);
-				// this.setState(states.STOPPED, err);
+				this.setState(states.STOPPED, err);
 			});
 	}
 }

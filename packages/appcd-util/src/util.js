@@ -101,7 +101,7 @@ export function assertNodeEngineVersion(pkgJson) {
  * to the returned function before firing the specified `fn`.
  * @returns {Function}
  */
-export function debounce(fn, wait=200) {
+export function debounce(fn, wait = 200) {
 	let timer;
 	wait = Math.max(~~wait, 0);
 

@@ -23,11 +23,11 @@ export const states = {
 };
 
 /**
- * ?
+ * The base class for internal and external plugin implementations.
  */
 export default class PluginImplBase extends EventEmitter {
 	/**
-	 * ?
+	 * Initializes the plugin's logger, global object, and state.
 	 *
 	 * @param {Plugin} plugin - A reference to the plugin instance.
 	 * @access public
@@ -82,10 +82,16 @@ export default class PluginImplBase extends EventEmitter {
 		this.plugin = plugin;
 
 		/**
-		 * The current state of the plugin.
-		 * @type {String}
+		 * Plugin runtime information.
+		 * @type {Object}
 		 */
-		this.state = states.STOPPED;
+		this.info = {
+			/**
+			 * The current state of the plugin.
+			 * @type {String}
+			 */
+			state: states.STOPPED
+		};
 	}
 
 	/**
@@ -157,8 +163,8 @@ export default class PluginImplBase extends EventEmitter {
 	 * @access private
 	 */
 	setState(state, err) {
-		if (state !== this.state) {
-			this.state = state;
+		if (state !== this.info.state) {
+			this.info.state = state;
 			this.emit('state', state, err);
 		}
 		return this;
@@ -171,19 +177,19 @@ export default class PluginImplBase extends EventEmitter {
 	 * @access public
 	 */
 	async start() {
-		if (this.state === states.STARTED) {
+		if (this.info.state === states.STARTED) {
 			logger.log('Plugin %s already started', highlight(this.plugin.toString()));
 			return;
 		}
 
-		if (this.state === states.STARTING) {
+		if (this.info.state === states.STARTING) {
 			logger.log('Plugin %s already starting... waiting', highlight(this.plugin.toString()));
 			await this.waitUntil(states.STARTED);
 			return;
 		}
 
 		// if the plugin is stopping, then wait for it to finish stopping
-		if (this.state === states.STOPPING) {
+		if (this.info.state === states.STOPPING) {
 			logger.log('Plugin %s stopping... waiting to start', highlight(this.plugin.toString()));
 			await this.waitUntil(states.STOPPED);
 		}
@@ -207,20 +213,20 @@ export default class PluginImplBase extends EventEmitter {
 	 */
 	async stop() {
 		// if the plugin is already stopped, then nothing to do
-		if (this.state === states.STOPPED) {
+		if (this.info.state === states.STOPPED) {
 			logger.log('Plugin %s already stopped', highlight(this.plugin.toString()));
 			return;
 		}
 
 		// if the plugin is already stopping, then wait for it to be stopped before resolving
-		if (this.state === states.STOPPING) {
+		if (this.info.state === states.STOPPING) {
 			logger.log('Plugin %s already stopping... waiting', highlight(this.plugin.toString()));
 			await this.waitUntil(states.STOPPED);
 			return;
 		}
 
 		// if the plugin is starting, then wait for it to finish starting
-		if (this.state === states.STARTING) {
+		if (this.info.state === states.STARTING) {
 			logger.log('Plugin %s starting... waiting to stop', highlight(this.plugin.toString()));
 			await this.waitUntil(states.STARTED);
 		}
@@ -231,7 +237,6 @@ export default class PluginImplBase extends EventEmitter {
 
 		this.setState(states.STOPPING);
 		await this.onStop();
-		this.setState(states.STOPPED);
 	}
 
 	/**

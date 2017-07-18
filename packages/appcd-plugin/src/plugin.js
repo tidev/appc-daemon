@@ -19,8 +19,11 @@ wire up agent
 
 deactivate after timeout
 
-restart watchdog
+external plugin state
 
+stream from parent to child
+
+restart plugin on error?
 reload external plugin
 */
 
@@ -177,7 +180,7 @@ export default class Plugin extends EventEmitter {
 		this.nodeVersion = pkgJson.engines && pkgJson.engines.node || process.version.replace(/^v/, '');
 
 		if (this.type === 'internal' && this.nodeVersion && !semver.satisfies(process.version, this.nodeVersion)) {
- 			this.error = `Internal plugin requires Node.js ${this.nodeVersion}, but currently running ${process.version}`;
+			this.error = `Internal plugin requires Node.js ${this.nodeVersion}, but currently running ${process.version}`;
 		}
 
 		/**
@@ -187,6 +190,7 @@ export default class Plugin extends EventEmitter {
 		this.directories = new Set()
 			.add(pluginPath)
 			.add(path.dirname(main));
+
 		if (typeof pkgJson.directories === 'object') {
 			for (const type of [ 'lib', 'src' ]) {
 				const dir = pkgJson.directories[type];

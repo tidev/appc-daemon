@@ -314,12 +314,12 @@ export default class Config extends EventEmitter {
 	 * @returns {Config}
 	 * @access public
 	 */
-	merge(values, opts={}) {
+	merge(values, opts = {}) {
 		if (!values || typeof values !== 'object' || Array.isArray(values)) {
 			return this;
 		}
 
-		const merger = (dest, src, scope=[]) => {
+		const merger = (dest, src, scope = []) => {
 			for (const key of Object.keys(src)) {
 				const value = src[key];
 

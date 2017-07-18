@@ -38,7 +38,7 @@ export default class PluginManager extends EventEmitter {
 		this.dispatcher = new Dispatcher()
 			.register('/register', ctx => {
 				try {
-					this.register(ctx.request.data.path, ctx.request.data.start);
+					this.register(ctx.request.data.path);
 					ctx.response = new Response(codes.PLUGIN_REGISTERED);
 				} catch (e) {
 					logger.warn(e);

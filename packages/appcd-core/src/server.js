@@ -97,7 +97,7 @@ export default class Server extends HookEmitter {
 		if (process.getuid && process.getuid() === 0) {
 			// we are on a posix system and we're root, so we need to switch to a non-root user
 			uid = this.config.get('server.user');
- 			gid = this.config.get('server.group');
+			gid = this.config.get('server.group');
 			if (!uid) {
 				const err = new Error('The daemon cannot be run as root. You must run as a non-root user or set a user in the config.');
 				err.code = 5;

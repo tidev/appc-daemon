@@ -42,7 +42,7 @@ export function isDir(dir) {
 /**
  * Determines if a file exists and that it is indeed a file.
  *
- * @param {String} dir - The file to check.
+ * @param {String} file - The file to check.
  * @returns {Boolean}
  */
 export function isFile(file) {

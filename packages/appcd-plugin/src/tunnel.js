@@ -38,29 +38,32 @@ export default class Tunnel {
 				if (req.id && this.requests[req.id]) {
 					this.requests[req.id](req);
 				} else {
-					handler(req, res => {
+					handler(req, /* send */ res => {
 						if (res instanceof Error) {
 							res = {
 								code:    res.code || '500',
-								id:      req.id,
 								message: res.message,
 								status:  res.status || 500,
 								type:    'error'
 							};
-						} else {
-							res.id = req.id;
-							if (!res.type && req.type) {
-								res.type = req.type;
-							}
+						} else if (res instanceof DispatcherContext) {
+							res = {
+								message: res.response,
+								status:  res.status || 200
+							};
+						} else if (res.message instanceof Response) {
+							res = {
+								status: res.message.status || 200,
+								message: res.message.toString()
+							};
+						}
 
-							if (res.message instanceof Response) {
-								res.status = res.message.status;
-								res.message = res.message.toString();
-							}
-
-							if (!res.status) {
-								res.status = 200;
-							}
+						res.id = req.id;
+						if (!res.status) {
+							res.status = 200;
+						}
+						if (!res.type && req.type) {
+							res.type = req.type;
 						}
 
 						this.proc.send(res);
@@ -112,6 +115,7 @@ export default class Tunnel {
 				if (msg.status) {
 					ctx.status = msg.status;
 				}
+
 				switch (msg.type) {
 					case 'error':
 						delete this.requests[id];
@@ -143,8 +147,7 @@ export default class Tunnel {
 				}
 			};
 
-			log('Sending tunnel request: %s', ctx.path || '');
-			log(ctx.request);
+			log('Sending tunnel request: %s', ctx.path || '', ctx.request);
 
 			this.proc.send({
 				id,
