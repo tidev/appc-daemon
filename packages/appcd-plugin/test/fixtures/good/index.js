@@ -6,8 +6,8 @@ module.exports = {
 
 		appcd.register('/square', ctx => {
 			return appcd.call('/appcd/config/home', { foo: 'bar' })
-				.then(result => {
-					console.log('appcd home = ' + result.response);
+				.then(({ response }) => {
+					console.log('appcd home =', response);
 
 					const n = parseInt(ctx.request.num);
 					if (isNaN(n)) {

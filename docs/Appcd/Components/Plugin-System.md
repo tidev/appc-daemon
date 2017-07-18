@@ -8,7 +8,7 @@ controlled by the Plugin Manager.
 ### Plugin Manager
 
 The Appc Daemon's plugin system is orchestrated by the Plugin Manager. It is responsible for
-detecting, starting, and stopping plugins. Plugin paths are registered with the Plugin Manager and
+detecting, activating, and deactivating plugins. Plugin paths are registered with the Plugin Manager and
 it will scan them for plugins.
 
 ### Plugin Paths
@@ -48,8 +48,5 @@ The Plugin Manager communicates with the plugin host using an IPC tunnel and a m
 protocol. Only serializable data types can be sent through the IPC tunnel. Functions, non-public
 properties, and contexts cannot be sent.
 
-The Plugin Manager can reload a plugin by simply killing the plugin host process and starting it
-again. It can also detect when a plugin host has crashed and restart it.
-
-If the plugin host exits with a non-zero exit code, the Plugin Manager will automatically restart
-it. However, if the plugin crashes more than 3 times, then it will be disabled.
+If the plugin host exits with a non-zero exit code, the Plugin Manager will flag the plugin as
+errored.

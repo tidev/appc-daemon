@@ -4,7 +4,7 @@ if (!Error.prepareStackTrace) {
 }
 
 import fs from 'fs';
-import path from 'path';
+import _path from 'path';
 
 const homeDirRegExp = /^~([\\|/].*)?$/;
 const winRegExp = /^win/;
@@ -20,11 +20,11 @@ export function expandPath(...segments) {
 	const platform = process.env.APPCD_TEST_PLATFORM || process.platform;
 	segments[0] = segments[0].replace(homeDirRegExp, (process.env.HOME || process.env.USERPROFILE) + '$1');
 	if (winRegExp.test(platform)) {
-		return path.resolve(path.join.apply(null, segments).replace(winEnvVarRegExp, (s, m, n) => {
+		return _path.resolve(_path.join.apply(null, segments).replace(winEnvVarRegExp, (s, m, n) => {
 			return process.env[n] || m;
 		}));
 	}
-	return path.resolve.apply(null, segments);
+	return _path.resolve.apply(null, segments);
 }
 
 /**
@@ -35,15 +35,15 @@ export function expandPath(...segments) {
  * @param {String} path - The path to resolve.
  * @returns {String}
  */
-export function real(p) {
+export function real(path) {
 	try {
-		return fs.realpathSync(p);
+		return fs.realpathSync(path);
 	} catch (e) {
-		const basename = path.basename(p);
-		p = path.dirname(p);
-		if (p === path.dirname(p)) {
-			return p;
+		const basename = _path.basename(path);
+		path = _path.dirname(path);
+		if (path === _path.dirname(path)) {
+			return path;
 		}
-		return path.join(real(p), basename);
+		return _path.join(real(path), basename);
 	}
 }

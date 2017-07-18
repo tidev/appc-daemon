@@ -190,7 +190,7 @@ export default class Router {
 	/**
 	 * Mounts the specified middleware at the specified path.
 	 *
-	 * @param {String|RegExp) path - The path to mount the middleware.
+	 * @param {String|RegExp} path - The path to mount the middleware.
 	 * @param {Function|Router} middleware - The middleware function or router instance being mounted.
 	 * @returns {Router}
 	 * @access public

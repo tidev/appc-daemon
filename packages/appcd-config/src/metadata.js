@@ -215,7 +215,7 @@ export default class Metadata {
 	 * @returns {Boolean}
 	 * @access public
 	 */
-	set(key, metadata={}) {
+	set(key, metadata = {}) {
 		if (!key || typeof key !== 'string') {
 			throw new TypeError('Expected key to be a string');
 		}
@@ -246,7 +246,7 @@ export default class Metadata {
 	 * enforce readonly.
 	 * @access public
 	 */
-	validate(key, value, opts={}) {
+	validate(key, value, opts = {}) {
 		if (!key || typeof key !== 'string') {
 			throw new TypeError('Expected key to be a string');
 		}
@@ -298,7 +298,7 @@ export default class Metadata {
 	 * config setting's dot-notation key.
 	 * @access private
 	 */
-	_findSettings(path, node, crumbs=[]) {
+	_findSettings(path, node, crumbs = []) {
 		for (const prop of node.properties) {
 			if (t.isObjectProperty(prop) && t.isIdentifier(prop.key)) {
 				if (prop.leadingComments) {

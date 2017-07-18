@@ -272,7 +272,7 @@ export default class SubprocessManager extends EventEmitter {
 	 * @returns {Promise}
 	 * @access public
 	 */
-	kill(pid, signal='SIGTERM') {
+	kill(pid, signal = 'SIGTERM') {
 		return new Promise((resolve, reject) => {
 			psTree(pid, (err, children) => {
 				let result = codes.OK;

@@ -197,7 +197,7 @@ describe('PluginManager', () => {
 		}, 1000);
 	});
 
-	it('should register, start, and stop an external plugin', function (done) {
+	it.only('should register, start, and stop an external plugin', function (done) {
 		this.timeout(10000);
 		this.slow(9000);
 

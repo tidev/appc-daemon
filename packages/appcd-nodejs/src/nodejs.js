@@ -283,8 +283,8 @@ export function extractNode({ archive, dest }) {
 				.once('error', reject);
 
 			fs.createReadStream(archive)
-	    		.pipe(gunzip)
-	    		.pipe(extract);
+				.pipe(gunzip)
+				.pipe(extract);
 		}
 	}).then(binaryPath => {
 		if (binaryPath) {

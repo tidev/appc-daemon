@@ -828,7 +828,7 @@ export function unregister(path, watcher) {
  *
  * @returns {String}
  */
-export function renderTree(node, depth=0, parent=[]) {
+export function renderTree(node, depth = 0, parent = []) {
 	let children = node instanceof Node ? node.children : roots;
 	const keys = Object.keys(children).sort((a, b) => a.localeCompare(b));
 	const len = keys.length;
