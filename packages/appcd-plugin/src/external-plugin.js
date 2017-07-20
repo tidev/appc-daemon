@@ -11,7 +11,8 @@ import { debounce } from 'appcd-util';
 import { FSWatcher } from 'appcd-fswatcher';
 import { Readable } from 'stream';
 
-const logger = snooplogg.config({ theme: 'detailed' })(process.connected ? 'appcd:plugin:external:child' : 'appcd:plugin:external:parent');
+const snooplogger = snooplogg.config({ theme: 'detailed' });
+const logger = snooplogger(process.connected ? 'appcd:plugin:external:child' : 'appcd:plugin:external:parent');
 const { highlight, ok, alert } = snooplogg.styles;
 
 /**
@@ -39,18 +40,6 @@ export default class ExternalPlugin extends PluginImplBase {
 		 */
 		this.tunnel = null;
 
-		this.globalObj.appcd.call = (path, data) => {
-			if (!this.tunnel) {
-				return Promise.reject(new Error('Tunnel not initialized!'));
-			}
-
-			return this.tunnel
-				.send({
-					path,
-					data
-				});
-		};
-
 		/**
 		 * The file system watcher for this scheme's path.
 		 * @type {Object}
@@ -66,6 +55,18 @@ export default class ExternalPlugin extends PluginImplBase {
 					logger.error('Failed to restart %s plugin: %s', highlight(this.plugin.toString()), err);
 				});
 		});
+
+		this.globalObj.appcd.call = (path, data) => {
+			if (!this.tunnel) {
+				return Promise.reject(new Error('Tunnel not initialized!'));
+			}
+
+			return this.tunnel
+				.send({
+					path,
+					data
+				});
+		};
 	}
 
 	/**
@@ -296,6 +297,7 @@ export default class ExternalPlugin extends PluginImplBase {
 				this.tunnel = new Tunnel(ctx.proc, (req, send) => {
 					if (req.type === 'log') {
 						if (typeof req.message === 'object') {
+							req.message.id = snooplogger._id;
 							snooplogg.dispatch(req.message);
 						} else {
 							this.logger.log(req.message);
@@ -393,13 +395,13 @@ export default class ExternalPlugin extends PluginImplBase {
 
 								break;
 
-							// case 'stdout':
-							// 	logger.log('STDOUT', data.output.trim());
-							// 	break;
+							case 'stdout':
+								logger.log('STDOUT', data.output.trim());
+								break;
 
-							// case 'stderr':
-							// 	logger.log('STDERR', data.output.trim());
-							// 	break;
+							case 'stderr':
+								logger.log('STDERR', data.output.trim());
+								break;
 
 							case 'exit':
 								logger.log('Plugin host exited: %s', highlight(data.code));

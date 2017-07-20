@@ -9,7 +9,7 @@ module.exports = {
 				.then(({ response }) => {
 					console.log('appcd home =', response);
 
-					const n = parseInt(ctx.request.num);
+					const n = parseInt(ctx.request.data.num);
 					if (isNaN(n)) {
 						throw new Error('Invalid number');
 					}

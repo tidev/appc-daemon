@@ -100,8 +100,13 @@ the WebSocket client disconnects.
 
 ### Web Browser Call Example
 
+> Note: The following example requires msgpack. Either download it or reference it via the CDN:
+>
+> `<script src="https://cdnjs.cloudflare.com/ajax/libs/msgpack-lite/0.1.26/msgpack.min.js"></script>`
+
 ```javascript
 const ws = new WebSocket('ws://127.0.0.1:1732');
+ws.binaryType = 'arraybuffer';
 
 ws.onopen = () => ws.send(JSON.stringify({
     version: '1.0',
@@ -110,8 +115,8 @@ ws.onopen = () => ws.send(JSON.stringify({
 }));
 
 ws.onmessage = evt => {
-    console.info('Got status!');
-    console.info(evt.data);
+	const status = msgpack.decode(new Uint8Array(evt.data)).message;
+    console.info(status);
 };
 ```
 

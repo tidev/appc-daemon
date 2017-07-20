@@ -15,7 +15,7 @@ const { pluralize } = snooplogg;
  * A regex that matches a path's root.
  * @type {RegExp}
  */
-const rootRegExp = /^(\/|[A-Za-z]+\:\\)(.+)?$/;
+const rootRegExp = /^(\/|[A-Za-z]+:\\)(.+)?$/;
 
 /**
  * An emitter that is used to broadcast all FS events for all nodes.

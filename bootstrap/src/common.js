@@ -43,6 +43,7 @@ export function banner() {
  * @param {Config} cfg - A config instance.
  * @param {String} path - The path to request.
  * @param {Object} [data] - The data to send along with the request.
+ * @param {String} [type] - The request type. (i.e. 'call', 'subscribe', 'unsubscribe')
  * @returns {Client}
  */
 export function createRequest(cfg, path, data, type) {
@@ -229,7 +230,9 @@ export function stopServer({ cfg, force }) {
 					force = true;
 					sendKill(pid).then(resolve, reject);
 					return;
-				} catch (e) {}
+				} catch (e) {
+					// squeltch
+				}
 
 				resolve();
 			}, 1000);

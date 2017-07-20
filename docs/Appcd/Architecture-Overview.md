@@ -115,9 +115,9 @@ written with the current process's id.
 The Appc Daemon Core is comprised of several components. Refer to each individual component for more
 information:
 
-* [Config](Components/Config.md)
+* [Configuration System](Components/Configuration-System.md)
 * [Dispatcher](Components/Dispatcher.md)
-* [Filesystem Watcher](Components/Filesystem-Watcher.md)
+* [File System Watcher](Components/File-System-Watcher.md)
 * [Hook System](Components/Hook-System.md)
 * [Logging](Components/Logging.md)
 * [Plugin System](Components/Plugin-System.md)

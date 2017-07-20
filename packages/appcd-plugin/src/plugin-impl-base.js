@@ -9,7 +9,8 @@ import vm from 'vm';
 import { EventEmitter } from 'events';
 import { wrap } from 'module';
 
-const logger = snooplogg.config({ theme: 'detailed' })(process.connected ? 'appcd:plugin:impl:child' : 'appcd:plugin:impl:parent');
+const snooplogger = snooplogg.config({ theme: 'detailed' });
+const logger = snooplogger(process.connected ? 'appcd:plugin:impl:child' : 'appcd:plugin:impl:parent');
 const { highlight } = snooplogg.styles;
 
 /**
@@ -46,14 +47,16 @@ export default class PluginImplBase extends EventEmitter {
 		 * The plugin's namespaced logger.
 		 * @type {SnoopLogg}
 		 */
-		this.logger = snooplogg(plugin.toString());
+		this.logger = snooplogger(plugin.toString());
 		Object.defineProperty(this.logger, 'trace', { value: console.trace.bind(console) });
 
 		/**
 		 * The default global object for the plugin sandbox.
 		 * @type {Object}
 		 */
-		this.globalObj = Object.assign({}, global, {
+		this.globalObj = {
+			...global,
+
 			appcd: {
 				call: Dispatcher.call.bind(Dispatcher),
 				register: this.dispatcher.register.bind(this.dispatcher)
@@ -68,7 +71,7 @@ export default class PluginImplBase extends EventEmitter {
 					}
 				}
 			})
-		});
+		};
 
 		/**
 		 * The Appc Daemon config.

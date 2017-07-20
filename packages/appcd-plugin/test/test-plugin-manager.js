@@ -193,7 +193,7 @@ describe('PluginManager', () => {
 
 		setTimeout(() => {
 			log('Calling square...');
-			Dispatcher.call('/good-internal/1.2.3/square', { num: 3 })
+			Dispatcher.call('/good-internal/1.2.3/square', { data: { num: 3 } })
 				.then(async (ctx) => {
 					expect(ctx.response).to.equal(9);
 					await this.pm.unregister(pluginDir);
@@ -222,12 +222,12 @@ describe('PluginManager', () => {
 
 		setTimeout(() => {
 			log('Calling square...');
-			Dispatcher.call('/good/1.2.3/square', { num: 3 })
+			Dispatcher.call('/good/1.2.3/square', { data: { num: 3 } })
 				.then(async (ctx) => {
 					expect(ctx.response).to.equal(9);
 					setTimeout(() => {
 						done();
-					}, 70000);
+					}, 7000);
 				})
 				.catch(done);
 		}, 1000);
