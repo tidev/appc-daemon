@@ -1,11 +1,11 @@
 import gawk from 'gawk';
 import os from 'os';
-import { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
-import snooplogg from './logger';
+import snooplogg from 'snooplogg';
 
+import { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
 import Response, { codes } from 'appcd-response';
 
-const logger = snooplogg('appcd:core:config-service');
+const logger = snooplogg.config({ theme: 'detailed' })('appcd:config-service');
 const { highlight } = snooplogg.styles;
 
 /**
@@ -15,8 +15,11 @@ export default class ConfigService extends ServiceDispatcher {
 	/**
 	 * Initalizes the status and kicks off the timers to refresh the dynamic
 	 * status information.
+	 *
+	 * @param {?GawkObject} cfg - The initial config object.
+	 * @access public
 	 */
-	constructor(cfg) {
+	constructor(cfg = {}) {
 		super('/:key*');
 
 		/**

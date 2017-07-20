@@ -1,4 +1,4 @@
-import ConfigService from './config-service';
+import ConfigService from 'appcd-config-service';
 import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs-extra';
 import FSWatchManager from 'appcd-fswatcher';

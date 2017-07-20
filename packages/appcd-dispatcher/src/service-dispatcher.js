@@ -1,5 +1,6 @@
 import Response, { codes } from 'appcd-response';
 import snooplogg, { pluralize, styles } from 'snooplogg';
+import uuid from 'uuid';
 
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:dispatcher:service-dispatcher');
 const { highlight, note } = styles;
@@ -13,16 +14,6 @@ const ServiceHandlerTypes = new Set([
 	'subscribe',
 	'unsubscribe'
 ]);
-
-/**
- * Formats the request's session id for logging.
- *
- * @param {DispatcherContext} ctx - A dispatcher context.
- * @returns {String}
- */
-function sessionId(ctx) {
-	return ctx.request && ctx.request.hasOwnProperty('sessionId') ? note(`[${ctx.request.sessionId}] `) : '';
-}
 
 /**
  * A dispatcher handler designed for exposing an interface for services.
@@ -69,7 +60,7 @@ export default class ServiceDispatcher {
 
 		/**
 		 * A map of all active subscriptions. The key is the topic (i.e. path) and the value is the
-		 * descriptor containing the session references and the publish function.
+		 * descriptor containing the subscription references and the publish function.
 		 * @type {Object}
 		 */
 		this.subscriptions = {};
@@ -87,6 +78,7 @@ export default class ServiceDispatcher {
 	 * @access public
 	 */
 	handler(ctx, next) {
+		const subscriptionId = ctx.request && ctx.request.sid || '<>';
 		const type = ctx.request && ctx.request.type || 'call';
 		if (!ServiceHandlerTypes.has(type)) {
 			throw new Error(`Invalid service handler type "${type}"`);
@@ -95,11 +87,11 @@ export default class ServiceDispatcher {
 		const onType = `on${type.substring(0, 1).toUpperCase() + type.substring(1)}`;
 
 		if (typeof this.instance[onType] === 'function') {
-			logger.log('%sInvoking %s handler: %s', sessionId(ctx), onType, highlight(this.path || 'no path'));
+			logger.log('%s Invoking %s handler: %s', note(`[${subscriptionId}]`), onType, highlight(this.path || 'no path'));
 			return this[type](ctx);
 		}
 
-		logger.log('%sNo %s handler: %s', sessionId(ctx), onType, highlight(this.path || 'no path'));
+		logger.log('%s No %s handler: %s', note(`[${subscriptionId}]`), onType, highlight(this.path || 'no path'));
 		return next();
 	}
 
@@ -115,61 +107,63 @@ export default class ServiceDispatcher {
 	}
 
 	/**
-	 * Subscribes the remote session, manages the subscriptions, and invokes the service's
-	 * `onSubscribe()` handler.
+	 * Subscribes the sub and invokes the service's `onSubscribe()` handler.
 	 *
 	 * @param {DispatcherContext} ctx - A dispatcher context.
 	 * @access private
 	 */
 	subscribe(ctx) {
-		const topic = typeof this.instance.getTopic === 'function' && this.instance.getTopic(ctx) || ctx.path;
+		const subscriptionId = ctx.request.sid = uuid.v4();
+		const topic = typeof this.instance.getTopic === 'function' && this.instance.getTopic(ctx) || ctx.realPath;
 		let descriptor = this.subscriptions[topic];
 		let callOnSubscribe = true;
 
 		if (descriptor) {
-			if (descriptor.sessions[ctx.request.sessionId]) {
-				logger.log('%sSession already subscribed to %s', sessionId(ctx), highlight(topic));
-				ctx.response = new Response(codes.ALREADY_SUBSCRIBED);
-				return;
-			}
+			logger.log('%s Adding subscription: %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
 
 			callOnSubscribe = false;
 
-			logger.log('%sAdding subscription: %s', sessionId(ctx), highlight(topic));
-
 		} else {
-			logger.log('%sInitializing new subscription: %s', sessionId(ctx), highlight(topic));
+			logger.log('%s Initializing new subscription: %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
 
 			descriptor = this.subscriptions[topic] = {
-				sessions: {},
+				subs: {},
 				publish: message => {
-					logger.log('%sPublishing %s to %s',
-						sessionId(ctx),
-						highlight(topic),
-						pluralize('listener', Object.keys(descriptor.sessions).length, true)
+					logger.log('%s Publishing%s to %s',
+						note(`[${subscriptionId}]`),
+						topic ? ` ${highlight(topic || '\'\'')}` : '',
+						pluralize('listener', Object.keys(descriptor.subs).length, true)
 					);
 
-					for (const listener of Object.values(descriptor.sessions)) {
+					for (const listener of Object.values(descriptor.subs)) {
 						listener(message);
 					}
 				}
 			};
 		}
 
-		descriptor.sessions[ctx.request.sessionId] = (message, type, fin) => {
+		descriptor.subs[subscriptionId] = (message, type, fin) => {
 			ctx.response.write({
 				message,
+				sid: subscriptionId,
 				topic,
 				type: type || 'event',
 				fin
 			});
 		};
 
-		ctx.response.once('end', () => this.unsubscribe(ctx));
-		ctx.response.once('error', err => this.unsubscribe(ctx));
+		const cleanup = () => {
+			logger.log('Stream ended or errored... cleaning up');
+			descriptor.subs[subscriptionId] = true;
+			this.unsubscribe(ctx);
+		};
+
+		ctx.response.once('end', cleanup);
+		ctx.response.once('error', cleanup);
 
 		ctx.response.write({
 			message: new Response(codes.SUBSCRIBED),
+			sid: subscriptionId,
 			topic,
 			type: 'subscribe'
 		});
@@ -181,21 +175,27 @@ export default class ServiceDispatcher {
 	}
 
 	/**
-	 * Unsubscribes the remote session and invokes the service's `onUnsubscribe()` handler.
+	 * Unsubscribes the sub and invokes the service's `onUnsubscribe()` handler.
 	 *
 	 * @param {DispatcherContext} ctx - A dispatcher context.
 	 * @access private
 	 */
 	unsubscribe(ctx) {
-		const topic = typeof this.instance.getTopic === 'function' && this.instance.getTopic(ctx) || ctx.path;
+		const subscriptionId = ctx.request.sid;
+		if (!subscriptionId) {
+			ctx.response = new Response(codes.MISSING_SUBSCRIPTION_ID);
+			return;
+		}
+
+		const topic = typeof this.instance.getTopic === 'function' && this.instance.getTopic(ctx) || ctx.realPath;
 		let descriptor = this.subscriptions[topic];
 
-		if (!descriptor || !descriptor.sessions[ctx.request.sessionId]) {
+		if (!descriptor || !descriptor.subs[subscriptionId]) {
 			// not subscribed
 			if (descriptor) {
-				logger.log('%sSession not subscribed to %s', sessionId(ctx), highlight(topic));
+				logger.log('%s Sub not subscribed to %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
 			} else {
-				logger.log('%sNo subscribers to topic: %s', sessionId(ctx), highlight(topic));
+				logger.log('%s No subscribers to topic: %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
 			}
 
 			ctx.response = new Response(codes.NOT_SUBSCRIBED);
@@ -204,15 +204,20 @@ export default class ServiceDispatcher {
 
 		ctx.response = new Response(codes.UNSUBSCRIBED);
 
-		logger.log('%sUnsubscribing session: %s', sessionId(ctx), highlight(topic));
-		descriptor.sessions[ctx.request.sessionId](ctx.response.message, 'unsubscribe', true);
-		delete descriptor.sessions[ctx.request.sessionId];
+		logger.log('%s Unsubscribing sub: %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
 
-		if (!Object.keys(descriptor.sessions).length) {
+		if (descriptor.subs[subscriptionId]) {
+			if (typeof descriptor.subs[subscriptionId] === 'function') {
+				descriptor.subs[subscriptionId](ctx.response, 'unsubscribe', true);
+			}
+			delete descriptor.subs[subscriptionId];
+		}
+
+		if (!Object.keys(descriptor.subs).length) {
 			if (this.instance.onUnsubscribe) {
 				this.instance.onUnsubscribe(ctx, descriptor.publish);
 			}
-			logger.log('%sNo more listeners, removing descriptor: %s', sessionId(ctx), highlight(topic));
+			logger.log('%s No more listeners, removing descriptor: %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
 			delete this.subscriptions[topic];
 		}
 	}

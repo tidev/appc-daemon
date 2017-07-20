@@ -14,3 +14,5 @@ afterEach(function () {
 	delete global.stub;
 	this.sandbox.restore();
 });
+
+process.env.SNOOPLOGG_MIN_BRIGHTNESS = '100';

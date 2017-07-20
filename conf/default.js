@@ -82,6 +82,12 @@ module.exports = {
 
 	server: {
 		/**
+		 * The number of milliseconds to have the agents poll for system health.
+		 * @type {Number}
+		 */
+		agentPollInterval: 1000,
+
+		/**
 		 * Launches the server as a background process
 		 * @type {Boolean}
 		 * @readonly
@@ -108,6 +114,12 @@ module.exports = {
 		 * @readonly
 		 */
 		pidFile: '~/.appcelerator/appcd/appcd.pid',
+
+		/**
+		 * The default number of milliseconds of inactivity before a plugin is deactivated.
+		 * @type {Number}
+		 */
+		defaultPluginInactivityTimeout: 60 * 60 * 1000,
 
 		/**
 		 * The port to listen for incoming requests.

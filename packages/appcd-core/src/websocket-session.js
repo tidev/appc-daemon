@@ -116,7 +116,7 @@ export default class WebSocketSession {
 		this.dispatcher
 			.call(req.path, {
 				id:        req.id,
-				sessionId: req.sessionId,
+				// sessionId: req.sessionId,
 				data:      req.data || {},
 				type:      req.type,
 				headers:   this.msg.headers,

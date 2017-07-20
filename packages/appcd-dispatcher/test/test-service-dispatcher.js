@@ -129,8 +129,8 @@ describe('ServiceDispatcher', () => {
 				.then(() => {
 					sd.handler({
 						path: '/foo',
+						realPath: '/foo',
 						request: {
-							sessionId: 0,
 							type: 'subscribe'
 						},
 						response: {
@@ -151,7 +151,7 @@ describe('ServiceDispatcher', () => {
 				.catch(done);
 		});
 
-		it('should create a new subscriptions for multiple sessions', done => {
+		it('should create a new subscriptions for multiple subs', done => {
 			let count = 0;
 			const sd = new ServiceDispatcher('/foo', {
 				onSubscribe: (ctx, publish) => {
@@ -163,8 +163,8 @@ describe('ServiceDispatcher', () => {
 				.then(() => {
 					sd.handler({
 						path: '/foo',
+						realPath: '/foo',
 						request: {
-							sessionId: 0,
 							type: 'subscribe'
 						},
 						response: {
@@ -181,8 +181,8 @@ describe('ServiceDispatcher', () => {
 
 					sd.handler({
 						path: '/foo',
+						realPath: '/foo',
 						request: {
-							sessionId: 1,
 							type: 'subscribe'
 						},
 						response: {
@@ -197,57 +197,6 @@ describe('ServiceDispatcher', () => {
 						}
 					}, () => Promise.resolve());
 
-					expect(count).to.equal(1);
-					done();
-				})
-				.catch(done);
-		});
-
-		it('should only subscribe once per session', done => {
-			let count = 0;
-			const sd = new ServiceDispatcher('/foo', {
-				onSubscribe: (ctx, publish) => {
-					count++;
-				}
-			});
-
-			Promise.resolve()
-				.then(() => {
-					sd.handler({
-						path: '/foo',
-						request: {
-							sessionId: 0,
-							type: 'subscribe'
-						},
-						response: {
-							once: () => {},
-							write: response => {
-								expect(response.message).to.be.instanceof(Response);
-								expect(response.message.toString()).to.equal('Subscribed');
-								expect(response.message.status).to.equal(201);
-								expect(response.topic).to.equal('/foo');
-								expect(response.type).to.equal('subscribe');
-							}
-						}
-					}, () => Promise.resolve());
-
-					const ctx = {
-						path: '/foo',
-						request: {
-							sessionId: 0,
-							type: 'subscribe'
-						},
-						response: {
-							once: () => {},
-							write: response => {}
-						}
-					};
-
-					sd.handler(ctx, () => Promise.resolve());
-
-					expect(ctx.response).to.be.instanceof(Response);
-					expect(ctx.response.toString()).to.equal('Already Subscribed');
-					expect(ctx.response.status).to.equal(409);
 					expect(count).to.equal(1);
 					done();
 				})
@@ -269,8 +218,8 @@ describe('ServiceDispatcher', () => {
 				.then(() => new Promise((resolve, reject) => {
 					sd.handler({
 						path: '/foo',
+						realPath: '/foo',
 						request: {
-							sessionId: 0,
 							type: 'subscribe'
 						},
 						response: {
@@ -283,11 +232,9 @@ describe('ServiceDispatcher', () => {
 									expect(response.topic).to.equal('/foo');
 									expect(response.type).to.equal('subscribe');
 								} else {
-									expect(response).to.deep.equal({
-										message: 'foo!',
-										topic: '/foo',
-										type: 'event'
-									});
+									expect(response.message).to.equal('foo!');
+									expect(response.topic).to.equal('/foo');
+									expect(response.type).to.equal('event');
 									resolve();
 								}
 							}
@@ -303,6 +250,34 @@ describe('ServiceDispatcher', () => {
 	});
 
 	describe('unsubscribe', () => {
+		it('should error if missing subscription id', done => {
+			const sd = new ServiceDispatcher('/foo', {
+				onUnsubscribe: (ctx, publish) => {}
+			});
+
+			Promise.resolve()
+				.then(() => {
+					const ctx = {
+						path: '/foo',
+						request: {
+							type: 'unsubscribe'
+						},
+						response: {
+							once: () => {},
+							write: response => {}
+						}
+					};
+
+					sd.handler(ctx, () => Promise.resolve());
+
+					expect(ctx.response).to.be.instanceof(Response);
+					expect(ctx.response.toString()).to.equal('Missing Subscription ID');
+					expect(ctx.response.status).to.equal(400);
+					done();
+				})
+				.catch(done);
+		});
+
 		it('should notify if not subscribed', done => {
 			const sd = new ServiceDispatcher('/foo', {
 				onUnsubscribe: (ctx, publish) => {}
@@ -313,7 +288,7 @@ describe('ServiceDispatcher', () => {
 					const ctx = {
 						path: '/foo',
 						request: {
-							sessionId: 0,
+							sid: 'foo',
 							type: 'unsubscribe'
 						},
 						response: {
@@ -338,134 +313,63 @@ describe('ServiceDispatcher', () => {
 				onUnsubscribe: (ctx, publish) => {}
 			});
 
-			Promise.resolve()
-				.then(() => {
-					sd.handler({
-						path: '/foo',
-						request: {
-							sessionId: 0,
-							type: 'subscribe'
-						},
-						response: {
-							once: () => {},
-							write: response => {
-								expect(response.message).to.be.instanceof(Response);
-								expect(response.message.toString()).to.equal('Subscribed');
-								expect(response.message.status).to.equal(201);
-								expect(response.topic).to.equal('/foo');
-								expect(response.type).to.equal('subscribe');
-							}
-						}
-					}, () => Promise.resolve());
-
-					expect(Object.keys(sd.subscriptions['/foo'].sessions)).to.have.lengthOf(1);
-
-					let ctx = {
-						path: '/foo',
-						request: {
-							sessionId: 0,
-							type: 'unsubscribe'
-						},
-						response: {
-							once: () => {},
-							write: response => {}
-						}
-					};
-
-					sd.handler(ctx, () => Promise.resolve());
-
-					expect(ctx.response).to.be.instanceof(Response);
-					expect(ctx.response.toString()).to.equal(loadMessage(codes.UNSUBSCRIBED));
-					expect(ctx.response.status).to.equal(200);
-					expect(ctx.response.statusCode).to.equal(codes.UNSUBSCRIBED);
-					expect(Object.keys(sd.subscriptions)).to.have.lengthOf(0);
-					done();
-				})
-				.catch(done);
-		});
-
-		it('should unsubscribe for one sessions', done => {
-			const sd = new ServiceDispatcher('/foo', {
-				onSubscribe: (ctx, publish) => {},
-				onUnsubscribe: (ctx, publish) => {}
-			});
+			let counter = 0;
 
 			Promise.resolve()
 				.then(() => {
 					sd.handler({
 						path: '/foo',
+						realPath: '/foo',
 						request: {
-							sessionId: 0,
 							type: 'subscribe'
 						},
 						response: {
 							once: () => {},
 							write: response => {
-								expect(response.message).to.be.instanceof(Response);
-								expect(response.message.toString()).to.equal('Subscribed');
-								expect(response.message.status).to.equal(201);
-								expect(response.topic).to.equal('/foo');
-								expect(response.type).to.equal('subscribe');
+								switch (++counter) {
+									case 1:
+										expect(response.message).to.be.instanceof(Response);
+										expect(response.message.toString()).to.equal('Subscribed');
+										expect(response.message.status).to.equal(201);
+										expect(response.topic).to.equal('/foo');
+										expect(response.type).to.equal('subscribe');
+
+										expect(Object.keys(sd.subscriptions['/foo'].subs)).to.have.lengthOf(1);
+
+										let ctx = {
+											path: '/foo',
+											realPath: '/foo',
+											request: {
+												sid: response.sid,
+												type: 'unsubscribe'
+											},
+											response: {
+												once: () => {},
+												write: response => {}
+											}
+										};
+
+										sd.handler(ctx, () => Promise.resolve());
+
+										expect(ctx.response).to.be.instanceof(Response);
+										expect(ctx.response.toString()).to.equal('Unsubscribed');
+										expect(ctx.response.status).to.equal(200);
+										expect(ctx.response.statusCode).to.equal(codes.UNSUBSCRIBED);
+										expect(Object.keys(sd.subscriptions)).to.have.lengthOf(0);
+										break;
+
+									case 2:
+										expect(response.message).to.be.instanceof(Response);
+										expect(response.message.toString()).to.equal('Unsubscribed');
+										expect(response.message.status).to.equal(200);
+										expect(response.topic).to.equal('/foo');
+										expect(response.type).to.equal('unsubscribe');
+										done();
+										break;
+								}
 							}
 						}
 					}, () => Promise.resolve());
-
-					sd.handler({
-						path: '/foo',
-						request: {
-							sessionId: 1,
-							type: 'subscribe'
-						},
-						response: {
-							once: () => {},
-							write: response => {
-								expect(response.message).to.be.instanceof(Response);
-								expect(response.message.toString()).to.equal('Subscribed');
-								expect(response.message.status).to.equal(201);
-								expect(response.topic).to.equal('/foo');
-								expect(response.type).to.equal('subscribe');
-							}
-						}
-					}, () => Promise.resolve());
-
-					let ctx = {
-						path: '/foo',
-						request: {
-							sessionId: 0,
-							type: 'unsubscribe'
-						},
-						response: {
-							once: () => {},
-							write: response => {}
-						}
-					};
-
-					sd.handler(ctx, () => Promise.resolve());
-
-					expect(ctx.response).to.be.instanceof(Response);
-					expect(ctx.response.toString()).to.equal(loadMessage(codes.UNSUBSCRIBED));
-					expect(ctx.response.status).to.equal(200);
-					expect(ctx.response.statusCode).to.equal(codes.UNSUBSCRIBED);
-
-					ctx = {
-						path: '/foo',
-						request: {
-							sessionId: 0,
-							type: 'unsubscribe'
-						},
-						response: {
-							once: () => {},
-							write: response => {}
-						}
-					};
-
-					sd.handler(ctx, () => Promise.resolve());
-
-					expect(ctx.response).to.be.instanceof(Response);
-					expect(ctx.response.toString()).to.equal(loadMessage(codes.NOT_SUBSCRIBED));
-					expect(ctx.response.status).to.equal(404);
-					expect(ctx.response.statusCode).to.equal(codes.NOT_SUBSCRIBED);
-					done();
 				})
 				.catch(done);
 		});
@@ -482,8 +386,8 @@ describe('ServiceDispatcher', () => {
 
 					sd.handler({
 						path: '/foo',
+						realPath: '/foo',
 						request: {
-							sessionId: 0,
 							type: 'subscribe'
 						},
 						response: {
@@ -500,7 +404,7 @@ describe('ServiceDispatcher', () => {
 						}
 					}, () => Promise.resolve());
 
-					expect(Object.keys(sd.subscriptions['/foo'].sessions)).to.have.lengthOf(1);
+					expect(Object.keys(sd.subscriptions['/foo'].subs)).to.have.lengthOf(1);
 					unsub.end();
 
 					expect(Object.keys(sd.subscriptions)).to.have.lengthOf(0);
@@ -521,8 +425,8 @@ describe('ServiceDispatcher', () => {
 
 					sd.handler({
 						path: '/foo',
+						realPath: '/foo',
 						request: {
-							sessionId: 0,
 							type: 'subscribe'
 						},
 						response: {
@@ -539,7 +443,7 @@ describe('ServiceDispatcher', () => {
 						}
 					}, () => Promise.resolve());
 
-					expect(Object.keys(sd.subscriptions['/foo'].sessions)).to.have.lengthOf(1);
+					expect(Object.keys(sd.subscriptions['/foo'].subs)).to.have.lengthOf(1);
 					unsub.error();
 
 					expect(Object.keys(sd.subscriptions)).to.have.lengthOf(0);

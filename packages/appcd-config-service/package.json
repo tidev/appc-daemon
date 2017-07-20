@@ -1,8 +1,8 @@
 {
-  "name": "appcd-core",
+  "name": "appcd-config-service",
   "version": "1.0.0",
-  "description": "Appc Daemon server implementation.",
-  "main": "./dist/main",
+  "description": "A service that exposes a config object.",
+  "main": "./dist/config-service",
   "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
     "Chris Barber <cbarber@appcelerator.com>"
@@ -16,38 +16,17 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "accepts": "^1.3.3",
-    "babel-polyfill": "^6.23.0",
-    "cli-kit": "^0.0.3",
-    "colors": "^1.1.2",
-    "double-stack": "^2.1.0",
-    "fs-extra": "^4.0.0",
     "gawk": "^4.2.0",
-    "hook-emitter": "^2.1.0",
-    "msgpack-lite": "^0.1.26",
-    "path-to-regexp": "^1.7.0",
     "snooplogg": "^1.6.0",
-    "through2": "^2.0.3",
-    "uuid": "^3.1.0"
+    "source-map-support": "^0.4.15"
   },
   "devDependencies": {
     "gulp": "^3.9.1"
   },
   "appcdDependencies": [
-    "appcd-agent",
-    "appcd-config",
-    "appcd-config-service",
     "appcd-dispatcher",
-    "appcd-fs",
-    "appcd-fswatcher",
     "appcd-gulp",
-    "appcd-http",
-    "appcd-machine-id",
-    "appcd-path",
-    "appcd-plugin",
-    "appcd-response",
-    "appcd-subprocess",
-    "appcd-util"
+    "appcd-response"
   ],
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",

@@ -23,9 +23,17 @@ export default class TunnelStream extends Writable {
 	 */
 	_write(message, enc, cb) {
 		if (process.connected) {
+			if (message instanceof Buffer) {
+				message = String(message).trim();
+			} else if (typeof message === 'object' && Array.isArray(message.args)) {
+				message.args = message.args.map(arg => {
+					return arg instanceof Error ? (arg.stack || arg.toString()) : arg;
+				});
+			}
+
 			process.send({
 				type: 'log',
-				message: message instanceof Buffer ? String(message).trim() : message
+				message
 			});
 		}
 		cb();

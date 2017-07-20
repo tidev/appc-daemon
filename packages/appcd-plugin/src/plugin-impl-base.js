@@ -1,5 +1,6 @@
 import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs';
+import gawk from 'gawk';
 import path from 'path';
 import PluginError from './plugin-error';
 import snooplogg from 'snooplogg';
@@ -70,6 +71,12 @@ export default class PluginImplBase extends EventEmitter {
 		});
 
 		/**
+		 * The Appc Daemon config.
+		 * @type {Object}
+		 */
+		this.config = {};
+
+		/**
 		 * The plugin's exports.
 		 * @type {Object}
 		 */
@@ -85,13 +92,31 @@ export default class PluginImplBase extends EventEmitter {
 		 * Plugin runtime information.
 		 * @type {Object}
 		 */
-		this.info = {
+		this.info = gawk({
+			/**
+			 * The exit code for when an external plugin exits unexpectedly.
+			 * @type {?Number}
+			 */
+			exitCode: null,
+
+			/**
+			 * The external plugin process' id.
+			 * @type {Number}
+			 */
+			pid: null,
+
 			/**
 			 * The current state of the plugin.
 			 * @type {String}
 			 */
-			state: states.STOPPED
-		};
+			state: states.STOPPED,
+
+			/**
+			 * External plugin agent stats.
+			 * @type {Object}
+			 */
+			stats: {}
+		});
 	}
 
 	/**

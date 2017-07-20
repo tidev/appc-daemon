@@ -127,7 +127,7 @@ export function debounce(fn, wait = 200) {
 /**
  * Formats a number using commas.
  *
- * @param {Number} - The number to format.
+ * @param {Number} n - The number to format.
  * @returns {String}
  */
 export function formatNumber(n) {

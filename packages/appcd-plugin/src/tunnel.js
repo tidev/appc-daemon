@@ -39,34 +39,43 @@ export default class Tunnel {
 					this.requests[req.id](req);
 				} else {
 					handler(req, /* send */ res => {
+						let message = res;
+
 						if (res instanceof Error) {
-							res = {
+							message = {
 								code:    res.code || '500',
 								message: res.message,
 								status:  res.status || 500,
 								type:    'error'
 							};
 						} else if (res instanceof DispatcherContext) {
-							res = {
+							message = {
 								message: res.response,
 								status:  res.status || 200
 							};
 						} else if (res.message instanceof Response) {
-							res = {
+							message = {
+								...res,
 								status: res.message.status || 200,
 								message: res.message.toString()
 							};
 						}
 
-						res.id = req.id;
-						if (!res.status) {
-							res.status = 200;
-						}
-						if (!res.type && req.type) {
-							res.type = req.type;
+						if (!message.status) {
+							message.status = 200;
 						}
 
-						this.proc.send(res);
+						if (!message.type && req.type) {
+							message.type = req.type;
+						}
+
+						const response = {
+							id: req.id,
+							message
+						};
+
+						log('Sending tunnel response:', response);
+						this.proc.send(response);
 					});
 				}
 			}
@@ -100,26 +109,22 @@ export default class Tunnel {
 		return new Promise((resolve, reject) => {
 			const id = uuid.v4();
 
-			let ctx;
-			if (payload instanceof DispatcherContext) {
-				ctx = payload;
-			} else {
-				ctx = new DispatcherContext({
-					request: typeof payload === 'object' && payload || {},
-					response: new PassThrough({ objectMode: true }),
-					status: 200
-				});
-			}
+			const ctx = new DispatcherContext({
+				request: typeof payload === 'object' && payload || {},
+				response: new PassThrough({ objectMode: true }),
+				status: 200
+			});
 
-			this.requests[id] = msg => {
-				if (msg.status) {
-					ctx.status = msg.status;
+			this.requests[id] = ({ message }) => {
+				if (message.status) {
+					ctx.status = message.status;
 				}
 
-				switch (msg.type) {
+				switch (message.type) {
 					case 'error':
+						log('Deleting request handler: %s', highlight(id));
 						delete this.requests[id];
-						ctx.response = new AppcdError(msg.code, msg.message);
+						ctx.response = new AppcdError(message.code, message.message);
 						reject(ctx);
 						break;
 
@@ -127,33 +132,36 @@ export default class Tunnel {
 						resolve(ctx);
 					case 'event':
 					case 'unsubscribe':
-						if (msg.fin) {
-							if (msg.type === 'unsubscribe') {
+						if (message.fin) {
+							if (message.type === 'unsubscribe') {
+								log('Deleting request handler: %s', highlight(id));
 								delete this.requests[id];
 							}
-							ctx.response.end(msg);
+							ctx.response.end(message);
 						} else {
-							ctx.response.write(msg);
+							ctx.response.write(message);
 						}
 						break;
 
 					default:
+						log('Deleting request handler: %s', highlight(id));
 						delete this.requests[id];
-						if (msg.status) {
-							ctx.status = msg.status;
+						if (message.status) {
+							ctx.status = message.status;
 						}
-						ctx.response = msg.message;
+						ctx.response = message.message;
 						resolve(ctx);
 				}
 			};
 
-			log('Sending tunnel request: %s', ctx.path || '', ctx.request);
-
-			this.proc.send({
+			const req = {
 				id,
-				path: ctx.path,
-				data: ctx.request
-			});
+				message: ctx.request,
+				type: 'request'
+			};
+
+			log('Sending tunnel request:', req);
+			this.proc.send(req);
 		});
 	}
 }
