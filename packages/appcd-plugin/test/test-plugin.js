@@ -119,13 +119,15 @@ describe('Plugin', () => {
 		expect(p.error).to.be.false;
 
 		expect(p.info).to.deep.equal({
-			path:    pluginPath,
-			name:    'good-main-nojs',
-			version: '1.2.3',
-			main:    path.join(pluginPath, 'foo.js'),
-			type:    'external',
+			activeRequests: 0,
+			error:          false,
+			main:           path.join(pluginPath, 'foo.js'),
+			name:           'good-main-nojs',
 			nodeVersion,
-			error:   false
+			path:           pluginPath,
+			totalRequests:  0,
+			type:           'external',
+			version:        '1.2.3'
 		});
 	});
 

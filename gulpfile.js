@@ -897,7 +897,7 @@ function processPackages(packages) {
 					}
 
 					if (dep.required !== 'latest' && dep.required !== 'next' && dep.required !== '*') {
-						const range = semver.validRange(dep.installed || dep.required) || '';
+						const range = dep.installed ? `<=${dep.installed}` : (semver.validRange(dep.required) || '');
 						const version = dep.stable || dep.latest;
 						if (version && range && !semver.satisfies(version, range)) {
 							if (dontUpdate.indexOf(name) === -1) {

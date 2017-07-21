@@ -5,7 +5,7 @@ import { banner, createRequest, loadConfig } from './common';
 
 const logger = createInstanceWithDefaults().config({ theme: 'compact' }).enable('*').pipe(new StdioStream);
 const { log } = logger;
-const { alert, highlight } = logger.styles;
+const { alert, highlight, note } = logger.styles;
 const { filesize, numberFormat, relativeTime } = logger.humanize;
 
 const cmd = {
@@ -76,27 +76,31 @@ const cmd = {
 				log(status.fs.tree);
 				log();
 
+				// console.log(status.plugins);
+				// activeRequests
+				// totalRequests
+
 				// plugin information
 				if (status.plugins.length) {
-					params.head = [ 'Plugin Name', 'Endpoint', 'Type', 'Path', 'Node.js', 'Status' ],
+					params.head = [ 'Plugin', 'Version', 'Type', 'Path', 'Node.js', 'Status' ],
 					table = new Table(params);
 					for (const plugin of status.plugins) {
 						let status = '';
 						if (plugin.error) {
 							status = alert(plugin.error);
-						} else if (plugin.active) {
+						} else if (plugin.pid) {
 							if (plugin.type === 'external') {
 								status = `Active, PID=${plugin.pid || 'null'}`;
 							} else {
 								status = 'Active';
 							}
 						} else {
-							status = 'Suspended';
+							status = 'Inactive';
 						}
 
 						table.push([
 							highlight(plugin.name),
-							`/${plugin.namespace}/${plugin.version}`,
+							plugin.version,
 							plugin.type,
 							plugin.path,
 							plugin.nodeVersion,
@@ -122,6 +126,7 @@ const cmd = {
 					}
 					log(table.toString());
 				} else {
+					log(note('Subprocesses'));
 					log('No subprocesses');
 				}
 				log();

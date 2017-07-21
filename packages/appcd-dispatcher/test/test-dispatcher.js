@@ -767,6 +767,27 @@ describe('dispatcher', () => {
 				.catch(done);
 		});
 
+		it('should register handler, unregister it, and call it', done => {
+			let count = 0;
+			const handler = () => {
+				count++;
+			};
+
+			Dispatcher.register([ '/foo' ], handler);
+
+			Dispatcher.unregister([ '/foo' ], handler);
+
+			Dispatcher.call('/foo')
+				.then(() => {
+					done(new Error('Expected call to fail'));
+				})
+				.catch(err => {
+					expect(count).to.equal(0);
+					done();
+				})
+				.catch(done);
+		});
+
 		it('should dispatch GET request', done => {
 			Dispatcher.register('/foo', ctx => {
 				ctx.response = 'foo!';

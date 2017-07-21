@@ -13,7 +13,7 @@ export const codes = {};
  */
 export const lookup = {};
 
-const filenameRegExp = /^(\d+(\.\d+)?)\-(.+)\.md$/;
+const filenameRegExp = /^(\d+(\.\d+)?)-(.+)\.md$/;
 
 /**
  * Loads codes and code names based on filenames in a 'messages' directory. Generally this only
@@ -33,7 +33,9 @@ export function loadCodes(dir) {
 					lookup[code] = m[3];
 				}
 			}
-		} catch (e) {}
+		} catch (e) {
+			// squeltch
+		}
 	}
 }
 

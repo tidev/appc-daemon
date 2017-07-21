@@ -34,7 +34,7 @@ export class Scheme extends HookEmitter {
 
 		/**
 		 * The file system watcher for this scheme's path.
-		 * @type {FSWatcher}
+		 * @type {Object}
 		 */
 		this.watchers = {};
 
@@ -411,19 +411,25 @@ export function detectScheme(dir) {
 		if (globule.find('./package.json', { srcBase: dir }).length) {
 			return PluginScheme;
 		}
-	} catch (e) {}
+	} catch (e) {
+		// squeltch
+	}
 
 	try {
 		if (globule.find('./*/package.json', { srcBase: dir }).length) {
 			return PluginsDirScheme;
 		}
-	} catch (e) {}
+	} catch (e) {
+		// squeltch
+	}
 
 	try {
 		if (globule.find('./*/*/package.json', { srcBase: dir }).length) {
 			return NestedPluginsDirScheme;
 		}
-	} catch (e) {}
+	} catch (e) {
+		// squeltch
+	}
 
 	return InvalidScheme;
 }

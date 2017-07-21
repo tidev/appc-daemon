@@ -54,7 +54,7 @@ export default class PluginPath extends HookEmitter {
 		const SchemeClass = detectScheme(this.path);
 
 		if (this.scheme instanceof SchemeClass) {
-			log(`Detecting no scheme change (${SchemeClass.name})`);
+			log(`Detected no scheme change (${SchemeClass.name})`);
 			return;
 		}
 

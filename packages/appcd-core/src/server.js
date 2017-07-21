@@ -1,4 +1,4 @@
-import ConfigService from './config-service';
+import ConfigService from 'appcd-config-service';
 import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs-extra';
 import FSWatchManager from 'appcd-fswatcher';
@@ -187,8 +187,10 @@ export default class Server extends HookEmitter {
 			})
 			.start();
 
-		// start the plugin manager
-		// this.systems.pluginManager.start();
+		// listen for fswatcher stats and update the status
+		this.systems.fswatchManager.on('stats', stats => {
+			this.systems.statusMonitor.merge({ fs: stats });
+		});
 
 		// init the web server
 		this.systems.webserver = new WebServer({

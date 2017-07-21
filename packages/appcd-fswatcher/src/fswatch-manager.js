@@ -96,6 +96,7 @@ export default class FSWatchManager extends EventEmitter {
 
 	/**
 	 * Stops all active file system watchers.
+	 * @access public
 	 */
 	shutdown() {
 		for (const path of Object.keys(this.watchers)) {
@@ -107,7 +108,7 @@ export default class FSWatchManager extends EventEmitter {
 	/**
 	 * Returns the FSWatcher internal statistics.
 	 *
-	 * @returns @Object
+	 * @returns {Object}
 	 * @access public
 	 */
 	status() {

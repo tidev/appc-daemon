@@ -105,7 +105,7 @@ export default class WebSocketSession {
 	 * Handles v1.0 WebSocket subprotocol requests.
 	 *
 	 * @param {Object} req - The WebSocket subprotocol request state.
-	 * @return {Promise}
+	 * @returns {Promise}
 	 * @access private
 	 */
 	handle_1_0(req) {
@@ -116,7 +116,6 @@ export default class WebSocketSession {
 		this.dispatcher
 			.call(req.path, {
 				id:        req.id,
-				sessionId: req.sessionId,
 				data:      req.data || {},
 				type:      req.type,
 				headers:   this.msg.headers,
@@ -211,7 +210,7 @@ export default class WebSocketSession {
 
 		if (res.message instanceof Response) {
 			res.status = res.message.status;
-			res.message = res.message.toString(accepts(this.ws.upgradeReq).languages());
+			res.message = res.message.toString(accepts(this.msg).languages());
 		}
 
 		this.send(res);

@@ -5,11 +5,11 @@ module.exports = {
 		console.log('hi from activate!');
 
 		appcd.register('/square', ctx => {
-			return appcd.call('/appcd/config/home', { foo: 'bar' })
+			return appcd.call('/appcd/config/home')
 				.then(({ response }) => {
 					console.log('appcd home =', response);
 
-					const n = parseInt(ctx.request.num);
+					const n = parseInt(ctx.request.data.num);
 					if (isNaN(n)) {
 						throw new Error('Invalid number');
 					}

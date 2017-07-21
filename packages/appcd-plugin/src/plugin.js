@@ -1,9 +1,11 @@
+import Dispatcher from 'appcd-dispatcher';
 import ExternalPlugin from './external-plugin';
 import fs from 'fs';
 import gawk from 'gawk';
 import InternalPlugin from './internal-plugin';
 import path from 'path';
 import PluginError from './plugin-error';
+import prettyMs from 'pretty-ms';
 import semver from 'semver';
 import snooplogg from 'snooplogg';
 import types from './types';
@@ -12,22 +14,8 @@ import { EventEmitter } from 'events';
 import { expandPath } from 'appcd-path';
 import { isDir, isFile } from 'appcd-fs';
 
-/*
-wire up agent
-- external only
-- updates usage in plugin instance (in parent process)
-
-deactivate after timeout
-
-external plugin state
-
-stream from parent to child
-
-restart plugin on error?
-reload external plugin
-*/
-
 const logger = snooplogg.config({ theme: 'detailed' })(process.connected ? 'appcd:plugin:host:plugin' : 'appcd:plugin');
+const { highlight } = snooplogg.styles;
 
 /**
  * A regular expression that removes all invalid characters from the plugin's name so that it is
@@ -56,13 +44,15 @@ export default class Plugin extends EventEmitter {
 		 * @type {GawkObject}
 		 */
 		this.info = gawk({
-			path:        undefined,
-			name:        undefined,
-			version:     undefined,
-			main:        undefined,
-			type:        'external',
-			nodeVersion: undefined,
-			error:       false
+			path:           undefined,
+			name:           undefined,
+			version:        undefined,
+			main:           undefined,
+			type:           'external',
+			nodeVersion:    undefined,
+			error:          false,
+			activeRequests: 0,
+			totalRequests:  0
 		});
 
 		return new Proxy(this, {
@@ -167,6 +157,13 @@ export default class Plugin extends EventEmitter {
 				}
 				this.type = appcdPlugin.type;
 			}
+
+			if (appcdPlugin.inactivityTimeout) {
+				if (typeof appcdPlugin.inactivityTimeout !== 'number' || isNaN(appcdPlugin.inactivityTimeout) || appcdPlugin.inactivityTimeout < 0) {
+					throw new PluginError('Expected inactivity timeout to be a non-negative number');
+				}
+				this.inactivityTimeout = appcdPlugin.inactivityTimeout;
+			}
 		}
 
 		// validate the name
@@ -188,8 +185,8 @@ export default class Plugin extends EventEmitter {
 		 * @type {Set}
 		 */
 		this.directories = new Set()
-			.add(pluginPath)
-			.add(path.dirname(main));
+			.add(this.path)
+			.add(path.dirname(this.main));
 
 		if (typeof pkgJson.directories === 'object') {
 			for (const type of [ 'lib', 'src' ]) {
@@ -200,11 +197,17 @@ export default class Plugin extends EventEmitter {
 			}
 		}
 
+		// initialize the plugin implementation
 		if (this.type === 'external') {
 			this.impl = new ExternalPlugin(this);
 		} else {
 			this.impl = new InternalPlugin(this);
 		}
+
+		// watch the plugin info changes and merge them into the public plugin info
+		gawk.watch(this.impl.info, obj => {
+			Object.assign(this.info, obj);
+		});
 
 		return this;
 	}
@@ -212,7 +215,7 @@ export default class Plugin extends EventEmitter {
 	/**
 	 * Starts the plugin. This is called from the main process and not the plugin host process.
 	 *
-	 * @return {Promise}
+	 * @returns {Promise}
 	 * @access public
 	 */
 	start() {
@@ -238,7 +241,46 @@ export default class Plugin extends EventEmitter {
 	 * @access public
 	 */
 	dispatch(ctx, next) {
-		return this.impl.dispatch(ctx, next);
+		gawk.merge(this.info, {
+			activeRequests: this.info.activeRequests + 1,
+			totalRequests:  this.info.totalRequests + 1
+		});
+
+		clearTimeout(this.inactivityTimer);
+
+		const resetTimer = () => {
+			if (this.inactivityTimeout !== 0) {
+				Dispatcher.call('/appcd/config/server/defaultPluginInactivityTimeout')
+					.then(ctx => ctx.response)
+					.catch(err => {
+						logger.warn('Failed to get default plugin inactivity timeout:', err);
+						return 60000;
+					})
+					.then(defaultInactivityTimeout => {
+						// restart the inactivity timer
+						const timeout = this.inactivityTimeout || defaultInactivityTimeout;
+
+						this.inactivityTimer = setTimeout(() => {
+							if (this.info.activeRequests === 0) {
+								logger.log('Deactivating plugin after %s of inactivity: %s', prettyMs(timeout, { verbose: true }), highlight(this.toString()));
+								this.stop();
+							}
+						}, timeout);
+					});
+			}
+		};
+
+		return this.impl.dispatch(ctx, next)
+			.then(result => {
+				this.info.activeRequests--;
+				resetTimer();
+				return result;
+			})
+			.catch(err => {
+				this.info.activeRequests--;
+				resetTimer();
+				throw err;
+			});
 	}
 
 	/**

@@ -20,7 +20,6 @@ export default class Dispatcher {
 	/**
 	 * The root dispatcher instance.
 	 * @type {Dispatcher}
-	 * @access {public}
 	 */
 	static get root() {
 		if (!rootInstance) {
@@ -31,6 +30,7 @@ export default class Dispatcher {
 
 	/**
 	 * Runs the root dispatcher instance's `call()`.
+	 * @returns {Promise}
 	 * @access public
 	 */
 	static call(...args) {
@@ -39,6 +39,7 @@ export default class Dispatcher {
 
 	/**
 	 * Runs the root dispatcher instance's `callback()`.
+	 * @returns {Function}
 	 * @access public
 	 */
 	static callback(...args) {
@@ -47,6 +48,7 @@ export default class Dispatcher {
 
 	/**
 	 * Runs the root dispatcher instance's `register()`.
+	 * @returns {Dispatcher}
 	 * @access public
 	 */
 	static register(...args) {
@@ -55,6 +57,7 @@ export default class Dispatcher {
 
 	/**
 	 * Runs the root dispatcher instance's `unregister()`.
+	 * @returns {Dispatcher}
 	 * @access public
 	 */
 	static unregister(...args) {
@@ -92,6 +95,9 @@ export default class Dispatcher {
 			});
 		}
 		ctx.path = path;
+		if (!ctx.realPath) {
+			ctx.realPath = path;
+		}
 
 		let index = -1;
 

@@ -1,5 +1,6 @@
 import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs';
+import gawk from 'gawk';
 import path from 'path';
 import PluginError from './plugin-error';
 import snooplogg from 'snooplogg';
@@ -8,7 +9,8 @@ import vm from 'vm';
 import { EventEmitter } from 'events';
 import { wrap } from 'module';
 
-const logger = snooplogg.config({ theme: 'detailed' })(process.connected ? 'appcd:plugin:impl:child' : 'appcd:plugin:impl:parent');
+const snooplogger = snooplogg.config({ theme: 'detailed' });
+const logger = snooplogger(process.connected ? 'appcd:plugin:impl:child' : 'appcd:plugin:impl:parent');
 const { highlight } = snooplogg.styles;
 
 /**
@@ -45,14 +47,16 @@ export default class PluginImplBase extends EventEmitter {
 		 * The plugin's namespaced logger.
 		 * @type {SnoopLogg}
 		 */
-		this.logger = snooplogg(plugin.toString());
+		this.logger = snooplogger(plugin.toString());
 		Object.defineProperty(this.logger, 'trace', { value: console.trace.bind(console) });
 
 		/**
 		 * The default global object for the plugin sandbox.
 		 * @type {Object}
 		 */
-		this.globalObj = Object.assign({}, global, {
+		this.globalObj = {
+			...global,
+
 			appcd: {
 				call: Dispatcher.call.bind(Dispatcher),
 				register: this.dispatcher.register.bind(this.dispatcher)
@@ -67,7 +71,13 @@ export default class PluginImplBase extends EventEmitter {
 					}
 				}
 			})
-		});
+		};
+
+		/**
+		 * The Appc Daemon config.
+		 * @type {Object}
+		 */
+		this.config = {};
 
 		/**
 		 * The plugin's exports.
@@ -85,13 +95,31 @@ export default class PluginImplBase extends EventEmitter {
 		 * Plugin runtime information.
 		 * @type {Object}
 		 */
-		this.info = {
+		this.info = gawk({
+			/**
+			 * The exit code for when an external plugin exits unexpectedly.
+			 * @type {?Number}
+			 */
+			exitCode: null,
+
+			/**
+			 * The external plugin process' id.
+			 * @type {Number}
+			 */
+			pid: null,
+
 			/**
 			 * The current state of the plugin.
 			 * @type {String}
 			 */
-			state: states.STOPPED
-		};
+			state: states.STOPPED,
+
+			/**
+			 * External plugin agent stats.
+			 * @type {Object}
+			 */
+			stats: {}
+		});
 	}
 
 	/**

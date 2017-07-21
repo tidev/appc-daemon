@@ -298,7 +298,9 @@ export default class SubprocessManager extends EventEmitter {
 					for (const child of children) {
 						try {
 							process.kill(child.PID, signal);
-						} catch (e) {}
+						} catch (e) {
+							// squeltch
+						}
 					}
 				} else {
 					log('Subprocess %s did not have any children', highlight(pid));

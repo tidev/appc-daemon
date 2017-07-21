@@ -1,5 +1,8 @@
+import Config from 'appcd-config';
+import ConfigService from 'appcd-config-service';
 import Dispatcher from 'appcd-dispatcher';
 import FSWatchManager from 'appcd-fswatcher';
+import gawk from 'gawk';
 import path from 'path';
 import PluginError from '../dist/plugin-error';
 import PluginManager from '../dist/index';
@@ -15,6 +18,7 @@ const log = snooplogg
 		theme: 'detailed'
 	})
 	.ns('test:appcd:plugin:manager').log;
+
 const { highlight } = snooplogg.styles;
 
 describe('PluginManager', () => {
@@ -25,9 +29,18 @@ describe('PluginManager', () => {
 		const sm = this.sm = new SubprocessManager();
 		Dispatcher.register('/appcd/subprocess', sm.dispatcher);
 
-		Dispatcher.register('/appcd/config/home', ctx => {
-			ctx.response = expandPath('~/.appcelerator/appcd');
+		const config = new Config({
+			config: {
+				home: expandPath('~/.appcelerator/appcd'),
+				server: {
+					defaultPluginInactivityTimeout: 60 * 60 * 1000
+				}
+			}
 		});
+		config.values = gawk(config.values);
+		config.watch = (filter, listener) => gawk.watch(config.values, filter, listener);
+		config.unwatch = listener => gawk.unwatch(config.values, listener);
+		Dispatcher.register('/appcd/config', new ConfigService(config));
 
 		Dispatcher.register('/appcd/status', ctx => {
 			// squeltch
@@ -180,7 +193,7 @@ describe('PluginManager', () => {
 
 		setTimeout(() => {
 			log('Calling square...');
-			Dispatcher.call('/good-internal/1.2.3/square', { num: 3 })
+			Dispatcher.call('/good-internal/1.2.3/square', { data: { num: 3 } })
 				.then(async (ctx) => {
 					expect(ctx.response).to.equal(9);
 					await this.pm.unregister(pluginDir);
@@ -197,9 +210,9 @@ describe('PluginManager', () => {
 		}, 1000);
 	});
 
-	it.only('should register, start, and stop an external plugin', function (done) {
-		this.timeout(10000);
-		this.slow(9000);
+	it('should register, start, and stop an external plugin', function (done) {
+		this.timeout(90000);
+		this.slow(90000);
 
 		const pluginDir = path.join(__dirname, 'fixtures', 'good');
 
@@ -209,18 +222,12 @@ describe('PluginManager', () => {
 
 		setTimeout(() => {
 			log('Calling square...');
-			Dispatcher.call('/good/1.2.3/square', { num: 3 })
+			Dispatcher.call('/good/1.2.3/square', { data: { num: 3 } })
 				.then(async (ctx) => {
 					expect(ctx.response).to.equal(9);
-					await this.pm.unregister(pluginDir);
 					setTimeout(() => {
-						try {
-							expect(this.pm.plugins).to.have.lengthOf(0);
-							done();
-						} catch (e) {
-							done(e);
-						}
-					}, 1000);
+						done();
+					}, 7000);
 				})
 				.catch(done);
 		}, 1000);

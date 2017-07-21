@@ -36,6 +36,7 @@
   "appcdDependencies": [
     "appcd-agent",
     "appcd-config",
+    "appcd-config-service",
     "appcd-dispatcher",
     "appcd-fs",
     "appcd-fswatcher",
@@ -55,6 +56,6 @@
     "url": "git+https://github.com/appcelerator/appc-daemon.git"
   },
   "engines": {
-    "node": "8.1.4"
+    "node": "8.2.1"
   }
 }

@@ -46,7 +46,6 @@ module.exports = {
          */
         name: null,
 
-
         /**
          * When true, detaches from stdio.
          * @type {Boolean}
