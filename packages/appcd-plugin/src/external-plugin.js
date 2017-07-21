@@ -395,13 +395,13 @@ export default class ExternalPlugin extends PluginImplBase {
 
 								break;
 
-							case 'stdout':
-								logger.log('STDOUT', data.output.trim());
-								break;
+							// case 'stdout':
+							// 	logger.log('STDOUT', data.output.trim());
+							// 	break;
 
-							case 'stderr':
-								logger.log('STDERR', data.output.trim());
-								break;
+							// case 'stderr':
+							// 	logger.log('STDERR', data.output.trim());
+							// 	break;
 
 							case 'exit':
 								logger.log('Plugin host exited: %s', highlight(data.code));

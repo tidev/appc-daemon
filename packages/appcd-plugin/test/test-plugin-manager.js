@@ -237,7 +237,7 @@ describe('PluginManager', () => {
 		this.timeout(10000);
 		this.slow(9000);
 
-		const pluginDir = path.join(__dirname, 'fixtures', 'pubsub');
+		const pluginDir = path.join(__dirname, 'fixtures', 'time-service');
 
 		this.pm = new PluginManager({
 			paths: [ pluginDir ]
@@ -245,7 +245,7 @@ describe('PluginManager', () => {
 
 		setTimeout(() => {
 			log('Getting current time...');
-			Dispatcher.call('/pubsub/latest/current-time')
+			Dispatcher.call('/time-service/latest/current-time')
 				.then(ctx => {
 					log('Current time =', ctx.response);
 					expect(ctx.response).to.be.a('string');
@@ -260,7 +260,7 @@ describe('PluginManager', () => {
 		this.timeout(20000);
 		this.slow(19000);
 
-		const pluginDir = path.join(__dirname, 'fixtures', 'pubsub');
+		const pluginDir = path.join(__dirname, 'fixtures', 'time-service');
 
 		this.pm = new PluginManager({
 			paths: [ pluginDir ]
@@ -268,7 +268,7 @@ describe('PluginManager', () => {
 
 		setTimeout(() => {
 			log('Getting current time...');
-			Dispatcher.call('/pubsub/latest/current-time', { type: 'subscribe' })
+			Dispatcher.call('/time-service/latest/current-time', { type: 'subscribe' })
 				.then(ctx => {
 					let counter = 0;
 
@@ -293,7 +293,7 @@ describe('PluginManager', () => {
 											// unsubscribe... we don't care if it succeeds
 											log('Unsubscribing from %s', highlight(res.topic));
 											Dispatcher
-												.call('/pubsub/latest/current-time', { type: 'unsubscribe', topic: res.topic })
+												.call('/time-service/latest/current-time', { sid: res.sid, type: 'unsubscribe', topic: res.topic })
 												.catch(done);
 										}
 										break;
