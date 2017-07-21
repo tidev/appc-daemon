@@ -49,9 +49,8 @@ require('babel-polyfill');
  * instead.
  */
 if (process.env.APPCD_COVERAGE) {
-	const cwd = process.cwd();
-	const distDir = process.cwd() + '/dist/';
-	const srcDir = process.cwd() + '/src/';
+	const distDir = cwd + '/dist/';
+	const srcDir = cwd + '/src/';
 	const originalResolveFilename = Module._resolveFilename;
 
 	Module._resolveFilename = function (request, parent, isMain) {
