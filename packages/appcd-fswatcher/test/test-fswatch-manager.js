@@ -116,67 +116,69 @@ describe('FSWatchManager', () => {
 						manager.dispatcher.handler({
 							request: {
 								data: { path: tmp },
-								sessionId: 0,
 								type: 'subscribe'
 							},
 							response: {
 								once: () => {},
 								write: response => {
 									try {
-										counter++;
+										switch (++counter) {
+											case 1:
+												expect(response.message.toString()).to.equal('Subscribed');
+												expect(response.message.status).to.equal(201);
+												expect(response.topic).to.equal(tmp);
+												expect(response.type).to.equal('subscribe');
+												break;
 
-										if (counter === 1) {
-											expect(response.message.toString()).to.equal('Subscribed');
-											expect(response.message.status).to.equal(201);
-											expect(response.topic).to.equal(tmp);
-											expect(response.type).to.equal('subscribe');
-										} else {
-											expect(response).to.deep.equal({
-												message: {
-													action: 'add',
-													filename: 'foo.txt',
-													file: real(filename)
-												},
-												topic: tmp,
-												type: 'event'
-											});
+											case 2:
+												expect(response).to.deep.equal({
+													fin: undefined,
+													message: {
+														action: 'add',
+														filename: 'foo.txt',
+														file: real(filename)
+													},
+													sid: response.sid,
+													topic: tmp,
+													type: 'event'
+												});
 
-											const stats = manager.status();
-											expect(stats.nodes).to.be.above(0);
-											expect(stats.fswatchers).to.be.above(0);
-											expect(stats.watchers).to.equal(1);
+												const stats = manager.status();
+												expect(stats.nodes).to.be.above(0);
+												expect(stats.fswatchers).to.be.above(0);
+												expect(stats.watchers).to.equal(1);
 
-											setTimeout(() => {
-												try {
-													// `tree` takes a few milliseconds to update
-													expect(manager.tree).to.not.equal('<empty tree>');
+												setTimeout(() => {
+													try {
+														// `tree` takes a few milliseconds to update
+														expect(manager.tree).to.not.equal('<empty tree>');
 
-													log('Unsubscribing');
-													const ctx = {
-														request: {
-															sessionId: 0,
-															topic: tmp,
-															type: 'unsubscribe'
-														},
-														response: {
-															once: () => {},
-															write: response => {}
-														}
-													};
-													manager.dispatcher.handler(ctx, () => Promise.resolve());
+														log('Unsubscribing');
+														const ctx = {
+															request: {
+																sid: response.sid,
+																topic: tmp,
+																type: 'unsubscribe'
+															},
+															response: {
+																once: () => {},
+																write: response => {}
+															}
+														};
+														manager.dispatcher.handler(ctx, () => Promise.resolve());
 
-													expect(ctx.response.toString()).to.equal('Unsubscribed');
-													expect(ctx.response.status).to.equal(200);
-													expect(ctx.response.statusCode).to.equal('200.1');
-													expect(Object.keys(manager.dispatcher.subscriptions)).to.have.lengthOf(0);
+														expect(ctx.response.toString()).to.equal('Unsubscribed');
+														expect(ctx.response.status).to.equal(200);
+														expect(ctx.response.statusCode).to.equal('200.1');
+														expect(Object.keys(manager.dispatcher.subscriptions)).to.have.lengthOf(0);
 
-													expect(roots).to.deep.equal({});
+														expect(roots).to.deep.equal({});
 
-													resolve();
-												} catch (e) {
-													reject(e);
-												}
-											}, 1000);
+														resolve();
+													} catch (e) {
+														reject(e);
+													}
+												}, 1000);
 										}
 									} catch (e) {
 										reject(e);
@@ -193,61 +195,6 @@ describe('FSWatchManager', () => {
 					fs.writeFileSync(filename, 'foo!');
 				}, 100);
 			}, 100);
-		});
-
-		it('should error if already subscribed', function (done) {
-			this.timeout(10000);
-			this.slow(8000);
-
-			const tmp = makeTempDir();
-			log('Creating tmp directory: %s', highlight(tmp));
-
-			const manager = new FSWatchManager;
-			let finished = false;
-
-			log('Subscribing first time');
-			manager.dispatcher.handler({
-				request: {
-					data: { path: tmp },
-					sessionId: 0,
-					type: 'subscribe'
-				},
-				response: {
-					once: () => {},
-					write: response => {
-						if (!finished) {
-							try {
-								expect(response.message).to.be.instanceof(Response);
-								expect(response.message.toString()).to.equal('Subscribed');
-								expect(response.message.status).to.equal(201);
-								expect(response.topic).to.equal(tmp);
-								expect(response.type).to.equal('subscribe');
-
-								log('Subscribing second time');
-								const ctx = {
-									request: {
-										data: { path: tmp },
-										sessionId: 0,
-										type: 'subscribe'
-									},
-									response: {
-										once: () => {},
-										write: response => {}
-									}
-								};
-								manager.dispatcher.handler(ctx, () => Promise.resolve());
-								expect(ctx.response.status).to.equal(409);
-								expect(ctx.response.statusCode).to.equal('409.1');
-								expect(ctx.response.toString()).to.equal('Already Subscribed');
-								finished = true;
-								done();
-							} catch (e) {
-								done(e);
-							}
-						}
-					}
-				}
-			}, () => Promise.resolve());
 		});
 
 		it('should shutdown all watchers', function (done) {

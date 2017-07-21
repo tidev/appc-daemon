@@ -497,6 +497,7 @@ export class Node {
 	/**
 	 * Recursively stops file system watching on this node and all its descendents.
 	 *
+	 * @param {Object} evt - The fs event.
 	 * @access private
 	 */
 	onDeleted(evt) {
@@ -826,6 +827,11 @@ export function unregister(path, watcher) {
  * A utility function that renders the tree to a string. This function should be invoked without
  * arguments.
  *
+ * Note that this function should NOT be called with any arguments.
+ *
+ * @param {Node} [node] - The tree node to render.
+ * @param {Number} [depth=0] - The tree depth counter.
+ * @param {Array} [parent] - An stack of parent node labels.
  * @returns {String}
  */
 export function renderTree(node, depth = 0, parent = []) {

@@ -88,7 +88,7 @@ const cmd = {
 						let status = '';
 						if (plugin.error) {
 							status = alert(plugin.error);
-						} else if (plugin.active) {
+						} else if (plugin.pid) {
 							if (plugin.type === 'external') {
 								status = `Active, PID=${plugin.pid || 'null'}`;
 							} else {

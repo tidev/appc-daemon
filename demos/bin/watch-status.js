@@ -13,4 +13,4 @@ const ws = new WebSocket('ws://127.0.0.1:1732', {
 		console.log(util.inspect(typeof msg === 'string' ? JSON.parse(msg) : msgpack.decode(msg), false, null, true));
 	})
 	.on('close', () => console.log('CLOSED'))
-	.on('open', () => ws.send(JSON.stringify({ version: '1.0', path: '/appcd/status/system', id: '1', type: 'subscribe' })));
+	.on('open', () => ws.send(JSON.stringify({ version: '1.0', path: '/appcd/status/system/loadavg', id: '1', type: 'subscribe' })));

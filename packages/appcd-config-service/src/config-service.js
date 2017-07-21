@@ -1,4 +1,5 @@
-import gawk from 'gawk';
+import Config from 'appcd-config';
+import gawk, { isGawked } from 'gawk';
 import os from 'os';
 import snooplogg from 'snooplogg';
 
@@ -19,8 +20,24 @@ export default class ConfigService extends ServiceDispatcher {
 	 * @param {?GawkObject} cfg - The initial config object.
 	 * @access public
 	 */
-	constructor(cfg = {}) {
+	constructor(cfg) {
 		super('/:key*');
+
+		if (!cfg || !(cfg instanceof Config)) {
+			throw new TypeError('Expected config to be a valid config object');
+		}
+
+		if (!cfg.values || !isGawked(cfg.values)) {
+			throw new TypeError('Expected config values to be gawked');
+		}
+
+		if (typeof cfg.watch !== 'function') {
+			throw new Error('Config object missing watch() method');
+		}
+
+		if (typeof cfg.unwatch !== 'function') {
+			throw new Error('Config object missing unwatch() method');
+		}
 
 		/**
 		 * The daemon config instance.
