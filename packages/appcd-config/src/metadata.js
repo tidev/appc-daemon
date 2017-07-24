@@ -212,7 +212,7 @@ export default class Metadata {
 	 * identifiers.
 	 * @param {Function} [metadata.validate] - A function that validates the
 	 * config setting.
-	 * @returns {Boolean}
+	 * @returns {Metadata}
 	 * @access public
 	 */
 	set(key, metadata = {}) {
@@ -234,6 +234,8 @@ export default class Metadata {
 			readonly:   metadata.readonly || false,
 			validate:   result && result.validate || (it => true)
 		});
+
+		return this;
 	}
 
 	/**
@@ -244,6 +246,7 @@ export default class Metadata {
 	 * @param {Object} [opts] - Various options.
 	 * @param {Boolean} [opts.overrideReadonly=false] - When true, does not
 	 * enforce readonly.
+	 * @returns {Boolean}
 	 * @access public
 	 */
 	validate(key, value, opts = {}) {

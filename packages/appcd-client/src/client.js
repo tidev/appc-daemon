@@ -20,11 +20,12 @@ export default class Client {
 	/**
 	 * Initializes the client.
 	 *
-	 * @param {Object} [opts]
+	 * @param {Object} [opts] - Various options.
 	 * @param {String} [opts.host='127.0.0.1'] - The host to connect to.
 	 * @param {Number} [opts.port=1732] - The port to connect to.
 	 * @param {String} [opts.userAgent] - The user agent containing the name and
 	 * version of the client. If not specified, one will be generated.
+	 * @access public
 	 */
 	constructor(opts = {}) {
 		/**
@@ -131,7 +132,8 @@ export default class Client {
 	 *
 	 * @param {String} path - The path to send.
 	 * @param {Object} [data] - An object to send.
-	 * @param {String} [type]
+	 * @param {String} [type] - The request type. Valid types include `call`, `subscribe`, and
+	 * `unsubscribe`.
 	 * @returns {EventEmitter} Emits events `response` and `error`.
 	 * @access public
 	 */
