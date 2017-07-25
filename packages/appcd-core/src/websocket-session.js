@@ -113,7 +113,7 @@ export default class WebSocketSession {
 			throw new WebSocketError('Request "id" required');
 		}
 
-		this.dispatcher
+		return this.dispatcher
 			.call(req.path, {
 				id:        req.id,
 				data:      req.data || {},

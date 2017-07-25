@@ -109,6 +109,7 @@ export default class Config extends EventEmitter {
 	 * Parses a string of JavaScript and evaluates it.
 	 *
 	 * @param {String} code - A string of JavaScript code to parse and eval.
+	 * @param {String} [file] - The path to the source file.
 	 * @returns {Config}
 	 * @access public
 	 */
@@ -184,6 +185,7 @@ export default class Config extends EventEmitter {
 	 * Gets a config setting.
 	 *
 	 * @param {String} key - The dot-notation config key.
+	 * @param {*} [defaultValue] - The default value to return if the specified key is not found.
 	 * @returns {*} The config value.
 	 * @access public
 	 */

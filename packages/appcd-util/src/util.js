@@ -258,10 +258,19 @@ export function sha1(str) {
 /**
  * Waits a number of milliseconds, then resolves the promise.
  *
+ * @param {Number} ms - The number of milliseconds to wait.
  * @returns {Promise}
  */
 export function sleep(ms) {
 	return new Promise(resolve => {
+		if (typeof ms !== 'number') {
+			throw new TypeError('Expected timeout milliseconds to be a number');
+		}
+
+		if (ms < 0) {
+			throw new RangeError('Expected timeout milliseconds to be greater than or equal to zero');
+		}
+
 		setTimeout(() => resolve(), ms);
 	});
 }
