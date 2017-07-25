@@ -116,11 +116,11 @@ describe('Plugin', () => {
 		expect(p.type).to.equal('external');
 		expect(p.pid).to.be.undefined;
 		expect(p.nodeVersion).to.equal(nodeVersion);
-		expect(p.error).to.be.false;
+		expect(p.error).to.be.null;
 
 		expect(p.info).to.deep.equal({
 			activeRequests: 0,
-			error:          false,
+			error:          null,
 			main:           path.join(pluginPath, 'foo.js'),
 			name:           'good-main-nojs',
 			nodeVersion,

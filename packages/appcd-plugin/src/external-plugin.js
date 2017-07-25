@@ -1,6 +1,7 @@
 import Agent from 'appcd-agent';
 import Dispatcher, { DispatcherContext } from 'appcd-dispatcher';
 import path from 'path';
+import PluginError from './plugin-error';
 import PluginImplBase, { states } from './plugin-impl-base';
 import Response, { codes } from 'appcd-response';
 import snooplogg from 'snooplogg';
@@ -266,7 +267,18 @@ export default class ExternalPlugin extends PluginImplBase {
 				this.logger.warn(err);
 			});
 
-		await this.activate();
+		try {
+			await this.activate();
+		} catch (err) {
+			this.logger.error(err);
+
+			this.tunnel.emit({
+				message: err.message,
+				type:    'activation_error'
+			});
+
+			process.exit(2);
+		}
 
 		await this.tunnel.emit({ type: 'activated' });
 	}
@@ -295,89 +307,105 @@ export default class ExternalPlugin extends PluginImplBase {
 			})
 			.then(ctx => new Promise((resolve, reject) => {
 				this.tunnel = new Tunnel(ctx.proc, (req, send) => {
-					if (req.type === 'log') {
-						if (typeof req.message === 'object') {
-							req.message.id = snooplogger._id;
-							snooplogg.dispatch(req.message);
-						} else {
-							this.logger.log(req.message);
-						}
-					} else if (req.type === 'activated') {
-						logger.log('External plugin is activated');
-						resolve();
-					} else if (req.type === 'unsubscribe') {
-						if (this.streams[req.sid]) {
-							this.streams[req.sid].end();
-							delete this.streams[req.sid];
-						}
-					} else if (req.type === 'stats') {
-						this.info.stats = req.stats;
-					} else if (req.id) {
-						const startTime = new Date;
+					switch (req.type) {
+						case 'activated':
+							logger.log('External plugin is activated');
+							resolve();
+							break;
 
-						Dispatcher
-							.call(req.message.path, req.message.data)
-							.then(({ status, response }) => {
-								const style = status < 400 ? ok : alert;
+						case 'activation_error':
+							this.info.error = req.message;
+							break;
 
-								let msg = `Plugin dispatcher: ${highlight(req.message.path || '/')} ${style(status)}`;
-								if (ctx.type !== 'event') {
-									msg += ` ${highlight(`${new Date - startTime}ms`)}`;
-								}
-								logger.log(msg);
+						case 'log':
+							if (typeof req.message === 'object') {
+								req.message.id = snooplogger._id;
+								snooplogg.dispatch(req.message);
+							} else {
+								this.logger.log(req.message);
+							}
+							break;
 
-								if (response instanceof Readable) {
-									// we have a stream
+						case 'stats':
+							this.info.stats = req.stats;
+							break;
 
-									// track if this stream is a pubsub stream so we know to send the `fin`
-									let pubsub = false;
-									let first = true;
-									let sid;
+						case 'unsubscribe':
+							if (this.streams[req.sid]) {
+								this.streams[req.sid].end();
+								delete this.streams[req.sid];
+							}
+							break;
 
-									response
-										.on('data', message => {
-											// data was written to the stream
+						default:
+							if (req.id) {
+								// dispatcher request
+								const startTime = new Date;
 
-											if (message.type === 'subscribe') {
-												pubsub = true;
-												sid = message.sid;
-												this.streams[sid] = response;
-											}
+								Dispatcher
+									.call(req.message.path, req.message.data)
+									.then(({ status, response }) => {
+										const style = status < 400 ? ok : alert;
 
-											send(message);
-											first = false;
-										})
-										.once('end', () => {
-											delete this.streams[sid];
+										let msg = `Plugin dispatcher: ${highlight(req.message.path || '/')} ${style(status)}`;
+										if (ctx.type !== 'event') {
+											msg += ` ${highlight(`${new Date - startTime}ms`)}`;
+										}
+										logger.log(msg);
 
-											// the stream has ended, if pubsub, send `fin`
-											if (pubsub) {
-												send({
-													sid,
-													type: 'event',
-													fin: true
+										if (response instanceof Readable) {
+											// we have a stream
+
+											// track if this stream is a pubsub stream so we know to send the `fin`
+											let pubsub = false;
+											let first = true;
+											let sid;
+
+											response
+												.on('data', message => {
+													// data was written to the stream
+
+													if (message.type === 'subscribe') {
+														pubsub = true;
+														sid = message.sid;
+														this.streams[sid] = response;
+													}
+
+													send(message);
+													first = false;
+												})
+												.once('end', () => {
+													delete this.streams[sid];
+
+													// the stream has ended, if pubsub, send `fin`
+													if (pubsub) {
+														send({
+															sid,
+															type: 'event',
+															fin: true
+														});
+													}
+												})
+												.once('error', err => {
+													delete this.streams[sid];
+
+													logger.error('Response stream error:');
+													logger.error(err);
+													this.send({ type: 'error', message: err.message || err, status: err.status || 500, fin: true });
 												});
-											}
-										})
-										.once('error', err => {
-											delete this.streams[sid];
 
-											logger.error('Response stream error:');
-											logger.error(err);
-											this.send({ type: 'error', message: err.message || err, status: err.status || 500, fin: true });
-										});
+										} else if (response instanceof Error) {
+											send(response);
 
-								} else if (response instanceof Error) {
-									send(response);
-
-								} else {
-									send({
-										status,
-										message: response
-									});
-								}
-							})
-							.catch(send);
+										} else {
+											send({
+												status,
+												message: response
+											});
+										}
+									})
+									.catch(send);
+							}
 					}
 				});
 
@@ -407,7 +435,7 @@ export default class ExternalPlugin extends PluginImplBase {
 								logger.log('Plugin host exited: %s', highlight(data.code));
 								this.tunnel = null;
 								this.info.pid = null;
-								this.setState(states.STOPPED);
+								const { state } = this.info;
 
 								if (this.watchers) {
 									for (const dir of Object.keys(this.watchers)) {
@@ -417,16 +445,27 @@ export default class ExternalPlugin extends PluginImplBase {
 									this.watchers = {};
 								}
 
+								let err;
+
 								if (data.code) {
 									this.info.exitCode = data.code;
+									if (state === states.STARTING) {
+										if (!this.info.error) {
+											this.info.error = `Failed to activate plugin (code ${data.code})`;
+										}
+										err = new PluginError(this.info.error);
+										reject(err);
+									}
 								}
+
+								this.setState(states.STOPPED, err);
 						}
 					});
 			}))
 			.catch(err => {
-				logger.error('Failed to launch plugin host');
-				logger.error(err);
+				logger.error('Failed to activate plugin: %s', highlight(this.plugin.toString()));
 				this.setState(states.STOPPED, err);
+				throw err;
 			});
 	}
 }

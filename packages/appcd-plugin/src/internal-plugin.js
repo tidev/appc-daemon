@@ -34,7 +34,12 @@ export default class InternalPlugin extends PluginImplBase {
 	 * @access private
 	 */
 	onStart() {
-		return this.activate();
+		return this.activate()
+			.catch(err => {
+				this.info.error = err.message;
+				this.logger.error(err);
+				throw err;
+			});
 	}
 
 	/**

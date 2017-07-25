@@ -1,0 +1,8 @@
+{
+	"name": "bad internal plugin",
+	"version": "1.2.3",
+	"appcd-plugin": {
+		"name": "bad-internal",
+		"type": "internal"
+	}
+}
