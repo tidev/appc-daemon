@@ -281,7 +281,7 @@ describe('PluginManager', () => {
 			setTimeout(() => {
 				log('Calling square...');
 				Dispatcher.call('/good/1.2.3/square', { data: { num: 3 } })
-					.then(async (ctx) => {
+					.then(ctx => {
 						expect(ctx.response).to.equal(9);
 						done();
 					})
@@ -448,6 +448,26 @@ describe('PluginManager', () => {
 				})
 				.then(() => done())
 				.catch(done);
+		});
+
+		it('should return list of registered plugin versions', function (done) {
+			this.timeout(10000);
+			this.slow(9000);
+
+			const pluginDir = path.join(__dirname, 'fixtures', 'good');
+
+			pm = new PluginManager({
+				paths: [ pluginDir ]
+			});
+
+			setTimeout(() => {
+				Dispatcher.call('/good')
+					.then(ctx => {
+						expect(ctx.response).to.deep.equal([ '1.2.3' ]);
+						done();
+					})
+					.catch(done);
+			}, 1000);
 		});
 	});
 

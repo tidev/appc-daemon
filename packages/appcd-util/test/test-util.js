@@ -420,5 +420,31 @@ describe('util', () => {
 				})
 				.catch(done);
 		});
+
+		it('should error if ms is not a number', done => {
+			util.sleep('foo')
+				.then(() => {
+					done(new Error('Expected type error'));
+				})
+				.catch(err => {
+					expect(err).to.be.instanceof(TypeError);
+					expect(err.message).to.equal('Expected timeout milliseconds to be a number');
+					done();
+				})
+				.catch(done);
+		});
+
+		it('should error if ms is less than zero', done => {
+			util.sleep(-666)
+				.then(() => {
+					done(new Error('Expected range error'));
+				})
+				.catch(err => {
+					expect(err).to.be.instanceof(RangeError);
+					expect(err.message).to.equal('Expected timeout milliseconds to be greater than or equal to zero');
+					done();
+				})
+				.catch(done);
+		});
 	});
 });

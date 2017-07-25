@@ -42,6 +42,10 @@ if (process.argv.indexOf('--silent') !== -1) {
 	gutil.log = function () {};
 }
 
+gulp.task('node-info', () => {
+	gutil.log(`Node.js ${process.version} (${process.platform})`);
+});
+
 /*
  * install tasks
  */
@@ -389,8 +393,8 @@ gulp.task('package', [ 'build' ], cb => {
 /*
  * test tasks
  */
-gulp.task('test', [ 'build' ], cb => runTests(false, cb));
-gulp.task('coverage', [ 'build' ], cb => runTests(true, cb));
+gulp.task('test', [ 'node-info', 'build' ], cb => runTests(false, cb));
+gulp.task('coverage', [ 'node-info', 'build' ], cb => runTests(true, cb));
 
 function runTests(cover, cb) {
 	let task = cover ? 'coverage-only' : 'test-only';

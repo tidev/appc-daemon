@@ -81,10 +81,16 @@ describe('Plugin', () => {
 		}).to.throw(PluginError, /^Invalid "name" property in the "appcd-plugin" section of /);
 	});
 
-	it('should error if package.json has appcd "type" is invalid', () => {
+	it('should error if package.json appcd "type" is invalid', () => {
 		expect(() => {
 			new Plugin(path.join(__dirname, 'fixtures', 'bad-appcd-type'));
 		}).to.throw(PluginError, /^Invalid type "foo" in "appcd-plugin" section of /);
+	});
+
+	it('should error if package.json appcd "inactivityTimeout" is invalid', () => {
+		expect(() => {
+			new Plugin(path.join(__dirname, 'fixtures', 'bad-inactivity-timeout'));
+		}).to.throw(PluginError, 'Expected inactivity timeout to be a non-negative number');
 	});
 
 	it('should error if plugin has an invalid name', () => {
