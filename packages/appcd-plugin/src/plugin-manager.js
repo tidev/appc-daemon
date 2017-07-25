@@ -37,22 +37,26 @@ export default class PluginManager extends EventEmitter {
 		 */
 		this.dispatcher = new Dispatcher()
 			.register('/register', ctx => {
-				try {
-					this.register(ctx.request.data.path);
-					ctx.response = new Response(codes.PLUGIN_REGISTERED);
-				} catch (e) {
-					logger.warn(e);
-					throw e;
-				}
+				return this.register(ctx.request.data.path)
+					.then(() => {
+						ctx.response = new Response(codes.PLUGIN_REGISTERED);
+						return ctx;
+					})
+					.catch(err => {
+						logger.warn(err);
+						throw err;
+					});
 			})
 			.register('/unregister', ctx => {
-				try {
-					this.unregister(ctx.request.data.path);
-					ctx.response = new Response(codes.PLUGIN_UNREGISTERED);
-				} catch (e) {
-					logger.warn(e);
-					throw e;
-				}
+				return this.unregister(ctx.request.data.path)
+					.then(() => {
+						ctx.response = new Response(codes.PLUGIN_UNREGISTERED);
+						return ctx;
+					})
+					.catch(err => {
+						logger.warn(err);
+						throw err;
+					});
 			})
 			.register('/status', ctx => {
 				ctx.response = this.plugins;
@@ -148,7 +152,9 @@ export default class PluginManager extends EventEmitter {
 					this.plugins.push(plugin.info);
 
 					let ns = this.namespaces[plugin.name];
+
 					if (!ns) {
+						// initialize the namespace
 						ns = this.namespaces[plugin.name] = {
 							handler: async (ctx, next) => {
 								const versions = Object.keys(ns.versions).sort(semver.rcompare);
@@ -232,6 +238,7 @@ export default class PluginManager extends EventEmitter {
 	 * `PluginPath` instance as long as it has no internal plugins.
 	 *
 	 * @param {String} pluginPath - The plugin path to unregister.
+	 * @returns {Promise}
 	 * @access public
 	 */
 	async unregister(pluginPath) {

@@ -40,6 +40,6 @@ Promise.resolve()
 		await plugin.start();
 	})
 	.catch(err => {
-		logger.error(err.stack || err.toString());
+		logger.error(err);
 		process.exit(1);
 	});

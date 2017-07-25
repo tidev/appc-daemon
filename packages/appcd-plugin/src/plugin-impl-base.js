@@ -97,8 +97,13 @@ export default class PluginImplBase extends EventEmitter {
 		 */
 		this.info = gawk({
 			/**
+			 * @type {Error}
+			 */
+			error: null,
+
+			/**
 			 * The exit code for when an external plugin exits unexpectedly.
-			 * @type {?Number}
+			 * @type {Number}
 			 */
 			exitCode: null,
 
