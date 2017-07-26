@@ -286,8 +286,9 @@ describe('PluginManager', () => {
 
 	describe('External Plugins', () => {
 		it('should register, start, and stop an external plugin', function (done) {
-			this.timeout(10000);
-			this.slow(9000);
+			// we need to wait a long time just in case the Node.js version isn't installed
+			this.timeout(30000);
+			this.slow(29000);
 
 			const pluginDir = path.join(__dirname, 'fixtures', 'good');
 
