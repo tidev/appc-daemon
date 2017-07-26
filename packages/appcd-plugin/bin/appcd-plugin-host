@@ -1,17 +1,5 @@
 #!/usr/bin/env node
 
-process.title = 'appcd-plugin-host';
-
-if (!process.connected) {
-	console.error('The Appc Daemon plugin host cannot be directly executed.');
-	process.exit(1);
-}
-
-if (process.argv.length < 2) {
-	console.error('Missing script path argument.');
-	process.exit(1);
-}
-
 const path = require('path');
 const main = path.resolve(__dirname, '..', (process.env.APPCD_COVERAGE ? 'src' : 'dist'), 'host.js');
 

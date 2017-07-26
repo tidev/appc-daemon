@@ -184,7 +184,7 @@ export default class PluginManager extends EventEmitter {
 									plugin = version && ns.versions[version];
 								}
 
-								if (plugin) {
+								if (plugin && !plugin.error) {
 									// forward request to the plugin's dispatcher
 									ctx.path = '/' + ctx.params.path;
 									await plugin.start();

@@ -34,7 +34,7 @@ function makeTempDir() {
 	return dir;
 }
 
-describe('PluginPath', () => {
+describe('Plugin Path', () => {
 	after(async function () {
 		if (this.pp) {
 			await this.pp.destroy();
