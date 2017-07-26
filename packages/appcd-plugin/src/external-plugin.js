@@ -277,7 +277,7 @@ export default class ExternalPlugin extends PluginImplBase {
 				type:    'activation_error'
 			});
 
-			process.exit(2);
+			process.exit(6);
 		}
 
 		await this.tunnel.emit({ type: 'activated' });
@@ -318,12 +318,8 @@ export default class ExternalPlugin extends PluginImplBase {
 							break;
 
 						case 'log':
-							if (typeof req.message === 'object') {
-								req.message.id = snooplogger._id;
-								snooplogg.dispatch(req.message);
-							} else {
-								this.logger.log(req.message);
-							}
+							req.message.id = snooplogger._id;
+							snooplogg.dispatch(req.message);
 							break;
 
 						case 'stats':
@@ -416,10 +412,19 @@ export default class ExternalPlugin extends PluginImplBase {
 								this.info.pid = data.pid;
 								this.info.exitCode = null;
 
-								for (const dir of this.plugin.directories) {
-									this.watchers[dir] = new FSWatcher(dir)
-										.on('change', () => this.onFilesystemChange());
-								}
+								Dispatcher.call('/appcd/config/plugin/autoReload')
+									.then(ctx => ctx.response, err => true)
+									.then(autoReload => {
+										if (autoReload) {
+											for (const dir of this.plugin.directories) {
+												this.watchers[dir] = new FSWatcher(dir)
+													.on('change', () => this.onFilesystemChange());
+											}
+										}
+									})
+									.catch(err => {
+										logger.warn('Failed to wire up fs watcher: %s', this.plugin.toString());
+									});
 
 								break;
 

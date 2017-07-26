@@ -158,6 +158,10 @@ export default class Plugin extends EventEmitter {
 				this.type = appcdPlugin.type;
 			}
 
+			if (appcdPlugin.allowProcessExit) {
+				this.allowProcessExit = !!appcdPlugin.allowProcessExit;
+			}
+
 			if (appcdPlugin.inactivityTimeout) {
 				if (typeof appcdPlugin.inactivityTimeout !== 'number' || isNaN(appcdPlugin.inactivityTimeout) || appcdPlugin.inactivityTimeout < 0) {
 					throw new PluginError('Expected inactivity timeout to be a non-negative number');
@@ -175,6 +179,9 @@ export default class Plugin extends EventEmitter {
 		}
 
 		this.nodeVersion = pkgJson.engines && pkgJson.engines.node || process.version.replace(/^v/, '');
+
+		// reset the error
+		this.error = null;
 
 		if (this.type === 'internal' && this.nodeVersion && !semver.satisfies(process.version, this.nodeVersion)) {
 			this.error = `Internal plugin requires Node.js ${this.nodeVersion}, but currently running ${process.version}`;
@@ -206,7 +213,12 @@ export default class Plugin extends EventEmitter {
 
 		// watch the plugin info changes and merge them into the public plugin info
 		gawk.watch(this.impl.info, obj => {
-			Object.assign(this.info, obj);
+			const info = Object.assign({}, obj);
+			if (this.info.error) {
+				// if we already had an error, then don't override it
+				info.error = this.info.error;
+			}
+			gawk.merge(this.info, info);
 		});
 
 		return this;
@@ -249,8 +261,10 @@ export default class Plugin extends EventEmitter {
 		clearTimeout(this.inactivityTimer);
 
 		const resetTimer = () => {
-			if (this.inactivityTimeout !== 0) {
-				Dispatcher.call('/appcd/config/server/defaultPluginInactivityTimeout')
+			if (this.type === 'external' && this.inactivityTimeout !== 0) {
+				// we get the default inactivity timeout even if we have one to preserve a single
+				// code path
+				Dispatcher.call('/appcd/config/plugin/defaultInactivityTimeout')
 					.then(ctx => ctx.response)
 					.catch(err => {
 						logger.warn('Failed to get default plugin inactivity timeout:', err);

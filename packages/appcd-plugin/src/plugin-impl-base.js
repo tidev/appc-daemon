@@ -51,29 +51,6 @@ export default class PluginImplBase extends EventEmitter {
 		Object.defineProperty(this.logger, 'trace', { value: console.trace.bind(console) });
 
 		/**
-		 * The default global object for the plugin sandbox.
-		 * @type {Object}
-		 */
-		this.globalObj = {
-			...global,
-
-			appcd: {
-				call: Dispatcher.call.bind(Dispatcher),
-				register: this.dispatcher.register.bind(this.dispatcher)
-			},
-
-			console: this.logger,
-
-			process: Object.defineProperties(Object.assign({}, process), {
-				exit: {
-					value: () => {
-						// noop
-					}
-				}
-			})
-		};
-
-		/**
 		 * The Appc Daemon config.
 		 * @type {Object}
 		 */
@@ -125,6 +102,33 @@ export default class PluginImplBase extends EventEmitter {
 			 */
 			stats: {}
 		});
+
+		/**
+		 * The default global object for the plugin sandbox.
+		 * @type {Object}
+		 */
+		this.globalObj = {
+			...global,
+
+			appcd: {
+				call: Dispatcher.call.bind(Dispatcher),
+				register: this.dispatcher.register.bind(this.dispatcher)
+			},
+
+			console: this.logger,
+
+			process: {
+				...process
+			}
+		};
+
+		if (plugin.type === 'internal' || !plugin.allowProcessExit) {
+			Object.defineProperty(this.globalObj.process, 'exit', {
+				value: () => {
+					// noop
+				}
+			});
+		}
 	}
 
 	/**

@@ -36,6 +36,21 @@ function makeTempDir() {
 
 let pm = null;
 
+const config = new Config({
+	config: {
+		home: expandPath('~/.appcelerator/appcd'),
+		plugins: {
+			defaultInactivityTimeout: 60 * 60 * 1000
+		},
+		server: {
+			agentPollInterval: 1000
+		}
+	}
+});
+config.values = gawk(config.values);
+config.watch = (filter, listener) => gawk.watch(config.values, filter, listener);
+config.unwatch = listener => gawk.unwatch(config.values, listener);
+
 describe('PluginManager', () => {
 	before(function () {
 		const fm = this.fm = new FSWatchManager();
@@ -44,17 +59,6 @@ describe('PluginManager', () => {
 		const sm = this.sm = new SubprocessManager();
 		Dispatcher.register('/appcd/subprocess', sm.dispatcher);
 
-		const config = new Config({
-			config: {
-				home: expandPath('~/.appcelerator/appcd'),
-				server: {
-					defaultPluginInactivityTimeout: 60 * 60 * 1000
-				}
-			}
-		});
-		config.values = gawk(config.values);
-		config.watch = (filter, listener) => gawk.watch(config.values, filter, listener);
-		config.unwatch = listener => gawk.unwatch(config.values, listener);
 		Dispatcher.register('/appcd/config', new ConfigService(config));
 
 		Dispatcher.register('/appcd/status', ctx => {
@@ -152,6 +156,19 @@ describe('PluginManager', () => {
 			if (err) {
 				throw err;
 			}
+		});
+
+		it('should error if registering an invalid path',  async function () {
+			const dir = path.join(__dirname, 'fixtures', 'empty');
+			pm = new PluginManager({ paths: [ dir ] });
+
+			return pm.register({})
+				.then(() => {
+					throw new Error('Expected error');
+				}, err => {
+					expect(err).to.be.instanceof(PluginError);
+					expect(err.message).to.equal('Invalid plugin path');
+				});
 		});
 
 		it('should error if registering a subdirectory of already registered path', async function () {
@@ -441,7 +458,7 @@ describe('PluginManager', () => {
 							expect(err.message).to.equal('Failed to load plugin: Unexpected token )');
 							const p = pm.plugins[0];
 							expect(p.state).to.equal('stopped');
-							expect(p.exitCode).to.equal(2);
+							expect(p.exitCode).to.equal(6);
 							expect(p.error).to.equal('Failed to load plugin: Unexpected token )');
 							expect(p.pid).to.be.null;
 						});
@@ -471,7 +488,39 @@ describe('PluginManager', () => {
 		});
 	});
 
-	// plugin that has a dispatcher that returns an error
+	// unregister plugin, then request it should 404
 
-	// unregister plugin should 404
+	// plugin states: stop when already stopping, stop when starting, state change w/ error
+
+	// plugin with only #! in .js
+
+	// plugin with shebang
+
+	// external plugin that doesn't match route and goes to next
+
+	// external plugin that has subscription and message is a string
+
+	// external plugin that has subscription that closes itself after N events
+
+	// external plugin that has subscription that emits an error
+
+	// external plugin that subscribes and unsubscribes from parent
+
+	// external plugin that subscribes to parent and closes after N events
+
+	// external plugin that subscribes to parent and emits error
+
+	// external plugin that emits an error
+
+	// external plugin that makes request and parent emits an error
+
+	// external plugin that fails to get config from parent
+
+	// internal plugin that has a dispatcher that returns an error
+
+	// external plugin that has a dispatcher that returns an error
+
+	// request for '1.x'
+
+	// request for something not found
 });

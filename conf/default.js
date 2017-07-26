@@ -1,7 +1,5 @@
 'use strict';
 
-const path = require('path');
-
 module.exports = {
 	core: {
 		v8: {
@@ -74,11 +72,20 @@ module.exports = {
 		strictSSL: true
 	},
 
-	/**
-	 * A list of plugins to load. Internal plugins are always loaded.
-	 * @type {Array.<Object>}
-	 */
-	plugins: [],
+	plugins: {
+		/**
+		 * Allow `external` plugins to be auto-reloaded when one of its files is changed.
+		 * @type {Boolean}
+		 */
+		autoReload: true,
+
+		/**
+		 * The default number of milliseconds of inactivity before an `external` plugin is
+		 * deactivated.
+		 * @type {Number}
+		 */
+		defaultInactivityTimeout: 60 * 60 * 1000,
+	},
 
 	server: {
 		/**
@@ -114,12 +121,6 @@ module.exports = {
 		 * @readonly
 		 */
 		pidFile: '~/.appcelerator/appcd/appcd.pid',
-
-		/**
-		 * The default number of milliseconds of inactivity before a plugin is deactivated.
-		 * @type {Number}
-		 */
-		defaultPluginInactivityTimeout: 60 * 60 * 1000,
 
 		/**
 		 * The port to listen for incoming requests.
