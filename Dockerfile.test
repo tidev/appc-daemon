@@ -1,0 +1,16 @@
+FROM node:latest
+
+MAINTAINER Chris Barber
+
+RUN mkdir -p /usr/src/appcd \
+  && npm i -g gulp \
+  && curl -o- -L https://yarnpkg.com/install.sh | bash
+
+WORKDIR /usr/src/appcd
+COPY . /usr/src/appcd
+
+RUN chown -R node:node /usr/src/appcd
+USER node
+RUN yarn
+
+CMD ["gulp", "coverage"]
