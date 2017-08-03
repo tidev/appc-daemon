@@ -1,19 +1,17 @@
 import Agent from 'appcd-agent';
-import Dispatcher, { DispatcherContext } from 'appcd-dispatcher';
+import Dispatcher from 'appcd-dispatcher';
 import path from 'path';
 import PluginError from './plugin-error';
 import PluginImplBase, { states } from './plugin-impl-base';
-import Response, { codes } from 'appcd-response';
+import Response, { AppcdError, codes } from 'appcd-response';
 import snooplogg from 'snooplogg';
 import Tunnel from './tunnel';
-import uuid from 'uuid';
 
 import { debounce } from 'appcd-util';
 import { FSWatcher } from 'appcd-fswatcher';
 import { Readable } from 'stream';
 
-const snooplogger = snooplogg.config({ theme: 'detailed' });
-const logger = snooplogger(process.connected ? 'appcd:plugin:external:child' : 'appcd:plugin:external:parent');
+const logger = snooplogg.config({ theme: 'detailed' })(process.connected ? 'appcd:plugin:external:child' : 'appcd:plugin:external:parent');
 const { highlight, ok, alert } = snooplogg.styles;
 
 /**
@@ -84,7 +82,7 @@ export default class ExternalPlugin extends PluginImplBase {
 			return next();
 		}
 
-		const startTime = new Date;
+		const startTime = new Date();
 
 		logger.log('Sending request: %s', highlight(ctx.path));
 
@@ -98,7 +96,7 @@ export default class ExternalPlugin extends PluginImplBase {
 				const style = status < 400 ? ok : alert;
 				let msg = `Plugin dispatcher: ${highlight(`/${this.plugin.name}/${this.plugin.version}${ctx.path}`)} ${style(status)}`;
 				if (ctx.type !== 'event') {
-					msg += ` ${highlight(`${new Date - startTime}ms`)}`;
+					msg += ` ${highlight(`${new Date() - startTime}ms`)}`;
 				}
 				logger.log(msg);
 
@@ -110,10 +108,6 @@ export default class ExternalPlugin extends PluginImplBase {
 				ctx.response = res.response;
 
 				return ctx;
-			})
-			.catch(err => {
-				logger.error(err.stack);
-				throw err;
 			});
 	}
 
@@ -175,7 +169,7 @@ export default class ExternalPlugin extends PluginImplBase {
 					});
 			}
 
-			logger.log('Dispatching %s', highlight(req.message.path));
+			logger.log('Dispatching %s', highlight(req.message.path), req.message.data);
 
 			this.dispatcher
 				.call(req.message.path, req.message.data)
@@ -185,7 +179,6 @@ export default class ExternalPlugin extends PluginImplBase {
 
 						// track if this stream is a pubsub stream so we know to send the `fin`
 						let pubsub = false;
-						let first = true;
 
 						response
 							.on('data', message => {
@@ -211,7 +204,6 @@ export default class ExternalPlugin extends PluginImplBase {
 								}
 
 								send(res);
-								first = false;
 							})
 							.once('end', () => {
 								// the stream has ended, if pubsub, send `fin`
@@ -225,7 +217,13 @@ export default class ExternalPlugin extends PluginImplBase {
 							.once('error', err => {
 								logger.error('Response stream error:');
 								logger.error(err);
-								this.send({ type: 'error', message: err.message || err, status: err.status || 500, fin: true });
+								this.send({
+									fin: true,
+									message: err.message || err,
+									stack: err.stack,
+									status: err.status || 500,
+									type: 'error'
+								});
 							});
 
 					} else if (response instanceof Error) {
@@ -238,7 +236,7 @@ export default class ExternalPlugin extends PluginImplBase {
 						});
 					}
 				})
-				.catch(send);
+				.catch(err => send(new AppcdError(err)));
 		});
 
 		this.agent = new Agent()
@@ -250,7 +248,7 @@ export default class ExternalPlugin extends PluginImplBase {
 
 		this.globalObj.appcd
 			.call('/appcd/config', { type: 'subscribe' })
-			.then(({ response, status }) => {
+			.then(({ response }) => {
 				response.on('data', response => {
 					if (response.type === 'event') {
 						this.config = response.message;
@@ -318,7 +316,7 @@ export default class ExternalPlugin extends PluginImplBase {
 							break;
 
 						case 'log':
-							req.message.id = snooplogger._id;
+							req.message.id = snooplogg._id;
 							snooplogg.dispatch(req.message);
 							break;
 
@@ -336,7 +334,7 @@ export default class ExternalPlugin extends PluginImplBase {
 						default:
 							if (req.id) {
 								// dispatcher request
-								const startTime = new Date;
+								const startTime = new Date();
 
 								Dispatcher
 									.call(req.message.path, req.message.data)
@@ -345,7 +343,7 @@ export default class ExternalPlugin extends PluginImplBase {
 
 										let msg = `Plugin dispatcher: ${highlight(req.message.path || '/')} ${style(status)}`;
 										if (ctx.type !== 'event') {
-											msg += ` ${highlight(`${new Date - startTime}ms`)}`;
+											msg += ` ${highlight(`${new Date() - startTime}ms`)}`;
 										}
 										logger.log(msg);
 
@@ -354,7 +352,6 @@ export default class ExternalPlugin extends PluginImplBase {
 
 											// track if this stream is a pubsub stream so we know to send the `fin`
 											let pubsub = false;
-											let first = true;
 											let sid;
 
 											response
@@ -368,7 +365,6 @@ export default class ExternalPlugin extends PluginImplBase {
 													}
 
 													send(message);
-													first = false;
 												})
 												.once('end', () => {
 													delete this.streams[sid];
@@ -387,7 +383,13 @@ export default class ExternalPlugin extends PluginImplBase {
 
 													logger.error('Response stream error:');
 													logger.error(err);
-													this.send({ type: 'error', message: err.message || err, status: err.status || 500, fin: true });
+													this.send({
+														fin: true,
+														message: err.message || err,
+														stack: err.stack,
+														status: err.status || 500,
+														type: 'error'
+													});
 												});
 
 										} else if (response instanceof Error) {
@@ -400,7 +402,14 @@ export default class ExternalPlugin extends PluginImplBase {
 											});
 										}
 									})
-									.catch(send);
+									.catch(err => {
+										send({
+											message: err.message || err,
+											stack: err.stack,
+											status: err.status || 500,
+											type: 'error'
+										});
+									});
 							}
 					}
 				});
@@ -413,7 +422,7 @@ export default class ExternalPlugin extends PluginImplBase {
 								this.info.exitCode = null;
 
 								Dispatcher.call('/appcd/config/plugin/autoReload')
-									.then(ctx => ctx.response, err => true)
+									.then(ctx => ctx.response, () => true)
 									.then(autoReload => {
 										if (autoReload) {
 											for (const dir of this.plugin.directories) {
@@ -423,17 +432,21 @@ export default class ExternalPlugin extends PluginImplBase {
 										}
 									})
 									.catch(err => {
-										logger.warn('Failed to wire up fs watcher: %s', this.plugin.toString());
+										logger.warn('Failed to wire up %s fs watcher: %s', this.plugin.toString(), err.message);
 									});
 
 								break;
 
 							// case 'stdout':
-							// 	logger.log('STDOUT', data.output.trim());
+							// 	data.output.trim().split('\n').forEach(line => {
+							// 		logger.log('STDOUT', line);
+							// 	});
 							// 	break;
 
 							// case 'stderr':
-							// 	logger.log('STDERR', data.output.trim());
+							// 	data.output.trim().split('\n').forEach(line => {
+							// 		logger.log('STDERR', line);
+							// 	});
 							// 	break;
 
 							case 'exit':

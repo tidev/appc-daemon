@@ -17,7 +17,7 @@ describe('util', () => {
 
 		it('should detect the system architecture', () => {
 			const a = util.arch();
-			expect(a).to.be.oneOf(['x86', 'x64']);
+			expect(a).to.be.oneOf([ 'x86', 'x64' ]);
 		});
 
 		it('should cache the architecture', () => {
@@ -65,7 +65,7 @@ describe('util', () => {
 				util.assertNodeEngineVersion(null);
 			}).to.throw(TypeError, 'Expected pkgJson to be an object or string to a package.json file');
 			expect(() => {
-				util.assertNodeEngineVersion(['a']);
+				util.assertNodeEngineVersion([ 'a' ]);
 			}).to.throw(TypeError, 'Expected pkgJson to be an object or string to a package.json file');
 			expect(() => {
 				util.assertNodeEngineVersion(123);
@@ -85,7 +85,7 @@ describe('util', () => {
 		it('should error with bad package.json', () => {
 			expect(() => {
 				util.assertNodeEngineVersion(path.join(__dirname, 'fixtures', 'bad-package.json'));
-			}).to.throw(Error, /^Unable to parse package.json\: /);
+			}).to.throw(Error, /^Unable to parse package.json: /);
 		});
 
 		it('should succeed without engines definition', () => {
@@ -314,7 +314,7 @@ describe('util', () => {
 					a: 1,
 					d: null,
 					g: [],
-					h: ['a'],
+					h: [ 'a' ],
 					i: { j: {} }
 				},
 				{
@@ -325,7 +325,7 @@ describe('util', () => {
 					e: undefined,
 					f: null,
 					g: { foo: 'bar' },
-					h: ['b', 'c'],
+					h: [ 'b', 'c' ],
 					i: { j: { k: 'l' } }
 				}
 			);
@@ -337,7 +337,7 @@ describe('util', () => {
 				d: { fn: fn },
 				f: null,
 				g: { foo: 'bar' },
-				h: ['a', 'b', 'c'],
+				h: [ 'a', 'b', 'c' ],
 				i: { j: { k: 'l' } }
 			});
 		});

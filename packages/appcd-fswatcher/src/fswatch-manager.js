@@ -1,4 +1,3 @@
-import path from 'path';
 import snooplogg from 'snooplogg';
 
 import { codes } from 'appcd-response';
@@ -8,7 +7,7 @@ import { expandPath } from 'appcd-path';
 import { FSWatcher, renderTree, rootEmitter, status, tree } from './fswatcher';
 
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:fswatcher:manager');
-const { highlight, note } = snooplogg.styles;
+const { highlight } = snooplogg.styles;
 
 /**
  * Starts and stops file system watches and sends notifications when a fs event occurs.
@@ -21,7 +20,18 @@ export default class FSWatchManager extends EventEmitter {
 	 */
 	constructor() {
 		super();
+
+		/**
+		 * The service dispatcher instance.
+		 * @type {ServiceDispatcher}
+		 */
 		this.dispatcher = new ServiceDispatcher(this);
+
+		/**
+		 * A map of paths to `FSWatcher` instances.
+		 * @type {Object}
+		 */
+		this.watchers = {};
 
 		rootEmitter
 			.on('change', evt => this.emit('change', evt))
@@ -34,12 +44,6 @@ export default class FSWatchManager extends EventEmitter {
 						logger.warn(err);
 					});
 			});
-
-		/**
-		 * A map of paths to `FSWatcher` instances.
-		 * @type {Object}
-		 */
-		this.watchers = {};
 	}
 
 	/**
@@ -83,7 +87,7 @@ export default class FSWatchManager extends EventEmitter {
 	 * the same publish function as the one passed to `onSubscribe()`.
 	 * @access private
 	 */
-	onUnsubscribe(ctx, publish) {
+	onUnsubscribe(ctx) {
 		const path = this.getTopic(ctx);
 		const watcher = path && this.watchers[path];
 		if (watcher) {

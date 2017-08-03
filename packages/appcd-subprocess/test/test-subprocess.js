@@ -18,7 +18,7 @@ describe('subprocess', () => {
 	describe('run()', () => {
 		it('should run a subprocess that exits successfully', done => {
 			subprocess
-				.run(process.execPath, ['-e', 'process.stdout.write("foo");process.stderr.write("bar");process.exit(0);'])
+				.run(process.execPath, [ '-e', 'process.stdout.write("foo");process.stderr.write("bar");process.exit(0);' ])
 				.then(({ stdout, stderr }) => {
 					expect(stdout).to.equal('foo');
 					expect(stderr).to.equal('bar');
@@ -29,8 +29,8 @@ describe('subprocess', () => {
 
 		it('should run a subprocess that exits unsuccessfully', done => {
 			subprocess
-				.run(process.execPath, ['-e', 'process.stdout.write("foo");process.stderr.write("bar");process.exit(1);'])
-				.then(({ stdout, stderr }) => {
+				.run(process.execPath, [ '-e', 'process.stdout.write("foo");process.stderr.write("bar");process.exit(1);' ])
+				.then(() => {
 					done(new Error('Expected subprocess to fail'));
 				})
 				.catch(({ code, stdout, stderr }) => {
@@ -45,10 +45,10 @@ describe('subprocess', () => {
 			subprocess
 				.run(
 					process.execPath,
-					['-e', 'process.exit(1);'],
+					[ '-e', 'process.exit(1);' ],
 					{ ignoreExitCode: true }
 				)
-				.then(({ code, stdout, stderr }) => {
+				.then(({ code }) => {
 					expect(code).to.equal(1);
 					done();
 				})
@@ -69,7 +69,7 @@ describe('subprocess', () => {
 		it('should run a subprocess without args and with options', done => {
 			subprocess
 				.run(fullpath, {})
-				.then(({ code, stdout, stderr }) => {
+				.then(({ stdout, stderr }) => {
 					expect(stdout.trim()).to.equal('this is a test');
 					expect(stderr.trim()).to.equal('');
 					done();
@@ -119,7 +119,7 @@ describe('subprocess', () => {
 		it('should run with null options', done => {
 			subprocess
 				.run(fullpath, null)
-				.then(({ code, stdout, stderr }) => {
+				.then(({ stdout, stderr }) => {
 					expect(stdout.trim()).to.equal('this is a test');
 					expect(stderr.trim()).to.equal('');
 					done();
@@ -193,8 +193,13 @@ describe('subprocess', () => {
 			let stdout = '';
 			let stderr = '';
 
-			desc.child.stdout.on('data', data => { stdout += data.toString(); });
-			desc.child.stderr.on('data', data => { stderr += data.toString(); });
+			desc.child.stdout.on('data', data => {
+				stdout += data.toString();
+			});
+
+			desc.child.stderr.on('data', data => {
+				stderr += data.toString();
+			});
 
 			desc.child.on('close', code => {
 				try {
@@ -234,7 +239,7 @@ describe('subprocess', () => {
 
 		it('should scan list of executables and find well-known executable', done => {
 			process.env.PATH = path.join(__dirname, 'fixtures');
-			subprocess.which(['no_way_does_this_already_exist', executable])
+			subprocess.which([ 'no_way_does_this_already_exist', executable ])
 				.then(result => {
 					expect(result).to.be.a('string');
 					expect(result).to.equal(fullpath);
@@ -244,7 +249,7 @@ describe('subprocess', () => {
 		});
 
 		it('should scan list of invalid executables', done => {
-			subprocess.which(['no_way_does_this_already_exist', null, 'this_also_should_not_exist'])
+			subprocess.which([ 'no_way_does_this_already_exist', null, 'this_also_should_not_exist' ])
 				.then(executable => {
 					done(new Error(`Somehow there's an executable called "${executable}"`));
 				})

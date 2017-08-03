@@ -71,10 +71,14 @@ module.exports = (opts) => {
 	function lint(pattern, eslintFile='eslint.json') {
 		return gulp.src(pattern)
 			.pipe($.plumber())
-			.pipe($.eslint(require(path.resolve(__dirname, '..', eslintFile))))
+			.pipe($.eslint({
+				configFile: path.resolve(__dirname, '..', eslintFile)
+			}))
 			.pipe($.eslint.format())
 			.pipe($.eslint.failAfterError());
 	}
+
+	gulp.task('lint', [ 'lint-src', 'lint-test' ]);
 
 	gulp.task('lint-src', () => lint('src/**/*.js'));
 

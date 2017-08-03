@@ -7,52 +7,52 @@ import Response, { AppcdError, codes } from 'appcd-response';
 describe('dispatcher', () => {
 	describe('register', () => {
 		it('should register with valid path and handler', () => {
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 			d.register('/foo', () => {});
 		});
 
 		it('should fail with no path', () => {
 			expect(() => {
-				const d = new Dispatcher;
+				const d = new Dispatcher();
 				d.register();
 			}).to.throw('Invalid path');
 		});
 
 		it('should fail with bad path', () => {
 			expect(() => {
-				const d = new Dispatcher;
+				const d = new Dispatcher();
 				d.register(123);
 			}).to.throw('Invalid path');
 		});
 
 		it('should fail with no handler', () => {
 			expect(() => {
-				const d = new Dispatcher;
+				const d = new Dispatcher();
 				d.register('/foo');
 			}).to.throw('Invalid handler');
 		});
 
 		it('should fail with bad handler', () => {
 			expect(() => {
-				const d = new Dispatcher;
+				const d = new Dispatcher();
 				d.register('/foo', 123);
 			}).to.throw('Invalid handler');
 		});
 
 		it('should accept array of paths', () => {
-			const d = new Dispatcher;
-			d.register(['/foo', '/bar'], () => {});
+			const d = new Dispatcher();
+			d.register([ '/foo', '/bar' ], () => {});
 		});
 
 		it('should accept dispatcher handler', () => {
-			const d = new Dispatcher;
-			const d2 = new Dispatcher;
+			const d = new Dispatcher();
+			const d2 = new Dispatcher();
 			d.register('/bar', () => {});
 			d2.register('/foo', d);
 		});
 
 		it('should accept an object with a path and handler', () => {
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 			d.register({
 				path: '/foo',
 				handler: () => {}
@@ -60,24 +60,24 @@ describe('dispatcher', () => {
 		});
 
 		it('should accept a ServiceDispatcher without any paths', () => {
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 			d.register(new ServiceDispatcher('/foo', {}));
 		});
 
 		it('should accept a path and a ServiceDispatcher with a path', () => {
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 			d.register('/foo', new ServiceDispatcher('/bar', {}));
 		});
 
 		it('should accept a path and ServiceDispatcher without a path', () => {
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 			d.register('/foo', new ServiceDispatcher({}));
 		});
 	});
 
 	describe('dispatch', () => {
 		it('should dispatch to valid route', done => {
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 			let count = 0;
 
 			d.register('/foo', () => {
@@ -96,11 +96,11 @@ describe('dispatcher', () => {
 			this.timeout(5000);
 			this.slow(5000);
 
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 			let count = 0;
 
 			d.register('/foo', () => {
-				return new Promise((resolve, reject) => {
+				return new Promise(resolve => {
 					setTimeout(() => {
 						count++;
 						resolve();
@@ -117,7 +117,7 @@ describe('dispatcher', () => {
 		});
 
 		it('should dispatch to valid route with payload', done => {
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 			let count = 0;
 			const data = { a: 1 };
 
@@ -137,7 +137,7 @@ describe('dispatcher', () => {
 		});
 
 		it('should parse params and pass them to the handler', done => {
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 
 			d.register('/foo/:bar', data => {
 				expect(data).to.be.an('object');
@@ -154,7 +154,7 @@ describe('dispatcher', () => {
 		});
 
 		it('should error if route not found', done => {
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 
 			d.call('/foo')
 				.then(() => {
@@ -169,9 +169,9 @@ describe('dispatcher', () => {
 		});
 
 		it('should handle a route that emits an error', done => {
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 
-			d.register('/foo', data => {
+			d.register('/foo', () => {
 				throw new Error('oops');
 			});
 
@@ -188,9 +188,9 @@ describe('dispatcher', () => {
 		});
 
 		it('should handle a route that emits an DispatcherError', done => {
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 
-			d.register('/foo', data => {
+			d.register('/foo', () => {
 				throw new DispatcherError(123, 'oops');
 			});
 
@@ -208,9 +208,9 @@ describe('dispatcher', () => {
 		});
 
 		it('should handle a route that emits an DispatcherError with no status', done => {
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 
-			d.register('/foo', data => {
+			d.register('/foo', () => {
 				throw new DispatcherError('oops');
 			});
 
@@ -228,9 +228,9 @@ describe('dispatcher', () => {
 		});
 
 		it('should handle a route that emits an DispatcherError with no args', done => {
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 
-			d.register('/foo', data => {
+			d.register('/foo', () => {
 				throw new DispatcherError(123);
 			});
 
@@ -248,9 +248,9 @@ describe('dispatcher', () => {
 		});
 
 		it('should handle a route that rejects', done => {
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 
-			d.register('/foo', data => {
+			d.register('/foo', () => {
 				return new Promise((resolve, reject) => {
 					reject(new Error('oops'));
 				});
@@ -269,9 +269,9 @@ describe('dispatcher', () => {
 		});
 
 		it('should handle a route that returns error', done => {
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 
-			d.register('/foo', (data, next) => {
+			d.register('/foo', () => {
 				throw new Error('oops');
 			});
 
@@ -288,7 +288,7 @@ describe('dispatcher', () => {
 		});
 
 		it('should re-route to error', done => {
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 			let fooCount = 0;
 
 			d.register('/foo', async (data, next) => {
@@ -297,7 +297,7 @@ describe('dispatcher', () => {
 			});
 
 			d.call('/foo')
-				.then(ctx => {
+				.then(() => {
 					done(new Error('Expected error for no route'));
 				})
 				.catch(err => {
@@ -310,7 +310,7 @@ describe('dispatcher', () => {
 		});
 
 		it('should re-route to new route', done => {
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 			let fooCount = 0;
 			let barCount = 0;
 
@@ -320,7 +320,7 @@ describe('dispatcher', () => {
 				await next();
 			});
 
-			d.register('/bar', data => {
+			d.register('/bar', () => {
 				barCount++;
 			});
 
@@ -334,14 +334,14 @@ describe('dispatcher', () => {
 		});
 
 		it('should scan multiple routes', done => {
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 			let count = 0;
 
 			d.register('/foo', async (data, next) => {
 				await next();
 			});
 
-			d.register('/bar', async (data, next) => {
+			d.register('/bar', async () => {
 				count++;
 			});
 
@@ -354,7 +354,7 @@ describe('dispatcher', () => {
 		});
 
 		it('should be ok if next() is called multiple times', done => {
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 			let count = 0;
 
 			d.register('/foo', async (data, next) => {
@@ -363,7 +363,7 @@ describe('dispatcher', () => {
 				await next(); // technically an error, but it won't do any harm
 			});
 
-			d.register('/foo', async (data, next) => {
+			d.register('/foo', async () => {
 				count++;
 			});
 
@@ -376,8 +376,8 @@ describe('dispatcher', () => {
 		});
 
 		it('should handle route to child dispatcher handler', done => {
-			const d = new Dispatcher;
-			const d2 = new Dispatcher;
+			const d = new Dispatcher();
+			const d2 = new Dispatcher();
 			let count = 0;
 
 			d.register('/bar', () => {
@@ -394,8 +394,8 @@ describe('dispatcher', () => {
 		});
 
 		it('should handle route to child dispatcher handler (reordered)', done => {
-			const d = new Dispatcher;
-			const d2 = new Dispatcher;
+			const d = new Dispatcher();
+			const d2 = new Dispatcher();
 			let count = 0;
 
 			d2.register('/foo', d);
@@ -412,9 +412,9 @@ describe('dispatcher', () => {
 		});
 
 		it('should route to deeply nested dispatchers', done => {
-			const d = new Dispatcher;
-			const d2 = new Dispatcher;
-			const d3 = new Dispatcher;
+			const d = new Dispatcher();
+			const d2 = new Dispatcher();
+			const d3 = new Dispatcher();
 			let count = 0;
 
 			d.register('/foo', d2);
@@ -432,8 +432,8 @@ describe('dispatcher', () => {
 		});
 
 		it('should error if no route to child dispatcher handler', done => {
-			const d = new Dispatcher;
-			const d2 = new Dispatcher;
+			const d = new Dispatcher();
+			const d2 = new Dispatcher();
 
 			d2.register('/foo', d);
 
@@ -450,7 +450,7 @@ describe('dispatcher', () => {
 		});
 
 		it('should error if path is invalid', () => {
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 
 			expect(() => {
 				d.call();
@@ -466,7 +466,7 @@ describe('dispatcher', () => {
 		});
 
 		it('should return 404 status if not found', done => {
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 
 			d.register('/foo', ctx => {
 				ctx.response = new Response(codes.NOT_FOUND);
@@ -483,13 +483,13 @@ describe('dispatcher', () => {
 
 	describe('middleware', () => {
 		it('should return a middleware callback function', () => {
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 			const middleware = d.callback();
 			expect(middleware).to.be.a('function');
 		});
 
 		it('should dispatch GET request', done => {
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 
 			d.register('/foo', ctx => {
 				ctx.response = 'foo!';
@@ -512,7 +512,7 @@ describe('dispatcher', () => {
 		});
 
 		it('should call next middleware if no route', done => {
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 			const middleware = d.callback();
 			const ctx = {
 				method: 'GET',
@@ -533,7 +533,7 @@ describe('dispatcher', () => {
 		});
 
 		it('should deeply call next middleware if no route', done => {
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 			const middleware = d.callback();
 			const ctx = {
 				method: 'GET',
@@ -554,7 +554,7 @@ describe('dispatcher', () => {
 		});
 
 		it('should dispatch POST request', done => {
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 
 			d.register('/foo', ctx => {
 				expect(ctx.request).to.deep.equal({ foo: 'bar' });
@@ -586,11 +586,11 @@ describe('dispatcher', () => {
 		});
 
 		it('should ignore HEAD request', done => {
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 			let count = 0;
 			let count2 = 0;
 
-			d.register('/', ctx => {
+			d.register('/', () => {
 				count2++;
 			});
 
@@ -614,9 +614,9 @@ describe('dispatcher', () => {
 		});
 
 		it('should return 500 error if handler throws error', done => {
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 
-			d.register('/foo', ctx => {
+			d.register('/foo', () => {
 				throw new Error('foo!');
 			});
 
@@ -637,9 +637,9 @@ describe('dispatcher', () => {
 		});
 
 		it('should return dispatcher error', done => {
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 
-			d.register('/foo', ctx => {
+			d.register('/foo', () => {
 				throw new DispatcherError(403, 'Not authorized!');
 			});
 
@@ -660,9 +660,9 @@ describe('dispatcher', () => {
 		});
 
 		it('should return dispatcher error with null status', done => {
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 
-			d.register('/foo', ctx => {
+			d.register('/foo', () => {
 				const err = new DispatcherError(403, 'Not authorized!');
 				err.status = null;
 				throw err;
@@ -688,7 +688,7 @@ describe('dispatcher', () => {
 		});
 
 		it('should return a Response object', done => {
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 
 			d.register('/foo', ctx => {
 				ctx.response = new Response(codes.OK);
@@ -718,7 +718,7 @@ describe('dispatcher', () => {
 		});
 
 		it('should return a Response object with null status', done => {
-			const d = new Dispatcher;
+			const d = new Dispatcher();
 
 			d.register('/foo', ctx => {
 				ctx.response = new Response(codes.OK);
@@ -781,7 +781,7 @@ describe('dispatcher', () => {
 				.then(() => {
 					done(new Error('Expected call to fail'));
 				})
-				.catch(err => {
+				.catch(() => {
 					expect(count).to.equal(0);
 					done();
 				})

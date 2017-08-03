@@ -1,5 +1,3 @@
-import path from 'path';
-
 import { loadConfig, startServer } from './common';
 
 const cmd = {

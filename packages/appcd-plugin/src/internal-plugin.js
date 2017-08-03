@@ -1,6 +1,4 @@
-import Dispatcher from 'appcd-dispatcher';
 import PluginImplBase from './plugin-impl-base';
-import snooplogg from 'snooplogg';
 
 import { AppcdError, codes } from 'appcd-response';
 
@@ -20,7 +18,7 @@ export default class InternalPlugin extends PluginImplBase {
 		return this.dispatcher
 			.call(ctx.path, ctx)
 			.catch(err => {
-				if (err instanceof AppcdError && err.status === codes.NOT_FOUND) {
+				if (err instanceof AppcdError && err.statusCode === codes.NOT_FOUND) {
 					return next();
 				}
 				throw err;
@@ -52,8 +50,9 @@ export default class InternalPlugin extends PluginImplBase {
 		if (this.module && typeof this.module.deactivate === 'function') {
 			try {
 				await this.module.deactivate();
-			} catch (e) {
-				(this.logger || logger).error(e);
+			} catch (err) {
+				this.logger.error(err);
+				throw err;
 			}
 		}
 	}

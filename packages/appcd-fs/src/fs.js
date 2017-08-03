@@ -5,9 +5,6 @@ if (!Error.prepareStackTrace) {
 
 import fs from 'fs';
 import path from 'path';
-import snooplogg from 'snooplogg';
-
-const log = snooplogg.config({ theme: 'detailed' })('appcd:fs').log;
 
 /**
  * Determines if a file or directory exists.

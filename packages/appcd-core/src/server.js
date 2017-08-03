@@ -5,7 +5,7 @@ import FSWatchManager from 'appcd-fswatcher';
 import gawk from 'gawk';
 import HookEmitter from 'hook-emitter';
 import path from 'path';
-import PluginManager, { Plugin } from 'appcd-plugin';
+import PluginManager from 'appcd-plugin';
 import snooplogg, { logcat, StdioStream } from './logger';
 import StatusMonitor from './status-monitor';
 import SubprocessManager from 'appcd-subprocess';
@@ -19,7 +19,7 @@ import { i18n } from 'appcd-response';
 import { isDir, isFile } from 'appcd-fs';
 import { load as loadConfig } from 'appcd-config';
 
-const { __, __n } = i18n();
+const { __n } = i18n();
 
 const { highlight, notice } = snooplogg.styles;
 const logger = snooplogg('appcd:server');
@@ -90,7 +90,7 @@ export default class Server extends HookEmitter {
 		// enable logging
 		snooplogg
 			.enable('*')
-			.pipe(new StdioStream, { flush: true });
+			.pipe(new StdioStream(), { flush: true });
 
 		// check if the current user is root
 		let uid, gid;
@@ -174,7 +174,7 @@ export default class Server extends HookEmitter {
 				// globally installed plugins
 				path.join(homeDir, 'plugins')
 			]
-		}); //.on('change', plugins => this.systems.statusMonitor.merge({ plugins }));
+		});
 		Dispatcher.register('/appcd/plugin', this.systems.pluginManager.dispatcher);
 
 		// start the status monitor

@@ -1,15 +1,31 @@
 import Metadata from '../dist/metadata';
 import path from 'path';
 
-import { parse } from 'babylon';
-
 describe('Metadata', () => {
 
 	describe('load()', () => {
 		it('should load a metadata file', () => {
 			const md = new Metadata();
 			md.load(path.join(__dirname, 'fixtures', 'good.json.metadata'));
-			expect(Array.from(md._map.keys())).to.deep.equal(['name', 'age', 'id', 'arrays.simple', 'arrays.arrayNums', 'arrays.arrayNums2', 'arrays.arrayNums3', 'arrays.multi', 'arrays.multiUnknown', 'multi', 'couldBeNull', 'couldBeNull2', 'couldBeNull3', 'cantBeNull', 'couldBeUndef', 'job.title', 'notype']);
+			expect(Array.from(md._map.keys())).to.deep.equal([
+				'name',
+				'age',
+				'id',
+				'arrays.simple',
+				'arrays.arrayNums',
+				'arrays.arrayNums2',
+				'arrays.arrayNums3',
+				'arrays.multi',
+				'arrays.multiUnknown',
+				'multi',
+				'couldBeNull',
+				'couldBeNull2',
+				'couldBeNull3',
+				'cantBeNull',
+				'couldBeUndef',
+				'job.title',
+				'notype'
+			]);
 		});
 
 		it('should not error if file doesn\'t exist', () => {
@@ -33,7 +49,7 @@ describe('Metadata', () => {
 		it('should error if metadata file is not valid json', () => {
 			expect(() => {
 				new Metadata().load(path.join(__dirname, 'fixtures', 'bad-syntax.json.metadata'));
-			}).to.throw(Error, /^Failed to load config metadata file\: /);
+			}).to.throw(Error, /^Failed to load config metadata file: /);
 		});
 
 		it('should error if metadata file is not an object', () => {
@@ -72,7 +88,7 @@ describe('Metadata', () => {
 		it('should load metadata file with union type and array of union type', () => {
 			const md = new Metadata();
 			md.load(path.join(__dirname, 'fixtures', 'good-unknown.json.metadata'));
-			expect(Array.from(md._map.keys())).to.deep.equal(['test1', 'test2']);
+			expect(Array.from(md._map.keys())).to.deep.equal([ 'test1', 'test2' ]);
 			expect(md.get('test1').type).to.equal('(bar|baz)');
 			expect(md.get('test2').type).to.equal('Array.<(bar|baz)>');
 		});
@@ -304,9 +320,9 @@ describe('Metadata', () => {
 		it('should validate array of union type', () => {
 			const md = new Metadata();
 			md.load(path.join(__dirname, 'fixtures', 'good.json.metadata'));
-			expect(md.validate('arrays.multi', ['hi', 123])).to.be.true;
+			expect(md.validate('arrays.multi', [ 'hi', 123 ])).to.be.true;
 			expect(() => {
-				md.validate('arrays.multi', [true]);
+				md.validate('arrays.multi', [ true ]);
 			}).to.throw(Error, 'Invalid "arrays.multi" value "true"');
 		});
 

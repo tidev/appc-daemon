@@ -2,8 +2,7 @@ import accepts from 'accepts';
 import Dispatcher from 'appcd-dispatcher';
 import msgpack from 'msgpack-lite';
 import Response, { codes, createErrorClass } from 'appcd-response';
-import snooplogg, { styles } from './logger';
-import uuid from 'uuid';
+import snooplogg from './logger';
 
 import { IncomingMessage } from 'http';
 import { Readable } from 'stream';
@@ -61,8 +60,8 @@ export default class WebSocketSession {
 
 		let req = null;
 
-		ws.on('message', (message, flags) => {
-			const startTime = new Date;
+		ws.on('message', message => {
+			const startTime = new Date();
 
 			try {
 				req = typeof message === 'string' ? message : msgpack.decode(message);
@@ -279,7 +278,7 @@ export default class WebSocketSession {
 			msg += ` ${style(res.message || res)}`;
 		}
 		if (req && req.startTime && type !== 'publish') {
-			msg += ` ${highlight(`${new Date - req.startTime}ms`)}`;
+			msg += ` ${highlight(`${new Date() - req.startTime}ms`)}`;
 		}
 
 		logger.log(msg);

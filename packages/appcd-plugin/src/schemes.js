@@ -88,7 +88,7 @@ export class InvalidScheme extends Scheme {
 	 * @access public
 	 */
 	watch() {
-		this.watchers[this.path].on('change', evt => this.onChange());
+		this.watchers[this.path].on('change', () => this.onChange());
 		return this;
 	}
 }
@@ -222,7 +222,7 @@ export class PluginsDirScheme extends Scheme {
 	 */
 	createPluginScheme(path) {
 		return new PluginScheme(path)
-			.on('change', evt => this.onChange())
+			.on('change', () => this.onChange())
 			.on('plugin-added', plugin => this.emit('plugin-added', plugin))
 			.on('plugin-deleted', plugin => this.emit('plugin-deleted', plugin));
 	}
@@ -331,7 +331,7 @@ export class NestedPluginsDirScheme extends Scheme {
 	 */
 	createPluginsDirScheme(path) {
 		return new PluginsDirScheme(path)
-			.on('change', evt => this.onChange())
+			.on('change', () => this.onChange())
 			.on('plugin-added', plugin => this.emit('plugin-added', plugin))
 			.on('plugin-deleted', plugin => this.emit('plugin-deleted', plugin));
 	}

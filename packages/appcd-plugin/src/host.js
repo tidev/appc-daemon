@@ -21,35 +21,17 @@ if (process.argv.length < 3) {
 
 process.title = 'appcd-plugin-host';
 
-const loggerConfig = {
-	maxBrightness: 220,
-	minBrightness: 100,
-	theme: 'detailed'
-};
-
-/**
- * The default logger. Routes all messages through the tunnel to the parent process.
- * @type {SnoopLogg}
- */
-const logger = createInstanceWithDefaults()
-	.snoop('appcd:plugin:host > ')
-	.config(loggerConfig)
-	.enable('*')
-	.pipe(new TunnelStream, { flush: true })
-	.ns('appcd:plugin:host');
-
-/**
- * An error-only logger that routes messages through stderr and the tunnel to the parent process.
- * The key difference here is this logger doesn't snoop because we don't want the plugin detection
- * to pollute stdio.
- * @type {SnoopLogg}
- */
 const { error } = createInstanceWithDefaults()
-	.config(loggerConfig)
+	.snoop(`appcd:plugin:host:${process.pid} > `)
+	.config({
+		maxBrightness: 220,
+		minBrightness: 100,
+		theme: 'detailed'
+	})
 	.enable('*')
-	.pipe(new StdioStream, { flush: true, theme: 'minimal' })
-	.pipe(new TunnelStream, { flush: true })
-	.ns('appcd:plugin:host');
+	.pipe(new StdioStream(), { flush: true, theme: 'minimal' })
+	.pipe(new TunnelStream(), { flush: true })
+	.ns(`appcd:plugin:host:${process.pid}`);
 
 process
 	.on('uncaughtException', err => error('Caught exception:', err.stack || err.toString()))

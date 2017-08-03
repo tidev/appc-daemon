@@ -16,7 +16,7 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "fs-extra": "^4.0.0",
+    "fs-extra": "^4.0.1",
     "macaddress": "^0.2.8",
     "simple-plist": "^0.2.1",
     "snooplogg": "^1.6.0",

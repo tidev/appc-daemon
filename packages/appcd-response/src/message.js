@@ -1,10 +1,8 @@
-import AppcdError from './appcd-error';
 import fs from 'fs';
 import path from 'path';
 import util from 'util';
 
 import { lookup } from './codes';
-import { isDir } from 'appcd-fs';
 import { sprintf } from 'sprintf-js';
 
 const codesCache = {};
@@ -13,7 +11,6 @@ const messagesDir = path.resolve(__dirname, '..', 'messages');
 const codeRegExp = /^((\d)\d*)(?:\.(\d+)?)?$/;
 const firstLineRegExp = /^#?\s*(.*?)\s*$/m;
 const localeRegExp = /^([a-z]{2})(?:[-_](?:\w+[-_])?([A-Z]{2}))?$/;
-const modulePathCache = {};
 
 /**
  * An internal message container. It is designed to be used by various response objects and not

@@ -122,7 +122,7 @@ describe('agent', () => {
 			let counter = 1;
 
 			this.agent
-				.addCollector(() => new Promise((resolve, reject) => {
+				.addCollector(() => new Promise(resolve => {
 					setImmediate(() => {
 						resolve({
 							foo: counter++
@@ -134,6 +134,8 @@ describe('agent', () => {
 						this.agent.stop();
 
 						try {
+							expect(stats).to.be.an('object');
+
 							const fooStats = this.agent.getStats('foo');
 							expect(fooStats).to.deep.equal({
 								values: [ 1, 2, 3, 4 ],
@@ -159,7 +161,7 @@ describe('agent', () => {
 			let counter = 1;
 
 			this.agent
-				.addCollector(() => new Promise((resolve, reject) => {
+				.addCollector(() => new Promise(resolve => {
 					setTimeout(() => {
 						resolve({
 							foo: counter++
@@ -171,6 +173,8 @@ describe('agent', () => {
 						this.agent.stop();
 
 						try {
+							expect(stats).to.be.an('object');
+
 							const fooStats = this.agent.getStats('foo');
 							expect(fooStats.min).to.equal(1);
 							expect(fooStats.max).to.equal(2);
@@ -196,6 +200,8 @@ describe('agent', () => {
 			this.agent
 				.on('stats', stats => {
 					try {
+						expect(stats).to.be.an('object');
+
 						const badStats = this.agent.getStats('foo');
 						expect(badStats).to.be.null;
 
@@ -237,7 +243,7 @@ describe('agent', () => {
 		});
 
 		it('should error if collector is not a function', () => {
-			const agent = new Agent;
+			const agent = new Agent();
 
 			expect(() => {
 				agent.addCollector();

@@ -15,7 +15,7 @@ import {
 	NestedPluginsDirScheme
 } from '../dist/schemes';
 
-const { log } = snooplogg.config({ theme: 'standard' })('test:appcd:plugin-path');
+const { log } = snooplogg.config({ theme: 'detailed' })('test:appcd:plugin-path');
 const { highlight, magenta } = snooplogg.styles;
 
 const _tmpDir = tmp.dirSync({

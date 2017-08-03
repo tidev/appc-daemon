@@ -1,4 +1,4 @@
-import Server from '../dist/server';
+// import Server from '../dist/server';
 
 describe('Server', () => {
 	//

@@ -1,4 +1,4 @@
-import { codes, createErrorClass } from 'appcd-response';
+import { createErrorClass } from 'appcd-response';
 
 const DispatcherError = createErrorClass('DispatcherError');
 

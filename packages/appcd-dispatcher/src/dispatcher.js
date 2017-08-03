@@ -3,12 +3,12 @@ import DispatcherError from './dispatcher-error';
 import pathToRegExp from 'path-to-regexp';
 import Response, { AppcdError, codes } from 'appcd-response';
 import ServiceDispatcher from './service-dispatcher';
-import snooplogg, { styles } from 'snooplogg';
+import snooplogg from 'snooplogg';
 
 import { PassThrough } from 'stream';
 
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:dispatcher');
-const { highlight } = styles;
+const { highlight } = snooplogg.styles;
 const stripRegExp = /\x1B\[\d+m/g;
 
 let rootInstance = null;
@@ -23,7 +23,7 @@ export default class Dispatcher {
 	 */
 	static get root() {
 		if (!rootInstance) {
-			rootInstance = new Dispatcher;
+			rootInstance = new Dispatcher();
 		}
 		return rootInstance;
 	}
@@ -101,7 +101,7 @@ export default class Dispatcher {
 
 		let index = -1;
 
-		logger.trace('Searching for route handler: %s', highlight(path));
+		logger.log('Searching for route handler: %s', highlight(path));
 
 		const dispatch = i => {
 			if (i <= index) {
@@ -114,18 +114,18 @@ export default class Dispatcher {
 			const route = this.routes[i];
 			if (!route) {
 				// end of the line
-				logger.debug('Route not found: %s', highlight(path));
+				logger.log('Route not found: %s', highlight(path));
 				throw new DispatcherError(codes.NOT_FOUND);
 			}
 
-			logger.trace('Testing route: %s', highlight(route.path));
+			logger.log('Testing route: %s', highlight(route.path));
 
 			const m = ctx.path.match(route.regexp);
 			if (!m) {
 				return dispatch(i + 1);
 			}
 
-			logger.trace('Found matching route: %s', highlight(route.path));
+			logger.log('Found matching route: %s', highlight(route.path));
 
 			// extract the params from the path
 			delete ctx.params;
@@ -139,22 +139,26 @@ export default class Dispatcher {
 
 			if (route.handler instanceof Dispatcher) {
 				// call the nested dispatcher
-				logger.trace('Calling dispatcher handler %s', highlight(route.prefix));
+				logger.log('Calling dispatcher handler %s', highlight(route.prefix));
 				return route.handler.call(path.replace(route.prefix, ''), ctx);
 			}
 
 			return new Promise((resolve, reject) => {
 				let fired = false;
 
-				let result = route.handler(ctx, function next(result) {
+				logger.log('Invoking route %s handler...', highlight(route.path));
+
+				let result = route.handler(ctx, function next() {
 					// go to next route
 
 					if (fired) {
-						logger.debug('next() already fired!');
+						logger.log('next() already fired!');
 						return;
 					}
 
 					fired = true;
+
+					logger.log('Route %s handler passed to next route', highlight(route.path));
 
 					return dispatch(i + 1)
 						.then(result => result || ctx)
@@ -287,7 +291,7 @@ export default class Dispatcher {
 			// if this is a scoped dispatcher and the path is /, then suppress the
 			// redundant log message
 			if (path !== '/') {
-				logger.debug(`Registered dispatcher route ${highlight(handle.path)}`);
+				logger.log(`Registered dispatcher route ${highlight(handle.path)}`);
 			}
 		}
 

@@ -29,57 +29,62 @@ export default class Tunnel {
 			throw new TypeError('Expected handler to be a function');
 		}
 
+		const onMessage = req => {
+			if (!req || typeof req !== 'object') {
+				return;
+			}
+
+			if (req.id && this.requests[req.id]) {
+				return this.requests[req.id](req);
+			}
+
+			handler(req, /* send */ res => {
+				let message = res;
+
+				if (res instanceof Error) {
+					message = {
+						statusCode: res.statusCode || '500',
+						message:    res.message,
+						stack:      res.stack,
+						status:     res.status || 500,
+						type:       'error'
+					};
+				} else if (res instanceof DispatcherContext) {
+					message = {
+						message: res.response,
+						status:  res.status || 200
+					};
+				} else if (res.message instanceof Response) {
+					message = {
+						...res,
+						status:  res.message.status || 200,
+						message: res.message.toString()
+					};
+				}
+
+				if (!message.status) {
+					message.status = 200;
+				}
+
+				if (!message.type && req.type) {
+					message.type = req.type;
+				}
+
+				const response = {
+					id: req.id,
+					message
+				};
+
+				log('Sending tunnel response:', response);
+				this.proc.send(response);
+			});
+		};
+
 		/**
 		 * The process establish a tunnel for.
 		 * @type {ChildProcess|Process}
 		 */
-		this.proc = proc.on('message', req => {
-			if (req && typeof req === 'object') {
-				if (req.id && this.requests[req.id]) {
-					this.requests[req.id](req);
-				} else {
-					handler(req, /* send */ res => {
-						let message = res;
-
-						if (res instanceof Error) {
-							message = {
-								code:    res.code || '500',
-								message: res.message,
-								status:  res.status || 500,
-								type:    'error'
-							};
-						} else if (res instanceof DispatcherContext) {
-							message = {
-								message: res.response,
-								status:  res.status || 200
-							};
-						} else if (res.message instanceof Response) {
-							message = {
-								...res,
-								status: res.message.status || 200,
-								message: res.message.toString()
-							};
-						}
-
-						if (!message.status) {
-							message.status = 200;
-						}
-
-						if (!message.type && req.type) {
-							message.type = req.type;
-						}
-
-						const response = {
-							id: req.id,
-							message
-						};
-
-						log('Sending tunnel response:', response);
-						this.proc.send(response);
-					});
-				}
-			}
-		});
+		this.proc = proc.on('message', onMessage);
 
 		/**
 		 * A map of pending requests.
@@ -125,11 +130,15 @@ export default class Tunnel {
 						log('Deleting request handler: %s', highlight(id));
 						delete this.requests[id];
 						ctx.response = new AppcdError(message.code, message.message);
-						reject(ctx);
+						if (message.stack) {
+							ctx.response.stack = message.stack;
+						}
+						reject(ctx.response);
 						break;
 
 					case 'subscribe':
 						resolve(ctx);
+						// fallthrough
 					case 'event':
 					case 'unsubscribe':
 						if (message.fin) {
