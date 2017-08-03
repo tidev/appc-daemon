@@ -10,12 +10,12 @@ import { expandPath } from 'appcd-path';
 import { prepareNode } from 'appcd-nodejs';
 import { spawn } from './subprocess';
 
-const { __, __n } = i18n();
+const { __n } = i18n();
 const { codes } = SubprocessError;
 
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:subprocess:manager');
 const { log } = logger;
-const { highlight, note } = snooplogg.styles;
+const { highlight } = snooplogg.styles;
 
 /**
  * Manages spawned subprocesses through dispatcher handlers.
@@ -104,12 +104,12 @@ export default class SubprocessManager extends EventEmitter {
 						}
 
 						// create the subprocess descriptor
-						const proc = ctx.proc = Object.assign(new EventEmitter, {
+						const proc = ctx.proc = Object.assign(new EventEmitter(), {
 							pid,
 							command,
 							args,
 							options,
-							startTime: new Date
+							startTime: new Date()
 						});
 
 						Object.defineProperties(proc, {
@@ -118,7 +118,7 @@ export default class SubprocessManager extends EventEmitter {
 									let timer;
 
 									// listen for a graceful exit
-									proc.on('exit', code => {
+									proc.on('exit', () => {
 										clearTimeout(timer);
 										resolve();
 									});
@@ -169,7 +169,9 @@ export default class SubprocessManager extends EventEmitter {
 						subprocesses.push(proc);
 
 						let writable = true;
-						ctx.response.on('end', () => { writable = false; });
+						ctx.response.on('end', () => {
+							writable = false;
+						});
 
 						log('Spawned %s', highlight(pid));
 						ctx.response.write({ type: 'spawn', pid });

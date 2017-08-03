@@ -1,9 +1,9 @@
 import Agent from 'appcd-agent';
 import gawk from 'gawk';
 import os from 'os';
+import Response, { codes } from 'appcd-response';
 import snooplogg from './logger';
 
-import { codes } from 'appcd-response';
 import { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
 
 const logger = snooplogg('appcd:core:status');
@@ -286,10 +286,10 @@ export default class StatusMonitor {
 		this.prevMemory = { ...currentMemoryUsage };
 
 		logger.log(
-			`CPU: ${cpuUsage}  ` +
-			`Heap:${heapUsage}  ` + // purposely don't put a space after the ':', heapUsage is already left padded
-			`RSS: ${rssUsage}  ` +
-			`Uptime: ${note(`${(this.status.uptime / 60).toFixed(2)}m`)}`
+			`CPU: ${cpuUsage}  `
+			+ `Heap:${heapUsage}  ` // purposely don't put a space after the ':', heapUsage is already left padded
+			+ `RSS: ${rssUsage}  `
+			+ `Uptime: ${note(`${(this.status.uptime / 60).toFixed(2)}m`)}`
 		);
 	}
 }

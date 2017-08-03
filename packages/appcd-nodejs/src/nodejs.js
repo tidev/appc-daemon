@@ -22,6 +22,8 @@ import { STATUS_CODES } from 'http';
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:nodejs');
 const { highlight } = snooplogg.styles;
 
+const archiveRegExp = /\.(zip|pkg|tar\.gz)$/;
+
 /**
  * Ensures the correct Node.js version is installed and ready to go. If the
  * required Node.js version is not installed, initiate the download.
@@ -49,7 +51,7 @@ export function prepareNode({ arch, nodeHome, version } = {}) {
 		throw new TypeError('Expected version to be a non-empty string');
 	}
 
-	if (!/^v/.test(version)) {
+	if (version[0] !== 'v') {
 		version = `v${version}`;
 	}
 
@@ -82,7 +84,7 @@ export function prepareNode({ arch, nodeHome, version } = {}) {
  * @returns {Promise}
  */
 export function downloadNode({ arch, nodeHome, version } = {}) {
-	if (!/^v/.test(version)) {
+	if (version[0] !== 'v') {
 		version = `v${version}`;
 	}
 
@@ -174,7 +176,7 @@ export function downloadNode({ arch, nodeHome, version } = {}) {
  */
 export function extractNode({ archive, dest }) {
 	return new Promise((resolve, reject) => {
-		if (!/\.(zip|pkg|tar\.gz)$/.test(archive)) {
+		if (!archiveRegExp.test(archive)) {
 			return reject(new Error(`Unsupported archive: ${archive}`));
 		}
 
@@ -190,7 +192,7 @@ export function extractNode({ archive, dest }) {
 		let target = null;
 		const platform = process.env.APPCD_TEST_PLATFORM || process.platform;
 		const binary = platform === 'win32' ? 'node.exe' : 'node';
-		const binaryPath = path.join(dest, binary);
+		let binaryPath = path.join(dest, binary);
 
 		if (/\.zip$/.test(archive)) {
 			logger.log(`Extracting zip file: ${archive}`);
@@ -242,7 +244,7 @@ export function extractNode({ archive, dest }) {
 				if (isFile(nodeBinary)) {
 					fs.renameSync(nodeBinary, binaryPath);
 				} else {
-					nodeBinary = null;
+					binaryPath = null;
 				}
 			} catch (e) {
 				return reject(new Error(`Failed to extract pkg payload: ${e.message || e.toString()}`));
@@ -363,7 +365,13 @@ export function spawnNode({ arch, args, detached, nodeHome, nodeArgs, v8mem = 'a
 				opts.stdio = 'ignore';
 			}
 
-			logger.log('Spawning: %s', highlight(`${node} ${args.map(s => s.indexOf(' ') === -1 ? s : `"${s}"`).join(' ')} # ${JSON.stringify(opts)}`));
+			let prettyArgs = args
+				.map(s => {
+					return s.indexOf(' ') === -1 ? s : `"${s}"`;
+				})
+				.join(' ');
+
+			logger.log('Spawning: %s', highlight(`${node} ${prettyArgs} # ${JSON.stringify(opts)}`));
 
 			let tries = 3;
 

@@ -16,7 +16,7 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "fs-extra": "^4.0.0",
+    "fs-extra": "^4.0.1",
     "pluralize": "^6.0.0",
     "snooplogg": "^1.6.0",
     "source-map-support": "^0.4.15",

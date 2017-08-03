@@ -3,7 +3,6 @@ import fs from 'fs';
 import path from 'path';
 import snooplogg from 'snooplogg';
 
-import { arch } from 'appcd-util';
 import { expandPath } from 'appcd-path';
 import { isFile } from 'appcd-fs';
 import { spawnNode } from 'appcd-nodejs';
@@ -33,8 +32,8 @@ export function getAppcdVersion() {
  * @returns {String}
  */
 export function banner() {
-	return `${highlight('Appcelerator Daemon')}, version ${getAppcdVersion()}\n` +
-		'Copyright (c) 2016-2017, Appcelerator, Inc. All Rights Reserved.\n';
+	return `${highlight('Appcelerator Daemon')}, version ${getAppcdVersion()}\n`
+		+ 'Copyright (c) 2016-2017, Appcelerator, Inc. All Rights Reserved.\n';
 }
 
 /**
@@ -163,7 +162,7 @@ export function stopServer({ cfg, force }) {
 	});
 
 	const isRunning = () => {
-		return new Promise((resolve, reject) => {
+		return new Promise(resolve => {
 			const pid = isFile(pidFile) && parseInt(fs.readFileSync(pidFile, 'utf8'));
 			if (pid) {
 				try {

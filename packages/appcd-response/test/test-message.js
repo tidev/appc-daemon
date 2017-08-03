@@ -1,4 +1,4 @@
-import Message, { i18n, loadMessage } from '../dist/message';
+import { i18n, loadMessage } from '../dist/message';
 
 describe('message', () => {
 	it('should load a message by code', () => {

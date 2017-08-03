@@ -1,4 +1,4 @@
-import snooplogg, { createInstanceWithDefaults, Format, StdioStream } from 'snooplogg';
+import { createInstanceWithDefaults, Format, StdioStream } from 'snooplogg';
 
 const instance = createInstanceWithDefaults()
 	.snoop()

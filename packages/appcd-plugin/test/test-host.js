@@ -3,7 +3,7 @@ import path from 'path';
 import { spawn } from 'child_process';
 
 describe('Plugin Host', () => {
-	it('should error when trying to run an internal plugin', function (done) {
+	it('should error when trying to run the plugin host without IPC', function (done) {
 		this.timeout(10000);
 		this.slow(9000);
 

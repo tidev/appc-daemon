@@ -1,10 +1,9 @@
 import Config from 'appcd-config';
-import gawk, { isGawked } from 'gawk';
-import os from 'os';
+import Response, { codes } from 'appcd-response';
 import snooplogg from 'snooplogg';
 
 import { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
-import Response, { codes } from 'appcd-response';
+import { isGawked } from 'gawk';
 
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:config-service');
 const { highlight } = snooplogg.styles;

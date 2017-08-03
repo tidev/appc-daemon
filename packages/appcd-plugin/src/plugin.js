@@ -266,10 +266,7 @@ export default class Plugin extends EventEmitter {
 				// code path
 				Dispatcher.call('/appcd/config/plugin/defaultInactivityTimeout')
 					.then(ctx => ctx.response)
-					.catch(err => {
-						logger.warn('Failed to get default plugin inactivity timeout:', err);
-						return 60000;
-					})
+					.catch(() => Promise.resolve(60000))
 					.then(defaultInactivityTimeout => {
 						// restart the inactivity timer
 						const timeout = this.inactivityTimeout || defaultInactivityTimeout;

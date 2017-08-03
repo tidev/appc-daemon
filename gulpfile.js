@@ -13,6 +13,7 @@ const istanbul    = require('istanbul');
 const Nsp         = require('nsp');
 const PassThrough = require('stream').PassThrough;
 const path        = require('path');
+const plumber     = require('gulp-plumber');
 const runSequence = require('run-sequence');
 const semver      = require('semver');
 const spawn       = require('child_process').spawn;
@@ -216,6 +217,21 @@ gulp.task('upgrade-critical', cb => {
 		.then(() => checkPackages())
 		.then(results => upgradeDeps(results.criticalToUpdate))
 		.then(() => cb(), cb);
+});
+
+/*
+ * lint tasks
+ */
+gulp.task('lint', () => {
+	return gulp
+		.src([
+			path.join(__dirname, 'bootstrap/gulpfile.js'),
+			path.join(__dirname, 'packages/*/gulpfile.js'),
+			path.join(__dirname, 'plugins/*/gulpfile.js')
+		])
+		.pipe(debug({ title: 'Linting project:' }))
+		.pipe(plumber())
+		.pipe(chug({ tasks: [ 'lint' ] }));
 });
 
 /*

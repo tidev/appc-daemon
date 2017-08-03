@@ -33,12 +33,9 @@ export default function request(params, callback) {
 	return Dispatcher
 		.call('/appcd/config/network')
 		.then(ctx => {
-			return new Promise((resolve, reject) => {
-				let timeout = false;
-
+			return new Promise(resolve => {
 				const timer = setTimeout(() => {
 					logger.warn('Fetching config timed out');
-					timeout = true;
 					resolve();
 				}, 1000);
 
@@ -79,7 +76,7 @@ export default function request(params, callback) {
 			}
 			return Promise.resolve();
 		})
-		.then(conf => new Promise((resolve, reject) => {
+		.then(conf => new Promise(resolve => {
 			conf = Object.assign({ method: 'GET' }, conf, params);
 
 			// configure proxy

@@ -5,7 +5,6 @@ import snooplogg from 'snooplogg';
 
 import { debounce } from 'appcd-util';
 import { EventEmitter } from 'events';
-import { inspect } from 'util';
 
 const { log } = snooplogg.config({ theme: 'standard' })('appcd:fswatcher');
 const { highlight, green } = snooplogg.styles;
@@ -21,7 +20,7 @@ const rootRegExp = /^(\/|[A-Za-z]+:\\)(.+)?$/;
  * An emitter that is used to broadcast all FS events for all nodes.
  * @type {EventEmitter}
  */
-export const rootEmitter = new EventEmitter;
+export const rootEmitter = new EventEmitter();
 
 /**
  * A map of roots to watched node trees.
@@ -78,12 +77,12 @@ export class Node {
 		log('Incrementing stats.nodes to ' + stats.nodes);
 
 		this.children = {};
-		this.links = new Set;
+		this.links = new Set();
 		this.name = _path.basename(path) || path;
 		this.parent = parent || null;
 		this.path = this.realPath = path;
 		this.recursive = 0;
-		this.watchers = new Set;
+		this.watchers = new Set();
 		this.stat();
 	}
 
@@ -155,7 +154,7 @@ export class Node {
 			stats.fswatchers++;
 
 			const now = Date.now();
-			this.files = new Map;
+			this.files = new Map();
 
 			for (const filename of fs.readdirSync(this.path)) {
 				const file = _path.join(this.path, filename);
@@ -704,7 +703,7 @@ function parsePath(path) {
 		throw new Error(`Invalid path "${path}"`);
 	}
 
-	return { rpath, root, segments: m && m[2] ? m[2].split(_path.sep) : [] };
+	return { root, segments: m && m[2] ? m[2].split(_path.sep) : [] };
 }
 
 /**
@@ -715,7 +714,7 @@ function parsePath(path) {
  * @returns {Node}
  */
 export function register(path, watcher) {
-	const { rpath, root, segments } = parsePath(path);
+	const { root, segments } = parsePath(path);
 
 	if (watcher) {
 		if (!(watcher instanceof FSWatcher)) {
@@ -763,7 +762,7 @@ export function register(path, watcher) {
  * @returns {Boolean} Returns `true` if the watcher was successfully unregistered.
  */
 export function unregister(path, watcher) {
-	const { rpath, root, segments } = parsePath(path);
+	const { root, segments } = parsePath(path);
 
 	if (watcher && !(watcher instanceof FSWatcher)) {
 		throw new TypeError('Expected watcher to be a FSWatcher instance');
@@ -852,7 +851,7 @@ export function renderTree(node, depth = 0, parent = []) {
 		const last = i + 1 === len;
 		const symbol = !depth ? '' : last ? '└─' : '├─';
 		let indent = '';
-		for (var j = 1; j < depth; j++) {
+		for (let j = 1; j < depth; j++) {
 			indent += (parent[j] ? ' ' : '│') + ' ';
 		}
 		let type = node.type & SYMLINK ? 'l' : '';

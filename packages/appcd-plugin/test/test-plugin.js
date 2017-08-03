@@ -1,10 +1,6 @@
 import path from 'path';
 import PluginError from '../dist/plugin-error';
-import Plugin, { states } from '../dist/plugin';
-import snooplogg from 'snooplogg';
-
-const log = snooplogg.config({ theme: 'detailed' })('test:appcd:plugin').log;
-const { highlight } = snooplogg.styles;
+import Plugin from '../dist/plugin';
 
 describe('Plugin', () => {
 	it('should error if plugin path is invalid', () => {

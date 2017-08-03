@@ -154,7 +154,7 @@ describe('nodejs', () => {
 				arch: 'x64',
 				nodeHome: tmpDir,
 				version: 'v123'
-			}).then(binary => {
+			}).then(() => {
 				done(new Error('Expected 404'));
 			}).catch(err => {
 				expect(err).to.be.an.instanceof(Error);
@@ -168,7 +168,7 @@ describe('nodejs', () => {
 		it('should fail if invalid archive type', done => {
 			extractNode({
 				archive: path.join(__dirname, 'fixtures', 'bad.txt')
-			}).then(binary => {
+			}).then(() => {
 				done(new Error('Expected unsupported archive error'));
 			}).catch(err => {
 				expect(err.message).to.match(/^Unsupported archive/);
@@ -179,7 +179,7 @@ describe('nodejs', () => {
 		it('should error if dest is missing', done => {
 			extractNode({
 				archive: path.join(__dirname, 'fixtures', 'bad.zip')
-			}).then(binary => {
+			}).then(() => {
 				done(new Error('Expected bad dest error'));
 			}).catch(err => {
 				expect(err).to.be.an.instanceof(Error);
@@ -191,7 +191,7 @@ describe('nodejs', () => {
 			extractNode({
 				archive: path.join(__dirname, 'fixtures', 'bad.zip'),
 				dest: ''
-			}).then(binary => {
+			}).then(() => {
 				done(new Error('Expected bad dest error'));
 			}).catch(err => {
 				expect(err).to.be.an.instanceof(Error);
@@ -203,7 +203,7 @@ describe('nodejs', () => {
 			extractNode({
 				archive: path.join(__dirname, 'fixtures', 'bad.zip'),
 				dest: function () {}
-			}).then(binary => {
+			}).then(() => {
 				done(new Error('Expected bad dest error'));
 			}).catch(err => {
 				expect(err).to.be.an.instanceof(Error);
@@ -217,7 +217,7 @@ describe('nodejs', () => {
 			extractNode({
 				archive: path.join(__dirname, 'fixtures', 'bad.zip'),
 				dest: tmpDir
-			}).then(binary => {
+			}).then(() => {
 				fs.removeSync(tmpDir);
 				done(new Error('Expected bad zip to not be extracted'));
 			}).catch(err => {
@@ -233,7 +233,7 @@ describe('nodejs', () => {
 			extractNode({
 				archive: path.join(__dirname, 'fixtures', 'bad.tar.gz'),
 				dest: tmpDir
-			}).then(binary => {
+			}).then(() => {
 				fs.removeSync(tmpDir);
 				done(new Error('Expected bad tarball to not be extracted'));
 			}).catch(err => {
@@ -249,7 +249,7 @@ describe('nodejs', () => {
 			extractNode({
 				archive: path.join(__dirname, 'fixtures', 'bad.pkg'),
 				dest: tmpDir
-			}).then(binary => {
+			}).then(() => {
 				fs.removeSync(tmpDir);
 				done(new Error('Expected bad pkg to not be extracted'));
 			}).catch(err => {
@@ -265,7 +265,7 @@ describe('nodejs', () => {
 			extractNode({
 				archive: path.join(__dirname, 'fixtures', 'invalid.zip'),
 				dest: tmpDir
-			}).then(binary => {
+			}).then(() => {
 				fs.removeSync(tmpDir);
 				done(new Error('Expected invalid node zip to not be extracted'));
 			}).catch(err => {
@@ -281,7 +281,7 @@ describe('nodejs', () => {
 			extractNode({
 				archive: path.join(__dirname, 'fixtures', 'invalid.tar.gz'),
 				dest: tmpDir
-			}).then(binary => {
+			}).then(() => {
 				fs.removeSync(tmpDir);
 				done(new Error('Expected invalid node tarball to not be extracted'));
 			}).catch(err => {

@@ -39,13 +39,12 @@ describe('SubprocessManager', () => {
 			const sm = new SubprocessManager();
 			let count = 0;
 			let killedPid = null;
-			let wait = Promise.resolve();
 
-			sm.on('change', (obj, src) => {
+			sm.on('change', () => {
 				count++;
 			});
 
-			sm.on('spawn', proc => {
+			sm.on('spawn', () => {
 				if (count === 5) {
 					sm.dispatcher
 						.call('/status')
@@ -117,7 +116,7 @@ describe('SubprocessManager', () => {
 						}
 					})
 					.then(ctx => {
-						calls.push(new Promise((resolve, reject) => {
+						calls.push(new Promise(resolve => {
 							ctx.response.on('data', data => {
 								if (data.type === 'exit') {
 									resolve();
@@ -125,7 +124,7 @@ describe('SubprocessManager', () => {
 							});
 						}));
 					})
-					.catch(err => {
+					.catch(() => {
 						calls.push(Promise.resolve());
 					});
 			}
@@ -165,7 +164,7 @@ describe('SubprocessManager', () => {
 						command: 'no_way_does_this_exist'
 					}
 				})
-				.then(result => {
+				.then(() => {
 					done(new Error('Expected spawn call to fail'));
 				})
 				.catch(err => {
@@ -267,7 +266,7 @@ describe('SubprocessManager', () => {
 			const sm = new SubprocessManager();
 			sm.dispatcher
 				.call('/spawn')
-				.then(result => {
+				.then(() => {
 					done(new Error('Expected error'));
 				})
 				.catch(err => {
@@ -564,7 +563,7 @@ describe('SubprocessManager', () => {
 			const sm = new SubprocessManager();
 			sm.dispatcher
 				.call('/kill')
-				.then(result => {
+				.then(() => {
 					done(new Error('Expected error'));
 				})
 				.catch(err => {
@@ -578,7 +577,7 @@ describe('SubprocessManager', () => {
 			const sm = new SubprocessManager();
 			sm.dispatcher
 				.call('/kill/it')
-				.then(result => {
+				.then(() => {
 					done(new Error('Expected error'));
 				})
 				.catch(err => {
@@ -625,7 +624,7 @@ describe('SubprocessManager', () => {
 			const sm = new SubprocessManager();
 			sm.dispatcher
 				.call(`/kill/${process.pid}`, { data: { signal: 'foo' } })
-				.then(result => {
+				.then(() => {
 					done(new Error('Expected error'));
 				})
 				.catch(err => {
@@ -645,7 +644,7 @@ describe('SubprocessManager', () => {
 		it('should shutdown 2 spawned processes', done => {
 			const sm = new SubprocessManager();
 
-			sm.on('spawn', proc => {
+			sm.on('spawn', () => {
 				if (sm.subprocesses.length === 1) {
 					sm.shutdown()
 						.then(() => {
@@ -676,7 +675,7 @@ describe('SubprocessManager', () => {
 
 			const sm = new SubprocessManager();
 
-			sm.on('spawn', proc => {
+			sm.on('spawn', () => {
 				setTimeout(async () => {
 					try {
 						expect(sm.subprocesses).to.have.lengthOf(1);
@@ -713,7 +712,7 @@ describe('SubprocessManager', () => {
 			let proc;
 			sm.on('spawn', p => {
 				proc = p;
-				proc.on('exit', code => {
+				proc.on('exit', () => {
 					// put the dead proc back in the list... which you shouldn't actually do
 					sm.subprocesses.push(proc);
 

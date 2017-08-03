@@ -7,7 +7,6 @@ import WebSocketSession from '../dist/websocket-session';
 import { IncomingMessage } from 'http';
 
 const log = snooplogg.config({ theme: 'detailed' })('test:appcd:core:websocket-session').log;
-const { highlight } = snooplogg.styles;
 
 describe('WebSocketSession', () => {
 	afterEach(function (done) {
@@ -50,13 +49,13 @@ describe('WebSocketSession', () => {
 
 		expect(() => {
 			const ws = new WebSocket('ws://127.0.0.1:1337').on('error', () => {});
-			const msg = new IncomingMessage;
+			const msg = new IncomingMessage();
 			new WebSocketSession(ws, msg, function () {});
 		}).to.throw(TypeError, 'Expected a Dispatcher instance');
 
 		expect(() => {
 			const ws = new WebSocket('ws://127.0.0.1:1337').on('error', () => {});
-			const msg = new IncomingMessage;
+			const msg = new IncomingMessage();
 			new WebSocketSession(ws, msg, {});
 		}).to.throw(TypeError, 'Expected a Dispatcher instance');
 	});
@@ -67,7 +66,7 @@ describe('WebSocketSession', () => {
 			port:     1337
 		});
 
-		const dispatcher = new Dispatcher;
+		const dispatcher = new Dispatcher();
 		let uuid = 0;
 
 		dispatcher.register('/foo', ctx => {
@@ -84,11 +83,13 @@ describe('WebSocketSession', () => {
 				// call the websocket
 				const socket = new WebSocket('ws://127.0.0.1:1337')
 					.on('error', () => {})
-					.on('message', (msg, flags) => {
+					.on('message', msg => {
 						if (typeof msg === 'string') {
 							try {
 								msg = JSON.parse(msg);
-							} catch (e) {}
+							} catch (e) {
+								// squeltch
+							}
 						} else {
 							msg = msgpack.decode(msg);
 						}

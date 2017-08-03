@@ -7,10 +7,8 @@ import snooplogg from 'snooplogg';
 import vm from 'vm';
 
 import { EventEmitter } from 'events';
-import { wrap } from 'module';
 
-const snooplogger = snooplogg.config({ theme: 'detailed' });
-const logger = snooplogger(process.connected ? 'appcd:plugin:impl:child' : 'appcd:plugin:impl:parent');
+const logger = snooplogg.config({ theme: 'detailed' })(process.connected ? 'appcd:plugin:impl:child' : 'appcd:plugin:impl:parent');
 const { highlight } = snooplogg.styles;
 
 /**
@@ -41,13 +39,13 @@ export default class PluginImplBase extends EventEmitter {
 		 * The plugin's dispatcher.
 		 * @type {Dispatcher}
 		 */
-		this.dispatcher = new Dispatcher;
+		this.dispatcher = new Dispatcher();
 
 		/**
 		 * The plugin's namespaced logger.
 		 * @type {SnoopLogg}
 		 */
-		this.logger = snooplogger(plugin.toString());
+		this.logger = snooplogg(plugin.toString());
 		Object.defineProperty(this.logger, 'trace', { value: console.trace.bind(console) });
 
 		/**
@@ -108,27 +106,13 @@ export default class PluginImplBase extends EventEmitter {
 		 * @type {Object}
 		 */
 		this.globalObj = {
-			...global,
-
 			appcd: {
 				call: Dispatcher.call.bind(Dispatcher),
 				register: this.dispatcher.register.bind(this.dispatcher)
 			},
 
-			console: this.logger,
-
-			process: {
-				...process
-			}
+			console: this.logger
 		};
-
-		if (plugin.type === 'internal' || !plugin.allowProcessExit) {
-			Object.defineProperty(this.globalObj.process, 'exit', {
-				value: () => {
-					// noop
-				}
-			});
-		}
 	}
 
 	/**
@@ -161,29 +145,36 @@ export default class PluginImplBase extends EventEmitter {
 			code = code.substring(p);
 		}
 
-		const ctx = { exports: {} };
+		const module = { exports: {} };
 		const filename = path.basename(main);
+		const sig = [ 'exports', 'require', 'module', '__filename', '__dirname' ]
+			.concat(Object.keys(this.globalObj))
+			.join(', ');
+		const args = [
+			module.exports,
+			require, // TODO: wrap!
+			module,
+			filename,
+			path.dirname(main)
+		].concat(Object.values(this.globalObj));
+
+		code = `(function (${sig}) {
+				${code}
+			})`;
 
 		try {
-			const compiled = vm.runInNewContext(wrap(code), this.globalObj, {
+			const closure = vm.runInThisContext(code, {
 				filename,
 				lineOffset: 0,
 				displayErrors: false
 			});
-
-			compiled.apply(ctx.exports, [
-				ctx.exports,
-				require,
-				ctx,
-				filename,
-				path.dirname(main)
-			]);
+			closure.apply(global, args);
 		} catch (e) {
 			e.message = 'Failed to load plugin: ' + e.message;
 			throw new PluginError(e);
 		}
 
-		this.module = ctx.exports && typeof ctx.exports === 'object' ? ctx.exports : null;
+		this.module = module.exports && typeof module.exports === 'object' ? module.exports : null;
 
 		// call the plugin's activate handler
 		if (this.module && typeof this.module.activate === 'function') {

@@ -107,7 +107,7 @@ describe('Config', () => {
 			}).to.throw(TypeError, 'Expected config file to be a string');
 
 			expect(function () {
-				new Config({ configFile: function(){} });
+				new Config({ configFile: function () {} });
 			}).to.throw(TypeError, 'Expected config file to be a string');
 
 			expect(function () {
@@ -263,7 +263,7 @@ describe('Config', () => {
 		});
 
 		it('should override existing', () => {
-			const config = new Config({ config: { foo: { bar: ['baz'] } } });
+			const config = new Config({ config: { foo: { bar: [ 'baz' ] } } });
 			config.set('foo.bar', 'wiz');
 			expect(config.get('foo.bar')).to.equal('wiz');
 		});
@@ -384,9 +384,9 @@ describe('Config', () => {
 
 		it('should append arrays', () => {
 			const config = new Config();
-			config.set('foo', ['bar']);
-			config.merge({ foo: ['baz'] });
-			expect(config.get('foo')).to.deep.equal(['bar', 'baz']);
+			config.set('foo', [ 'bar' ]);
+			config.merge({ foo: [ 'baz' ] });
+			expect(config.get('foo')).to.deep.equal([ 'bar', 'baz' ]);
 		});
 
 		it('should mix deep objects', () => {
@@ -473,7 +473,7 @@ describe('Config', () => {
 
 			const config = new Config();
 			config.parseJS(code);
-			expect(Array.from(config.meta._map.keys())).to.deep.equal(['someSetting', 'otherSetting']);
+			expect(Array.from(config.meta._map.keys())).to.deep.equal([ 'someSetting', 'otherSetting' ]);
 		});
 
 		it('should enforce datatypes', () => {

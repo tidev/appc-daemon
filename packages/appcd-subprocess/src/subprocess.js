@@ -1,4 +1,4 @@
-import snooplogg, { styles } from 'snooplogg';
+import snooplogg from 'snooplogg';
 import SubprocessError from './subprocess-error';
 import _which from 'which';
 
@@ -42,7 +42,7 @@ export function run(cmd, args, opts) {
 			opts = {};
 		}
 
-		logger.log('Executing: %s', `${styles.highlight(cmd + (args ? args.map(a => a.indexOf(' ') !== -1 ? ` "${a}"` : ` ${a}`).join('') : ''))}`);
+		logger.log('Executing: %s %s', highlight(cmd), highlight(prettyArgs(args)));
 
 		const child = _spawn(cmd, args, opts);
 
@@ -116,7 +116,7 @@ export function spawn(params = {}) {
 		}
 	}
 
-	logger.log('Executing: %s %s', highlight(params.command), highlight(args.map(a => typeof a === 'string' && a.indexOf(' ') !== -1 ? `"${a}"` : a).join(' ')));
+	logger.log('Executing: %s %s', highlight(params.command), highlight(prettyArgs(args)));
 
 	return {
 		command: params.command,
@@ -156,4 +156,22 @@ export function which(executables) {
 				});
 			});
 		});
+}
+
+/**
+ * Formats an array of arguments and quotes arguments containing a space.
+ *
+ * @param {Array.<String>} args - The array of arguments.
+ * @returns {String}
+ */
+function prettyArgs(args) {
+	if (!args) {
+		return '';
+	}
+
+	return args
+		.map(a => {
+			return typeof a === 'string' && a.indexOf(' ') !== -1 ? `"${a}"` : a;
+		})
+		.join(' ');
 }

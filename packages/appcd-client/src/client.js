@@ -76,7 +76,7 @@ export default class Client {
 	 * @access public
 	 */
 	connect() {
-		const emitter = new EventEmitter;
+		const emitter = new EventEmitter();
 
 		// need to delay request so event emitter can be returned and events can
 		// be wired up
@@ -138,7 +138,7 @@ export default class Client {
 	 * @access public
 	 */
 	request({ path, data, type } = {}) {
-		const emitter = new EventEmitter;
+		const emitter = new EventEmitter();
 
 		// need to delay request so event emitter can be returned and events can
 		// be wired up
@@ -223,7 +223,6 @@ function constructUserAgent(userAgent) {
 		const name = path.basename(entry.filename);
 		const root = path.resolve('/');
 		let dir = path.dirname(entry.filename);
-		let version = '';
 
 		do {
 			const pkgJsonFile = path.join(dir, 'package.json');

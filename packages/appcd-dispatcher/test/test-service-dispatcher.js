@@ -1,7 +1,5 @@
-import Dispatcher from '../dist/dispatcher';
+import Response, { codes } from 'appcd-response';
 import ServiceDispatcher from '../dist/service-dispatcher';
-
-import Response, { codes, loadMessage } from 'appcd-response';
 
 describe('ServiceDispatcher', () => {
 	it('should fail if path is invalid', () => {
@@ -42,7 +40,7 @@ describe('ServiceDispatcher', () => {
 		it('should invoke service with call handler', done => {
 			let count = 0;
 			const sd = new ServiceDispatcher('/foo', {
-				onCall: ctx => {
+				onCall() {
 					count++;
 				}
 			});
@@ -59,7 +57,7 @@ describe('ServiceDispatcher', () => {
 		it('should invoke service with call handler with explicit type', done => {
 			let count = 0;
 			const sd = new ServiceDispatcher('/foo', {
-				onCall: ctx => {
+				onCall() {
 					count++;
 				}
 			});
@@ -101,7 +99,7 @@ describe('ServiceDispatcher', () => {
 		it('should invoke service that doesn\'t have a path', done => {
 			let count = 0;
 			const sd = new ServiceDispatcher({
-				onCall: ctx => {
+				onCall() {
 					count++;
 				}
 			});
@@ -120,7 +118,7 @@ describe('ServiceDispatcher', () => {
 		it('should create a new subscription', done => {
 			let count = 0;
 			const sd = new ServiceDispatcher('/foo', {
-				onSubscribe: (ctx, publish) => {
+				onSubscribe() {
 					count++;
 				}
 			});
@@ -134,7 +132,9 @@ describe('ServiceDispatcher', () => {
 							type: 'subscribe'
 						},
 						response: {
-							once: () => {},
+							once() {
+								// noop
+							},
 							write: response => {
 								expect(response.message).to.be.instanceof(Response);
 								expect(response.message.toString()).to.equal('Subscribed');
@@ -154,7 +154,7 @@ describe('ServiceDispatcher', () => {
 		it('should create a new subscriptions for multiple subs', done => {
 			let count = 0;
 			const sd = new ServiceDispatcher('/foo', {
-				onSubscribe: (ctx, publish) => {
+				onSubscribe() {
 					count++;
 				}
 			});
@@ -168,8 +168,10 @@ describe('ServiceDispatcher', () => {
 							type: 'subscribe'
 						},
 						response: {
-							once: () => {},
-							write: response => {
+							once() {
+								// noop
+							},
+							write(response) {
 								expect(response.message).to.be.instanceof(Response);
 								expect(response.message.toString()).to.equal('Subscribed');
 								expect(response.message.status).to.equal(201);
@@ -186,8 +188,10 @@ describe('ServiceDispatcher', () => {
 							type: 'subscribe'
 						},
 						response: {
-							once: () => {},
-							write: response => {
+							once() {
+								// noop
+							},
+							write(response) {
 								expect(response.message).to.be.instanceof(Response);
 								expect(response.message.toString()).to.equal('Subscribed');
 								expect(response.message.status).to.equal(201);
@@ -206,7 +210,7 @@ describe('ServiceDispatcher', () => {
 		it('should publish message to subscriber', done => {
 			let count = 0;
 			const sd = new ServiceDispatcher('/foo', {
-				onSubscribe: (ctx, publish) => {
+				onSubscribe(ctx, publish) {
 					setImmediate(() => {
 						count++;
 						publish('foo!');
@@ -215,7 +219,7 @@ describe('ServiceDispatcher', () => {
 			});
 
 			Promise.resolve()
-				.then(() => new Promise((resolve, reject) => {
+				.then(() => new Promise(resolve => {
 					sd.handler({
 						path: '/foo',
 						realPath: '/foo',
@@ -223,8 +227,10 @@ describe('ServiceDispatcher', () => {
 							type: 'subscribe'
 						},
 						response: {
-							once: () => {},
-							write: response => {
+							once() {
+								// noop
+							},
+							write(response) {
 								if (count === 0) {
 									expect(response.message).to.be.instanceof(Response);
 									expect(response.message.toString()).to.equal('Subscribed');
@@ -252,7 +258,9 @@ describe('ServiceDispatcher', () => {
 	describe('unsubscribe', () => {
 		it('should error if missing subscription id', done => {
 			const sd = new ServiceDispatcher('/foo', {
-				onUnsubscribe: (ctx, publish) => {}
+				onUnsubscribe() {
+					// noop
+				}
 			});
 
 			Promise.resolve()
@@ -263,8 +271,12 @@ describe('ServiceDispatcher', () => {
 							type: 'unsubscribe'
 						},
 						response: {
-							once: () => {},
-							write: response => {}
+							once() {
+								// noop
+							},
+							write() {
+								// noop
+							}
 						}
 					};
 
@@ -280,7 +292,9 @@ describe('ServiceDispatcher', () => {
 
 		it('should notify if not subscribed', done => {
 			const sd = new ServiceDispatcher('/foo', {
-				onUnsubscribe: (ctx, publish) => {}
+				onUnsubscribe() {
+					// noop
+				}
 			});
 
 			Promise.resolve()
@@ -292,8 +306,12 @@ describe('ServiceDispatcher', () => {
 							type: 'unsubscribe'
 						},
 						response: {
-							once: () => {},
-							write: response => {}
+							once() {
+								// noop
+							},
+							write() {
+								// noop
+							}
 						}
 					};
 
@@ -309,8 +327,12 @@ describe('ServiceDispatcher', () => {
 
 		it('should unsubscribe and delete subscription topic', done => {
 			const sd = new ServiceDispatcher('/foo', {
-				onSubscribe: (ctx, publish) => {},
-				onUnsubscribe: (ctx, publish) => {}
+				onSubscribe() {
+					// noop
+				},
+				onUnsubscribe() {
+					// noop
+				}
 			});
 
 			let counter = 0;
@@ -324,8 +346,10 @@ describe('ServiceDispatcher', () => {
 							type: 'subscribe'
 						},
 						response: {
-							once: () => {},
-							write: response => {
+							once() {
+								// noop
+							},
+							write(response) {
 								switch (++counter) {
 									case 1:
 										expect(response.message).to.be.instanceof(Response);
@@ -344,8 +368,12 @@ describe('ServiceDispatcher', () => {
 												type: 'unsubscribe'
 											},
 											response: {
-												once: () => {},
-												write: response => {}
+												once() {
+													// noop
+												},
+												write() {
+													// noop
+												}
 											}
 										};
 
@@ -376,8 +404,12 @@ describe('ServiceDispatcher', () => {
 
 		it('should unsubscribe if stream closes', done => {
 			const sd = new ServiceDispatcher('/foo', {
-				onSubscribe: (ctx, publish) => {},
-				onUnsubscribe: (ctx, publish) => {}
+				onSubscribe() {
+					// noop
+				},
+				onUnsubscribe() {
+					// noop
+				}
 			});
 
 			Promise.resolve()
@@ -391,10 +423,10 @@ describe('ServiceDispatcher', () => {
 							type: 'subscribe'
 						},
 						response: {
-							once: (evt, fn) => {
+							once(evt, fn) {
 								unsub[evt] = fn;
 							},
-							write: response => {
+							write(response) {
 								expect(response.message).to.be.instanceof(Response);
 								expect(response.message.toString()).to.equal('Subscribed');
 								expect(response.message.status).to.equal(201);
@@ -415,8 +447,12 @@ describe('ServiceDispatcher', () => {
 
 		it('should unsubscribe if stream errors', done => {
 			const sd = new ServiceDispatcher('/foo', {
-				onSubscribe: (ctx, publish) => {},
-				onUnsubscribe: (ctx, publish) => {}
+				onSubscribe() {
+					// noop
+				},
+				onUnsubscribe() {
+					// noop
+				}
 			});
 
 			Promise.resolve()
@@ -430,10 +466,10 @@ describe('ServiceDispatcher', () => {
 							type: 'subscribe'
 						},
 						response: {
-							once: (evt, fn) => {
+							once(evt, fn) {
 								unsub[evt] = fn;
 							},
-							write: response => {
+							write(response) {
 								expect(response.message).to.be.instanceof(Response);
 								expect(response.message.toString()).to.equal('Subscribed');
 								expect(response.message.status).to.equal(201);

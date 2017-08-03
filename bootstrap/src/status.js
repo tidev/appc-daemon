@@ -3,7 +3,7 @@ import Table from 'cli-table2';
 import { createInstanceWithDefaults, StdioStream } from 'snooplogg';
 import { banner, createRequest, loadConfig } from './common';
 
-const logger = createInstanceWithDefaults().config({ theme: 'compact' }).enable('*').pipe(new StdioStream);
+const logger = createInstanceWithDefaults().config({ theme: 'compact' }).enable('*').pipe(new StdioStream());
 const { log } = logger;
 const { alert, highlight, note } = logger.styles;
 const { filesize, numberFormat, relativeTime } = logger.humanize;
@@ -76,13 +76,9 @@ const cmd = {
 				log(status.fs.tree);
 				log();
 
-				// console.log(status.plugins);
-				// activeRequests
-				// totalRequests
-
 				// plugin information
 				if (status.plugins.length) {
-					params.head = [ 'Plugin', 'Version', 'Type', 'Path', 'Node.js', 'Status' ],
+					params.head = [ 'Plugin', 'Version', 'Type', 'Path', 'Node.js', 'Status', 'Active/Total Requests' ];
 					table = new Table(params);
 					for (const plugin of status.plugins) {
 						let status = '';
@@ -104,7 +100,8 @@ const cmd = {
 							plugin.type,
 							plugin.path,
 							plugin.nodeVersion,
-							status
+							status,
+							`${numberFormat(plugin.activeRequests)} / ${numberFormat(plugin.totalRequests)}`
 						]);
 					}
 					log(table.toString());
@@ -115,12 +112,24 @@ const cmd = {
 
 				// subprocess information
 				if (status.subprocesses.length) {
-					params.head = [ 'PID', 'Command', 'Started' ],
+					params.head = [ 'PID', 'Command', 'Started' ];
 					table = new Table(params);
 					for (const subprocess of status.subprocesses) {
+						let args = '';
+						if (subprocess.args.length) {
+							args = ' ' + subprocess.args
+								.map(a => {
+									if (typeof a === 'string' && a.indexOf(' ') !== -1) {
+										return `"${a}"`;
+									}
+									return a;
+								})
+								.join(' ');
+						}
+
 						table.push([
 							highlight(subprocess.pid),
-							subprocess.command + (subprocess.args.length ? ` ${subprocess.args.map(a => typeof a === 'string' && a.indexOf(' ') !== -1 ? `"${a}"` : a).join(' ')}` : ''),
+							subprocess.command + args,
 							relativeTime(subprocess.startTime.getTime() / 1000)
 						]);
 					}

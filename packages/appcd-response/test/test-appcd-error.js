@@ -8,14 +8,14 @@ describe('AppcdError', () => {
 		const err = new AppcdError();
 		expect(err.message).to.equal('Unknown Error');
 		expect(err.toString()).to.equal('AppcdError: Unknown Error');
-		expect(err.stack).to.match(/^AppcdError\:/);
+		expect(err.stack).to.match(/^AppcdError:/);
 	});
 
 	it('should create an error with a string', () => {
 		const err = new AppcdError('Oh no!');
 		expect(err.message).to.equal('Oh no!');
 		expect(err.toString()).to.equal('AppcdError: Oh no!');
-		expect(err.stack).to.match(/^AppcdError\:/);
+		expect(err.stack).to.match(/^AppcdError:/);
 	});
 
 	it('should create an error with a string and string args', () => {
@@ -25,7 +25,7 @@ describe('AppcdError', () => {
 	});
 
 	it('should create an error with a string and non-string args', () => {
-		const err = new AppcdError('Invalid value: %s', ['a','b']);
+		const err = new AppcdError('Invalid value: %s', [ 'a', 'b' ]);
 		expect(err.message).to.equal('Invalid value: ["a","b"]');
 		expect(err.toString()).to.equal('AppcdError: Invalid value: ["a","b"]');
 	});
@@ -142,7 +142,7 @@ describe('AppcdError', () => {
 			expect(err.code).to.equal('ENOENT');
 			expect(err.syscall).to.equal('stat');
 			expect(err.path).to.equal(file);
-			expect(err.toString()).to.match(/^AppcdError\: ENOENT\: no such file or directory/);
+			expect(err.toString()).to.match(/^AppcdError: ENOENT: no such file or directory/);
 		}
 	});
 });
@@ -158,7 +158,7 @@ describe('Custom Errors', () => {
 		expect(err).to.be.instanceof(MyError);
 		expect(err.message).to.equal('Oh no!');
 		expect(err.toString()).to.equal('MyError: Oh no!');
-		expect(err.stack).to.match(/^MyError\:/);
+		expect(err.stack).to.match(/^MyError:/);
 	});
 
 	it('should create a custom error with default status/code', () => {
@@ -184,7 +184,7 @@ describe('Custom Errors', () => {
 		}).to.throw(TypeError, 'Expected custom error class name to be a non-empty string');
 
 		expect(() => {
-			createErrorClass(function(){});
+			createErrorClass(function () {});
 		}).to.throw(TypeError, 'Expected custom error class name to be a non-empty string');
 	});
 
@@ -223,7 +223,7 @@ describe('Custom Errors', () => {
 			expect(err.code).to.equal('ENOENT');
 			expect(err.syscall).to.equal('stat');
 			expect(err.path).to.equal(file);
-			expect(err.toString()).to.match(/^MyError\: ENOENT\: no such file or directory/);
+			expect(err.toString()).to.match(/^MyError: ENOENT: no such file or directory/);
 		}
 	});
 });

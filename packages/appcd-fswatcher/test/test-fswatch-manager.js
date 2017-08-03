@@ -1,7 +1,6 @@
 import fs from 'fs-extra';
 import FSWatchManager, { renderTree, reset, roots } from '../dist/index';
 import path from 'path';
-import Response from 'appcd-response';
 import snooplogg from 'snooplogg';
 import tmp from 'tmp';
 
@@ -30,30 +29,35 @@ function makeTempDir() {
 describe('FSWatchManager', () => {
 	describe('error handling', () => {
 		it('should continue to next route if type is a call', done => {
-			const manager = new FSWatchManager;
+			const manager = new FSWatchManager();
 
 			Promise.resolve()
-				.then(() => new Promise((resolve, reject) => {
+				.then(() => new Promise(resolve => {
 					manager.dispatcher.handler({
 						path: '/',
 						request: {},
 						response: {
-							once: () => {},
-							write: response => {}
+							once() {
+								// noop
+							},
+							write() {
+								// noop
+							}
 						}
 					}, () => {
-						done();
+						resolve();
 						return Promise.resolve();
 					});
 				}))
+				.then(() => done())
 				.catch(done);
 		});
 
 		it('should fail if watch path not specified', done => {
-			const manager = new FSWatchManager;
+			const manager = new FSWatchManager();
 
 			Promise.resolve()
-				.then(() => new Promise((resolve, reject) => {
+				.then(() => new Promise(() => {
 					manager.dispatcher.handler({
 						path: '/',
 						request: {
@@ -61,8 +65,12 @@ describe('FSWatchManager', () => {
 							type: 'subscribe'
 						},
 						response: {
-							once: () => {},
-							write: response => {}
+							once() {
+								// noop
+							},
+							write() {
+								// noop
+							}
 						}
 					}, () => Promise.resolve());
 				}))
@@ -99,7 +107,7 @@ describe('FSWatchManager', () => {
 			log('Creating tmp directory: %s', highlight(tmp));
 
 			const filename = path.join(tmp, 'foo.txt');
-			const manager = new FSWatchManager;
+			const manager = new FSWatchManager();
 			let counter = 0;
 
 			const stats = manager.status();
@@ -119,8 +127,10 @@ describe('FSWatchManager', () => {
 								type: 'subscribe'
 							},
 							response: {
-								once: () => {},
-								write: response => {
+								once() {
+									// noop
+								},
+								write(response) {
 									try {
 										switch (++counter) {
 											case 1:
@@ -161,8 +171,12 @@ describe('FSWatchManager', () => {
 																type: 'unsubscribe'
 															},
 															response: {
-																once: () => {},
-																write: response => {}
+																once() {
+																	// noop
+																},
+																write() {
+																	// noop
+																}
 															}
 														};
 														manager.dispatcher.handler(ctx, () => Promise.resolve());
@@ -212,7 +226,7 @@ describe('FSWatchManager', () => {
 			log('Creating bar directory: %s', highlight(barDir));
 			fs.mkdirsSync(barDir);
 
-			const manager = new FSWatchManager;
+			const manager = new FSWatchManager();
 
 			manager.dispatcher.handler({
 				request: {
@@ -221,8 +235,12 @@ describe('FSWatchManager', () => {
 					type: 'subscribe'
 				},
 				response: {
-					once: () => {},
-					write: response => {}
+					once() {
+						// noop
+					},
+					write() {
+						// noop
+					}
 				}
 			}, () => Promise.resolve());
 
@@ -233,8 +251,12 @@ describe('FSWatchManager', () => {
 					type: 'subscribe'
 				},
 				response: {
-					once: () => {},
-					write: response => {}
+					once() {
+						// noop
+					},
+					write() {
+						// noop
+					}
 				}
 			}, () => Promise.resolve());
 

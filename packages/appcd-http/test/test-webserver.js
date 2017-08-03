@@ -126,13 +126,13 @@ describe('webserver', () => {
 				server
 					.shutdown()
 					.then(() => done())
-					.catch(err2 => done());
+					.catch(() => done());
 			})
 			.catch(err => {
 				server
 					.shutdown()
 					.then(() => done(err))
-					.catch(err2 => done(err));
+					.catch(() => done(err));
 			});
 	});
 
@@ -147,7 +147,9 @@ describe('webserver', () => {
 				conn.on('message', msg => {
 					try {
 						conn.send(JSON.parse(msg).foo.split('').reverse().join(''));
-					} catch (e) {}
+					} catch (e) {
+						// squeltch
+					}
 					conn.close();
 				});
 			})
@@ -170,13 +172,13 @@ describe('webserver', () => {
 				server
 					.shutdown()
 					.then(() => done())
-					.catch(err2 => done());
+					.catch(() => done());
 			})
 			.catch(err => {
 				server
 					.shutdown()
 					.then(() => done(err))
-					.catch(err2 => done(err));
+					.catch(() => done(err));
 			});
 	});
 
@@ -187,7 +189,7 @@ describe('webserver', () => {
 		});
 
 		server
-			.use((ctx, next) => {
+			.use(ctx => {
 				ctx.body = 'hello!';
 			})
 			.listen()
@@ -204,13 +206,13 @@ describe('webserver', () => {
 				server
 					.shutdown()
 					.then(() => done())
-					.catch(err2 => done());
+					.catch(() => done());
 			})
 			.catch(err => {
 				server
 					.shutdown()
 					.then(() => done(err))
-					.catch(err2 => done(err));
+					.catch(() => done(err));
 			});
 	});
 
@@ -221,7 +223,7 @@ describe('webserver', () => {
 		});
 
 		server
-			.use((ctx, next) => {
+			.use(() => {
 				const err = new Error('go away!');
 				err.expose = true;
 				err.status = 403;
@@ -241,13 +243,13 @@ describe('webserver', () => {
 				server
 					.shutdown()
 					.then(() => done())
-					.catch(err2 => done());
+					.catch(() => done());
 			})
 			.catch(err => {
 				server
 					.shutdown()
 					.then(() => done(err))
-					.catch(err2 => done(err));
+					.catch(() => done(err));
 			});
 	});
 
@@ -258,7 +260,7 @@ describe('webserver', () => {
 		});
 
 		server
-			.use((ctx, next) => {
+			.use(() => {
 				const err = new Error('oh no!');
 				err.expose = true;
 				throw err;
@@ -277,13 +279,13 @@ describe('webserver', () => {
 				server
 					.shutdown()
 					.then(() => done())
-					.catch(err2 => done());
+					.catch(() => done());
 			})
 			.catch(err => {
 				server
 					.shutdown()
 					.then(() => done(err))
-					.catch(err2 => done(err));
+					.catch(() => done(err));
 			});
 	});
 });

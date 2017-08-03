@@ -7,7 +7,7 @@ describe('Client', () => {
 
 	describe('constructor', () => {
 		it('should create a client instance', () => {
-			const client = new Client;
+			const client = new Client();
 			expect(client).to.be.instanceof(Client);
 		});
 
@@ -32,7 +32,7 @@ describe('Client', () => {
 
 	describe('User Agent', () => {
 		it('should autogenerate a user agent', () => {
-			const client = new Client;
+			const client = new Client();
 			expect(client.userAgent).to.be.a('string');
 			expect(client.userAgent).to.not.equal('');
 
@@ -87,7 +87,7 @@ describe('Client', () => {
 			}
 
 			const server = new WebSocketServer({ port: 12345 });
-			server.on('connection', conn => {
+			server.on('connection', () => {
 				server.close(() => finish());
 			});
 
@@ -223,7 +223,7 @@ describe('Client', () => {
 			const client = new Client({ port: 12345 });
 
 			client.request('/foo', { foo: 'bar' })
-				.on('response', (data, response) => {
+				.on('response', () => {
 					server.close(() => done(new Error('Expected error to be caught')));
 				})
 				.on('close', () => {
@@ -259,7 +259,7 @@ describe('Client', () => {
 			const client = new Client({ port: 12345 });
 
 			client.request('/foo', { foo: 'bar' })
-				.on('response', (data, response) => {
+				.on('response', () => {
 					server.close(() => done(new Error('Expected error to be caught')));
 				})
 				.on('close', () => {
@@ -293,7 +293,7 @@ describe('Client', () => {
 			const client = new Client({ port: 12345 });
 
 			client.request('/foo', { foo: 'bar' })
-				.on('response', (data, response) => {
+				.on('response', () => {
 					server.close(() => done(new Error('Expected error to be caught')));
 				})
 				.on('close', () => {
@@ -326,7 +326,7 @@ describe('Client', () => {
 			const client = new Client({ port: 12345 });
 
 			client.request('/foo', { foo: 'bar' })
-				.on('response', (data, response) => {
+				.on('response', () => {
 					server.close(() => done(new Error('Expected error to be caught')));
 				})
 				.on('close', () => {
@@ -391,7 +391,7 @@ describe('Client', () => {
 			const server = new WebSocketServer({ port: 12345 });
 
 			server.on('connection', conn => {
-				conn.on('message', msg => {
+				conn.on('message', () => {
 					conn.send('foo');
 				});
 			});
@@ -402,7 +402,7 @@ describe('Client', () => {
 				.on('warning', msg => {
 					server.close(() => {
 						try {
-							expect(msg).to.match(/^Server returned invalid JSON\:/);
+							expect(msg).to.match(/^Server returned invalid JSON:/);
 							done();
 						} catch (e) {
 							done(e);
@@ -424,7 +424,7 @@ describe('Client', () => {
 			const server = new WebSocketServer({ port: 12345 });
 
 			server.on('connection', conn => {
-				conn.on('message', msg => {
+				conn.on('message', () => {
 					conn.send('{}');
 				});
 			});
@@ -457,7 +457,7 @@ describe('Client', () => {
 			const client = new Client({ port: 12345 });
 
 			client.request('/foo')
-				.on('warning', msg => {
+				.on('warning', () => {
 					done(new Error('Expected error, not warning'));
 				})
 				.on('response', () => {
@@ -466,7 +466,7 @@ describe('Client', () => {
 				.on('close', () => {
 					done(new Error('Expected error, not close'));
 				})
-				.on('error', err => {
+				.on('error', () => {
 					done();
 				});
 		});

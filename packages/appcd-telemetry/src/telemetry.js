@@ -7,17 +7,16 @@ import fs from 'fs-extra';
 import path from 'path';
 import pluralize from 'pluralize';
 // import request from 'request';
-import snooplogg, { styles } from 'snooplogg';
+import snooplogg from 'snooplogg';
 import uuid from 'uuid';
 
 import { expandPath } from 'appcd-path';
-// import { HookEmitter } from 'hook-emitter';
-import { isFile } from 'appcd-fs';
+// import { isFile } from 'appcd-fs';
 import { randomBytes } from 'appcd-util';
 
 const logger = snooplogg.config({ theme: 'detailed' })('appcd:telemetry');
 
-export default class Telemetry /*extends HookEmitter*/ {
+export default class Telemetry {
 	/**
 	 * Constructs an analytics instance.
 	 *
@@ -132,9 +131,16 @@ export default class Telemetry /*extends HookEmitter*/ {
 		// don't need 'type' anymore
 		delete data.type;
 
-		return this.hook('analytics:store', (filename, event) => new Promise((resolve, reject) => {
-			fs.writeFile(filename, JSON.stringify(event), err => err ? reject(err) : resolve());
-		}))(path.join(this.eventsDir, id + '.json'), event);
+		return new Promise((resolve, reject) => {
+			const filename = path.join(this.eventsDir, id + '.json');
+			fs.writeFile(filename, JSON.stringify(event), err => {
+				if (err) {
+					reject(err);
+				} else {
+					resolve();
+				}
+			});
+		});
 	}
 
 	/**
@@ -165,28 +171,28 @@ export default class Telemetry /*extends HookEmitter*/ {
 				return resolve();
 			}
 
-			const sendHook = this.hook('analytics:send', (batch, params) => new Promise((resolve, reject) => {
+			const sendHook = (batch, params) => new Promise((resolve, reject) => {
 				this.logger.debug(`Sending ${batch.length} analytics ${pluralize('event', batch.length)}`);
 
 				params.json = batch.map(file => JSON.parse(fs.readFileSync(file)));
 
-				request(params, (err, resp, body) => {
-					if (err) {
-						this.logger.error(`Error sending ${batch.length} analytics ${pluralize('event', batch.length)} (status ${resp.statusCode}):`);
-						this.logger.error(err);
-						reject(err);
-						return;
-					}
-
-					logger.debug(`Sent ${batch.length} analytics ${pluralize('event', batch.length)} successfully (status ${resp.statusCode})`);
-					for (const file of batch) {
-						if (isFile(file)) {
-							fs.unlinkSync(file);
-						}
-					}
-					resolve();
-				});
-			}));
+				// request(params, (err, resp, body) => {
+				// 	if (err) {
+				// 		this.logger.error(`Error sending ${batch.length} analytics ${pluralize('event', batch.length)} (status ${resp.statusCode}):`);
+				// 		this.logger.error(err);
+				// 		reject(err);
+				// 		return;
+				// 	}
+				//
+				// 	logger.debug(`Sent ${batch.length} analytics ${pluralize('event', batch.length)} successfully (status ${resp.statusCode})`);
+				// 	for (const file of batch) {
+				// 		if (isFile(file)) {
+				// 			fs.unlinkSync(file);
+				// 		}
+				// 	}
+				// 	resolve();
+				// });
+			});
 
 			const sendBatch = () => {
 				let batch;

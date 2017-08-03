@@ -30,8 +30,12 @@ Plugin paths can be unregistered which will deactivate all plugins found in that
 
 ### Plugin Types
 
-There are two types of plugins: internal and external. The plugin code is executed in a sandbox and
-has limited access to the Node.js global object and Appc Daemon.
+There are two types of plugins: internal and external.
+
+Both types will load the plugins code in a wrapper that is executed in the same context as the host.
+In other words, the plugin code is not run in a sandbox or a jail. It's free to do anything. The
+wrapper simply exposes the `appcd` global variable as well as a namespaced logger bound to `console`
+and a wrapped `require()` which will make sure all plugin dependencies are also wrapped.
 
 #### Internal Plugins
 

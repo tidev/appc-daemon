@@ -24,13 +24,13 @@ export default class WebServer extends EventEmitter {
 	 * The root koa router.
 	 * @type {Router}
 	 */
-	router = new Router;
+	router = new Router();
 
 	/**
 	 * The koa app instance.
 	 * @type {Koa}
 	 */
-	app = new Koa;
+	app = new Koa();
 
 	/**
 	 * The WebSocket server instance.
@@ -108,7 +108,7 @@ export default class WebServer extends EventEmitter {
 				highlight(ctx.url),
 				style(ctx.status),
 				err ? (style(err.message || err) + ' ') : '',
-				note((new Date - ctx.startTime) + 'ms')
+				note((new Date() - ctx.startTime) + 'ms')
 			);
 		}
 
@@ -117,7 +117,7 @@ export default class WebServer extends EventEmitter {
 			.use(helmet())
 			.use(bodyParser())
 			.use((ctx, next) => {
-				ctx.startTime = new Date;
+				ctx.startTime = new Date();
 				return next()
 					.then(() => logRequest(ctx));
 			})
@@ -155,7 +155,7 @@ export default class WebServer extends EventEmitter {
 			.then(() => {
 				const webroot = this.webroot || path.resolve(__dirname, '..', 'public');
 
-				return new Promise((resolve, reject) => {
+				return new Promise(resolve => {
 					this.httpServer = this.app
 						.use(this.router.routes())
 						.use(ctx => send(ctx, ctx.path, { index: this.index || 'index.html', root: webroot }))
@@ -205,7 +205,7 @@ export default class WebServer extends EventEmitter {
 		return Promise.resolve()
 			.then(() => {
 				if (this.websocketServer) {
-					return new Promise((resolve, reject) => {
+					return new Promise(resolve => {
 						// close the websocket server
 						logger.log('Closing WebSocket server');
 						this.websocketServer.close(() => {
@@ -217,7 +217,7 @@ export default class WebServer extends EventEmitter {
 			})
 			.then(() => {
 				if (this.httpServer) {
-					return new Promise((resolve, reject) => {
+					return new Promise(resolve => {
 						// close the http server
 						logger.log('Closing HTTP server');
 						this.httpServer.close(() => {

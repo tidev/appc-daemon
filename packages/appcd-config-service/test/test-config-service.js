@@ -1,7 +1,7 @@
 import Config from 'appcd-config';
 import ConfigService from '../dist/config-service';
 import gawk from 'gawk';
-import Response, { codes } from 'appcd-response';
+import Response from 'appcd-response';
 
 import { DispatcherError } from 'appcd-dispatcher';
 

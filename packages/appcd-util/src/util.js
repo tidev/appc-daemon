@@ -5,14 +5,12 @@ if (!Error.prepareStackTrace) {
 
 import crypto from 'crypto';
 import fs from 'fs';
-import path from 'path';
 import semver from 'semver';
 
-import { ChildProcess } from 'child_process';
+import { ChildProcess, execSync } from 'child_process';
 import { EventEmitter } from 'events';
-import { execSync } from 'child_process';
 import { isFile } from 'appcd-fs';
-import { Socket, Server } from 'net';
+import { Server, Socket } from 'net';
 
 const Timer = process.binding('timer_wrap').Timer;
 const FSEvent = process.binding('fs_event_wrap').FSEvent;
@@ -37,8 +35,8 @@ export function arch(bypassCache) {
 	archCache = process.env.APPCD_TEST_ARCH || process.arch;
 
 	if (archCache === 'ia32') {
-		if ((platform === 'win32' && process.env.PROCESSOR_ARCHITEW6432) ||
-			(platform === 'linux' && /64/.test(execSync('getconf LONG_BIT')))) {
+		if ((platform === 'win32' && process.env.PROCESSOR_ARCHITEW6432)
+			|| (platform === 'linux' && /64/.test(execSync('getconf LONG_BIT')))) {
 			// it's actually 64-bit
 			archCache = 'x64';
 		} else {

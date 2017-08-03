@@ -193,7 +193,7 @@ describe('router', () => {
 					}, () => p);
 			});
 
-			app.on('error', (err, ctx) => {
+			app.on('error', err => {
 				theError = err;
 			});
 			app.use(router.routes());
@@ -201,7 +201,7 @@ describe('router', () => {
 			const server = app.listen();
 			request(server)
 				.get('/')
-				.end(err => {
+				.end(() => {
 					server.close();
 					done(theError);
 				});
@@ -779,7 +779,7 @@ describe('router', () => {
 		it('doesn\'t run parameter middleware if path matched does not have a parameter', done => {
 			const app = new Koa();
 			const router = new Router();
-			router.param('id', (ctx, next, id) => {
+			router.param('id', (ctx, next) => {
 				ctx.ranParam = 'true';
 				next();
 			});

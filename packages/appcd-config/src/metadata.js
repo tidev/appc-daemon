@@ -18,7 +18,7 @@ export default class Metadata {
 	constructor() {
 		Object.defineProperties(this, {
 			_map: {
-				value: new Map
+				value: new Map()
 			},
 			_types: {
 				value: {
@@ -52,13 +52,13 @@ export default class Metadata {
 		try {
 			const json = JSON.parse(fs.readFileSync(file));
 			if (!json || typeof json !== 'object' || Array.isArray(json)) {
-				throw 'expected an object';
+				throw new Error('expected an object');
 			}
 
 			for (const key of Object.keys(json)) {
 				const entry = json[key];
 				if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
-					throw `invalid entry "${key}"`;
+					throw new Error(`invalid entry "${key}"`);
 				}
 
 				let type = entry.type || null;
@@ -68,7 +68,7 @@ export default class Metadata {
 					try {
 						result = this._createTypeValidator(type);
 					} catch (e) {
-						throw `invalid type "${type}" for entry "${key}"`;
+						throw new Error(`invalid type "${type}" for entry "${key}"`);
 					}
 				}
 
@@ -78,11 +78,11 @@ export default class Metadata {
 					nullable:   entry.nullable !== undefined ? entry.nullable !== false : result ? result.nullable : true,
 					readonly:   entry.readonly || false,
 					type:       result && result.type || type,
-					validate:   result && result.validate || (it => true)
+					validate:   result && result.validate || (() => true)
 				});
 			}
 		} catch (e) {
-			throw new Error(`Failed to load config metadata file: ${e}`);
+			throw new Error(`Failed to load config metadata file: ${e.message}`);
 		}
 	}
 
@@ -102,7 +102,6 @@ export default class Metadata {
 				const { left } = path.node.expression;
 				if (t.isMemberExpression(left) && t.isIdentifier(left.object) && left.object.name === 'module' && t.isIdentifier(left.property) && left.property.name === 'exports') {
 					let value = path.node.expression.right;
-					let node;
 
 					if (t.isObjectExpression(value)) {
 						this._findSettings(path, path.node.expression.right);
@@ -232,7 +231,7 @@ export default class Metadata {
 			deprecated: metadata.deprecated || false,
 			nullable:   metadata.nullable !== undefined ? metadata.nullable !== false : result ? result.nullable : true,
 			readonly:   metadata.readonly || false,
-			validate:   result && result.validate || (it => true)
+			validate:   result && result.validate || (() => true)
 		});
 
 		return this;
@@ -303,35 +302,37 @@ export default class Metadata {
 	 */
 	_findSettings(path, node, crumbs = []) {
 		for (const prop of node.properties) {
-			if (t.isObjectProperty(prop) && t.isIdentifier(prop.key)) {
-				if (prop.leadingComments) {
-					for (const comment of prop.leadingComments) {
-						if (comment.type === 'CommentBlock') {
-							this._parseDocs(crumbs.concat(prop.key.name).join('.'), comment.value);
-						}
-					}
-				}
+			if (!t.isObjectProperty(prop) || !t.isIdentifier(prop.key)) {
+				continue;
+			}
 
-				let { value } = prop;
-				while (value && t.isIdentifier(value)) {
-					const binding = path.scope.getBinding(value.name);
-					if (!binding) {
-						value = false;
-						break;
+			if (prop.leadingComments) {
+				for (const comment of prop.leadingComments) {
+					if (comment.type === 'CommentBlock') {
+						this._parseDocs(crumbs.concat(prop.key.name).join('.'), comment.value);
 					}
-					path = binding.path;
-					if (!t.isVariableDeclarator(path.node)) {
-						value = false;
-						break;
-					}
-					value = path.node.init;
 				}
+			}
 
-				if (value && t.isObjectExpression(value)) {
-					crumbs.push(prop.key.name);
-					this._findSettings(path, value, crumbs);
-					crumbs.pop();
+			let { value } = prop;
+			while (value && t.isIdentifier(value)) {
+				const binding = path.scope.getBinding(value.name);
+				if (!binding) {
+					value = false;
+					break;
 				}
+				path = binding.path;
+				if (!t.isVariableDeclarator(path.node)) {
+					value = false;
+					break;
+				}
+				value = path.node.init;
+			}
+
+			if (value && t.isObjectExpression(value)) {
+				crumbs.push(prop.key.name);
+				this._findSettings(path, value, crumbs);
+				crumbs.pop();
 			}
 		}
 	}
@@ -357,7 +358,7 @@ export default class Metadata {
 			nullable:   true,
 			readonly:   false,
 			type:       null,
-			validate:   it => true
+			validate:   () => true
 		};
 
 		for (const tag of ast.tags) {

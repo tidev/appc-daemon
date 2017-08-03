@@ -59,7 +59,7 @@ describe('request', () => {
 		});
 
 		this.server.listen(1337, '127.0.0.1', () => {
-			request({}, (err, res, body) => {
+			request({}, err => {
 				try {
 					if (err) {
 						expect(err.message).to.equal('options.uri is a required argument');
@@ -101,11 +101,9 @@ describe('request', () => {
 		this.timeout(5000);
 		this.slow(4000);
 
-		Dispatcher.register('/appcd/config/network', ctx => {
-			return new Promise((resolve, reject) => {
-				setTimeout(() => {
-					resolve();
-				}, 2000);
+		Dispatcher.register('/appcd/config/network', () => {
+			return new Promise(resolve => {
+				setTimeout(resolve, 2000);
 			});
 		});
 
@@ -135,7 +133,7 @@ describe('request', () => {
 		this.timeout(5000);
 		this.slow(4000);
 
-		Dispatcher.register('/appcd/config/network', ctx => {
+		Dispatcher.register('/appcd/config/network', () => {
 			throw new Error('oh no!');
 		});
 
@@ -263,7 +261,7 @@ describe('request', () => {
 		this.server.listen(1337, '127.0.0.1', () => {
 			request({
 				url: 'https://127.0.0.1:1337'
-			}, (err, res, body) => {
+			}, err => {
 				try {
 					if (err) {
 						expect(err.message).to.match(/self signed/);

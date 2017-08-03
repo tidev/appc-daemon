@@ -55,7 +55,7 @@ export function getMachineId(midFile) {
 					});
 			}
 		})
-		.catch(err => Promise.resolve()) // squeltch errors
+		.catch(() => Promise.resolve()) // squeltch errors
 		.then(machineId => {
 			if (machineId) {
 				logger.log('Native Machine ID: %s', styles.highlight(machineId));
@@ -64,7 +64,7 @@ export function getMachineId(midFile) {
 
 			// try to generate the machine id based on the mac address
 			return import('macaddress')
-				.then(macaddress => new Promise((resolve, reject) => {
+				.then(macaddress => new Promise(resolve => {
 					macaddress.one((err, mac) => {
 						let machineId = null;
 						if (!err && mac) {

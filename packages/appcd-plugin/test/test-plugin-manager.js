@@ -61,7 +61,7 @@ describe('PluginManager', () => {
 
 		Dispatcher.register('/appcd/config', new ConfigService(config));
 
-		Dispatcher.register('/appcd/status', ctx => {
+		Dispatcher.register('/appcd/status', () => {
 			// squeltch
 		});
 	});
@@ -198,7 +198,7 @@ describe('PluginManager', () => {
 		});
 
 		it('should error unregistering if plugin path is invalid', function () {
-			pm = new PluginManager;
+			pm = new PluginManager();
 
 			return pm.unregister(null)
 				.then(() => {
@@ -211,7 +211,7 @@ describe('PluginManager', () => {
 
 		it('should error unregistering if plugin path is not registered', function () {
 			const dir = path.join(__dirname, 'fixtures', 'empty');
-			pm = new PluginManager;
+			pm = new PluginManager();
 
 			return pm.unregister(dir)
 				.then(() => {
@@ -253,7 +253,7 @@ describe('PluginManager', () => {
 			}, 1000);
 		});
 
-		it('should register, start, and stop an internal plugin', function (done) {
+		it('should fail to load bad internal plugin', function (done) {
 			this.timeout(10000);
 			this.slow(9000);
 
@@ -267,10 +267,10 @@ describe('PluginManager', () => {
 						path: pluginDir
 					}
 				})
-				.then(ctx => {
+				.then(() => {
 					log('Calling square...');
 					return Dispatcher.call('/bad-internal/1.2.3/foo', { data: { num: 3 } })
-						.then(ctx => {
+						.then(() => {
 							throw new Error('Expected the route to not be found');
 						}, err => {
 							expect(err.message).to.equal('Failed to load plugin: Unexpected token )');
@@ -286,8 +286,9 @@ describe('PluginManager', () => {
 
 	describe('External Plugins', () => {
 		it('should register, start, and stop an external plugin', function (done) {
-			this.timeout(10000);
-			this.slow(9000);
+			// we need to wait a long time just in case the Node.js version isn't installed
+			this.timeout(30000);
+			this.slow(29000);
 
 			const pluginDir = path.join(__dirname, 'fixtures', 'good');
 
@@ -402,7 +403,7 @@ describe('PluginManager', () => {
 							path: pluginDir
 						}
 					})
-					.then(result => {
+					.then(() => {
 						log('Calling square...');
 						return Dispatcher
 							.call('/good/1.2.3/square', { data: { num: 3 } });
@@ -448,10 +449,10 @@ describe('PluginManager', () => {
 						path: pluginDir
 					}
 				})
-				.then(ctx => {
+				.then(() => {
 					log('Calling square...');
 					return Dispatcher.call('/bad/1.2.3/foo', { data: { num: 3 } })
-						.then(ctx => {
+						.then(() => {
 							done(new Error('Expected the route to not be found'));
 						})
 						.catch(err => {
@@ -486,6 +487,83 @@ describe('PluginManager', () => {
 					.catch(done);
 			}, 1000);
 		});
+
+		it('should call a service that calls a service in another plugin', function (done) {
+			this.timeout(10000);
+			this.slow(9000);
+
+			const pluginDir = path.join(__dirname, 'fixtures', 'xdep');
+
+			pm = new PluginManager({
+				paths: [ pluginDir ]
+			});
+
+			setTimeout(() => {
+				Dispatcher.call('/foo/1.0.0/reverse', { data: { str: 'Hello world!' } })
+					.then(ctx => {
+						expect(ctx.response).to.equal('!dlrow olleH');
+						done();
+					})
+					.catch(done);
+			}, 1000);
+		});
+
+		it('should call a service that passes to the next route', function (done) {
+			this.timeout(10000);
+			this.slow(9000);
+
+			const pluginDir = path.join(__dirname, 'fixtures', 'xdep');
+
+			pm = new PluginManager({
+				paths: [ pluginDir ]
+			});
+
+			setTimeout(() => {
+				Dispatcher.call('/foo/1.0.0/pass')
+					.then(ctx => {
+						expect(ctx.response).to.equal('pass!');
+						done();
+					})
+					.catch(err => {
+						done(err);
+					});
+			}, 1000);
+		});
+
+		// it('should subscribe to a service that subscribes a service in another plugin', function (done) {
+		// 	this.timeout(10000);
+		// 	this.slow(9000);
+		//
+		// 	const pluginDir = path.join(__dirname, 'fixtures', 'xdep');
+		//
+		// 	pm = new PluginManager({
+		// 		paths: [ pluginDir ]
+		// 	});
+		//
+		// 	let counter = 0;
+		//
+		// 	setTimeout(() => {
+		// 		Dispatcher.call('/foo/1.0.0/time', { type: 'subscribe' })
+		// 			.then(ctx => {
+		// 				ctx.response
+		// 					.on('data', res => {
+		// 						console.log(counter, res);
+		// 						if (counter++ > 3) {
+		// 							log('Unsubscribing from %s', highlight(res.topic));
+		// 							Dispatcher
+		// 								.call('/foo/1.0.0/time', { sid: res.sid, type: 'unsubscribe' })
+		// 								.catch(done);
+		// 						}
+		// 					})
+		// 					.on('end', () => {
+		// 						done();
+		// 					});
+		// 			})
+		// 			.catch(err => {
+		// 				done(err);
+		// 			});
+		// 	}, 1000);
+		// });
 	});
 
 	// unregister plugin, then request it should 404

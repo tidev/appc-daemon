@@ -5,7 +5,6 @@ import snooplogg from 'snooplogg';
 import vm from 'vm';
 
 import { EventEmitter } from 'events';
-import { expandPath } from 'appcd-path';
 import { isFile } from 'appcd-fs';
 import { parse } from 'babylon';
 import { wrap } from 'module';
@@ -38,7 +37,7 @@ export default class Config extends EventEmitter {
 		 * @type {Metadata}
 		 * @access public
 		 */
-		this.meta = new Metadata;
+		this.meta = new Metadata();
 
 		/**
 		 * The internal values object. This object can be accessed directly,
