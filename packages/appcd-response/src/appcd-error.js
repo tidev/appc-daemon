@@ -21,10 +21,6 @@ export default class AppcdError extends Error {
 			msg: { writable: true, value: new Message(...args) }
 		});
 
-		// set the default statuses
-		this.status = '500';
-		this.statusCode = 500;
-
 		const err = args[0];
 		if (err instanceof Error) {
 			for (const prop of Object.getOwnPropertyNames(err)) {

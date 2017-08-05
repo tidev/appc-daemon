@@ -142,6 +142,7 @@ export default class ServiceDispatcher {
 			};
 		}
 
+		// wire up a handler so that unsubscribe will terminate the subscription stream
 		descriptor.subs[subscriptionId] = (message, type, fin) => {
 			ctx.response.write({
 				message,
@@ -150,10 +151,19 @@ export default class ServiceDispatcher {
 				type: type || 'event',
 				fin
 			});
+
+			if (fin) {
+				ctx.response.end();
+			}
 		};
 
-		const cleanup = () => {
-			logger.log('Stream ended or errored... cleaning up');
+		const cleanup = err => {
+			if (err) {
+				logger.error(err);
+				logger.log('Stream errored, cleaning up');
+			} else {
+				logger.log('Stream ended, cleaning up');
+			}
 			descriptor.subs[subscriptionId] = true;
 			this.unsubscribe(ctx);
 		};

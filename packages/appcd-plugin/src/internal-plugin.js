@@ -1,11 +1,11 @@
-import PluginImplBase from './plugin-impl-base';
+import PluginBase from './plugin-base';
 
 import { AppcdError, codes } from 'appcd-response';
 
 /**
  * Internal plugin implementation logic.
  */
-export default class InternalPlugin extends PluginImplBase {
+export default class InternalPlugin extends PluginBase {
 	/**
 	 * Dispatches a request to the plugin's dispatcher.
 	 *

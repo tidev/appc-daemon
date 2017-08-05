@@ -141,14 +141,14 @@ export default class Tunnel {
 						// fallthrough
 					case 'event':
 					case 'unsubscribe':
+						ctx.response.write(message);
+
 						if (message.fin) {
 							if (message.type === 'unsubscribe') {
 								log('Deleting request handler: %s', highlight(id));
 								delete this.requests[id];
 							}
-							ctx.response.end(message);
-						} else {
-							ctx.response.write(message);
+							ctx.response.end();
 						}
 						break;
 

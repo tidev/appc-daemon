@@ -8,16 +8,11 @@ module.exports = {
 	activate() {
 		appcd.register('/reverse', ctx => {
 			console.log('Asking bar to reverse', ctx.request.data.str);
-			return appcd.call('/bar/1.0.0/do-reverse', { data: ctx.request.data })
+			return appcd.call('/bar/1.0.0/reverse', { data: ctx.request.data })
 				.then(({ response }) => {
 					console.log('bar reversed:', response);
 					ctx.response = response;
 				});
-		});
-
-		appcd.register('/do-reverse', ctx => {
-			console.log('Reversing string: %s', ctx.request.data.str);
-			ctx.response = ctx.request.data.str.split('').reverse().join('');
 		});
 
 		appcd.register('/pass', (ctx, next) => next());
@@ -40,6 +35,7 @@ module.exports = {
 							ctx.response.write(res);
 						})
 						.on('end', () => {
+							console.log('bar response ended');
 							ctx.response.end();
 						});
 				});

@@ -7,6 +7,7 @@ import path from 'path';
 import PluginError from './plugin-error';
 import prettyMs from 'pretty-ms';
 import semver from 'semver';
+import slug from 'slugg';
 import snooplogg from 'snooplogg';
 import types from './types';
 
@@ -16,13 +17,6 @@ import { isDir, isFile } from 'appcd-fs';
 
 const logger = snooplogg.config({ theme: 'detailed' })(process.connected ? 'appcd:plugin:host:plugin' : 'appcd:plugin');
 const { highlight } = snooplogg.styles;
-
-/**
- * A regular expression that removes all invalid characters from the plugin's name so that it is
- * safe to use in a URL.
- * @type {RegExp}
- */
-const urlSafeRegExp = /[^\w$\-_.+!*'(),]/g;
 
 /**
  * Contains information about a plugin.
@@ -112,7 +106,7 @@ export default class Plugin extends EventEmitter {
 			if (typeof pkgJson.name !== 'string') {
 				throw new PluginError('Invalid "name" property in %s', pkgJsonFile);
 			}
-			this.name = pkgJson.name.replace(urlSafeRegExp, '');
+			this.name = slug(pkgJson.name);
 		}
 
 		// validate and set the version
@@ -148,7 +142,7 @@ export default class Plugin extends EventEmitter {
 				if (typeof appcdPlugin.name !== 'string') {
 					throw new PluginError('Invalid "name" property in the "appcd-plugin" section of %s', pkgJsonFile);
 				}
-				this.name = appcdPlugin.name.replace(urlSafeRegExp, '');
+				this.name = slug(appcdPlugin.name);
 			}
 
 			if (appcdPlugin.type) {

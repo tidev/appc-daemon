@@ -28,15 +28,6 @@ function sleep() {
 module.exports = {
 	activate() {
 		appcd.register('/reverse', ctx => {
-			console.log('Asking foo to reverse', ctx.request.data.str);
-			return appcd.call('/foo/1.0.0/do-reverse', { data: ctx.request.data })
-				.then(({ response }) => {
-					console.log('foo reversed:', response);
-					ctx.response = response;
-				});
-		});
-
-		appcd.register('/do-reverse', ctx => {
 			console.log('Reversing string: %s', ctx.request.data.str);
 			ctx.response = ctx.request.data.str.split('').reverse().join('');
 		});

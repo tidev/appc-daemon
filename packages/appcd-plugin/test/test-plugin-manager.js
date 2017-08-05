@@ -530,40 +530,79 @@ describe('PluginManager', () => {
 			}, 1000);
 		});
 
-		// it('should subscribe to a service that subscribes a service in another plugin', function (done) {
-		// 	this.timeout(10000);
-		// 	this.slow(9000);
-		//
-		// 	const pluginDir = path.join(__dirname, 'fixtures', 'xdep');
-		//
-		// 	pm = new PluginManager({
-		// 		paths: [ pluginDir ]
-		// 	});
-		//
-		// 	let counter = 0;
-		//
-		// 	setTimeout(() => {
-		// 		Dispatcher.call('/foo/1.0.0/time', { type: 'subscribe' })
-		// 			.then(ctx => {
-		// 				ctx.response
-		// 					.on('data', res => {
-		// 						console.log(counter, res);
-		// 						if (counter++ > 3) {
-		// 							log('Unsubscribing from %s', highlight(res.topic));
-		// 							Dispatcher
-		// 								.call('/foo/1.0.0/time', { sid: res.sid, type: 'unsubscribe' })
-		// 								.catch(done);
-		// 						}
-		// 					})
-		// 					.on('end', () => {
-		// 						done();
-		// 					});
-		// 			})
-		// 			.catch(err => {
-		// 				done(err);
-		// 			});
-		// 	}, 1000);
-		// });
+		it.skip('should subscribe to a service that subscribes a service in another plugin', function (done) {
+			this.timeout(16000);
+			this.slow(15000);
+
+			const pluginDir = path.join(__dirname, 'fixtures', 'xdep');
+
+			pm = new PluginManager({
+				paths: [ pluginDir ]
+			});
+
+			let counter = 0;
+
+			setTimeout(() => {
+				Dispatcher.call('/foo/1.0.0/time', { type: 'subscribe' })
+					.then(ctx => {
+						ctx.response
+							.on('data', res => {
+								counter++;
+								console.log(counter, res);
+
+								switch (counter) {
+									case 1:
+										expect(res.type).to.equal('subscribe');
+										expect(res.message).to.equal('Subscribed');
+										break;
+
+									case 2:
+										expect(res.type).to.equal('event');
+										expect(res.message).to.be.an('object');
+										expect(res.message.time).to.be.a('string');
+										expect(res.message.time).to.match(/^\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)$/);
+										break;
+
+									case 3:
+										log('Unsubscribing from %s', highlight(res.sid));
+										Dispatcher
+											.call('/foo/1.0.0/time', { sid: res.sid, type: 'unsubscribe' })
+											.catch(done);
+								}
+							})
+							.on('end', () => {
+								log('foo response ended');
+								done();
+							})
+							.on('error', done);
+					})
+					.catch(err => {
+						done(err);
+					});
+			}, 1000);
+		});
+
+		it('should call service implemented in a require()\'d js file', function (done) {
+			this.timeout(10000);
+			this.slow(9000);
+
+			const pluginDir = path.join(__dirname, 'fixtures', 'require-test');
+
+			pm = new PluginManager({
+				paths: [ pluginDir ]
+			});
+
+			setTimeout(() => {
+				Dispatcher.call('/require-test/1.0.0/hi')
+					.then(ctx => {
+						expect(ctx.response).to.match(/^Hello .+!$/);
+						done();
+					})
+					.catch(err => {
+						done(err);
+					});
+			}, 1000);
+		});
 	});
 
 	// unregister plugin, then request it should 404
