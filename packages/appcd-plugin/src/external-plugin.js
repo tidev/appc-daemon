@@ -1,8 +1,8 @@
 import Agent from 'appcd-agent';
 import Dispatcher from 'appcd-dispatcher';
 import path from 'path';
+import PluginBase, { states } from './plugin-base';
 import PluginError from './plugin-error';
-import PluginImplBase, { states } from './plugin-impl-base';
 import Response, { AppcdError, codes } from 'appcd-response';
 import snooplogg from 'snooplogg';
 import Tunnel from './tunnel';
@@ -17,7 +17,7 @@ const { highlight, ok, alert } = snooplogg.styles;
 /**
  * External plugin implementation logic.
  */
-export default class ExternalPlugin extends PluginImplBase {
+export default class ExternalPlugin extends PluginBase {
 	/**
 	 * Initializes the plugin and the sandbox global object.
 	 *
@@ -55,7 +55,7 @@ export default class ExternalPlugin extends PluginImplBase {
 				});
 		});
 
-		this.globalObj.appcd.call = (path, data) => {
+		this.globals.appcd.call = (path, data) => {
 			if (!this.tunnel) {
 				return Promise.reject(new Error('Tunnel not initialized!'));
 			}
@@ -151,7 +151,7 @@ export default class ExternalPlugin extends PluginImplBase {
 				return Promise.resolve()
 					.then(() => {
 						if (this.configSubscriptionId) {
-							return this.globalObj.appcd
+							return this.globals.appcd
 								.call('/appcd/config', {
 									sid: this.configSubscriptionId,
 									type: 'unsubscribe'
@@ -208,6 +208,7 @@ export default class ExternalPlugin extends PluginImplBase {
 							.once('end', () => {
 								// the stream has ended, if pubsub, send `fin`
 								if (pubsub) {
+									logger.log('RESPONSE ENDED!!!!!!!!');
 									send({
 										type: 'event',
 										fin: true
@@ -246,7 +247,7 @@ export default class ExternalPlugin extends PluginImplBase {
 			})
 			.start();
 
-		this.globalObj.appcd
+		this.globals.appcd
 			.call('/appcd/config', { type: 'subscribe' })
 			.then(({ response }) => {
 				response.on('data', response => {

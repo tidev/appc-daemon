@@ -1,14 +1,11 @@
 import Dispatcher from 'appcd-dispatcher';
-import fs from 'fs';
 import gawk from 'gawk';
-import path from 'path';
-import PluginError from './plugin-error';
+import PluginModule from './plugin-module';
 import snooplogg from 'snooplogg';
-import vm from 'vm';
 
 import { EventEmitter } from 'events';
 
-const logger = snooplogg.config({ theme: 'detailed' })(process.connected ? 'appcd:plugin:impl:child' : 'appcd:plugin:impl:parent');
+const logger = snooplogg.config({ theme: 'detailed' })(process.connected ? 'appcd:plugin:base:child' : 'appcd:plugin:base:parent');
 const { highlight } = snooplogg.styles;
 
 /**
@@ -25,7 +22,7 @@ export const states = {
 /**
  * The base class for internal and external plugin implementations.
  */
-export default class PluginImplBase extends EventEmitter {
+export default class PluginBase extends EventEmitter {
 	/**
 	 * Initializes the plugin's logger, global object, and state.
 	 *
@@ -105,7 +102,7 @@ export default class PluginImplBase extends EventEmitter {
 		 * The default global object for the plugin sandbox.
 		 * @type {Object}
 		 */
-		this.globalObj = {
+		this.globals = {
 			appcd: {
 				call: Dispatcher.call.bind(Dispatcher),
 				register: this.dispatcher.register.bind(this.dispatcher)
@@ -119,7 +116,6 @@ export default class PluginImplBase extends EventEmitter {
 	 * Loads the plugin's main JS file, evaluates it in a sandbox, and calls its `activate()`
 	 * handler.
 	 *
-	 * @param {Object} globalObj - The global object to use in the sandbox.
 	 * @returns {Promise}
 	 * @access private
 	 */
@@ -128,53 +124,9 @@ export default class PluginImplBase extends EventEmitter {
 
 		logger.log('Activating plugin: %s', highlight(main));
 
-		// load the js file
-		let code = fs.readFileSync(main, 'utf8').trim();
+		const exports = PluginModule.load(this, main);
 
-		// return if the file only contains an empty shebang
-		if (code === '#!') {
-			return;
-		}
-
-		// strip the shebang
-		if (code.length > 1 && code[0] === '#' && code[1] === '!') {
-			const p = Math.max(code.indexOf('\n', 2), code.indexOf('\r', 2));
-			if (p === -1) {
-				return;
-			}
-			code = code.substring(p);
-		}
-
-		const module = { exports: {} };
-		const filename = path.basename(main);
-		const sig = [ 'exports', 'require', 'module', '__filename', '__dirname' ]
-			.concat(Object.keys(this.globalObj))
-			.join(', ');
-		const args = [
-			module.exports,
-			require, // TODO: wrap!
-			module,
-			filename,
-			path.dirname(main)
-		].concat(Object.values(this.globalObj));
-
-		code = `(function (${sig}) {
-				${code}
-			})`;
-
-		try {
-			const closure = vm.runInThisContext(code, {
-				filename,
-				lineOffset: 0,
-				displayErrors: false
-			});
-			closure.apply(global, args);
-		} catch (e) {
-			e.message = 'Failed to load plugin: ' + e.message;
-			throw new PluginError(e);
-		}
-
-		this.module = module.exports && typeof module.exports === 'object' ? module.exports : null;
+		this.module = exports && typeof exports === 'object' ? exports : null;
 
 		// call the plugin's activate handler
 		if (this.module && typeof this.module.activate === 'function') {
