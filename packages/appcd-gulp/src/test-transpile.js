@@ -36,7 +36,9 @@ Object.keys(conf).forEach(function (key) {
 });
 
 // only transpile src and tests
-conf.only = new RegExp(process.cwd() + '/(src|test)/');
+conf.only = new RegExp(process.cwd() + '/(src|(test(?!\/fixtures)))/');
+
+conf.cache = true;
 
 // console.log(conf);
 

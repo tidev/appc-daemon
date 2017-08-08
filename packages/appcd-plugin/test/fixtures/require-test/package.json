@@ -2,6 +2,6 @@
 	"name": "require test",
 	"version": "1.0.0",
 	"appcd-plugin": {
-		"type": "internal"
+		"type": "external"
 	}
 }

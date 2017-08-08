@@ -1,3 +1,5 @@
+/* eslint security/detect-non-literal-require: 0 */
+
 import builtinModules from 'builtin-modules';
 import Module from 'module';
 import path from 'path';
@@ -33,6 +35,7 @@ export default class PluginModule extends Module {
 			module.load(filename);
 		} catch (e) {
 			delete Module._cache[filename];
+			throw e;
 		}
 
 		return module.exports;

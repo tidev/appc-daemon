@@ -178,18 +178,18 @@ export default class ExternalPlugin extends PluginBase {
 						// we have a stream
 
 						// track if this stream is a pubsub stream so we know to send the `fin`
-						let pubsub = false;
+						let sid;
 
 						response
 							.on('data', message => {
 								// data was written to the stream
 
 								if (message.type === 'subscribe') {
-									pubsub = true;
+									sid = message.sid;
 								}
 
 								let res;
-								const type = message.type || (pubsub ? 'event' : undefined);
+								const type = message.type || (sid ? 'event' : undefined);
 
 								if (typeof message === 'object') {
 									res = {
@@ -206,20 +206,19 @@ export default class ExternalPlugin extends PluginBase {
 								send(res);
 							})
 							.once('end', () => {
-								// the stream has ended, if pubsub, send `fin`
-								if (pubsub) {
-									logger.log('RESPONSE ENDED!!!!!!!!');
+								// the stream has ended, if sid, send `fin`
+								if (sid) {
 									send({
-										type: 'event',
-										fin: true
+										sid,
+										type: 'fin',
 									});
+
 								}
 							})
 							.once('error', err => {
 								logger.error('Response stream error:');
 								logger.error(err);
 								this.send({
-									fin: true,
 									message: err.message || err,
 									stack: err.stack,
 									status: err.status || 500,
@@ -352,7 +351,6 @@ export default class ExternalPlugin extends PluginBase {
 											// we have a stream
 
 											// track if this stream is a pubsub stream so we know to send the `fin`
-											let pubsub = false;
 											let sid;
 
 											response
@@ -360,7 +358,6 @@ export default class ExternalPlugin extends PluginBase {
 													// data was written to the stream
 
 													if (message.type === 'subscribe') {
-														pubsub = true;
 														sid = message.sid;
 														this.streams[sid] = response;
 													}
@@ -370,12 +367,11 @@ export default class ExternalPlugin extends PluginBase {
 												.once('end', () => {
 													delete this.streams[sid];
 
-													// the stream has ended, if pubsub, send `fin`
-													if (pubsub) {
+													// the stream has ended, if sid, send `fin`
+													if (sid) {
 														send({
 															sid,
-															type: 'event',
-															fin: true
+															type: 'fin'
 														});
 													}
 												})
@@ -385,7 +381,6 @@ export default class ExternalPlugin extends PluginBase {
 													logger.error('Response stream error:');
 													logger.error(err);
 													this.send({
-														fin: true,
 														message: err.message || err,
 														stack: err.stack,
 														status: err.status || 500,
