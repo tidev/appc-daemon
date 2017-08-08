@@ -16,12 +16,10 @@ export default class ConfigService extends ServiceDispatcher {
 	 * Initalizes the status and kicks off the timers to refresh the dynamic
 	 * status information.
 	 *
-	 * @param {?GawkObject} cfg - The initial config object.
+	 * @param {Config} cfg - The initial config object.
 	 * @access public
 	 */
 	constructor(cfg) {
-		super('/:key*');
-
 		if (!cfg || !(cfg instanceof Config)) {
 			throw new TypeError('Expected config to be a valid config object');
 		}
@@ -37,6 +35,8 @@ export default class ConfigService extends ServiceDispatcher {
 		if (typeof cfg.unwatch !== 'function') {
 			throw new Error('Config object missing unwatch() method');
 		}
+
+		super('/:key*');
 
 		/**
 		 * The daemon config instance.

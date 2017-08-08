@@ -617,7 +617,7 @@ homedir-polyfill@^1.0.0, homedir-polyfill@^1.0.1:
   dependencies:
     parse-passwd "^1.0.0"
 
-hook-emitter@^2.0.0, hook-emitter@^2.1.0:
+hook-emitter@^2.0.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/hook-emitter/-/hook-emitter-2.1.0.tgz#45ac760712cf96621571fd74054f73c933d7259c"
   dependencies:
