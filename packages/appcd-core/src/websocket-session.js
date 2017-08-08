@@ -2,14 +2,14 @@ import accepts from 'accepts';
 import Dispatcher from 'appcd-dispatcher';
 import msgpack from 'msgpack-lite';
 import Response, { codes, createErrorClass } from 'appcd-response';
-import snooplogg from './logger';
+import appcdLogger from './logger';
 
 import { IncomingMessage } from 'http';
 import { Readable } from 'stream';
 import { WebSocket } from 'appcd-http';
 
-const logger = snooplogg('appcd:core:websocket-session');
-const { highlight, magenta, ok, alert, note } = snooplogg.styles;
+const logger = appcdLogger('appcd:core:websocket-session');
+const { highlight, magenta, ok, alert, note } = appcdLogger.styles;
 
 /**
  * The counter to track sessions.
@@ -21,8 +21,8 @@ let sessionCounter = 0;
  * A custom error for WebSocket session errors.
  */
 const WebSocketError = createErrorClass('WebSocketError', {
-	defaultStatus: codes.BAD_REQUEST,
-	defaultCode:   codes.WEBSOCKET_BAD_REQUEST
+	defaultStatus:     codes.BAD_REQUEST,
+	defaultStatusCode: codes.WEBSOCKET_BAD_REQUEST
 });
 
 /**

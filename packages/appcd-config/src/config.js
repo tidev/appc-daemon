@@ -1,7 +1,7 @@
+import appcdLogger from 'appcd-logger';
 import fs from 'fs';
 import Metadata from './metadata';
 import path from 'path';
-import snooplogg from 'snooplogg';
 import vm from 'vm';
 
 import { EventEmitter } from 'events';
@@ -9,7 +9,7 @@ import { isFile } from 'appcd-fs';
 import { parse } from 'babylon';
 import { wrap } from 'module';
 
-const log = snooplogg.config({ theme: 'detailed' })('appcd:config').log;
+const { log } = appcdLogger('appcd:config');
 
 /**
  * A config model that loads config files, retrieves settings, changes settings,

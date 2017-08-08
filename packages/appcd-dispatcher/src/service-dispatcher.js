@@ -1,9 +1,10 @@
+import appcdLogger from 'appcd-logger';
 import Response, { codes } from 'appcd-response';
-import snooplogg, { pluralize, styles } from 'snooplogg';
 import uuid from 'uuid';
 
-const logger = snooplogg.config({ theme: 'detailed' })('appcd:dispatcher:service-dispatcher');
-const { highlight, note } = styles;
+const logger = appcdLogger('appcd:service-dispatcher');
+const { highlight, note } = appcdLogger.styles;
+const { pluralize } = appcdLogger;
 
 /**
  * List of all valid handler types.

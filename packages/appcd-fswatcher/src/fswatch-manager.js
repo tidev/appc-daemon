@@ -1,13 +1,13 @@
-import snooplogg from 'snooplogg';
+import appcdLogger from 'appcd-logger';
+import Dispatcher, { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
 
 import { codes } from 'appcd-response';
-import Dispatcher, { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
 import { EventEmitter } from 'events';
 import { expandPath } from 'appcd-path';
 import { FSWatcher, renderTree, rootEmitter, status, tree } from './fswatcher';
 
-const logger = snooplogg.config({ theme: 'detailed' })('appcd:fswatcher:manager');
-const { highlight } = snooplogg.styles;
+const logger = appcdLogger('appcd:fswatcher:manager');
+const { highlight } = appcdLogger.styles;
 
 /**
  * Starts and stops file system watches and sends notifications when a fs event occurs.

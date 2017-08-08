@@ -1,14 +1,14 @@
+import appcdLogger from 'appcd-logger';
 import fs from 'fs';
 import gawk from 'gawk';
 import _path from 'path';
-import snooplogg from 'snooplogg';
 
 import { debounce } from 'appcd-util';
 import { EventEmitter } from 'events';
 
-const { log } = snooplogg.config({ theme: 'standard' })('appcd:fswatcher');
-const { highlight, green } = snooplogg.styles;
-const { pluralize } = snooplogg;
+const { log } = appcdLogger('appcd:fswatcher');
+const { highlight, green } = appcdLogger.styles;
+const { pluralize } = appcdLogger;
 
 /**
  * A regex that matches a path's root.

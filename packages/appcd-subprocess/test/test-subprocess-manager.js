@@ -1,11 +1,11 @@
+import appcdLogger from 'appcd-logger';
 import Dispatcher from 'appcd-dispatcher';
 import path from 'path';
-import snooplogg from 'snooplogg';
 import SubprocessError from '../dist/subprocess-error';
 import SubprocessManager from '../dist/index';
 import tmp from 'tmp';
 
-const logger = snooplogg.config({ theme: 'detailed' })('test');
+const logger = appcdLogger('test:appcd:subprocess');
 
 tmp.setGracefulCleanup();
 function makeTempDir() {

@@ -1,3 +1,4 @@
+import appcdLogger from 'appcd-logger';
 import bodyParser from 'koa-bodyparser';
 import EventEmitter from 'events';
 import helmet from 'koa-helmet';
@@ -5,14 +6,13 @@ import Koa from 'koa';
 import path from 'path';
 import Router from './router';
 import send from 'koa-send';
-import snooplogg from 'snooplogg';
 
 import { isDir } from 'appcd-fs';
 import { Server as WebSocketServer } from 'ws';
 
-const logger = snooplogg.config({ theme: 'detailed' })('appcd:http:webserver');
-const { pluralize } = snooplogg;
-const { alert, highlight, note, notice, ok, yellow } = snooplogg.styles;
+const logger = appcdLogger('appcd:http:webserver');
+const { alert, highlight, note, notice, ok, yellow } = appcdLogger.styles;
+const { pluralize } = appcdLogger;
 
 /**
  * The internal web server that serves up API and WebSocket requests.

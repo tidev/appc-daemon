@@ -1,3 +1,4 @@
+import appcdLogger from 'appcd-logger';
 import Dispatcher from 'appcd-dispatcher';
 import ExternalPlugin from './external-plugin';
 import fs from 'fs';
@@ -8,15 +9,14 @@ import PluginError from './plugin-error';
 import prettyMs from 'pretty-ms';
 import semver from 'semver';
 import slug from 'slugg';
-import snooplogg from 'snooplogg';
 import types from './types';
 
 import { EventEmitter } from 'events';
 import { expandPath } from 'appcd-path';
 import { isDir, isFile } from 'appcd-fs';
 
-const logger = snooplogg.config({ theme: 'detailed' })(process.connected ? 'appcd:plugin:host:plugin' : 'appcd:plugin');
-const { highlight } = snooplogg.styles;
+const logger = appcdLogger(process.connected ? 'appcd:plugin:host:plugin' : 'appcd:plugin');
+const { highlight } = appcdLogger.styles;
 
 /**
  * Contains information about a plugin.

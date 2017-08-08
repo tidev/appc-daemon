@@ -202,8 +202,8 @@ describe('Custom Errors', () => {
 
 	it('should fail if default code is invalid', () => {
 		expect(() => {
-			createErrorClass('foo', { defaultCode: {} });
-		}).to.throw(TypeError, 'Expected default code to be a string or number');
+			createErrorClass('foo', { defaultStatusCode: {} });
+		}).to.throw(TypeError, 'Expected default status code to be a string or number');
 	});
 
 	it('should copy system error details', () => {

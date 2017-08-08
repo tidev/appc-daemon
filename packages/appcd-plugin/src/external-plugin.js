@@ -1,18 +1,18 @@
 import Agent from 'appcd-agent';
+import appcdLogger from 'appcd-logger';
 import Dispatcher from 'appcd-dispatcher';
 import path from 'path';
 import PluginBase, { states } from './plugin-base';
 import PluginError from './plugin-error';
 import Response, { AppcdError, codes } from 'appcd-response';
-import snooplogg from 'snooplogg';
 import Tunnel from './tunnel';
 
 import { debounce } from 'appcd-util';
 import { FSWatcher } from 'appcd-fswatcher';
 import { Readable } from 'stream';
 
-const logger = snooplogg.config({ theme: 'detailed' })(process.connected ? 'appcd:plugin:external:child' : 'appcd:plugin:external:parent');
-const { highlight, ok, alert } = snooplogg.styles;
+const logger = appcdLogger(process.connected ? 'appcd:plugin:external:child' : 'appcd:plugin:external:parent');
+const { highlight, ok, alert } = appcdLogger.styles;
 
 /**
  * External plugin implementation logic.
@@ -236,7 +236,7 @@ export default class ExternalPlugin extends PluginBase {
 						});
 					}
 				})
-				.catch(err => send(new AppcdError(err)));
+				.catch(err => send(err instanceof AppcdError ? err : new AppcdError(err)));
 		});
 
 		this.agent = new Agent()
@@ -316,8 +316,9 @@ export default class ExternalPlugin extends PluginBase {
 							break;
 
 						case 'log':
-							req.message.id = snooplogg._id;
-							snooplogg.dispatch(req.message);
+							// we need to override the id from the child's log message
+							req.message.id = appcdLogger._id;
+							appcdLogger.dispatch(req.message);
 							break;
 
 						case 'stats':

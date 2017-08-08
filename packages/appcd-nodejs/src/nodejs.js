@@ -3,12 +3,12 @@ if (!Error.prepareStackTrace) {
 	require('source-map-support/register');
 }
 
+import appcdLogger from 'appcd-logger';
 import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
 import progress from 'progress';
 import request from 'appcd-request';
-import snooplogg from 'snooplogg';
 import tar from 'tar-stream';
 import tmp from 'tmp';
 import yauzl from 'yauzl';
@@ -19,8 +19,8 @@ import { isDir, isFile } from 'appcd-fs';
 import { arch as getArch, formatNumber } from 'appcd-util';
 import { STATUS_CODES } from 'http';
 
-const logger = snooplogg.config({ theme: 'detailed' })('appcd:nodejs');
-const { highlight } = snooplogg.styles;
+const logger = appcdLogger('appcd:nodejs');
+const { highlight } = appcdLogger.styles;
 
 const archiveRegExp = /\.(zip|pkg|tar\.gz)$/;
 

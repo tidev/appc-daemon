@@ -132,6 +132,9 @@ describe('ServiceDispatcher', () => {
 							type: 'subscribe'
 						},
 						response: {
+							end() {
+								// noop
+							},
 							once() {
 								// noop
 							},
@@ -168,6 +171,9 @@ describe('ServiceDispatcher', () => {
 							type: 'subscribe'
 						},
 						response: {
+							end() {
+								// noop
+							},
 							once() {
 								// noop
 							},
@@ -188,6 +194,9 @@ describe('ServiceDispatcher', () => {
 							type: 'subscribe'
 						},
 						response: {
+							end() {
+								// noop
+							},
 							once() {
 								// noop
 							},
@@ -227,6 +236,9 @@ describe('ServiceDispatcher', () => {
 							type: 'subscribe'
 						},
 						response: {
+							end() {
+								// noop
+							},
 							once() {
 								// noop
 							},
@@ -271,6 +283,9 @@ describe('ServiceDispatcher', () => {
 							type: 'unsubscribe'
 						},
 						response: {
+							end() {
+								// noop
+							},
 							once() {
 								// noop
 							},
@@ -306,6 +321,9 @@ describe('ServiceDispatcher', () => {
 							type: 'unsubscribe'
 						},
 						response: {
+							end() {
+								// noop
+							},
 							once() {
 								// noop
 							},
@@ -346,6 +364,9 @@ describe('ServiceDispatcher', () => {
 							type: 'subscribe'
 						},
 						response: {
+							end() {
+								// noop
+							},
 							once() {
 								// noop
 							},
@@ -368,6 +389,9 @@ describe('ServiceDispatcher', () => {
 												type: 'unsubscribe'
 											},
 											response: {
+												end() {
+													// noop
+												},
 												once() {
 													// noop
 												},

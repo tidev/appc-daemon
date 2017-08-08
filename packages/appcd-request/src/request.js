@@ -3,16 +3,17 @@ if (!Error.prepareStackTrace) {
 	require('source-map-support/register');
 }
 
+import appcdLogger from 'appcd-logger';
 import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs';
 import path from 'path';
 import _request from 'request';
-import snooplogg from 'snooplogg';
 
 import { isFile } from 'appcd-fs';
 
-const logger = snooplogg.config({ theme: 'detailed' })('appcd:request');
-const { alert, ok, note } = snooplogg.styles;
+const logger = appcdLogger('appcd:request');
+const { alert, ok, note } = appcdLogger.styles;
+const { humanize } = appcdLogger;
 
 /**
  * Makes an HTTP request.
@@ -97,7 +98,7 @@ export default function request(params, callback) {
 						note(conf.method),
 						conf.url,
 						statusCode < 400 ? ok(statusCode) : alert(statusCode),
-						headers.hasOwnProperty('content-length') ? note(`(${snooplogg.humanize.filesize(headers['content-length'])})`) : ''
+						headers.hasOwnProperty('content-length') ? note(`(${humanize.filesize(headers['content-length'])})`) : ''
 					);
 				})
 				.on('error', () => {});

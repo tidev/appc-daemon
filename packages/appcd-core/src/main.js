@@ -13,11 +13,11 @@ try {
 import 'babel-polyfill';
 
 import CLI from 'cli-kit';
-import snooplogg from './logger';
+import logger from './logger';
 
 process
-	.on('uncaughtException', err => snooplogg.error('Caught exception:', err))
-	.on('unhandledRejection', (reason, p) => snooplogg.error('Unhandled Rejection at: Promise ', p, reason));
+	.on('uncaughtException', err => logger.error('Caught exception:', err))
+	.on('unhandledRejection', (reason, p) => logger.error('Unhandled Rejection at: Promise ', p, reason));
 
 new CLI({
 	options: {

@@ -1,4 +1,4 @@
-import { createInstanceWithDefaults, Format, StdioStream } from 'snooplogg';
+import { createInstanceWithDefaults, Format, StdioStream } from 'appcd-logger';
 
 const instance = createInstanceWithDefaults()
 	.snoop()

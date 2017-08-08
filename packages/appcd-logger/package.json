@@ -1,8 +1,8 @@
 {
-  "name": "appcd-config-service",
+  "name": "appcd-logger",
   "version": "1.0.0",
-  "description": "A service that exposes a config object.",
-  "main": "./dist/config-service",
+  "description": "Defines the default logger for appcd components.",
+  "main": "./dist/logger",
   "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
     "Chris Barber <cbarber@appcelerator.com>"
@@ -16,26 +16,19 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "gawk": "^4.2.0",
+    "snooplogg": "^1.6.0",
     "source-map-support": "^0.4.15"
   },
   "devDependencies": {
     "gulp": "^3.9.1"
   },
   "appcdDependencies": [
-    "appcd-config",
-    "appcd-dispatcher",
-    "appcd-gulp",
-    "appcd-logger",
-    "appcd-response"
+    "appcd-gulp"
   ],
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/appcelerator/appc-daemon.git"
-  },
-  "engines": {
-    "node": "8.2.0"
   }
 }

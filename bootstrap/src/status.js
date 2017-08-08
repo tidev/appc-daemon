@@ -1,6 +1,6 @@
 import Table from 'cli-table2';
 
-import { createInstanceWithDefaults, StdioStream } from 'snooplogg';
+import { createInstanceWithDefaults, StdioStream } from 'appcd-logger';
 import { banner, createRequest, loadConfig } from './common';
 
 const logger = createInstanceWithDefaults().config({ theme: 'compact' }).enable('*').pipe(new StdioStream());

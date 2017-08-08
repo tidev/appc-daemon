@@ -1,12 +1,12 @@
+import appcdLogger from 'appcd-logger';
 import Config from 'appcd-config';
 import Response, { codes } from 'appcd-response';
-import snooplogg from 'snooplogg';
 
 import { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
 import { isGawked } from 'gawk';
 
-const logger = snooplogg.config({ theme: 'detailed' })('appcd:config-service');
-const { highlight } = snooplogg.styles;
+const logger = appcdLogger('appcd:config-service');
+const { highlight } = appcdLogger.styles;
 
 /**
  * Exposes a dispatcher service handler for observing and manipulating the config.

@@ -20,7 +20,6 @@
     "babel-types": "^6.25.0",
     "babylon": "^6.17.4",
     "doctrine": "^2.0.0",
-    "snooplogg": "^1.6.0",
     "source-map-support": "^0.4.15"
   },
   "devDependencies": {
@@ -29,6 +28,7 @@
   "appcdDependencies": [
     "appcd-fs",
     "appcd-gulp",
+    "appcd-logger",
     "appcd-path"
   ],
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",

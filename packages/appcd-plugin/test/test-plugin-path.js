@@ -1,7 +1,7 @@
+import appcdLogger from 'appcd-logger';
 import fs from 'fs-extra';
 import path from 'path';
 import PluginPath from '../dist/plugin-path';
-import snooplogg from 'snooplogg';
 import tmp from 'tmp';
 
 import { real } from 'appcd-path';
@@ -15,8 +15,8 @@ import {
 	NestedPluginsDirScheme
 } from '../dist/schemes';
 
-const { log } = snooplogg.config({ theme: 'detailed' })('test:appcd:plugin-path');
-const { highlight, magenta } = snooplogg.styles;
+const { log } = appcdLogger('test:appcd:plugin-path');
+const { highlight, magenta } = appcdLogger.styles;
 
 const _tmpDir = tmp.dirSync({
 	prefix: 'appcd-plugin-test-',

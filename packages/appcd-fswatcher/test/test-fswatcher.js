@@ -1,6 +1,6 @@
+import appcdLogger from 'appcd-logger';
 import fs from 'fs-extra';
 import path from 'path';
-import snooplogg from 'snooplogg';
 import tmp from 'tmp';
 
 import { real } from 'appcd-path';
@@ -15,9 +15,9 @@ import {
 	status
 } from '../dist/index';
 
-const logger = snooplogg.config({ theme: 'standard' })('test:appcd:fswatcher');
+const logger = appcdLogger('test:appcd:fswatcher');
 const { log } = logger;
-const { green, highlight } = snooplogg.styles;
+const { green, highlight } = appcdLogger.styles;
 
 const _tmpDir = tmp.dirSync({
 	prefix: 'appcd-fswatcher-test-',

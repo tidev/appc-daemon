@@ -1,14 +1,14 @@
+import appcdLogger from 'appcd-logger';
 import DispatcherContext from './dispatcher-context';
 import DispatcherError from './dispatcher-error';
 import pathToRegExp from 'path-to-regexp';
 import Response, { AppcdError, codes } from 'appcd-response';
 import ServiceDispatcher from './service-dispatcher';
-import snooplogg from 'snooplogg';
 
 import { PassThrough } from 'stream';
 
-const logger = snooplogg.config({ theme: 'detailed' })('appcd:dispatcher');
-const { highlight } = snooplogg.styles;
+const logger = appcdLogger('appcd:dispatcher');
+const { highlight } = appcdLogger.styles;
 const stripRegExp = /\x1B\[\d+m/g;
 
 let rootInstance = null;

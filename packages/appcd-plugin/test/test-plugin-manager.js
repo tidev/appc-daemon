@@ -1,3 +1,4 @@
+import appcdLogger from 'appcd-logger';
 import Config from 'appcd-config';
 import ConfigService from 'appcd-config-service';
 import Dispatcher, { DispatcherError } from 'appcd-dispatcher';
@@ -7,21 +8,13 @@ import gawk from 'gawk';
 import path from 'path';
 import PluginError from '../dist/plugin-error';
 import PluginManager from '../dist/index';
-import snooplogg from 'snooplogg';
 import SubprocessManager from 'appcd-subprocess';
 import tmp from 'tmp';
 
 import { expandPath } from 'appcd-path';
 
-const log = snooplogg
-	.config({
-		minBrightness: 80,
-		maxBrightness: 210,
-		theme: 'detailed'
-	})
-	.ns('test:appcd:plugin:manager').log;
-
-const { highlight } = snooplogg.styles;
+const { log } = appcdLogger('test:appcd:plugin:manager');
+const { highlight } = appcdLogger.styles;
 
 const tmpDir = tmp.dirSync({
 	prefix: 'appcd-plugin-test-',
@@ -55,10 +48,6 @@ describe('PluginManager', () => {
 	before(function () {
 		this.fm = new FSWatchManager();
 		this.sm = new SubprocessManager();
-	});
-
-	beforeEach(function () {
-		pm = null;
 
 		Dispatcher.register('/appcd/fs/watch', this.fm.dispatcher);
 		Dispatcher.register('/appcd/subprocess', this.sm.dispatcher);
@@ -68,19 +57,26 @@ describe('PluginManager', () => {
 		});
 	});
 
+	beforeEach(function () {
+		pm = null;
+	});
+
 	afterEach(async function () {
 		if (pm) {
 			await pm.shutdown();
 			pm = null;
 		}
 
-		Dispatcher.root.routes = [];
-
 		log();
 	});
 
-	after(function () {
+	after(async function () {
 		fs.removeSync(tmpDir);
+
+		this.fm.shutdown();
+		await this.sm.shutdown();
+
+		Dispatcher.root.routes = [];
 	});
 
 	describe('Error Handling', () => {
@@ -307,6 +303,27 @@ describe('PluginManager', () => {
 			}, 1000);
 		});
 
+		it('should register, start, and stop an external plugin using partial version match', function (done) {
+			this.timeout(10000);
+			this.slow(9000);
+
+			const pluginDir = path.join(__dirname, 'fixtures', 'good');
+
+			pm = new PluginManager({
+				paths: [ pluginDir ]
+			});
+
+			setTimeout(() => {
+				log('Calling square...');
+				Dispatcher.call('/good/1.x/square', { data: { num: 3 } })
+					.then(ctx => {
+						expect(ctx.response).to.equal(9);
+						done();
+					})
+					.catch(done);
+			}, 1000);
+		});
+
 		it('should call current time service plugin', function (done) {
 			this.timeout(10000);
 			this.slow(9000);
@@ -435,7 +452,6 @@ describe('PluginManager', () => {
 			}, 1000);
 		});
 
-		/*
 		it('should handle bad plugins', function (done) {
 			this.timeout(10000);
 			this.slow(9000);
@@ -468,7 +484,6 @@ describe('PluginManager', () => {
 				.then(() => done())
 				.catch(done);
 		});
-		*/
 
 		it('should return list of registered plugin versions', function (done) {
 			this.timeout(10000);
@@ -533,9 +548,8 @@ describe('PluginManager', () => {
 		});
 
 		it('should 404 after a plugin is unregistered', function (done) {
-			// we need to wait a long time just in case the Node.js version isn't installed
-			this.timeout(30000);
-			this.slow(29000);
+			this.timeout(10000);
+			this.slow(9000);
 
 			const pluginDir = path.join(__dirname, 'fixtures', 'good');
 
@@ -640,39 +654,67 @@ describe('PluginManager', () => {
 					});
 			}, 1000);
 		});
+
+		it('should load a plugin with a js file with empty shebang', function (done) {
+			this.timeout(10000);
+			this.slow(9000);
+
+			const pluginDir = path.join(__dirname, 'fixtures', 'shebang-empty');
+
+			pm = new PluginManager({
+				paths: [ pluginDir ]
+			});
+
+			setTimeout(() => {
+				log('Calling square...');
+				Dispatcher.call('/shebang-empty/1.0.0/square', { data: { num: 3 } })
+					.then(() => {
+						throw new Error('Expected 404');
+					}, err => {
+						expect(err).to.be.instanceof(DispatcherError);
+						expect(err.statusCode).to.equal(404);
+						done();
+					})
+					.catch(done);
+			}, 1000);
+		});
+
+		it('should load a plugin with a js file with non-empty shebang', function (done) {
+			this.timeout(10000);
+			this.slow(9000);
+
+			const pluginDir = path.join(__dirname, 'fixtures', 'shebang-node');
+
+			pm = new PluginManager({
+				paths: [ pluginDir ]
+			});
+
+			setTimeout(() => {
+				log('Calling square...');
+				Dispatcher.call('/shebang-empty/1.0.0/square', { data: { num: 3 } })
+					.then(() => {
+						throw new Error('Expected 404');
+					}, err => {
+						expect(err).to.be.instanceof(DispatcherError);
+						expect(err.statusCode).to.equal(404);
+						done();
+					})
+					.catch(done);
+			}, 1000);
+		});
 	});
 
-	// plugin states: stop when already stopping, stop when starting, state change w/ error
-
-	// plugin with only #! in .js
-
-	// plugin with shebang
-
-	// external plugin that doesn't match route and goes to next
-
-	// external plugin that has subscription and message is a string
-
-	// external plugin that has subscription that closes itself after N events
-
-	// external plugin that has subscription that emits an error
-
-	// external plugin that subscribes and unsubscribes from parent
-
-	// external plugin that subscribes to parent and closes after N events
-
-	// external plugin that subscribes to parent and emits error
-
-	// external plugin that emits an error
-
-	// external plugin that makes request and parent emits an error
-
-	// external plugin that fails to get config from parent
-
-	// internal plugin that has a dispatcher that returns an error
-
-	// external plugin that has a dispatcher that returns an error
-
-	// request for '1.x'
-
-	// request for something not found
+	/**
+	 * Missing edge case unit tests:
+	 *
+	 *   - plugin states: stop when already stopping, stop when starting, state change w/ error
+	 *   - external plugin that has subscription and message is a string
+	 *   - external plugin that has subscription that emits an error
+	 *   - external plugin that subscribes and unsubscribes from parent
+	 *   - external plugin that subscribes to parent and closes after N events
+	 *   - external plugin that subscribes to parent and emits error
+	 *   - external plugin that makes request and parent emits an error
+	 *   - external plugin that fails to get config from parent
+	 *   - internal plugin that has a dispatcher that returns an error
+	 */
 });

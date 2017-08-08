@@ -115,8 +115,8 @@ export function createErrorClass(className, opts = {}) {
 			throw new TypeError('Expected default status to be a number');
 		}
 
-		if (opts.hasOwnProperty('defaultCode') && typeof opts.defaultCode !== 'number' && typeof opts.defaultCode !== 'string') {
-			throw new TypeError('Expected default code to be a string or number');
+		if (opts.hasOwnProperty('defaultStatusCode') && typeof opts.defaultStatusCode !== 'number' && typeof opts.defaultStatusCode !== 'string') {
+			throw new TypeError('Expected default status code to be a string or number');
 		}
 	}
 

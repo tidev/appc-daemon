@@ -2,14 +2,14 @@ import Agent from 'appcd-agent';
 import gawk from 'gawk';
 import os from 'os';
 import Response, { codes } from 'appcd-response';
-import snooplogg from './logger';
+import appcdLogger from './logger';
 
 import { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
 
-const logger = snooplogg('appcd:core:status');
-const { alert, highlight, note, ok } = snooplogg.styles;
-const { arrowUp, arrowDown } = snooplogg.symbols;
-const { filesize } = snooplogg.humanize;
+const logger = appcdLogger('appcd:core:status');
+const { alert, highlight, note, ok } = appcdLogger.styles;
+const { arrowUp, arrowDown } = appcdLogger.symbols;
+const { filesize } = appcdLogger.humanize;
 
 /**
  * Monitors the Appc Daemon status.

@@ -1,8 +1,8 @@
+import appcdLogger from 'appcd-logger';
 import Dispatcher from 'appcd-dispatcher';
 import gawk from 'gawk';
 import psTree from 'ps-tree';
 import Response, { i18n } from 'appcd-response';
-import snooplogg from 'snooplogg';
 import SubprocessError from './subprocess-error';
 
 import { EventEmitter } from 'events';
@@ -13,9 +13,9 @@ import { spawn } from './subprocess';
 const { __n } = i18n();
 const { codes } = SubprocessError;
 
-const logger = snooplogg.config({ theme: 'detailed' })('appcd:subprocess:manager');
+const logger = appcdLogger('appcd:subprocess:manager');
 const { log } = logger;
-const { highlight } = snooplogg.styles;
+const { highlight } = appcdLogger.styles;
 
 /**
  * Manages spawned subprocesses through dispatcher handlers.

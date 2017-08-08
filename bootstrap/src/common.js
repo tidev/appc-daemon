@@ -1,7 +1,7 @@
 import Client from 'appcd-client';
 import fs from 'fs';
 import path from 'path';
-import snooplogg from 'snooplogg';
+import appcdLogger from 'appcd-logger';
 
 import { expandPath } from 'appcd-path';
 import { isFile } from 'appcd-fs';
@@ -9,8 +9,8 @@ import { spawnNode } from 'appcd-nodejs';
 
 import * as config from 'appcd-config';
 
-const log = snooplogg.config({ theme: 'detailed' })('appcd:common').log;
-const { highlight } = snooplogg.styles;
+const { log } = appcdLogger('appcd:common');
+const { highlight } = appcdLogger.styles;
 
 let appcdVersion = null;
 
