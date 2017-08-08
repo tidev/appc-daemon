@@ -7,6 +7,7 @@ import { PassThrough } from 'stream';
 
 const { log } = snooplogg.config({ theme: 'detailed' })(process.connected ? 'appcd:plugin:tunnel:child' : 'appcd:plugin:tunnel:parent');
 const { highlight } = snooplogg.styles;
+const { magenta } = snooplogg.chalk;
 
 /**
  * Orchestrates messages across a tunnel between processes. Both the parent and child process would
@@ -28,6 +29,8 @@ export default class Tunnel {
 		if (!handler || typeof handler !== 'function') {
 			throw new TypeError('Expected handler to be a function');
 		}
+
+		this.remoteName = process.connected ? 'parent' : proc.pid;
 
 		const onMessage = req => {
 			if (!req || typeof req !== 'object') {
@@ -75,7 +78,8 @@ export default class Tunnel {
 					message
 				};
 
-				log('Sending tunnel response:', response);
+				log(new Error('foo').stack);
+				log('Sending tunnel response to %s:', highlight(this.remoteName), response);
 				this.proc.send(response);
 			});
 		};
@@ -125,9 +129,11 @@ export default class Tunnel {
 					ctx.status = message.status;
 				}
 
+				log('Received response from %s:', highlight(this.remoteName), message);
+
 				switch (message.type) {
 					case 'error':
-						log('Deleting request handler: %s', highlight(id));
+						log('Deleting request handler: %s', highlight(id), magenta(ctx.request.path));
 						delete this.requests[id];
 						ctx.response = new AppcdError(message.code, message.message);
 						if (message.stack) {
@@ -142,18 +148,18 @@ export default class Tunnel {
 					case 'event':
 					case 'unsubscribe':
 						ctx.response.write(message);
+						break;
 
-						if (message.fin) {
-							if (message.type === 'unsubscribe') {
-								log('Deleting request handler: %s', highlight(id));
-								delete this.requests[id];
-							}
-							ctx.response.end();
+					case 'fin':
+						if (this.requests[id]) {
+							log('Deleting request handler: %s', highlight(id), magenta(ctx.request.path));
+							delete this.requests[id];
 						}
+						ctx.response.end();
 						break;
 
 					default:
-						log('Deleting request handler: %s', highlight(id));
+						log('Deleting request handler: %s %s', highlight(id), magenta(ctx.request.path));
 						delete this.requests[id];
 						if (message.status) {
 							ctx.status = message.status;
@@ -169,7 +175,7 @@ export default class Tunnel {
 				type: 'request'
 			};
 
-			log('Sending tunnel request:', req);
+			log('Sending tunnel request to %s:', highlight(this.remoteName), req);
 			this.proc.send(req);
 		});
 	}

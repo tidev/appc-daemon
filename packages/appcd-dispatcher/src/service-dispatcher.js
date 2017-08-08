@@ -144,12 +144,13 @@ export default class ServiceDispatcher {
 
 		// wire up a handler so that unsubscribe will terminate the subscription stream
 		descriptor.subs[subscriptionId] = (message, type, fin) => {
+			logger.log('%s Subscription has been unsubscribed, sending fin and closing', note(`[${subscriptionId}]`));
+
 			ctx.response.write({
 				message,
 				sid: subscriptionId,
 				topic,
-				type: type || 'event',
-				fin
+				type: type || 'event'
 			});
 
 			if (fin) {
