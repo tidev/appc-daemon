@@ -23,7 +23,6 @@
     "double-stack": "^2.1.0",
     "fs-extra": "^4.0.1",
     "gawk": "^4.2.0",
-    "hook-emitter": "^2.1.0",
     "msgpack-lite": "^0.1.26",
     "path-to-regexp": "^1.7.0",
     "through2": "^2.0.3",
@@ -46,6 +45,7 @@
     "appcd-plugin",
     "appcd-response",
     "appcd-subprocess",
+    "appcd-telemetry",
     "appcd-util"
   ],
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",

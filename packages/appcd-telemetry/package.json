@@ -17,14 +17,16 @@
   },
   "dependencies": {
     "fs-extra": "^4.0.1",
-    "pluralize": "^6.0.0",
+    "gawk": "^4.2.0",
     "source-map-support": "^0.4.15",
     "uuid": "^3.1.0"
   },
   "devDependencies": {
-    "gulp": "^3.9.1"
+    "gulp": "^3.9.1",
+    "tmp": "^0.0.31"
   },
   "appcdDependencies": [
+    "appcd-dispatcher",
     "appcd-fs",
     "appcd-gulp",
     "appcd-logger",

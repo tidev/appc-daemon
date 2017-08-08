@@ -3,12 +3,12 @@ import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs-extra';
 import FSWatchManager from 'appcd-fswatcher';
 import gawk from 'gawk';
-import HookEmitter from 'hook-emitter';
 import path from 'path';
 import PluginManager from 'appcd-plugin';
 import appcdLogger, { logcat, StdioStream } from './logger';
 import StatusMonitor from './status-monitor';
 import SubprocessManager from 'appcd-subprocess';
+import Telemetry from 'appcd-telemetry';
 import WebServer from 'appcd-http';
 import WebSocketSession from './websocket-session';
 
@@ -28,7 +28,7 @@ const { highlight, notice } = appcdLogger.styles;
  * The main server logic for the Appc Daemon. It controls all core aspects of the daemon including
  * plugins, logging, and request dispatching.
  */
-export default class Server extends HookEmitter {
+export default class Server {
 	/**
 	 * Creates a server instance and loads the configuration.
 	 *
@@ -40,8 +40,6 @@ export default class Server extends HookEmitter {
 	 * @access public
 	 */
 	constructor({ config, configFile } = {}) {
-		super();
-
 		/**
 		 * The config object.
 		 * @type {Config}
@@ -147,6 +145,9 @@ export default class Server extends HookEmitter {
 			fs.mkdirsSync(homeDir);
 		}
 
+		// init the telemetry system
+		Dispatcher.register('/appcd/telemetry', new Telemetry(this.config));
+
 		// init the config service
 		Dispatcher.register('/appcd/config', new ConfigService(this.config));
 
@@ -205,10 +206,13 @@ export default class Server extends HookEmitter {
 
 		this.mid = await getMachineId(path.join(homeDir, '.mid'));
 
-		// TODO: init telemetry
-
+		// start the web server
 		await this.systems.webserver.listen();
-		await this.emit('appcd.start');
+
+		// send the server start event
+		await Dispatcher.call('/appcd/telemetry', {
+			type: 'appcd.server.start'
+		});
 	}
 
 	/**
@@ -221,11 +225,10 @@ export default class Server extends HookEmitter {
 		logger.log('Shutting down server gracefully');
 
 		return Promise.resolve()
-			// .then(() => this.emit('analytics:event', {
-			// 	type: 'appcd.server.shutdown',
-			// 	uptime: this.status.get(['appcd', 'uptime']).toJS()
-			// }))
-			.then(() => this.emit('appcd:shutdown'))
+			.then(() => Dispatcher.call('/appcd/telemetry', {
+				type:   'appcd.server.shutdown',
+				uptime: process.uptime()
+			}))
 			.then(async () => {
 				for (const system of Object.values(this.systems)) {
 					if (typeof system.shutdown === 'function') {
