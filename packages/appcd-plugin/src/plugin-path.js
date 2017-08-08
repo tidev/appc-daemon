@@ -1,11 +1,11 @@
+import appcdLogger from 'appcd-logger';
 import HookEmitter from 'hook-emitter';
-import snooplogg from 'snooplogg';
 
 import { expandPath } from 'appcd-path';
 import { detectScheme } from './schemes';
 
-const { log } = snooplogg.config({ theme: 'detailed' })('appcd:plugin:path');
-const { highlight } = snooplogg.styles;
+const { log } = appcdLogger('appcd:plugin:path');
+const { highlight } = appcdLogger.styles;
 
 /**
  * Scans and watches a path for plugins, then emits events when plugins are added or removed.

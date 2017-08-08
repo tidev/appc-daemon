@@ -1,4 +1,4 @@
-import snooplogg from 'snooplogg';
+import appcdLogger from 'appcd-logger';
 import SubprocessError from './subprocess-error';
 import _which from 'which';
 
@@ -8,8 +8,8 @@ const { codes } = SubprocessError;
 
 const isWindows = process.platform === 'win32';
 
-const logger = snooplogg.config({ theme: 'detailed' })('appcd:subprocess');
-const { highlight } = snooplogg.styles;
+const logger = appcdLogger('appcd:subprocess');
+const { highlight } = appcdLogger.styles;
 
 export const exe = (isWindows ? '.exe' : '');
 export const cmd = (isWindows ? '.cmd' : '');

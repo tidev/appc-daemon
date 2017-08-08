@@ -17,7 +17,6 @@
   },
   "dependencies": {
     "gawk": "^4.2.0",
-    "snooplogg": "^1.6.0",
     "source-map-support": "^0.4.15"
   },
   "devDependencies": {
@@ -28,6 +27,7 @@
   "appcdDependencies": [
     "appcd-dispatcher",
     "appcd-gulp",
+    "appcd-logger",
     "appcd-path",
     "appcd-response",
     "appcd-util"

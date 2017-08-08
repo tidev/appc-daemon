@@ -23,6 +23,8 @@ describe('Plugin Host', () => {
 
 		child.on('close', code => {
 			try {
+				console.log(stdout);
+				console.log(stderr);
 				expect(code).to.equal(2);
 				expect(stdout).to.equal('');
 				expect(stderr).to.equal('The Appc Daemon plugin host cannot be directly executed.\n');

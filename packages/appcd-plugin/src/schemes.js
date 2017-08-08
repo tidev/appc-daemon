@@ -1,17 +1,17 @@
+import appcdLogger from 'appcd-logger';
 import fs from 'fs';
 import globule from 'globule';
 import HookEmitter from 'hook-emitter';
 import _path from 'path';
 import Plugin from './plugin';
-import snooplogg from 'snooplogg';
 
 import { debounce } from 'appcd-util';
 import { FSWatcher } from 'appcd-fswatcher';
 import { isDir } from 'appcd-fs';
 import { real } from 'appcd-path';
 
-const { log, warn } = snooplogg.config({ theme: 'detailed' })('appcd:plugin:scheme');
-const { highlight } = snooplogg.styles;
+const { log, warn } = appcdLogger('appcd:plugin:scheme');
+const { highlight } = appcdLogger.styles;
 
 /**
  * Base class for a plugin path scheme.

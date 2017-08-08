@@ -5,11 +5,11 @@
  * Copyright (c) 2015 blaz
  */
 
+import appcdLogger from 'appcd-logger';
 import pathToRegexp from 'path-to-regexp';
-import snooplogg from 'snooplogg';
 
-const logger = snooplogg.config({ theme: 'detailed' })('appcd:http:router');
-const { highlight, note } = snooplogg.styles;
+const logger = appcdLogger('appcd:http:router');
+const { highlight, note } = appcdLogger.styles;
 
 /**
  * Supported HTTP methods.

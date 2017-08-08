@@ -1,13 +1,13 @@
+import appcdLogger from 'appcd-logger';
+import PluginError from './plugin-error';
 import Response, { AppcdError } from 'appcd-response';
-import snooplogg from 'snooplogg';
 import uuid from 'uuid';
 
-import { DispatcherContext } from 'appcd-dispatcher';
+import { DispatcherContext, DispatcherError } from 'appcd-dispatcher';
 import { PassThrough } from 'stream';
 
-const { log } = snooplogg.config({ theme: 'detailed' })(process.connected ? 'appcd:plugin:tunnel:child' : 'appcd:plugin:tunnel:parent');
-const { highlight } = snooplogg.styles;
-const { magenta } = snooplogg.chalk;
+const { log } = appcdLogger(process.connected ? 'appcd:plugin:tunnel:child' : 'appcd:plugin:tunnel:parent');
+const { highlight, magenta } = appcdLogger.styles;
 
 /**
  * Orchestrates messages across a tunnel between processes. Both the parent and child process would
@@ -46,10 +46,11 @@ export default class Tunnel {
 
 				if (res instanceof Error) {
 					message = {
-						statusCode: res.statusCode || '500',
+						instanceof: res.constructor.name,
 						message:    res.message,
 						stack:      res.stack,
 						status:     res.status || 500,
+						statusCode: res.statusCode || '500',
 						type:       'error'
 					};
 				} else if (res instanceof DispatcherContext) {
@@ -78,7 +79,6 @@ export default class Tunnel {
 					message
 				};
 
-				log(new Error('foo').stack);
 				log('Sending tunnel response to %s:', highlight(this.remoteName), response);
 				this.proc.send(response);
 			});
@@ -135,10 +135,26 @@ export default class Tunnel {
 					case 'error':
 						log('Deleting request handler: %s', highlight(id), magenta(ctx.request.path));
 						delete this.requests[id];
-						ctx.response = new AppcdError(message.code, message.message);
+
+						const status = message.statusCode || message.status;
+
+						switch (message.instanceof) {
+							case 'DispatcherError':
+								ctx.response = new DispatcherError(status, message.message);
+								break;
+
+							case 'PluginError':
+								ctx.response = new PluginError(status, message.message);
+								break;
+
+							default:
+								ctx.response = new AppcdError(status, message.message);
+						}
+
 						if (message.stack) {
 							ctx.response.stack = message.stack;
 						}
+
 						reject(ctx.response);
 						break;
 

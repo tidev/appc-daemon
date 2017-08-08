@@ -3,16 +3,17 @@ if (!Error.prepareStackTrace) {
 	require('source-map-support/register');
 }
 
+import appcdLogger from 'appcd-logger';
 import fs from 'fs-extra';
 import path from 'path';
-import snooplogg, { styles } from 'snooplogg';
 
 import { expandPath } from 'appcd-path';
 import { isFile } from 'appcd-fs';
 import { randomBytes, sha1 } from 'appcd-util';
 import { run } from 'appcd-subprocess';
 
-const logger = snooplogg.config({ theme: 'detailed' })('appcd:machine-id');
+const { log } = appcdLogger.config({ theme: 'detailed' })('appcd:machine-id');
+const { highlight } = appcdLogger.styles;
 
 /**
  * Determines and caches a unique machine identifier.
@@ -28,7 +29,7 @@ export function getMachineId(midFile) {
 		midFile = expandPath(midFile);
 	}
 
-	logger.log('Detecting Machine ID...');
+	log('Detecting Machine ID...');
 
 	return Promise.resolve()
 		.then(() => {
@@ -58,7 +59,7 @@ export function getMachineId(midFile) {
 		.catch(() => Promise.resolve()) // squeltch errors
 		.then(machineId => {
 			if (machineId) {
-				logger.log('Native Machine ID: %s', styles.highlight(machineId));
+				log('Native Machine ID: %s', highlight(machineId));
 				return machineId;
 			}
 
@@ -69,7 +70,7 @@ export function getMachineId(midFile) {
 						let machineId = null;
 						if (!err && mac) {
 							machineId = sha1(mac);
-							logger.log('MAC address Machine ID: %s', styles.highlight(machineId));
+							log('MAC address Machine ID: %s', highlight(machineId));
 						}
 						resolve(machineId);
 					});
@@ -91,12 +92,12 @@ export function getMachineId(midFile) {
 				machineId = randomBytes(20);
 			}
 
-			logger.log('Machine ID: %s', styles.highlight(machineId));
+			log('Machine ID: %s', highlight(machineId));
 
 			// write the mid file
 			if (midFile) {
 				fs.mkdirsSync(path.dirname(midFile));
-				logger.log('Writing Machine ID to %s', styles.highlight(midFile));
+				log('Writing Machine ID to %s', highlight(midFile));
 				fs.writeFileSync(midFile, machineId);
 			}
 

@@ -3,18 +3,18 @@ if (!Error.prepareStackTrace) {
 	require('source-map-support/register');
 }
 
+import appcdLogger from 'appcd-logger';
 import fs from 'fs-extra';
 import path from 'path';
 import pluralize from 'pluralize';
 // import request from 'request';
-import snooplogg from 'snooplogg';
 import uuid from 'uuid';
 
 import { expandPath } from 'appcd-path';
 // import { isFile } from 'appcd-fs';
 import { randomBytes } from 'appcd-util';
 
-const logger = snooplogg.config({ theme: 'detailed' })('appcd:telemetry');
+const logger = appcdLogger('appcd:telemetry');
 
 export default class Telemetry {
 	/**

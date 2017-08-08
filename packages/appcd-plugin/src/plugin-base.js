@@ -1,12 +1,12 @@
+import appcdLogger from 'appcd-logger';
 import Dispatcher from 'appcd-dispatcher';
 import gawk from 'gawk';
 import PluginModule from './plugin-module';
-import snooplogg from 'snooplogg';
 
 import { EventEmitter } from 'events';
 
-const logger = snooplogg.config({ theme: 'detailed' })(process.connected ? 'appcd:plugin:base:child' : 'appcd:plugin:base:parent');
-const { highlight } = snooplogg.styles;
+const logger = appcdLogger(process.connected ? 'appcd:plugin:base:child' : 'appcd:plugin:base:parent');
+const { highlight } = appcdLogger.styles;
 
 /**
  * The plugin state.
@@ -42,7 +42,7 @@ export default class PluginBase extends EventEmitter {
 		 * The plugin's namespaced logger.
 		 * @type {SnoopLogg}
 		 */
-		this.logger = snooplogg(plugin.toString());
+		this.logger = appcdLogger(plugin.toString());
 		Object.defineProperty(this.logger, 'trace', { value: console.trace.bind(console) });
 
 		/**

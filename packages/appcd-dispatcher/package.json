@@ -17,7 +17,6 @@
   },
   "dependencies": {
     "path-to-regexp": "^1.7.0",
-    "snooplogg": "^1.6.0",
     "source-map-support": "^0.4.15",
     "uuid": "^3.1.0"
   },
@@ -26,6 +25,7 @@
   },
   "appcdDependencies": [
     "appcd-gulp",
+    "appcd-logger",
     "appcd-response"
   ],
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",

@@ -19,7 +19,6 @@
     "fs-extra": "^4.0.1",
     "macaddress": "^0.2.8",
     "simple-plist": "^0.2.1",
-    "snooplogg": "^1.6.0",
     "source-map-support": "^0.4.15"
   },
   "devDependencies": {
@@ -29,6 +28,7 @@
   "appcdDependencies": [
     "appcd-fs",
     "appcd-gulp",
+    "appcd-logger",
     "appcd-path",
     "appcd-subprocess",
     "appcd-util"

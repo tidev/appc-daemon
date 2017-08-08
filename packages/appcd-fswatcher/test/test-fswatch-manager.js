@@ -1,14 +1,14 @@
+import appcdLogger from 'appcd-logger';
 import fs from 'fs-extra';
 import FSWatchManager, { renderTree, reset, roots } from '../dist/index';
 import path from 'path';
-import snooplogg from 'snooplogg';
 import tmp from 'tmp';
 
 import { DispatcherError } from 'appcd-dispatcher';
 import { real } from 'appcd-path';
 
-const log = snooplogg.config({ theme: 'standard' })('test:appcd:fswatcher:manager').log;
-const { highlight } = snooplogg.styles;
+const log = appcdLogger('test:appcd:fswatcher:manager').log;
+const { highlight } = appcdLogger.styles;
 
 const _tmpDir = tmp.dirSync({
 	prefix: 'appcd-fswatcher-test-',
@@ -37,6 +37,9 @@ describe('FSWatchManager', () => {
 						path: '/',
 						request: {},
 						response: {
+							end() {
+								// noop
+							},
 							once() {
 								// noop
 							},
@@ -65,6 +68,9 @@ describe('FSWatchManager', () => {
 							type: 'subscribe'
 						},
 						response: {
+							end() {
+								// noop
+							},
 							once() {
 								// noop
 							},
@@ -127,6 +133,9 @@ describe('FSWatchManager', () => {
 								type: 'subscribe'
 							},
 							response: {
+								end() {
+									// noop
+								},
 								once() {
 									// noop
 								},
@@ -142,7 +151,6 @@ describe('FSWatchManager', () => {
 
 											case 2:
 												expect(response).to.deep.equal({
-													fin: undefined,
 													message: {
 														action: 'add',
 														filename: 'foo.txt',
@@ -171,6 +179,9 @@ describe('FSWatchManager', () => {
 																type: 'unsubscribe'
 															},
 															response: {
+																end() {
+																	// noop
+																},
 																once() {
 																	// noop
 																},
@@ -235,6 +246,9 @@ describe('FSWatchManager', () => {
 					type: 'subscribe'
 				},
 				response: {
+					end() {
+						// noop
+					},
 					once() {
 						// noop
 					},
@@ -251,6 +265,9 @@ describe('FSWatchManager', () => {
 					type: 'subscribe'
 				},
 				response: {
+					end() {
+						// noop
+					},
 					once() {
 						// noop
 					},

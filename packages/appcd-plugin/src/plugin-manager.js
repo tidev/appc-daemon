@@ -1,3 +1,4 @@
+import appcdLogger from 'appcd-logger';
 import Dispatcher from 'appcd-dispatcher';
 import gawk from 'gawk';
 import Response, { codes } from 'appcd-response';
@@ -5,13 +6,12 @@ import path from 'path';
 import PluginError from './plugin-error';
 import PluginPath from './plugin-path';
 import semver from 'semver';
-import snooplogg from 'snooplogg';
 
 import { EventEmitter } from 'events';
 import { expandPath } from 'appcd-path';
 
-const logger = snooplogg.config({ theme: 'detailed' })('appcd:plugin:manager');
-const { highlight } = snooplogg.styles;
+const logger = appcdLogger('appcd:plugin:manager');
+const { highlight } = appcdLogger.styles;
 
 /**
  * Detects, starts, and stops Appc Daemon plugins.

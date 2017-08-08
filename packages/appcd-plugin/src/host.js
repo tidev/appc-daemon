@@ -7,7 +7,7 @@ import Plugin from './plugin';
 import semver from 'semver';
 import TunnelStream from './tunnel-stream';
 
-import { createInstanceWithDefaults, StdioStream } from 'snooplogg';
+import { createInstanceWithDefaults, StdioStream } from 'appcd-logger';
 
 if (!process.connected) {
 	console.error('The Appc Daemon plugin host cannot be directly executed.');

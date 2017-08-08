@@ -1,12 +1,12 @@
+import appcdLogger from 'appcd-logger';
 import Dispatcher from 'appcd-dispatcher';
 import msgpack from 'msgpack-lite';
-import snooplogg from 'snooplogg';
 import WebServer, { WebSocket } from 'appcd-http';
 import WebSocketSession from '../dist/websocket-session';
 
 import { IncomingMessage } from 'http';
 
-const log = snooplogg.config({ theme: 'detailed' })('test:appcd:core:websocket-session').log;
+const { log } = appcdLogger('test:appcd:core:websocket-session');
 
 describe('WebSocketSession', () => {
 	afterEach(function (done) {

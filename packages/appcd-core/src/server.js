@@ -6,7 +6,7 @@ import gawk from 'gawk';
 import HookEmitter from 'hook-emitter';
 import path from 'path';
 import PluginManager from 'appcd-plugin';
-import snooplogg, { logcat, StdioStream } from './logger';
+import appcdLogger, { logcat, StdioStream } from './logger';
 import StatusMonitor from './status-monitor';
 import SubprocessManager from 'appcd-subprocess';
 import WebServer from 'appcd-http';
@@ -21,8 +21,8 @@ import { load as loadConfig } from 'appcd-config';
 
 const { __n } = i18n();
 
-const { highlight, notice } = snooplogg.styles;
-const logger = snooplogg('appcd:server');
+const logger = appcdLogger('appcd:server');
+const { highlight, notice } = appcdLogger.styles;
 
 /**
  * The main server logic for the Appc Daemon. It controls all core aspects of the daemon including
@@ -88,7 +88,7 @@ export default class Server extends HookEmitter {
 	 */
 	async start() {
 		// enable logging
-		snooplogg
+		appcdLogger
 			.enable('*')
 			.pipe(new StdioStream(), { flush: true });
 
