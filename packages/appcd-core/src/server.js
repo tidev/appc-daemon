@@ -14,7 +14,6 @@ import WebSocketSession from './websocket-session';
 
 import { expandPath } from 'appcd-path';
 import { getActiveHandles } from 'appcd-util';
-import { getMachineId } from 'appcd-machine-id';
 import { i18n } from 'appcd-response';
 import { isDir, isFile } from 'appcd-fs';
 import { load as loadConfig } from 'appcd-config';
@@ -146,7 +145,9 @@ export default class Server {
 		}
 
 		// init the telemetry system
-		Dispatcher.register('/appcd/telemetry', new Telemetry(this.config));
+		this.systems.telemetry = new Telemetry(this.config);
+		await this.systems.telemetry.init(homeDir);
+		Dispatcher.register('/appcd/telemetry', this.systems.telemetry);
 
 		// init the config service
 		Dispatcher.register('/appcd/config', new ConfigService(this.config));
@@ -204,14 +205,12 @@ export default class Server {
 			.use(Dispatcher.callback())
 			.on('websocket', (ws, req) => new WebSocketSession(ws, req));
 
-		this.mid = await getMachineId(path.join(homeDir, '.mid'));
-
 		// start the web server
 		await this.systems.webserver.listen();
 
 		// send the server start event
 		await Dispatcher.call('/appcd/telemetry', {
-			type: 'appcd.server.start'
+			event: 'appcd.server.start'
 		});
 	}
 
@@ -226,7 +225,7 @@ export default class Server {
 
 		return Promise.resolve()
 			.then(() => Dispatcher.call('/appcd/telemetry', {
-				type:   'appcd.server.shutdown',
+				event:  'appcd.server.shutdown',
 				uptime: process.uptime()
 			}))
 			.then(async () => {

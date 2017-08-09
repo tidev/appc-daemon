@@ -30,6 +30,7 @@
     "appcd-fs",
     "appcd-gulp",
     "appcd-logger",
+    "appcd-machine-id",
     "appcd-path",
     "appcd-request",
     "appcd-util"

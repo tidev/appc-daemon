@@ -1,7 +1,9 @@
 {
+	"appcd": {
+		"guid": "ea327577-858f-4d31-905e-fa670f50ef48"
+	},
 	"environment": {
 		"name": "prod",
 		"title": "Production"
-	},
-	"guid": "ea327577-858f-4d31-905e-fa670f50ef48"
+	}
 }

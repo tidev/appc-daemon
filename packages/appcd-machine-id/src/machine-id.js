@@ -21,7 +21,7 @@ const { highlight } = appcdLogger.styles;
  * @param {String} [midFile] - The path to the file to cache the machine id.
  * @returns {Promise} Resovles the machine id.
  */
-export function getMachineId(midFile) {
+export default function getMachineId(midFile) {
 	if (midFile) {
 		if (typeof midFile !== 'string') {
 			throw new TypeError('Expected midFile to be a string');
