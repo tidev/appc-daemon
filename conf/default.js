@@ -148,13 +148,20 @@ module.exports = {
 		 * The path to the telemetry cache directory.
 		 * @type {String}
 		 */
-		eventsDir: '~/.appcelerator/appcd/analytics',
+		eventsDir: '~/.appcelerator/appcd/telemetry',
 
 		/**
 		 * The number of events to queue up before sending.
 		 * @type {Number}
 		 */
 		sendBatchSize: 10,
+
+		/**
+		 * The number of milliseconds to wait before checking if there are enough telemetry events
+		 * to batch send.
+		 * @type {Number}
+		 */
+		sendInterval: 60000,
 
 		/**
 		 * The URL to post the telemetry events to.
