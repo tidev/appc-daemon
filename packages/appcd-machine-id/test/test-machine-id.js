@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import tmp from 'tmp';
 
-import { getMachineId } from '../dist/machine-id';
+import getMachineId from '../dist/machine-id';
 
 tmp.setGracefulCleanup();
 function makeTempDir() {

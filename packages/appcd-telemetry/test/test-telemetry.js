@@ -1,12 +1,17 @@
+import appcdLogger from 'appcd-logger';
 import Config from 'appcd-config';
 import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs-extra';
 import gawk from 'gawk';
+import http from 'http';
 import path from 'path';
 import Telemetry from '../dist/telemetry';
 import tmp from 'tmp';
 
 import { codes } from 'appcd-response';
+import { sleep } from 'appcd-util';
+
+const { log } = appcdLogger('test:appcd:telemetry');
 
 const tmpDir = tmp.dirSync({
 	prefix: 'appcd-telemetry-test-',
@@ -224,10 +229,328 @@ describe('telemetry', () => {
 					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(1);
 				});
 		});
+
+		it('should stop writing events if event dir is nulled', async function () {
+			const eventsDir = makeTempDir();
+
+			const cfg = new Config({
+				config: {
+					appcd: {
+						guid: '<GUID>'
+					},
+					telemetry: {
+						enabled: true,
+						eventsDir
+					}
+				}
+			});
+			cfg.values = gawk(cfg.values);
+
+			const telemetry = this.telemetry = new Telemetry(cfg);
+
+			await telemetry.init(makeTempDir());
+
+			const dispatcher = new Dispatcher();
+
+			return dispatcher
+				.register('/appcd/telemetry', telemetry)
+				.call('/appcd/telemetry', {
+					event: 'test',
+					foo: 'bar'
+				})
+				.then(ctx => {
+					expect(ctx.response.statusCode).to.equal(codes.CREATED);
+					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(1);
+
+					cfg.set('telemetry.eventsDir', null);
+
+					return dispatcher.call('/appcd/telemetry', {
+						event: 'test',
+						foo: 'bar'
+					});
+				})
+				.then(ctx => {
+					expect(ctx.response.statusCode).to.equal(codes.TELEMETRY_DISABLED);
+					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(1);
+
+					cfg.set('telemetry.eventsDir', eventsDir);
+
+					return dispatcher.call('/appcd/telemetry', {
+						event: 'test',
+						foo: 'bar'
+					});
+				})
+				.then(ctx => {
+					expect(ctx.response.statusCode).to.equal(codes.CREATED);
+					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(2);
+				});
+		});
+
+		it('should fallback to writing event to home events dir', async function () {
+			const telemetry = this.telemetry = createTelemetry({
+				telemetry: {
+					enabled: true
+				}
+			});
+
+			const homeDir = makeTempDir();
+			const eventsDir = path.join(homeDir, 'telemetry');
+			await telemetry.init(homeDir);
+
+			return new Dispatcher()
+				.register('/appcd/telemetry', telemetry)
+				.call('/appcd/telemetry', {
+					event: 'test',
+					foo: 'bar'
+				})
+				.then(ctx => {
+					expect(ctx.response.statusCode).to.equal(codes.CREATED);
+					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(1);
+				});
+		});
 	});
 
 	describe('Sending Events', () => {
-		// TODO
+		afterEach(function (done) {
+			Promise.resolve()
+				.then(async () => {
+					if (this.telemetry) {
+						await this.telemetry.shutdown();
+						this.telemetry = null;
+					}
+				})
+				.then(() => {
+					if (this.server) {
+						return new Promise(resolve => {
+							this.server.close(() => {
+								this.server = null;
+								resolve();
+							});
+						});
+					}
+				})
+				.then(() => sleep(1000))
+				.then(() => done())
+				.catch(done);
+		});
+
+		it('should send events to the server', async function () {
+			this.timeout(10000);
+			this.slow(10000);
+
+			let counter = 0;
+
+			this.server = http.createServer((req, res) => {
+				counter++;
+				log('Receiving HTTP request');
+				res.writeHead(200, { 'Content-Type': 'text/plain' });
+				res.end('okay');
+			}).listen(1337);
+
+			let i = 0;
+			const eventsDir = makeTempDir();
+			const telemetry = this.telemetry = await createInitializedTelemetry({
+				telemetry: {
+					eventsDir,
+					sendBatchSize: 5,
+					sendInterval: 3000, // 3 seconds
+					url: 'http://127.0.0.1:1337'
+				}
+			});
+
+			const dispatcher = new Dispatcher()
+				.register('/appcd/telemetry', telemetry);
+
+			const addEvent = () => {
+				return dispatcher
+					.call('/appcd/telemetry', {
+						event: 'test',
+						foo: `bar${++i}`
+					});
+			};
+
+			return Promise
+				.all([
+					addEvent(),
+					addEvent(),
+					addEvent()
+				])
+				.then(() => {
+					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(3);
+					expect(counter).to.equal(0);
+					return sleep(2000);
+				})
+				.then(() => {
+					return Promise
+						.all([
+							addEvent(),
+							addEvent()
+						]);
+				})
+				.then(() => {
+					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(2);
+					expect(counter).to.equal(1);
+					return sleep(1000);
+				})
+				.then(() => {
+					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(0);
+					expect(counter).to.equal(2);
+				});
+		});
+
+		it('should not delete events if the server fails', async function () {
+			this.timeout(10000);
+			this.slow(10000);
+
+			let counter = 0;
+
+			this.server = http.createServer((req, res) => {
+				counter++;
+				log('Receiving HTTP request');
+				res.writeHead(500, { 'Content-Type': 'text/plain' });
+				res.end('server error');
+			}).listen(1337);
+
+			const eventsDir = makeTempDir();
+			const telemetry = this.telemetry = await createInitializedTelemetry({
+				telemetry: {
+					eventsDir,
+					sendBatchSize: 5,
+					sendInterval: 3000, // 3 seconds
+					url: 'http://127.0.0.1:1337'
+				}
+			});
+
+			return new Dispatcher()
+				.register('/appcd/telemetry', telemetry)
+				.call('/appcd/telemetry', {
+					event: 'test',
+					foo: 'bar'
+				})
+				.then(() => {
+					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(1);
+					expect(counter).to.equal(0);
+					return sleep(1500);
+				})
+				.then(() => {
+					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(1);
+					expect(counter).to.equal(1);
+				});
+		});
+
+		it('should not delete events if the request fails', async function () {
+			this.timeout(10000);
+			this.slow(10000);
+
+			const eventsDir = makeTempDir();
+			const telemetry = this.telemetry = await createInitializedTelemetry({
+				telemetry: {
+					eventsDir,
+					sendBatchSize: 5,
+					sendInterval: 3000, // 3 seconds
+					timeout: 1000,
+					url: 'http://127.0.0.1:1338'
+				}
+			});
+
+			return new Dispatcher()
+				.register('/appcd/telemetry', telemetry)
+				.call('/appcd/telemetry', {
+					event: 'test',
+					foo: 'bar'
+				})
+				.then(() => sleep(1000))
+				.then(() => {
+					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(1);
+				});
+		});
+
+		it('should not delete events if telemetry not enabled', async function () {
+			this.timeout(10000);
+			this.slow(10000);
+
+			const eventsDir = makeTempDir();
+			const telemetry = this.telemetry = await createInitializedTelemetry({
+				telemetry: {
+					eventsDir,
+					url: null
+				}
+			});
+
+			return new Dispatcher()
+				.register('/appcd/telemetry', telemetry)
+				.call('/appcd/telemetry', {
+					event: 'test',
+					foo: 'bar'
+				})
+				.then(() => sleep(1000))
+				.then(() => {
+					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(1);
+				});
+		});
+
+		it('should send events in batches', async function () {
+			this.timeout(10000);
+			this.slow(10000);
+
+			let counter = 0;
+
+			this.server = http.createServer((req, res) => {
+				counter++;
+				log('Receiving HTTP request');
+				res.writeHead(200, { 'Content-Type': 'text/plain' });
+				res.end('okay');
+			}).listen(1337);
+
+			let i = 0;
+			const eventsDir = makeTempDir();
+			const telemetry = this.telemetry = await createInitializedTelemetry({
+				telemetry: {
+					eventsDir,
+					sendBatchSize: 5,
+					sendInterval: 3000, // 3 seconds
+					url: 'http://127.0.0.1:1337'
+				}
+			});
+
+			const dispatcher = new Dispatcher()
+				.register('/appcd/telemetry', telemetry);
+
+			const addEvent = () => {
+				return dispatcher
+					.call('/appcd/telemetry', {
+						event: 'test',
+						foo: `bar${++i}`
+					});
+			};
+
+			return Promise
+				.all([
+					addEvent(),
+					addEvent(),
+					addEvent(),
+					addEvent(),
+					addEvent(),
+
+					addEvent(),
+					addEvent(),
+					addEvent(),
+					addEvent(),
+					addEvent(),
+
+					addEvent(),
+					addEvent()
+				])
+				.then(() => {
+					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(12);
+					expect(counter).to.equal(0);
+					return sleep(2000);
+				})
+				.then(() => {
+					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(0);
+					expect(counter).to.equal(3);
+				});
+		});
 	});
 });
 

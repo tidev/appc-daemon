@@ -34,8 +34,5 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/appcelerator/appc-daemon.git"
-  },
-  "engines": {
-    "node": "8.2.0"
   }
 }
