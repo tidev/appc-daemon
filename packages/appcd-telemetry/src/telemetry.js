@@ -11,13 +11,18 @@ import gawk, { isGawked } from 'gawk';
 import getMachineId from 'appcd-machine-id';
 import path from 'path';
 import request from 'appcd-request';
-import Response, { AppcdError, codes } from 'appcd-response';
+import Response, { AppcdError, codes, i18n } from 'appcd-response';
 import uuid from 'uuid';
 
 import { expandPath } from 'appcd-path';
-// import { isFile } from 'appcd-fs';
+import { isDir, isFile } from 'appcd-fs';
 
-const { log } = appcdLogger('appcd:telemetry');
+const { __n } = i18n();
+
+const { error, log } = appcdLogger('appcd:telemetry');
+const { highlight } = appcdLogger.styles;
+
+const jsonRegExp = /\.json$/;
 
 /**
  * Records and sends telemetry data.
@@ -38,46 +43,31 @@ export default class Telemetry extends Dispatcher {
 			throw new TypeError('Expected config values to be gawked');
 		}
 
+		const aguid = cfg.get('appcd.guid');
+		if (!aguid || typeof aguid !== 'string') {
+			throw new Error('Config is missing a required, valid "appcd.guid"');
+		}
+
 		super();
 
 		/**
 		 * The Appc Daemon application guid.
 		 * @type {String}
 		 */
-		this.aguid = cfg.get('appcd.guid');
-		if (!this.aguid || typeof this.aguid !== 'string') {
-			throw new Error('Config is missing a required, valid "appcd.guid"');
-		}
+		this.aguid = aguid;
 
 		/**
 		 * The daemon config instance.
 		 * @type {Config}
 		 */
-		this.config = Object.assign({
+		this.config = {
 			enabled:       false,
 			eventsDir:     null,
 			sendBatchSize: 10,
 			sendInterval:  60000, // 1 minute
+			sendTimeout:   60000, // 1 minute
 			url:           null
-		}, cfg.get('telemetry'));
-
-		gawk.watch(cfg.values, 'telemetry', obj => {
-			const eventsDir = obj.eventsDir || null;
-			if (eventsDir !== this.config.eventsDir) {
-				this.initEventsDir(eventsDir);
-			}
-
-			// copy over the config
-			Object.assign(this.config, obj);
-
-			// make sure things are sane
-			if (this.config.sendBatchSize) {
-				this.config.sendBatchSize = Math.max(this.config.sendBatchSize, 1);
-			}
-
-			// don't let the sendInterval dip below 1 second
-			this.config.sendInterval = Math.max(this.config.sendInterval, 1000);
-		});
+		};
 
 		/**
 		 * The time, in milliseconds, that the last send was fired.
@@ -110,6 +100,10 @@ export default class Telemetry extends Dispatcher {
 		 */
 		this.sessionId = uuid.v4();
 
+		// set the config and wire up the watcher
+		this.updateConfig(cfg.get('telemetry') || {});
+		gawk.watch(cfg.values, 'telemetry', obj => this.updateConfig(obj));
+
 		// wire up the telemetry route
 		this.register('/', this.addEvent.bind(this));
 	}
@@ -126,7 +120,7 @@ export default class Telemetry extends Dispatcher {
 				throw new AppcdError(codes.NOT_INITIALIZED, 'The telemetry system has not been initialized');
 			}
 
-			if (!this.config.enabled) {
+			if (!this.config.enabled || !this.eventsDir) {
 				throw new AppcdError(codes.TELEMETRY_DISABLED);
 			}
 
@@ -155,8 +149,11 @@ export default class Telemetry extends Dispatcher {
 
 			const filename = path.join(this.eventsDir, id + '.json');
 			try {
+				fs.mkdirsSync(this.eventsDir);
+				log('Writing event: %s', highlight(filename));
 				fs.writeFileSync(filename, JSON.stringify(payload));
 			} catch (e) {
+				/* istanbul ignore next */
 				throw new AppcdError(codes.SERVER_ERROR, 'Failed to write event data: %s', e.message);
 			}
 
@@ -183,56 +180,87 @@ export default class Telemetry extends Dispatcher {
 			throw new TypeError('Expected home directory to be a non-empty string');
 		}
 
-		this.initEventsDir(this.config.eventsDir || path.join(homeDir, 'telemetry'));
+		this.eventsDir = expandPath(this.config.eventsDir || path.join(homeDir, 'telemetry'));
 
 		this.mid = await getMachineId(path.join(homeDir, '.mid'));
 
 		// record now as the last send and start the send timer
 		this.lastSend = Date.now();
-		this.sendTimer = setTimeout(() => this.sendEvents(), 1000);
+		this.sendEvents();
 
 		return this;
 	}
 
 	/**
-	 * Initializes the directory where the telemetry event data is saved.
-	 *
-	 * @param {String} dir - The directory to store the event data in.
-	 * @access private
-	 */
-	initEventsDir(dir) {
-		if (dir) {
-			this.eventsDir = expandPath(dir);
-			fs.mkdirsSync(this.eventsDir);
-		} else {
-			this.eventsDir = null;
-		}
-	}
-
-	/**
-	 * Sends telemetry events if telemetry is enabled, there's enough events to fill a batch, and
-	 * it's time to send events.
+	 * Sends telemetry events if telemetry is enabled, and if it's time to send events.
 	 *
 	 * @access private
 	 */
 	sendEvents() {
-		if (!this.config.enabled
-			|| !this.config.url
-			|| this.lastSend + this.config.sendInterval < Date.now()) {
-			// not time to send
-			this.sendTimer = setTimeout(() => this.sendEvents(), 1000);
-			return;
-		}
+		this.sendTimer = setTimeout(() => {
+			const { sendBatchSize, enabled, sendInterval, sendTimeout, url } = this.config;
+			const { eventsDir } = this;
 
-		// time to send!
-		log('Sending events');
+			if (!enabled || !url || (this.lastSend + sendInterval) < Date.now() || !eventsDir || !isDir(eventsDir)) {
+				// not enabled or not time to send
+				log('Not enabled or not time to send');
+				return this.sendEvents();
+			}
 
-		// request({ params })
-		//	.then(req => {})
-		//	.catch(err => {});
+			// sendBatch() is recursive and will continue to scoop up `sendBatchSize` of events
+			// until they're all gone
+			const sendBatch = () => {
+				const batch = [];
+				for (const name of fs.readdirSync(eventsDir)) {
+					if (jsonRegExp.test(name)) {
+						batch.push(path.join(eventsDir, name));
+						if (batch.length >= sendBatchSize) {
+							break;
+						}
+					}
+				}
 
-		// TODO: check batch size and send!
-		this.sendTimer = setTimeout(() => this.sendEvents(), 1000);
+				if (!batch.length) {
+					// no events to send
+					log('No events to send');
+					this.lastSend = Date.now();
+					return this.sendEvents();
+				}
+
+				log(__n(batch.length, 'Sending %%s event', 'Sending %%s events', highlight(batch.length)));
+
+				request({
+					json:    batch.map(file => JSON.parse(fs.readFileSync(file))),
+					method:  'POST',
+					timeout: sendTimeout,
+					url
+				}, (err, resp) => {
+					if (err || resp.statusCode >= 300) {
+						error(__n(
+							batch.length,
+							'Failed to send %%s event: %%s',
+							'Failed to send %%s events: %%s',
+							highlight(batch.length),
+							err ? err.message : `${resp.statusCode} - ${resp.statusMessage}`
+						));
+						this.lastSend = Date.now();
+						return this.sendEvents();
+					}
+
+					log(__n(batch.length, 'Successfully sent %%s event', 'Successfully sent %%s events', highlight(batch.length)));
+
+					for (const file of batch) {
+						if (isFile(file)) {
+							fs.unlinkSync(file);
+						}
+					}
+
+					sendBatch();
+				});
+			};
+
+			sendBatch();
+		}, 1000);
 	}
 
 	/**
@@ -245,5 +273,30 @@ export default class Telemetry extends Dispatcher {
 		clearTimeout(this.sendTimer);
 
 		// TODO: wait for any pending requests to finish
+	}
+
+	/**
+	 * Scrubs and sets updated config settings.
+	 *
+	 * @param {Object} config - The config settings to apply.
+	 * @access private
+	 */
+	updateConfig(config) {
+		const eventsDir = config.eventsDir || null;
+		if (eventsDir !== this.config.eventsDir) {
+			this.eventsDir = eventsDir ? expandPath(eventsDir) : null;
+		}
+
+		// copy over the config
+		Object.assign(this.config, config);
+
+		// make sure things are sane
+		if (this.config.sendBatchSize) {
+			this.config.sendBatchSize = Math.max(this.config.sendBatchSize, 1);
+		}
+
+		// don't let the sendInterval or sendTimeout dip below 1 second
+		this.config.sendInterval = Math.max(this.config.sendInterval, 1000);
+		this.config.sendTimeout  = Math.max(this.config.sendTimeout, 1000);
 	}
 }

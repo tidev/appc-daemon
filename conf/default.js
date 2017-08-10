@@ -151,7 +151,7 @@ module.exports = {
 		eventsDir: '~/.appcelerator/appcd/telemetry',
 
 		/**
-		 * The number of events to queue up before sending.
+		 * The maximum number of events to send at a time.
 		 * @type {Number}
 		 */
 		sendBatchSize: 10,
@@ -164,9 +164,15 @@ module.exports = {
 		sendInterval: 60000,
 
 		/**
+		 * The number of milliseconds to wait before timing out sending telementry events.
+		 * @type {Number}
+		 */
+		sendTimeout: 60000,
+
+		/**
 		 * The URL to post the telemetry events to.
 		 * @type {String}
 		 */
-		url: 'https://api.appcelerator.net/p/v2/partner-track'
+		url: 'https://api.appcelerator.com/p/v1/app-track'
 	}
 };
