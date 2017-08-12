@@ -13,6 +13,7 @@ describe('request', () => {
 	});
 
 	afterEach(function (done) {
+		Dispatcher.root.routes = [];
 		if (this.server) {
 			this.server.close(() => {
 				if (this.server2) {
@@ -135,6 +136,36 @@ describe('request', () => {
 
 		Dispatcher.register('/appcd/config/network', () => {
 			throw new Error('oh no!');
+		});
+
+		this.server = http.createServer((req, res) => {
+			res.end('foo!');
+		});
+
+		this.server.listen(1337, '127.0.0.1', () => {
+			request({
+				url: 'http://127.0.0.1:1337'
+			}, (err, res, body) => {
+				try {
+					if (err) {
+						throw err;
+					}
+					expect(res.statusCode).to.equal(200);
+					expect(body).to.equal('foo!');
+					done();
+				} catch (e) {
+					done(e);
+				}
+			});
+		});
+	});
+
+	it('should make http request when getting config returns null', function (done) {
+		this.timeout(5000);
+		this.slow(4000);
+
+		Dispatcher.register('/appcd/config/network', ctx => {
+			ctx.response = null;
 		});
 
 		this.server = http.createServer((req, res) => {

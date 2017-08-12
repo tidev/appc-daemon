@@ -41,6 +41,9 @@ timestamps {
         }
 
         stage('Test') {
+          environment {
+            SNOOPLOGG = '*'
+          }
           try {
             sh 'node ./node_modules/.bin/gulp coverage'
           } finally {

@@ -285,7 +285,7 @@ export default class PluginManager extends EventEmitter {
 					return info;
 				})
 			})
-			.catch(err => {
+			.catch(() => {
 				// squeltch
 			});
 	}
