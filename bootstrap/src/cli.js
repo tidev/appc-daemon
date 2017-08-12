@@ -28,4 +28,7 @@ new CLI({
 		'-v, --version':        { desc: 'outputs the appcd version' }
 	}
 }).exec()
-	.catch(console.error);
+	.catch(err => {
+		console.error(err.message);
+		process.exit(err.exitCode || 1);
+	});

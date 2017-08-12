@@ -378,7 +378,7 @@ describe('telemetry', () => {
 				.then(() => {
 					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(3);
 					expect(counter).to.equal(0);
-					return sleep(2000);
+					return sleep(3500);
 				})
 				.then(() => {
 					return Promise
@@ -390,7 +390,7 @@ describe('telemetry', () => {
 				.then(() => {
 					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(2);
 					expect(counter).to.equal(1);
-					return sleep(1000);
+					return sleep(3500);
 				})
 				.then(() => {
 					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(0);
@@ -430,7 +430,7 @@ describe('telemetry', () => {
 				.then(() => {
 					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(1);
 					expect(counter).to.equal(0);
-					return sleep(1500);
+					return sleep(3500);
 				})
 				.then(() => {
 					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(1);
@@ -459,7 +459,7 @@ describe('telemetry', () => {
 					event: 'test',
 					foo: 'bar'
 				})
-				.then(() => sleep(1000))
+				.then(() => sleep(3500))
 				.then(() => {
 					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(1);
 				});
@@ -483,7 +483,7 @@ describe('telemetry', () => {
 					event: 'test',
 					foo: 'bar'
 				})
-				.then(() => sleep(1000))
+				.then(() => sleep(3500))
 				.then(() => {
 					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(1);
 				});
@@ -544,11 +544,136 @@ describe('telemetry', () => {
 				.then(() => {
 					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(12);
 					expect(counter).to.equal(0);
-					return sleep(2000);
+					return sleep(3500);
 				})
 				.then(() => {
 					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(0);
 					expect(counter).to.equal(3);
+				});
+		});
+
+		it('should keep checking for new events', async function () {
+			this.timeout(10000);
+			this.slow(10000);
+
+			let counter = 0;
+
+			this.server = http.createServer((req, res) => {
+				counter++;
+				log('Receiving HTTP request');
+				res.writeHead(200, { 'Content-Type': 'text/plain' });
+				res.end('okay');
+			}).listen(1337);
+
+			const eventsDir = makeTempDir();
+			const telemetry = this.telemetry = await createInitializedTelemetry({
+				telemetry: {
+					eventsDir,
+					sendBatchSize: 5,
+					sendInterval: 3000, // 3 seconds
+					url: 'http://127.0.0.1:1337'
+				}
+			});
+
+			const dispatcher = new Dispatcher()
+				.register('/appcd/telemetry', telemetry);
+
+			await sleep(3500);
+
+			expect(fs.readdirSync(eventsDir)).to.have.lengthOf(0);
+			expect(counter).to.equal(0);
+
+			return dispatcher
+				.call('/appcd/telemetry', {
+					event: 'test'
+				})
+				.then(() => {
+					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(1);
+					expect(counter).to.equal(0);
+					return sleep(3500);
+				})
+				.then(() => {
+					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(0);
+					expect(counter).to.equal(1);
+				});
+		});
+	});
+
+	describe('Shutdown', () => {
+		afterEach(function (done) {
+			Promise.resolve()
+				.then(async () => {
+					if (this.telemetry) {
+						await this.telemetry.shutdown();
+						this.telemetry = null;
+					}
+				})
+				.then(() => {
+					if (this.server) {
+						return new Promise(resolve => {
+							this.server.close(() => {
+								this.server = null;
+								resolve();
+							});
+						});
+					}
+				})
+				.then(() => sleep(1000))
+				.then(() => done())
+				.catch(done);
+		});
+
+		it('should wait for pending request when shutting down', async function () {
+			this.timeout(10000);
+			this.slow(10000);
+
+			let counter = 0;
+
+			this.server = http.createServer((req, res) => {
+				log('Receiving HTTP request, waiting 3 seconds...');
+				setTimeout(() => {
+					counter++;
+					res.writeHead(200, { 'Content-Type': 'text/plain' });
+					res.end('okay');
+				}, 3000);
+			}).listen(1337);
+
+			const eventsDir = makeTempDir();
+			const telemetry = this.telemetry = await createInitializedTelemetry({
+				telemetry: {
+					eventsDir,
+					sendInterval: 1000, // 1 second
+					url: 'http://127.0.0.1:1337'
+				}
+			});
+
+			return new Dispatcher()
+				.register('/appcd/telemetry', telemetry)
+				.call('/appcd/telemetry', {
+					event: 'test',
+					foo: 'bar'
+				})
+				.then(async () => {
+					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(1);
+
+					// wait for telemetry to send the event
+					await sleep(1000);
+
+					// time the shutdown
+					const now = Date.now();
+					log('Shutting down');
+					await this.telemetry.shutdown();
+					const delta = Date.now() - now;
+
+					// make sure the server was called
+					expect(counter).to.equal(1);
+
+					// make sure it took around 3 seconds to complete
+					expect(delta).to.be.at.least(2500);
+					expect(delta).to.be.at.most(3500);
+
+					// make sure the event file was removed
+					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(0);
 				});
 		});
 	});

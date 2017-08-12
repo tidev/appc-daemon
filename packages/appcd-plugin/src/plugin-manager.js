@@ -94,6 +94,16 @@ export default class PluginManager extends EventEmitter {
 				}
 			}
 		}
+
+		/**
+		 * Indicates that telemetry data should be captured.
+		 *
+		 * NOTE: This property MUST be set AFTER doing the initial path scanning and plugin
+		 * registration.
+		 *
+		 * @type {Boolean}
+		 */
+		this.telemetryEnabled = true;
 	}
 
 	/**
@@ -138,99 +148,146 @@ export default class PluginManager extends EventEmitter {
 
 		this.pluginPaths[pluginPath] = new PluginPath(pluginPath)
 			.on('added', plugin => {
-				if (this.plugins.indexOf(plugin) === -1) {
-					logger.log('Plugin added: %s', highlight(`${plugin.name}@${plugin.version}`));
-
-					// sanity check the plugin hasn't been added twice
-					for (let i = 0; i < this.plugins.length; i++) {
-						if (this.plugins[i].path === plugin.path || (this.plugins[i].name === plugin.name && this.plugins[i].version === plugin.version)) {
-							logger.error('Plugin already registered: %s', highlight(plugin.toString()));
-							return;
-						}
-					}
-
-					this.plugins.push(plugin.info);
-
-					let ns = this.namespaces[plugin.name];
-
-					if (!ns) {
-						// initialize the namespace
-						ns = this.namespaces[plugin.name] = {
-							handler: async (ctx, next) => {
-								const versions = Object.keys(ns.versions).sort(semver.rcompare);
-								let version = ctx.params.version || null;
-
-								if (!version) {
-									logger.log('No version specified, return list of versions');
-									ctx.response = versions;
-									return;
-								}
-
-								let plugin = ns.versions[version];
-								if (!plugin) {
-									if (version === 'latest') {
-										version = versions[0];
-										logger.log('Remapping plugin version %s -> %s', highlight('latest'), highlight(version));
-									} else {
-										for (const v of versions) {
-											if (semver.satisfies(v, version)) {
-												logger.log('Remapping plugin version %s -> %s', highlight(version), highlight(v));
-												version = v;
-												break;
-											}
-										}
-									}
-
-									plugin = version && ns.versions[version];
-								}
-
-								if (plugin && !plugin.error) {
-									// forward request to the plugin's dispatcher
-									ctx.path = '/' + ctx.params.path;
-									await plugin.start();
-									logger.log('Plugin %s started', highlight(plugin.toString()));
-									return await plugin.dispatch(ctx, next);
-								}
-
-								// not found, continue
-								return await next();
-							},
-							path: `/${plugin.name}/:version?/:path*`,
-							versions: {}
-						};
-
-						Dispatcher.register(ns.path, ns.handler);
-					}
-
-					// add this version to the namespace
-					ns.versions[plugin.version] = plugin;
+				if (this.plugins.indexOf(plugin) !== -1) {
+					return;
 				}
-			})
-			.on('removed', async (plugin) => {
+
+				logger.log('Plugin added: %s', highlight(`${plugin.name}@${plugin.version}`));
+
+				// sanity check the plugin hasn't been added twice
 				for (let i = 0; i < this.plugins.length; i++) {
-					if (this.plugins[i].path === plugin.path) {
-						try {
-							logger.log('Stopping plugin: %s', highlight(`${plugin.name}@${plugin.version}`));
-							await plugin.stop();
-							this.plugins.splice(i--, 1);
-						} catch (e) {
-							logger.error(e);
-						}
+					if (this.plugins[i].path === plugin.path || (this.plugins[i].name === plugin.name && this.plugins[i].version === plugin.version)) {
+						logger.error('Plugin already registered: %s', highlight(plugin.toString()));
+						return;
 					}
 				}
+
+				this.plugins.push(plugin.info);
 
 				let ns = this.namespaces[plugin.name];
-				if (ns && ns.versions[plugin.version]) {
-					delete ns.versions[plugin.version];
 
-					if (Object.keys(ns.versions).length === 0) {
-						Dispatcher.unregister(ns.path, ns.handler);
-						delete this.namespaces[plugin.name];
+				if (!ns) {
+					// initialize the namespace
+					ns = this.namespaces[plugin.name] = {
+						handler: async (ctx, next) => {
+							const versions = Object.keys(ns.versions).sort(semver.rcompare);
+							let version = ctx.params.version || null;
+
+							if (!version) {
+								logger.log('No version specified, return list of versions');
+								ctx.response = versions;
+								return;
+							}
+
+							let plugin = ns.versions[version];
+							if (!plugin) {
+								if (version === 'latest') {
+									version = versions[0];
+									logger.log('Remapping plugin version %s -> %s', highlight('latest'), highlight(version));
+								} else {
+									for (const v of versions) {
+										if (semver.satisfies(v, version)) {
+											logger.log('Remapping plugin version %s -> %s', highlight(version), highlight(v));
+											version = v;
+											break;
+										}
+									}
+								}
+
+								plugin = version && ns.versions[version];
+							}
+
+							if (plugin && !plugin.error) {
+								// forward request to the plugin's dispatcher
+								ctx.path = '/' + ctx.params.path;
+								await plugin.start();
+								logger.log('Plugin %s started', highlight(plugin.toString()));
+								return await plugin.dispatch(ctx, next);
+							}
+
+							// not found, continue
+							return await next();
+						},
+						path: `/${plugin.name}/:version?/:path*`,
+						versions: {}
+					};
+
+					Dispatcher.register(ns.path, ns.handler);
+				}
+
+				// add this version to the namespace
+				ns.versions[plugin.version] = plugin;
+
+				this.sendTelemetry('plugin.added', plugin);
+			})
+			.on('removed', async (plugin) => {
+				try {
+					logger.log('Stopping plugin: %s', highlight(`${plugin.name}@${plugin.version}`));
+					await plugin.stop();
+
+					for (let i = 0; i < this.plugins.length; i++) {
+						if (this.plugins[i].path === plugin.path) {
+							this.plugins.splice(i, 1);
+							break;
+						}
 					}
+
+					let ns = this.namespaces[plugin.name];
+					if (ns && ns.versions[plugin.version]) {
+						delete ns.versions[plugin.version];
+
+						if (Object.keys(ns.versions).length === 0) {
+							Dispatcher.unregister(ns.path, ns.handler);
+							delete this.namespaces[plugin.name];
+						}
+					}
+
+					this.sendTelemetry('plugin.removed', plugin);
+				} catch (e) {
+					logger.error(e);
 				}
 			});
 
 		await this.pluginPaths[pluginPath].detect();
+	}
+
+	/**
+	 * Creates a telemetry event.
+	 *
+	 * @param {String} event - The name of the telemetry event.
+	 * @param {Plugin} plugin - A reference to the plugin that was added or removed.
+	 * @access private
+	 */
+	sendTelemetry(event, plugin) {
+		if (!this.telemetryEnabled) {
+			return;
+		}
+
+		Dispatcher
+			.call('/appcd/telemetry', {
+				event,
+				plugin: {
+					name:    plugin.name,
+					path:    plugin.path,
+					version: plugin.version
+				},
+				plugins:     this.plugins.map(p => {
+					const info = {
+						name:        p.name,
+						nodeVersion: p.nodeVersion,
+						path:        p.path,
+						version:     p.version,
+						type:        p.type
+					};
+					if (p.error) {
+						info.error = p.error;
+					}
+					return info;
+				})
+			})
+			.catch(err => {
+				// squeltch
+			});
 	}
 
 	/**

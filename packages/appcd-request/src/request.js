@@ -18,6 +18,8 @@ const { humanize } = appcdLogger;
 /**
  * Makes an HTTP request.
  *
+ * Note: The returned `Promise` will always resolve and never rejects.
+ *
  * @param {Object} [params] - Request parameters.
  * @param {Function} [callback] - A function to call when the request has completed.
  * @returns {Promise}
@@ -40,35 +42,31 @@ export default function request(params, callback) {
 					resolve();
 				}, 1000);
 
-				ctx.response.on('data', msg => {
-					if (msg.type === 'event') {
-						const conf = Object.assign({}, msg.message);
+				const conf = Object.assign({}, ctx.response);
 
-						// ca file
-						const caFile = conf.caFile && typeof conf.caFile === 'string' && path.resolve(conf.caFile);
-						if (isFile(caFile)) {
-							conf.ca = fs.readFileSync(caFile);
-							delete conf.caFile;
-						}
+				// ca file
+				const caFile = conf.caFile && typeof conf.caFile === 'string' && path.resolve(conf.caFile);
+				if (isFile(caFile)) {
+					conf.ca = fs.readFileSync(caFile);
+					delete conf.caFile;
+				}
 
-						// cert file
-						const certFile = conf.certFile && typeof conf.certFile === 'string' && path.resolve(conf.certFile);
-						if (isFile(certFile)) {
-							conf.cert = fs.readFileSync(certFile);
-							delete conf.certFile;
-						}
+				// cert file
+				const certFile = conf.certFile && typeof conf.certFile === 'string' && path.resolve(conf.certFile);
+				if (isFile(certFile)) {
+					conf.cert = fs.readFileSync(certFile);
+					delete conf.certFile;
+				}
 
-						// key file
-						const keyFile = conf.keyFile && typeof conf.keyFile === 'string' && path.resolve(conf.keyFile);
-						if (isFile(keyFile)) {
-							conf.key = fs.readFileSync(keyFile);
-							delete conf.keyFile;
-						}
+				// key file
+				const keyFile = conf.keyFile && typeof conf.keyFile === 'string' && path.resolve(conf.keyFile);
+				if (isFile(keyFile)) {
+					conf.key = fs.readFileSync(keyFile);
+					delete conf.keyFile;
+				}
 
-						clearTimeout(timer);
-						resolve(conf);
-					}
-				});
+				clearTimeout(timer);
+				resolve(conf);
 			});
 		})
 		.catch(err => {

@@ -12,32 +12,34 @@ All telemetry payloads are persisted to disk and sent to the cloud in batches.
 The data that is captured includes:
 
 * Startup time
-* Memory usage, CPU usage, uptime
-* Online vs offline time
-* Logged in status
 * Hardware information:
-	* Total memory
-	* Number of cores
-	* Number of drives
-	* Root drive the Appc Daemon is installed
-	* Root drive the workspace is located
+  * Total memory
+  * Number of cores
+  * Appc Daemon install path
 * Software information:
-	* Operating system and architecture
-	* Node.js
-	* npm
-	* Yarn
-	* Xcode
-	* iOS SDKs
-	* Android SDKs/NDKs
-	* JDKs
-* Client request stats (Appc CLI, Appcd CLI, HTTP, WebSocket, Appc Studio, `appcd-client`, etc)
-* Commands being run, runtime, and errors
-* Registered plugins, memory usage, CPU usage, uptime, load time
-* Subprocess stats
-* Filesystem watcher stats
+  * Operating system and architecture
+  * Node.js
+  * npm
+  * Yarn
+* Registered plugins and load time
 
-If possible, it would be also nice to know:
+Plugin-specific data:
 
-* Is the machine virtualized?
-* Is the storage drive a HDD or SSD?
+* Logged in status
+  * Organization
+* System info
+  * Xcode
+  * iOS SDKs
+  * Android SDKs/NDKs
+  * JDKs
+
+### Future Telemetry
+
 * Appc Daemon crashes
+* Health
+  * Memory usage, CPU usage, uptime
+  * Plugin memory usage, CPU usage, uptime
+  * Subprocess stats
+  * Filesystem watcher stats
+  * Client request stats (Appc CLI, Appcd CLI, HTTP, WebSocket, Appc Studio, `appcd-client`, etc)
+  * Online vs offline time
