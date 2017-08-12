@@ -34,6 +34,7 @@
     "appcd-machine-id",
     "appcd-path",
     "appcd-request",
+    "appcd-response",
     "appcd-util"
   ],
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
