@@ -10,6 +10,7 @@ import path from 'path';
 import _request from 'request';
 
 import { isFile } from 'appcd-fs';
+import { Stream } from 'stream';
 
 const logger = appcdLogger('appcd:request');
 const { alert, ok, note } = appcdLogger.styles;
@@ -35,38 +36,23 @@ export default function request(params, callback) {
 
 	return Dispatcher
 		.call('/appcd/config/network')
-		.then(ctx => {
+		.then(({ response }) => {
+			if (!response || typeof response !== 'object' || !(response instanceof Stream)) {
+				return {};
+			}
+
 			return new Promise(resolve => {
 				const timer = setTimeout(() => {
 					logger.warn('Fetching config timed out');
 					resolve();
 				}, 1000);
 
-				const conf = Object.assign({}, ctx.response);
-
-				// ca file
-				const caFile = conf.caFile && typeof conf.caFile === 'string' && path.resolve(conf.caFile);
-				if (isFile(caFile)) {
-					conf.ca = fs.readFileSync(caFile);
-					delete conf.caFile;
-				}
-
-				// cert file
-				const certFile = conf.certFile && typeof conf.certFile === 'string' && path.resolve(conf.certFile);
-				if (isFile(certFile)) {
-					conf.cert = fs.readFileSync(certFile);
-					delete conf.certFile;
-				}
-
-				// key file
-				const keyFile = conf.keyFile && typeof conf.keyFile === 'string' && path.resolve(conf.keyFile);
-				if (isFile(keyFile)) {
-					conf.key = fs.readFileSync(keyFile);
-					delete conf.keyFile;
-				}
-
-				clearTimeout(timer);
-				resolve(conf);
+				response.on('data', msg => {
+					if (msg.type === 'event') {
+						clearTimeout(timer);
+						resolve(msg.message);
+					}
+				});
 			});
 		})
 		.catch(err => {
@@ -77,6 +63,27 @@ export default function request(params, callback) {
 		})
 		.then(conf => new Promise(resolve => {
 			conf = Object.assign({ method: 'GET' }, conf, params);
+
+			// ca file
+			const caFile = conf.caFile && typeof conf.caFile === 'string' && path.resolve(conf.caFile);
+			if (isFile(caFile)) {
+				conf.ca = fs.readFileSync(caFile);
+				delete conf.caFile;
+			}
+
+			// cert file
+			const certFile = conf.certFile && typeof conf.certFile === 'string' && path.resolve(conf.certFile);
+			if (isFile(certFile)) {
+				conf.cert = fs.readFileSync(certFile);
+				delete conf.certFile;
+			}
+
+			// key file
+			const keyFile = conf.keyFile && typeof conf.keyFile === 'string' && path.resolve(conf.keyFile);
+			if (isFile(keyFile)) {
+				conf.key = fs.readFileSync(keyFile);
+				delete conf.keyFile;
+			}
 
 			// configure proxy
 			const proxyType = conf.url && conf.url.indexOf('https') === 0 ? 'httpsProxy' : 'httpProxy';
