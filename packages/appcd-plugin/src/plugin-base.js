@@ -185,7 +185,7 @@ export default class PluginBase extends EventEmitter {
 		try {
 			const startTime = Date.now();
 			await this.onStart();
-			this.info.startupTime = Date.now() - startTime();
+			this.info.startupTime = Date.now() - startTime;
 			this.setState(states.STARTED);
 		} catch (e) {
 			this.setState(states.STOPPED);
