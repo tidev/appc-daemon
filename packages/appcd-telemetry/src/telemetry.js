@@ -83,6 +83,12 @@ export default class Telemetry extends Dispatcher {
 		this.mid = null;
 
 		/**
+		 * A promise that is resolved when telemetry data is not being sent to the server.
+		 * @type {Promise}
+		 */
+		this.pending = Promise.resolve();
+
+		/**
 		 * The timer for sending telemetry data.
 		 * @type {Timer}
 		 */
@@ -124,10 +130,14 @@ export default class Telemetry extends Dispatcher {
 				throw new AppcdError(codes.TELEMETRY_DISABLED);
 			}
 
-			const { event } = ctx.request;
+			let { event } = ctx.request;
 
 			if (!event || typeof event !== 'string') {
 				throw new AppcdError(codes.BAD_REQUEST, 'Invalid telemetry event');
+			}
+
+			if (!/^appcd[.-]/.test(event)) {
+				event = `appcd.${event}`;
 			}
 
 			const data = Object.assign({}, ctx.request);
@@ -148,9 +158,14 @@ export default class Telemetry extends Dispatcher {
 			};
 
 			const filename = path.join(this.eventsDir, id + '.json');
+
+			// make sure the events directory exists
+			fs.mkdirsSync(this.eventsDir);
+
+			log('Writing event: %s', highlight(filename));
+			log(payload);
+
 			try {
-				fs.mkdirsSync(this.eventsDir);
-				log('Writing event: %s', highlight(filename));
 				fs.writeFileSync(filename, JSON.stringify(payload));
 			} catch (e) {
 				/* istanbul ignore next */
@@ -201,11 +216,12 @@ export default class Telemetry extends Dispatcher {
 			const { sendBatchSize, enabled, sendInterval, sendTimeout, url } = this.config;
 			const { eventsDir } = this;
 
-			if (!enabled || !url || (this.lastSend + sendInterval) < Date.now() || !eventsDir || !isDir(eventsDir)) {
+			if (!enabled || !url || (this.lastSend + sendInterval) > Date.now() || !eventsDir || !isDir(eventsDir)) {
 				// not enabled or not time to send
-				log('Not enabled or not time to send');
 				return this.sendEvents();
 			}
+
+			let sends = 0;
 
 			// sendBatch() is recursive and will continue to scoop up `sendBatchSize` of events
 			// until they're all gone
@@ -220,42 +236,51 @@ export default class Telemetry extends Dispatcher {
 					}
 				}
 
+				// check if we found any events to send
 				if (!batch.length) {
-					// no events to send
-					log('No events to send');
+					if (sends) {
+						log('No more events to send');
+					} else {
+						log('No events to send');
+					}
 					this.lastSend = Date.now();
 					return this.sendEvents();
 				}
 
 				log(__n(batch.length, 'Sending %%s event', 'Sending %%s events', highlight(batch.length)));
 
-				request({
-					json:    batch.map(file => JSON.parse(fs.readFileSync(file))),
-					method:  'POST',
-					timeout: sendTimeout,
-					url
-				}, (err, resp) => {
-					if (err || resp.statusCode >= 300) {
-						error(__n(
-							batch.length,
-							'Failed to send %%s event: %%s',
-							'Failed to send %%s events: %%s',
-							highlight(batch.length),
-							err ? err.message : `${resp.statusCode} - ${resp.statusMessage}`
-						));
-						this.lastSend = Date.now();
-						return this.sendEvents();
-					}
+				this.pending = new Promise(resolve => {
+					request({
+						json:    batch.map(file => JSON.parse(fs.readFileSync(file))),
+						method:  'POST',
+						timeout: sendTimeout,
+						url
+					}, (err, resp) => {
+						resolve();
 
-					log(__n(batch.length, 'Successfully sent %%s event', 'Successfully sent %%s events', highlight(batch.length)));
-
-					for (const file of batch) {
-						if (isFile(file)) {
-							fs.unlinkSync(file);
+						if (err || resp.statusCode >= 300) {
+							error(__n(
+								batch.length,
+								'Failed to send %%s event: %%s',
+								'Failed to send %%s events: %%s',
+								highlight(batch.length),
+								err ? err.message : `${resp.statusCode} - ${resp.statusMessage}`
+							));
+							this.lastSend = Date.now();
+							return this.sendEvents();
 						}
-					}
 
-					sendBatch();
+						log(__n(batch.length, 'Successfully sent %%s event', 'Successfully sent %%s events', highlight(batch.length)));
+
+						for (const file of batch) {
+							if (isFile(file)) {
+								fs.unlinkSync(file);
+							}
+						}
+
+						sends++;
+						sendBatch();
+					});
 				});
 			};
 
@@ -272,7 +297,8 @@ export default class Telemetry extends Dispatcher {
 	async shutdown() {
 		clearTimeout(this.sendTimer);
 
-		// TODO: wait for any pending requests to finish
+		// wait for the pending post to finish
+		await this.pending;
 	}
 
 	/**

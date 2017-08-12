@@ -29,8 +29,8 @@ const cmd = {
 					console.log('Server not running');
 					process.exit(3);
 				} else {
-					console.error(err);
-					process.exit(1);
+					console.error(err.message);
+					process.exit(err.exitCode || 1);
 				}
 			});
 	}

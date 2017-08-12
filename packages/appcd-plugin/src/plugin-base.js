@@ -86,6 +86,12 @@ export default class PluginBase extends EventEmitter {
 			pid: null,
 
 			/**
+			 * The number of milliseconds it took for the module to activate.
+			 * @type {Number}
+			 */
+			startupTime: null,
+
+			/**
 			 * The current state of the plugin.
 			 * @type {String}
 			 */
@@ -177,7 +183,9 @@ export default class PluginBase extends EventEmitter {
 		// the plugin is stopped and can now be started
 		this.setState(states.STARTING);
 		try {
+			const startTime = Date.now();
 			await this.onStart();
+			this.info.startupTime = Date.now() - startTime();
 			this.setState(states.STARTED);
 		} catch (e) {
 			this.setState(states.STOPPED);

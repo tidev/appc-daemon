@@ -1,11 +1,12 @@
+import appcdLogger, { logcat, StdioStream } from './logger';
 import ConfigService from 'appcd-config-service';
 import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs-extra';
 import FSWatchManager from 'appcd-fswatcher';
 import gawk from 'gawk';
+import os from 'os';
 import path from 'path';
 import PluginManager from 'appcd-plugin';
-import appcdLogger, { logcat, StdioStream } from './logger';
 import StatusMonitor from './status-monitor';
 import SubprocessManager from 'appcd-subprocess';
 import Telemetry from 'appcd-telemetry';
@@ -13,7 +14,7 @@ import WebServer from 'appcd-http';
 import WebSocketSession from './websocket-session';
 
 import { expandPath } from 'appcd-path';
-import { getActiveHandles } from 'appcd-util';
+import { arch as getArch, getActiveHandles } from 'appcd-util';
 import { i18n } from 'appcd-response';
 import { isDir, isFile } from 'appcd-fs';
 import { load as loadConfig } from 'appcd-config';
@@ -210,7 +211,22 @@ export default class Server {
 
 		// send the server start event
 		await Dispatcher.call('/appcd/telemetry', {
-			event: 'appcd.server.start'
+			arch:        getArch(),
+			argv:        process.argv.slice(),
+			cpus:        os.cpus().length,
+			event:       'server.start',
+			env:         this.config.get('environment.name'),
+			memory:      os.totalmem(),
+			nodeVersion: process.version,
+			platform:    process.platform,
+			plugins:     this.systems.pluginManager.plugins.map(p => ({
+				name:        p.name,
+				nodeVersion: p.nodeVersion,
+				version:     p.version,
+				type:        p.type
+			})),
+			startupTime: process.uptime(),
+			version:     this.version
 		});
 	}
 
@@ -225,7 +241,7 @@ export default class Server {
 
 		return Promise.resolve()
 			.then(() => Dispatcher.call('/appcd/telemetry', {
-				event:  'appcd.server.shutdown',
+				event:  'server.shutdown',
 				uptime: process.uptime()
 			}))
 			.then(async () => {

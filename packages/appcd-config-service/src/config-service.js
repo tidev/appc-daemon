@@ -72,6 +72,7 @@ export default class ConfigService extends ServiceDispatcher {
 					if (!key) {
 						throw new DispatcherError(codes.FORBIDDEN, 'Not allowed to set config root');
 					}
+					logger.log(`Setting "${key}" to "${data.value}"`);
 					this.config.set(key, data.value);
 					ctx.response = new Response(codes.OK);
 					return;
