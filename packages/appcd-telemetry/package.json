@@ -26,6 +26,7 @@
     "tmp": "^0.0.31"
   },
   "appcdDependencies": [
+    "appcd-config",
     "appcd-dispatcher",
     "appcd-fs",
     "appcd-gulp",
