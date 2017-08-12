@@ -41,10 +41,11 @@ timestamps {
         }
 
         stage('Test') {
+          environment {
+            SNOOPLOGG = '*'
+          }
           try {
-            withEnv(['SNOOPLOGG=*']) {
-              sh 'node ./node_modules/.bin/gulp coverage'
-            }
+            sh 'node ./node_modules/.bin/gulp coverage'
           } finally {
             // record results even if tests/coverage 'fails'
             junit 'bootstrap/junit.xml,packages/*/junit.xml'
