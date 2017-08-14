@@ -22,7 +22,7 @@
   "devDependencies": {
     "fs-extra": "^4.0.1",
     "gulp": "^3.9.1",
-    "tmp": "^0.0.31"
+    "tmp": "^0.0.33"
   },
   "appcdDependencies": [
     "appcd-dispatcher",
