@@ -45,6 +45,7 @@ if (process.argv.indexOf('--silent') !== -1) {
 
 gulp.task('node-info', () => {
 	gutil.log(`Node.js ${process.version} (${process.platform})`);
+	gutil.log(process.env);
 });
 
 /*

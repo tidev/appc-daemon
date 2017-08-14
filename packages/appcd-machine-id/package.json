@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "gulp": "^3.9.1",
-    "tmp": "^0.0.31"
+    "tmp": "^0.0.33"
   },
   "appcdDependencies": [
     "appcd-fs",
