@@ -424,6 +424,7 @@ function runTests(cover, cb) {
 	}
 
 	process.env.FORCE_COLOR = 1;
+	process.env.SNOOPLOGG = '*';
 
 	const gulp = path.join(path.dirname(require.resolve('gulp')), 'bin', 'gulp.js');
 	const gulpfiles = globule.find([ './*/gulpfile.js', 'packages/*/gulpfile.js', 'plugins/*/gulpfile.js' ]);
