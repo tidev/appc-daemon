@@ -42,7 +42,7 @@ timestamps {
 
         stage('Test') {
           try {
-            sh 'SNOOPLOGG=* node ./node_modules/.bin/gulp coverage'
+            sh 'node ./node_modules/.bin/gulp coverage'
           } finally {
             // record results even if tests/coverage 'fails'
             junit 'bootstrap/junit.xml,packages/*/junit.xml'
