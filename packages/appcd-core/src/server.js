@@ -47,7 +47,7 @@ export default class Server {
 		this.config = loadConfig({
 			config,
 			configFile,
-			defaultConfigFile: path.resolve(__dirname, '../../../conf/default.js')
+			defaultConfigFile: path.resolve(__dirname, '..', 'conf', 'default.js')
 		});
 
 		// if we didn't have a `configFile`, then load the user config file

@@ -65,6 +65,7 @@ export function locate(dir, filename, depth) {
 			for (const name of fs.readdirSync(dir)) {
 				const file = path.join(dir, name);
 				try {
+					/* eslint-disable max-depth */
 					if (fs.statSync(file).isDirectory()) {
 						if (typeof depth === 'undefined' || depth > 0) {
 							const result = locate(file, filename, typeof depth === 'undefined' ? undefined : depth - 1);

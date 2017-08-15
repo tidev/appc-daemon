@@ -11,7 +11,7 @@
 			"transform-object-rest-spread"
 		],
 		"xpresets": [
-			"babili"
+			"minify"
 		]
 	},
 
@@ -26,7 +26,7 @@
 			"transform-object-rest-spread"
 		],
 		"xpresets": [
-			"babili"
+			"minify"
 		]
 	},
 
@@ -39,7 +39,7 @@
 			"transform-object-rest-spread"
 		],
 		"xpresets": [
-			"babili"
+			"minify"
 		]
 	},
 
@@ -52,7 +52,7 @@
 			"transform-object-rest-spread"
 		],
 		"xpresets": [
-			"babili"
+			"minify"
 		]
 	}
 }

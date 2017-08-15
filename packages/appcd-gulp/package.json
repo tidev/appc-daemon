@@ -20,7 +20,7 @@
     "babel-plugin-transform-es2015-parameters": "^6.24.1",
     "babel-plugin-transform-object-rest-spread": "^6.23.0",
     "babel-polyfill": "^6.23.0",
-    "babel-preset-babili": "^0.1.4",
+    "babel-preset-minify": "^0.2.0",
     "babel-register": "^6.24.1",
     "chai": "^4.1.1",
     "del": "^3.0.0",
@@ -40,6 +40,9 @@
     "nyc": "^11.0.3",
     "sinon": "^3.2.0",
     "sinon-chai": "^2.13.0"
+  },
+  "peerDependencies": {
+    "gulp": "3.x"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",

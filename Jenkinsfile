@@ -50,10 +50,10 @@ timestamps {
           }
         }
 
-        stage('Package') {
-          sh 'node ./node_modules/.bin/gulp package'
-          archiveArtifacts 'dist/*.tgz'
-        } // stage
+        // stage('Package') {
+        //  sh 'node ./node_modules/.bin/gulp package'
+        //  archiveArtifacts 'dist/*.tgz'
+        // } // stage
 
         // stage('Publish') {
         //   // TODO tag in git and push to repo?

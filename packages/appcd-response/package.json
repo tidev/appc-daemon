@@ -16,16 +16,14 @@
     "test": "gulp test"
   },
   "dependencies": {
+    "appcd-fs": "1.0.0",
     "source-map-support": "^0.4.15",
     "sprintf-js": "^1.1.1"
   },
   "devDependencies": {
+    "appcd-gulp": "1.0.0",
     "gulp": "^3.9.1"
   },
-  "appcdDependencies": [
-    "appcd-fs",
-    "appcd-gulp"
-  ],
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
   "repository": {

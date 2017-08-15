@@ -1,39 +1,40 @@
 {
   "name": "appcd-plugin-system-info",
   "version": "1.0.0",
-  "description": "System Info plugin for the Appc Daemon",
+  "description": "The Appc Daemon plugin for detecting system info.",
   "main": "./dist/index",
-  "author": {
-    "name": "Appcelerator, Inc.",
-    "email": "npmjs@appcelerator.com"
-  },
+  "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
-    {
-      "name": "Chris Barber",
-      "email": "cbarber@appcelerator.com"
-    }
+    "Chris Barber <cbarber@appcelerator.com>"
   ],
   "license": "SEE LICENSE IN LICENSE",
   "scripts": {
     "build": "gulp build",
+    "coverage": "gulp coverage",
+    "docs": "gulp docs",
     "prepublish": "gulp build",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "gulp test"
   },
   "dependencies": {
-    "gawk": "^3.2.2"
+    "source-map-support": "^0.4.15"
   },
   "devDependencies": {
-    "babel-eslint": "^7.1.1",
-    "babel-preset-nodejs-lts": "^2.0.1",
-    "del": "^2.2.2",
-    "gulp": "^3.9.1",
-    "gulp-babel": "^6.1.2",
-    "gulp-debug": "^3.1.0",
-    "gulp-eslint": "^3.0.1",
-    "gulp-filter": "^5.0.0",
-    "gulp-load-plugins": "^1.5.0",
-    "gulp-mocha": "^4.0.1",
-    "gulp-plumber": "^1.1.0",
-    "gulp-sourcemaps": "^2.4.1"
+    "gulp": "^3.9.1"
+  },
+  "appcdDependencies": [
+    "appcd-gulp"
+  ],
+  "homepage": "https://github.com/appcelerator/appc-daemon#readme",
+  "bugs": "https://github.com/appcelerator/appc-daemon/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/appcelerator/appc-daemon.git"
+  },
+  "engines": {
+    "node": "8.2.1"
+  },
+  "appcd-plugin": {
+    "name": "system-info",
+    "type": "external"
   }
 }
