@@ -1,21 +1,13 @@
 {
-  "name": "appcd",
+  "name": "appcd-plugin-jdk",
   "version": "1.0.0",
-  "description": "A daemon that powers Appcelerator tooling and makes the impossible possible.",
+  "description": "JDK service for the Appc Daemon",
+  "main": "./dist/index",
   "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
     "Chris Barber <cbarber@appcelerator.com>"
   ],
   "license": "SEE LICENSE IN LICENSE",
-  "keywords": [
-    "appcelerator",
-    "appc",
-    "daemon"
-  ],
-  "bin": {
-    "appcd": "./bin/appcd"
-  },
-  "preferGlobal": true,
   "scripts": {
     "build": "gulp build",
     "coverage": "gulp coverage",
@@ -24,27 +16,20 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "cli-kit": "^0.0.3",
-    "cli-table2": "^0.2.0",
     "source-map-support": "^0.4.15"
   },
   "devDependencies": {
+    "appcd-gulp": "1.0.0",
     "gulp": "^3.9.1"
   },
-  "appcdDependencies": [
-    "appcd-client",
-    "appcd-config",
-    "appcd-core",
-    "appcd-fs",
-    "appcd-gulp",
-    "appcd-nodejs",
-    "appcd-path",
-    "appcd-util"
-  ],
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/appcelerator/appc-daemon.git"
+  },
+  "appcd-plugin": {
+    "name": "jdk",
+    "type": "external"
   }
 }

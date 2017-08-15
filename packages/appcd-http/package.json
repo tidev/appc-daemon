@@ -16,6 +16,8 @@
     "test": "gulp test"
   },
   "dependencies": {
+    "appcd-fs": "1.0.0",
+    "appcd-logger": "1.0.0",
     "koa": "^2.3.0",
     "koa-bodyparser": "next",
     "koa-helmet": "^3.2.0",
@@ -25,14 +27,10 @@
     "ws": "^3.1.0"
   },
   "devDependencies": {
+    "appcd-gulp": "1.0.0",
     "gulp": "^3.9.1",
     "supertest": "^3.0.0"
   },
-  "appcdDependencies": [
-    "appcd-fs",
-    "appcd-gulp",
-    "appcd-logger"
-  ],
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
   "repository": {

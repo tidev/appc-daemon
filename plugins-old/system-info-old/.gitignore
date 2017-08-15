@@ -4,7 +4,6 @@
 /dist
 /docs
 gulpfile.tmp.*
-junit.xml
 node_modules
 npm-debug.log
 yarn-error.log

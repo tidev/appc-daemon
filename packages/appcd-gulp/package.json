@@ -41,6 +41,9 @@
     "sinon": "^3.2.0",
     "sinon-chai": "^2.13.0"
   },
+  "peerDependencies": {
+    "gulp": "3.x"
+  },
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
   "repository": {

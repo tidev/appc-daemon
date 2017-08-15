@@ -16,7 +16,9 @@ sudo npm install -g appcd
 
 #### Dependencies
 
-The Appc Daemon requires Node.js 7.6.0 or newer, Gulp 3.9, and Yarn.
+On client machines, Node.js 4 or newer is required.
+
+However, developing on the Appc Daemon requires Node.js 7.6.0 or newer, Gulp 3.9, Yarn, and Lerna.
 
 ##### Node.js
 
@@ -25,7 +27,7 @@ You can download Node.js from [https://nodejs.org]([https://nodejs.org]).
 ##### Gulp
 
 ```bash
-npm install -g gulp
+npm install -g gulp lerna
 ```
 
 ##### Yarn
@@ -76,7 +78,7 @@ additional information.
 git clone git@github.com:appcelerator/appc-daemon.git
 cd appc-daemon
 yarn
-sudo npm link
+cd packages/appcd && yarn link && cd ../..
 ```
 
 ### Running in Production

@@ -16,6 +16,17 @@
     "test": "gulp test"
   },
   "dependencies": {
+    "appcd-agent": "1.0.0",
+    "appcd-config": "1.0.0",
+    "appcd-config-service": "1.0.0",
+    "appcd-dispatcher": "1.0.0",
+    "appcd-fs": "1.0.0",
+    "appcd-fswatcher": "1.0.0",
+    "appcd-logger": "1.0.0",
+    "appcd-path": "1.0.0",
+    "appcd-response": "1.0.0",
+    "appcd-subprocess": "1.0.0",
+    "appcd-util": "1.0.0",
     "builtin-modules": "^1.1.1",
     "gawk": "^4.2.0",
     "globule": "^1.2.0",
@@ -27,24 +38,11 @@
     "uuid": "^3.1.0"
   },
   "devDependencies": {
+    "appcd-gulp": "1.0.0",
     "fs-extra": "^4.0.1",
     "gulp": "^3.9.1",
     "tmp": "^0.0.33"
   },
-  "appcdDependencies": [
-    "appcd-agent",
-    "appcd-config",
-    "appcd-config-service",
-    "appcd-dispatcher",
-    "appcd-fs",
-    "appcd-fswatcher",
-    "appcd-gulp",
-    "appcd-logger",
-    "appcd-path",
-    "appcd-response",
-    "appcd-subprocess",
-    "appcd-util"
-  ],
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
   "repository": {
