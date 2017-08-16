@@ -199,7 +199,7 @@ export default class PluginManager extends EventEmitter {
 
 							if (plugin && !plugin.error) {
 								// forward request to the plugin's dispatcher
-								ctx.path = '/' + ctx.params.path;
+								ctx.path = '/' + (ctx.params.path || '');
 								await plugin.start();
 								logger.log('Plugin %s started', highlight(plugin.toString()));
 								return await plugin.dispatch(ctx, next);
