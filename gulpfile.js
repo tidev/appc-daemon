@@ -474,6 +474,15 @@ gulp.task('watch-only', cb => {
 					if (pkgJson['appcd-plugin'] && pkgJson['appcd-plugin'].type === 'internal') {
 						stopDaemon();
 						runSequence('build-plugins', startDaemon);
+					} else {
+						const args = [
+							'./node_modules/.bin/lerna',
+							'run',
+							'--scope', path.basename(p),
+							'build'
+						];
+						gutil.log(`Running: ${process.execPath} ${args.join(' ')}`);
+						spawnSync(process.execPath, args, { stdio: 'inherit' });
 					}
 					break;
 				} catch (e) {
