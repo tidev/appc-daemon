@@ -1,5 +1,5 @@
 import appcdLogger from 'appcd-logger';
-import Dispatcher from 'appcd-dispatcher';
+import Dispatcher, { DispatcherError } from 'appcd-dispatcher';
 import ExternalPlugin from './external-plugin';
 import fs from 'fs';
 import gawk from 'gawk';
@@ -284,6 +284,12 @@ export default class Plugin extends EventEmitter {
 			.catch(err => {
 				this.info.activeRequests--;
 				resetTimer();
+
+				if (err instanceof DispatcherError && err.status === 404) {
+					ctx.response = this.info;
+					return ctx;
+				}
+
 				throw err;
 			});
 	}

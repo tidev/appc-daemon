@@ -33,7 +33,7 @@
 		6. [Exit Codes](Appcd/Exit-Codes.md)
 		7. [Core Services](Appcd/Services/README.md)
 			1. [/appcd/config](Appcd/Services/config.md)
-			2. [/appcd/fs](Appcd/Services/fs.md)
+			2. [/appcd/fswatch](Appcd/Services/fswatch.md)
 			3. [/appcd/logcat](Appcd/Services/logcat.md)
 			4. [/appcd/plugin](Appcd/Services/plugin.md)
 			5. [/appcd/status](Appcd/Services/status.md)

@@ -31,7 +31,7 @@ appcd is the name of the npm package that contains the Appc Daemon bootstrap, co
 6. [Exit Codes](Exit-Codes.md)
 7. [Core Services](Services/README.md)
 	1. [/appcd/config](Services/config.md)
-	2. [/appcd/fs](Services/fs.md)
+	2. [/appcd/fswatch](Services/fswatch.md)
 	3. [/appcd/logcat](Services/logcat.md)
 	4. [/appcd/plugin](Services/plugin.md)
 	5. [/appcd/status](Services/status.md)

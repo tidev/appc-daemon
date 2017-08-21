@@ -48,6 +48,18 @@ export function arch(bypassCache) {
 }
 
 /**
+ * Ensures that a value is an array. If not, it wraps the value in an array.
+ *
+ * @param {*} it - The value to ensure is an array.
+ * @param {Boolean} [removeFalsey=false] - When true, filters out all falsey items.
+ * @returns {Array}
+ */
+export function arrayify(it, removeFalsey) {
+	const arr = Array.isArray(it) ? it : [ it ];
+	return removeFalsey ? arr.filter(v => typeof v !== 'undefined' && v !== null && v !== '' && v !== false && (typeof v !== 'number' || !isNaN(v))) : arr;
+}
+
+/**
  * Validates that the current Node.js version strictly equals the Node engine
  * version in the specified package.json.
  *
@@ -233,6 +245,69 @@ export function mergeDeep(dest, src) {
 }
 
 /**
+ * A map of named promise callbacks.
+ * @type {Object}
+ */
+export const pendingMutexes = {};
+
+/**
+ * Ensures that only a function is executed by a single task at a time. If the
+ * function is currently being run, then additional requests are queued and are
+ * resolved when the function completes.
+ *
+ * @param {String} name - The mutex name.
+ * @param {Function} fn - A function to call if value is not cached.
+ * @returns {Promise} Resolves whatever value `fn` returns/resolves.
+ */
+export function mutex(name, fn) {
+	return new Promise((resolve, reject) => setImmediate(() => {
+		if (typeof name !== 'string' || !name) {
+			return reject(new TypeError('Expected name to be a non-empty string'));
+		}
+
+		if (typeof fn !== 'function') {
+			return reject(new TypeError('Expected fn to be a function'));
+		}
+
+		if (pendingMutexes.hasOwnProperty(name)) {
+			pendingMutexes[name].push({ resolve, reject });
+			return;
+		}
+
+		pendingMutexes[name] = [ { resolve, reject } ];
+
+		const dispatchSuccess = value => {
+			const pending = pendingMutexes[name];
+			delete pendingMutexes[name];
+			resolve(value);
+			for (const p of pending) {
+				p.resolve(value);
+			}
+		};
+
+		const dispatchError = err => {
+			const pending = pendingMutexes[name];
+			delete pendingMutexes[name];
+			reject(err);
+			for (const p of pending) {
+				p.reject(err);
+			}
+		};
+
+		try {
+			const result = fn();
+			if (result instanceof Promise) {
+				result.then(dispatchSuccess, dispatchError);
+			} else {
+				dispatchSuccess(result);
+			}
+		} catch (err) {
+			dispatchError(err);
+		}
+	}));
+}
+
+/**
  * Returns the specified number of random bytes as a hex string.
  *
  * @param {Number} howMany - The number of random bytes to generate. Must be
@@ -271,4 +346,27 @@ export function sleep(ms) {
 
 		setTimeout(() => resolve(), ms);
 	});
+}
+
+/**
+ * Removes duplicates from an array and returns a new array.
+ *
+ * @param {Array} arr - The array to remove duplicates.
+ * @returns {Array}
+ */
+export function unique(arr) {
+	const len = Array.isArray(arr) ? arr.length : 0;
+
+	if (len === 0) {
+		return [];
+	}
+
+	return arr.reduce((prev, cur, i) => {
+		if (typeof cur !== 'undefined' && cur !== null) {
+			if (prev.indexOf(cur) === -1) {
+				prev.push(cur);
+			}
+		}
+		return prev;
+	}, []);
 }

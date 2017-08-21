@@ -37,7 +37,7 @@ export function expandPath(...segments) {
  */
 export function real(path) {
 	try {
-		return fs.realpathSync(path);
+		return fs.realpathSync(expandPath(path));
 	} catch (e) {
 		const basename = _path.basename(path);
 		path = _path.dirname(path);

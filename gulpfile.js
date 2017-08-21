@@ -36,7 +36,7 @@ const cliTableChars = {
 const fixReasons = {
 	install: 'install missing packages',
 	link: 'link missing dependencies',
-	nuke: 'nuke and reinstall'
+	nuke: 'reinstall'
 };
 
 process.env.FORCE_COLOR = 1;

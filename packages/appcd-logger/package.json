@@ -16,8 +16,8 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "snooplogg": "^1.7.1",
-    "source-map-support": "^0.4.15"
+    "snooplogg": "^1.8.0",
+    "source-map-support": "^0.4.16"
   },
   "devDependencies": {
     "appcd-gulp": "1.0.0",

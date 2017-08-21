@@ -1,0 +1,40 @@
+{
+  "name": "appcd-detect",
+  "version": "1.0.0",
+  "description": "A engine for detecting various things.",
+  "main": "./dist/detect-engine",
+  "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
+  "maintainers": [
+    "Chris Barber <cbarber@appcelerator.com>"
+  ],
+  "license": "SEE LICENSE IN LICENSE",
+  "scripts": {
+    "build": "gulp build",
+    "coverage": "gulp coverage",
+    "docs": "gulp docs",
+    "prepublish": "gulp build",
+    "test": "gulp test"
+  },
+  "dependencies": {
+    "appcd-dispatcher": "1.0.0",
+    "appcd-logger": "1.0.0",
+    "appcd-path": "1.0.0",
+    "appcd-util": "1.0.0",
+    "gawk": "^4.2.0",
+    "source-map-support": "^0.4.15"
+  },
+  "devDependencies": {
+    "appcd-fs": "1.0.0",
+    "appcd-gulp": "1.0.0",
+    "appcd-fswatcher": "1.0.0",
+    "appcd-subprocess": "1.0.0",
+    "fs-extra": "^4.0.1",
+    "gulp": "^3.9.1"
+  },
+  "homepage": "https://github.com/appcelerator/appc-daemon#readme",
+  "bugs": "https://github.com/appcelerator/appc-daemon/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/appcelerator/appc-daemon.git"
+  }
+}
