@@ -19,11 +19,11 @@
     "appcd-fs": "1.0.0",
     "appcd-logger": "1.0.0",
     "appcd-path": "1.0.0",
-    "babel-traverse": "^6.25.0",
-    "babel-types": "^6.25.0",
+    "babel-traverse": "^6.26.0",
+    "babel-types": "^6.26.0",
     "babylon": "^6.17.4",
     "doctrine": "^2.0.0",
-    "source-map-support": "^0.4.15"
+    "source-map-support": "^0.4.16"
   },
   "devDependencies": {
     "appcd-gulp": "1.0.0",

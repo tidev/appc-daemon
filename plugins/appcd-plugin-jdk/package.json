@@ -16,7 +16,8 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "source-map-support": "^0.4.15"
+    "appcd-dispatcher": "1.0.0",
+    "source-map-support": "^0.4.16"
   },
   "devDependencies": {
     "appcd-gulp": "1.0.0",

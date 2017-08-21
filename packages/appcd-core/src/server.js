@@ -162,7 +162,7 @@ export default class Server {
 
 		// init the fs watch manager
 		this.systems.fswatchManager = new FSWatchManager();
-		Dispatcher.register('/appcd/fs/watch', this.systems.fswatchManager.dispatcher);
+		Dispatcher.register('/appcd/fswatch', this.systems.fswatchManager.dispatcher);
 
 		// init the subprocess manager
 		this.systems.subprocessManager = new SubprocessManager();

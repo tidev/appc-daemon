@@ -1,3 +1,5 @@
+import InfoService from './info';
+
 export function activate() {
-	console.log('hi from activate!');
+	appcd.register('/info', new InfoService());
 }

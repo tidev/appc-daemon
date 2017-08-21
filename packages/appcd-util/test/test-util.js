@@ -52,6 +52,28 @@ describe('util', () => {
 		});
 	});
 
+	describe('arrayify()', () => {
+		it('should convert a string to an array', () => {
+			expect(util.arrayify('foo')).to.deep.equal([ 'foo' ]);
+		});
+
+		it('should convert a number to an array', () => {
+			expect(util.arrayify(123)).to.deep.equal([ 123 ]);
+		});
+
+		it('should return the original array', () => {
+			expect(util.arrayify([ 'foo', 'bar' ])).to.deep.equal([ 'foo', 'bar' ]);
+		});
+
+		it('should return empty array', () => {
+			expect(util.arrayify('', true)).to.deep.equal([]);
+		});
+
+		it('should remove falsey items', () => {
+			expect(util.arrayify([ 'a', '', 'b', null, 'c', undefined, 'd', true, false, 0, NaN, 1 ], true)).to.deep.equal([ 'a', 'b', 'c', 'd', true, 0, 1 ]);
+		});
+	});
+
 	describe('assertNodeEngineVersion()', () => {
 		afterEach(() => {
 			delete process.env.APPCD_TEST_NODE_VERSION;
@@ -343,6 +365,89 @@ describe('util', () => {
 		});
 	});
 
+	describe('mutex()', () => {
+		it('should error if name is not a string', done => {
+			util.mutex()
+				.then(() => done(new Error('Expected rejection')))
+				.catch(err => {
+					expect(err).to.be.an.instanceof(TypeError);
+					expect(err.message).to.equal('Expected name to be a non-empty string');
+					done();
+				});
+		});
+
+		it('should error if fn is not a function', done => {
+			util.mutex('foo', 'bar')
+				.then(() => done(new Error('Expected rejection')))
+				.catch(err => {
+					expect(err).to.be.an.instanceof(TypeError);
+					expect(err.message).to.equal('Expected fn to be a function');
+					done();
+				});
+		});
+
+		it('should queue up multiple calls', done => {
+			let count = 0;
+
+			const fn = () => {
+				return util.mutex('foo', () => {
+					count++;
+					return Math.random();
+				});
+			};
+
+			Promise
+				.all([ fn(), fn(), fn() ])
+				.then(results => {
+					expect(count).to.equal(3);
+					expect(results).to.have.lengthOf(3);
+					expect(results[1]).to.not.equal(results[0]);
+					expect(results[2]).to.not.equal(results[0]);
+					done();
+				})
+				.catch(done);
+		});
+
+		it('should queue up multiple async calls', done => {
+			let count = 0;
+
+			const fn = () => {
+				return util.mutex('foo', () => {
+					return new Promise(resolve => {
+						count++;
+						resolve(Math.random());
+					});
+				});
+			};
+
+			Promise
+				.all([ fn(), fn(), fn() ])
+				.then(results => {
+					expect(count).to.equal(1);
+					expect(results).to.have.lengthOf(3);
+					expect(results[1]).to.equal(results[0]);
+					expect(results[2]).to.equal(results[0]);
+					done();
+				})
+				.catch(done);
+		});
+
+		it('should catch errors', done => {
+			util
+				.mutex('foo', () => {
+					throw new Error('oh snap');
+				})
+				.then(() => {
+					done(new Error('Expected error to be caught'));
+				})
+				.catch(err => {
+					expect(err).to.be.instanceof(Error);
+					expect(err.message).to.equal('oh snap');
+					done();
+				});
+		});
+	});
+
 	describe('randomBytes()', () => {
 		it('should return 0 random bytes', () => {
 			const r = util.randomBytes(0);
@@ -445,6 +550,40 @@ describe('util', () => {
 					done();
 				})
 				.catch(done);
+		});
+	});
+
+	describe('unique()', () => {
+		it('should return an empty array if input is not an array', () => {
+			let r = util.unique();
+			expect(r).to.be.an('array');
+			expect(r).to.have.lengthOf(0);
+
+			r = util.unique('foo');
+			expect(r).to.be.an('array');
+			expect(r).to.have.lengthOf(0);
+
+			r = util.unique([]);
+			expect(r).to.be.an('array');
+			expect(r).to.have.lengthOf(0);
+		});
+
+		it('should handle a string and undefined', () => {
+			const r = util.unique([ 'foo', undefined ]);
+			expect(r).to.be.an('array');
+			expect(r).to.deep.equal([ 'foo' ]);
+		});
+
+		it('should handle an empty string', () => {
+			const r = util.unique([ 'foo', '', 'bar', '' ]);
+			expect(r).to.be.an('array');
+			expect(r).to.deep.equal([ 'foo', '', 'bar' ]);
+		});
+
+		it('should remove duplicates, null, and undefined elements', () => {
+			const r = util.unique([ 'a', 1, 'b', 'c', 2, 'a', undefined, 'd', 3, 'b', null, 'b', 1, 3 ]);
+			expect(r).to.be.an('array');
+			expect(r).to.deep.equal([ 'a', 1, 'b', 'c', 2, 'd', 3 ]);
 		});
 	});
 });

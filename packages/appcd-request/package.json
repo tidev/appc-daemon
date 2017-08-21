@@ -20,7 +20,7 @@
     "appcd-fs": "1.0.0",
     "appcd-logger": "1.0.0",
     "request": "^2.81.0",
-    "source-map-support": "^0.4.15"
+    "source-map-support": "^0.4.16"
   },
   "devDependencies": {
     "appcd-gulp": "1.0.0",

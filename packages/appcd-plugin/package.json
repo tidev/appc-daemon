@@ -34,7 +34,7 @@
     "pretty-ms": "^3.0.0",
     "semver": "^5.4.1",
     "slugg": "^1.2.1",
-    "source-map-support": "^0.4.15",
+    "source-map-support": "^0.4.16",
     "uuid": "^3.1.0"
   },
   "devDependencies": {
