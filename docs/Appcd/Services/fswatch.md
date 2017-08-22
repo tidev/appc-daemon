@@ -4,18 +4,29 @@
 
 Watches the specified path for changes.
 
+### Subscribe
+
 ```js
 Dispatcher
 	.call('/appcd/fswatch', {
 		data: {
-			path: dir,
-			recursive
+			path: '/path/to/watch',
+			recursive: false
 		},
 		type: 'subscribe'
 	})
 	.then(ctx => {
 		ctx.response.on('data', data => {
-			//
+			switch (data.type) {
+				case 'subscribe':
+					console.log(`Subscription ID = ${data.sid}`);
+					console.log(`Topic = ${data.topic}`);
+					break;
+
+				case 'event':
+					console.log('FS Event!', data);
+					break;
+			}
 		});
 
 		ctx.response.on('end', () => {
@@ -24,5 +35,18 @@ Dispatcher
 	})
 	.catch(err => {
 		console.error(err);
+	});
+```
+
+### Unsubscribe
+
+```js
+Dispatcher
+	.call('/appcd/fswatch', {
+		data: {
+			topic: '/path/to/watch'
+		},
+		sid: '<sid from subscribe event>',
+		type: 'unsubscribe'
 	});
 ```

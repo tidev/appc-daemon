@@ -10,14 +10,14 @@ import gawk, { isGawked } from 'gawk';
 import Handle from './handle';
 import path from 'path';
 
-import { arrayify, debounce, mutex, randomBytes, sha1, unique } from 'appcd-util';
+import { arrayify, mutex, randomBytes, sha1, unique } from 'appcd-util';
 import { isDir } from 'appcd-fs';
 import { real } from 'appcd-path';
 import { which } from 'appcd-subprocess';
 
 // import { registry } from './windows';
 
-const { log } = appcdLogger('appcd:detect');
+const { log, warn } = appcdLogger('appcd:detect');
 const { highlight } = appcdLogger.styles;
 const { pluralize } = appcdLogger;
 
@@ -107,6 +107,8 @@ export default class DetectEngine {
 	 * @param {Object} [opts] - An object with various params.
 	 * @param {Boolean} [opts.force=false] - When true, bypasses cache and rescans the search paths.
 	 * @param {Array} [opts.paths] - One or more paths to search in addition.
+	 * @param {Boolean} [opts.recursive=false] - When `true`, recursively watches a path for
+	 * changes to trigger a redetect.
 	 * @param {Boolean} [opts.redetect=false] - When true, re-runs detection when a path changes.
 	 * Requires `watch` to be `true`.
 	 * @param {Boolean} [opts.watch=false] - When true, watches for changes and emits the new
@@ -119,7 +121,7 @@ export default class DetectEngine {
 		log('detect()');
 
 		if (opts.redetect && !opts.watch) {
-			log('  disabling redetect since watch was not enabled');
+			log('  Disabling redetect since watch was not enabled');
 			opts.redetect = false;
 		}
 
@@ -236,33 +238,30 @@ export default class DetectEngine {
 	 */
 	getPaths(userPaths) {
 		return this.initialize()
-			.then(() => {
-				return Promise
-					.all([
-						// global search paths
-						process.env.NODE_APPC_SKIP_GLOBAL_SEARCH_PATHS ? null : this.paths,
+			.then(() => Promise.all([
+				// global search paths
+				process.env.NODE_APPC_SKIP_GLOBAL_SEARCH_PATHS ? null : this.paths,
 
-						// windows registry paths
-						process.env.NODE_APPC_SKIP_GLOBAL_SEARCH_PATHS ? null : this.queryRegistry(),
+				// windows registry paths
+				process.env.NODE_APPC_SKIP_GLOBAL_SEARCH_PATHS ? null : this.queryRegistry(),
 
-						// global environment paths
-						process.env.NODE_APPC_SKIP_GLOBAL_ENVIRONMENT_PATHS ? null : this.envPaths,
+				// global environment paths
+				process.env.NODE_APPC_SKIP_GLOBAL_ENVIRONMENT_PATHS ? null : this.envPaths,
 
-						// global executable path
-						process.env.NODE_APPC_SKIP_GLOBAL_EXECUTABLE_PATH ? null : this.exePath,
+				// global executable path
+				process.env.NODE_APPC_SKIP_GLOBAL_EXECUTABLE_PATH ? null : this.exePath,
 
-						// user paths
-						...arrayify(userPaths, true).map(path => {
-							if (typeof path === 'function') {
-								return Promise.resolve()
-									.then(() => path())
-									.then(paths => arrayify(paths, true).map(real));
-							}
-							return real(path);
-						})
-					])
-					.then(paths => unique(Array.prototype.concat.apply([], paths)));
-			});
+				// user paths
+				...arrayify(userPaths, true).map(path => {
+					if (typeof path === 'function') {
+						return Promise.resolve()
+							.then(() => path())
+							.then(paths => arrayify(paths, true).map(real));
+					}
+					return real(path);
+				})
+			]))
+			.then(paths => unique(Array.prototype.concat.apply([], paths)));
 	}
 
 	/**
@@ -274,36 +273,38 @@ export default class DetectEngine {
 	 * @returns {Promise}
 	 * @access private
 	 */
-	startScan({ paths, handle, opts }) {
+	async startScan({ paths, handle, opts }) {
 		const sha = handle.lastSha = sha1(paths.sort());
 		const id = opts.watch ? randomBytes(10) : sha;
 
 		log('  startScan()');
-		log('    paths:', highlight(JSON.stringify(paths)));
-		log('    id:', highlight(id));
-		log('    force:', highlight(!!opts.force));
-		log('    watch:', highlight(!!opts.watch));
+		log('    paths:',     highlight(JSON.stringify(paths)));
+		log('    id:',        highlight(id));
+		log('    force:',     highlight(!!opts.force));
+		log('    recursive:', highlight(!!opts.recursive));
+		log('    watch:',     highlight(!!opts.watch));
 
 		const handleError = err => {
 			log(err);
 			log('  Stopping watchers, emitting error');
 			handle.stop();
 			handle.emit('error', err);
+			throw err;
 		};
 
 		let firstTime = true;
 		let activeScan = null;
 
-		log('  default path:', highlight(this.defaultPath));
+		log('  Default path:', highlight(this.defaultPath));
 		this.lastDefaultPath = this.defaultPath;
 
-		const watchPaths = (prefix, paths, recursive) => {
+		const watchPaths = (prefix, paths) => new Promise(resolve => {
 			const active = {};
 
 			if (paths.length) {
-				log('  watching paths' + (recursive ? ' recursivly' : '') + ':');
+				log(`  Watching paths ${opts.recursive ? '' : 'non-'}recursivly:`);
 				for (const dir of paths) {
-					log('    ' + dir);
+					log(`    ${highlight(dir)}`);
 				}
 
 				// start watching the paths
@@ -311,60 +312,77 @@ export default class DetectEngine {
 					const key = `${prefix}:${dir}`;
 					active[key] = 1;
 					if (!handle.unwatchers.has(key)) {
+						handle.unwatchers.set(key, false);
+
 						Dispatcher
 							.call('/appcd/fswatch', {
 								data: {
 									path: dir,
-									recursive
+									recursive: opts.recursive
 								},
 								type: 'subscribe'
 							})
 							.then(ctx => {
 								ctx.response
 									.on('data', data => {
-										console.log(data);
+										switch (data.type) {
+											case 'subscribe':
+												const { sid, topic } = data;
+
+												handle.unwatchers.delete(key);
+												handle.unwatchers.set(key, () => {
+													return Dispatcher
+														.call('/appcd/fswatch', {
+															data: {
+																path: topic
+															},
+															sid,
+															type: 'unsubscribe'
+														})
+														.catch(err => {
+															warn('Failed to unsubscribe from topic: %s', topic);
+															warn(err);
+														});
+												});
+
+												resolve();
+												break;
+
+											case 'event':
+												log('    fs event, rescanning', dir);
+												this.scan({ id, handle, paths, force: true, onlyPaths: [ dir ] })
+													.then(() => {
+														log('      Scan complete');
+														// no need to emit... the gawk watcher will do it
+													})
+													.catch(handleError);
+										}
+									})
+									.on('end', () => {
+										handle.unwatchers.delete(key);
 									});
-								/* debounce(evt => {
-									handle.unwatchers.set(key, evt.topic);
-									log('    fs event, rescanning', dir);
-									this.scan({ id, handle, paths, force: true, onlyPaths: [ dir ] })
-										.then(() => {
-											log('      scan complete');
-											// no need to emit... the gawk watcher will do it
-										})
-										.catch(handleError);
-								}));
-								*/
 							})
 							.catch(handleError);
-
-						// istanbul ignore no-loop-func
-						// handle.unwatchers.set(key, watch(dir, { ignoreDirectoryTimestampUpdates: true, recursive }, debounce(() => {
-						// 	log('    fs event, rescanning', dir);
-						// 	this.scan({ id, handle, paths, force: true, onlyPaths: [ dir ] })
-						// 		.then(() => {
-						// 			log('      scan complete');
-						// 			// no need to emit... the gawk watcher will do it
-						// 		})
-						// 		.catch(handleError);
-						// })));
 					}
 				}
 			} else {
-				log('  no paths to watch');
+				log('  No paths to watch');
 			}
 
 			// remove any inactive watchers
 			for (const key of handle.unwatchers.keys()) {
 				if (key.indexOf(prefix + ':') === 0 && !active[key]) {
-					handle.unwatchers.get(key)();
+					const unwatch = handle.unwatchers.get(key);
+					if (typeof unwatch === 'function') {
+						unwatch();
+					}
 					handle.unwatchers.delete(key);
 				}
 			}
-		};
+		});
 
 		if (opts.watch) {
-			watchPaths('watch', paths);
+			await watchPaths('watch', paths);
 		}
 
 		// windows only... checks the registry to see if paths have changed
@@ -373,15 +391,15 @@ export default class DetectEngine {
 			this.rescanTimer = setTimeout(() => {
 				this.getPaths(opts.paths)
 					.then(paths => {
-						log('    starting scan to see if paths changed');
+						log('    Starting scan to see if paths changed');
 						log('    paths:', paths);
 						const sha = sha1(paths.sort());
 						if (handle.lastSha !== sha) {
-							log('  paths changed, rescanning', handle.lastSha, sha);
+							log('  Paths changed, rescanning', handle.lastSha, sha);
 							handle.lastSha = sha;
 							return runScan(paths);
 						} else if (this.lastDefaultPath !== this.defaultPath) {
-							log('  default path changed, rescanning');
+							log('  Default path changed, rescanning');
 							log('    ' + this.lastDefaultPath);
 							log('    ' + this.defaultPath);
 							this.lastDefaultPath = this.defaultPath;
@@ -400,39 +418,42 @@ export default class DetectEngine {
 
 			return activeScan
 				.then(() => this.scan({ id, handle, paths, force: opts.force }))
-				.then(({ container, pathsFound }) => {
+				.then(async ({ container, pathsFound }) => {
 					const results = container.results;
-					log('  scan complete', results);
+					log('  Scan complete', results);
 
 					// wire up watch on the gawked results
 					if (opts.watch && firstTime) {
-						log('  watching gawk object');
+						log('  Watching gawk object');
 						gawk.watch(container, () => {
-							log('  gawk object changed, emitting:', container.results);
+							log('  Gawk object changed, emitting:', container.results);
 							handle.emit('results', container.results);
 						});
 
 						if (process.platform === 'win32') {
-							log('  watching registry for path changes');
+							log('  Watching registry for path changes');
 							checkRegistry();
 						}
 					}
 
-					// if we're watching and redetect is enabled, then watch the found paths
-					// for changes
+					// if we're watching and redetect is enabled, then watch the found paths for
+					// changes
 					if (opts.watch && opts.redetect && pathsFound.length) {
 						// first wire up the recursive watches so that we don't incur more overhead
 						// to unwatching nodes and re-watching them
-						watchPaths('redetect', pathsFound, true);
+						await watchPaths('redetect', pathsFound);
 
 						// next remove the non-recursive watch paths since we just replaced them
 						// with recursive watches
-						log('  removing non-recursive watch paths:');
+						log('  Removing non-recursive watch paths:');
 						for (const dir of pathsFound) {
 							const watchKey = `watch:${dir}`;
 							if (handle.unwatchers.has(watchKey)) {
-								log('    ' + dir);
-								handle.unwatchers.get(watchKey)();
+								const unwatch = handle.unwatchers.get(watchKey);
+								log(`    ${highlight(dir)}`);
+								if (typeof unwatch === 'function') {
+									await unwatch();
+								}
 								handle.unwatchers.delete(watchKey);
 							}
 						}
@@ -441,7 +462,7 @@ export default class DetectEngine {
 					if (firstTime) {
 						if (!opts.watch || results) {
 							// emit the results
-							log('  emitting results:', results);
+							log('  Emitting results:', results);
 							handle.emit('results', results);
 						}
 
@@ -458,8 +479,8 @@ export default class DetectEngine {
 				});
 		};
 
-		log('  performing initial scan');
-		runScan(paths).catch(handleError);
+		log('  Performing initial scan');
+		return runScan(paths).catch(handleError);
 	}
 
 	/**
@@ -483,15 +504,15 @@ export default class DetectEngine {
 		const next = () => {
 			const dir = paths[index++];
 			if (!this.options.checkDir || !dir) {
-				log('    finished scanning paths');
+				log('    Finished scanning paths');
 				return;
 			}
 
-			log('    scanning ' + highlight(index + '/' + paths.length) + ': ' + highlight(dir));
+			log('    Scanning ' + highlight(index + '/' + paths.length) + ': ' + highlight(dir));
 
 			// check cache first
 			if (this.cache.hasOwnProperty(dir) && (!force || (onlyPaths && onlyPaths.indexOf(dir) === -1))) {
-				log('    result for this directory cached, pushing to results');
+				log('    Result for this directory cached, pushing to results');
 				if (this.cache[dir]) {
 					results.push.apply(results, arrayify(this.cache[dir]));
 				}
@@ -510,12 +531,12 @@ export default class DetectEngine {
 					.then(() => this.options.checkDir(dir))
 					.then(result => {
 						if (result) {
-							log('      got result, returning:', result);
+							log('      Got result, returning:', result);
 							pathsFound.push(dir);
 							return result;
 						}
 						if (depth <= 0) {
-							log('      no result, hit max depth, returning');
+							log('      No result, hit max depth, returning');
 							return;
 						}
 
@@ -530,7 +551,7 @@ export default class DetectEngine {
 							return;
 						}
 
-						log('      walking subdirs:', highlight(JSON.stringify(subdirs)));
+						log('      Walking subdirs:', highlight(JSON.stringify(subdirs)));
 
 						return Promise.resolve()
 							.then(function nextSubDir() {
@@ -546,10 +567,10 @@ export default class DetectEngine {
 
 			return check(dir, this.options.depth)
 				.then(result => {
-					log('      done checking ' + highlight(dir));
+					log('      Done checking ' + highlight(dir));
 
 					// even if we don't have a result, we still cache that there was no result
-					log('      caching result');
+					log('      Caching result');
 					this.cache[dir] = result || null;
 
 					if (result) {
@@ -557,23 +578,23 @@ export default class DetectEngine {
 					}
 
 					if (!result || this.options.multiple) {
-						log('  checking next directory');
+						log('  Checking next directory');
 						return next();
 					}
 				});
 		};
 
-		log('    entering mutex');
+		log('    Entering mutex');
 		return mutex('node-appc/detect/engine/' + id + (force ? '/' + randomBytes(5) : ''), () => {
-			log('    walking directories:', highlight(JSON.stringify(paths)));
+			log('    Walking directories:', highlight(JSON.stringify(paths)));
 			return Promise.resolve()
 				.then(next)
 				.then(() => {
-					log(`  scanning found ${highlight(results.length)} ${pluralize('result', results.length)}`);
+					log(`  Scanning found ${highlight(results.length)} ${pluralize('result', results.length)}`);
 					return this.processResults(results, id);
 				});
 		}).then(container => {
-			log('    exiting mutex');
+			log('    Exiting mutex');
 			return { container, pathsFound };
 		});
 	}
@@ -592,7 +613,7 @@ export default class DetectEngine {
 
 		let container = this.cache[id];
 		if (!container) {
-			log('    creating cached gawk object container');
+			log('    Creating cached gawk object container');
 			container = this.cache[id] = gawk({ results: undefined });
 		}
 
@@ -601,11 +622,11 @@ export default class DetectEngine {
 		return Promise.resolve()
 			.then(() => {
 				if (this.options.multiple) {
-					log('    ensuring results is an array of results');
+					log('    Ensuring results is an array of results');
 					results = Array.isArray(results) ? results : (results ? [ results ] : []);
 					log('    ', results);
 				} else {
-					log('    ensuring results is a single result');
+					log('    Ensuring results is a single result');
 					results = Array.isArray(results) ? results[0] : (results || null);
 					log('    ', results);
 				}
@@ -621,31 +642,31 @@ export default class DetectEngine {
 			})
 			.then(results => {
 				// ensure that the value is a gawked data type
-				log('    gawking results');
+				log('    Gawking results');
 				results = gawk(results);
 
 				if (this.options.multiple) {
 					// results will be a gawked array
 					if (isGawked(existingValue) && Array.isArray(existingValue)) {
 						if (Array.isArray(results)) {
-							log('    overriding gawk array value');
+							log('    Overriding gawk array value');
 							existingValue.splice(0, existingValue.length, ...results);
-							log('    done');
+							log('    Done');
 						} else {
-							log('    pushing results into results array');
+							log('    Pushing results into results array');
 							existingValue.push(results);
 						}
 					} else {
-						log('    no existing value, setting');
+						log('    No existing value, setting');
 						container.results = gawk(results);
 					}
 
 				// single result
 				} else if (isGawked(existingValue)) {
-					log('    merging results into existing value:', results);
+					log('    Merging results into existing value:', results);
 					gawk.mergeDeep(existingValue, results);
 				} else {
-					log('    setting new value:', results);
+					log('    Setting new value:', results);
 					container.results = results;
 				}
 
@@ -665,26 +686,27 @@ export default class DetectEngine {
 			return;
 		}
 
-		// return Promise
-		// 	.all([
-		// 		...this.options.registryKeys.map(reg => {
-		// 			return registry
-		// 				.get(reg.root || 'HKLM', reg.key, reg.name)
-		// 				.catch(err => Promise.resolve());
-		// 		}),
-		//
-		// 		!this.options.registryKeysFn ? null : Promise.resolve()
-		// 			.then(() => this.options.registryKeysFn())
-		// 	])
-		// 	.then(paths => {
-		// 		return Array.prototype.concat.apply([], paths.map(p => {
-		// 			if (p && typeof p === 'object') {
-		// 				this.defaultPath = p.defaultPath;
-		// 				return p.paths;
-		// 			}
-		// 			return p;
-		// 		}));
-		// 	});
+		return Promise
+			.all([
+				...this.options.registryKeys.map(reg => {
+					// TODO:
+					// return registry
+					// 	.get(reg.root || 'HKLM', reg.key, reg.name)
+					// 	.catch(err => Promise.resolve());
+				}),
+
+				!this.options.registryKeysFn ? null : Promise.resolve()
+					.then(() => this.options.registryKeysFn())
+			])
+			.then(paths => {
+				return Array.prototype.concat.apply([], paths.map(p => {
+					if (p && typeof p === 'object') {
+						this.defaultPath = p.defaultPath;
+						return p.paths;
+					}
+					return p;
+				}));
+			});
 	}
 }
 
@@ -696,10 +718,6 @@ export default class DetectEngine {
  */
 function resolveDir(dir) {
 	return new Promise(resolve => {
-		if (!dir || typeof dir !== 'string') {
-			return resolve();
-		}
-
 		fs.stat(dir, (err, stat) => {
 			if (err) {
 				return resolve(err.code === 'ENOENT' ? dir : null);
