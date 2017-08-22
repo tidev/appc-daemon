@@ -1,7 +1,7 @@
 import Dispatcher from 'appcd-dispatcher';
 import DetectEngine from '../dist/detect-engine';
 import fs from 'fs-extra';
-import FSWatchManager, { reset } from 'appcd-fswatcher';
+import FSWatchManager from 'appcd-fswatcher';
 import gawk from 'gawk';
 import path from 'path';
 import tmp from 'tmp';
@@ -29,13 +29,13 @@ function makeTempDir() {
 
 describe('Detect Engine', () => {
 	before(function () {
-		this.wm = new FSWatchManager();
-		Dispatcher.register('/appcd/fswatch', this.wm.dispatcher);
+		this.fsw = new FSWatchManager();
+		Dispatcher.register('/appcd/fswatch', this.fsw.dispatcher);
 	});
 
 	after(function () {
-		Dispatcher.unregister('/appcd/fswatch', this.wm.dispatcher);
-		this.wm.shutdown();
+		Dispatcher.unregister('/appcd/fswatch', this.fsw.dispatcher);
+		this.fsw.shutdown();
 		fs.removeSync(tmpDir);
 	});
 
@@ -219,7 +219,7 @@ describe('Detect Engine', () => {
 		});
 
 		it('should return an array with multiple paths', done => {
-			const engine = new DetectEngine({ paths: [ __dirname, path.join(__dirname, 'foo') ] });
+			const engine = new DetectEngine({ paths: [ __dirname, '', path.join(__dirname, 'foo') ] });
 			engine.getPaths()
 				.then(results => {
 					expect(results).to.be.an('array');
@@ -287,7 +287,12 @@ describe('Detect Engine', () => {
 			});
 
 			engine
-				.detect({ paths: __dirname })
+				.detect({
+					paths: __dirname,
+					// harmlessly enable redetect which will be disabled if watch is not enabled
+					// this is more for code coverage
+					redetect: true
+				})
 				.on('results', results => {
 					expect(results).to.deep.equal({ foo: 'bar' });
 					done();
@@ -418,7 +423,7 @@ describe('Detect Engine', () => {
 
 		it('should return multiple results', done => {
 			const engine = new DetectEngine({
-				checkDir(dir) {
+				checkDir() {
 					return [
 						{ foo: 'bar' },
 						{ baz: 'wiz' }
@@ -477,7 +482,7 @@ describe('Detect Engine', () => {
 					expect(dir).to.equal(__dirname);
 					return { foo: 'bar' };
 				},
-				processResults(results, previous, engine) {
+				processResults(results) {
 					expect(results).to.deep.equal({ foo: 'bar' });
 					return { baz: 'wiz' };
 				}
@@ -515,7 +520,7 @@ describe('Detect Engine', () => {
 
 			engine
 				.detect({ paths: __dirname })
-				.on('results', results => {
+				.on('results', () => {
 					expect(counter++).to.equal(1);
 					finish();
 				})
@@ -524,7 +529,7 @@ describe('Detect Engine', () => {
 			setTimeout(() => {
 				engine
 					.detect({ paths: __dirname })
-					.on('results', results => {
+					.on('results', () => {
 						expect(counter++).to.equal(2);
 						finish();
 					})
@@ -534,14 +539,14 @@ describe('Detect Engine', () => {
 	});
 
 	describe('watch', () => {
-		it.skip('should watch a path for changes', function (done) {
+		it('should watch a path for changes', function (done) {
 			this.timeout(5000);
 			this.slow(4000);
 
 			let counter = 0;
 			const tmp = makeTempDir();
 			const engine = new DetectEngine({
-				checkDir(dir) {
+				checkDir() {
 					if (++counter === 1) {
 						return null;
 					}
@@ -567,22 +572,19 @@ describe('Detect Engine', () => {
 			}, 100);
 		});
 
-		/*
-		it('should watch for changes in a detected path', function (done) {
+		it('should watch for updates in a detected path', function (done) {
 			this.timeout(5000);
 			this.slow(4000);
 
 			let counter = 0;
-			const tmp = temp.mkdirSync('node-appc-test-');
-			const subdir = path.join(tmp, 'test');
-			fs.mkdirSync(subdir);
-			const testFile = path.join(subdir, 'test.txt');
+			const tmp = makeTempDir();
+			const testFile = path.join(tmp, 'test.txt');
 			fs.writeFileSync(testFile, 'foo');
 
 			const engine = new DetectEngine({
-				checkDir: dir => {
-					const file = path.join(dir, 'test', 'test.txt');
-					if (appc.fs.isFile(file)) {
+				checkDir(dir) {
+					const file = path.join(dir, 'test.txt');
+					if (isFile(file)) {
 						return { contents: fs.readFileSync(file).toString() };
 					}
 				}
@@ -608,25 +610,65 @@ describe('Detect Engine', () => {
 			}, 1000);
 		});
 
+		it('should recursivly watch for updateds in a detected path', function (done) {
+			this.timeout(5000);
+			this.slow(4000);
+
+			let counter = 0;
+			const tmp = makeTempDir();
+			const subdir = path.join(tmp, 'test');
+			fs.mkdirSync(subdir);
+			const testFile = path.join(subdir, 'test.txt');
+			fs.writeFileSync(testFile, 'foo');
+
+			const engine = new DetectEngine({
+				checkDir(dir) {
+					const file = path.join(dir, 'test', 'test.txt');
+					if (isFile(file)) {
+						return { contents: fs.readFileSync(file).toString() };
+					}
+				}
+			});
+
+			this.handle = engine
+				.detect({ paths: tmp, watch: true, recursive: true, redetect: true })
+				.on('results', results => {
+					counter++;
+					if (counter === 1) {
+						expect(results).to.deep.equal({ contents: 'foo' });
+					} else if (counter === 2) {
+						expect(results).to.deep.equal({ contents: 'bar' });
+						this.handle.stop();
+						done();
+					}
+				})
+				.on('error', done);
+
+			setTimeout(() => {
+				// update the test file to trigger re-detection
+				fs.writeFileSync(testFile, 'bar');
+			}, 1000);
+		});
+
 		it('should redetect after initial detection', function (done) {
 			this.timeout(5000);
 			this.slow(4000);
 
 			let checkDirCounter = 0;
 			let resultsCounter = 0;
-			const tmp = temp.mkdirSync('node-appc-test-');
+			const tmp = makeTempDir();
 
 			const engine = new DetectEngine({
-				checkDir: dir => {
+				checkDir() {
 					if (++checkDirCounter === 1) {
 						return Promise.resolve()
-							.then(() => new appc.gawk.GawkObject({ version: '1.0.0' }))
-							.catch(err => Promise.resolve());
+							.then(() => gawk({ version: '1.0.0' }))
+							.catch(() => {});
 					}
 
 					return Promise.resolve()
-						.then(() => new appc.gawk.GawkObject({ version: '2.0.0' }))
-						.catch(err => Promise.resolve());
+						.then(() => gawk({ version: '2.0.0' }))
+						.catch(err => {});
 				},
 				depth: 1,
 				multiple: true
@@ -635,17 +677,20 @@ describe('Detect Engine', () => {
 			this.handle = engine
 				.detect({ paths: tmp, watch: true, redetect: true })
 				.on('results', results => {
-					if (++resultsCounter === 1) {
-						expect(results).to.deep.equal([ { version: '1.0.0' } ]);
+					switch (++resultsCounter) {
+						case 1:
+							expect(results).to.deep.equal([ { version: '1.0.0' } ]);
 
-						// trigger an update
-						fs.writeFileSync(path.join(tmp, 'foo.txt'), 'bar');
-					} else {
-						expect(results).to.deep.equal([ { version: '2.0.0' } ]);
-						done();
+							// trigger an update
+							fs.writeFileSync(path.join(tmp, 'foo.txt'), 'bar');
+							break;
+
+						case 2:
+							expect(results).to.deep.equal([ { version: '2.0.0' } ]);
+							done();
+							break;
 					}
 				});
 		});
-		*/
 	});
 });
