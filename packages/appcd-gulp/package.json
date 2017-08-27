@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Common gulp tasks and utilities.",
   "main": "./src/index",
-  "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
+  "author": "Axway, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
-    "Chris Barber <cbarber@appcelerator.com>"
+    "Chris Barber <cbarber@axway.com>"
   ],
   "license": "SEE LICENSE IN LICENSE",
   "dependencies": {
@@ -36,7 +36,7 @@
     "gulp-plumber": "^1.1.0",
     "gulp-util": "^3.0.8",
     "mocha": "^3.5.0",
-    "mocha-jenkins-reporter": "^0.3.8",
+    "mocha-jenkins-reporter": "^0.3.9",
     "nyc": "^11.1.0",
     "sinon": "^3.2.1",
     "sinon-chai": "^2.13.0"

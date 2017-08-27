@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "HTTP server with WebSocket support, router, and various middlewares.",
   "main": "./dist/index",
-  "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
+  "author": "Axway, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
-    "Chris Barber <cbarber@appcelerator.com>"
+    "Chris Barber <cbarber@axway.com>"
   ],
   "license": "SEE LICENSE IN LICENSE",
   "scripts": {
@@ -22,7 +22,7 @@
     "koa-bodyparser": "next",
     "koa-helmet": "^3.2.0",
     "koa-send": "^4.1.0",
-    "path-to-regexp": "^1.7.0",
+    "path-to-regexp": "^2.0.0",
     "source-map-support": "^0.4.16",
     "ws": "^3.1.0"
   },

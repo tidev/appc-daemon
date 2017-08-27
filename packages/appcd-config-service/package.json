@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "A service that exposes a config object.",
   "main": "./dist/config-service",
-  "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
+  "author": "Axway, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
-    "Chris Barber <cbarber@appcelerator.com>"
+    "Chris Barber <cbarber@axway.com>"
   ],
   "license": "SEE LICENSE IN LICENSE",
   "scripts": {

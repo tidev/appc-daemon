@@ -5,7 +5,7 @@
   "main": "./dist/index",
   "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
-    "Chris Barber <cbarber@appcelerator.com>"
+    "Chris Barber <cbarber@axway.com>"
   ],
   "license": "SEE LICENSE IN LICENSE",
   "scripts": {
@@ -19,19 +19,14 @@
     "source-map-support": "^0.4.15"
   },
   "devDependencies": {
+    "appcd-gulp": "1.0.0",
     "gulp": "^3.9.1"
   },
-  "appcdDependencies": [
-    "appcd-gulp"
-  ],
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/appcelerator/appc-daemon.git"
-  },
-  "engines": {
-    "node": "8.2.1"
   },
   "appcd-plugin": {
     "name": "system-info",

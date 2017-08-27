@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Defines the default logger for appcd components.",
   "main": "./dist/logger",
-  "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
+  "author": "Axway, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
-    "Chris Barber <cbarber@appcelerator.com>"
+    "Chris Barber <cbarber@axway.com>"
   ],
   "license": "SEE LICENSE IN LICENSE",
   "scripts": {

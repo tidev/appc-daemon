@@ -33,6 +33,7 @@ export default class ServiceDispatcher {
 				instance = path;
 				path = null;
 			} else if (path === undefined) {
+				path = '/:key*';
 				instance = this;
 			}
 		}

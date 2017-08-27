@@ -688,12 +688,12 @@ export default class DetectEngine {
 
 		return Promise
 			.all([
-				...this.options.registryKeys.map(reg => {
-					// TODO:
-					// return registry
-					// 	.get(reg.root || 'HKLM', reg.key, reg.name)
-					// 	.catch(err => Promise.resolve());
-				}),
+				// ...this.options.registryKeys.map(reg => {
+				// TODO:
+				// 	return registry
+				// 		.get(reg.root || 'HKLM', reg.key, reg.name)
+				// 		.catch(err => Promise.resolve());
+				// }),
 
 				!this.options.registryKeysFn ? null : Promise.resolve()
 					.then(() => this.options.registryKeysFn())

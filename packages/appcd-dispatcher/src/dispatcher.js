@@ -140,7 +140,7 @@ export default class Dispatcher {
 			if (route.handler instanceof Dispatcher) {
 				// call the nested dispatcher
 				logger.log('Calling dispatcher handler %s', highlight(route.prefix));
-				return route.handler.call(path.replace(route.prefix, ''), ctx);
+				return route.handler.call(path.replace(route.prefix, '') || '/', ctx);
 			}
 
 			return new Promise((resolve, reject) => {
@@ -345,6 +345,10 @@ export default class Dispatcher {
 
 		if (typeof path !== 'string' && !(path instanceof RegExp)) {
 			throw new TypeError('Invalid path');
+		}
+
+		if (path === '') {
+			path = '/';
 		}
 
 		// need to keep a reference to the original handler just in case it's a ServiceDispatcher

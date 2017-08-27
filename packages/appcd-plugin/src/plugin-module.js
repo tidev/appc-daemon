@@ -117,7 +117,12 @@ export default class PluginModule extends Module {
 
 			return closure.apply(this.exports, args);
 		} catch (e) {
-			e.message = 'Failed to load plugin: ' + e.message;
+			if (!/^Failed to load plugin/.test(e.message)) {
+				e.message = `Failed to load plugin: ${e.message}`;
+			}
+			if (e instanceof PluginError) {
+				throw e;
+			}
 			throw new PluginError(e);
 		}
 	}

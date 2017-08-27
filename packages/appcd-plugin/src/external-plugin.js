@@ -149,13 +149,17 @@ export default class ExternalPlugin extends PluginBase {
 
 			if (req.message.type === 'deactivate') {
 				return Promise.resolve()
-					.then(() => {
+					.then(async () => {
 						if (this.configSubscriptionId) {
-							return this.globals.appcd
-								.call('/appcd/config', {
+							try {
+								await this.globals.appcd.call('/appcd/config', {
 									sid: this.configSubscriptionId,
 									type: 'unsubscribe'
 								});
+							} catch (err) {
+								logger.warn('Failed to unsubscribe from config');
+								logger.warn(err);
+							}
 						}
 					})
 					.then(() => {
@@ -261,7 +265,7 @@ export default class ExternalPlugin extends PluginBase {
 				});
 			})
 			.catch(err => {
-				this.logger.warn('Failed to get config!');
+				this.logger.warn('Failed to subscribe to config');
 				this.logger.warn(err);
 			});
 
@@ -272,6 +276,7 @@ export default class ExternalPlugin extends PluginBase {
 
 			this.tunnel.emit({
 				message: err.message,
+				stack:   err.stack,
 				type:    'activation_error'
 			});
 
@@ -313,6 +318,7 @@ export default class ExternalPlugin extends PluginBase {
 
 						case 'activation_error':
 							this.info.error = req.message;
+							this.info.stack = req.stack;
 							break;
 
 						case 'log':
@@ -469,6 +475,9 @@ export default class ExternalPlugin extends PluginBase {
 											this.info.error = `Failed to activate plugin (code ${data.code})`;
 										}
 										err = new PluginError(this.info.error);
+										if (this.info.stack) {
+											err.stack = this.info.stack;
+										}
 										reject(err);
 									}
 								}
