@@ -12,7 +12,7 @@ import { FSWatcher } from 'appcd-fswatcher';
 import { Readable } from 'stream';
 
 const logger = appcdLogger(process.connected ? 'appcd:plugin:external:child' : 'appcd:plugin:external:parent');
-const { highlight, ok, alert } = appcdLogger.styles;
+const { alert, highlight, notice, ok } = appcdLogger.styles;
 
 /**
  * External plugin implementation logic.
@@ -139,7 +139,7 @@ export default class ExternalPlugin extends PluginBase {
 	 * @returns {Promise}
 	 * @access private
 	 */
-	async startChild() {
+	startChild() {
 		// external plugin running in the plugin host
 		this.tunnel = new Tunnel(process, (req, send) => {
 			// message from parent process that needs to be dispatched
@@ -250,9 +250,10 @@ export default class ExternalPlugin extends PluginBase {
 			})
 			.start();
 
-		this.globals.appcd
+		return this.globals.appcd
 			.call('/appcd/config', { type: 'subscribe' })
-			.then(({ response }) => {
+			.then(({ response }) => new Promise(resolve => {
+				let initialized = false;
 				response.on('data', response => {
 					if (response.type === 'event') {
 						this.config = response.message;
@@ -261,29 +262,30 @@ export default class ExternalPlugin extends PluginBase {
 						if (this.config.server && this.config.server.agentPollInterval) {
 							this.agent.pollInterval = Math.max(1000, this.config.server.agentPollInterval);
 						}
+
+						if (!initialized) {
+							initialized = true;
+							resolve();
+						}
 					}
 				});
-			})
-			.catch(err => {
+			}), err => {
 				this.logger.warn('Failed to subscribe to config');
 				this.logger.warn(err);
+			})
+			.then(() => this.activate())
+			.then(() => this.tunnel.emit({ type: 'activated' }))
+			.catch(err => {
+				this.logger.error(err);
+
+				this.tunnel.emit({
+					message: err.message,
+					stack:   err.stack,
+					type:    'activation_error'
+				});
+
+				process.exit(6);
 			});
-
-		try {
-			await this.activate();
-		} catch (err) {
-			this.logger.error(err);
-
-			this.tunnel.emit({
-				message: err.message,
-				stack:   err.stack,
-				type:    'activation_error'
-			});
-
-			process.exit(6);
-		}
-
-		await this.tunnel.emit({ type: 'activated' });
 	}
 
 	/**
@@ -295,13 +297,22 @@ export default class ExternalPlugin extends PluginBase {
 	startParent() {
 		logger.log('Spawning plugin host');
 
+		const args = [
+			path.resolve(__dirname, '..', 'bin', 'appcd-plugin-host'),
+			this.plugin.path
+		];
+
+		const debuggerRegExp = /^Debugger listening on .+\/([A-Za-z0-9-]+)$/;
+		const debugPort = process.env.INSPECT_PLUGIN_PORT && Math.max(parseInt(process.env.INSPECT_PLUGIN_PORT), 1024) || 9230;
+		let debugEnabled = process.env.INSPECT_PLUGIN === this.plugin.name;
+		if (debugEnabled) {
+			args.unshift(`--inspect-brk=${debugPort}`);
+		}
+
 		return Dispatcher
 			.call(`/appcd/subprocess/spawn/node/${this.plugin.nodeVersion}`, {
 				data: {
-					args: [
-						path.resolve(__dirname, '..', 'bin', 'appcd-plugin-host'),
-						this.plugin.path
-					],
+					args,
 					options: {
 						env: Object.assign({ FORCE_COLOR: 1 }, process.env)
 					},
@@ -446,11 +457,22 @@ export default class ExternalPlugin extends PluginBase {
 							// 	});
 							// 	break;
 
-							// case 'stderr':
-							// 	data.output.trim().split('\n').forEach(line => {
-							// 		logger.log('STDERR', line);
-							// 	});
-							// 	break;
+							case 'stderr':
+								if (debugEnabled) {
+									data.output.trim().split('\n').some(line => {
+										const m = line.match(debuggerRegExp);
+										if (m) {
+											logger.log(`${this.plugin.toString()} ready to debug`);
+											logger.log(notice(`chrome-devtools://devtools/bundled/inspector.html?experiments=true&v8only=true&ws=localhost:${debugPort}/${m[1]}`));
+
+											// we don't need to output any more
+											debugEnabled = false;
+											return true;
+										}
+										return false;
+									});
+								}
+								break;
 
 							case 'exit':
 								logger.log('Plugin host exited: %s', highlight(data.code));

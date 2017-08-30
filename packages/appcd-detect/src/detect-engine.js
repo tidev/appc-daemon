@@ -729,5 +729,5 @@ function resolveDir(dir) {
 
 			resolve(real(dir));
 		});
-	});
+	}).catch(err => null);
 }

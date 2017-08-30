@@ -1,4 +1,5 @@
 import DetectEngine from 'appcd-detect';
+import gawk from 'gawk';
 
 import { detect, jdkLocations } from 'jdklib';
 import { exe } from 'appcd-subprocess';
@@ -12,9 +13,6 @@ export default class JDKInfoService extends ServiceDispatcher {
 	 * @access public
 	 */
 	activate(cfg) {
-		console.log('JDK INFO CONFIG!');
-		console.log(cfg);
-
 		const engine = new DetectEngine({
 			checkDir:             this.checkDir.bind(this),
 			depth:                1,
@@ -27,8 +25,7 @@ export default class JDKInfoService extends ServiceDispatcher {
 			paths:                jdkLocations[process.platform]
 		});
 
-		this.results = [
-		];
+		this.results = gawk({});
 
 		this.handle = engine
 			.detect({
@@ -36,7 +33,7 @@ export default class JDKInfoService extends ServiceDispatcher {
 				redetect: true
 			})
 			.on('results', jdk => {
-				//
+				gawk.mergeDeep(this.results, jdk);
 			})
 			.on('error', err => {
 				//
@@ -156,6 +153,6 @@ export default class JDKInfoService extends ServiceDispatcher {
 	}
 
 	onCall(ctx) {
-		ctx.response = 'sweet';
+		ctx.response = this.results;
 	}
 }
