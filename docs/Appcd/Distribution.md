@@ -6,7 +6,8 @@ The Appc Daemon is intended to be distributed via npm under the `appcd` package 
 
 ### License
 
-:warning: At this time, the Appc Daemon license has not been determined.
+The Appc Daemon and all of its packages and plugins are to be distributed under the Apache 2 open
+source license.
 
 ### Release Process
 

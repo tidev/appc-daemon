@@ -1,13 +1,13 @@
 {
   "name": "appcd-client",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "The Node.js client for connecting to the Appc Daemon.",
   "main": "./dist/client",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
     "Chris Barber <cbarber@axway.com>"
   ],
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "Apache-2.0",
   "keywords": [
     "appcelerator",
     "appc",

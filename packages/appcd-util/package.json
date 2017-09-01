@@ -1,13 +1,13 @@
 {
   "name": "appcd-util",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Various utility functions to support the Appc Daemon.",
   "main": "./dist/util",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
     "Chris Barber <cbarber@axway.com>"
   ],
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "Apache-2.0",
   "scripts": {
     "build": "gulp build",
     "coverage": "gulp coverage",

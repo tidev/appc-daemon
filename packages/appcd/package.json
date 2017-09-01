@@ -1,12 +1,12 @@
 {
   "name": "appcd",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "A daemon that powers Appcelerator tooling and makes the impossible possible.",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
     "Chris Barber <cbarber@axway.com>"
   ],
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "Apache-2.0",
   "keywords": [
     "appcelerator",
     "appc",

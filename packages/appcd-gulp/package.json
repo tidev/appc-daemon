@@ -1,13 +1,13 @@
 {
   "name": "appcd-gulp",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Common gulp tasks and utilities.",
   "main": "./src/index",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
     "Chris Barber <cbarber@axway.com>"
   ],
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "Apache-2.0",
   "dependencies": {
     "babel-eslint": "^7.2.3",
     "babel-plugin-import-node": "^1.0.2",

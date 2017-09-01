@@ -1,13 +1,13 @@
 {
   "name": "appcd-plugin-system-info",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "The Appc Daemon plugin for detecting system info.",
   "main": "./dist/index",
   "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
     "Chris Barber <cbarber@axway.com>"
   ],
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "Apache-2.0",
   "scripts": {
     "build": "gulp build",
     "coverage": "gulp coverage",

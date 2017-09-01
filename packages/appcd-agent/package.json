@@ -1,13 +1,13 @@
 {
   "name": "appcd-agent",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Monitors a Node.js process and tracks CPU and memory usage.",
   "main": "./dist/index",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
     "Chris Barber <cbarber@axway.com>"
   ],
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "Apache-2.0",
   "scripts": {
     "build": "gulp build",
     "coverage": "gulp coverage",
