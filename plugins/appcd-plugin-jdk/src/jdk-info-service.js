@@ -180,8 +180,8 @@ export default class JDKInfoService extends ServiceDispatcher {
 	onSubscribe(ctx, publish) {
 		publish(this.results);
 
-		logger.debug('Starting jdk info watch');
-		gawk.watch(this.results, filter, publish);
+		console.log('Starting jdk info watch');
+		gawk.watch(this.results, publish);
 	}
 
 	/**
@@ -193,7 +193,7 @@ export default class JDKInfoService extends ServiceDispatcher {
 	 * @access private
 	 */
 	onUnsubscribe(ctx, publish) {
-		logger.debug('Removing jdk info watch');
+		console.log('Removing jdk info watch');
 		gawk.unwatch(this.results, publish);
 	}
 }
