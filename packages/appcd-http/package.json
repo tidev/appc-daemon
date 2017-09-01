@@ -1,13 +1,13 @@
 {
   "name": "appcd-http",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "HTTP server with WebSocket support, router, and various middlewares.",
   "main": "./dist/index",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
     "Chris Barber <cbarber@axway.com>"
   ],
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "Apache-2.0",
   "scripts": {
     "build": "gulp build",
     "coverage": "gulp coverage",
@@ -16,10 +16,10 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-fs": "1.0.0",
-    "appcd-logger": "1.0.0",
+    "appcd-fs": "0.1.0",
+    "appcd-logger": "0.1.0",
     "koa": "^2.3.0",
-    "koa-bodyparser": "next",
+    "koa-bodyparser": "^4.2.0",
     "koa-helmet": "^3.2.0",
     "koa-send": "^4.1.0",
     "path-to-regexp": "^2.0.0",
@@ -27,7 +27,7 @@
     "ws": "^3.1.0"
   },
   "devDependencies": {
-    "appcd-gulp": "1.0.0",
+    "appcd-gulp": "0.1.0",
     "gulp": "^3.9.1",
     "supertest": "^3.0.0"
   },

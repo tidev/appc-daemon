@@ -1,13 +1,13 @@
 {
   "name": "appcd-config-service",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "A service that exposes a config object.",
   "main": "./dist/config-service",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
     "Chris Barber <cbarber@axway.com>"
   ],
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "Apache-2.0",
   "scripts": {
     "build": "gulp build",
     "coverage": "gulp coverage",
@@ -16,15 +16,15 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-config": "1.0.0",
-    "appcd-dispatcher": "1.0.0",
-    "appcd-logger": "1.0.0",
-    "appcd-response": "1.0.0",
+    "appcd-config": "0.1.0",
+    "appcd-dispatcher": "0.1.0",
+    "appcd-logger": "0.1.0",
+    "appcd-response": "0.1.0",
     "gawk": "^4.3.0",
     "source-map-support": "^0.4.16"
   },
   "devDependencies": {
-    "appcd-gulp": "1.0.0",
+    "appcd-gulp": "0.1.0",
     "gulp": "^3.9.1"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
