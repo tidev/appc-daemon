@@ -47,6 +47,10 @@ export default class AppcdError extends Error {
 		return this.msg.toString(null, 'Unknown Error');
 	}
 
+	set message(msg) {
+		this.msg = msg;
+	}
+
 	/**
 	 * The error status.
 	 * @type {Number}

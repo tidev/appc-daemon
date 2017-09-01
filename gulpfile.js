@@ -829,7 +829,7 @@ function checkPackages() {
 						runDavid(pkgJson, 'devDependencies', packages[packagePath]),
 						runDavid(pkgJson, 'optionalDependencies', packages[packagePath]),
 
-						runYarn(packagePath, 'check', '--json')
+						runYarn(packagePath, 'check', '--json', '--non-interactive')
 							.then(result => {
 								if (result.status) {
 									const lines = result.stderr.toString().trim().split('\n');

@@ -8,7 +8,7 @@
 import appcdLogger from 'appcd-logger';
 import pathToRegexp from 'path-to-regexp';
 
-const logger = appcdLogger('appcd:http:router');
+const { log } = appcdLogger('appcd:http:router');
 const { highlight, note } = appcdLogger.styles;
 
 /**
@@ -29,6 +29,11 @@ export const methods = [
  * A Koa compatible web router.
  */
 export default class Router {
+	/**
+	 * Initializes the router properties.
+	 *
+	 * @access public
+	 */
 	constructor() {
 		this.layers = [];
 		this.methods = methods;
@@ -43,7 +48,7 @@ export default class Router {
 	routes() {
 		return (ctx, next) => {
 			const prefix = ctx.route && ctx.route.prefix || '';
-			const path = prefix ? ctx.path.replace(prefix, '') : ctx.path;
+			const path = (prefix ? ctx.path.replace(prefix, '') : ctx.path) || '/';
 			const middlewares = [];
 			const paramMiddlewares = Object.assign({}, ctx.route && ctx.route.paramMiddlewares);
 			let allowedMethods = {};
@@ -55,6 +60,8 @@ export default class Router {
 				if (!m) {
 					continue;
 				}
+
+				log('Found route match:', highlight(route.path));
 
 				if (route.paramNames) {
 					ctx.params = this.parseParams(ctx.params, route.paramNames, path.match(route.regexp).slice(1));
@@ -141,8 +148,8 @@ export default class Router {
 	/**
 	 * Registers a path for a given method and handler.
 	 *
-	 * @param {String|Array<String>} methods - An array of methods or a single method.
-	 * Value may be null (falsey) if the method is not applicable.
+	 * @param {String|Array<String>} methods - An array of methods or a single method. Value may be
+	 * null (falsey) if the method is not applicable.
 	 * @param {String|RegExp} path - The path to register.
 	 * @param {String} [paramKey] - The name of the path's parameter key.
 	 * @param {Function|Router} middleware - The function to invoke when the route has been matched.
@@ -173,7 +180,7 @@ export default class Router {
 
 		const keys = [];
 
-		logger.log('Registering layer: %s %s', highlight(path), methods ? note(`(${methods.join(',')})`) : '');
+		log('Registering layer: %s %s', highlight(path), methods ? note(`(${methods.join(',')})`) : '');
 
 		this.layers.push({
 			path,

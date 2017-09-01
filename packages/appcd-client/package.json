@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "The Node.js client for connecting to the Appc Daemon.",
   "main": "./dist/client",
-  "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
+  "author": "Axway, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
-    "Chris Barber <cbarber@appcelerator.com>"
+    "Chris Barber <cbarber@axway.com>"
   ],
   "license": "SEE LICENSE IN LICENSE",
   "keywords": [

@@ -1,6 +1,6 @@
 import Agent from 'appcd-agent';
 import appcdLogger from 'appcd-logger';
-import Dispatcher from 'appcd-dispatcher';
+import Dispatcher, { DispatcherError } from 'appcd-dispatcher';
 import path from 'path';
 import PluginBase, { states } from './plugin-base';
 import PluginError from './plugin-error';
@@ -12,7 +12,7 @@ import { FSWatcher } from 'appcd-fswatcher';
 import { Readable } from 'stream';
 
 const logger = appcdLogger(process.connected ? 'appcd:plugin:external:child' : 'appcd:plugin:external:parent');
-const { highlight, ok, alert } = appcdLogger.styles;
+const { alert, highlight, notice, ok } = appcdLogger.styles;
 
 /**
  * External plugin implementation logic.
@@ -49,7 +49,12 @@ export default class ExternalPlugin extends PluginBase {
 			logger.log('Restarting external plugin: %s', highlight(this.plugin.toString()));
 			Promise.resolve()
 				.then(() => this.stop())
-				.then(() => this.start())
+				.then(() => {
+					// reset the plugin error state
+					plugin.error = null;
+
+					return this.start();
+				})
 				.catch(err => {
 					logger.error('Failed to restart %s plugin: %s', highlight(this.plugin.toString()), err);
 				});
@@ -139,7 +144,21 @@ export default class ExternalPlugin extends PluginBase {
 	 * @returns {Promise}
 	 * @access private
 	 */
-	async startChild() {
+	startChild() {
+		// we need to override the global root dispatcher instance so that we can redirect all calls
+		// back to the parent process
+		const rootDispatcher = Dispatcher.root;
+		const origCall = rootDispatcher.call;
+		rootDispatcher.call = (path, payload) => {
+			return origCall.call(rootDispatcher, path, payload)
+				.catch(err => {
+					if (err instanceof DispatcherError && err.statusCode === 404) {
+						return this.globals.appcd.call(path, payload);
+					}
+					throw err;
+				});
+		};
+
 		// external plugin running in the plugin host
 		this.tunnel = new Tunnel(process, (req, send) => {
 			// message from parent process that needs to be dispatched
@@ -149,13 +168,17 @@ export default class ExternalPlugin extends PluginBase {
 
 			if (req.message.type === 'deactivate') {
 				return Promise.resolve()
-					.then(() => {
+					.then(async () => {
 						if (this.configSubscriptionId) {
-							return this.globals.appcd
-								.call('/appcd/config', {
+							try {
+								await this.globals.appcd.call('/appcd/config', {
 									sid: this.configSubscriptionId,
 									type: 'unsubscribe'
 								});
+							} catch (err) {
+								logger.warn('Failed to unsubscribe from config');
+								logger.warn(err);
+							}
 						}
 					})
 					.then(() => {
@@ -246,9 +269,10 @@ export default class ExternalPlugin extends PluginBase {
 			})
 			.start();
 
-		this.globals.appcd
+		return this.globals.appcd
 			.call('/appcd/config', { type: 'subscribe' })
-			.then(({ response }) => {
+			.then(({ response }) => new Promise(resolve => {
+				let initialized = false;
 				response.on('data', response => {
 					if (response.type === 'event') {
 						this.config = response.message;
@@ -257,28 +281,30 @@ export default class ExternalPlugin extends PluginBase {
 						if (this.config.server && this.config.server.agentPollInterval) {
 							this.agent.pollInterval = Math.max(1000, this.config.server.agentPollInterval);
 						}
+
+						if (!initialized) {
+							initialized = true;
+							resolve();
+						}
 					}
 				});
-			})
-			.catch(err => {
-				this.logger.warn('Failed to get config!');
+			}), err => {
+				this.logger.warn('Failed to subscribe to config');
 				this.logger.warn(err);
+			})
+			.then(() => this.activate())
+			.then(() => this.tunnel.emit({ type: 'activated' }))
+			.catch(err => {
+				this.logger.error(err);
+
+				this.tunnel.emit({
+					message: err.message,
+					stack:   err.stack,
+					type:    'activation_error'
+				});
+
+				process.exit(6);
 			});
-
-		try {
-			await this.activate();
-		} catch (err) {
-			this.logger.error(err);
-
-			this.tunnel.emit({
-				message: err.message,
-				type:    'activation_error'
-			});
-
-			process.exit(6);
-		}
-
-		await this.tunnel.emit({ type: 'activated' });
 	}
 
 	/**
@@ -290,13 +316,22 @@ export default class ExternalPlugin extends PluginBase {
 	startParent() {
 		logger.log('Spawning plugin host');
 
+		const args = [
+			path.resolve(__dirname, '..', 'bin', 'appcd-plugin-host'),
+			this.plugin.path
+		];
+
+		const debuggerRegExp = /^Debugger listening on .+\/([A-Za-z0-9-]+)$/;
+		const debugPort = process.env.INSPECT_PLUGIN_PORT && Math.max(parseInt(process.env.INSPECT_PLUGIN_PORT), 1024) || 9230;
+		let debugEnabled = process.env.INSPECT_PLUGIN === this.plugin.name;
+		if (debugEnabled) {
+			args.unshift(`--inspect-brk=${debugPort}`);
+		}
+
 		return Dispatcher
 			.call(`/appcd/subprocess/spawn/node/${this.plugin.nodeVersion}`, {
 				data: {
-					args: [
-						path.resolve(__dirname, '..', 'bin', 'appcd-plugin-host'),
-						this.plugin.path
-					],
+					args,
 					options: {
 						env: Object.assign({ FORCE_COLOR: 1 }, process.env)
 					},
@@ -313,6 +348,7 @@ export default class ExternalPlugin extends PluginBase {
 
 						case 'activation_error':
 							this.info.error = req.message;
+							this.info.stack = req.stack;
 							break;
 
 						case 'log':
@@ -440,11 +476,22 @@ export default class ExternalPlugin extends PluginBase {
 							// 	});
 							// 	break;
 
-							// case 'stderr':
-							// 	data.output.trim().split('\n').forEach(line => {
-							// 		logger.log('STDERR', line);
-							// 	});
-							// 	break;
+							case 'stderr':
+								if (debugEnabled) {
+									data.output.trim().split('\n').some(line => {
+										const m = line.match(debuggerRegExp);
+										if (m) {
+											logger.log(`${this.plugin.toString()} ready to debug`);
+											logger.log(notice(`chrome-devtools://devtools/bundled/inspector.html?experiments=true&v8only=true&ws=localhost:${debugPort}/${m[1]}`));
+
+											// we don't need to output any more
+											debugEnabled = false;
+											return true;
+										}
+										return false;
+									});
+								}
+								break;
 
 							case 'exit':
 								logger.log('Plugin host exited: %s', highlight(data.code));
@@ -469,6 +516,9 @@ export default class ExternalPlugin extends PluginBase {
 											this.info.error = `Failed to activate plugin (code ${data.code})`;
 										}
 										err = new PluginError(this.info.error);
+										if (this.info.stack) {
+											err.stack = this.info.stack;
+										}
 										reject(err);
 									}
 								}

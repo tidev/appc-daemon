@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "A service that exposes a config object.",
   "main": "./dist/config-service",
-  "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
+  "author": "Axway, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
-    "Chris Barber <cbarber@appcelerator.com>"
+    "Chris Barber <cbarber@axway.com>"
   ],
   "license": "SEE LICENSE IN LICENSE",
   "scripts": {
@@ -20,7 +20,7 @@
     "appcd-dispatcher": "1.0.0",
     "appcd-logger": "1.0.0",
     "appcd-response": "1.0.0",
-    "gawk": "^4.2.0",
+    "gawk": "^4.3.0",
     "source-map-support": "^0.4.16"
   },
   "devDependencies": {

@@ -86,6 +86,12 @@ export default class PluginBase extends EventEmitter {
 			pid: null,
 
 			/**
+			 * The full stack dump if an error occurred.
+			 * @type {String}
+			 */
+			stack: null,
+
+			/**
 			 * The number of milliseconds it took for the module to activate.
 			 * @type {Number}
 			 */
@@ -136,7 +142,7 @@ export default class PluginBase extends EventEmitter {
 
 		// call the plugin's activate handler
 		if (this.module && typeof this.module.activate === 'function') {
-			await this.module.activate();
+			await this.module.activate(this.config);
 		}
 	}
 

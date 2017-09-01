@@ -101,7 +101,7 @@ const cmd = {
 							plugin.path,
 							plugin.nodeVersion,
 							status,
-							`${numberFormat(plugin.activeRequests)} / ${numberFormat(plugin.totalRequests)}`
+							`${numberFormat(plugin.activeRequests, 0)} / ${numberFormat(plugin.totalRequests, 0)}`
 						]);
 					}
 					log(table.toString());

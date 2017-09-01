@@ -36,7 +36,7 @@ export default class ConfigService extends ServiceDispatcher {
 			throw new Error('Config object missing unwatch() method');
 		}
 
-		super('/:key*');
+		super();
 
 		/**
 		 * The daemon config instance.

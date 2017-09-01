@@ -11,7 +11,7 @@ const cmd = {
 		});
 
 		if (!wasRunning) {
-			console.log('Appc Daemon not running');
+			console.log('Appc Daemon already stopped');
 			process.exit(3);
 		}
 	}

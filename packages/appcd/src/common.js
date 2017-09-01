@@ -198,7 +198,7 @@ export function stopServer({ cfg, force }) {
 	function sendKill(pid) {
 		return new Promise((resolve, reject) => {
 			if (!pid) {
-				return reject(wasRunning);
+				return resolve(wasRunning);
 			}
 			if (!wasRunning) {
 				log('Daemon was running, attempting to stop');

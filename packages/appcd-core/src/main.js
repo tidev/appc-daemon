@@ -10,8 +10,6 @@ try {
 	process.exit(1);
 }
 
-import 'babel-polyfill';
-
 import CLI from 'cli-kit';
 import logger from './logger';
 
