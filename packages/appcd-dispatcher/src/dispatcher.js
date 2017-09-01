@@ -28,6 +28,13 @@ export default class Dispatcher {
 		return rootInstance;
 	}
 
+	static set root(instance) {
+		if (!(instance instanceof Dispatcher)) {
+			throw new TypeError('Root instance must be a Dispatcher type');
+		}
+		rootInstance = instance;
+	}
+
 	/**
 	 * Runs the root dispatcher instance's `call()`.
 	 * @returns {Promise}

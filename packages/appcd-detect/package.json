@@ -20,7 +20,7 @@
     "appcd-logger": "1.0.0",
     "appcd-path": "1.0.0",
     "appcd-util": "1.0.0",
-    "gawk": "^4.2.0",
+    "gawk": "^4.3.0",
     "source-map-support": "^0.4.15"
   },
   "devDependencies": {

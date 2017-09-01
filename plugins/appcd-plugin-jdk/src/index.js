@@ -5,8 +5,8 @@ const jdkInfo = new JDKInfoService();
 /**
  * Activates and wires up the JDK info service.
  */
-export function activate(cfg) {
-	jdkInfo.activate(cfg);
+export async function activate(cfg) {
+	await jdkInfo.activate(cfg);
 	appcd.register('/info', jdkInfo);
 }
 

@@ -1,6 +1,6 @@
 import Agent from 'appcd-agent';
 import appcdLogger from 'appcd-logger';
-import Dispatcher from 'appcd-dispatcher';
+import Dispatcher, { DispatcherError } from 'appcd-dispatcher';
 import path from 'path';
 import PluginBase, { states } from './plugin-base';
 import PluginError from './plugin-error';
@@ -49,7 +49,12 @@ export default class ExternalPlugin extends PluginBase {
 			logger.log('Restarting external plugin: %s', highlight(this.plugin.toString()));
 			Promise.resolve()
 				.then(() => this.stop())
-				.then(() => this.start())
+				.then(() => {
+					// reset the plugin error state
+					plugin.error = null;
+
+					return this.start();
+				})
 				.catch(err => {
 					logger.error('Failed to restart %s plugin: %s', highlight(this.plugin.toString()), err);
 				});
@@ -140,6 +145,20 @@ export default class ExternalPlugin extends PluginBase {
 	 * @access private
 	 */
 	startChild() {
+		// we need to override the global root dispatcher instance so that we can redirect all calls
+		// back to the parent process
+		const rootDispatcher = Dispatcher.root;
+		const origCall = rootDispatcher.call;
+		rootDispatcher.call = (path, payload) => {
+			return origCall.call(rootDispatcher, path, payload)
+				.catch(err => {
+					if (err instanceof DispatcherError && err.statusCode === 404) {
+						return this.globals.appcd.call(path, payload);
+					}
+					throw err;
+				});
+		};
+
 		// external plugin running in the plugin host
 		this.tunnel = new Tunnel(process, (req, send) => {
 			// message from parent process that needs to be dispatched

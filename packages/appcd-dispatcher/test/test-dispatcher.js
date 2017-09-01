@@ -808,5 +808,17 @@ describe('dispatcher', () => {
 				})
 				.catch(done);
 		});
+
+		it('should fail to set invalid root instance', () => {
+			expect(() => {
+				Dispatcher.root = 'foo';
+			}).to.throw(TypeError, 'Root instance must be a Dispatcher type');
+		});
+
+		it('should set a new root instance', () => {
+			const d = new Dispatcher();
+			Dispatcher.root = d;
+			expect(Dispatcher.root).to.equal(d);
+		});
 	});
 });

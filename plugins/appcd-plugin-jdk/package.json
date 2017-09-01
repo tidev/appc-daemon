@@ -19,7 +19,7 @@
     "appcd-detect": "1.0.0",
     "appcd-dispatcher": "1.0.0",
     "appcd-subprocess": "1.0.0",
-    "gawk": "^4.2.0",
+    "gawk": "^4.3.0",
     "jdklib": "^2.0.0",
     "source-map-support": "^0.4.16"
   },

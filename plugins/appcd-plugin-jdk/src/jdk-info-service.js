@@ -5,11 +5,15 @@ import { detect, jdkLocations } from 'jdklib';
 import { exe } from 'appcd-subprocess';
 import { ServiceDispatcher } from 'appcd-dispatcher';
 
+/**
+ * The JDK info service.
+ */
 export default class JDKInfoService extends ServiceDispatcher {
 	/**
 	 * Starts the detect engine.
 	 *
 	 * @param {Config} cfg - An Appc Daemon config object
+	 * @returns {Promise}
 	 * @access public
 	 */
 	activate(cfg) {
@@ -25,19 +29,23 @@ export default class JDKInfoService extends ServiceDispatcher {
 			paths:                jdkLocations[process.platform]
 		});
 
-		this.results = gawk({});
+		this.results = gawk([]);
 
-		this.handle = engine
-			.detect({
-				watch: true,
-				redetect: true
-			})
-			.on('results', jdk => {
-				gawk.mergeDeep(this.results, jdk);
-			})
-			.on('error', err => {
-				//
-			});
+		return new Promise((resolve, reject) => {
+			this.handle = engine
+				.detect({
+					watch: true,
+					redetect: true
+				})
+				.on('results', results => {
+					this.results.splice.apply(this.results, [ 0, this.results.length ].concat(results));
+					resolve();
+				})
+				.on('error', err => {
+					console.error(err);
+					reject(err);
+				});
+		});
 	}
 
 	/**
@@ -152,7 +160,40 @@ export default class JDKInfoService extends ServiceDispatcher {
 		return Promise.resolve();
 	}
 
+	/**
+	 * Responds to "call" service requests.
+	 *
+	 * @param {Object} ctx - A dispatcher request context.
+	 * @access private
+	 */
 	onCall(ctx) {
 		ctx.response = this.results;
+	}
+
+	/**
+	 * Responds to "subscribe" service requests.
+	 *
+	 * @param {Object} ctx - A dispatcher request context.
+	 * @param {Function} publish - A function used to publish data to a dispatcher client.
+	 * @access private
+	 */
+	onSubscribe(ctx, publish) {
+		publish(this.results);
+
+		logger.debug('Starting jdk info watch');
+		gawk.watch(this.results, filter, publish);
+	}
+
+	/**
+	 * Responds to "unsubscribe" service requests.
+	 *
+	 * @param {Object} ctx - A dispatcher request context.
+	 * @param {Function} publish - The function used to publish data to a dispatcher client. This is
+	 * the same publish function as the one passed to `onSubscribe()`.
+	 * @access private
+	 */
+	onUnsubscribe(ctx, publish) {
+		logger.debug('Removing jdk info watch');
+		gawk.unwatch(this.results, publish);
 	}
 }
