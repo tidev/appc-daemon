@@ -16,15 +16,15 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-detect": "1.0.0",
-    "appcd-dispatcher": "1.0.0",
-    "appcd-subprocess": "1.0.0",
+    "appcd-detect": "0.1.0",
+    "appcd-dispatcher": "0.1.0",
+    "appcd-subprocess": "0.1.0",
     "gawk": "^4.3.0",
-    "jdklib": "^2.0.0",
+    "jdklib": "^2.0.1",
     "source-map-support": "^0.4.16"
   },
   "devDependencies": {
-    "appcd-gulp": "1.0.0",
+    "appcd-gulp": "0.1.0",
     "gulp": "^3.9.1"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",

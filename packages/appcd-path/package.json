@@ -19,7 +19,7 @@
     "source-map-support": "^0.4.16"
   },
   "devDependencies": {
-    "appcd-gulp": "1.0.0",
+    "appcd-gulp": "0.1.0",
     "gulp": "^3.9.1",
     "tmp": "^0.0.33"
   },
