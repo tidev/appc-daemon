@@ -361,7 +361,7 @@ export function unique(arr) {
 		return [];
 	}
 
-	return arr.reduce((prev, cur, i) => {
+	return arr.reduce((prev, cur) => {
 		if (typeof cur !== 'undefined' && cur !== null) {
 			if (prev.indexOf(cur) === -1) {
 				prev.push(cur);
