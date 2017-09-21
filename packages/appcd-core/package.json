@@ -32,7 +32,7 @@
     "appcd-telemetry": "0.1.0",
     "appcd-util": "0.1.0",
     "cli-kit": "^0.0.3",
-    "fs-extra": "^4.0.1",
+    "fs-extra": "^4.0.2",
     "gawk": "^4.3.0",
     "msgpack-lite": "^0.1.26"
   },

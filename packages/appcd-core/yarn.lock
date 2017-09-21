@@ -409,12 +409,12 @@ fs-exists-sync@^0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/fs-exists-sync/-/fs-exists-sync-0.1.0.tgz#982d6893af918e72d08dec9e8673ff2b5a8d6add"
 
-fs-extra@^4.0.1:
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/fs-extra/-/fs-extra-4.0.1.tgz#7fc0c6c8957f983f57f306a24e5b9ddd8d0dd880"
+fs-extra@^4.0.2:
+  version "4.0.2"
+  resolved "https://registry.yarnpkg.com/fs-extra/-/fs-extra-4.0.2.tgz#f91704c53d1b461f893452b0c307d9997647ab6b"
   dependencies:
     graceful-fs "^4.1.2"
-    jsonfile "^3.0.0"
+    jsonfile "^4.0.0"
     universalify "^0.1.0"
 
 gawk@^4.3.0:
@@ -639,8 +639,8 @@ int64-buffer@^0.1.9:
   resolved "https://registry.yarnpkg.com/int64-buffer/-/int64-buffer-0.1.9.tgz#9e039da043b24f78b196b283e04653ef5e990f61"
 
 interpret@^1.0.0:
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/interpret/-/interpret-1.0.3.tgz#cbc35c62eeee73f19ab7b10a801511401afc0f90"
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/interpret/-/interpret-1.0.4.tgz#820cdd588b868ffb191a809506d6c9c8f212b1b0"
 
 invariant@^2.2.2:
   version "2.2.2"
@@ -755,9 +755,9 @@ js-tokens@^3.0.0, js-tokens@^3.0.2:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/js-tokens/-/js-tokens-3.0.2.tgz#9866df395102130e38f7f996bceb65443209c25b"
 
-jsonfile@^3.0.0:
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/jsonfile/-/jsonfile-3.0.1.tgz#a5ecc6f65f53f662c4415c7675a0331d0992ec66"
+jsonfile@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/jsonfile/-/jsonfile-4.0.0.tgz#8771aae0799b64076b76640fca058f9c10e33ecb"
   optionalDependencies:
     graceful-fs "^4.1.6"
 
@@ -922,15 +922,15 @@ micromatch@^2.3.7:
     parse-glob "^3.0.4"
     regex-cache "^0.4.2"
 
-mime-db@~1.29.0:
-  version "1.29.0"
-  resolved "https://registry.yarnpkg.com/mime-db/-/mime-db-1.29.0.tgz#48d26d235589651704ac5916ca06001914266878"
+mime-db@~1.30.0:
+  version "1.30.0"
+  resolved "https://registry.yarnpkg.com/mime-db/-/mime-db-1.30.0.tgz#74c643da2dd9d6a45399963465b26d5ca7d71f01"
 
 mime-types@~2.1.16:
-  version "2.1.16"
-  resolved "https://registry.yarnpkg.com/mime-types/-/mime-types-2.1.16.tgz#2b858a52e5ecd516db897ac2be87487830698e23"
+  version "2.1.17"
+  resolved "https://registry.yarnpkg.com/mime-types/-/mime-types-2.1.17.tgz#09d7a393f03e995a79f8af857b70a9e0ab16557a"
   dependencies:
-    mime-db "~1.29.0"
+    mime-db "~1.30.0"
 
 minimatch@^2.0.1:
   version "2.0.10"
@@ -1155,11 +1155,10 @@ regenerator-runtime@^0.11.0:
   resolved "https://registry.yarnpkg.com/regenerator-runtime/-/regenerator-runtime-0.11.0.tgz#7e54fe5b5ccd5d6624ea6255c3473be090b802e1"
 
 regex-cache@^0.4.2:
-  version "0.4.3"
-  resolved "https://registry.yarnpkg.com/regex-cache/-/regex-cache-0.4.3.tgz#9b1a6c35d4d0dfcef5711ae651e8e9d3d7114145"
+  version "0.4.4"
+  resolved "https://registry.yarnpkg.com/regex-cache/-/regex-cache-0.4.4.tgz#75bdc58a2a1496cec48a12835bc54c8d562336dd"
   dependencies:
     is-equal-shallow "^0.1.3"
-    is-primitive "^2.0.0"
 
 remove-trailing-separator@^1.0.1:
   version "1.1.0"
@@ -1221,8 +1220,8 @@ snooplogg@^1.3.0:
     supports-color "^4.2.1"
 
 source-map-support@^0.4.11, source-map-support@^0.4.15, source-map-support@^0.4.16:
-  version "0.4.16"
-  resolved "https://registry.yarnpkg.com/source-map-support/-/source-map-support-0.4.16.tgz#16fecf98212467d017d586a2af68d628b9421cd8"
+  version "0.4.18"
+  resolved "https://registry.yarnpkg.com/source-map-support/-/source-map-support-0.4.18.tgz#0286a6de8be42641338594e97ccea75f0a2c585f"
   dependencies:
     source-map "^0.5.6"
 

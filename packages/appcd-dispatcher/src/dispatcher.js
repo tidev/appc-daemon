@@ -1,3 +1,5 @@
+/* eslint no-control-regex: "off" */
+
 import appcdLogger from 'appcd-logger';
 import DispatcherContext from './dispatcher-context';
 import DispatcherError from './dispatcher-error';
@@ -9,8 +11,17 @@ import { PassThrough } from 'stream';
 
 const logger = appcdLogger('appcd:dispatcher');
 const { highlight } = appcdLogger.styles;
+
+/**
+ * A regular expression that strips ansi color sequences.
+ * @type {RegExp}
+ */
 const stripRegExp = /\x1B\[\d+m/g;
 
+/**
+ * The (global) root dispatcher instance that is used across multiple packages.
+ * @type {Dispatcher}
+ */
 let rootInstance = null;
 
 /**

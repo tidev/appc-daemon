@@ -21,7 +21,7 @@
     "appcd-subprocess": "0.1.0",
     "gawk": "^4.3.0",
     "jdklib": "^2.0.1",
-    "source-map-support": "^0.4.16"
+    "source-map-support": "^0.4.18"
   },
   "devDependencies": {
     "appcd-gulp": "0.1.0",

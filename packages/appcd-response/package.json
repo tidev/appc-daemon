@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "appcd-fs": "0.1.0",
-    "source-map-support": "^0.4.16",
+    "source-map-support": "^0.4.18",
     "sprintf-js": "^1.1.1"
   },
   "devDependencies": {

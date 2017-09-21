@@ -806,10 +806,10 @@ function checkPackages() {
 													}
 
 													for (const v of result.vulnerabilities) {
-														const advisory = v.info && v.info[0];
+														const advisory = v.info && v.info.pop();
 														if (advisory && !n[ver].vulnerabilities[advisory]) {
 															n[ver].vulnerabilities[advisory] = {
-																title: v.identifiers.summary
+																title: v.identifiers && v.identifiers.summary || advisory
 															};
 														}
 													}
