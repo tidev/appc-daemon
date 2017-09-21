@@ -149,10 +149,6 @@ export function startServer({ cfg, argv }) {
  */
 export function stopServer({ cfg, force }) {
 	const pidFile = expandPath(cfg.get('server.pidFile'));
-	const client = new Client({
-		host: cfg.get('server.host'),
-		port: cfg.get('server.port')
-	});
 
 	const isRunning = () => {
 		return new Promise(resolve => {

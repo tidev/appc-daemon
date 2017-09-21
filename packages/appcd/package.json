@@ -34,7 +34,7 @@
     "appcd-util": "0.1.0",
     "cli-kit": "^0.0.3",
     "cli-table2": "^0.2.0",
-    "source-map-support": "^0.4.16"
+    "source-map-support": "^0.4.18"
   },
   "devDependencies": {
     "appcd-gulp": "0.1.0",

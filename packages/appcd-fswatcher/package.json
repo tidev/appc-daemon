@@ -22,11 +22,11 @@
     "appcd-response": "0.1.0",
     "appcd-util": "0.1.0",
     "gawk": "^4.3.0",
-    "source-map-support": "^0.4.16"
+    "source-map-support": "^0.4.18"
   },
   "devDependencies": {
     "appcd-gulp": "0.1.0",
-    "fs-extra": "^4.0.1",
+    "fs-extra": "^4.0.2",
     "gulp": "^3.9.1",
     "tmp": "^0.0.33"
   },
