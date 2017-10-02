@@ -31,7 +31,7 @@
     "gawk": "^4.3.0",
     "globule": "^1.2.0",
     "hook-emitter": "^2.1.0",
-    "pretty-ms": "^3.0.0",
+    "pretty-ms": "^3.0.1",
     "semver": "^5.4.1",
     "slugg": "^1.2.1",
     "source-map-support": "^0.4.18",

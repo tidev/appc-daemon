@@ -15,7 +15,9 @@ export async function activate(cfg) {
 
 /**
  * Shutdown the JDK info service.
+ *
+ * @returns {Promise}
  */
-export function deactivate() {
-	jdkInfo.deactivate();
+export async function deactivate() {
+	await jdkInfo.deactivate();
 }

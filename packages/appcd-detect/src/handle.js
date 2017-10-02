@@ -24,10 +24,10 @@ export default class Handle extends EventEmitter {
 	 * @returns {Handle}
 	 * @access public
 	 */
-	stop() {
+	async stop() {
 		for (const unwatch of this.unwatchers.values()) {
 			if (typeof unwatch === 'function') {
-				unwatch();
+				await unwatch();
 			}
 		}
 		this.unwatchers.clear();

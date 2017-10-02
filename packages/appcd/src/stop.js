@@ -10,7 +10,9 @@ const cmd = {
 			force: argv.force
 		});
 
-		if (!wasRunning) {
+		if (wasRunning) {
+			console.log('Appc Daemon stopped');
+		} else {
 			console.log('Appc Daemon already stopped');
 			process.exit(3);
 		}
