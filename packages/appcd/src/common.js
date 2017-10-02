@@ -222,7 +222,7 @@ export function stopServer({ cfg, force }) {
 					// squeltch
 				}
 
-				resolve();
+				resolve(wasRunning);
 			}, 1000);
 		});
 	}

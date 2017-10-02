@@ -84,7 +84,7 @@ module.exports = {
 		 * deactivated.
 		 * @type {Number}
 		 */
-		defaultInactivityTimeout: 60 * 60 * 1000,
+		defaultInactivityTimeout: 60 * 60 * 1000
 	},
 
 	server: {

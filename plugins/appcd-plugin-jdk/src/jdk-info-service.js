@@ -53,9 +53,9 @@ export default class JDKInfoService extends ServiceDispatcher {
 	 *
 	 * @access public
 	 */
-	deactivate() {
+	async deactivate() {
 		if (this.handle) {
-			this.handle.stop();
+			await this.handle.stop();
 			this.handle = null;
 		}
 	}

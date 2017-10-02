@@ -258,9 +258,9 @@ export default class Plugin extends EventEmitter {
 			if (this.type === 'external' && this.inactivityTimeout !== 0) {
 				// we get the default inactivity timeout even if we have one to preserve a single
 				// code path
-				Dispatcher.call('/appcd/config/plugin/defaultInactivityTimeout')
+				Dispatcher.call('/appcd/config/plugins/defaultInactivityTimeout')
 					.then(ctx => ctx.response)
-					.catch(() => Promise.resolve(60000))
+					.catch(() => Promise.resolve(60 * 60 * 1000)) // 1 hour
 					.then(defaultInactivityTimeout => {
 						// restart the inactivity timer
 						const timeout = this.inactivityTimeout || defaultInactivityTimeout;

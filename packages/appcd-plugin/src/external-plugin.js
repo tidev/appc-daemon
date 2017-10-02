@@ -147,12 +147,14 @@ export default class ExternalPlugin extends PluginBase {
 	startChild() {
 		// we need to override the global root dispatcher instance so that we can redirect all calls
 		// back to the parent process
+		logger.log('Patching root dispatcher');
 		const rootDispatcher = Dispatcher.root;
 		const origCall = rootDispatcher.call;
 		rootDispatcher.call = (path, payload) => {
 			return origCall.call(rootDispatcher, path, payload)
 				.catch(err => {
 					if (err instanceof DispatcherError && err.statusCode === 404) {
+						logger.log(`No route for ${highlight(path)} in child process, forwarding to parent process`);
 						return this.globals.appcd.call(path, payload);
 					}
 					throw err;
@@ -454,7 +456,7 @@ export default class ExternalPlugin extends PluginBase {
 								this.info.pid = data.pid;
 								this.info.exitCode = null;
 
-								Dispatcher.call('/appcd/config/plugin/autoReload')
+								Dispatcher.call('/appcd/config/plugins/autoReload')
 									.then(ctx => ctx.response, () => true)
 									.then(autoReload => {
 										if (autoReload) {

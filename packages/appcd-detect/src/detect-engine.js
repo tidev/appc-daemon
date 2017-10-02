@@ -126,27 +126,27 @@ export default class DetectEngine {
 		}
 
 		// ensure async
-		setImmediate(() => {
+		setImmediate(async () => {
 			if (opts.paths && (typeof opts.paths !== 'string' && (!Array.isArray(opts.paths) || opts.paths.some(s => typeof s !== 'string')))) {
 				handle.emit('error', new TypeError('Expected paths to be a string or an array of strings'));
 				return;
 			}
 
-			Promise.resolve()
-				// initialize
-				.then(() => this.initialize())
+			// initialize
+			await this.initialize();
 
-				// build the list of paths to scan
-				.then(() => this.getPaths(opts.paths))
+			// build the list of paths to scan
+			const paths = await this.getPaths(opts.paths);
 
-				// scan all paths for whatever we're looking for
-				.then(paths => this.startScan({ paths, handle, opts }))
-				.catch(err => {
-					log(err);
-					log('  Stopping watchers, emitting error');
-					handle.stop();
-					handle.emit('error', err);
-				});
+			// scan all paths for whatever we're looking for
+			try {
+				await this.startScan({ paths, handle, opts });
+			} catch (err) {
+				log(err);
+				log('  Stopping watchers, emitting error');
+				handle.stop();
+				handle.emit('error', err);
+			}
 
 			if (opts.watch) {
 				handle.unwatchers.set('__rescan_timer__', () => {
@@ -165,9 +165,9 @@ export default class DetectEngine {
 	 * @returns {Promise}
 	 * @access private
 	 */
-	initialize() {
+	async initialize() {
 		if (this.initialized) {
-			return Promise.resolve();
+			return;
 		}
 
 		log('  initialize()');
@@ -179,11 +179,9 @@ export default class DetectEngine {
 				.all([
 					// search paths
 					Promise.all(
-						this.options.paths.map(pathOrFn => {
+						this.options.paths.map(async (pathOrFn) => {
 							if (typeof pathOrFn === 'function') {
-								return Promise.resolve()
-									.then(() => pathOrFn())
-									.then(paths => Promise.all(arrayify(paths, true).map(resolveDir)));
+								return Promise.all(arrayify(await pathOrFn(), true).map(resolveDir));
 							}
 							return resolveDir(pathOrFn);
 						})
@@ -371,7 +369,7 @@ export default class DetectEngine {
 
 			// remove any inactive watchers
 			for (const key of handle.unwatchers.keys()) {
-				if (key.indexOf(prefix + ':') === 0 && !active[key]) {
+				if (key.indexOf(`${prefix}:`) === 0 && !active[key]) {
 					const unwatch = handle.unwatchers.get(key);
 					if (typeof unwatch === 'function') {
 						unwatch();
@@ -400,8 +398,8 @@ export default class DetectEngine {
 							return runScan(paths);
 						} else if (this.lastDefaultPath !== this.defaultPath) {
 							log('  Default path changed, rescanning');
-							log('    ' + this.lastDefaultPath);
-							log('    ' + this.defaultPath);
+							log(`    ${this.lastDefaultPath}`);
+							log(`    ${this.defaultPath}`);
 							this.lastDefaultPath = this.defaultPath;
 							return this.processResults(this.cache[id].results, id);
 						}
@@ -494,21 +492,77 @@ export default class DetectEngine {
 	 * @returns {Promise}
 	 * @access private
 	 */
-	scan({ id, paths, force, onlyPaths }) {
+	async scan({ id, paths, force, onlyPaths }) {
 		const results = [];
 		const pathsFound = [];
 		let index = 0;
 
 		log('  scan()', highlight(JSON.stringify(paths)));
 
-		const next = () => {
+		// not cached, set up our directory walking chain
+		const check = async (dir, depth) => {
+			if (!isDir(dir)) {
+				return;
+			}
+
+			log(`      checkDir(${highlight(`'${dir}'`)}) depth=${depth}`);
+
+			const result = await this.options.checkDir(dir);
+			if (result) {
+				log('      Got result, returning:', result);
+				pathsFound.push(dir);
+				return result;
+			}
+
+			if (depth <= 0) {
+				log('      No result, hit max depth, returning');
+				return;
+			}
+
+			// dir is not what we're looking for, check subdirectories
+			const subdirs = [];
+			for (const name of fs.readdirSync(dir)) {
+				const subdir = path.join(dir, name);
+				isDir(subdir) && subdirs.push(subdir);
+			}
+
+			if (!subdirs.length) {
+				return;
+			}
+
+			log(`      Walking subdirs: ${highlight(JSON.stringify(subdirs))}`);
+
+			const nextSubDir = async () => {
+				const subdir = subdirs.shift();
+				if (!subdir) {
+					return;
+				}
+
+				const result = await check(subdir, depth - 1);
+				const results = [];
+
+				if (result) {
+					if (!this.options.multiple) {
+						return result;
+					}
+					results.push(result);
+				}
+
+				results.push.apply(results, await nextSubDir());
+				return results;
+			};
+
+			return nextSubDir();
+		};
+
+		const next = async () => {
 			const dir = paths[index++];
 			if (!this.options.checkDir || !dir) {
 				log('    Finished scanning paths');
 				return;
 			}
 
-			log('    Scanning ' + highlight(index + '/' + paths.length) + ': ' + highlight(dir));
+			log(`    Scanning ${highlight(`${index}/${paths.length}`)}: ${highlight(dir)}`);
 
 			// check cache first
 			if (this.cache.hasOwnProperty(dir) && (!force || (onlyPaths && onlyPaths.indexOf(dir) === -1))) {
@@ -516,87 +570,37 @@ export default class DetectEngine {
 				if (this.cache[dir]) {
 					results.push.apply(results, arrayify(this.cache[dir]));
 				}
-				return this.options.multiple ? next() : null;
+				return this.options.multiple ? next() : undefined;
 			}
 
-			// not cached, set up our directory walking chain
-			const check = (dir, depth) => {
-				if (!isDir(dir)) {
-					return Promise.resolve();
-				}
+			const result = await check(dir, this.options.depth);
+			log(`      Done checking ${highlight(dir)}`);
 
-				log(`      checkDir(${highlight(`'${dir}'`)}) depth=${depth}`);
+			// even if we don't have a result, we still cache that there was no result
+			log('      Caching result');
+			this.cache[dir] = result || null;
 
-				return Promise.resolve()
-					.then(() => this.options.checkDir(dir))
-					.then(result => {
-						if (result) {
-							log('      Got result, returning:', result);
-							pathsFound.push(dir);
-							return result;
-						}
-						if (depth <= 0) {
-							log('      No result, hit max depth, returning');
-							return;
-						}
+			if (result) {
+				results.push.apply(results, arrayify(result));
+			}
 
-						// dir is not what we're looking for, check subdirectories
-						const subdirs = [];
-						for (const name of fs.readdirSync(dir)) {
-							const subdir = path.join(dir, name);
-							isDir(subdir) && subdirs.push(subdir);
-						}
-
-						if (!subdirs.length) {
-							return;
-						}
-
-						log('      Walking subdirs:', highlight(JSON.stringify(subdirs)));
-
-						return Promise.resolve()
-							.then(function nextSubDir() {
-								const subdir = subdirs.shift();
-								if (subdir) {
-									return Promise.resolve()
-										.then(() => check(subdir, depth - 1))
-										.then(result => result || nextSubDir());
-								}
-							});
-					});
-			};
-
-			return check(dir, this.options.depth)
-				.then(result => {
-					log('      Done checking ' + highlight(dir));
-
-					// even if we don't have a result, we still cache that there was no result
-					log('      Caching result');
-					this.cache[dir] = result || null;
-
-					if (result) {
-						results.push.apply(results, Array.isArray(result) ? result : [ result ]);
-					}
-
-					if (!result || this.options.multiple) {
-						log('  Checking next directory');
-						return next();
-					}
-				});
+			if (!result || this.options.multiple) {
+				log('  Checking next directory');
+				return next();
+			}
 		};
 
 		log('    Entering mutex');
-		return mutex('node-appc/detect/engine/' + id + (force ? '/' + randomBytes(5) : ''), () => {
+		const container = await mutex(`node-appc/detect/engine/${id}${force ? `/${randomBytes(5)}` : ''}`, async () => {
 			log('    Walking directories:', highlight(JSON.stringify(paths)));
-			return Promise.resolve()
-				.then(next)
-				.then(() => {
-					log(`  Scanning found ${highlight(results.length)} ${pluralize('result', results.length)}`);
-					return this.processResults(results, id);
-				});
-		}).then(container => {
-			log('    Exiting mutex');
-			return { container, pathsFound };
+			await next();
+
+			log(`  Scanning found ${highlight(results.length)} ${pluralize('result', results.length)}`);
+			return this.processResults(results, id);
 		});
+
+		log('    Exiting mutex');
+		return { container, pathsFound };
 	}
 
 	/**
