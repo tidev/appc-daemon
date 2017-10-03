@@ -1,8 +1,8 @@
 {
-  "name": "appcd-telemetry",
+  "name": "appcd-winreg",
   "version": "0.1.0",
-  "description": "Library for collecting and sending data to the Appcelerator cloud.",
-  "main": "./dist/telemetry",
+  "description": "Simplified API for querying the Windows Registry.",
+  "main": "./dist/winreg",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
     "Chris Barber <cbarber@axway.com>"
@@ -16,24 +16,11 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-config": "0.1.0",
-    "appcd-dispatcher": "0.1.0",
-    "appcd-fs": "0.1.0",
-    "appcd-logger": "0.1.0",
-    "appcd-machine-id": "0.1.0",
-    "appcd-path": "0.1.0",
-    "appcd-request": "0.1.0",
-    "appcd-response": "0.1.0",
-    "appcd-util": "0.1.0",
-    "fs-extra": "^4.0.2",
-    "gawk": "^4.3.0",
-    "source-map-support": "^0.5.0",
-    "uuid": "^3.1.0"
+    "source-map-support": "^0.5.0"
   },
   "devDependencies": {
     "appcd-gulp": "0.1.0",
-    "gulp": "^3.9.1",
-    "tmp": "^0.0.33"
+    "gulp": "^3.9.1"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",

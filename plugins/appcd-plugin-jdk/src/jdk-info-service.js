@@ -1,6 +1,8 @@
 import DetectEngine from 'appcd-detect';
 import gawk from 'gawk';
 
+import * as registry from 'appcd-winreg';
+
 import { detect, jdkLocations } from 'jdklib';
 import { exe } from 'appcd-subprocess';
 import { ServiceDispatcher } from 'appcd-dispatcher';
@@ -121,43 +123,48 @@ export default class JDKInfoService extends ServiceDispatcher {
 	 * @access private
 	 */
 	scanRegistry() {
-		/*
-		const results = {};
-		const scanRegistry = key => {
+		const scanRegistry = async (key) => {
 			// try to get the current version, but if this fails, no biggie
-			return appc.windows.registry.get('HKLM', key, 'CurrentVersion')
-				.then(currentVersion => currentVersion && `${key}\\${currentVersion}`)
-				.catch(err => Promise.resolve())
-				.then(defaultKey => {
-					// get all subkeys which should only be valid JDKs
-					return appc.windows.registry.keys('HKLM', key)
-						.then(keys => Promise.all(keys.map(key => {
-							return appc.windows.registry.get('HKLM', key, 'JavaHome')
-								.then(javaHome => {
-									if (javaHome && !results.hasOwnProperty(javaHome)) {
-										log(`found JavaHome: ${javaHome}`);
-										results[javaHome] = key === defaultKey;
-									}
-								})
-								.catch(err => Promise.resolve());
-						})));
-				})
-				.catch(err => Promise.resolve());
+			let currentVersion;
+			try {
+				currentVersion = await registry.get('HKLM', key, 'CurrentVersion');
+			} catch (ex) {
+				// squeltch
+			}
+
+			const defaultKey = currentVersion && `${key}\\${currentVersion}`;
+
+			// get all subkeys which should only be valid JDKs
+			try {
+				const keys = await registry.keys('HKLM', key);
+				return Promise
+					.all(keys.map(async (key) => {
+						const javaHome = await registry.get('HKLM', key, 'JavaHome');
+						if (javaHome) {
+							console.log(`found JavaHome: ${javaHome}`);
+							return { [javaHome]: key === defaultKey };
+						}
+					}))
+					.then(results => Object.assign.apply(null, results));
+			} catch (ex) {
+				// squeltch
+			}
 		};
 
-		log('checking Windows registry for JavaHome paths');
+		console.log('checking Windows registry for JavaHome paths');
 
 		return Promise
 			.all([
 				scanRegistry('\\Software\\JavaSoft\\Java Development Kit'),
 				scanRegistry('\\Software\\Wow6432Node\\JavaSoft\\Java Development Kit')
 			])
-			.then(() => ({
-				paths: Object.keys(results),
-				defaultPath: Object.keys(results).filter(key => results[key])[0]
-			}));
-		*/
-		return Promise.resolve();
+			.then(results => {
+				results = Object.assign.apply(null, results);
+				return {
+					paths: Object.keys(results),
+					defaultPath: Object.keys(results).filter(key => results[key])[0]
+				};
+			});
 	}
 
 	/**
@@ -179,8 +186,6 @@ export default class JDKInfoService extends ServiceDispatcher {
 	 */
 	onSubscribe(ctx, publish) {
 		publish(this.results);
-
-		console.log('Starting jdk info watch');
 		gawk.watch(this.results, publish);
 	}
 
@@ -193,7 +198,6 @@ export default class JDKInfoService extends ServiceDispatcher {
 	 * @access private
 	 */
 	onUnsubscribe(ctx, publish) {
-		console.log('Removing jdk info watch');
 		gawk.unwatch(this.results, publish);
 	}
 }
