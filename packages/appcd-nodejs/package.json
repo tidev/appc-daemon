@@ -22,7 +22,7 @@
     "appcd-util": "0.1.0",
     "fs-extra": "^4.0.2",
     "progress": "^2.0.0",
-    "source-map-support": "^0.4.18",
+    "source-map-support": "^0.5.0",
     "tar-stream": "^1.5.4",
     "tmp": "^0.0.33",
     "yauzl": "^2.8.0"

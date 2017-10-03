@@ -22,7 +22,7 @@
     "gulp-util": "^3.0.8",
     "ignore": "^3.3.5",
     "istanbul": "^0.4.5",
-    "lerna": "^2.2.0",
+    "lerna": "^2.3.1",
     "nsp": "^2.8.1",
     "promise-limit": "^2.5.0",
     "retire": "^1.4.0",

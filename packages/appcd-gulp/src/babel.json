@@ -1,7 +1,7 @@
 {
 	"node4": {
 		"plugins": [
-			"import-node",
+			"dynamic-import-node",
 			"transform-async-to-generator",
 			"transform-class-properties",
 			"transform-decorators-legacy",
@@ -17,7 +17,7 @@
 
 	"node6": {
 		"plugins": [
-			"import-node",
+			"dynamic-import-node",
 			"transform-async-to-generator",
 			"transform-class-properties",
 			"transform-decorators-legacy",
@@ -32,7 +32,7 @@
 
 	"node7": {
 		"plugins": [
-			"import-node",
+			"dynamic-import-node",
 			"transform-class-properties",
 			"transform-decorators-legacy",
 			"transform-es2015-modules-commonjs",
@@ -45,7 +45,7 @@
 
 	"node8": {
 		"plugins": [
-			"import-node",
+			"dynamic-import-node",
 			"transform-class-properties",
 			"transform-decorators-legacy",
 			"transform-es2015-modules-commonjs",
