@@ -45,20 +45,37 @@ export default class ExternalPlugin extends PluginBase {
 		 */
 		this.watchers = {};
 
-		this.onFilesystemChange = debounce(() => {
-			logger.log('Restarting external plugin: %s', highlight(this.plugin.toString()));
-			Promise.resolve()
-				.then(() => this.stop())
-				.then(() => {
-					// reset the plugin error state
-					plugin.error = null;
+		// for the parent process only, wire up the external plugin filesystem watcher
+		if (!process.connected) {
+			this.onFilesystemChange = debounce(() => {
+				logger.log('Detected change in plugin source file - plugin auto-reload is enabled');
+				logger.log('Stopping external plugin: %s', highlight(this.plugin.toString()));
+				Promise.resolve()
+					.then(() => this.stop())
+					.then(() => {
+						// reset the plugin error state
+						logger.log('Reseting error state');
+						this.info.error = null;
+					})
+					.catch(err => {
+						logger.error('Failed to restart %s plugin: %s', highlight(this.plugin.toString()), err);
+					});
+			}, 3000);
 
-					return this.start();
+			Dispatcher.call('/appcd/config/plugins/autoReload')
+				.then(ctx => ctx.response, () => true)
+				.then(autoReload => {
+					if (autoReload) {
+						for (const dir of this.plugin.directories) {
+							this.watchers[dir] = new FSWatcher(dir)
+								.on('change', () => this.onFilesystemChange());
+						}
+					}
 				})
 				.catch(err => {
-					logger.error('Failed to restart %s plugin: %s', highlight(this.plugin.toString()), err);
+					logger.warn('Failed to wire up %s fs watcher: %s', this.plugin.toString(), err.message);
 				});
-		});
+		}
 
 		this.globals.appcd.call = (path, data) => {
 			if (!this.tunnel) {
@@ -132,9 +149,18 @@ export default class ExternalPlugin extends PluginBase {
 	 * @returns {Promise}
 	 * @access private
 	 */
-	onStop() {
+	async onStop() {
 		// send deactivate message which will trigger the child to exit gracefully
-		return this.tunnel.send({ type: 'deactivate' });
+		await this.tunnel.send({ type: 'deactivate' });
+
+		// stop all filesystem watchers
+		if (this.watchers) {
+			for (const dir of Object.keys(this.watchers)) {
+				this.watchers[dir].close();
+				delete this.watchers[dir];
+			}
+			this.watchers = {};
+		}
 	}
 
 	/**
@@ -370,6 +396,7 @@ export default class ExternalPlugin extends PluginBase {
 							}
 							break;
 
+						case 'request':
 						default:
 							if (req.id) {
 								// dispatcher request
@@ -398,6 +425,7 @@ export default class ExternalPlugin extends PluginBase {
 
 													if (message.type === 'subscribe') {
 														sid = message.sid;
+														logger.log('Detected new subscription: %s', highlight(sid));
 														this.streams[sid] = response;
 													}
 
@@ -455,21 +483,7 @@ export default class ExternalPlugin extends PluginBase {
 							case 'spawn':
 								this.info.pid = data.pid;
 								this.info.exitCode = null;
-
-								Dispatcher.call('/appcd/config/plugins/autoReload')
-									.then(ctx => ctx.response, () => true)
-									.then(autoReload => {
-										if (autoReload) {
-											for (const dir of this.plugin.directories) {
-												this.watchers[dir] = new FSWatcher(dir)
-													.on('change', () => this.onFilesystemChange());
-											}
-										}
-									})
-									.catch(err => {
-										logger.warn('Failed to wire up %s fs watcher: %s', this.plugin.toString(), err.message);
-									});
-
+								this.info.stats = null;
 								break;
 
 							// case 'stdout':
@@ -499,21 +513,27 @@ export default class ExternalPlugin extends PluginBase {
 								logger.log('Plugin host exited: %s', highlight(data.code));
 								this.tunnel = null;
 								this.info.pid = null;
-								const { state } = this.info;
-
-								if (this.watchers) {
-									for (const dir of Object.keys(this.watchers)) {
-										this.watchers[dir].close();
-										delete this.watchers[dir];
-									}
-									this.watchers = {};
-								}
-
 								let err;
+
+								// close any open response streams (i.e. subscriptions)
+								const sids = Object.keys(this.streams);
+								if (sids.length) {
+									logger.log(appcdLogger.pluralize('orphaned stream', sids.length, true));
+									for (const sid of sids) {
+										try {
+											this.streams[sid].end();
+										} catch (e) {
+											// squeltch
+										}
+										delete this.streams[sid];
+									}
+								} else {
+									logger.log('No orphan streams');
+								}
 
 								if (data.code) {
 									this.info.exitCode = data.code;
-									if (state === states.STARTING) {
+									if (this.info.state === states.STARTING) {
 										if (!this.info.error) {
 											this.info.error = `Failed to activate plugin (code ${data.code})`;
 										}

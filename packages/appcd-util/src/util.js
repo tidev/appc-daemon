@@ -135,6 +135,38 @@ export function debounce(fn, wait = 200) {
 }
 
 /**
+ * Decodes an string with octals to a utf-8 string.
+ *
+ * @param {String} input - The string to decode
+ * @returns {String} The decoded string
+ */
+export function decodeOctalUTF8(input) {
+	let result = '';
+	let i = 0;
+	const l = input.length;
+	let c;
+	let octByte;
+
+	for (; i < l; i++) {
+		c = input.charAt(i);
+		if (c === '\\') {
+			octByte = input.substring(i + 1, i + 4);
+			try {
+				result += String.fromCharCode(parseInt(octByte, 8));
+				i += 3;
+			} catch (e) {
+				result += '\\';
+				input = octByte + input;
+			}
+		} else {
+			result += c;
+		}
+	}
+
+	return decodeURIComponent(escape(result));
+}
+
+/**
  * Formats a number using commas.
  *
  * @param {Number} n - The number to format.

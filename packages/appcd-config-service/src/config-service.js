@@ -43,6 +43,11 @@ export default class ConfigService extends ServiceDispatcher {
 		 * @type {Config}
 		 */
 		this.config = cfg;
+
+		/**
+		 * A map of active watch filters.
+		 */
+		this.watchers = {};
 	}
 
 	/**
@@ -115,8 +120,13 @@ export default class ConfigService extends ServiceDispatcher {
 		const node = this.config.get(filter);
 		publish(node);
 
-		logger.debug('Starting config watch: %s', highlight(filter || 'no filter'));
-		this.config.watch(filter, publish);
+		if (!this.watchers[filter]) {
+			this.watchers[filter] = 1;
+			logger.log('Starting config watch: %s', highlight(filter || 'no filter'));
+			this.config.watch(filter, publish);
+		} else {
+			this.watchers[filter]++;
+		}
 	}
 
 	/**
@@ -128,7 +138,12 @@ export default class ConfigService extends ServiceDispatcher {
 	 * @access private
 	 */
 	onUnsubscribe(ctx, publish) {
-		logger.debug('Removing config watch');
+		const filter = (ctx.params.key || '').replace(/^\//, '').split(/\.|\//).join('.');
+		if (--this.watchers[filter] <= 0) {
+			delete this.watchers[filter];
+		}
+
+		logger.log('Removing config watch');
 		this.config.unwatch(publish);
 	}
 }

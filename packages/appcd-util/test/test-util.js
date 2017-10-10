@@ -226,6 +226,20 @@ describe('util', () => {
 		});
 	});
 
+	describe('decodeOctalUTF8()', () => {
+		it('decodes non-octal string', () => {
+			expect(util.decodeOctalUTF8('titanium rocks')).to.equal('titanium rocks');
+		});
+
+		it('decodes octal string', () => {
+			expect(util.decodeOctalUTF8('testing \\303\\274 and \\351\\252\\236')).to.equal('testing ü and 骞');
+		});
+
+		it('try to decode incomplete octal string', () => {
+			expect(util.decodeOctalUTF8('testing \\')).to.equal('testing \0');
+		});
+	});
+
 	describe('formatNumber()', () => {
 		it('should format a small integer', () => {
 			expect(util.formatNumber(12)).to.equal('12');

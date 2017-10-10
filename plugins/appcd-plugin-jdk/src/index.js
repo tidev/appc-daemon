@@ -1,3 +1,8 @@
+/* istanbul ignore if */
+if (!Error.prepareStackTrace) {
+	require('source-map-support/register');
+}
+
 import JDKInfoService from './jdk-info-service';
 
 const jdkInfo = new JDKInfoService();

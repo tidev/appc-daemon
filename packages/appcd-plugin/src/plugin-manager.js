@@ -197,9 +197,10 @@ export default class PluginManager extends EventEmitter {
 								plugin = version && ns.versions[version];
 							}
 
-							if (plugin && !plugin.error) {
+							if (plugin) {
 								// forward request to the plugin's dispatcher
 								ctx.path = '/' + (ctx.params.path || '');
+								logger.log('Starting plugin %s', highlight(plugin.toString()));
 								await plugin.start();
 								logger.log('Plugin %s started', highlight(plugin.toString()));
 								return await plugin.dispatch(ctx, next);
