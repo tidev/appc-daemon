@@ -489,8 +489,6 @@ gulp.task('watch-only', cb => {
 							'build'
 						];
 
-
-						gutil.log(`Running: ${process.execPath} ${args.join(' ')}`);
 						runLerna(args);
 
 					}
