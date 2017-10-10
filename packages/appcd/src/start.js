@@ -4,10 +4,10 @@ const cmd = {
 	options: {
 		'--debug': { desc: 'don\'t run as a background daemon' }
 	},
-	action({ argv }) {
+	async action({ argv }) {
 		const cfg = loadConfig(argv);
 
-		return startServer({ cfg, argv });
+		await startServer({ cfg, argv });
 	}
 };
 

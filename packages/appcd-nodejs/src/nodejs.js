@@ -300,11 +300,47 @@ export function extractNode({ archive, dest }) {
 }
 
 /**
+ * Analyzes the V8 memory setting value and generates the `--max_old_space_size` argument.
+ *
+ * @param {String} value - The V8 memory setting value.
+ * @param {String} [arch] - The desired Node.js architecture. Must be `x86` or `x64`. Defaults to
+ * the current machine architecture.
+ * @returns {?String}
+ */
+export function generateV8MemoryArgument(value, arch) {
+	if (!value) {
+		return;
+	}
+
+	if (value === 'auto') {
+		if (!arch) {
+			arch = getArch();
+		}
+		if (arch !== 'x86' && arch !== 'x64') {
+			throw new Error('Expected arch to be "x86" or "x64"');
+		}
+
+		const defaultMem = arch === 'x64' ? 1400 : 700;
+		const totalMem = Math.floor(os.totalmem() / 1e6);
+		// you must have at least double the RAM of the default memory amount
+		if (totalMem * 0.5 > defaultMem) {
+			value = Math.min(totalMem * 0.5, 3000);
+		} else {
+			value = null;
+		}
+	}
+
+	if (value) {
+		return `--max_old_space_size=${value}`;
+	}
+}
+
+/**
  * Spawns the specified script using the specified Node.js version.
  *
  * @param {Object} params - Various parameters.
- * @param {String} [params.arch] - The desired Node.js architecture. Must be
- * `x86` or `x64`. Defaults to the current machine architecture.
+ * @param {String} [params.arch] - The desired Node.js architecture. Must be `x86` or `x64`.
+ * Defaults to the current machine architecture.
  * @param {String} params.args - The arguments to pass into Node.js.
  * @param {Boolean} [params.detached=false] - When true, detaches the child
  * process.
@@ -339,19 +375,9 @@ export function spawnNode({ arch, args, detached, nodeHome, nodeArgs, v8mem = 'a
 			}
 
 			if (v8mem && !nodeArgs.some(arg => arg.indexOf('--max_old_space_size=') === 0)) {
-				let mem = v8mem;
-				if (mem === 'auto') {
-					const defaultMem = getArch() === 'x64' ? 1400 : 700;
-					const totalMem = Math.floor(os.totalmem() / 1e6);
-					// you must have at least double the RAM of the default memory amount
-					if (totalMem * 0.5 > defaultMem) {
-						mem = Math.min(totalMem * 0.5, 3000);
-					} else {
-						mem = null;
-					}
-				}
-				if (mem) {
-					nodeArgs.push(`--max_old_space_size=${mem}`);
+				const arg = generateV8MemoryArgument(v8mem, arch);
+				if (arg) {
+					nodeArgs.push(arg);
 				}
 			}
 

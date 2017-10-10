@@ -82,6 +82,7 @@ export default class ServiceDispatcher {
 	handler(ctx, next) {
 		const subscriptionId = ctx.request && ctx.request.sid || '<>';
 		const type = ctx.request && ctx.request.type || 'call';
+
 		if (!ServiceHandlerTypes.has(type)) {
 			throw new Error(`Invalid service handler type "${type}"`);
 		}
@@ -118,12 +119,12 @@ export default class ServiceDispatcher {
 		const subscriptionId = ctx.request.sid = uuid.v4();
 		const topic = typeof this.instance.getTopic === 'function' && this.instance.getTopic(ctx) || ctx.realPath;
 		let descriptor = this.subscriptions[topic];
-		let callOnSubscribe = true;
+		let firstSubscription = true;
 
 		if (descriptor) {
 			logger.log('%s Adding subscription: %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
 
-			callOnSubscribe = false;
+			firstSubscription = false;
 
 		} else {
 			logger.log('%s Initializing new subscription: %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
@@ -146,7 +147,9 @@ export default class ServiceDispatcher {
 
 		// wire up a handler so that unsubscribe will terminate the subscription stream
 		descriptor.subs[subscriptionId] = (message, type, fin) => {
-			logger.log('%s Subscription has been unsubscribed, sending fin and closing', note(`[${subscriptionId}]`));
+			if (fin) {
+				logger.log('%s Subscription has been unsubscribed, sending fin and closing', note(`[${subscriptionId}]`));
+			}
 
 			ctx.response.write({
 				message,
@@ -182,8 +185,18 @@ export default class ServiceDispatcher {
 		});
 
 		// this has to be done AFTER we send the "subscribe" response
-		if (callOnSubscribe) {
+		if (firstSubscription) {
 			this.instance.onSubscribe(ctx, descriptor.publish);
+		} else {
+			// this is not the first subscription
+			this.instance.onSubscribe(ctx, message => {
+				ctx.response.write({
+					message,
+					sid: subscriptionId,
+					topic,
+					type: 'event'
+				});
+			});
 		}
 	}
 
@@ -220,6 +233,7 @@ export default class ServiceDispatcher {
 		logger.log('%s Unsubscribing sub: %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
 
 		if (descriptor.subs[subscriptionId]) {
+			// send a message to the original stream to let them know that this subscription is no more
 			if (typeof descriptor.subs[subscriptionId] === 'function') {
 				descriptor.subs[subscriptionId](ctx.response, 'unsubscribe', true);
 			}

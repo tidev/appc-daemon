@@ -2,6 +2,15 @@
 
 module.exports = {
 	core: {
+		/**
+		 * When `true`, enforces the Node.js version required by the core. If the required Node.js
+		 * version is not installed, then the required version is downloaded. When `false`, it will
+		 * use the current Node.js version which may be incompatible with the core.
+		 * @type {Boolean}
+		 * @readonly
+		 */
+		enforceNodeVersion: true,
+
 		v8: {
 			/**
 			 * The maximum amount of memory the spawned appcd-core process

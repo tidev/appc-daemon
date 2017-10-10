@@ -4,8 +4,9 @@ import path from 'path';
 import appcdLogger from 'appcd-logger';
 
 import { expandPath } from 'appcd-path';
+import { generateV8MemoryArgument, spawnNode } from 'appcd-nodejs';
 import { isFile } from 'appcd-fs';
-import { spawnNode } from 'appcd-nodejs';
+import { spawn } from 'child_process';
 
 import * as config from 'appcd-config';
 
@@ -102,20 +103,16 @@ export function loadConfig(argv) {
  * @returns {Promise}
  */
 export function startServer({ cfg, argv }) {
-	const corePkgJson = JSON.parse(fs.readFileSync(require.resolve('appcd-core/package.json'), 'utf8'));
-	let nodeVer = corePkgJson.engines.node;
-	const m = nodeVer.match(/(\d+\.\d+\.\d+)/);
-
-	if (m) {
-		nodeVer = `v${m[1]}`;
-	} else if (nodeVer) {
-		throw new Error(`Invalid Node.js engine version from appcd-core package.json: ${nodeVer}`);
-	} else {
-		throw new Error('Unable to determine Node.js engine version from appcd-core package.json');
-	}
-
 	const { config, configFile, debug } = argv;
 	const args = [];
+	const detached = debug ? false : cfg.get('server.daemonize');
+	const v8mem = cfg.get('core.v8.memory');
+	const corePkgJson = JSON.parse(fs.readFileSync(require.resolve('appcd-core/package.json'), 'utf8'));
+
+	let nodeVer = corePkgJson.engines && corePkgJson.engines.node;
+	const m = nodeVer && nodeVer.match(/(\d+\.\d+\.\d+)/);
+	nodeVer = m ? `v${m[1]}` : null;
+
 	if (debug) {
 		args.push('--inspect');
 	}
@@ -129,13 +126,37 @@ export function startServer({ cfg, argv }) {
 
 	process.env.APPCD_BOOTSTRAP = appcdVersion;
 
-	return spawnNode({
-		args,
-		detached: debug ? false : cfg.get('server.daemonize'),
-		nodeHome: expandPath(cfg.get('home'), 'node'),
-		version:  nodeVer,
-		v8mem:    cfg.get('core.v8.memory')
-	});
+	// check if we should use the core's required Node.js version
+	if (cfg.get('core.enforceNodeVersion') !== false) {
+		if (!nodeVer) {
+			throw new Error(`Invalid Node.js engine version from appcd-core package.json: ${nodeVer}`);
+		}
+
+		return spawnNode({
+			args,
+			detached,
+			nodeHome: expandPath(cfg.get('home'), 'node'),
+			version:  nodeVer,
+			v8mem
+		});
+	}
+
+	// using the current Node.js version which may be incompatible with the core
+
+	if (v8mem) {
+		const arg = generateV8MemoryArgument(v8mem);
+		if (arg) {
+			args.unshift(arg);
+		}
+	}
+
+	const opts = {};
+	if (detached) {
+		opts.detached = true;
+		opts.stdio = 'ignore';
+	}
+
+	return spawn(process.execPath, args, opts);
 }
 
 /**
