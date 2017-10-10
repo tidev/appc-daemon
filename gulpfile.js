@@ -24,6 +24,7 @@ const treePrinter  = require('tree-printer');
 const util         = require('util');
 
 const appcdRE = /^appcd-/;
+const isWindows = process.platform === 'win32';
 
 const cliTableChars = {
 	bottom: '', 'bottom-left': '', 'bottom-mid': '', 'bottom-right': '',
@@ -112,10 +113,7 @@ gulp.task('fix', cb => {
 				fs.removeSync(p);
 			}
 
-			spawnSync(process.execPath, [
-				'./node_modules/.bin/lerna',
-				'bootstrap'
-			], { stdio: 'inherit' });
+			runLerna(['bootstrap']);
 
 			return nuke.reduce((promise, cwd) => {
 				return promise
@@ -173,16 +171,23 @@ gulp.task('lint', () => {
 		.pipe(chug({ tasks: [ 'lint' ] }));
 });
 
+function runLerna (args) {
+	let execPath = '';
+	if (isWindows) {
+		execPath = path.join(__dirname, 'node_modules', '.bin', 'lerna.cmd');
+	} else {
+		args.unshift('./node_modules/.bin/lerna');
+		execPath = process.execPath;
+	}
+	gutil.log(`Running ${execPath} ${args.join(' ')}`)
+	spawnSync(execPath, args, { stdio: 'inherit' });
+}
+
 /*
  * build tasks
  */
 gulp.task('build', () => {
-	spawnSync(process.execPath, [
-		'./node_modules/.bin/lerna',
-		'run',
-		'--parallel',
-		'build'
-	], { stdio: 'inherit' });
+	runLerna(['run', '--parallel', 'build']);
 });
 
 /*
@@ -447,7 +452,10 @@ gulp.task('start-daemon', () => {
 gulp.task('watch-only', cb => {
 	const watchers = [
 		gulp.watch(__dirname + '/packages/*/src/**/*.js', evt => {
-			const m = evt.path.match(new RegExp('^(' + __dirname + '/(packages/([^\/]+)))'));
+			// FIXME: There's almost certainly a better way of doing this than replacing \\ with /
+			evt.path = evt.path.replace(/\\/g, '/');
+			const m = evt.path.match(new RegExp('^(' +  __dirname.replace(/\\/g, '/') + '/(packages/([^\/]+)))'));
+			console.log(m)
 			if (m) {
 				gutil.log('Detected change: ' + gutil.colors.cyan(evt.path));
 				stopDaemon();
@@ -476,13 +484,15 @@ gulp.task('watch-only', cb => {
 						runSequence('build-plugins', startDaemon);
 					} else {
 						const args = [
-							'./node_modules/.bin/lerna',
 							'run',
 							'--scope', path.basename(p),
 							'build'
 						];
+
+
 						gutil.log(`Running: ${process.execPath} ${args.join(' ')}`);
-						spawnSync(process.execPath, args, { stdio: 'inherit' });
+						runLerna(args);
+
 					}
 					break;
 				} catch (e) {
