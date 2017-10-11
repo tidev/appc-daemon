@@ -145,13 +145,8 @@ export default class JDKInfoService extends ServiceDispatcher {
 							return { [javaHome]: key === defaultKey };
 						}
 					}))
-					.then(results => {
-						try {
-							Object.assign.apply(null, results);
-						} catch (ex) {
-							// squeltch
-						}
-					});
+					.then(results => Object.assign.apply(null, results))
+					.catch(() => ({}));
 			} catch (ex) {
 				// squeltch
 			}
@@ -165,16 +160,13 @@ export default class JDKInfoService extends ServiceDispatcher {
 				scanRegistry('\\Software\\Wow6432Node\\JavaSoft\\Java Development Kit')
 			])
 			.then(results => {
-				try {
-					results = Object.assign.apply(null, results);
-					return {
-						paths: results && Object.keys(results) || [],
-						defaultPath: Object.keys(results).filter(key => results[key])[0] || ''
-					};
-				} catch (ex) {
-					return {};
-				}
-			});
+				results = Object.assign.apply(null, results);
+				return {
+					paths: Object.keys(results),
+					defaultPath: Object.keys(results).filter(key => results[key])[0]
+				};
+			})
+			.catch(() => ({}));
 	}
 
 	/**

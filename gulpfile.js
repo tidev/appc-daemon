@@ -455,7 +455,6 @@ gulp.task('watch-only', cb => {
 			// FIXME: There's almost certainly a better way of doing this than replacing \\ with /
 			evt.path = evt.path.replace(/\\/g, '/');
 			const m = evt.path.match(new RegExp('^(' +  __dirname.replace(/\\/g, '/') + '/(packages/([^\/]+)))'));
-			console.log(m)
 			if (m) {
 				gutil.log('Detected change: ' + gutil.colors.cyan(evt.path));
 				stopDaemon();
@@ -490,7 +489,6 @@ gulp.task('watch-only', cb => {
 						];
 
 						runLerna(args);
-
 					}
 					break;
 				} catch (e) {

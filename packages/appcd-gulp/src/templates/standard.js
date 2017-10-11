@@ -134,7 +134,6 @@ module.exports = (opts) => {
 			} else {
 				execPath = process.execPath;
 				args.push(path.join(appcdGulpNodeModulesPath, '.bin', 'nyc'))
-
 			}
 			args.push(
 				'--cache', 'false',
