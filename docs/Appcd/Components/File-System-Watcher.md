@@ -16,4 +16,4 @@ file system watcher supports recursive watching on all platforms by descending i
 directory and adding it to the tree. This is very expensive for large and deep directories and
 should be avoided if possible.
 
-Refer to the [/appcd/fs/watch](../Services/fs.md) service for more information.
+Refer to the [/appcd/fs/watch](../Services/fswatch.md) service for more information.
