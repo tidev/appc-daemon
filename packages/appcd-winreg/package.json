@@ -16,7 +16,8 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "source-map-support": "^0.5.0"
+    "source-map-support": "^0.5.0",
+    "winreg": "^1.2.4"
   },
   "devDependencies": {
     "appcd-gulp": "0.1.0",
