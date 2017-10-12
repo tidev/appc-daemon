@@ -113,7 +113,7 @@ gulp.task('fix', cb => {
 				fs.removeSync(p);
 			}
 
-			runLerna(['bootstrap']);
+			runLerna([ 'bootstrap' ]);
 
 			return nuke.reduce((promise, cwd) => {
 				return promise

@@ -36,9 +36,9 @@ Object.keys(conf).forEach(function (key) {
 });
 
 // only transpile src and tests
-conf.only = ['src/', 'test/'];
+conf.only = [ 'src/', 'test/' ];
 
-conf.ignore = ['test/fixtures'];
+conf.ignore = [ 'test/fixtures' ];
 
 conf.cache = true;
 
