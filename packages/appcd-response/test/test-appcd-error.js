@@ -138,7 +138,11 @@ describe('AppcdError', () => {
 			const err = new AppcdError(e);
 			expect(err.status).to.be.undefined;
 			expect(err.statusCode).to.be.undefined;
-			expect(err.errno).to.equal(-2);
+			if (process.platform === 'win32') {
+				expect(err.errno).to.equal(-4058);
+			} else {
+				expect(err.errno).to.equal(-2);
+			}
 			expect(err.code).to.equal('ENOENT');
 			expect(err.syscall).to.equal('stat');
 			expect(err.path).to.equal(file);
@@ -219,7 +223,11 @@ describe('Custom Errors', () => {
 			const err = new MyError(e);
 			expect(err.status).to.equal(599);
 			expect(err.statusCode).to.equal('599.1');
-			expect(err.errno).to.equal(-2);
+			if (process.platform === 'win32') {
+				expect(err.errno).to.equal(-4058);
+			} else {
+				expect(err.errno).to.equal(-2);
+			}
 			expect(err.code).to.equal('ENOENT');
 			expect(err.syscall).to.equal('stat');
 			expect(err.path).to.equal(file);

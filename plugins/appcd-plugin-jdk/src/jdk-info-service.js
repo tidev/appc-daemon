@@ -145,7 +145,8 @@ export default class JDKInfoService extends ServiceDispatcher {
 							return { [javaHome]: key === defaultKey };
 						}
 					}))
-					.then(results => Object.assign.apply(null, results));
+					.then(results => Object.assign.apply(null, results))
+					.catch(() => ({}));
 			} catch (ex) {
 				// squeltch
 			}
@@ -164,7 +165,8 @@ export default class JDKInfoService extends ServiceDispatcher {
 					paths: Object.keys(results),
 					defaultPath: Object.keys(results).filter(key => results[key])[0]
 				};
-			});
+			})
+			.catch(() => ({}));
 	}
 
 	/**

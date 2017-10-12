@@ -16,6 +16,8 @@ module.exports = (opts) => {
 	const distDir     = path.join(projectDir, 'dist');
 	const docsDir     = path.join(projectDir, 'docs');
 
+	const isWindows = process.platform === 'win32';
+
 	/*
 	 * Inject appcd-gulp into require() search path
 	 */
@@ -124,11 +126,16 @@ module.exports = (opts) => {
 
 	function runTests(cover) {
 		const args = [];
-
+		let execPath;
 		// add nyc
 		if (cover) {
+			if (isWindows) {
+				execPath = path.join(appcdGulpNodeModulesPath, '.bin', 'nyc.cmd');
+			} else {
+				execPath = process.execPath;
+				args.push(path.join(appcdGulpNodeModulesPath, '.bin', 'nyc'))
+			}
 			args.push(
-				path.join(appcdGulpNodeModulesPath, '.bin', 'nyc'),
 				'--cache', 'false',
 				'--exclude', 'test',
 				'--instrument', 'false',
@@ -141,14 +148,24 @@ module.exports = (opts) => {
 				'--reporter=text-summary',
 				'--require', path.resolve(__dirname, '../test-transpile.js'),
 				'--show-process-tree',
-				process.execPath // need to specify node here so that spawn-wrap works
 			);
+			if (!isWindows) {
+				args.push(process.execPath); // need to specify node here so that spawn-wrap works
+			}
 			process.env.FORCE_COLOR = 1;
 			process.env.APPCD_COVERAGE = 1;
 		}
 
 		// add mocha
-		args.push(path.join(appcdGulpNodeModulesPath, '.bin', 'mocha'));
+		if (!cover && isWindows) {
+			execPath = path.join(appcdGulpNodeModulesPath, '.bin', 'mocha.cmd');
+		} else {
+			if (isWindows) {
+				args.push(path.join(appcdGulpNodeModulesPath, '.bin', 'mocha.cmd'));
+			} else {
+				args.push(path.join(appcdGulpNodeModulesPath, '.bin', 'mocha'));
+			}
+		}
 
 		// add --inspect
 		if (process.argv.indexOf('--inspect') !== -1 || process.argv.indexOf('--inspect-brk') !== -1) {
@@ -181,10 +198,10 @@ module.exports = (opts) => {
 			args.push('test/**/test-*.js');
 		}
 
-		$.util.log('Running: ' + $.util.colors.cyan(process.execPath + ' ' + args.join(' ')));
+		$.util.log('Running: ' + $.util.colors.cyan(execPath + ' ' + args.join(' ')));
 
 		// run!
-		spawnSync(process.execPath, args, { stdio: 'inherit' });
+		spawnSync(execPath, args, { stdio: 'inherit' });
 	}
 
 	gulp.task('default', ['build']);
