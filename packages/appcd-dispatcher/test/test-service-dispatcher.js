@@ -155,10 +155,10 @@ describe('ServiceDispatcher', () => {
 		});
 
 		it('should create a new subscriptions for multiple subs', done => {
-			let count = 0;
+			const fns = [];
 			const sd = new ServiceDispatcher('/foo', {
-				onSubscribe() {
-					count++;
+				onSubscribe(ctx, publish) {
+					fns.push(publish);
 				}
 			});
 
@@ -210,7 +210,8 @@ describe('ServiceDispatcher', () => {
 						}
 					}, () => Promise.resolve());
 
-					expect(count).to.equal(1);
+					expect(fns).to.have.lengthOf(2);
+					expect(fns[0]).to.not.equal(fns[1]);
 					done();
 				})
 				.catch(done);

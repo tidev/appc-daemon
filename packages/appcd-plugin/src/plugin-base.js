@@ -147,6 +147,13 @@ export default class PluginBase extends EventEmitter {
 	}
 
 	/**
+	 * Allows a plugin to cleanup before being unloaded.
+	 */
+	deactivate() {
+		// noop
+	}
+
+	/**
 	 * Sets the plugin state and emits the `state` event if it is changed.
 	 *
 	 * @param {String} state - The new state.
@@ -209,6 +216,7 @@ export default class PluginBase extends EventEmitter {
 		// if the plugin is already stopped, then nothing to do
 		if (this.info.state === states.STOPPED) {
 			logger.log('Plugin %s already stopped', highlight(this.plugin.toString()));
+			await this.deactivate();
 			return;
 		}
 
@@ -216,13 +224,15 @@ export default class PluginBase extends EventEmitter {
 		if (this.info.state === states.STOPPING) {
 			logger.log('Plugin %s already stopping... waiting', highlight(this.plugin.toString()));
 			await this.waitUntil(states.STOPPED);
+			logger.log('Plugin %s finally stopped', highlight(this.plugin.toString()));
 			return;
 		}
 
 		// if the plugin is starting, then wait for it to finish starting
 		if (this.info.state === states.STARTING) {
-			logger.log('Plugin %s starting... waiting to stop', highlight(this.plugin.toString()));
+			logger.log('Plugin %s starting... waiting to start before stopping', highlight(this.plugin.toString()));
 			await this.waitUntil(states.STARTED);
+			logger.log('Plugin %s started, stopping...', highlight(this.plugin.toString()));
 		}
 
 		// the plugin is started and can now be stopped
@@ -231,6 +241,7 @@ export default class PluginBase extends EventEmitter {
 
 		this.setState(states.STOPPING);
 		await this.onStop();
+		await this.deactivate();
 	}
 
 	/**

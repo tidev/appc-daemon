@@ -126,15 +126,16 @@ module.exports = (opts) => {
 
 	function runTests(cover) {
 		const args = [];
-		let execPath;
+		let { execPath } = process;
+
 		// add nyc
 		if (cover) {
 			if (isWindows) {
 				execPath = path.join(appcdGulpNodeModulesPath, '.bin', 'nyc.cmd');
 			} else {
-				execPath = process.execPath;
 				args.push(path.join(appcdGulpNodeModulesPath, '.bin', 'nyc'))
 			}
+
 			args.push(
 				'--cache', 'false',
 				'--exclude', 'test',
@@ -148,23 +149,18 @@ module.exports = (opts) => {
 				'--reporter=text-summary',
 				'--require', path.resolve(__dirname, '../test-transpile.js'),
 				'--show-process-tree',
+				process.execPath // need to specify node here so that spawn-wrap works
 			);
-			if (!isWindows) {
-				args.push(process.execPath); // need to specify node here so that spawn-wrap works
-			}
+
 			process.env.FORCE_COLOR = 1;
 			process.env.APPCD_COVERAGE = 1;
 		}
 
 		// add mocha
-		if (!cover && isWindows) {
+		if (isWindows) {
 			execPath = path.join(appcdGulpNodeModulesPath, '.bin', 'mocha.cmd');
 		} else {
-			if (isWindows) {
-				args.push(path.join(appcdGulpNodeModulesPath, '.bin', 'mocha.cmd'));
-			} else {
-				args.push(path.join(appcdGulpNodeModulesPath, '.bin', 'mocha'));
-			}
+			args.push(path.join(appcdGulpNodeModulesPath, '.bin', 'mocha'));
 		}
 
 		// add --inspect

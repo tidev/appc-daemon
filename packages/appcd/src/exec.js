@@ -1,4 +1,5 @@
 import { createRequest, loadConfig } from './common';
+import { inspect } from 'util';
 
 const cmd = {
 	options: {
@@ -16,12 +17,12 @@ const cmd = {
 			.request
 			.on('response', (message, response) => {
 				if (!argv.subscribe) {
-					console.log(message);
+					console.log(inspect(message, { depth: null }));
 					process.exit(0);
 				}
 
 				if (response.type === 'publish') {
-					console.log(message);
+					console.log(inspect(message, { depth: null }));
 				}
 			})
 			.on('error', err => {

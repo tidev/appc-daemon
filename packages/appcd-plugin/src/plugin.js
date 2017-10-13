@@ -285,7 +285,9 @@ export default class Plugin extends EventEmitter {
 				this.info.activeRequests--;
 				resetTimer();
 
-				if (err instanceof DispatcherError && err.status === 404) {
+				// if the request was for `/<plugin-name>/version/` and the plugin didn't explicitly
+				// handle the request, then override the error and return the plugin info
+				if (ctx.path === '/' && err instanceof DispatcherError && err.status === 404) {
 					ctx.response = this.info;
 					return ctx;
 				}
