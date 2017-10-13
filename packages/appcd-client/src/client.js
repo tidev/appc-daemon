@@ -80,7 +80,7 @@ export default class Client {
 
 		// need to delay request so event emitter can be returned and events can
 		// be wired up
-		setImmediate(() => {
+		setImmediate(async () => {
 			if (this.socket) {
 				emitter.emit('connected', this);
 				return;
@@ -88,7 +88,7 @@ export default class Client {
 
 			const socket = this.socket = new WebSocket(`ws://${this.host}:${this.port}`, {
 				headers: {
-					'Accept-Language': process.env.APPCD_LOCALE || locale(),
+					'Accept-Language': process.env.APPCD_LOCALE || await locale(),
 					'User-Agent': this.userAgent
 				}
 			});

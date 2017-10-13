@@ -11,6 +11,7 @@ import { expandPath } from 'appcd-path';
 import { isFile } from 'appcd-fs';
 import { randomBytes, sha1 } from 'appcd-util';
 import { run } from 'appcd-subprocess';
+import { get } from 'appcd-winreg';
 
 const { log } = appcdLogger.config({ theme: 'detailed' })('appcd:machine-id');
 const { highlight } = appcdLogger.styles;
@@ -19,7 +20,7 @@ const { highlight } = appcdLogger.styles;
  * Determines and caches a unique machine identifier.
  *
  * @param {String} [midFile] - The path to the file to cache the machine id.
- * @returns {Promise} Resovles the machine id.
+ * @returns {Promise} Resolves the machine id.
  */
 export default function getMachineId(midFile) {
 	if (midFile) {
@@ -47,11 +48,10 @@ export default function getMachineId(midFile) {
 			}
 
 			if (/^win/.test(platform)) {
-				return run('reg', [ 'query', 'HKLM\\Software\\Microsoft\\Cryptography', '/v', 'MachineGuid' ])
+				return get('HKLM', 'Software\\Microsoft\\Cryptography', 'MachineGuid')
 					.then(result => {
-						const m = result.stdout.trim().match(/MachineGuid\s+REG_SZ\s+(.+)/i);
-						if (m) {
-							return sha1(m[1]);
+						if (result) {
+							return sha1(result);
 						}
 					});
 			}
