@@ -1,28 +1,29 @@
-import { spawnSync } from 'child_process';
+import { run } from 'appcd-subprocess';
+import { get } from 'appcd-winreg';
 
 let cachedLocale;
 
 /**
  * Determines the current locale of this machine.
- *
- * @returns {String}
+ * @async
+ * @returns {Promise<String>}
  */
-export function locale() {
+export async function locale() {
 	if (cachedLocale !== undefined) {
 		return cachedLocale;
 	}
 
 	if (process.platform === 'win32') {
-		let { stdout } = spawnSync('reg', [ 'query', 'HKCU\\Control Panel\\International', '/v', 'Locale' ]);
-		let m = stdout.toString().trim().match(/Locale\s+REG_SZ\s+(.+)/);
-		if (m) {
-			m = m[1].substring(m[1].length - 4, m[1].length);
-			let { stdout } = spawnSync('reg', [ 'query', 'HKLM\\SOFTWARE\\Classes\\MIME\\Database\\Rfc1766', '/v', m ]);
-			m = stdout.toString().trim().match(/REG_SZ\s+([^;,\n]+?);/);
+		let value = await get('HKCU', 'Control Panel\\International', 'Locale');
+		if (value) {
+			value = value.substring(value.length - 4, value.length);
+			const locale = await get('HKLM', 'SOFTWARE\\Classes\\MIME\\Database\\Rfc1766', value);
+			const m = locale.match(/([^;,\n]+?);/);
 			cachedLocale = m ? m[1].replace(/_/g, '-') : null;
 		}
 	} else {
-		let m = spawnSync('locale').stdout.toString().match(/^LANG="?([^".\s]+)/);
+		const { stdout } = await run('locale');
+		const m = stdout.toString().match(/^LANG="?([^".\s]+)/);
 		cachedLocale = m ? m[1].replace(/_/g, '-') : null;
 	}
 
