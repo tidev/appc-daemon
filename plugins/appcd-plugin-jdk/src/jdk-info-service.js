@@ -99,8 +99,7 @@ export default class JDKInfoService extends ServiceDispatcher {
 				if (r !== 0) {
 					return r;
 				}
-
-				return a.architecture.localeCompare(b.architecture);
+				return a.arch.localeCompare(b.arch);
 			});
 		}
 
