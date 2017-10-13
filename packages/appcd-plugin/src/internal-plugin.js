@@ -41,19 +41,20 @@ export default class InternalPlugin extends PluginBase {
 				throw err;
 			})
 			.then(() => {
-				return Dispatcher.call('/appcd/config', { type: 'subscribe' });
-			})
-			.then(({ response }) => {
-				response.on('data', response => {
-					if (response.type === 'event') {
-						this.config = response.message;
-						this.configSubscriptionId = response.sid;
-					}
-				});
-			})
-			.catch(err => {
-				this.logger.warn('Failed to subscribe to config');
-				this.logger.warn(err);
+				return Dispatcher
+					.call('/appcd/config', { type: 'subscribe' })
+					.then(({ response }) => {
+						response.on('data', response => {
+							if (response.type === 'event') {
+								this.config = response.message;
+								this.configSubscriptionId = response.sid;
+							}
+						});
+					})
+					.catch(err => {
+						this.logger.warn('Failed to subscribe to config');
+						this.logger.warn(err);
+					});
 			});
 	}
 

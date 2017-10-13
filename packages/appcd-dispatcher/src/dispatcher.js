@@ -84,6 +84,7 @@ export default class Dispatcher {
 
 	/**
 	 * List of registered routes.
+	 * Note: Various unit tests will reset this, so this is essentially a public property.
 	 * @type {Array.<Object>}
 	 */
 	routes = [];
@@ -166,7 +167,7 @@ export default class Dispatcher {
 
 				logger.log('Invoking route %s handler...', highlight(route.path));
 
-				let result = route.handler(ctx, function next() {
+				let result = route.handler(ctx, async function next() {
 					// go to next route
 
 					if (fired) {
@@ -178,9 +179,12 @@ export default class Dispatcher {
 
 					logger.log('Route %s handler passed to next route', highlight(route.path));
 
-					return dispatch(i + 1)
-						.then(result => result || ctx)
-						.catch(reject);
+					try {
+						const result = await dispatch(i + 1);
+						return result || ctx;
+					} catch (ex) {
+						reject(ex);
+					}
 				});
 
 				// if we got back a promise, we have to wait

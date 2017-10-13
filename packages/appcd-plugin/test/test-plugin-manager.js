@@ -3,7 +3,7 @@ import Config from 'appcd-config';
 import ConfigService from 'appcd-config-service';
 import Dispatcher, { DispatcherError } from 'appcd-dispatcher';
 import fs from 'fs-extra';
-import FSWatchManager from 'appcd-fswatcher';
+import FSWatchManager, { renderTree } from 'appcd-fswatcher';
 import gawk from 'gawk';
 import path from 'path';
 import PluginError from '../dist/plugin-error';
@@ -12,6 +12,7 @@ import SubprocessManager from 'appcd-subprocess';
 import tmp from 'tmp';
 
 import { expandPath } from 'appcd-path';
+import { getActiveHandles } from 'appcd-util';
 
 const { log } = appcdLogger('test:appcd:plugin:manager');
 const { highlight } = appcdLogger.styles;
@@ -66,8 +67,6 @@ describe('PluginManager', () => {
 			await pm.shutdown();
 			pm = null;
 		}
-
-		log();
 	});
 
 	after(async function () {
@@ -77,6 +76,9 @@ describe('PluginManager', () => {
 		await this.sm.shutdown();
 
 		Dispatcher.root.routes = [];
+
+		log(renderTree());
+		// log(getActiveHandles());
 	});
 
 	describe('Error Handling', () => {
@@ -655,7 +657,7 @@ describe('PluginManager', () => {
 			}, 1000);
 		});
 
-		it('should load a plugin with a js file with empty shebang', function (done) {
+		it.only('should load a plugin with a js file with empty shebang', function (done) {
 			this.timeout(10000);
 			this.slow(9000);
 

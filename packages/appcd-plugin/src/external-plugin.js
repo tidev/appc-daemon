@@ -108,28 +108,36 @@ export default class ExternalPlugin extends PluginBase {
 
 		logger.log('Sending request: %s', highlight(ctx.path));
 
+		const logRequest = status => {
+			const style = status < 400 ? ok : alert;
+			let msg = `Plugin dispatcher: ${highlight(`/${this.plugin.name}/${this.plugin.version}${ctx.path}`)} ${style(status)}`;
+			if (ctx.type !== 'event') {
+				msg += ` ${highlight(`${new Date() - startTime}ms`)}`;
+			}
+			logger.log(msg);
+		};
+
 		return this.tunnel
 			.send({
 				path: ctx.path,
 				data: ctx.request
 			})
 			.then(res => {
-				const { status } = res;
-				const style = status < 400 ? ok : alert;
-				let msg = `Plugin dispatcher: ${highlight(`/${this.plugin.name}/${this.plugin.version}${ctx.path}`)} ${style(status)}`;
-				if (ctx.type !== 'event') {
-					msg += ` ${highlight(`${new Date() - startTime}ms`)}`;
-				}
-				logger.log(msg);
+				logRequest(res.status);
 
-				if (status === 404) {
-					return next();
-				}
-
-				ctx.status = status;
+				ctx.status = res.status;
 				ctx.response = res.response;
 
 				return ctx;
+			}, err => {
+				if (err.status === 404) {
+					logger.log('Plugin did not have handler, passing to next route');
+					return next();
+				}
+
+				logRequest(err.status);
+
+				throw err;
 			});
 	}
 
@@ -152,14 +160,25 @@ export default class ExternalPlugin extends PluginBase {
 	async onStop() {
 		// send deactivate message which will trigger the child to exit gracefully
 		await this.tunnel.send({ type: 'deactivate' });
+		await this.deactivate();
+	}
 
+	/**
+	 * Cleans up the plugin before it's deactivated.
+	 *
+	 * @returns {Promise}
+	 */
+	async deactivate() {
 		// stop all filesystem watchers
-		if (this.watchers) {
-			for (const dir of Object.keys(this.watchers)) {
+		const dirs = Object.keys(this.watchers);
+		if (dirs.length) {
+			logger.log(appcdLogger.pluralize(`Closing ${dirs.length} fs watcher`, dirs.length));
+			for (const dir of dirs) {
 				this.watchers[dir].close();
 				delete this.watchers[dir];
 			}
-			this.watchers = {};
+		} else {
+			logger.log('No open fs watchers');
 		}
 	}
 

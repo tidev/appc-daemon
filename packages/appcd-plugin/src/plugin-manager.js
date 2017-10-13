@@ -201,13 +201,20 @@ export default class PluginManager extends EventEmitter {
 								// forward request to the plugin's dispatcher
 								ctx.path = '/' + (ctx.params.path || '');
 								logger.log('Starting plugin %s', highlight(plugin.toString()));
+								plugin.error = null;
 								await plugin.start();
-								logger.log('Plugin %s started', highlight(plugin.toString()));
-								return await plugin.dispatch(ctx, next);
+
+								if (plugin.error) {
+									logger.log('Plugin %s errored during start', highlight(plugin.toString()));
+								} else {
+									logger.log('Plugin %s started', highlight(plugin.toString()));
+								}
+
+								return plugin.dispatch(ctx, next);
 							}
 
 							// not found, continue
-							return await next();
+							return next();
 						},
 						path: `/${plugin.name}/:version?/:path*`,
 						versions: {}
