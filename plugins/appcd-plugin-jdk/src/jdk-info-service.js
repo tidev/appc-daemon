@@ -131,7 +131,6 @@ export default class JDKInfoService extends ServiceDispatcher {
 			} catch (ex) {
 				// squeltch
 			}
-
 			const defaultKey = currentVersion && `${key}\\${currentVersion}`;
 
 			// get all subkeys which should only be valid JDKs
@@ -157,7 +156,8 @@ export default class JDKInfoService extends ServiceDispatcher {
 		return Promise
 			.all([
 				scanRegistry('\\Software\\JavaSoft\\Java Development Kit'),
-				scanRegistry('\\Software\\Wow6432Node\\JavaSoft\\Java Development Kit')
+				scanRegistry('\\Software\\Wow6432Node\\JavaSoft\\Java Development Kit'),
+				scanRegistry('\\Software\\JavaSoft\\JDK')
 			])
 			.then(results => {
 				results = Object.assign.apply(null, results);
