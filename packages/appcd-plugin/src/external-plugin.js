@@ -48,10 +48,8 @@ export default class ExternalPlugin extends PluginBase {
 		// for the parent process only, wire up the external plugin filesystem watcher
 		if (!process.connected) {
 			this.onFilesystemChange = debounce(() => {
-				logger.log('Detected change in plugin source file - plugin auto-reload is enabled');
-				logger.log('Stopping external plugin: %s', highlight(this.plugin.toString()));
-				Promise.resolve()
-					.then(() => this.stop())
+				logger.log('Detected change in plugin source file, stopping external plugin: %s', highlight(this.plugin.toString()));
+				this.stop()
 					.then(() => {
 						// reset the plugin error state
 						logger.log('Reseting error state');
@@ -60,15 +58,19 @@ export default class ExternalPlugin extends PluginBase {
 					.catch(err => {
 						logger.error('Failed to restart %s plugin: %s', highlight(this.plugin.toString()), err);
 					});
-			}, 3000);
+			}, 2000);
 
 			Dispatcher.call('/appcd/config/plugins/autoReload')
 				.then(ctx => ctx.response, () => true)
 				.then(autoReload => {
 					if (autoReload) {
-						for (const dir of this.plugin.directories) {
-							this.watchers[dir] = new FSWatcher(dir)
-								.on('change', () => this.onFilesystemChange());
+						const { directories } = this.plugin;
+						if (directories.size) {
+							logger.log('Watching plugin source directories for changes...');
+							for (const dir of directories) {
+								this.watchers[dir] = new FSWatcher(dir)
+									.on('change', this.onFilesystemChange);
+							}
 						}
 					}
 				})
@@ -96,7 +98,7 @@ export default class ExternalPlugin extends PluginBase {
 	 *
 	 * @param {Object} ctx - A dispatcher context.
 	 * @param {Function} next - A function to continue to next dispatcher route.
-	 * @returns {Promise}
+	 * @returns {Promise<Object>}
 	 * @access public
 	 */
 	dispatch(ctx, next) {
@@ -129,13 +131,13 @@ export default class ExternalPlugin extends PluginBase {
 				ctx.response = res.response;
 
 				return ctx;
-			}, err => {
+			})
+			.catch(err => {
 				if (err.status === 404) {
 					logger.log('Plugin did not have handler, passing to next route');
-					return next();
+				} else {
+					logRequest(err.status);
 				}
-
-				logRequest(err.status);
 
 				throw err;
 			});
