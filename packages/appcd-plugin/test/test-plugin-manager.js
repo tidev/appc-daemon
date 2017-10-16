@@ -12,7 +12,7 @@ import SubprocessManager from 'appcd-subprocess';
 import tmp from 'tmp';
 
 import { expandPath } from 'appcd-path';
-import { getActiveHandles } from 'appcd-util';
+import { sleep } from 'appcd-util';
 
 const { log } = appcdLogger('test:appcd:plugin:manager');
 const { highlight } = appcdLogger.styles;
@@ -78,7 +78,6 @@ describe('PluginManager', () => {
 		Dispatcher.root.routes = [];
 
 		log(renderTree());
-		// log(getActiveHandles());
 	});
 
 	describe('Error Handling', () => {
@@ -237,7 +236,9 @@ describe('PluginManager', () => {
 				Dispatcher.call('/good-internal/1.2.3/square', { data: { num: 3 } })
 					.then(async (ctx) => {
 						expect(ctx.response).to.equal(9);
+
 						await pm.unregister(pluginDir);
+
 						setTimeout(() => {
 							try {
 								expect(pm.plugins).to.have.lengthOf(0);
@@ -428,11 +429,14 @@ describe('PluginManager', () => {
 							.call('/good/1.2.3/square', { data: { num: 3 } });
 					})
 					.then(ctx => {
+						log(`Expecting ${ctx.response} to equal 9`);
 						expect(ctx.response).to.equal(9);
 
+						log('Copying modified square.js');
 						fs.copySync(path.join(__dirname, 'fixtures', 'modified-square.js'), path.join(pluginDir, 'index.js'));
 
-						return new Promise(resolve => setTimeout(resolve, 1000));
+						// need to wait at least 2 seconds for the source change to be detected
+						return sleep(3000);
 					})
 					.then(() => {
 						log('Calling square again...');
@@ -566,9 +570,7 @@ describe('PluginManager', () => {
 						expect(ctx.response).to.equal(9);
 						return pm.unregister(pluginDir);
 					})
-					.then(() => new Promise(resolve => {
-						setTimeout(resolve, 1000);
-					}))
+					.then(() => sleep(1000))
 					.then(() => {
 						return Dispatcher.call('/good/1.2.3/square', { data: { num: 3 } });
 					})
@@ -657,7 +659,7 @@ describe('PluginManager', () => {
 			}, 1000);
 		});
 
-		it.only('should load a plugin with a js file with empty shebang', function (done) {
+		it('should load a plugin with a js file with empty shebang', function (done) {
 			this.timeout(10000);
 			this.slow(9000);
 

@@ -103,17 +103,32 @@ module.exports = (opts) => {
 	})
 
 	gulp.task('docs', ['lint-src', 'clean-docs'], () => {
-		return gulp.src('src')
-			.pipe($.plumber())
-			.pipe($.debug({ title: 'docs' }))
-			.pipe($.esdoc({
-				// debug: true,
-				destination: docsDir,
-				plugins: [
-					{ name: 'esdoc-es7-plugin' }
-				],
-				title: opts.pkgJson.name
-			}));
+		const esdoc = require('esdoc').default;
+
+		esdoc.generate({
+			// debug: true,
+			destination: docsDir,
+			plugins: [
+				{
+					name: 'esdoc-standard-plugin',
+					option: {
+						brand: {
+							title:       opts.pkgJson.name,
+							description: opts.pkgJson.description,
+							respository: 'https://github.com/appcelerator/appc-daemon',
+							site:        'https://github.com/appcelerator/appc-daemon'
+						}
+					}
+				},
+				{
+					name: 'esdoc-ecmascript-proposal-plugin',
+					option: {
+						all: true
+					}
+				}
+			],
+			source: './src'
+		});
 	});
 
 	/*

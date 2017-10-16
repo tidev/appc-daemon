@@ -235,6 +235,8 @@ export default class Plugin extends EventEmitter {
 	 * @access public
 	 */
 	stop() {
+		clearTimeout(this.inactivityTimer);
+
 		return this.impl.stop();
 	}
 
