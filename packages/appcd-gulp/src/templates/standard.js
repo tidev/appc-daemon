@@ -183,7 +183,18 @@ module.exports = (opts) => {
 			args.push('--inspect-brk');
 		}
 
-		args.push('--reporter=' + path.join(appcdGulpNodeModulesPath, 'mocha-jenkins-reporter'));
+		let jenkinsReporter = path.join(appcdGulpNodeModulesPath, 'mocha-jenkins-reporter');
+		if (!fs.existsSync(jenkinsReporter)) {
+			try {
+				jenkinsReporter = require.resolve('mocha-jenkins-reporter');
+			} catch (e) {
+				jenkinsReporter = null;
+			}
+		}
+		if (jenkinsReporter) {
+			args.push(`--reporter=${jenkinsReporter}`);
+		}
+
 		process.env.JUNIT_REPORT_PATH = path.join(projectDir, 'junit.xml');
 		process.env.JUNIT_REPORT_NAME = path.basename(projectDir);
 

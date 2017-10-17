@@ -1,6 +1,6 @@
 {
   "name": "appcd-gulp",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Common gulp tasks and utilities.",
   "main": "./src/index",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
