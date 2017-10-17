@@ -216,7 +216,7 @@ export default class PluginBase extends EventEmitter {
 		// if the plugin is already stopped, then nothing to do
 		if (this.info.state === states.STOPPED) {
 			logger.log('Plugin %s already stopped', highlight(this.plugin.toString()));
-			await this.deactivate();
+			this.deactivate();
 			return;
 		}
 
@@ -241,7 +241,7 @@ export default class PluginBase extends EventEmitter {
 
 		this.setState(states.STOPPING);
 		await this.onStop();
-		await this.deactivate();
+		this.deactivate();
 	}
 
 	/**

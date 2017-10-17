@@ -230,9 +230,6 @@ export default class PluginManager extends EventEmitter {
 			})
 			.on('removed', async (plugin) => {
 				try {
-					logger.log('Stopping plugin: %s', highlight(`${plugin.name}@${plugin.version}`));
-					await plugin.stop();
-
 					for (let i = 0; i < this.plugins.length; i++) {
 						if (this.plugins[i].path === plugin.path) {
 							this.plugins.splice(i, 1);
@@ -329,10 +326,8 @@ export default class PluginManager extends EventEmitter {
 	 * @access public
 	 */
 	shutdown() {
-		return Promise.all(
-			Object
-				.keys(this.pluginPaths)
-				.map(this.unregister.bind(this))
-		);
+		const paths = Object.keys(this.pluginPaths);
+		logger.log(appcdLogger.pluralize(`Shutting down plugin manager and ${highlight(paths.length)} plugin path`, paths.length));
+		return Promise.all(paths.map(this.unregister.bind(this)));
 	}
 }
