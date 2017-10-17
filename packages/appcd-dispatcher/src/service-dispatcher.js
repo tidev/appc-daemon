@@ -138,8 +138,13 @@ export default class ServiceDispatcher {
 						pluralize('listener', Object.keys(descriptor.subs).length, true)
 					);
 
-					for (const listener of Object.values(descriptor.subs)) {
-						listener(message);
+					for (const sid of Object.keys(descriptor.subs)) {
+						const listener = descriptor.subs[sid];
+						if (typeof listener === 'function') {
+							listener(message);
+						} else {
+							delete descriptor.subs[sid];
+						}
 					}
 				}
 			};

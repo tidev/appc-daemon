@@ -55,6 +55,20 @@ class SystemInfoService extends ServiceDispatcher {
 	 */
 	async activate(cfg) {
 		await this.initOSInfo();
+
+		// subscribe to android service
+
+		// subscribe to ios service
+		if (process.platform === 'darwin') {
+			// go
+		}
+
+		// subscribe to jdk service
+
+		// subscribe to windows service
+		if (process.platform === 'win32') {
+			// go
+		}
 	}
 
 	/**
