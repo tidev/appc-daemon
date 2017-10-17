@@ -730,15 +730,15 @@ describe('PluginManager', () => {
 						expect(resp.type).to.equal('external');
 						expect(resp.path).to.equal(pluginDir);
 						expect(resp.version).to.equal('1.2.3');
-						Dispatcher.call('/good/latest/')
-							.then(ctx2 => {
-								const resp = ctx.response;
-								expect(resp.type).to.equal('external');
-								expect(resp.path).to.equal(pluginDir);
-								expect(resp.version).to.equal('1.2.3');
-								done();
-							});
+						return Dispatcher.call('/good/latest/');
 					})
+					.then(ctx => {
+						const resp = ctx.response;
+						expect(resp.type).to.equal('external');
+						expect(resp.path).to.equal(pluginDir);
+						expect(resp.version).to.equal('1.2.3');
+					})
+					.then(done)
 					.catch(done);
 			}, 1000);
 		});
