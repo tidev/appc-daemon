@@ -722,7 +722,7 @@ function checkPackages() {
 								package: pkgJson
 							}, (err, results) => {
 								if (err) {
-									guilt.log('NSP failed!', err);
+									gutil.log('NSP failed!', err);
 									return resolve();
 								}
 

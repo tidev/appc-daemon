@@ -711,6 +711,37 @@ describe('PluginManager', () => {
 					.catch(done);
 			}, 1000);
 		});
+
+		it('should return plugin info', function (done) {
+			this.timeout(10000);
+			this.slow(9000);
+
+			const pluginDir = path.join(__dirname, 'fixtures', 'good');
+
+			pm = new PluginManager({
+				paths: [ pluginDir ]
+			});
+
+			setTimeout(() => {
+				log('Calling info...');
+				Dispatcher.call('/good/1.2.3/')
+					.then(ctx => {
+						const resp = ctx.response;
+						expect(resp.type).to.equal('external');
+						expect(resp.path).to.equal(pluginDir);
+						expect(resp.version).to.equal('1.2.3');
+						return Dispatcher.call('/good/latest/');
+					})
+					.then(ctx => {
+						const resp = ctx.response;
+						expect(resp.type).to.equal('external');
+						expect(resp.path).to.equal(pluginDir);
+						expect(resp.version).to.equal('1.2.3');
+					})
+					.then(done)
+					.catch(done);
+			}, 1000);
+		});
 	});
 
 	/**
