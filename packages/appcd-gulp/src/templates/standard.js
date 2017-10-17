@@ -172,25 +172,19 @@ module.exports = (opts) => {
 		}
 
 		// add mocha
-		if (isWindows) {
-			execPath = path.join(appcdGulpNodeModulesPath, '.bin', 'mocha.cmd');
-		} else {
-			args.push(path.join(appcdGulpNodeModulesPath, '.bin', 'mocha'));
+		const mocha = resolveModule('mocha');
+		if (!mocha) {
+			gutil.log('Unable to find mocha!');
+			process.exit(1);
 		}
+		args.push(path.join(mocha, 'bin', 'mocha'));
 
 		// add --inspect
 		if (process.argv.indexOf('--inspect') !== -1 || process.argv.indexOf('--inspect-brk') !== -1) {
 			args.push('--inspect-brk');
 		}
 
-		let jenkinsReporter = path.join(appcdGulpNodeModulesPath, 'mocha-jenkins-reporter');
-		if (!fs.existsSync(jenkinsReporter)) {
-			try {
-				jenkinsReporter = require.resolve('mocha-jenkins-reporter');
-			} catch (e) {
-				jenkinsReporter = null;
-			}
-		}
+		const jenkinsReporter = resolveModule('mocha-jenkins-reporter');
 		if (jenkinsReporter) {
 			args.push(`--reporter=${jenkinsReporter}`);
 		}
@@ -224,6 +218,19 @@ module.exports = (opts) => {
 
 		// run!
 		spawnSync(execPath, args, { stdio: 'inherit' });
+	}
+
+	function resolveModule(name) {
+		let dir = path.join(appcdGulpNodeModulesPath, name);
+		if (fs.existsSync(dir)) {
+			return dir;
+		}
+
+		try {
+			return path.dirname(require.resolve(name));
+		} catch (e) {
+			return null;
+		}
 	}
 
 	gulp.task('default', ['build']);

@@ -6,12 +6,14 @@ if (!Error.prepareStackTrace) {
 import fs from 'fs';
 import gawk from 'gawk';
 import os from 'os';
+import path from 'path';
 
 import { arch } from 'appcd-util';
+import { cmd, run, which } from 'appcd-subprocess';
 import { codes } from 'appcd-response';
 import { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
+import { expandPath } from 'appcd-path';
 import { isFile } from 'appcd-fs';
-import { run } from 'appcd-subprocess';
 
 /**
  * Aggregrates system info from Android, iOS, JDK, and Windows libraries.
@@ -26,7 +28,7 @@ class SystemInfoService extends ServiceDispatcher {
 		this.results = gawk({
 			android: null,
 			ios: null,
-			jdk: null,
+			jdks: null,
 			node: {
 				path:     process.execPath,
 				version:  process.version.substring(1),
@@ -53,22 +55,61 @@ class SystemInfoService extends ServiceDispatcher {
 	 * @returns {Promise}
 	 * @access public
 	 */
-	async activate(cfg) {
-		await this.initOSInfo();
+	activate(cfg) {
+		return Promise.all([
+			// get the os info
+			this.initOSInfo(),
 
-		// subscribe to android service
+			// get the npm info
+			this.npmInfo(),
 
-		// subscribe to ios service
-		if (process.platform === 'darwin') {
-			// go
-		}
+			// subscribe to android service
+			this.wireup('android', '/android/latest/info'),
 
-		// subscribe to jdk service
+			// subscribe to ios service
+			process.platform === 'darwin' && this.wireup('ios', '/ios/latest/info'),
 
-		// subscribe to windows service
-		if (process.platform === 'win32') {
-			// go
-		}
+			// subscribe to jdk service
+			this.wireup('jdks', '/jdk/latest/info'),
+
+			// subscribe to windows service
+			process.platform === 'win32' && this.wireup('windows', '/windows/latest/info')
+		]);
+	}
+
+	/**
+	 * Wires up the subscription to one of the info services.
+	 *
+	 * @param {String} type - The bucket type to merge the results into.
+	 * @param {String} endpoint - The service endpoint to subscribe to.
+	 * @returns {Promise}
+	 * @access private
+	 */
+	wireup(type, endpoint) {
+		return new Promise(resolve => {
+			appcd.call(endpoint, { type: 'subscribe' })
+				.then(({ response }) => {
+					response.on('data', data => {
+						if (data.type === 'event' && data.message && typeof data.message === 'object') {
+							if (!this.results[type]) {
+								this.results[type] = {};
+							}
+
+							if (Array.isArray(data.message)) {
+								this.results[type] = data.message;
+							} else {
+								gawk.mergeDeep(this.results[type], data.message);
+							}
+
+							resolve();
+						}
+					});
+				})
+				.catch(err => {
+					console.error(err);
+					resolve();
+				});
+		});
 	}
 
 	/**
@@ -133,6 +174,73 @@ class SystemInfoService extends ServiceDispatcher {
 	}
 
 	/**
+	 * Detects the NPM information.
+	 *
+	 * @returns {Promise}
+	 * @access private
+	 */
+	async npmInfo() {
+		let npm = null;
+		let prefix = process.platform === 'win32' ? '%ProgramFiles%\\Node.js' : '/usr/local';
+
+		try {
+			npm = await which(`npm${cmd}`);
+			const { stdout } = run(npm, 'prefix', '-g');
+			prefix = stdout.split('\n')[0].replace(/^"|"$/g, '');
+		} catch (e) {
+			// squeltch
+		}
+
+		let npmPkgJson = expandPath(prefix, 'node_modules', 'npm', 'package.json');
+		if (!isFile(npmPkgJson)) {
+			// on Linux and macOS, the `node_modules` is inside a `lib` directory
+			npmPkgJson = expandPath(prefix, 'lib', 'node_modules', 'npm', 'package.json');
+		}
+
+		if (!isFile(npmPkgJson)) {
+			// can't find npm, fail :(
+			console.log('Unable to find where npm is installed');
+			return;
+		}
+
+		this.results.npm = {
+			home:    path.dirname(npmPkgJson),
+			path:    npm,
+			version: null
+		};
+
+		const readPkgJson = () => {
+			let ver;
+
+			try {
+				const json = JSON.parse(fs.readFileSync(npmPkgJson));
+				ver = json && json.version;
+			} catch (e) {
+				// squeltch
+			}
+
+			this.results.npm.version = ver || null;
+		};
+
+		readPkgJson();
+
+		const { response } = await appcd.call('/appcd/fswatch', {
+			data: {
+				path: npmPkgJson
+			},
+			type: 'subscribe'
+		});
+
+		response.on('data', data => {
+			if (data.type === 'subscribe') {
+				this.npmSubscriptionId = data.sid;
+			} else if (data.type === 'event') {
+				readPkgJson();
+			}
+		});
+	}
+
+	/**
 	 * Responds to "call" service requests.
 	 *
 	 * @param {Object} ctx - A dispatcher request context.
@@ -147,6 +255,36 @@ class SystemInfoService extends ServiceDispatcher {
 		}
 
 		ctx.response = node;
+	}
+
+	/**
+	 * Responds to "subscribe" service requests.
+	 *
+	 * @param {Object} ctx - A dispatcher request context.
+	 * @param {Function} publish - A function used to publish data to a dispatcher client.
+	 * @access private
+	 */
+	onSubscribe(ctx, publish) {
+		const filter = ctx.params.filter && ctx.params.filter.replace(/^\//, '').split(/\.|\//) || undefined;
+
+		const node = this.get(filter);
+		publish(node);
+
+		console.log('Starting gawk watch: %s', filter ? filter.join('/') : 'no filter');
+		gawk.watch(this.results, filter, publish);
+	}
+
+	/**
+	 * Responds to "unsubscribe" service requests.
+	 *
+	 * @param {Object} ctx - A dispatcher request context.
+	 * @param {Function} publish - The function used to publish data to a dispatcher client. This is
+	 * the same publish function as the one passed to `onSubscribe()`.
+	 * @access private
+	 */
+	onUnsubscribe(ctx, publish) {
+		console.log('Removing gawk watch');
+		gawk.unwatch(this.results, publish);
 	}
 
 	/**
@@ -184,5 +322,12 @@ export async function activate(cfg) {
 	appcd.register('/info', systemInfo);
 }
 
-// export function deactivate() {
-// }
+export async function deactivate() {
+	if (this.npmSubscriptionId) {
+		await appcd.call('/appcd/fswatch', {
+			sid: this.npmSubscriptionId,
+			type: 'unsubscribe'
+		});
+		this.npmSubscriptionId = null;
+	}
+}

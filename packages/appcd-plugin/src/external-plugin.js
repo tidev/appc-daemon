@@ -467,7 +467,7 @@ export default class ExternalPlugin extends PluginBase {
 
 													logger.error('Response stream error:');
 													logger.error(err);
-													this.send({
+													send({
 														message: err.message || err,
 														stack: err.stack,
 														status: err.status || 500,
