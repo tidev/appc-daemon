@@ -2,9 +2,9 @@
 
 ## Core Services
 
-* [/appcd/config](Services/config.md)
-* [/appcd/fswatch](Services/fswatch.md)
-* [/appcd/logcat](Services/logcat.md)
-* [/appcd/plugin](Services/plugin.md)
-* [/appcd/status](Services/status.md)
-* [/appcd/subprocess](Services/subprocess.md)
+* [/appcd/config](config.md)
+* [/appcd/fswatch](fswatch.md)
+* [/appcd/logcat](logcat.md)
+* [/appcd/plugin](plugin.md)
+* [/appcd/status](status.md)
+* [/appcd/subprocess](subprocess.md)

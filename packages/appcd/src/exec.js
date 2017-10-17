@@ -21,7 +21,7 @@ const cmd = {
 					process.exit(0);
 				}
 
-				if (response.type === 'publish') {
+				if (response.type === 'event') {
 					console.log(inspect(message, { depth: null }));
 				}
 			})

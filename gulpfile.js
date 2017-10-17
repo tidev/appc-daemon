@@ -771,7 +771,11 @@ function checkPackages() {
 									const outFile = path.join(packagePath, 'retire_output.json')
 
 									if (result.status !== 13) {
-										fs.unlinkSync(outFile);
+										try {
+											fs.unlinkSync(outFile);
+										} catch (e) {
+											// squeltch
+										}
 										if (result.status !== 0) {
 											gutil.log(result.stderr);
 										}

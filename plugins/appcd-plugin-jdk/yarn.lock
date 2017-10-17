@@ -77,17 +77,6 @@ ansi-styles@^3.1.0:
   dependencies:
     color-convert "^1.9.0"
 
-appcd-detect@0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/appcd-detect/-/appcd-detect-0.1.0.tgz#87f3072ac5b3c9913c986d432aa2cadcad2ae3a7"
-  dependencies:
-    appcd-dispatcher "0.1.0"
-    appcd-logger "0.1.0"
-    appcd-path "0.1.0"
-    appcd-util "0.1.0"
-    gawk "^4.3.0"
-    source-map-support "^0.5.0"
-
 appcd-dispatcher@0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/appcd-dispatcher/-/appcd-dispatcher-0.1.0.tgz#0ef8c21496d63612ede02ca408aee45ed98da6e4"
@@ -186,7 +175,7 @@ appcd-response@0.1.0:
     source-map-support "^0.4.16"
     sprintf-js "^1.1.1"
 
-appcd-subprocess@0.1.0, appcd-subprocess@^0.1.0:
+appcd-subprocess@^0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/appcd-subprocess/-/appcd-subprocess-0.1.0.tgz#8c41e0cd74667d5ec49487bce4abcb2dd01a0703"
   dependencies:
@@ -207,13 +196,6 @@ appcd-util@0.1.0:
     appcd-fs "0.1.0"
     semver "^5.4.1"
     source-map-support "^0.4.16"
-
-appcd-winreg@0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/appcd-winreg/-/appcd-winreg-0.1.0.tgz#a19b63c7427e2ec0c0e73829337163cc6f0e6b3e"
-  dependencies:
-    source-map-support "^0.5.0"
-    winreg "^1.2.4"
 
 append-transform@^0.4.0:
   version "0.4.0"
@@ -4294,10 +4276,6 @@ which@^1.2.12, which@^1.2.4, which@^1.2.9, which@^1.3.0:
 window-size@0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/window-size/-/window-size-0.1.0.tgz#5438cd2ea93b202efa3a19fe8887aee7c94f9c9d"
-
-winreg@^1.2.4:
-  version "1.2.4"
-  resolved "https://registry.yarnpkg.com/winreg/-/winreg-1.2.4.tgz#ba065629b7a925130e15779108cf540990e98d1b"
 
 winston@*:
   version "2.4.0"
