@@ -71,6 +71,9 @@ export default class PluginPath extends HookEmitter {
 				await this.emit('added', plugin);
 			})
 			.on('plugin-deleted', async (plugin) => {
+				log('Stopping plugin: %s', highlight(`${plugin.name}@${plugin.version}`));
+				await plugin.stop();
+
 				log('Plugin unloaded: %s', highlight(`${plugin.name}@${plugin.version}`));
 				delete this.plugins[plugin.path];
 				await this.emit('removed', plugin);

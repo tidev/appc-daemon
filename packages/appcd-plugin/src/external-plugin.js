@@ -45,40 +45,6 @@ export default class ExternalPlugin extends PluginBase {
 		 */
 		this.watchers = {};
 
-		// for the parent process only, wire up the external plugin filesystem watcher
-		if (!process.connected) {
-			this.onFilesystemChange = debounce(() => {
-				logger.log('Detected change in plugin source file, stopping external plugin: %s', highlight(this.plugin.toString()));
-				this.stop()
-					.then(() => {
-						// reset the plugin error state
-						logger.log('Reseting error state');
-						this.info.error = null;
-					})
-					.catch(err => {
-						logger.error('Failed to restart %s plugin: %s', highlight(this.plugin.toString()), err);
-					});
-			}, 2000);
-
-			Dispatcher.call('/appcd/config/plugins/autoReload')
-				.then(ctx => ctx.response, () => true)
-				.then(autoReload => {
-					if (autoReload) {
-						const { directories } = this.plugin;
-						if (directories.size) {
-							logger.log('Watching plugin source directories for changes...');
-							for (const dir of directories) {
-								this.watchers[dir] = new FSWatcher(dir)
-									.on('change', this.onFilesystemChange);
-							}
-						}
-					}
-				})
-				.catch(err => {
-					logger.warn('Failed to wire up %s fs watcher: %s', this.plugin.toString(), err.message);
-				});
-		}
-
 		this.globals.appcd.call = (path, data) => {
 			if (!this.tunnel) {
 				return Promise.reject(new Error('Tunnel not initialized!'));
@@ -162,15 +128,12 @@ export default class ExternalPlugin extends PluginBase {
 	async onStop() {
 		// send deactivate message which will trigger the child to exit gracefully
 		await this.tunnel.send({ type: 'deactivate' });
-		await this.deactivate();
 	}
 
 	/**
 	 * Cleans up the plugin before it's deactivated.
-	 *
-	 * @returns {Promise}
 	 */
-	async deactivate() {
+	deactivate() {
 		// stop all filesystem watchers
 		const dirs = Object.keys(this.watchers);
 		if (dirs.length) {
@@ -377,15 +340,51 @@ export default class ExternalPlugin extends PluginBase {
 			args.unshift(`--inspect-brk=${debugPort}`);
 		}
 
-		return Dispatcher
-			.call(`/appcd/subprocess/spawn/node/${this.plugin.nodeVersion}`, {
-				data: {
-					args,
-					options: {
-						env: Object.assign({ FORCE_COLOR: 1 }, process.env)
-					},
-					ipc: true
+		const onFilesystemChange = debounce(() => {
+			logger.log('Detected change in plugin source file, stopping external plugin: %s', highlight(this.plugin.toString()));
+			this.stop()
+				.then(() => {
+					// reset the plugin error state
+					logger.log('Reseting error state');
+					this.info.error = null;
+				})
+				.catch(err => {
+					logger.error('Failed to restart %s plugin: %s', highlight(this.plugin.toString()), err);
+				});
+		}, 2000);
+
+		return Dispatcher.call('/appcd/config/plugins/autoReload')
+			.then(ctx => ctx.response, () => true)
+			.then(autoReload => {
+				if (autoReload) {
+					const { directories } = this.plugin;
+					if (directories.size) {
+						logger.log('Watching plugin source directories for changes...');
+						for (const dir of directories) {
+							if (this.watchers[dir]) {
+								logger.log('Already watching plugin directory %s', highlight(dir));
+							} else {
+								this.watchers[dir] = new FSWatcher(dir)
+									.on('change', onFilesystemChange);
+							}
+						}
+					}
 				}
+			})
+			.catch(err => {
+				logger.warn('Failed to wire up %s fs watcher: %s', this.plugin.toString(), err.message);
+			})
+			.then(() => {
+				return Dispatcher
+					.call(`/appcd/subprocess/spawn/node/${this.plugin.nodeVersion}`, {
+						data: {
+							args,
+							options: {
+								env: Object.assign({ FORCE_COLOR: 1 }, process.env)
+							},
+							ipc: true
+						}
+					});
 			})
 			.then(ctx => new Promise((resolve, reject) => {
 				this.tunnel = new Tunnel(ctx.proc, (req, send) => {

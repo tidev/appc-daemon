@@ -35,7 +35,10 @@ export default class PluginModule extends Module {
 			module.load(filename);
 		} catch (e) {
 			delete Module._cache[filename];
-			throw e;
+
+			// the following code is only executed for tests because babel-register fails to parse
+			// the code before we have a chance to compile it ourselves
+			throwPluginError(e);
 		}
 
 		return module.exports;
@@ -117,13 +120,23 @@ export default class PluginModule extends Module {
 
 			return closure.apply(this.exports, args);
 		} catch (e) {
-			if (!/^Failed to load plugin/.test(e.message)) {
-				e.message = `Failed to load plugin: ${e.message}`;
-			}
-			if (e instanceof PluginError) {
-				throw e;
-			}
-			throw new PluginError(e);
+			throwPluginError(e);
 		}
 	}
+}
+
+/**
+ * Converts an exception to a `PluginError` and throws it.
+ *
+ * @param {Error} ex - The exception.
+ * @throws {PluginError}
+ */
+function throwPluginError(ex) {
+	if (!/^Failed to load plugin/.test(ex.message)) {
+		ex.message = `Failed to load plugin: ${ex.message}`;
+	}
+	if (ex instanceof PluginError) {
+		throw ex;
+	}
+	throw new PluginError(ex);
 }

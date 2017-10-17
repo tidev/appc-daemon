@@ -272,10 +272,11 @@ describe('PluginManager', () => {
 						.then(() => {
 							throw new Error('Expected the route to not be found');
 						}, err => {
-							expect(err.message).to.equal('Failed to load plugin: Unexpected token )');
+							expect(err).to.be.instanceof(PluginError);
+							expect(err.message).to.match(/Failed to load plugin: .*Unexpected token/);
 							const p = pm.plugins[0];
 							expect(p.state).to.equal('stopped');
-							expect(p.error).to.equal('Failed to load plugin: Unexpected token )');
+							expect(p.error).to.match(/Failed to load plugin: .*Unexpected token/);
 						});
 				})
 				.then(() => done())
@@ -406,8 +407,8 @@ describe('PluginManager', () => {
 		});
 
 		it('should reload a modified external plugin', function (done) {
-			this.timeout(10000);
-			this.slow(9000);
+			this.timeout(20000);
+			this.slow(19000);
 
 			const sourceDir = path.join(__dirname, 'fixtures', 'good');
 			const pluginDir = makeTempDir();
@@ -446,6 +447,7 @@ describe('PluginManager', () => {
 					.then(ctx => {
 						expect(ctx.response).to.equal(27);
 
+						log('Unregistering plugin');
 						return pm.dispatcher
 							.call('/unregister', {
 								data: {
@@ -453,7 +455,10 @@ describe('PluginManager', () => {
 								}
 							});
 					})
-					.then(() => done())
+					.then(() => {
+						log('Done');
+						done();
+					})
 					.catch(done);
 			}, 1000);
 		});
@@ -479,11 +484,11 @@ describe('PluginManager', () => {
 							done(new Error('Expected the route to not be found'));
 						})
 						.catch(err => {
-							expect(err.message).to.equal('Failed to load plugin: Unexpected token )');
+							expect(err.message).to.match(/Failed to load plugin: .*Unexpected token/);
 							const p = pm.plugins[0];
 							expect(p.state).to.equal('stopped');
 							expect(p.exitCode).to.equal(6);
-							expect(p.error).to.equal('Failed to load plugin: Unexpected token )');
+							expect(p.error).to.match(/Failed to load plugin: .*Unexpected token/);
 							expect(p.pid).to.be.null;
 						});
 				})

@@ -35,12 +35,15 @@ function makeTempDir() {
 }
 
 describe('Plugin Path', () => {
-	after(async function () {
+	after(() => {
+		fs.removeSync(tmpDir);
+	});
+
+	afterEach(async function () {
 		if (this.pp) {
 			await this.pp.destroy();
 			this.pp = null;
 		}
-		fs.removeSync(tmpDir);
 	});
 
 	it('should error if plugin path is invalid', () => {
@@ -77,15 +80,17 @@ describe('Plugin Path', () => {
 				}
 			});
 
-		this.pp.detect();
+		this.pp.detect()
+			.then(() => {
+				log(renderTree());
 
-		log(renderTree());
-
-		setTimeout(() => {
-			const good = path.join(__dirname, 'fixtures', 'good');
-			log('Copying %s => %s', highlight(good), highlight(tmp));
-			fs.copySync(good, tmp);
-		}, 1000);
+				setTimeout(() => {
+					const good = path.join(__dirname, 'fixtures', 'good');
+					log('Copying %s => %s', highlight(good), highlight(tmp));
+					fs.copySync(good, tmp);
+				}, 1000);
+			})
+			.catch(done);
 	});
 
 	it('should watch existing file to become a plugin', function (done) {
@@ -622,9 +627,9 @@ describe('Plugin Path', () => {
 			log('Copying %s => %s', highlight(good), highlight(tmp));
 			fs.copySync(good, tmp);
 
-			setTimeout(() => {
+			setTimeout(async () => {
 				log('Destroying plugin path instance');
-				this.pp.destroy();
+				await this.pp.destroy();
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(0);
 				done();
 			}, 1000);

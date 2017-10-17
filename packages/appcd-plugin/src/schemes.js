@@ -175,6 +175,7 @@ export class PluginScheme extends Scheme {
 	async destroy() {
 		super.destroy();
 		if (this.plugin) {
+			debugger;
 			await this.emit('plugin-deleted', this.plugin);
 			this.plugin = null;
 		}
