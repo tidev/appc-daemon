@@ -3,14 +3,22 @@ import gawk from 'gawk';
 
 import * as registry from 'appcd-winreg';
 
+import { codes } from 'appcd-response';
 import { detect, jdkLocations } from 'jdklib';
+import { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
 import { exe } from 'appcd-subprocess';
-import { ServiceDispatcher } from 'appcd-dispatcher';
 
 /**
  * The JDK info service.
  */
 export default class JDKInfoService extends ServiceDispatcher {
+	/**
+	 * Initializes the service path.
+	 */
+	constructor() {
+		super('/:filter*');
+	}
+
 	/**
 	 * Starts the detect engine.
 	 *
@@ -31,7 +39,7 @@ export default class JDKInfoService extends ServiceDispatcher {
 			paths:                jdkLocations[process.platform]
 		});
 
-		this.results = gawk([]);
+		this.jdks = gawk([]);
 
 		return new Promise((resolve, reject) => {
 			this.handle = engine
@@ -39,8 +47,8 @@ export default class JDKInfoService extends ServiceDispatcher {
 					watch: true,
 					redetect: true
 				})
-				.on('results', results => {
-					this.results.splice.apply(this.results, [ 0, this.results.length ].concat(results));
+				.on('results', jdks => {
+					this.jdks.splice.apply(this.jdks, [ 0, this.jdks.length ].concat(jdks));
 					resolve();
 				})
 				.on('error', err => {
@@ -78,18 +86,18 @@ export default class JDKInfoService extends ServiceDispatcher {
 	}
 
 	/**
-	 * Sorts the results and assigns a default.
+	 * Sorts the JDKs and assigns a default.
 	 *
-	 * @param {Array.<JDK>} results - An array of results.
+	 * @param {Array.<JDK>} jdks - An array of JDKs.
 	 * @param {Array.<JDK>|undefined} previousValue - The previous value or `undefined` if there is
 	 * no previous value.
 	 * @param {DetectEngine} engine - The detect engine instance.
 	 * @access private
 	 */
-	processResults(results, previousValue, engine) {
-		// sort the results
-		if (results.length > 1) {
-			results.sort((a, b) => {
+	processResults(jdks, previousValue, engine) {
+		// sort the jdks
+		if (jdks.length > 1) {
+			jdks.sort((a, b) => {
 				let r = 0; // version.compare(a.version, b.version);
 				if (r !== 0) {
 					return r;
@@ -103,9 +111,9 @@ export default class JDKInfoService extends ServiceDispatcher {
 			});
 		}
 
-		// loop over all of the new results and set default version
+		// loop over all of the new jdks and set default version
 		let foundDefault = false;
-		for (const result of results) {
+		for (const result of jdks) {
 			if (!foundDefault && (!engine.defaultPath || result.path === engine.defaultPath)) {
 				result.default = true;
 				foundDefault = true;
@@ -143,7 +151,7 @@ export default class JDKInfoService extends ServiceDispatcher {
 							return { [javaHome]: key === defaultKey };
 						}
 					}))
-					.then(results => Object.assign.apply(null, results))
+					.then(jdks => Object.assign.apply(null, jdks))
 					.catch(() => ({}));
 			} catch (ex) {
 				// squeltch
@@ -175,7 +183,12 @@ export default class JDKInfoService extends ServiceDispatcher {
 	 * @access private
 	 */
 	onCall(ctx) {
-		ctx.response = this.results;
+		const filter = ctx.params.filter && ctx.params.filter.replace(/^\//, '').split(/\.|\//) || undefined;
+		const node = this.get(filter);
+		if (!node) {
+			throw new DispatcherError(codes.NOT_FOUND);
+		}
+		ctx.response = node;
 	}
 
 	/**
@@ -186,8 +199,13 @@ export default class JDKInfoService extends ServiceDispatcher {
 	 * @access private
 	 */
 	onSubscribe(ctx, publish) {
-		publish(this.results);
-		gawk.watch(this.results, publish);
+		const filter = ctx.params.filter && ctx.params.filter.replace(/^\//, '').split(/\.|\//) || undefined;
+
+		const node = this.get(filter);
+		publish(node);
+
+		console.log('Starting gawk watch: %s', filter ? filter.join('/') : 'no filter');
+		gawk.watch(this.jdks, filter, publish);
 	}
 
 	/**
@@ -199,6 +217,34 @@ export default class JDKInfoService extends ServiceDispatcher {
 	 * @access private
 	 */
 	onUnsubscribe(ctx, publish) {
-		gawk.unwatch(this.results, publish);
+		console.log('Removing gawk watch');
+		gawk.unwatch(this.jdks, publish);
+	}
+
+	/**
+	 * Returns the complete or filtered status values.
+	 *
+	 * @param {Array.<String>} [filter] - An array of namespaces used to filter and return a deep
+	 * object.
+	 * @return {*}
+	 * @access private
+	 */
+	get(filter) {
+		if (filter && !Array.isArray(filter)) {
+			throw new TypeError('Expected filter to be an array');
+		}
+
+		let obj = this.jdks;
+
+		if (filter) {
+			for (let i = 0, len = filter.length; obj && typeof obj === 'object' && i < len; i++) {
+				if (!obj.hasOwnProperty(filter[i])) {
+					return null;
+				}
+				obj = obj[filter[i]];
+			}
+		}
+
+		return obj;
 	}
 }

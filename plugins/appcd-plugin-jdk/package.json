@@ -18,6 +18,7 @@
   "dependencies": {
     "appcd-detect": "0.1.0",
     "appcd-dispatcher": "0.1.0",
+    "appcd-response": "0.1.0",
     "appcd-subprocess": "0.1.0",
     "appcd-winreg": "0.1.0",
     "gawk": "^4.3.0",
