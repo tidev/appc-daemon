@@ -2,7 +2,6 @@ import appcdLogger from 'appcd-logger';
 import Config from 'appcd-config';
 import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs-extra';
-import gawk from 'gawk';
 import http from 'http';
 import path from 'path';
 import Telemetry from '../dist/telemetry';
@@ -48,25 +47,12 @@ describe('telemetry', () => {
 			}).to.throw(TypeError, 'Expected config to be a valid config object');
 		});
 
-		it('should error if config values are not gawked', () => {
-			const cfg = new Config({
-				config: {
-					foo: 'bar'
-				}
-			});
-
-			expect(() => {
-				new Telemetry(cfg);
-			}).to.throw(TypeError, 'Expected config values to be gawked');
-		});
-
 		it('should error if the config doesn\'t contain an app guid', () => {
 			const cfg = new Config({
 				config: {
 					foo: 'bar'
 				}
 			});
-			cfg.values = gawk(cfg.values);
 
 			expect(() => {
 				new Telemetry(cfg);
@@ -244,7 +230,6 @@ describe('telemetry', () => {
 					}
 				}
 			});
-			cfg.values = gawk(cfg.values);
 
 			const telemetry = this.telemetry = new Telemetry(cfg);
 
@@ -690,7 +675,6 @@ function createTelemetry(json) {
 		json.appcd.guid = '<GUID>';
 	}
 	const cfg = new Config({ config: json });
-	cfg.values = gawk(cfg.values);
 	return new Telemetry(cfg);
 }
 

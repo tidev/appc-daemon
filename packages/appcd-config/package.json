@@ -23,6 +23,7 @@
     "babel-types": "^6.26.0",
     "babylon": "^6.17.4",
     "doctrine": "^2.0.0",
+    "gawk": "^4.3.0",
     "source-map-support": "^0.5.0"
   },
   "devDependencies": {
@@ -34,5 +35,8 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/appcelerator/appc-daemon.git"
+  },
+  "engines": {
+    "node": ">=8.0.0"
   }
 }

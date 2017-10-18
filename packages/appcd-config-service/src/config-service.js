@@ -3,7 +3,6 @@ import Config from 'appcd-config';
 import Response, { codes } from 'appcd-response';
 
 import { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
-import { isGawked } from 'gawk';
 
 const logger = appcdLogger('appcd:config-service');
 const { highlight } = appcdLogger.styles;
@@ -22,18 +21,6 @@ export default class ConfigService extends ServiceDispatcher {
 	constructor(cfg) {
 		if (!cfg || !(cfg instanceof Config)) {
 			throw new TypeError('Expected config to be a valid config object');
-		}
-
-		if (!cfg.values || !isGawked(cfg.values)) {
-			throw new TypeError('Expected config values to be gawked');
-		}
-
-		if (typeof cfg.watch !== 'function') {
-			throw new Error('Config object missing watch() method');
-		}
-
-		if (typeof cfg.unwatch !== 'function') {
-			throw new Error('Config object missing unwatch() method');
 		}
 
 		super();
@@ -139,6 +126,7 @@ export default class ConfigService extends ServiceDispatcher {
 	 */
 	onUnsubscribe(ctx, publish) {
 		const filter = (ctx.params.key || '').replace(/^\//, '').split(/\.|\//).join('.');
+
 		if (--this.watchers[filter] <= 0) {
 			delete this.watchers[filter];
 		}
