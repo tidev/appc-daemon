@@ -37,7 +37,7 @@
     "gulp-plumber": "^1.1.0",
     "gulp-util": "^3.0.8",
     "mocha": "^4.0.1",
-    "mocha-jenkins-reporter": "^0.3.9",
+    "mocha-jenkins-reporter": "^0.3.10",
     "nyc": "^11.2.1",
     "sinon": "^4.0.1",
     "sinon-chai": "^2.14.0"
@@ -50,5 +50,8 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/appcelerator/appc-daemon.git"
+  },
+  "engines": {
+    "node": ">=8.0.0"
   }
 }

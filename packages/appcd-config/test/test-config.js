@@ -71,14 +71,14 @@ describe('load()', () => {
 			configFile: path.join(__dirname, 'fixtures', 'good-load.js'),
 			defaultConfigFile: path.join(__dirname, 'fixtures', 'good-default-load.js')
 		});
-		expect(config.toString(0)).to.equal('{"age":30,"food":["pizza","tacos"],"name":"foo"}');
+		expect(config.toString(0)).to.equal('{"food":["pizza","tacos"],"name":"foo","age":30}');
 	});
 
 	it('should load environment specific config file', () =>  {
 		const config = load({
 			configFile: path.join(__dirname, 'fixtures', 'good-load-foo.js')
 		});
-		expect(config.toString(0)).to.equal('{"name":"baz","environment":{"name":"foo"}}');
+		expect(config.toString(0)).to.equal('{"environment":{"name":"foo"},"name":"baz"}');
 	});
 
 	it('should merge custom config with config file', () => {
@@ -89,7 +89,7 @@ describe('load()', () => {
 			},
 			configFile: path.join(__dirname, 'fixtures', 'good-load.js')
 		});
-		expect(config.toString(0)).to.equal('{"age":29,"food":"nachos","name":"foo"}');
+		expect(config.toString(0)).to.equal('{"name":"foo","age":29,"food":"nachos"}');
 	});
 });
 
@@ -394,6 +394,35 @@ describe('Config', () => {
 			config.set('foo', { bar: 'baz' });
 			config.merge({ foo: { wiz: 'pow' } });
 			expect(config.toString(0)).to.equal('{"foo":{"bar":"baz","wiz":"pow"}}');
+		});
+	});
+
+	describe('watch/unwatch', () => {
+		it('should watch and unwatch changes', () => {
+			const config = new Config();
+			let count = 0;
+			const callback = () => {
+				count++;
+			};
+
+			config.set('foo', 'bar1');
+			expect(count).to.equal(0);
+
+			config.watch(callback);
+
+			config.set('foo', 'bar2');
+			expect(count).to.equal(1);
+
+			config.set('foo', 'bar3');
+			expect(count).to.equal(2);
+
+			config.unwatch(callback);
+
+			config.set('foo', 'bar4');
+			expect(count).to.equal(2);
+
+			config.set('foo', 'bar5');
+			expect(count).to.equal(2);
 		});
 	});
 

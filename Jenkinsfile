@@ -22,7 +22,7 @@ timestamps {
       currentBuild.displayName = "#${packageVersion}-${currentBuild.number}"
     }
 
-    nodejs(nodeJSInstallationName: 'node 8.2.1') {
+    nodejs(nodeJSInstallationName: 'node 8.7.0') {
       ansiColor('xterm') {
         stage('Install') {
           timeout(15) {

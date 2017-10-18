@@ -26,7 +26,6 @@
     "appcd-response": "0.1.0",
     "appcd-util": "0.1.0",
     "fs-extra": "^4.0.2",
-    "gawk": "^4.3.0",
     "source-map-support": "^0.5.0",
     "uuid": "^3.1.0"
   },
@@ -40,5 +39,8 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/appcelerator/appc-daemon.git"
+  },
+  "engines": {
+    "node": ">=8.0.0"
   }
 }
