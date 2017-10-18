@@ -760,13 +760,19 @@ function checkPackages() {
 						}),
 
 						limit(() => {
-							return run(process.execPath, [
-								path.join(__dirname, 'node_modules', '.bin', 'retire'),
+							let { execPath } = process;
+							const args = [
 								'--node',
 								'--package',
 								'--outputformat', 'json',
 								'--outputpath', 'retire_output.json'
-							], { cwd: packagePath })
+							];
+							if (isWindows) {
+								execPath = path.join(__dirname, 'node_modules', '.bin', 'retire.cmd');
+							} else {
+								args.unshift(path.join(__dirname, 'node_modules', '.bin', 'retire'))
+							}
+							return run(execPath, args, { cwd: packagePath })
 								.then(result => new Promise(resolve => {
 									const outFile = path.join(packagePath, 'retire_output.json')
 
@@ -1196,7 +1202,7 @@ function renderPackages(results) {
 		console.log(magenta('Recommendations') + '\n');
 
 		if (results.packagesToUpdate.length) {
-			console.log(`Run ${cyan('gulp upgrade-all')} to update:`);
+			console.log(`Run ${cyan('gulp upgrade')} to update:`);
 			table = new Table({
 				chars: cliTableChars,
 				head: [ 'Component', 'Package', 'From', 'To' ],
