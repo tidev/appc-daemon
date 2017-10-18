@@ -93,6 +93,9 @@ export default class ConfigService extends ServiceDispatcher {
 					}
 					return;
 
+				case 'list':
+					break;
+
 				default:
 					throw new DispatcherError(codes.BAD_REQUEST, `Invalid action: ${data.action}`);
 			}
