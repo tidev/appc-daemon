@@ -388,6 +388,176 @@ describe('Config Service', () => {
 		expect(ctx.response).to.deep.equal({});
 	});
 
+	it.only('should support push', () => {
+		const cs = createConfigService({
+			foo: 'bar'
+		});
+
+		let ctx = {
+			request: {
+				data: {
+					action: 'push',
+					key: 'foo',
+					value: 'baz'
+				}
+			},
+			params: {
+				key: null
+			},
+			response: null
+		};
+
+		cs.onCall(ctx);
+
+		expect(ctx.response).to.be.instanceof(Response);
+		expect(ctx.response.statusCode).to.equal(200);
+
+		ctx = {
+			request: {
+				data: {
+					action: 'get',
+					key: null,
+					value: null
+				}
+			},
+			params: {
+				key: null
+			},
+			response: null
+		};
+
+		cs.onCall(ctx);
+
+		expect(ctx.response).to.deep.equal({ foo: [ 'bar', 'baz' ] });
+	});
+
+	it.only('should support unshift', () => {
+		const cs = createConfigService({
+			foo: 'bar'
+		});
+
+		let ctx = {
+			request: {
+				data: {
+					action: 'unshift',
+					key: 'foo',
+					value: 'baz'
+				}
+			},
+			params: {
+				key: null
+			},
+			response: null
+		};
+
+		cs.onCall(ctx);
+
+		expect(ctx.response).to.be.instanceof(Response);
+		expect(ctx.response.statusCode).to.equal(200);
+
+		ctx = {
+			request: {
+				data: {
+					action: 'get',
+					key: null,
+					value: null
+				}
+			},
+			params: {
+				key: null
+			},
+			response: null
+		};
+
+		cs.onCall(ctx);
+
+		expect(ctx.response).to.deep.equal({ foo: [ 'baz', 'bar' ] });
+	});
+
+	it.only('should support pop', () => {
+		const cs = createConfigService({
+			foo: [ 'baz', 'bar' ]
+		});
+
+		let ctx = {
+			request: {
+				data: {
+					action: 'pop',
+					key: 'foo'
+				}
+			},
+			params: {
+				key: null
+			},
+			response: null
+		};
+
+		cs.onCall(ctx);
+
+		expect(ctx.response).to.be.instanceof(Response);
+		expect(ctx.response.statusCode).to.equal(200);
+
+		ctx = {
+			request: {
+				data: {
+					action: 'get',
+					key: null,
+					value: null
+				}
+			},
+			params: {
+				key: null
+			},
+			response: null
+		};
+
+		cs.onCall(ctx);
+
+		expect(ctx.response).to.deep.equal({ foo: [ 'baz' ] });
+	});
+
+	it.only('should support shift', () => {
+		const cs = createConfigService({
+			foo: [ 'baz', 'bar' ]
+		});
+
+		let ctx = {
+			request: {
+				data: {
+					action: 'shift',
+					key: 'foo'
+				}
+			},
+			params: {
+				key: null
+			},
+			response: null
+		};
+
+		cs.onCall(ctx);
+
+		expect(ctx.response).to.be.instanceof(Response);
+		expect(ctx.response.statusCode).to.equal(200);
+
+		ctx = {
+			request: {
+				data: {
+					action: 'get',
+					key: null,
+					value: null
+				}
+			},
+			params: {
+				key: null
+			},
+			response: null
+		};
+
+		cs.onCall(ctx);
+
+		expect(ctx.response).to.deep.equal({ foo: [ 'bar' ] });
+	});
+
 	it('should subscribe and unsubscribe to config changes', () => {
 		const cs = createConfigService({});
 
