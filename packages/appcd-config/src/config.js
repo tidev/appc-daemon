@@ -210,6 +210,138 @@ export default class Config extends EventEmitter {
 	}
 
 	/**
+	 * Pushes a value onto the end of a config setting
+	 * @param  {String} key   The dot-notation config key
+	 * @param  {String} value The config balue
+	 * @returns {Config}
+	 * @emits Config#change
+	 * @access public
+	 */
+	push(key, value) {
+		debugger;
+		if (!key || (typeof key !== 'string')) {
+			throw new TypeError('Expected key to be a string');
+		}
+
+		if (!Array.isArray(value)) {
+			value = [ value ];
+		}
+
+		this.meta.validate(key, value, { action: 'push' });
+		key.split('.').reduce((obj, part, i, arr) => {
+			if (i + 1 === arr.length) {
+				// check if any descendant is read-only
+				this.hasReadonlyDescendant(obj[part], key, 'set');
+				if (!Array.isArray(obj[part])) {
+					if (obj[part]) {
+						obj[part] = [ obj[part] ];
+					} else {
+						obj[part] = [];
+					}
+				}
+				console.log(obj[part]);
+				obj[part].push.apply(obj[part], value);
+			} else if (typeof obj[part] !== 'object' || Array.isArray(obj[part])) {
+				this.hasReadonlyDescendant(obj[part], key, 'set');
+				obj[part] = {};
+			}
+			return obj[part];
+		}, this.values);
+
+		this.emit('change');
+		return this;
+	}
+
+	/**
+	 * Adds a value to the start of a config setting
+	 * @param  {String} key   The dot-notation config key
+	 * @param  {String} value The config balue
+	 * @returns {Config}
+	 * @emits Config#change
+	 * @access public
+	 */
+	unshift(key, value) {
+		if (!key || (typeof key !== 'string')) {
+			throw new TypeError('Expected key to be a string or object');
+		}
+
+		if (!Array.isArray(value)) {
+			value = [ value ];
+		}
+
+		this.meta.validate(key, value, { action: 'push' });
+
+		key.split('.').reduce((obj, part, i, arr) => {
+			if (i + 1 === arr.length) {
+				// check if any descendant is read-only
+				this.hasReadonlyDescendant(obj[part], key, 'set');
+				if (!Array.isArray(obj[part])) {
+					if (obj[part]) {
+						obj[part] = [ obj[part] ];
+					} else {
+						obj[part] = [];
+					}
+				}
+				obj[part].unshift.apply(obj[part], value);
+			}
+			return obj[part];
+		}, this.values);
+
+		this.emit('change');
+		return this;
+	}
+
+	/**
+	 * Remove the first value of the config setting and return it
+	 * @param  {String} key The dot-notation config key
+	 * @returns {*} value The value removed from the config setting
+	 */
+	shift(key) {
+		let it = this.values;
+
+		if (!key || (typeof key !== 'string')) {
+			throw new TypeError('Expected key to be a string or object');
+		}
+
+		const parts = key.split('.');
+
+		for (let i = 0, k; it !== undefined && (k = parts[i++]);) {
+			it = it[k];
+		}
+
+		if (!Array.isArray(it)) {
+			throw Error('Value is not an array');
+		}
+		this.emit('change');
+		return it.shift();
+	}
+
+	/**
+	 * Remove the first value of the config setting and return it
+	 * @param  {String} key The dot-notation config key
+	 * @returns {*} value The value removed from the config setting
+	 */
+	pop(key) {
+		let it = this.values;
+
+		if (!key || (typeof key !== 'string')) {
+			throw new TypeError('Expected key to be a string or object');
+		}
+
+		const parts = key.split('.');
+
+		for (let i = 0, k; it !== undefined && (k = parts[i++]);) {
+			it = it[k];
+		}
+
+		if (!Array.isArray(it)) {
+			throw Error('Value is not an array');
+		}
+		this.emit('change');
+		return it.pop();
+	}
+
+	/**
 	 * Sets a config setting.
 	 *
 	 * @param {String} key - The dot-notation config key.
