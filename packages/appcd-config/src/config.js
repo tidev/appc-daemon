@@ -1,11 +1,12 @@
 import appcdLogger from 'appcd-logger';
-import fs from 'fs';
+import fs from 'fs-extra';
 import Metadata from './metadata';
 import path from 'path';
 import vm from 'vm';
 
 import { EventEmitter } from 'events';
 import { isFile } from 'appcd-fs';
+import { expandPath } from 'appcd-path';
 import { parse } from 'babylon';
 import { wrap } from 'module';
 
@@ -49,6 +50,10 @@ export default class Config extends EventEmitter {
 		 */
 		this.values = {};
 
+		this.filename = 'config.json';
+
+		this.location = expandPath(path.join(this.get('home', '~/.appcelerator/appcd'), this.filename));
+
 		if (opts.configFile) {
 			this.load(opts.configFile);
 		}
@@ -57,7 +62,7 @@ export default class Config extends EventEmitter {
 			if (typeof opts.config !== 'object' || Array.isArray(opts.config)) {
 				throw new TypeError('Expected config to be an object');
 			}
-			this.merge(opts.config, { overrideReadonly: true });
+			this.merge(opts.config, { overrideReadonly: true, write: false });
 		}
 	}
 
@@ -239,7 +244,6 @@ export default class Config extends EventEmitter {
 						obj[part] = [];
 					}
 				}
-				console.log(obj[part]);
 				obj[part].push.apply(obj[part], value);
 			} else if (typeof obj[part] !== 'object' || Array.isArray(obj[part])) {
 				this.hasReadonlyDescendant(obj[part], key, 'set');
@@ -249,6 +253,7 @@ export default class Config extends EventEmitter {
 		}, this.values);
 
 		this.emit('change');
+		this.save();
 		return this;
 	}
 
@@ -274,7 +279,7 @@ export default class Config extends EventEmitter {
 		key.split('.').reduce((obj, part, i, arr) => {
 			if (i + 1 === arr.length) {
 				// check if any descendant is read-only
-				this.hasReadonlyDescendant(obj[part], key, 'set');
+				this.hasReadonlyDescendant(obj[part], key, 'unshift');
 				if (!Array.isArray(obj[part])) {
 					if (obj[part]) {
 						obj[part] = [ obj[part] ];
@@ -288,6 +293,7 @@ export default class Config extends EventEmitter {
 		}, this.values);
 
 		this.emit('change');
+		this.save();
 		return this;
 	}
 
@@ -312,8 +318,9 @@ export default class Config extends EventEmitter {
 		if (!Array.isArray(it)) {
 			throw Error('Value is not an array');
 		}
-		this.emit('change');
-		return it.shift();
+		const val = it.shift();
+		this.save();
+		return val;
 	}
 
 	/**
@@ -338,7 +345,10 @@ export default class Config extends EventEmitter {
 			throw Error('Value is not an array');
 		}
 		this.emit('change');
-		return it.pop();
+		const val = it.pop();
+		console.log(it);
+		this.save();
+		return val;
 	}
 
 	/**
@@ -375,6 +385,7 @@ export default class Config extends EventEmitter {
 		}
 
 		this.emit('change');
+		this.save();
 		return this;
 	}
 
@@ -408,6 +419,7 @@ export default class Config extends EventEmitter {
 
 				delete obj[part];
 				_t.emit('change');
+				_t.save();
 				return true;
 			}
 			return false;
@@ -479,7 +491,9 @@ export default class Config extends EventEmitter {
 		};
 
 		merger(this.values, values);
-
+		if (opts.write) {
+			this.save();
+		}
 		return this;
 	}
 
@@ -493,5 +507,20 @@ export default class Config extends EventEmitter {
 	 */
 	toString(indentation = 2) {
 		return JSON.stringify(this.values, null, Math.max(indentation, 0));
+	}
+
+	save() {
+		try {
+			const homeDir = expandPath(this.get('home', '~/.appcelerator/appcd'));
+			fs.ensureDirSync(homeDir);
+			const tmpFile = this.location + '.' + Date.now() + '.tmp';
+			fs.writeFileSync(tmpFile, this.toString());
+			console.log(this.location);
+			fs.renameSync(tmpFile, this.location);
+			console.log(fs.existsSync(this.location));
+			console.log(this.toString());
+		} catch (e) {
+			console.log(e);
+		}
 	}
 }

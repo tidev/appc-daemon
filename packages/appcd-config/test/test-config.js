@@ -679,6 +679,14 @@ describe('Config', () => {
 			}).to.throw(Error, 'Not allowed to set read-only property');
 		});
 	});
+
+	describe.only('save()', () => {
+		it('should save', () => {
+			const config = new Config({ config: { home: path.join(__dirname, 'testdir') } });
+			console.log(config.get('home'));
+			config.save();
+		});
+	});
 });
 
 function validateMetadata(meta, desc, type, deprecated, readonly) {
