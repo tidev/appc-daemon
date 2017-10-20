@@ -82,6 +82,7 @@ export default class ConfigService extends ServiceDispatcher {
 					ctx.response = new Response(codes.OK);
 					return;
 
+				case 'rm':
 				case 'delete':
 					if (!key) {
 						throw new DispatcherError(codes.FORBIDDEN, 'Not allowed to delete config root');
@@ -93,6 +94,7 @@ export default class ConfigService extends ServiceDispatcher {
 					}
 					return;
 
+				case 'ls':
 				case 'list':
 					break;
 
