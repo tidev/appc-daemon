@@ -362,26 +362,22 @@ describe('Config Service', () => {
 		const publish = value => {
 			switch (++i) {
 				case 1:
-					expect(value).to.deep.equal({});
-					break;
-
-				case 2:
 					expect(value).to.deep.equal({ foo: 'bar' });
 					break;
 
-				case 3:
+				case 2:
 					expect(value).to.deep.equal({});
 					break;
 
-				case 4:
+				case 3:
 					throw new Error('Expected publish to be unsubscribed');
 			}
 		};
 
-		cs.onSubscribe(ctx, publish);
+		cs.initSubscription({ publish });
 		cs.config.set('foo', 'bar');
 		cs.config.delete('foo');
-		cs.onUnsubscribe(ctx, publish);
+		cs.destroySubscription({ publish });
 		cs.config.set('foo', 'bar');
 	});
 });

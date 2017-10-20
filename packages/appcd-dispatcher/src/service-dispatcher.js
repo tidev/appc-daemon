@@ -61,18 +61,25 @@ export default class ServiceDispatcher {
 		this.instance = instance;
 
 		/**
-		 * A map of all active subscriptions. The key is the topic (i.e. path) and the value is the
-		 * descriptor containing the subscription references and the publish function.
+		 * A map of subscription ids to topics. This makes it easy to look up the topic from the
+		 * subscription id.
 		 * @type {Object}
 		 */
 		this.subscriptions = {};
+
+		/**
+		 * A map of topics to the topic descriptor which contains all subscribers and the publish
+		 * callback.
+		 * @type {Object}
+		 */
+		this.topics = {};
 
 		// need to bind to this instance
 		this.handler = this.handler.bind(this);
 	}
 
 	/**
-	 * An Appc Dispatcher handler.
+	 * The Dispatcher handler.
 	 *
 	 * @param {DispatcherContext} ctx - A dispatcher context.
 	 * @param {Function} next - A function to continue to next dispatcher route.
@@ -89,8 +96,11 @@ export default class ServiceDispatcher {
 
 		const onType = `on${type.substring(0, 1).toUpperCase() + type.substring(1)}`;
 
-		if (typeof this.instance[onType] === 'function') {
-			logger.log('%s Invoking %s handler: %s', note(`[${subscriptionId}]`), onType, highlight(this.path || 'no path'));
+		if (typeof this.instance[onType] === 'function'
+			|| (type === 'subscribe' && typeof this.instance.initSubscription === 'function')
+			|| (type === 'unsubscribe' && typeof this.instance.destroySubscription === 'function')
+		) {
+			logger.log('%s Invoking %s handler: %s', note(`[${subscriptionId}]`), type, highlight(this.path || 'no path'));
 			return this[type](ctx);
 		}
 
@@ -117,66 +127,52 @@ export default class ServiceDispatcher {
 	 */
 	subscribe(ctx) {
 		const subscriptionId = ctx.request.sid = uuid.v4();
-		const topic = typeof this.instance.getTopic === 'function' && this.instance.getTopic(ctx) || ctx.realPath;
-		let descriptor = this.subscriptions[topic];
-		let firstSubscription = true;
+		const topic = typeof this.instance.getTopic === 'function' && this.instance.getTopic(ctx) || ctx.realPath || '';
+		let descriptor = this.topics[topic];
+		const firstSubscription = !descriptor;
 
 		if (descriptor) {
 			logger.log('%s Adding subscription: %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
 
-			firstSubscription = false;
-
 		} else {
 			logger.log('%s Initializing new subscription: %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
 
-			descriptor = this.subscriptions[topic] = {
-				subs: {},
-				publish: message => {
+			descriptor = this.topics[topic] = {
+				subs: new Map(),
+				topic,
+				publishAll: message => {
 					logger.log('%s Publishing%s to %s',
 						note(`[${subscriptionId}]`),
 						topic ? ` ${highlight(topic || '\'\'')}` : '',
-						pluralize('listener', Object.keys(descriptor.subs).length, true)
+						pluralize('listener', descriptor.subs.size, true)
 					);
 
-					for (const sid of Object.keys(descriptor.subs)) {
-						const listener = descriptor.subs[sid];
-						if (typeof listener === 'function') {
-							listener(message);
-						} else {
-							delete descriptor.subs[sid];
-						}
+					for (const [ sid, resp ] of descriptor.subs.entries()) {
+						resp.write({
+							message,
+							sid,
+							topic,
+							type: 'event'
+						});
 					}
 				}
 			};
 		}
 
-		// wire up a handler so that unsubscribe will terminate the subscription stream
-		descriptor.subs[subscriptionId] = (message, type, fin) => {
-			if (fin) {
-				logger.log('%s Subscription has been unsubscribed, sending fin and closing', note(`[${subscriptionId}]`));
-			}
-
-			ctx.response.write({
-				message,
-				sid: subscriptionId,
-				topic,
-				type: type || 'event'
-			});
-
-			if (fin) {
-				ctx.response.end();
-			}
-		};
+		this.subscriptions[subscriptionId] = descriptor;
+		descriptor.subs.set(subscriptionId, ctx.response);
 
 		const cleanup = err => {
 			if (err) {
 				logger.error(err);
-				logger.log('Stream errored, cleaning up');
-			} else {
-				logger.log('Stream ended, cleaning up');
 			}
-			descriptor.subs[subscriptionId] = true;
-			this.unsubscribe(ctx);
+
+			if (descriptor.subs.has(subscriptionId)) {
+				logger.log(`Stream ${err ? 'errored' : 'ended'}, cleaning up`);
+				this.unsubscribe(ctx);
+			} else {
+				logger.log(`Stream ${err ? 'errored' : 'ended'}, subscription already cleaned up`);
+			}
 		};
 
 		ctx.response.once('end', cleanup);
@@ -190,17 +186,29 @@ export default class ServiceDispatcher {
 		});
 
 		// this has to be done AFTER we send the "subscribe" response
-		if (firstSubscription) {
-			this.instance.onSubscribe(ctx, descriptor.publish);
-		} else {
-			// this is not the first subscription
-			this.instance.onSubscribe(ctx, message => {
-				ctx.response.write({
-					message,
-					sid: subscriptionId,
-					topic,
-					type: 'event'
-				});
+
+		if (firstSubscription && typeof this.instance.initSubscription === 'function') {
+			this.instance.initSubscription({
+				ctx,
+				publish: descriptor.publishAll,
+				sid: subscriptionId,
+				topic
+			});
+		}
+
+		if (typeof this.instance.onSubscribe === 'function') {
+			this.instance.onSubscribe({
+				ctx,
+				publish: message => {
+					ctx.response.write({
+						message,
+						sid: subscriptionId,
+						topic,
+						type: 'event'
+					});
+				},
+				sid: subscriptionId,
+				topic
 			});
 		}
 	}
@@ -218,39 +226,66 @@ export default class ServiceDispatcher {
 			return;
 		}
 
-		const topic = typeof this.instance.getTopic === 'function' && this.instance.getTopic(ctx) || ctx.realPath;
-		let descriptor = this.subscriptions[topic];
+		if (!this.subscriptions.hasOwnProperty(subscriptionId)) {
+			logger.log('%s No such subscription found', note(`[${subscriptionId}]`));
 
-		if (!descriptor || !descriptor.subs[subscriptionId]) {
-			// not subscribed
-			if (descriptor) {
-				logger.log('%s Sub not subscribed to %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
-			} else {
-				logger.log('%s No subscribers to topic: %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
+			// double check that no topics have this subscription id
+			for (const descriptor of Object.values(this.topics)) {
+				descriptor.subs.delete(subscriptionId);
 			}
 
 			ctx.response = new Response(codes.NOT_SUBSCRIBED);
 			return;
 		}
 
-		ctx.response = new Response(codes.UNSUBSCRIBED);
+		const descriptor = this.subscriptions[subscriptionId];
+		const { topic } = descriptor;
+		const originalResponse = descriptor.subs.get(subscriptionId);
 
-		logger.log('%s Unsubscribing sub: %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
+		logger.log('%s Unsubscribing: %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
+		delete this.subscriptions[subscriptionId];
+		descriptor.subs.delete(subscriptionId);
 
-		if (descriptor.subs[subscriptionId]) {
-			// send a message to the original stream to let them know that this subscription is no more
-			if (typeof descriptor.subs[subscriptionId] === 'function') {
-				descriptor.subs[subscriptionId](ctx.response, 'unsubscribe', true);
-			}
-			delete descriptor.subs[subscriptionId];
+		const response = new Response(codes.UNSUBSCRIBED);
+		ctx.response = response;
+
+		// send the unsubscribe event and close the stream
+		try {
+			originalResponse.write({
+				message: response,
+				sid: subscriptionId,
+				topic,
+				type: 'unsubscribe'
+			});
+
+			logger.log('%s Ending response: %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
+			originalResponse.end();
+		} catch (e) {
+			// squeltch
 		}
 
-		if (!Object.keys(descriptor.subs).length) {
-			if (this.instance.onUnsubscribe) {
-				this.instance.onUnsubscribe(ctx, descriptor.publish);
-			}
+		if (typeof this.instance.onUnsubscribe === 'function') {
+			logger.log('%s Calling service\'s onUnsubscribe(): %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
+			this.instance.onUnsubscribe({
+				ctx,
+				sid: subscriptionId,
+				topic
+			});
+		}
+
+		if (descriptor.subs.size === 0) {
 			logger.log('%s No more listeners, removing descriptor: %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
-			delete this.subscriptions[topic];
+			delete this.topics[topic];
+
+			if (typeof this.instance.destroySubscription === 'function') {
+				logger.log('%s Calling service\'s destroySubscription(): %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
+				this.instance.destroySubscription({
+					ctx,
+					publish: descriptor.publishAll,
+					sid: subscriptionId,
+					topic
+				});
+			}
 		}
 	}
 }

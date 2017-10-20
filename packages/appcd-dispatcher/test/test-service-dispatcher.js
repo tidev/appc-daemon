@@ -157,7 +157,7 @@ describe('ServiceDispatcher', () => {
 		it('should create a new subscriptions for multiple subs', done => {
 			const fns = [];
 			const sd = new ServiceDispatcher('/foo', {
-				onSubscribe(ctx, publish) {
+				onSubscribe({ publish }) {
 					fns.push(publish);
 				}
 			});
@@ -220,7 +220,7 @@ describe('ServiceDispatcher', () => {
 		it('should publish message to subscriber', done => {
 			let count = 0;
 			const sd = new ServiceDispatcher('/foo', {
-				onSubscribe(ctx, publish) {
+				onSubscribe({ publish }) {
 					setImmediate(() => {
 						count++;
 						publish('foo!');
@@ -271,7 +271,16 @@ describe('ServiceDispatcher', () => {
 	describe('unsubscribe', () => {
 		it('should error if missing subscription id', done => {
 			const sd = new ServiceDispatcher('/foo', {
+				initSubscription() {
+					// noop
+				},
+				onSubscribe() {
+					// noop
+				},
 				onUnsubscribe() {
+					// noop
+				},
+				destroySubscription() {
 					// noop
 				}
 			});
@@ -308,7 +317,16 @@ describe('ServiceDispatcher', () => {
 
 		it('should notify if not subscribed', done => {
 			const sd = new ServiceDispatcher('/foo', {
+				initSubscription() {
+					// noop
+				},
+				onSubscribe() {
+					// noop
+				},
 				onUnsubscribe() {
+					// noop
+				},
+				destroySubscription() {
 					// noop
 				}
 			});
@@ -346,10 +364,16 @@ describe('ServiceDispatcher', () => {
 
 		it('should unsubscribe and delete subscription topic', done => {
 			const sd = new ServiceDispatcher('/foo', {
+				initSubscription() {
+					// noop
+				},
 				onSubscribe() {
 					// noop
 				},
 				onUnsubscribe() {
+					// noop
+				},
+				destroySubscription() {
 					// noop
 				}
 			});
@@ -380,7 +404,7 @@ describe('ServiceDispatcher', () => {
 										expect(response.topic).to.equal('/foo');
 										expect(response.type).to.equal('subscribe');
 
-										expect(Object.keys(sd.subscriptions['/foo'].subs)).to.have.lengthOf(1);
+										expect(sd.topics['/foo'].subs.size).to.equal(1);
 
 										let ctx = {
 											path: '/foo',
@@ -429,10 +453,16 @@ describe('ServiceDispatcher', () => {
 
 		it('should unsubscribe if stream closes', done => {
 			const sd = new ServiceDispatcher('/foo', {
+				initSubscription() {
+					// noop
+				},
 				onSubscribe() {
 					// noop
 				},
 				onUnsubscribe() {
+					// noop
+				},
+				destroySubscription() {
 					// noop
 				}
 			});
@@ -461,10 +491,10 @@ describe('ServiceDispatcher', () => {
 						}
 					}, () => Promise.resolve());
 
-					expect(Object.keys(sd.subscriptions['/foo'].subs)).to.have.lengthOf(1);
+					expect(sd.topics['/foo'].subs.size).to.equal(1);
 					unsub.end();
 
-					expect(Object.keys(sd.subscriptions)).to.have.lengthOf(0);
+					expect(sd.topics['/foo']).to.be.undefined;
 					done();
 				})
 				.catch(done);
@@ -504,10 +534,10 @@ describe('ServiceDispatcher', () => {
 						}
 					}, () => Promise.resolve());
 
-					expect(Object.keys(sd.subscriptions['/foo'].subs)).to.have.lengthOf(1);
+					expect(sd.topics['/foo'].subs.size).to.equal(1);
 					unsub.error();
 
-					expect(Object.keys(sd.subscriptions)).to.have.lengthOf(0);
+					expect(sd.topics).to.not.have.property('/foo');
 					done();
 				})
 				.catch(done);

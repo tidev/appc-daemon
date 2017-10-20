@@ -33,8 +33,21 @@ export default class ConfigService extends ServiceDispatcher {
 
 		/**
 		 * A map of active watch filters.
+		 * @type {Object}
 		 */
 		this.watchers = {};
+	}
+
+	/**
+	 * Determines the topic for the incoming request.
+	 *
+	 * @param {DispatcherContext} ctx - The dispatcher request context object.
+	 * @returns {String}
+	 * @access private
+	 */
+	getTopic(ctx) {
+		const { data, params, topic } = ctx.request;
+		return topic || ((params && params.key) || data.key || '').replace(/^\//, '').split(/\.|\//).join('.');
 	}
 
 	/**
@@ -94,44 +107,40 @@ export default class ConfigService extends ServiceDispatcher {
 	}
 
 	/**
-	 * Responds to "subscribe" service requests.
+	 * nitializes the config watch for the filter.
 	 *
-	 * @param {Object} ctx - A dispatcher request context.
-	 * @param {Function} publish - A function used to publish data to a dispatcher client.
+	 * @param {Object} params - Various parameters.
+	 * @param {String} [params.topic] - The filter to apply.
+	 * @param {Function} params.publish - A function used to publish data to a dispatcher client.
 	 * @access private
 	 */
-	onSubscribe(ctx, publish) {
-		const filter = (ctx.params.key || '').replace(/^\//, '').split(/\.|\//).join('.');
-
-		// write the initial value
-		const node = this.config.get(filter);
-		publish(node);
-
-		if (!this.watchers[filter]) {
-			this.watchers[filter] = 1;
-			logger.log('Starting config watch: %s', highlight(filter || 'no filter'));
-			this.config.watch(filter, publish);
-		} else {
-			this.watchers[filter]++;
-		}
+	initSubscription({ topic: filter, publish }) {
+		logger.log('Starting config gawk watch: %s', highlight(filter || 'no filter'));
+		this.config.watch(filter, publish);
 	}
 
 	/**
-	 * Responds to "unsubscribe" service requests.
+	 * Handles a new subscriber.
 	 *
-	 * @param {Object} ctx - A dispatcher request context.
-	 * @param {Function} publish - The function used to publish data to a dispatcher client. This is
-	 * the same publish function as the one passed to `onSubscribe()`.
+	 * @param {Object} params - Various parameters.
+	 * @param {String} [params.topic] - The filter to apply.
+	 * @param {Function} params.publish - A function used to publish data to a dispatcher client.
 	 * @access private
 	 */
-	onUnsubscribe(ctx, publish) {
-		const filter = (ctx.params.key || '').replace(/^\//, '').split(/\.|\//).join('.');
+	onSubscribe({ topic: filter, publish }) {
+		publish(this.config.get(filter));
+	}
 
-		if (--this.watchers[filter] <= 0) {
-			delete this.watchers[filter];
-		}
-
-		logger.log('Removing config watch');
+	/**
+	 * Stops watching the config updates.
+	 *
+	 * @param {Object} params - Various parameters.
+	 * @param {Function} params.publish - The function used to publish data to a dispatcher client.
+	 * This is the same publish function as the one passed to `onSubscribe()`.
+	 * @access private
+	 */
+	destroySubscription({ publish }) {
+		logger.log('Removing config gawk watch');
 		this.config.unwatch(publish);
 	}
 }

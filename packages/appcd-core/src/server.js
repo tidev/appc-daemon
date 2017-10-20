@@ -153,7 +153,7 @@ export default class Server {
 
 		// init the status monitor
 		this.systems.statusMonitor = new StatusMonitor();
-		Dispatcher.register('/appcd/status', this.systems.statusMonitor.dispatcher);
+		Dispatcher.register('/appcd/status', this.systems.statusMonitor);
 
 		// init the fs watch manager
 		this.systems.fswatchManager = new FSWatchManager();

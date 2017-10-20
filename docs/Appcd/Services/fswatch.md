@@ -43,9 +43,6 @@ Dispatcher
 ```js
 Dispatcher
 	.call('/appcd/fswatch', {
-		data: {
-			topic: '/path/to/watch'
-		},
 		sid: '<sid from subscribe event>',
 		type: 'unsubscribe'
 	});

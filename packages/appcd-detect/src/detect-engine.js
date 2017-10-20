@@ -105,13 +105,14 @@ export default class DetectEngine {
 	 * Main entry for the detection process flow.
 	 *
 	 * @param {Object} [opts] - An object with various params.
-	 * @param {Boolean} [opts.force=false] - When true, bypasses cache and rescans the search paths.
+	 * @param {Boolean} [opts.force=false] - When `true`, bypasses cache and rescans the search
+	 * paths.
 	 * @param {Array} [opts.paths] - One or more paths to search in addition.
 	 * @param {Boolean} [opts.recursive=false] - When `true`, recursively watches a path for
 	 * changes to trigger a redetect.
-	 * @param {Boolean} [opts.redetect=false] - When true, re-runs detection when a path changes.
+	 * @param {Boolean} [opts.redetect=false] - When `true`, re-runs detection when a path changes.
 	 * Requires `watch` to be `true`.
-	 * @param {Boolean} [opts.watch=false] - When true, watches for changes and emits the new
+	 * @param {Boolean} [opts.watch=false] - When `true`, watches for changes and emits the new
 	 * results when a change occurs.
 	 * @returns {Handle}
 	 * @access public
@@ -280,6 +281,7 @@ export default class DetectEngine {
 		log('    id:',        highlight(id));
 		log('    force:',     highlight(!!opts.force));
 		log('    recursive:', highlight(!!opts.recursive));
+		log('    redetect:',  highlight(!!opts.redetect));
 		log('    watch:',     highlight(!!opts.watch));
 
 		const handleError = err => {
@@ -296,88 +298,91 @@ export default class DetectEngine {
 		log('  Default path:', highlight(this.defaultPath));
 		this.lastDefaultPath = this.defaultPath;
 
-		const watchPaths = (prefix, paths) => new Promise(resolve => {
-			const active = {};
+		const watchPaths = (prefix, paths) => {
+			return Promise.resolve()
+				.then(() => new Promise(resolve => {
+					const active = {};
 
-			if (paths.length) {
-				log(`  Watching paths ${opts.recursive ? '' : 'non-'}recursivly:`);
-				for (const dir of paths) {
-					log(`    ${highlight(dir)}`);
-				}
+					if (paths.length) {
+						log(`  Watching paths ${opts.recursive ? '' : 'non-'}recursivly:`);
+						for (const dir of paths) {
+							log(`    ${highlight(dir)}`);
+						}
 
-				// start watching the paths
-				for (const dir of paths) {
-					const key = `${prefix}:${dir}`;
-					active[key] = 1;
-					if (!handle.unwatchers.has(key)) {
-						handle.unwatchers.set(key, false);
+						// start watching the paths
+						for (const dir of paths) {
+							const key = `${prefix}:${dir}`;
+							active[key] = 1;
+							if (!handle.unwatchers.has(key)) {
+								handle.unwatchers.set(key, false);
 
-						Dispatcher
-							.call('/appcd/fswatch', {
-								data: {
-									path: dir,
-									recursive: opts.recursive
-								},
-								type: 'subscribe'
-							})
-							.then(ctx => {
-								ctx.response
-									.on('data', data => {
-										switch (data.type) {
-											case 'subscribe':
-												const { sid, topic } = data;
-
-												handle.unwatchers.delete(key);
-												handle.unwatchers.set(key, () => {
-													return Dispatcher
-														.call('/appcd/fswatch', {
-															data: {
-																path: topic
-															},
-															sid,
-															type: 'unsubscribe'
-														})
-														.catch(err => {
-															warn('Failed to unsubscribe from topic: %s', topic);
-															warn(err);
-														});
-												});
-
-												resolve();
-												break;
-
-											case 'event':
-												log('    fs event, rescanning', dir);
-												this.scan({ id, handle, paths, force: true, onlyPaths: [ dir ] })
-													.then(() => {
-														log('      Scan complete');
-														// no need to emit... the gawk watcher will do it
-													})
-													.catch(handleError);
-										}
+								Dispatcher
+									.call('/appcd/fswatch', {
+										data: {
+											path: dir,
+											recursive: opts.recursive
+										},
+										type: 'subscribe'
 									})
-									.on('end', () => {
-										handle.unwatchers.delete(key);
-									});
-							})
-							.catch(handleError);
-					}
-				}
-			} else {
-				log('  No paths to watch');
-			}
+									.then(ctx => {
+										ctx.response
+											.on('data', data => {
+												switch (data.type) {
+													case 'subscribe':
+														const { sid, topic } = data;
 
-			// remove any inactive watchers
-			for (const key of handle.unwatchers.keys()) {
-				if (key.indexOf(`${prefix}:`) === 0 && !active[key]) {
-					const unwatch = handle.unwatchers.get(key);
-					if (typeof unwatch === 'function') {
-						unwatch();
+														handle.unwatchers.delete(key);
+														handle.unwatchers.set(key, () => {
+															return Dispatcher
+																.call('/appcd/fswatch', {
+																	sid,
+																	type: 'unsubscribe'
+																})
+																.catch(err => {
+																	warn('Failed to unsubscribe from topic: %s', topic);
+																	warn(err);
+																});
+														});
+
+														resolve(active);
+														break;
+
+													case 'event':
+														log('    fs event, rescanning', dir);
+														this.scan({ id, handle, paths, force: true, onlyPaths: [ dir ] })
+															.then(() => {
+																log('      Scan complete');
+																// no need to emit... the gawk watcher will do it
+															})
+															.catch(handleError);
+												}
+											})
+											.on('end', () => {
+												handle.unwatchers.delete(key);
+											});
+									})
+									.catch(handleError);
+							}
+						}
+					} else {
+						log('  No paths to watch');
 					}
-					handle.unwatchers.delete(key);
-				}
-			}
-		});
+				}))
+				.then(async (active) => {
+					// remove any inactive watchers
+					prefix = `${prefix}:`;
+					for (const key of handle.unwatchers.keys()) {
+						if (key.indexOf(prefix) === 0 && !active[key]) {
+							const unwatch = handle.unwatchers.get(key);
+							handle.unwatchers.delete(key);
+
+							if (typeof unwatch === 'function') {
+								await unwatch();
+							}
+						}
+					}
+				});
+		};
 
 		if (opts.watch) {
 			await watchPaths('watch', paths);
@@ -733,5 +738,5 @@ function resolveDir(dir) {
 
 			resolve(real(dir));
 		});
-	}).catch(err => null);
+	}).catch(() => null);
 }
