@@ -14,17 +14,13 @@ const { filesize } = appcdLogger.humanize;
 /**
  * Monitors the Appc Daemon status.
  */
-export default class StatusMonitor {
+export default class StatusMonitor extends ServiceDispatcher {
 	/**
 	 * Initalizes the status and kicks off the timers to refresh the dynamic
 	 * status information.
 	 */
 	constructor() {
-		/**
-		 * The status monitor dispatcher.
-		 * @type {Dispatcher}
-		 */
-		this.dispatcher = new ServiceDispatcher('/:filter*', this);
+		super('/:filter*');
 
 		/**
 		 * The user and system time this process has used.
@@ -103,6 +99,18 @@ export default class StatusMonitor {
 	}
 
 	/**
+	 * Determines the topic for the incoming request.
+	 *
+	 * @param {DispatcherContext} ctx - The dispatcher request context object.
+	 * @returns {String}
+	 * @access private
+	 */
+	getTopic(ctx) {
+		const { params, topic } = ctx.request;
+		return topic || (params && params.filter && params.filter.replace(/^\//, '').split(/\.|\//).join('.')) || '';
+	}
+
+	/**
 	 * Responds to "call" service requests.
 	 *
 	 * @param {Object} ctx - A dispatcher request context.
@@ -116,8 +124,7 @@ export default class StatusMonitor {
 			this.merge(ctx.data);
 			ctx.response = new Response(codes.OK);
 		} else {
-			const filter = ctx.params.filter && ctx.params.filter.replace(/^\//, '').split(/\.|\//) || undefined;
-			const node = this.get(filter);
+			const node = this.get(this.getTopic(ctx));
 			if (!node) {
 				throw new DispatcherError(codes.NOT_FOUND);
 			}
@@ -126,33 +133,40 @@ export default class StatusMonitor {
 	}
 
 	/**
-	 * Responds to "subscribe" service requests.
+	 * Initializes the status watch for the filter.
 	 *
-	 * @param {Object} ctx - A dispatcher request context.
-	 * @param {Function} publish - A function used to publish data to a dispatcher client.
+	 * @param {Object} params - Various parameters.
+	 * @param {String} [params.topic] - The filter to apply.
+	 * @param {Function} params.publish - A function used to publish data to a dispatcher client.
 	 * @access private
 	 */
-	onSubscribe(ctx, publish) {
-		const filter = ctx.params.filter && ctx.params.filter.replace(/^\//, '').split(/\.|\//) || undefined;
-
-		// write the initial value
-		const node = this.get(filter);
-		publish(node);
-
-		logger.debug('Starting gawk watch: %s', highlight(filter ? filter.join('/') : 'no filter'));
+	initSubscription({ topic: filter, publish }) {
+		logger.debug('Starting status gawk watch: %s', highlight(filter || 'no filter'));
 		gawk.watch(this.status, filter, publish);
 	}
 
 	/**
-	 * Responds to "unsubscribe" service requests.
+	 * Handles a new subscriber.
 	 *
-	 * @param {Object} ctx - A dispatcher request context.
-	 * @param {Function} publish - The function used to publish data to a dispatcher client. This is
-	 * the same publish function as the one passed to `onSubscribe()`.
+	 * @param {Object} params - Various parameters.
+	 * @param {String} [params.topic] - The filter to apply.
+	 * @param {Function} params.publish - A function used to publish data to a dispatcher client.
 	 * @access private
 	 */
-	onUnsubscribe(ctx, publish) {
-		logger.debug('Removing gawk watch');
+	onSubscribe({ topic: filter, publish }) {
+		publish(this.get(filter));
+	}
+
+	/**
+	 * Stops watching status updates.
+	 *
+	 * @param {Object} params - Various parameters.
+	 * @param {Function} params.publish - The function used to publish data to a dispatcher client.
+	 * This is the same publish function as the one passed to `onSubscribe()`.
+	 * @access private
+	 */
+	destroySubscription({ publish }) {
+		logger.debug('Removing status gawk watch');
 		gawk.unwatch(this.status, publish);
 	}
 

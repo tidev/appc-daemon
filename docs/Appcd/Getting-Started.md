@@ -16,9 +16,10 @@ sudo npm install -g appcd
 
 #### Dependencies
 
-On client machines, Node.js 4 or newer is required.
+On client machines, Node.js 8 or newer is required.
 
-However, developing on the Appc Daemon requires Node.js 7.6.0 or newer, Gulp 3.9, Yarn, and Lerna.
+However, developing on the Appc Daemon requires Node.js >=8.7.0, Gulp 3.9 (but NOT Gulp 4.x),
+Yarn >=1.2, and Lerna.
 
 ##### Node.js
 

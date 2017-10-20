@@ -88,18 +88,35 @@ unsubscribed.
 
 ```javascript
 Dispatcher.register('/myservice', new ServiceDispatcher({
-	onCall: ctx => {
+	onCall(ctx) {
 		ctx.response = 'howdy!';
 	},
-	onSubscribe: (ctx, publish) => {
+
+	initSubscription({ ctx, publish, sid, topic }) {
+		// this is called the first time a subscription to the specified topic is started
+		// `publish()` is the same function that is passed into the `destroySubscription()` handler
+	}
+
+	onSubscribe({ ctx, publish, sid, topic }) {
+		// this is called every time a new subscription is added
+		// `publish()` is sends a message to just the new subscriber unlike `initSubscription()`
+		// which sends the message to all subscribers
+
 		if (!this.timer) {
 			this.timer = setInterval(() => {
 				publish({ ts: Date.now() });
 			}, 1000);
 		}
 	},
-	onUnsubscribe: (ctx, publish) => {
+
+	onUnsubscribe({ ctx, sid, topic }) {
+		// this is called every time a subscription has been cancelled
+		// note that there is no `publish()` param
 		clearTimeout(this.timer);
+	},
+
+	destroySubscription({ ctx, publish, sid, topic }) {
+		// this is called after all subscriptions for the specific topic have been cancelled
 	}
 }));
 
@@ -113,15 +130,18 @@ Dispatcher
 // trigger `onSubscribe()`
 Dispatcher
     .call('/myservice', { type: 'subscribe' })
-    .then(result => {
-		result.response.on('data', msg => {
-			switch (msg.type) {
+    .then(ctx => {
+		ctx.response.on('data', data => {
+			console.log(data);
+
+			switch (data.type) {
 				case 'subscribe':
+					console.log('subscription id = ', data.sid);
 					break;
 				case 'unsubscribe':
+					console.log('subscription has been cancelled');
 					break;
 			}
-        	console.log(data);
 		});
     });
 ```

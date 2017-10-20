@@ -1,5 +1,6 @@
 import appcdLogger from 'appcd-logger';
 import fs from 'fs-extra';
+import gawk from 'gawk';
 import Metadata from './metadata';
 import path from 'path';
 import vm from 'vm';
@@ -48,7 +49,7 @@ export default class Config extends EventEmitter {
 		 * @type {Object}
 		 * @access public
 		 */
-		this.values = {};
+		this.values = gawk({});
 
 		this.filename = 'config.json';
 
@@ -522,5 +523,30 @@ export default class Config extends EventEmitter {
 		} catch (e) {
 			console.log(e);
 		}
+	}
+	/**
+	 * Adds a listener for config changes.
+	 *
+	 * @param {String|Array.<String>} [filter] - A property name or array of nested properties to
+	 * watch.
+	 * @param {Function} listener - The function to call when something changes.
+	 * @returns {Config}
+	 * @access public
+	 */
+	watch(filter, listener) {
+		gawk.watch(this.values, filter, listener);
+		return this;
+	}
+
+	/**
+	 * Removes a config listener.
+	 *
+	 * @param {Function} listener - The listener callback function.
+	 * @returns {Config}
+	 * @access public
+	 */
+	unwatch(listener) {
+		gawk.unwatch(this.values, listener);
+		return this;
 	}
 }

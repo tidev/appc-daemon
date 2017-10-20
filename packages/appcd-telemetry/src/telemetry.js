@@ -7,7 +7,6 @@ import appcdLogger from 'appcd-logger';
 import Config from 'appcd-config';
 import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs-extra';
-import gawk, { isGawked } from 'gawk';
 import getMachineId from 'appcd-machine-id';
 import path from 'path';
 import request from 'appcd-request';
@@ -37,10 +36,6 @@ export default class Telemetry extends Dispatcher {
 	constructor(cfg) {
 		if (!cfg || !(cfg instanceof Config)) {
 			throw new TypeError('Expected config to be a valid config object');
-		}
-
-		if (!cfg.values || !isGawked(cfg.values)) {
-			throw new TypeError('Expected config values to be gawked');
 		}
 
 		const aguid = cfg.get('appcd.guid');
@@ -108,7 +103,7 @@ export default class Telemetry extends Dispatcher {
 
 		// set the config and wire up the watcher
 		this.updateConfig(cfg.get('telemetry') || {});
-		gawk.watch(cfg.values, 'telemetry', obj => this.updateConfig(obj));
+		cfg.watch('telemetry', obj => this.updateConfig(obj));
 
 		// wire up the telemetry route
 		this.register('/', this.addEvent.bind(this));

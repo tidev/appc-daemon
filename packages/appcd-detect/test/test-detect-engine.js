@@ -668,7 +668,7 @@ describe('Detect Engine', () => {
 
 					return Promise.resolve()
 						.then(() => gawk({ version: '2.0.0' }))
-						.catch(err => {});
+						.catch(() => {});
 				},
 				depth: 1,
 				multiple: true

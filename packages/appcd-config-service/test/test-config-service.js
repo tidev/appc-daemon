@@ -1,6 +1,5 @@
 import Config from 'appcd-config';
 import ConfigService from '../dist/config-service';
-import gawk from 'gawk';
 import Response from 'appcd-response';
 
 import { DispatcherError } from 'appcd-dispatcher';
@@ -18,45 +17,6 @@ describe('Config Service', () => {
 		expect(() => {
 			new ConfigService('foo');
 		}).to.throw(TypeError, 'Expected config to be a valid config object');
-	});
-
-	it('should error if config values are not gawked', () => {
-		const cfg = new Config({
-			config: {
-				foo: 'bar'
-			}
-		});
-
-		expect(() => {
-			new ConfigService(cfg);
-		}).to.throw(TypeError, 'Expected config values to be gawked');
-	});
-
-	it('should error if config missing watch() method', () => {
-		const cfg = new Config({
-			config: {
-				foo: 'bar'
-			}
-		});
-		cfg.values = gawk(cfg.values);
-
-		expect(() => {
-			new ConfigService(cfg);
-		}).to.throw(Error, 'Config object missing watch() method');
-	});
-
-	it('should error if config missing unwatch() method', () => {
-		const cfg = new Config({
-			config: {
-				foo: 'bar'
-			}
-		});
-		cfg.values = gawk(cfg.values);
-		cfg.watch = (filter, listener) => gawk.watch(cfg.values, filter, listener);
-
-		expect(() => {
-			new ConfigService(cfg);
-		}).to.throw(Error, 'Config object missing unwatch() method');
 	});
 
 	it('should implicitly get a config', () => {
@@ -572,34 +532,27 @@ describe('Config Service', () => {
 		const publish = value => {
 			switch (++i) {
 				case 1:
-					expect(value).to.deep.equal({});
-					break;
-
-				case 2:
 					expect(value).to.deep.equal({ foo: 'bar' });
 					break;
 
-				case 3:
+				case 2:
 					expect(value).to.deep.equal({});
 					break;
 
-				case 4:
+				case 3:
 					throw new Error('Expected publish to be unsubscribed');
 			}
 		};
 
-		cs.onSubscribe(ctx, publish);
+		cs.initSubscription({ publish });
 		cs.config.set('foo', 'bar');
 		cs.config.delete('foo');
-		cs.onUnsubscribe(ctx, publish);
+		cs.destroySubscription({ publish });
 		cs.config.set('foo', 'bar');
 	});
 });
 
 function createConfigService(json) {
 	const cfg = new Config({ config: json });
-	cfg.values = gawk(cfg.values);
-	cfg.watch = (filter, listener) => gawk.watch(cfg.values, filter, listener);
-	cfg.unwatch = listener => gawk.unwatch(cfg.values, listener);
 	return new ConfigService(cfg);
 }
