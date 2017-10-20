@@ -241,15 +241,27 @@ class SystemInfoService extends ServiceDispatcher {
 	}
 
 	/**
+	 * Determines the topic for the incoming request.
+	 *
+	 * @param {DispatcherContext} ctx - The dispatcher request context object.
+	 * @returns {String}
+	 * @access private
+	 */
+	getTopic(ctx) {
+		const { params, topic } = ctx.request;
+		return topic || (params.filter && params.filter.replace(/^\//, '').split(/\.|\//)) || undefined;
+	}
+
+	/**
 	 * Responds to "call" service requests.
 	 *
 	 * @param {Object} ctx - A dispatcher request context.
 	 * @access private
 	 */
 	onCall(ctx) {
-		const filter = ctx.params.filter && ctx.params.filter.replace(/^\//, '').split(/\.|\//) || undefined;
-
+		const filter = this.getTopic(ctx);
 		const node = this.get(filter);
+
 		if (!node) {
 			throw new DispatcherError(codes.NOT_FOUND);
 		}
@@ -258,32 +270,40 @@ class SystemInfoService extends ServiceDispatcher {
 	}
 
 	/**
-	 * Responds to "subscribe" service requests.
+	 * nitializes the config watch for the filter.
 	 *
-	 * @param {Object} ctx - A dispatcher request context.
-	 * @param {Function} publish - A function used to publish data to a dispatcher client.
+	 * @param {Object} params - Various parameters.
+	 * @param {String} [params.topic] - The filter to apply.
+	 * @param {Function} params.publish - A function used to publish data to a dispatcher client.
 	 * @access private
 	 */
-	onSubscribe(ctx, publish) {
-		const filter = ctx.params.filter && ctx.params.filter.replace(/^\//, '').split(/\.|\//) || undefined;
-
-		const node = this.get(filter);
-		publish(node);
-
-		console.log('Starting gawk watch: %s', filter ? filter.join('/') : 'no filter');
+	initSubscription({ topic: filter, publish }) {
+		console.log('Starting jdk gawk watch: %s', filter || 'no filter');
 		gawk.watch(this.results, filter, publish);
 	}
 
 	/**
-	 * Responds to "unsubscribe" service requests.
+	 * Handles a new subscriber.
 	 *
-	 * @param {Object} ctx - A dispatcher request context.
-	 * @param {Function} publish - The function used to publish data to a dispatcher client. This is
-	 * the same publish function as the one passed to `onSubscribe()`.
+	 * @param {Object} params - Various parameters.
+	 * @param {String} [params.topic] - The filter to apply.
+	 * @param {Function} params.publish - A function used to publish data to a dispatcher client.
 	 * @access private
 	 */
-	onUnsubscribe(ctx, publish) {
-		console.log('Removing gawk watch');
+	onSubscribe({ topic: filter, publish }) {
+		publish(this.get(filter));
+	}
+
+	/**
+	 * Stops watching the config updates.
+	 *
+	 * @param {Object} params - Various parameters.
+	 * @param {Function} params.publish - The function used to publish data to a dispatcher client.
+	 * This is the same publish function as the one passed to `onSubscribe()`.
+	 * @access private
+	 */
+	destroySubscription({ publish }) {
+		console.log('Removing jdk gawk watch');
 		gawk.unwatch(this.results, publish);
 	}
 

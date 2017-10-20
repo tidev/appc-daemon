@@ -1,7 +1,7 @@
 {
   "name": "appcd-config-service",
   "version": "0.1.0",
-  "description": "A service that exposes a config object.",
+  "description": "Exposes an API for managing the appcd configuration.",
   "main": "./dist/config-service",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
   "maintainers": [

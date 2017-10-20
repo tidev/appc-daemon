@@ -4,7 +4,7 @@ import Dispatcher, { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher
 import { codes } from 'appcd-response';
 import { EventEmitter } from 'events';
 import { expandPath } from 'appcd-path';
-import { FSWatcher, renderTree, rootEmitter, status, tree } from './fswatcher';
+import { FSWatcher, renderTree, rootEmitter, status as fsStatus, tree as fsTree } from './fswatcher';
 
 const logger = appcdLogger('appcd:fswatcher:manager');
 const { highlight } = appcdLogger.styles;
@@ -61,51 +61,57 @@ export default class FSWatchManager extends EventEmitter {
 	/**
 	 * Responds to "subscribe" service requests.
 	 *
-	 * @param {Object} ctx - A dispatcher request context.
-	 * @param {Function} publish - A function used to publish data to a dispatcher client.
+	 * @param {Object} params - Various parameters.
+	 * @param {Object} params.ctx - A dispatcher request context.
+	 * @param {String} params.sid - The subscription id.
+	 * @param {String} params.topic - The path to watch.
+	 * @param {Function} params.publish - A function used to publish data to a dispatcher client.
 	 * @access private
 	 */
-	onSubscribe(ctx, publish) {
-		const path = this.getTopic(ctx);
-
+	onSubscribe({ ctx, sid, topic: path, publish }) {
 		if (!path) {
 			throw new DispatcherError(codes.MISSING_ARGUMENT, 'Missing required parameter "%s"', 'path');
 		}
 
 		logger.log('Starting FSWatcher: %s', highlight(path));
 		const { data } = ctx.request;
-		this.watchers[path] = new FSWatcher(path, { recursive: data && !!data.recursive })
-			.on('change', publish);
+
+		const watcher = new FSWatcher(path, { recursive: data && !!data.recursive });
+		watcher.on('change', publish);
+		this.watchers[sid] = watcher;
+
 		logger.log(renderTree());
 	}
 
 	/**
 	 * Responds to "unsubscribe" service requests.
 	 *
-	 * @param {Object} ctx - A dispatcher request context.
-	 * @param {Function} publish - The function used to publish data to a dispatcher client. This is
+	 * @param {Object} params - Various parameters.
+	 * @param {Object} params.ctx - A dispatcher request context.
+	 * @param {String} params.sid - The subscription id.
+	 * @param {Function} params.publish - The function used to publish data to a dispatcher client. This is
 	 * the same publish function as the one passed to `onSubscribe()`.
 	 * @access private
 	 */
-	onUnsubscribe(ctx) {
-		const path = this.getTopic(ctx);
-		const watcher = path && this.watchers[path];
+	onUnsubscribe({ ctx, sid }) {
+		const watcher = sid && this.watchers[sid];
 		if (watcher) {
-			logger.log('Stopping FSWatcher: %s', highlight(path));
+			logger.log('Stopping FSWatcher: %s', highlight(sid));
 			watcher.close();
-			delete this.watchers[path];
+			delete this.watchers[sid];
 			logger.log(renderTree());
 		}
 	}
 
 	/**
 	 * Stops all active file system watchers.
+	 *
 	 * @access public
 	 */
 	shutdown() {
-		for (const path of Object.keys(this.watchers)) {
-			this.watchers[path].close();
-			delete this.watchers[path];
+		for (const sid of Object.keys(this.watchers)) {
+			this.watchers[sid].close();
+			delete this.watchers[sid];
 		}
 	}
 
@@ -116,7 +122,7 @@ export default class FSWatchManager extends EventEmitter {
 	 * @access public
 	 */
 	status() {
-		return status();
+		return fsStatus();
 	}
 
 	/**
@@ -126,6 +132,6 @@ export default class FSWatchManager extends EventEmitter {
 	 * @access public
 	 */
 	get tree() {
-		return tree;
+		return fsTree;
 	}
 }
