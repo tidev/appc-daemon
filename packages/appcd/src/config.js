@@ -1,10 +1,13 @@
 import { createInstanceWithDefaults, StdioStream } from 'appcd-logger';
+import Response, { codes } from 'appcd-response';
 import { banner, createRequest, loadConfig } from './common';
 
 const logger = createInstanceWithDefaults().config({ theme: 'compact' }).enable('*').pipe(new StdioStream());
-const { log, error } = logger;
-const { alert, highlight, note, underline } = logger.styles;
+const { log } = logger;
+const { highlight, underline } = logger.styles;
 
+const getterActions = [ 'ls', 'list', 'get' ];
+const setterActions = [ 'set', 'rm', 'delete', 'push', 'pop', 'shift', 'unshift' ];
 const cmd = {
 	options: {
 		'--json': { desc: 'outputs the config as JSON' }
@@ -22,219 +25,141 @@ const cmd = {
 		request
 			.once('error', err => {
 				const { code, errorCode } = err;
-				if (err.code === 'ECONNREFUSED') {
-					switch (action) {
-						case 'set':
-							if (!key) {
-								log('Not allowed to set config root');
-								return;
-							}
-							try {
+				let config;
+				let val;
+				let response = {};
+				if (code === 'ECONNREFUSED') {
+					try {
+						if (setterActions.includes(action) && !key) {
+							response = new Response(codes.FORBIDDEN, `Not allowed to ${action} config root`);
+							logIt({ response });
+							process.exit(1);
+						}
+						switch (action) {
+							case 'set':
 								cfg.set(key, value);
-								log(`Set ${underline(key)} to ${highlight(value)}`);
-							} catch (ex) {
-								log(`Oh no! Couldn't set ${key}`);
-							}
-							return;
+								break;
 
-						case 'rm':
-						case 'delete':
-							if (!key) {
-								log('Not allowed to delete config root');
-								return;
-							}
-							try {
+							case 'rm':
+							case 'delete':
 								cfg.delete(key);
-								logIt(action, key, value);
-							} catch (ex) {
-								console.log(ex);
-								error(`Unable to remove property ${key}`);
-							}
-							return;
+								break;
 
-						case 'push':
-							if (!key) {
-								log('Not allowed to push onto config root');
-								return;
-							}
-							try {
-								logIt(action, key, value);
-							} catch (e) {
-								log(e);
-								log(`Oh no! Couldn't push ${key}`);
-							}
-							return;
+							case 'push':
+								cfg.push(key, value);
+								break;
 
-						case 'shift':
-							if (!key) {
-								log('Not allowed to shift config root');
-								return;
-							}
-							try {
-								logIt(action, key, value);
-							} catch (e) {
-								log(`Oh no! Couldn't shift ${key}`);
-							}
-							return;
+							case 'shift':
+								cfg.shift(key);
+								break;
 
-						case 'pop':
-							if (!key) {
-								log('Not allowed to pop config root');
-								return;
-							}
-							try {
-								const val = cfg.pop(key);
-								console.log(val);
-								logIt(action, key, value);
-							} catch (e) {
-								console.log(e);
-								log(`Oh no! Couldn't pop ${key}`);
-							}
-							return;
+							case 'pop':
+								val = cfg.pop(key);
+								break;
 
-						case 'unshift':
-							if (!key) {
-								log('Not allowed to unshift onto config root');
-								return;
-							}
-							try {
-								cfg.unshift(key, data.value);
-								logIt(action, key, value);
-							} catch (e) {
-								log(`Oh no! Couldn't unshift ${key}`);
-							}
-							return;
+							case 'unshift':
+								cfg.unshift(key, value);
+								break;
 
-						case 'ls':
-						case 'get':
-						case 'list':
-						case undefined:
-							break;
+							case 'ls':
+							case 'get':
+							case 'list':
+							case undefined:
+								const filter = key && key.split(/\.|\//).join('.') || undefined;
+								config = cfg.get(filter || undefined);
+								break;
 
-						default:
-							error(`Invalid action: ${action}`);
-							return;
+							default:
+								response = new Response(codes.BAD_REQUEST, `Invalid action: ${data.action}`);
+						}
+					} catch (ex) {
+						response = ex;
+						logIt({ response });
 					}
-					const filter = key && key.split(/\.|\//).join('.') || undefined;
-					const node = cfg.get(filter || undefined);
-					if (!node) {
-						log(`Not Found: ${filter || ''}`);
-						process.exit(1);
-					}
-					log(prettyConfig(node));
-				}  else if (err.errorCode === 400) {
 					if (argv.json) {
-						log(err);
+						log(response);
 					} else {
-						error(`Invalid action ${alert(underline(action))}`);
+						logIt({ action, key, value, config });
 					}
-				} else if (err.errorCode === 404) {
-					if (argv.json) {
-						log(err);
-					} else {
-						error(`Unable to find key ${key}`);
-					}
-				} else if (err.errorCode === 500) {
-					if (argv.json) {
-						log(err);
-					} else {
-						error(`Unable to set readonly property ${key}`);
-					}
-					process.exit(6);
-				} else {
+				}  else if (argv.json) {
 					log(err);
+				} else {
+					logIt({ response: err });
 				}
 				process.exit(1);
 			})
-			.on('response', (message, response) => {
+			.on('response', message => {
 				client.disconnect();
 				if (argv.json) {
-					log(response);
+					log(message);
 					process.exit(0);
 				}
-				log(banner());
-				if (argv.json) {
-					log(message);
-				} else {
-					logIt(action, key, value, false, message);
-				}
+				logIt({ action, key, value, config: message });
 				process.exit(0);
 			});
 	}
 };
 
-function logIt(action, key, value, json = false, message) {
+function logIt({ action, key, value, config, response }) {
+	log(banner());
+	if (response) {
+		log(response.format || response.message);
+		if (response.errorCode === 500) {
+			process.exit(6);
+		}
+		process.exit(1);
+	}
 	switch (action) {
 		case 'push':
 		case 'unshift':
-			if (json) {
-				log({});
-			} else {
-				log(`Added ${highlight(value)} to ${underline(key)}`);
-			}
+			log(`Added ${highlight(value)} to ${underline(key)}`);
 			break;
 		case 'set':
-			if (json) {
-				log({});
-			} else {
-				log(`Set ${underline(key)} to ${highlight(value)}`);
-			}
+			log(`Set ${underline(key)} to ${highlight(value)}`);
 			break;
 		case 'rm':
 		case 'delete':
-			if (json) {
-				log({});
-			} else {
-				log(`Removed ${underline(key)}`);
-			}
+			log(`Removed ${underline(key)}`);
 			break;
 		case 'pop':
 		case 'shift':
-			if (json) {
-				log({});
-			} else {
-				log(`Removed value from ${underline(key)}`);
-			}
+			log(`Removed value from ${underline(key)}`);
 			break;
 		case 'ls':
 		case 'list':
 		case 'get':
 		default:
-			log(prettyConfig(message, key));
+			log(prettyConfig(config, key));
 			break;
 	}
 }
 
 function prettyConfig (config, key) {
 	const results = {};
-	function walk(obj, parts, parent) {
-		var filter = Array.isArray(parts) ? parts.shift() : null;
+	function walk(obj, parent) {
 		Object.keys(obj).forEach(function (name) {
-			if (!filter || name === filter) {
-				var p = parent ? parent + '.' + name : name;
-				if (Object.prototype.toString.call(obj[name]) === '[object Object]') {
-					walk(obj[name], parts, p);
-				} else if (!parts || !parts.length || !parent || parent.indexOf(parts) === 0) {
-					if (obj[name]) {
-						results[p] = JSON.stringify(obj[name]);
-					}
-				}
+			const p = parent ? parent + '.' + name : name;
+			if (Object.prototype.toString.call(obj[name]) === '[object Object]') {
+				walk(obj[name], p);
+			} else if (obj[name]) {
+				results[p] = JSON.stringify(obj[name]);
 			}
 		});
 	}
+
 	if (typeof config === 'object' && !Array.isArray(config)) {
-		walk(config);
+		walk(config, key && key.split('.'));
 	} else {
-		results[key] = config;
+		// We have just a single value, return it;
+		return `${underline(key)} = ${highlight(config)}`;
 	}
-	var maxlen = Object.keys(results).reduce(function (a, b) {
+	const maxlen = Object.keys(results).reduce(function (a, b) {
 		return Math.max(a, b.length + 1);
 	}, 0);
 	let string = '';
 	Object.keys(results).sort().forEach(function (k) {
 		const padding = maxlen - k.length;
-		let value;
-		string += `${underline(k)} ${('=').padStart(padding)} ${highlight((results[k]))}\n`;
+		string += `${underline(k)} ${('=').padStart(padding)} ${highlight(results[k])}\n`;
 	});
 	return string;
 }
