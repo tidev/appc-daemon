@@ -171,7 +171,7 @@ export default class PluginManager extends EventEmitter {
 					ns = this.namespaces[plugin.name] = {
 						handler: async (ctx, next) => {
 							const versions = Object.keys(ns.versions).sort(semver.rcompare);
-							let version = ctx.params.version || null;
+							let version = ctx.request.params.version || null;
 
 							if (!version) {
 								logger.log('No version specified, return list of versions');
@@ -199,7 +199,7 @@ export default class PluginManager extends EventEmitter {
 
 							if (plugin) {
 								// forward request to the plugin's dispatcher
-								ctx.path = '/' + (ctx.params.path || '');
+								ctx.path = '/' + (ctx.request.params.path || '');
 								logger.log('Starting plugin %s', highlight(plugin.toString()));
 								plugin.error = null;
 								await plugin.start();

@@ -50,11 +50,10 @@ export default class ExternalPlugin extends PluginBase {
 				return Promise.reject(new Error('Tunnel not initialized!'));
 			}
 
-			return this.tunnel
-				.send({
-					path,
-					data
-				});
+			return this.tunnel.send({
+				path,
+				data
+			});
 		};
 	}
 
@@ -69,32 +68,35 @@ export default class ExternalPlugin extends PluginBase {
 	 */
 	dispatch(ctx, next) {
 		if (!this.tunnel) {
+			// this should probably never happen
 			return next();
 		}
 
 		const startTime = new Date();
-
-		logger.log('Sending request: %s', highlight(ctx.path));
-
+		const { path, type } = ctx.request;
 		const logRequest = status => {
 			const style = status < 400 ? ok : alert;
-			let msg = `Plugin dispatcher: ${highlight(`/${this.plugin.name}/${this.plugin.version}${ctx.path}`)} ${style(status)}`;
+			let msg = `Plugin dispatcher: ${highlight(`/${this.plugin.name}/${this.plugin.version}${path}`)} ${style(status)}`;
 			if (ctx.type !== 'event') {
 				msg += ` ${highlight(`${new Date() - startTime}ms`)}`;
 			}
 			logger.log(msg);
 		};
 
-		return this.tunnel
-			.send({
-				path: ctx.path,
-				data: ctx.request
-			})
-			.then(res => {
-				logRequest(res.status);
+		logger.log('Sending request: %s', highlight(path));
 
-				ctx.status = res.status;
-				ctx.response = res.response;
+		return this.tunnel
+			.send(ctx)
+			.then(ctx => {
+				logRequest(ctx.status);
+
+				const { sid } = ctx.request;
+				if (type === 'subscribe' && sid) {
+					this.streams[sid] = ctx.response;
+					ctx.response.on('end', () => {
+						delete this.streams[sid];
+					});
+				}
 
 				return ctx;
 			})
@@ -104,7 +106,6 @@ export default class ExternalPlugin extends PluginBase {
 				} else {
 					logRequest(err.status);
 				}
-
 				throw err;
 			});
 	}

@@ -22,6 +22,9 @@ const cmd = {
 				}
 
 				if (response.type === 'event') {
+					if (response.fin) {
+						process.exit(0);
+					}
 					console.log(inspect(message, { depth: null }));
 				}
 			})

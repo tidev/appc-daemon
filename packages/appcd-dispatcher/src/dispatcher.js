@@ -147,12 +147,10 @@ export default class Dispatcher {
 			logger.log('Found matching route: %s', highlight(route.path));
 
 			// extract the params from the path
-			delete ctx.params;
-			const params = m.slice(1);
-			params.forEach((param, i) => {
+			ctx.request.params = {};
+			m.slice(1).forEach((param, i) => {
 				if (route.keys[i]) {
-					ctx.params || (ctx.params = {});
-					ctx.params[route.keys[i].name] = param;
+					ctx.request.params[route.keys[i].name] = param;
 				}
 			});
 
@@ -264,8 +262,6 @@ export default class Dispatcher {
 
 					logger.error(err);
 					ctx.body = err.toString(ctx.request && ctx.request.acceptsLanguages());
-
-					return Promise.resolve();
 				});
 		};
 	}
