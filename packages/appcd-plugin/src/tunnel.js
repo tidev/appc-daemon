@@ -110,19 +110,29 @@ export default class Tunnel {
 	/**
 	 * Sends a message and waits for a response.
 	 *
-	 * @param {Object|DispatcherContext} payload - The message to send.
+	 * @param {Object|DisptacherContext} ctxOrPayload - An existing dispatcher context or an object
+	 * containing the path and message to send.
 	 * @returns {Promise}
 	 * @access public
 	 */
-	send(payload) {
+	send(ctxOrPayload) {
 		return new Promise((resolve, reject) => {
 			const id = uuid.v4();
+			let ctx;
 
-			const ctx = new DispatcherContext({
-				request: typeof payload === 'object' && payload || {},
-				response: new PassThrough({ objectMode: true }),
-				status: 200
-			});
+			if (ctxOrPayload instanceof DispatcherContext) {
+				ctx = ctxOrPayload;
+				ctx.request = {
+					path: ctxOrPayload.path,
+					data: ctxOrPayload.request
+				};
+			} else {
+				ctx = new DispatcherContext({
+					request: typeof ctxOrPayload === 'object' && ctxOrPayload || {},
+					response: new PassThrough({ objectMode: true }),
+					status: 200
+				});
+			}
 
 			this.requests[id] = ({ message }) => {
 				if (message.status) {
@@ -162,6 +172,7 @@ export default class Tunnel {
 						resolve(ctx);
 						// fallthrough
 					case 'event':
+						ctx.request.sid = message.sid;
 					case 'unsubscribe':
 						ctx.response.write(message);
 						break;

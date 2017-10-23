@@ -33,7 +33,7 @@ export default class SubprocessManager extends EventEmitter {
 
 		const dispatcher = this.dispatcher = new Dispatcher()
 			.register('/spawn/node/:version?', ctx => {
-				const { data, source } = ctx.request;
+				const { data, params, source } = ctx.request;
 
 				// if the source is http, then block the spawn
 				if (source === 'http') {
@@ -43,7 +43,7 @@ export default class SubprocessManager extends EventEmitter {
 				return Promise.resolve()
 					.then(() => Dispatcher.call('/appcd/config/home'))
 					.then(({ response }) => expandPath(response, 'node'))
-					.then(nodeHome => prepareNode({ nodeHome, version: ctx.params.version || process.version }))
+					.then(nodeHome => prepareNode({ nodeHome, version: params.version || process.version }))
 					.then(node => dispatcher.call('/spawn', { data: { ...data, command: node } }));
 			})
 
@@ -229,11 +229,13 @@ export default class SubprocessManager extends EventEmitter {
 			}))
 
 			.register('/kill/:pid?', ctx => {
-				if (!ctx.params.pid) {
+				const { params } = ctx.request;
+
+				if (!params.pid) {
 					throw new SubprocessError(codes.MISSING_PARAMETER, 'Missing required parameter "%s"', 'pid');
 				}
 
-				const pid = parseInt(ctx.params.pid);
+				const pid = parseInt(params.pid);
 				if (isNaN(pid) || pid < 0) {
 					throw new SubprocessError(codes.INVALID_PARAMETER, 'The "%s" parameter must be a positive integer', 'pid');
 				}

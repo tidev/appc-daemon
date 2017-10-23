@@ -270,7 +270,7 @@ class SystemInfoService extends ServiceDispatcher {
 	}
 
 	/**
-	 * nitializes the config watch for the filter.
+	 * Initializes the system info watch for the filter.
 	 *
 	 * @param {Object} params - Various parameters.
 	 * @param {String} [params.topic] - The filter to apply.
@@ -278,7 +278,7 @@ class SystemInfoService extends ServiceDispatcher {
 	 * @access private
 	 */
 	initSubscription({ topic: filter, publish }) {
-		console.log('Starting jdk gawk watch: %s', filter || 'no filter');
+		console.log('Starting system info gawk watch: %s', filter || 'no filter');
 		gawk.watch(this.results, filter, publish);
 	}
 
@@ -295,7 +295,7 @@ class SystemInfoService extends ServiceDispatcher {
 	}
 
 	/**
-	 * Stops watching the config updates.
+	 * Stops watching the system info updates.
 	 *
 	 * @param {Object} params - Various parameters.
 	 * @param {Function} params.publish - The function used to publish data to a dispatcher client.
@@ -303,7 +303,7 @@ class SystemInfoService extends ServiceDispatcher {
 	 * @access private
 	 */
 	destroySubscription({ publish }) {
-		console.log('Removing jdk gawk watch');
+		console.log('Removing system info gawk watch');
 		gawk.unwatch(this.results, publish);
 	}
 

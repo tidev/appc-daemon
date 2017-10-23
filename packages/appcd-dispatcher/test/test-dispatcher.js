@@ -139,11 +139,12 @@ describe('dispatcher', () => {
 		it('should parse params and pass them to the handler', done => {
 			const d = new Dispatcher();
 
-			d.register('/foo/:bar', data => {
-				expect(data).to.be.an('object');
-				expect(data).to.have.property('params');
-				expect(data.params).to.have.property('bar');
-				expect(data.params.bar).to.equal('abc');
+			d.register('/foo/:bar', ctx => {
+				expect(ctx).to.be.an('object');
+				expect(ctx).to.have.property('request');
+				expect(ctx.request).to.have.property('params');
+				expect(ctx.request.params).to.have.property('bar');
+				expect(ctx.request.params.bar).to.equal('abc');
 			});
 
 			d.call('/foo/abc')
@@ -557,7 +558,7 @@ describe('dispatcher', () => {
 			const d = new Dispatcher();
 
 			d.register('/foo', ctx => {
-				expect(ctx.request).to.deep.equal({ foo: 'bar' });
+				expect(ctx.request).to.deep.equal({ foo: 'bar', params: {} });
 				expect(ctx.headers).to.deep.equal({});
 				expect(ctx.source).to.equal('http');
 				ctx.response = 'foo!';
