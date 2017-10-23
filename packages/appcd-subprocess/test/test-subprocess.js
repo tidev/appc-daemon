@@ -126,6 +126,30 @@ describe('subprocess', () => {
 				})
 				.catch(done);
 		});
+
+		it('should default to opts.windowsHide: true when not specified', done => {
+			subprocess
+				.run(process.execPath, [ '-e', 'process.stdout.write("foo");process.stderr.write("bar");process.exit(1);' ])
+				.then(() => {
+					done(new Error('Expected subprocess to fail'));
+				})
+				.catch(({ opts }) => {
+					expect(opts.windowsHide).to.equal(true);
+					done();
+				});
+		});
+
+		it('should not override opts.windowsHide when specified', done => {
+			subprocess
+				.run(process.execPath, [ '-e', 'process.stdout.write("foo");process.stderr.write("bar");process.exit(1);' ], { windowsHide: false })
+				.then(() => {
+					done(new Error('Expected subprocess to fail'));
+				})
+				.catch(({ opts }) => {
+					expect(opts.windowsHide).to.equal(false);
+					done();
+				});
+		});
 	});
 
 	describe('spawn()', () => {
@@ -211,6 +235,38 @@ describe('subprocess', () => {
 					done(e);
 				}
 			});
+		});
+
+		it('should default to opts.windowsHide: true when not specified', done => {
+			const desc = subprocess.spawn({
+				command: process.execPath,
+				args: [
+					path.join(__dirname, 'fixtures', 'echo.js'),
+					'Hello world!'
+				],
+				options: { cwd: __dirname }
+			});
+
+			expect(desc).to.be.an('object');
+			expect(desc).to.have.keys('command', 'args', 'options', 'child');
+			expect(desc.options.windowsHide).to.equal(true);
+			done();
+		});
+
+		it('should not override opts.windowsHide when specified', done => {
+			const desc = subprocess.spawn({
+				command: process.execPath,
+				args: [
+					path.join(__dirname, 'fixtures', 'echo.js'),
+					'Hello world!'
+				],
+				options: { cwd: __dirname, windowsHide: false }
+			});
+
+			expect(desc).to.be.an('object');
+			expect(desc).to.have.keys('command', 'args', 'options', 'child');
+			expect(desc.options.windowsHide).to.equal(false);
+			done();
 		});
 	});
 
