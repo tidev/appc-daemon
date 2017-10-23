@@ -236,15 +236,32 @@ export function extractNode({ archive, dest }) {
 			}
 
 			try {
-				const cwd = path.join(dir, 'local.pkg');
+				const nodePkgRegExp = /^(local|node-v.+)\.pkg$/;
+				let cwd;
+				for (const name of fs.readdirSync(dir)) {
+					if (nodePkgRegExp.test(name)) {
+						cwd = path.join(dir, name);
+						break;
+					}
+				}
+
+				if (!cwd) {
+					throw new Error('Failed to find package directory in archive');
+				}
+
 				logger.log('Executing: %s', highlight(`CWD=${cwd} cat Payload | gzip -d | cpio -id`));
 				execSync('cat Payload | gzip -d | cpio -id', { cwd, stdio: 'ignore' });
 
-				const nodeBinary = path.join(dir, 'local.pkg', 'bin', 'node');
+				let nodeBinary = path.join(cwd, 'bin', 'node');
 				if (isFile(nodeBinary)) {
 					fs.renameSync(nodeBinary, binaryPath);
 				} else {
-					binaryPath = null;
+					nodeBinary = path.join(cwd, 'usr', 'local', 'bin', 'node');
+					if (isFile(nodeBinary)) {
+						fs.renameSync(nodeBinary, binaryPath);
+					} else {
+						binaryPath = null;
+					}
 				}
 			} catch (e) {
 				return reject(new Error(`Failed to extract pkg payload: ${e.message || e.toString()}`));
