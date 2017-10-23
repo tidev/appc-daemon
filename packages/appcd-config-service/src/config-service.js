@@ -70,6 +70,8 @@ export default class ConfigService extends ServiceDispatcher {
 			}
 
 			switch (data.action) {
+				case 'ls':
+				case 'list':
 				case 'get':
 					break;
 
@@ -93,10 +95,6 @@ export default class ConfigService extends ServiceDispatcher {
 						ctx.response = new Response(codes.NOT_FOUND);
 					}
 					return;
-
-				case 'ls':
-				case 'list':
-					break;
 
 				case 'push':
 					if (!key) {
