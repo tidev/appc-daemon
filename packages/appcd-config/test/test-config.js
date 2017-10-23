@@ -1,5 +1,24 @@
 import Config, { load } from '../dist/index';
+import fs from 'fs-extra';
 import path from 'path';
+import tmp from 'tmp';
+import { real } from 'appcd-path';
+
+const _tmpDir = tmp.dirSync({
+	prefix: 'appcd-fswatcher-test-',
+	unsafeCleanup: true
+}).name;
+const tmpDir = real(_tmpDir);
+
+function makeTempName() {
+	return path.join(_tmpDir, Math.random().toString(36).substring(7));
+}
+
+function makeTempDir() {
+	const dir = makeTempName();
+	fs.mkdirsSync(dir);
+	return dir;
+}
 
 describe('load()', () => {
 	/**
@@ -710,10 +729,24 @@ describe('Config', () => {
 	});
 
 	describe.only('save()', () => {
+		let tmp;
+		after(() => {
+			fs.removeSync(tmpDir);
+		});
+
 		it('should save', () => {
-			const config = new Config({ config: { home: path.join(__dirname, 'testdir') } });
-			console.log(config.get('home'));
-			config.save();
+			tmp = makeTempDir();
+			const config = new Config({ config: { home: tmp, foo: 'bar', job: { title: 'binman' } }, configFile: path.join(__dirname, 'fixtures', 'good-meta-simple.js') });
+			expect(() => {
+				config.save();
+			}).to.not.throw();
+			expect(fs.existsSync(path.join(tmp, 'config.json'))).to.equal(true);
+		});
+
+		it('should be able to load with a saved config that has persisted values', () => {
+			const config = new Config({ configFile: path.join(tmp, 'config.json') });
+			expect(config.get('foo')).to.equal('bar');
+			expect(config.get('job.title')).to.equal('binman');
 		});
 	});
 });

@@ -53,8 +53,6 @@ export default class Config extends EventEmitter {
 
 		this.filename = 'config.json';
 
-		this.location = expandPath(path.join(this.get('home', '~/.appcelerator/appcd'), this.filename));
-
 		if (opts.configFile) {
 			this.load(opts.configFile);
 		}
@@ -65,6 +63,8 @@ export default class Config extends EventEmitter {
 			}
 			this.merge(opts.config, { overrideReadonly: true, write: false });
 		}
+
+		this.location = expandPath(path.join(this.get('home', '~/.appcelerator/appcd'), this.filename));
 	}
 
 	/**
@@ -347,7 +347,6 @@ export default class Config extends EventEmitter {
 		}
 		this.emit('change');
 		const val = it.pop();
-		console.log(it);
 		this.save();
 		return val;
 	}
@@ -516,12 +515,9 @@ export default class Config extends EventEmitter {
 			fs.ensureDirSync(homeDir);
 			const tmpFile = this.location + '.' + Date.now() + '.tmp';
 			fs.writeFileSync(tmpFile, this.toString());
-			console.log(this.location);
 			fs.renameSync(tmpFile, this.location);
-			console.log(fs.existsSync(this.location));
-			console.log(this.toString());
 		} catch (e) {
-			console.log(e);
+			log(e);
 		}
 	}
 	/**
