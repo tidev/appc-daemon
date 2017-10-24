@@ -27,7 +27,7 @@ const cmd = {
 				const { code, errorCode } = err;
 				let config;
 				let val;
-				let response = {};
+				let response;
 				if (code === 'ECONNREFUSED') {
 					try {
 						if (setterActions.includes(action) && !key) {
@@ -67,6 +67,9 @@ const cmd = {
 							case undefined:
 								const filter = key && key.split(/\.|\//).join('.') || undefined;
 								config = cfg.get(filter || undefined);
+								if (!config) {
+									response = new Response(codes.NOT_FOUND, `Not found: ${filter || ''}`);
+								}
 								break;
 
 							default:
@@ -77,9 +80,9 @@ const cmd = {
 						logIt({ response });
 					}
 					if (argv.json) {
-						log(response);
+						log(response || config);
 					} else {
-						logIt({ action, key, value, config });
+						logIt({ action, key, value, config, response });
 					}
 				}  else if (argv.json) {
 					log(err);
