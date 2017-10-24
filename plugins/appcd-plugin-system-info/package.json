@@ -12,7 +12,7 @@
     "build": "gulp build",
     "coverage": "gulp coverage",
     "docs": "gulp docs",
-    "prepublish": "gulp build",
+    "prepare": "gulp build",
     "test": "gulp test"
   },
   "dependencies": {
@@ -21,7 +21,7 @@
     "appcd-path": "0.1.0",
     "appcd-response": "0.1.0",
     "appcd-subprocess": "0.1.0",
-    "appcd-util": "0.1.0",
+    "appcd-util": "0.1.1",
     "gawk": "^4.3.0",
     "source-map-support": "^0.5.0"
   },

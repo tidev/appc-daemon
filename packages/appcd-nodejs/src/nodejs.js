@@ -359,20 +359,22 @@ export function generateV8MemoryArgument(value, arch) {
  * @param {String} [params.arch] - The desired Node.js architecture. Must be `x86` or `x64`.
  * Defaults to the current machine architecture.
  * @param {String} params.args - The arguments to pass into Node.js.
- * @param {Boolean} [params.detached=false] - When true, detaches the child
+ * @param {Boolean} [params.detached=false] - When `true`, detaches the child
  * process.
  * @param {Array<String>} [params.nodeArgs] - Node and V8 arguments to pass into
  * the Node process. Useful for specifying V8 settings or enabling debugging.
  * @param {String} params.nodeHome - The path to where Node.js executables are
  * stored.
+ * @param {String|Array.<String>} [params.stdio] - The stdio settings to pass into `spawn()`.
+ * Defaults to 'ignore` if `detached` is `true`, otherwise `inherit`.
  * @param {Number|String} params.v8mem - The maximum amount of memory for child
  * Node.js process's V8 engine to use. The value must either be the number of
  * megabytes or the string `auto`, which will automatically select a sensible
  * size based on the system architecture and installed memory.
  * @param {String} params.version - The Node.js version to use.
- * @returns {Promise}
+ * @returns {Promise<ChildProcess>}
  */
-export function spawnNode({ arch, args, detached, nodeHome, nodeArgs, v8mem = 'auto', version }) {
+export function spawnNode({ arch, args, detached, nodeHome, nodeArgs, stdio, v8mem = 'auto', version }) {
 	if (v8mem && (typeof v8mem !== 'number' && v8mem !== 'auto')) {
 		return Promise.reject(new TypeError('Expected v8mem to be a number or "auto"'));
 	}
@@ -403,9 +405,15 @@ export function spawnNode({ arch, args, detached, nodeHome, nodeArgs, v8mem = 'a
 			const opts = {
 				stdio: 'inherit'
 			};
+
 			if (detached) {
 				opts.detached = true;
 				opts.stdio = 'ignore';
+			}
+
+			if (stdio) {
+				// if stdio is set, then override the default
+				opts.stdio = stdio;
 			}
 
 			let prettyArgs = args
@@ -426,7 +434,7 @@ export function spawnNode({ arch, args, detached, nodeHome, nodeArgs, v8mem = 'a
 						if (detached) {
 							child.unref();
 						}
-						return child.pid;
+						return child;
 					})
 					.catch(err => {
 						if (err.code === 'ETXTBSY' && tries) {

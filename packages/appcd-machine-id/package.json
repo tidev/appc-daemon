@@ -12,7 +12,7 @@
     "build": "gulp build",
     "coverage": "gulp coverage",
     "docs": "gulp docs",
-    "prepublish": "gulp build",
+    "prepare": "gulp build",
     "test": "gulp test"
   },
   "dependencies": {
@@ -20,7 +20,7 @@
     "appcd-logger": "0.1.0",
     "appcd-path": "0.1.0",
     "appcd-subprocess": "0.1.0",
-    "appcd-util": "0.1.0",
+    "appcd-util": "0.1.1",
     "appcd-winreg": "0.1.0",
     "fs-extra": "^4.0.2",
     "macaddress": "^0.2.8",
