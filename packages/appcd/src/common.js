@@ -137,6 +137,7 @@ export function startServer({ cfg, argv }) {
 
 				return spawnNode({
 					args,
+					detached,
 					nodeHome: expandPath(cfg.get('home'), 'node'),
 					stdio,
 					v8mem,
