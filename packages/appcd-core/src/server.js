@@ -3,7 +3,6 @@ import ConfigService from 'appcd-config-service';
 import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs-extra';
 import FSWatchManager from 'appcd-fswatcher';
-import gawk from 'gawk';
 import os from 'os';
 import path from 'path';
 import PluginManager from 'appcd-plugin';
