@@ -70,6 +70,8 @@ export default class ConfigService extends ServiceDispatcher {
 			}
 
 			switch (data.action) {
+				case 'ls':
+				case 'list':
 				case 'get':
 					break;
 
@@ -82,6 +84,7 @@ export default class ConfigService extends ServiceDispatcher {
 					ctx.response = new Response(codes.OK);
 					return;
 
+				case 'rm':
 				case 'delete':
 					if (!key) {
 						throw new DispatcherError(codes.FORBIDDEN, 'Not allowed to delete config root');
@@ -91,6 +94,38 @@ export default class ConfigService extends ServiceDispatcher {
 					} else {
 						ctx.response = new Response(codes.NOT_FOUND);
 					}
+					return;
+
+				case 'push':
+					if (!key) {
+						throw new DispatcherError(codes.FORBIDDEN, 'Not allowed to push onto config root');
+					}
+					this.config.push(key, data.value);
+					ctx.response = new Response(codes.OK);
+					return;
+
+				case 'shift':
+					if (!key) {
+						throw new DispatcherError(codes.FORBIDDEN, 'Not allowed to shift config root');
+					}
+					this.config.shift(key);
+					ctx.response = new Response(codes.OK);
+					return;
+
+				case 'pop':
+					if (!key) {
+						throw new DispatcherError(codes.FORBIDDEN, 'Not allowed to pop config root');
+					}
+					this.config.pop(key);
+					ctx.response = new Response(codes.OK);
+					return;
+
+				case 'unshift':
+					if (!key) {
+						throw new DispatcherError(codes.FORBIDDEN, 'Not allowed to unshift onto config root');
+					}
+					this.config.unshift(key, data.value);
+					ctx.response = new Response(codes.OK);
 					return;
 
 				default:

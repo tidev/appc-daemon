@@ -31,6 +31,7 @@
     "appcd-logger": "0.1.0",
     "appcd-nodejs": "0.1.0",
     "appcd-path": "0.1.0",
+    "appcd-response": "0.1.0",
     "appcd-util": "0.1.1",
     "cli-kit": "^0.0.3",
     "cli-table2": "^0.2.0",

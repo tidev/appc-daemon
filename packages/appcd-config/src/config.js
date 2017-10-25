@@ -1,5 +1,5 @@
 import appcdLogger from 'appcd-logger';
-import fs from 'fs';
+import fs from 'fs-extra';
 import gawk from 'gawk';
 import Metadata from './metadata';
 import path from 'path';
@@ -7,6 +7,7 @@ import vm from 'vm';
 
 import { EventEmitter } from 'events';
 import { isFile } from 'appcd-fs';
+import { expandPath } from 'appcd-path';
 import { parse } from 'babylon';
 import { wrap } from 'module';
 
@@ -50,6 +51,8 @@ export default class Config extends EventEmitter {
 		 */
 		this.values = gawk({});
 
+		this.filename = 'config.json';
+
 		if (opts.configFile) {
 			this.load(opts.configFile);
 		}
@@ -58,8 +61,10 @@ export default class Config extends EventEmitter {
 			if (typeof opts.config !== 'object' || Array.isArray(opts.config)) {
 				throw new TypeError('Expected config to be an object');
 			}
-			this.merge(opts.config, { overrideReadonly: true });
+			this.merge(opts.config, { overrideReadonly: true, write: false });
 		}
+
+		this.location = expandPath(path.join(this.get('home', '~/.appcelerator/appcd'), this.filename));
 	}
 
 	/**
@@ -211,6 +216,142 @@ export default class Config extends EventEmitter {
 	}
 
 	/**
+	 * Pushes a value onto the end of a config setting
+	 * @param  {String} key   The dot-notation config key
+	 * @param  {String} value The config balue
+	 * @returns {Config}
+	 * @emits Config#change
+	 * @access public
+	 */
+	push(key, value) {
+		debugger;
+		if (!key || (typeof key !== 'string')) {
+			throw new TypeError('Expected key to be a string');
+		}
+
+		if (!Array.isArray(value)) {
+			value = [ value ];
+		}
+
+		this.meta.validate(key, value, { action: 'push' });
+		key.split('.').reduce((obj, part, i, arr) => {
+			if (i + 1 === arr.length) {
+				// check if any descendant is read-only
+				this.hasReadonlyDescendant(obj[part], key, 'set');
+				if (!Array.isArray(obj[part])) {
+					if (obj[part]) {
+						obj[part] = [ obj[part] ];
+					} else {
+						obj[part] = [];
+					}
+				}
+				obj[part].push.apply(obj[part], value);
+			} else if (typeof obj[part] !== 'object' || Array.isArray(obj[part])) {
+				this.hasReadonlyDescendant(obj[part], key, 'set');
+				obj[part] = {};
+			}
+			return obj[part];
+		}, this.values);
+
+		this.emit('change');
+		this.save();
+		return this;
+	}
+
+	/**
+	 * Adds a value to the start of a config setting
+	 * @param  {String} key   The dot-notation config key
+	 * @param  {String} value The config balue
+	 * @returns {Config}
+	 * @emits Config#change
+	 * @access public
+	 */
+	unshift(key, value) {
+		if (!key || (typeof key !== 'string')) {
+			throw new TypeError('Expected key to be a string or object');
+		}
+
+		if (!Array.isArray(value)) {
+			value = [ value ];
+		}
+
+		this.meta.validate(key, value, { action: 'push' });
+
+		key.split('.').reduce((obj, part, i, arr) => {
+			if (i + 1 === arr.length) {
+				// check if any descendant is read-only
+				this.hasReadonlyDescendant(obj[part], key, 'unshift');
+				if (!Array.isArray(obj[part])) {
+					if (obj[part]) {
+						obj[part] = [ obj[part] ];
+					} else {
+						obj[part] = [];
+					}
+				}
+				obj[part].unshift.apply(obj[part], value);
+			}
+			return obj[part];
+		}, this.values);
+
+		this.emit('change');
+		this.save();
+		return this;
+	}
+
+	/**
+	 * Remove the first value of the config setting and return it
+	 * @param  {String} key The dot-notation config key
+	 * @returns {*} value The value removed from the config setting
+	 */
+	shift(key) {
+		let it = this.values;
+
+		if (!key || (typeof key !== 'string')) {
+			throw new TypeError('Expected key to be a string or object');
+		}
+
+		const parts = key.split('.');
+
+		for (let i = 0, k; it !== undefined && (k = parts[i++]);) {
+			it = it[k];
+		}
+
+		if (!Array.isArray(it)) {
+			throw Error('Value is not an array');
+		}
+		const val = it.shift();
+		this.save();
+		return val;
+	}
+
+	/**
+	 * Remove the first value of the config setting and return it
+	 * @param  {String} key The dot-notation config key
+	 * @returns {*} value The value removed from the config setting
+	 */
+	pop(key) {
+		let it = this.values;
+
+		if (!key || (typeof key !== 'string')) {
+			throw new TypeError('Expected key to be a string or object');
+		}
+
+		const parts = key.split('.');
+
+		for (let i = 0, k; it !== undefined && (k = parts[i++]);) {
+			it = it[k];
+		}
+
+		if (!Array.isArray(it)) {
+			throw Error('Value is not an array');
+		}
+		this.emit('change');
+		const val = it.pop();
+		this.save();
+		return val;
+	}
+
+	/**
 	 * Sets a config setting.
 	 *
 	 * @param {String} key - The dot-notation config key.
@@ -244,6 +385,7 @@ export default class Config extends EventEmitter {
 		}
 
 		this.emit('change');
+		this.save();
 		return this;
 	}
 
@@ -277,6 +419,7 @@ export default class Config extends EventEmitter {
 
 				delete obj[part];
 				_t.emit('change');
+				_t.save();
 				return true;
 			}
 			return false;
@@ -348,7 +491,9 @@ export default class Config extends EventEmitter {
 		};
 
 		merger(this.values, values);
-
+		if (opts.write) {
+			this.save();
+		}
 		return this;
 	}
 
@@ -364,6 +509,17 @@ export default class Config extends EventEmitter {
 		return JSON.stringify(this.values, null, Math.max(indentation, 0));
 	}
 
+	save() {
+		try {
+			const homeDir = expandPath(this.get('home', '~/.appcelerator/appcd'));
+			fs.ensureDirSync(homeDir);
+			const tmpFile = this.location + '.' + Date.now() + '.tmp';
+			fs.writeFileSync(tmpFile, this.toString());
+			fs.renameSync(tmpFile, this.location);
+		} catch (e) {
+			log(e);
+		}
+	}
 	/**
 	 * Adds a listener for config changes.
 	 *

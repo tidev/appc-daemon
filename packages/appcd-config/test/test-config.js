@@ -1,5 +1,24 @@
 import Config, { load } from '../dist/index';
+import fs from 'fs-extra';
 import path from 'path';
+import tmp from 'tmp';
+import { real } from 'appcd-path';
+
+const _tmpDir = tmp.dirSync({
+	prefix: 'appcd-fswatcher-test-',
+	unsafeCleanup: true
+}).name;
+const tmpDir = real(_tmpDir);
+
+function makeTempName() {
+	return path.join(_tmpDir, Math.random().toString(36).substring(7));
+}
+
+function makeTempDir() {
+	const dir = makeTempName();
+	fs.mkdirsSync(dir);
+	return dir;
+}
 
 describe('load()', () => {
 	/**
@@ -209,6 +228,202 @@ describe('Config', () => {
 		it('should strip shebang when using windows line endings', () => {
 			const config = new Config();
 			config.parseJS('#!/foo/bar\nmodule.exports={};');
+		});
+	});
+
+	describe('push()', () => {
+		it('should error when not given a key', () => {
+			const config = new Config();
+			expect(() => {
+				config.push(123);
+			}).to.throw(TypeError, 'Expected key to be a string');
+
+			expect(() => {
+				config.push();
+			}).to.throw(TypeError, 'Expected key to be a string');
+
+			expect(() => {
+				config.push([]);
+			}).to.throw(TypeError, 'Expected key to be a string');
+		});
+
+		it('should create an array if pre-existing value is not an array', () => {
+			const config = new Config();
+			config.set('foo', 'bar');
+			expect(config.get('foo')).to.equal('bar');
+			config.push('foo', 'baz');
+			expect(config.get('foo')).to.deep.equal([ 'bar', 'baz' ]);
+		});
+
+		it('should create an array if pre-existing value is undefined', () => {
+			const config = new Config();
+			expect(config.get('foo.bar')).to.equal(undefined);
+			config.push('foo.bar', 'baz');
+			expect(config.get('foo.bar')).to.deep.equal([ 'baz' ]);
+		});
+
+		it('should push onto an existing array', () => {
+			const config = new Config({ config: { foo: { bar: [ 'baz' ] } } });
+			config.push('foo.bar', 'wiz');
+			expect(config.get('foo.bar')).to.deep.equal([ 'baz', 'wiz' ]);
+		});
+
+		it('should combine multiple types ', () => {
+			const config = new Config({ config: { foo: { bar: [ 'baz' ] } } });
+			config.push('foo', 'wiz');
+			expect(config.get('foo')).to.deep.equal([ { bar: [ 'baz' ] }, 'wiz' ]);
+		});
+
+		it('should restrict to allowed types', () => {
+			const config = new Config({ configFile: path.join(__dirname, 'fixtures', 'good-meta-simple.js') });
+			expect(() => {
+				config.push('arrays.arrayNums', 'foo');
+			}).to.throw(Error, 'Invalid "arrays.arrayNums" value "foo"');
+			config.push('arrays.arrayNums', 5);
+			expect(config.get('arrays.arrayNums')).to.deep.equal([  1, 2, 3, 5 ]);
+		});
+
+		it('should be able to push onto multi types arrays', () => {
+			const config = new Config({ configFile: path.join(__dirname, 'fixtures', 'good-meta-simple.js') });
+			config.push('arrays.multi', 'foo');
+
+			expect(config.get('arrays.multi')).to.deep.equal([ 'a', 1, 'foo' ]);
+			expect(() => {
+				config.push('arrays.multi', { me: 'fail' });
+			}).to.throw(Error, 'Invalid "arrays.multi" value "[object Object]"');
+
+			expect(() => {
+				config.push('arrays.multi', true);
+			}).to.throw(Error, 'Invalid "arrays.multi" value "true"');
+		});
+	});
+
+	describe('unshift()', () => {
+		it('should error when not given a key', () => {
+			const config = new Config();
+			expect(() => {
+				config.unshift(123);
+			}).to.throw(TypeError, 'Expected key to be a string');
+
+			expect(() => {
+				config.unshift();
+			}).to.throw(TypeError, 'Expected key to be a string');
+
+			expect(() => {
+				config.unshift([]);
+			}).to.throw(TypeError, 'Expected key to be a string');
+		});
+
+		it('should create an array if pre-existing value is not an array', () => {
+			const config = new Config();
+			config.set('foo', 'bar');
+			expect(config.get('foo')).to.equal('bar');
+			config.unshift('foo', 'baz');
+			expect(config.get('foo')).to.deep.equal([ 'baz', 'bar' ]);
+		});
+
+		it('should create an array if pre-existing value is undefined', () => {
+			const config = new Config();
+			config.set('foo', undefined);
+			expect(config.get('foo')).to.equal(undefined);
+			config.unshift('foo', 'baz');
+			expect(config.get('foo')).to.deep.equal([ 'baz' ]);
+		});
+
+		it('should unshift onto an existing array', () => {
+			const config = new Config({ config: { foo: { bar: [ 'baz' ] } } });
+			config.unshift('foo.bar', 'wiz');
+			expect(config.get('foo.bar')).to.deep.equal([ 'wiz', 'baz' ]);
+		});
+
+		it('should support adding multiple values', () => {
+			const config = new Config();
+			config.set('foo', 'bar');
+			expect(config.get('foo')).to.equal('bar');
+			config.unshift('foo', [ 'baz', 'wiz' ]);
+			expect(config.get('foo')).to.deep.equal([ 'baz', 'wiz', 'bar' ]);
+		});
+	});
+
+	describe('shift()', () => {
+		it('should error when not given a key', () => {
+			const config = new Config();
+			expect(() => {
+				config.shift(123);
+			}).to.throw(TypeError, 'Expected key to be a string');
+
+			expect(() => {
+				config.shift();
+			}).to.throw(TypeError, 'Expected key to be a string');
+
+			expect(() => {
+				config.shift([]);
+			}).to.throw(TypeError, 'Expected key to be a string');
+		});
+
+		it('should return and remove first value of an array', () => {
+			const config = new Config({ config: { foo: { bar: [ 'baz', 'wiz' ] } } });
+			expect(config.shift('foo.bar')).to.equal('baz');
+			expect(config.get('foo.bar')).to.deep.equal([ 'wiz' ]);
+		});
+
+		it('should return ', () => {
+			const config = new Config({ config: { foo: { bar: [ 'baz' ] } } });
+			expect(config.shift('foo.bar')).to.equal('baz');
+			expect(config.get('foo.bar')).to.deep.equal([ ]);
+		});
+
+		it('should return undefined if no values in array', () => {
+			const config = new Config({ config: { foo: { bar: [ ] } } });
+			expect(config.shift('foo.bar')).to.equal(undefined);
+		});
+
+		it('should error if value is not an array', () => {
+			const config = new Config({ config: { foo: { bar: 'baz' } } });
+			expect(() => {
+				config.shift('foo.bar');
+			}).to.throw(Error, 'Value is not an array');
+		});
+	});
+
+	describe('pop()', () => {
+		it('should error when not given a key', () => {
+			const config = new Config();
+			expect(() => {
+				config.pop(123);
+			}).to.throw(TypeError, 'Expected key to be a string');
+
+			expect(() => {
+				config.pop();
+			}).to.throw(TypeError, 'Expected key to be a string');
+
+			expect(() => {
+				config.pop([]);
+			}).to.throw(TypeError, 'Expected key to be a string');
+		});
+
+		it('should return and remove first value of an array', () => {
+			const config = new Config({ config: { foo: { bar: [ 'baz', 'wiz' ] } } });
+			expect(config.pop('foo.bar')).to.equal('wiz');
+			expect(config.get('foo.bar')).to.deep.equal([ 'baz' ]);
+		});
+
+		it('should return ', () => {
+			const config = new Config({ config: { foo: { bar: [ 'baz' ] } } });
+			expect(config.pop('foo.bar')).to.equal('baz');
+			expect(config.get('foo.bar')).to.deep.equal([ ]);
+		});
+
+		it('should return undefined if no values in array', () => {
+			const config = new Config({ config: { foo: { bar: [ ] } } });
+			expect(config.pop('foo.bar')).to.equal(undefined);
+		});
+
+		it('should error if value is not an array', () => {
+			const config = new Config({ config: { foo: { bar: 'baz' } } });
+			expect(() => {
+				config.pop('foo.bar');
+			}).to.throw(Error, 'Value is not an array');
 		});
 	});
 
@@ -510,6 +725,28 @@ describe('Config', () => {
 			expect(() => {
 				config.set('id', 'foo');
 			}).to.throw(Error, 'Not allowed to set read-only property');
+		});
+	});
+
+	describe.only('save()', () => {
+		let tmp;
+		after(() => {
+			fs.removeSync(tmpDir);
+		});
+
+		it('should save', () => {
+			tmp = makeTempDir();
+			const config = new Config({ config: { home: tmp, foo: 'bar', job: { title: 'binman' } }, configFile: path.join(__dirname, 'fixtures', 'good-meta-simple.js') });
+			expect(() => {
+				config.save();
+			}).to.not.throw();
+			expect(fs.existsSync(path.join(tmp, 'config.json'))).to.equal(true);
+		});
+
+		it('should be able to load with a saved config that has persisted values', () => {
+			const config = new Config({ configFile: path.join(tmp, 'config.json') });
+			expect(config.get('foo')).to.equal('bar');
+			expect(config.get('job.title')).to.equal('binman');
 		});
 	});
 });
