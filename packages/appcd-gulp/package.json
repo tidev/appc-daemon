@@ -39,7 +39,7 @@
     "mocha": "^4.0.1",
     "mocha-jenkins-reporter": "^0.3.10",
     "nyc": "^11.2.1",
-    "sinon": "^4.0.1",
+    "sinon": "^4.0.2",
     "sinon-chai": "^2.14.0"
   },
   "peerDependencies": {
