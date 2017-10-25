@@ -84,9 +84,13 @@ export function createRequest(cfg, path, data, type) {
  * @returns {Config}
  */
 export function loadConfig(argv) {
+	let defaultLocation = expandPath('~/.appcelerator/appcd/config.json');
+	if (!fs.existsSync(defaultLocation)) {
+		defaultLocation = undefined;
+	}
 	const cfg = config.load({
 		config:            argv.config,
-		configFile:        argv.configFile,
+		configFile:        argv.configFile || defaultLocation,
 		defaultConfigFile: require.resolve('appcd-core/conf/default.js')
 	});
 	log(cfg.toString());
