@@ -27,7 +27,12 @@ new CLI({
 	.then(({ argv }) => {
 		return import('./server')
 			.then(server => new server.default(argv))
-			.then(server => server.start());
+			.then(server => server.start())
+			.then(() => {
+				if (process.connected) {
+					process.send('booted');
+				}
+			});
 	})
 	.catch(err => {
 		console.error(err);

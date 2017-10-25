@@ -23,7 +23,7 @@ export default class ConfigService extends ServiceDispatcher {
 			throw new TypeError('Expected config to be a valid config object');
 		}
 
-		super();
+		super('/:filter*');
 
 		/**
 		 * The daemon config instance.
@@ -47,7 +47,7 @@ export default class ConfigService extends ServiceDispatcher {
 	 */
 	getTopic(ctx) {
 		const { data, params, topic } = ctx.request;
-		return topic || ((params && params.key) || data.key || '').replace(/^\//, '').split(/\.|\//).join('.');
+		return topic || String(params.filter || (data && data.key) || '').replace(/^\//, '').split(/\.|\//).join('.');
 	}
 
 	/**
@@ -57,8 +57,8 @@ export default class ConfigService extends ServiceDispatcher {
 	 * @access private
 	 */
 	onCall(ctx) {
-		const { data } = ctx.request;
-		let key = (ctx.params.key || '').replace(/^\//, '').split(/\.|\//).join('.');
+		const { data, params } = ctx.request;
+		let key = (params.filter || '').replace(/^\//, '').split(/\.|\//).join('.');
 
 		if (data && data.action) {
 			if (data.key && typeof data.key !== 'string') {
@@ -145,11 +145,12 @@ export default class ConfigService extends ServiceDispatcher {
 	 * nitializes the config watch for the filter.
 	 *
 	 * @param {Object} params - Various parameters.
-	 * @param {String} [params.topic] - The filter to apply.
+	 * @param {DispatcherContext} params.ctx - The dispatcher context object.
 	 * @param {Function} params.publish - A function used to publish data to a dispatcher client.
 	 * @access private
 	 */
-	initSubscription({ topic: filter, publish }) {
+	initSubscription({ ctx, publish }) {
+		const { filter } = ctx.request.params;
 		logger.log('Starting config gawk watch: %s', highlight(filter || 'no filter'));
 		this.config.watch(filter, publish);
 	}
@@ -158,12 +159,15 @@ export default class ConfigService extends ServiceDispatcher {
 	 * Handles a new subscriber.
 	 *
 	 * @param {Object} params - Various parameters.
-	 * @param {String} [params.topic] - The filter to apply.
+	 * @param {DispatcherContext} params.ctx - The dispatcher context object.
 	 * @param {Function} params.publish - A function used to publish data to a dispatcher client.
 	 * @access private
 	 */
-	onSubscribe({ topic: filter, publish }) {
-		publish(this.config.get(filter));
+	onSubscribe({ ctx, publish }) {
+		const { filter } = ctx.request.params;
+		logger.log('Sending initial config state to subscriber: %s', highlight(filter));
+		const node = this.config.get(filter);
+		publish(node);
 	}
 
 	/**

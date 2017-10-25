@@ -1,4 +1,4 @@
-import { loadConfig, startServer } from './common';
+import { banner, loadConfig, startServer } from './common';
 
 const cmd = {
 	options: {
@@ -7,7 +7,26 @@ const cmd = {
 	async action({ argv }) {
 		const cfg = loadConfig(argv);
 
-		await startServer({ cfg, argv });
+		console.log(banner());
+
+		try {
+			await startServer({ cfg, argv });
+			console.log('Appc Daemon started');
+		} catch (code) {
+			switch (code) {
+				case 1:
+					console.error('Failed to start the Appc Daemon');
+					break;
+
+				case 4:
+					console.log('Appc Daemon already started');
+					break;
+
+				case 5:
+					console.error('Error: Daemon cannot be run as root');
+					break;
+			}
+		}
 	}
 };
 

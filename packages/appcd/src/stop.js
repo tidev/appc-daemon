@@ -1,10 +1,12 @@
-import { loadConfig, stopServer } from './common';
+import { banner, loadConfig, stopServer } from './common';
 
 const cmd = {
 	options: {
 		'--force': { desc: 'force the daemon to stop' }
 	},
 	async action({ argv }) {
+		console.log(banner());
+
 		const wasRunning = await stopServer({
 			cfg: loadConfig(argv),
 			force: argv.force

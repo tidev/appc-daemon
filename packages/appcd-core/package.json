@@ -12,7 +12,7 @@
     "build": "gulp build",
     "coverage": "gulp coverage",
     "docs": "gulp docs",
-    "prepublish": "gulp build",
+    "prepare": "gulp build",
     "test": "gulp test"
   },
   "dependencies": {
@@ -30,7 +30,7 @@
     "appcd-response": "0.1.0",
     "appcd-subprocess": "0.1.0",
     "appcd-telemetry": "0.1.0",
-    "appcd-util": "0.1.0",
+    "appcd-util": "0.1.1",
     "cli-kit": "^0.0.3",
     "fs-extra": "^4.0.2",
     "gawk": "^4.3.0",
@@ -50,6 +50,6 @@
     "url": "git+https://github.com/appcelerator/appc-daemon.git"
   },
   "engines": {
-    "node": "8.7.0"
+    "node": "8.8.0"
   }
 }

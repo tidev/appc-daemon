@@ -34,7 +34,8 @@ describe('SubprocessManager', () => {
 				'2000'
 			];
 			const options = {
-				stdio: 'ignore'
+				stdio: 'ignore',
+				windowsHide: false
 			};
 			const sm = new SubprocessManager();
 			let count = 0;

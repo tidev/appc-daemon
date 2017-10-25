@@ -37,5 +37,4 @@ Simply press <kbd>CTRL-C</kbd> to quit the Appc Daemon
 | 0     | Success                    |
 | 1     | An error occurred          |
 | 2     | Showed help screen         |
-| 4     | Server is already running  |
 | 5     | Server was run as root     |

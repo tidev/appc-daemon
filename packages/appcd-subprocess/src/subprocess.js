@@ -42,6 +42,10 @@ export function run(cmd, args, opts) {
 			opts = {};
 		}
 
+		if (!opts.hasOwnProperty('windowsHide')) {
+			opts.windowsHide = true;
+		}
+
 		logger.log('Executing: %s %s', highlight(cmd), highlight(prettyArgs(args)));
 
 		const child = _spawn(cmd, args, opts);
@@ -102,14 +106,16 @@ export function spawn(params = {}) {
 	}
 
 	// we scrub the supplied options for only allowed options
-	const options = {};
+	const options = {
+		windowsHide: true
+	};
 
 	if (params.hasOwnProperty('options')) {
 		if (!params.options || typeof params.options !== 'object') {
 			throw new SubprocessError(codes.INVALID_ARGUMENT, 'Spawn "options" must be an object');
 		}
 
-		for (const prop of [ 'cwd', 'env', 'stdio' ]) {
+		for (const prop of [ 'cwd', 'env', 'stdio', 'windowsHide' ]) {
 			if (params.options.hasOwnProperty(prop)) {
 				options[prop] = params.options[prop];
 			}

@@ -110,6 +110,7 @@ export function startServer({ cfg, argv }) {
 	const { config, configFile, debug } = argv;
 	const args = [];
 	const detached = debug ? false : cfg.get('server.daemonize');
+	const stdio = detached ? [ 'ignore', 'ignore', 'ignore', 'ipc' ] : 'inherit';
 	const v8mem = cfg.get('core.v8.memory');
 	const corePkgJson = JSON.parse(fs.readFileSync(require.resolve('appcd-core/package.json'), 'utf8'));
 
@@ -130,37 +131,50 @@ export function startServer({ cfg, argv }) {
 
 	process.env.APPCD_BOOTSTRAP = appcdVersion;
 
-	// check if we should use the core's required Node.js version
-	if (cfg.get('core.enforceNodeVersion') !== false) {
-		if (!nodeVer) {
-			throw new Error(`Invalid Node.js engine version from appcd-core package.json: ${nodeVer}`);
-		}
+	return Promise.resolve()
+		.then(() => {
+			// check if we should use the core's required Node.js version
+			if (cfg.get('core.enforceNodeVersion') !== false) {
+				if (!nodeVer) {
+					throw new Error(`Invalid Node.js engine version from appcd-core package.json: ${nodeVer}`);
+				}
 
-		return spawnNode({
-			args,
-			detached,
-			nodeHome: expandPath(cfg.get('home'), 'node'),
-			version:  nodeVer,
-			v8mem
-		});
-	}
+				return spawnNode({
+					args,
+					detached,
+					nodeHome: expandPath(cfg.get('home'), 'node'),
+					stdio,
+					v8mem,
+					version:  nodeVer
+				});
+			}
 
-	// using the current Node.js version which may be incompatible with the core
+			// using the current Node.js version which may be incompatible with the core
 
-	if (v8mem) {
-		const arg = generateV8MemoryArgument(v8mem);
-		if (arg) {
-			args.unshift(arg);
-		}
-	}
+			if (v8mem) {
+				const arg = generateV8MemoryArgument(v8mem);
+				if (arg) {
+					args.unshift(arg);
+				}
+			}
 
-	const opts = {};
-	if (detached) {
-		opts.detached = true;
-		opts.stdio = 'ignore';
-	}
+			return spawn(process.execPath, args, { stdio });
+		})
+		.then(child => new Promise((resolve, reject) => {
+			if (detached) {
+				child.on('message', msg => {
+					if (msg === 'booted') {
+						child.disconnect();
+						child.unref();
+						resolve();
+					}
+				});
 
-	return spawn(process.execPath, args, opts);
+				child.on('close', code => {
+					reject(code);
+				});
+			}
+		}));
 }
 
 /**
