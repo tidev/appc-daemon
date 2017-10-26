@@ -246,16 +246,15 @@ export default class Telemetry extends Dispatcher {
 
 				const json = [];
 
-				batch.forEach(file => {
+				for (const file of batch) {
 					try {
-						const contents = JSON.parse(fs.readFileSync(file));
-						json.push(contents);
+						json.push(JSON.parse(fs.readFileSync(file)));
 					} catch (e) {
 						// Rather then squeltch the error we'll remove here
 						log(`Failed to read ${highlight(file)}, removing`);
 						fs.unlinkSync(file);
 					}
-				});
+				}
 
 				this.pending = new Promise(resolve => {
 					request({

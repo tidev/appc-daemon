@@ -582,6 +582,71 @@ describe('telemetry', () => {
 					expect(counter).to.equal(1);
 				});
 		});
+
+		it('should handle invalid event files', async function () {
+			this.timeout(10000);
+			this.slow(10000);
+
+			let counter = 0;
+
+			this.server = http.createServer((req, res) => {
+				counter++;
+				log('Receiving HTTP request');
+				res.writeHead(200, { 'Content-Type': 'text/plain' });
+				res.end('okay');
+			}).listen(1337);
+
+			let i = 0;
+			const eventsDir = makeTempDir();
+			const telemetry = this.telemetry = await createInitializedTelemetry({
+				telemetry: {
+					eventsDir,
+					sendBatchSize: 5,
+					sendInterval: 3000, // 3 seconds
+					url: 'http://127.0.0.1:1337'
+				}
+			});
+
+			const dispatcher = new Dispatcher()
+				.register('/appcd/telemetry', telemetry);
+
+			const addEvent = () => {
+				return dispatcher
+					.call('/appcd/telemetry', {
+						event: 'test',
+						foo: `bar${++i}`
+					});
+			};
+
+			return Promise
+				.all([
+					addEvent(),
+					addEvent(),
+					addEvent()
+				])
+				.then(() => {
+					fs.writeFileSync(path.join(eventsDir, 'bad-event.json'), 'foobar');
+					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(4);
+					expect(counter).to.equal(0);
+					return sleep(3500);
+				})
+				.then(() => {
+					return Promise
+						.all([
+							addEvent(),
+							addEvent()
+						]);
+				})
+				.then(() => {
+					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(2);
+					expect(counter).to.equal(1);
+					return sleep(3500);
+				})
+				.then(() => {
+					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(0);
+					expect(counter).to.equal(2);
+				});
+		});
 	});
 
 	describe('Shutdown', () => {

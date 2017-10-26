@@ -244,7 +244,7 @@ class SystemInfoService extends ServiceDispatcher {
 	 * Determines the topic for the incoming request.
 	 *
 	 * @param {DispatcherContext} ctx - The dispatcher request context object.
-	 * @returns {Array.<String>}
+	 * @returns {String}
 	 * @access private
 	 */
 	getTopic(ctx) {
