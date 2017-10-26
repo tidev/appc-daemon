@@ -12,6 +12,8 @@ import exec from './exec';
 import logcat from './logcat';
 import status from './status';
 
+import { getAppcdVersion } from './common';
+
 new CLI({
 	commands: {
 		start,
@@ -22,11 +24,14 @@ new CLI({
 		logcat,
 		status
 	},
+	help: true,
+	helpExitCode: 2,
+	name: 'appcd',
 	options: {
 		'--config <json>':      { type: 'json', desc: 'serialized JSON string to mix into the appcd config' },
-		'--config-file <file>': { type: 'file', desc: 'path to a appcd JS config file' },
-		'-v, --version':        { desc: 'outputs the appcd version' }
-	}
+		'--config-file <file>': { type: 'file', desc: 'path to a appcd JS config file' }
+	},
+	version: getAppcdVersion()
 }).exec()
 	.catch(err => {
 		console.error(err.message);

@@ -10,5 +10,6 @@
 | 3     | Server was not running                               |
 | 4     | Server is already running                            |
 | 5     | Server was run as root                               |
-| 6     | Configuration setting is read-only                   |
-| 7     | Server must be restarted for changes to take effect  |
+| 6     | Config setting is not found                          |
+| 7     | Configuration setting is read-only                   |
+| 8     | Server must be restarted for changes to take effect  |

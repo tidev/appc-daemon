@@ -158,9 +158,9 @@ export default class Client {
 
 							case 4:
 							case 5:
-								const err = new Error(status + ' ' + (response.message || 'Server Error'));
+								const err = new Error(response.message || 'Server Error');
 								err.errorCode = status;
-								err.code = response.code ? String(response.code) : String(status);
+								err.code = String(response.statusCode ? response.statusCode : status);
 								emitter.emit('error', err, response);
 						}
 					};

@@ -1,178 +1,193 @@
-import { createInstanceWithDefaults, StdioStream } from 'appcd-logger';
 import Response, { codes } from 'appcd-response';
-import { banner, createRequest, loadConfig } from './common';
 
-const logger = createInstanceWithDefaults().config({ theme: 'compact' }).enable('*').pipe(new StdioStream());
-const { log } = logger;
-const { highlight, underline } = logger.styles;
+import { createRequest, loadConfig } from './common';
+import { expandPath } from 'appcd-path';
 
-const getterActions = [ 'ls', 'list', 'get' ];
-const setterActions = [ 'set', 'rm', 'delete', 'push', 'pop', 'shift', 'unshift' ];
+const readActions = {
+	'get':     'get',
+	'ls':      'get',
+	'list':    'get'
+};
+
+const writeActions = {
+	'set':     'set',
+
+	'delete':  'delete',
+	'rm':      'delete',
+	'unset':   'delete',
+
+	'push':    'push',
+	'pop':     'pop',
+	'shift':   'shift',
+	'unshift': 'unshift'
+};
+
 const cmd = {
+	desc: 'get and set config options',
 	options: {
 		'--json': { desc: 'outputs the config as JSON' }
 	},
+	args: [ 'action', 'key', 'value' ],
 	action({ argv, _ }) {
 		const cfg = loadConfig(argv);
-		const [ action, key, value ] = _;
+		let [ incomingAction, key, value ] = _;
+
+		let action = readActions[incomingAction] || writeActions[incomingAction];
+		if (!action) {
+			key = incomingAction;
+			action = 'get';
+		}
+
 		const data = {
 			action,
 			key,
-			value: convertValue(value)
+			value
 		};
+
+		if (writeActions[action]) {
+			if (!key) {
+				console.error(`Error: Missing the configuration key to ${action}`);
+				process.exit(1);
+			}
+
+			try {
+				data.value = JSON.parse(data.value);
+			} catch (e) {
+				// squelch
+			}
+
+			if ((action === 'set' || action === 'push' || action === 'unshift') && data.value === undefined) {
+				console.error(`Error: Missing the configuration value to ${action}`);
+				process.exit(1);
+			}
+		}
+
 		const { client, request } = createRequest(cfg, '/appcd/config', data);
 
 		request
-			.once('error', err => {
-				const { code, errorCode } = err;
-				let config;
-				let val;
-				let response;
-				if (code === 'ECONNREFUSED') {
-					try {
-						if (setterActions.includes(action) && !key) {
-							response = new Response(codes.FORBIDDEN, `Not allowed to ${action} config root`);
-							logIt({ response });
-							process.exit(1);
+			.once('error', async (err) => {
+				if (err.code === 'ECONNREFUSED') {
+					// the daemon is not running, need to do things the easy way
+
+					if (action === 'get') {
+						const filter = key && key.split(/\.|\//).join('.') || undefined;
+						const value = cfg.get(filter);
+						if (value === undefined) {
+							printAndExit(key, value, argv.json, 6);
+						} else {
+							printAndExit(key, value, argv.json);
 						}
+					}
+
+					// it's a write operation
+
+					try {
+						let result = true;
+
 						switch (action) {
 							case 'set':
-								cfg.set(key, value);
+								cfg.set(key, data.value);
 								break;
 
-							case 'rm':
 							case 'delete':
-								cfg.delete(key);
-								break;
-
-							case 'push':
-								cfg.push(key, value);
-								break;
-
-							case 'shift':
-								cfg.shift(key);
-								break;
-
-							case 'pop':
-								val = cfg.pop(key);
-								break;
-
-							case 'unshift':
-								cfg.unshift(key, value);
-								break;
-
-							case 'ls':
-							case 'get':
-							case 'list':
-							case undefined:
-								const filter = key && key.split(/\.|\//).join('.') || undefined;
-								config = cfg.get(filter || undefined);
-								if (!config) {
-									response = new Response(codes.NOT_FOUND, `Not found: ${filter || ''}`);
+								if (!cfg.delete(key)) {
+									console.error(`Error: Unable to delete key "${key}"`);
+									process.exit(1);
 								}
 								break;
 
-							default:
-								response = new Response(codes.BAD_REQUEST, `Invalid action: ${data.action}`);
+							case 'push':
+								cfg.push(key, data.value);
+								break;
+
+							case 'pop':
+								result = cfg.pop(key);
+								break;
+
+							case 'shift':
+								result = cfg.shift(key);
+								break;
+
+							case 'unshift':
+								cfg.unshift(key, data.value);
+								break;
 						}
+
+						const home = cfg.get('home');
+						if (!home) {
+							console.error('The "home" directory is not configured and the change was not saved');
+							process.exit(1);
+						}
+
+						await cfg.save(expandPath(home, 'config.json'));
+
+						printAndExit(null, argv.json ? result : 'Saved', argv.json);
+
 					} catch (ex) {
-						response = ex;
-						logIt({ response });
+						err = ex;
 					}
-					if (argv.json) {
-						log(response || config);
-					} else {
-						logIt({ action, key, value, config, response });
-					}
-				}  else if (argv.json) {
-					log(err);
-				} else {
-					logIt({ response: err });
 				}
-				process.exit(1);
+
+				printAndExit(null, argv.json ? {
+					code: err.code,
+					message: err.message
+				} : err.toString(), argv.json, 1);
 			})
 			.on('response', message => {
 				client.disconnect();
-				if (argv.json) {
-					log(message);
-					process.exit(0);
+
+				let result = 'Saved';
+				if (message !== 'OK') {
+					result = message;
+				} else if (argv.json) {
+					// if a pop() or shift() returns OK, then that means there's no more items and
+					// thus we have to force undefined
+					result = /^pop|shift$/.test(action) ? undefined : true;
 				}
-				logIt({ action, key, value, config: message });
-				process.exit(0);
+
+				printAndExit(key, result, argv.json);
 			});
 	}
 };
 
-function logIt({ action, key, value, config, response }) {
-	log(banner());
-	if (response) {
-		log(response.format || response.message);
-		if (response.errorCode === 500) {
-			process.exit(6);
-		}
-		process.exit(1);
-	}
-	switch (action) {
-		case 'push':
-		case 'unshift':
-			log(`Added ${highlight(value)} to ${underline(key)}`);
-			break;
-		case 'set':
-			log(`Set ${underline(key)} to ${highlight(value)}`);
-			break;
-		case 'rm':
-		case 'delete':
-			log(`Removed ${underline(key)}`);
-			break;
-		case 'pop':
-		case 'shift':
-			log(`Removed value from ${underline(key)}`);
-			break;
-		case 'ls':
-		case 'list':
-		case 'get':
-		default:
-			log(prettyConfig(config, key));
-			break;
-	}
-}
-
-function prettyConfig (config, key) {
-	const results = {};
-	function walk(obj, parent) {
-		Object.keys(obj).forEach(function (name) {
-			const p = parent ? parent + '.' + name : name;
-			if (Object.prototype.toString.call(obj[name]) === '[object Object]') {
-				walk(obj[name], p);
-			} else if (obj[name]) {
-				results[p] = JSON.stringify(obj[name]);
-			}
-		});
-	}
-
-	if (typeof config === 'object' && !Array.isArray(config)) {
-		walk(config, key && key.split('.'));
-	} else {
-		// We have just a single value, return it;
-		return `${underline(key)} = ${highlight(config)}`;
-	}
-	const maxlen = Object.keys(results).reduce(function (a, b) {
-		return Math.max(a, b.length + 1);
-	}, 0);
-	let string = '';
-	Object.keys(results).sort().forEach(function (k) {
-		const padding = maxlen - k.length;
-		string += `${underline(k)} ${('=').padStart(padding)} ${highlight(results[k])}\n`;
-	});
-	return string;
-}
-
-function convertValue(value) {
-	if (typeof value === 'object') {
-		return JSON.parse(value);
-	} else {
-		return value;
-	}
-}
-
 export default cmd;
+
+/**
+ * Prints the result.
+ *
+ * @param {String?} key - The prefix used for the filter to prepend the keys when listing the config
+ * settings.
+ * @param {*} value - The resulting value.
+ * @param {Boolean} [json=false] - When `true`, displays the output as json.
+ * @param {Number} [exitCode=0] - The exit code to return after printing the value.
+ */
+function printAndExit(key, value, json, exitCode = 0) {
+	if (json) {
+		console.log(JSON.stringify(value, null, 2));
+	} else if (value && typeof value === 'object') {
+		let width = 0;
+		const rows = [];
+
+		(function walk(scope, segments) {
+			for (const key of Object.keys(scope)) {
+				segments.push(key);
+				if (scope[key] && typeof scope[key] === 'object') {
+					walk(scope[key], segments);
+				} else {
+					const path = segments.join('.');
+					width = Math.max(width, path.length);
+					rows.push([ path, scope[key] ]);
+				}
+				segments.pop();
+			}
+		}(value, key ? key.split('.') : []));
+
+		for (const row of rows) {
+			console.log(row[0].padEnd(width) + ' = ' + row[1]);
+		}
+	} else {
+		console.log(value);
+	}
+
+	process.exit(exitCode);
+}

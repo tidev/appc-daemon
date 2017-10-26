@@ -84,16 +84,24 @@ export function createRequest(cfg, path, data, type) {
  * @returns {Config}
  */
 export function loadConfig(argv) {
-	let defaultLocation = expandPath('~/.appcelerator/appcd/config.json');
-	if (!fs.existsSync(defaultLocation)) {
-		defaultLocation = undefined;
-	}
+	let { configFile } = argv;
 	const cfg = config.load({
 		config:            argv.config,
-		configFile:        argv.configFile || defaultLocation,
+		configFile,
 		defaultConfigFile: require.resolve('appcd-core/conf/default.js')
 	});
+
+	if (!configFile && isFile(configFile = expandPath(cfg.get('home'), 'config.json'))) {
+		cfg.loadUserConfig(configFile);
+
+		// if we had a `argv.config` object, then we need to re-merge it on top of the user config
+		if (argv.config) {
+			cfg.merge(argv.config);
+		}
+	}
+
 	log(cfg.toString());
+
 	return cfg;
 }
 

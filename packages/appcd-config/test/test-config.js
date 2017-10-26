@@ -5,7 +5,7 @@ import tmp from 'tmp';
 import { real } from 'appcd-path';
 
 const _tmpDir = tmp.dirSync({
-	prefix: 'appcd-fswatcher-test-',
+	prefix: 'appcd-config-test-',
 	unsafeCleanup: true
 }).name;
 const tmpDir = real(_tmpDir);
@@ -108,11 +108,15 @@ describe('load()', () => {
 			},
 			configFile: path.join(__dirname, 'fixtures', 'good-load.js')
 		});
-		expect(config.toString(0)).to.equal('{"name":"foo","age":29,"food":"nachos"}');
+		expect(config.toString(0)).to.equal('{"food":"nachos","name":"foo","age":29}');
 	});
 });
 
 describe('Config', () => {
+	after(() => {
+		fs.removeSync(tmpDir);
+	});
+
 	describe('constructor', () => {
 		it('should load blank config', () => {
 			const config = new Config();
@@ -382,7 +386,7 @@ describe('Config', () => {
 			const config = new Config({ config: { foo: { bar: 'baz' } } });
 			expect(() => {
 				config.shift('foo.bar');
-			}).to.throw(Error, 'Value is not an array');
+			}).to.throw(TypeError, 'Configuration setting "foo.bar" is not an array');
 		});
 	});
 
@@ -423,7 +427,7 @@ describe('Config', () => {
 			const config = new Config({ config: { foo: { bar: 'baz' } } });
 			expect(() => {
 				config.pop('foo.bar');
-			}).to.throw(Error, 'Value is not an array');
+			}).to.throw(TypeError, 'Configuration setting "foo.bar" is not an array');
 		});
 	});
 
@@ -481,16 +485,6 @@ describe('Config', () => {
 			const config = new Config({ config: { foo: { bar: [ 'baz' ] } } });
 			config.set('foo.bar', 'wiz');
 			expect(config.get('foo.bar')).to.equal('wiz');
-		});
-
-		it('should emit an event when setting', () => {
-			const config = new Config();
-			let fired = false;
-			config.on('change', () => {
-				fired = true;
-			});
-			config.set('foo', 'bar');
-			expect(fired).to.be.true;
 		});
 
 		it('should error if trying to set read-only property', () => {
@@ -612,6 +606,76 @@ describe('Config', () => {
 		});
 	});
 
+	describe('save()', () => {
+		it('should get user settings only', () => {
+			const config = new Config({
+				config: {
+					foo: 'bar',
+					baz: {
+						wiz: 'pow'
+					},
+					boo: []
+				}
+			});
+
+			config.set('name', 'yip');
+			config.set('alpha.omega', 'gamma');
+			config.set('r.g.b', 'mk');
+			config.delete('r.g');
+			config.push('foo', 'zap');
+			config.set({
+				arr: [ 1, 2, 3 ],
+				obj: {
+					a: 'b'
+				}
+			});
+
+			expect(config.getUserConfig()).to.deep.equal({
+				alpha: {
+					omega: 'gamma'
+				},
+				foo: [ 'bar', 'zap' ],
+				name: 'yip',
+				arr: [ 1, 2, 3 ],
+				obj: {
+					a: 'b'
+				}
+			});
+		});
+
+		it('should save the user config settings to a file', async () => {
+			const dir = makeTempDir();
+			const inFile = path.join(dir, 'input.json');
+			const outFile = path.join(dir, 'output.json');
+
+			const config = new Config({
+				config: {
+					foo: 'bar',
+					baz: {
+						wiz: 'pow'
+					}
+				}
+			});
+
+			const values = {
+				alpha: 'beta',
+				baz: {
+					wow: 'zip',
+					wiz: 'wee'
+				},
+				arr: [ 1, 2, 3 ]
+			};
+
+			fs.writeFileSync(inFile, JSON.stringify(values, null, 4));
+
+			config.loadUserConfig(inFile);
+
+			await config.save(outFile);
+
+			expect(JSON.parse(fs.readFileSync(outFile))).to.deep.equal(values);
+		});
+	});
+
 	describe('watch/unwatch', () => {
 		it('should watch and unwatch changes', () => {
 			const config = new Config();
@@ -725,28 +789,6 @@ describe('Config', () => {
 			expect(() => {
 				config.set('id', 'foo');
 			}).to.throw(Error, 'Not allowed to set read-only property');
-		});
-	});
-
-	describe.only('save()', () => {
-		let tmp;
-		after(() => {
-			fs.removeSync(tmpDir);
-		});
-
-		it('should save', () => {
-			tmp = makeTempDir();
-			const config = new Config({ config: { home: tmp, foo: 'bar', job: { title: 'binman' } }, configFile: path.join(__dirname, 'fixtures', 'good-meta-simple.js') });
-			expect(() => {
-				config.save();
-			}).to.not.throw();
-			expect(fs.existsSync(path.join(tmp, 'config.json'))).to.equal(true);
-		});
-
-		it('should be able to load with a saved config that has persisted values', () => {
-			const config = new Config({ configFile: path.join(tmp, 'config.json') });
-			expect(config.get('foo')).to.equal('bar');
-			expect(config.get('job.title')).to.equal('binman');
 		});
 	});
 });

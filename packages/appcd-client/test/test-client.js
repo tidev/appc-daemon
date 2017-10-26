@@ -214,7 +214,7 @@ describe('Client', () => {
 				conn.on('message', msg => {
 					conn.send(JSON.stringify({
 						status: 404,
-						code: '404',
+						statusCode: '404',
 						id: JSON.parse(msg).id,
 						message: 'Not found',
 						type: 'error'
@@ -233,7 +233,7 @@ describe('Client', () => {
 				})
 				.on('error', err => {
 					try {
-						expect(err.message).to.equal('404 Not found');
+						expect(err.message).to.equal('Not found');
 						expect(err.errorCode).to.equal(404);
 						expect(err.code).to.equal('404');
 						server.close(() => done());
@@ -250,7 +250,7 @@ describe('Client', () => {
 				conn.on('message', msg => {
 					conn.send(JSON.stringify({
 						status: 500,
-						code: '500.1',
+						statusCode: '500.1',
 						id: JSON.parse(msg).id,
 						message: 'Server error',
 						type: 'error'
@@ -269,7 +269,7 @@ describe('Client', () => {
 				})
 				.on('error', err => {
 					try {
-						expect(err.message).to.equal('500 Server error');
+						expect(err.message).to.equal('Server error');
 						expect(err.errorCode).to.equal(500);
 						expect(err.code).to.equal('500.1');
 						server.close(() => done());
@@ -303,7 +303,7 @@ describe('Client', () => {
 				})
 				.on('error', err => {
 					try {
-						expect(err.message).to.equal('500 Server Error');
+						expect(err.message).to.equal('Server Error');
 						expect(err.errorCode).to.equal(500);
 						expect(err.code).to.equal('500');
 						server.close(() => done());
@@ -336,7 +336,7 @@ describe('Client', () => {
 				})
 				.on('error', err => {
 					try {
-						expect(err.message).to.equal('500 Server Error');
+						expect(err.message).to.equal('Server Error');
 						expect(err.errorCode).to.equal(500);
 						expect(err.code).to.equal('500');
 						server.close(() => done());
