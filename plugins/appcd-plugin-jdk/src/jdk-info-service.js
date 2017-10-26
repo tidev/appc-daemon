@@ -195,7 +195,7 @@ export default class JDKInfoService extends ServiceDispatcher {
 	 * @access private
 	 */
 	onCall(ctx) {
-		const filter = this.getTopic(ctx);
+		const filter = ctx.request.params.filter && ctx.request.params.filter.replace(/^\//, '').split('/') || undefined;
 		const node = this.get(filter);
 
 		if (!node) {
