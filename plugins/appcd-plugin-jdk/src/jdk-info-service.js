@@ -180,12 +180,12 @@ export default class JDKInfoService extends ServiceDispatcher {
 	 * Determines the topic for the incoming request.
 	 *
 	 * @param {DispatcherContext} ctx - The dispatcher request context object.
-	 * @returns {String}
+	 * @returns {Array.<String>}
 	 * @access private
 	 */
 	getTopic(ctx) {
 		const { params, topic } = ctx.request;
-		return topic || (params.filter && params.filter.replace(/^\//, '').split('/').join('.')) || undefined;
+		return topic || (params.filter && params.filter.replace(/^\//, '').split('/')) || undefined;
 	}
 
 	/**
