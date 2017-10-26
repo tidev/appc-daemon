@@ -131,8 +131,7 @@ export default class Metadata {
 	/**
 	 * Allows ability to define a function to validate a custom type.
 	 *
-	 * @param {String} type - The name of the type. All names will be converted
-	 * to lowercase.
+	 * @param {String} type - The name of the type. All names will be converted to lowercase.
 	 * @param {Function} validate - The function to call to validate a value.
 	 * @access public
 	 */
@@ -201,16 +200,12 @@ export default class Metadata {
 	 * @param {String} key - The config setting's dot-notation key.
 	 * @param {Object} [metadata] - A metadata object.
 	 * @param {String} [metadata.desc] - The config setting's description.
-	 * @param {Boolean|String} [metadata.deprecated=false] - Considers a
-	 * settings as no longer used when the value is `true` or a string
-	 * containing a reason.
-	 * @param {Boolean} [metadata.readonly=false] - When true, the value cannot
-	 * be overwritten.
-	 * @param {String} [metadata.type] - A JSDoc style `@type` value meaning it
-	 * can be one or more datatype names as well as nullable/non-nullable
-	 * identifiers.
-	 * @param {Function} [metadata.validate] - A function that validates the
-	 * config setting.
+	 * @param {Boolean|String} [metadata.deprecated=false] - Considers a settings as no longer used
+	 * when the value is `true` or a string containing a reason.
+	 * @param {Boolean} [metadata.readonly=false] - When true, the value cannot be overwritten.
+	 * @param {String} [metadata.type] - A JSDoc style `@type` value meaning it can be one or more
+	 * datatype names as well as nullable/non-nullable identifiers.
+	 * @param {Function} [metadata.validate] - A function that validates the config setting.
 	 * @returns {Metadata}
 	 * @access public
 	 */
@@ -243,8 +238,7 @@ export default class Metadata {
 	 * @param {String} key - The key being validated.
 	 * @param {*} value - The value to validate.
 	 * @param {Object} [opts] - Various options.
-	 * @param {Boolean} [opts.overrideReadonly=false] - When true, does not
-	 * enforce readonly.
+	 * @param {Boolean} [opts.overrideReadonly=false] - When `true`, does not enforce readonly.
 	 * @returns {Boolean}
 	 * @access public
 	 */
@@ -253,22 +247,38 @@ export default class Metadata {
 			throw new TypeError('Expected key to be a string');
 		}
 
-		const meta = this._map.get(key);
-		if (!meta) {
-			return true;
-		}
+		const parts = key.split('.');
+		const count = parts.length;
+		const segments = [];
 
-		if (!opts.overrideReadonly && meta.readonly) {
-			throw new Error(opts.action
-				? `Not allowed to ${opts.action} read-only property`
-				: `Config option "${key}" is read-only`);
-		}
+		for (const part of parts) {
+			segments.push(part);
+			const meta = this._map.get(segments.join('.'));
 
-		if ((meta.nullable && value === null) || meta.validate(value)) {
-			return true;
-		}
+			if (!meta) {
+				if (segments.length === count) {
+					return true;
+				}
+				continue;
+			}
 
-		throw new Error(`Invalid "${key}" value "${value}"`);
+			// check for readonly and datatype
+			if (!opts.overrideReadonly && meta.readonly) {
+				throw new Error(opts.action
+					? `Not allowed to ${opts.action} read-only property`
+					: `Config option "${key}" is read-only`);
+			}
+
+			if ((meta.nullable && value === null) || meta.validate(value)) {
+				return true;
+			}
+
+			if (meta.type && segments.length < count) {
+				throw new Error(`Cannot overwrite ${meta.type} "${segments.join('.')}" value with object`);
+			}
+
+			throw new Error(`Invalid "${key}" value "${value}"`);
+		}
 	}
 
 	/**
@@ -291,13 +301,13 @@ export default class Metadata {
 	}
 
 	/**
-	 * Loops over a Babylon ObjectExpression's properties to find comments and
-	 * descend into child ObjectExpressions.
+	 * Loops over a Babylon ObjectExpression's properties to find comments and descend into child
+	 * ObjectExpressions.
 	 *
 	 * @param {Object} path - A Babylon AST path object.
 	 * @param {Object} node - A Babylon AST path node object.
-	 * @param {String[]} crumbs=[] - A list of scope names used to construct the
-	 * config setting's dot-notation key.
+	 * @param {String[]} crumbs=[] - A list of scope names used to construct the config setting's
+	 * dot-notation key.
 	 * @access private
 	 */
 	_findSettings(path, node, crumbs = []) {
@@ -340,8 +350,8 @@ export default class Metadata {
 	/**
 	 * Parses the docs from a comment block extracted from the AST.
 	 *
-	 * @param {String} key - The key for the config setting. This should be a
-	 * dot-notation formatted string.
+	 * @param {String} key - The key for the config setting. This should be a dot-notation formatted
+	 * string.
 	 * @param {String} comment - The comment block to parse.
 	 * @access private
 	 */
@@ -388,8 +398,7 @@ export default class Metadata {
 	}
 
 	/**
-	 * Parses a Doctrine AST tag type and constructs an array of validate
-	 * functions.
+	 * Parses a Doctrine AST tag type and constructs an array of validate functions.
 	 *
 	 * @param {Object} type - A tag "type" from a Doctrine AST.
 	 * @returns {Function[]} An array of validate functions.

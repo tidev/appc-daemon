@@ -247,17 +247,21 @@ export default class Config {
 			key.split('.').reduce((obj, part, i, arr) => {
 				if (i + 1 === arr.length) {
 					// check if any descendant is read-only
-					this.hasReadonlyDescendant(obj[part], key, 'set');
-					obj[part] = value;
+					if (obj[part] !== value) {
+						this.hasReadonlyDescendant(obj[part], key, 'set');
+						obj[part] = value;
+						this.userDefined.add(key);
+						if (value && typeof value === 'object') {
+							addUserDefinedKeys(value, key.split('.'));
+						}
+					}
 				} else if (typeof obj[part] !== 'object' || Array.isArray(obj[part])) {
 					this.hasReadonlyDescendant(obj[part], key, 'set');
 					obj[part] = {};
 				}
+
 				return obj[part];
 			}, this.values);
-
-			this.userDefined.add(key);
-			addUserDefinedKeys(value, key.split('.'));
 		} else {
 			// key is an object
 			this.merge(key);
@@ -370,7 +374,7 @@ export default class Config {
 		}
 
 		if (!Array.isArray(it)) {
-			throw new TypeError('Value is not an array');
+			throw new TypeError(`Configuration setting ${`"${key}" ` || ''}is not an array`);
 		}
 
 		this.userDefined.add(key);
@@ -397,7 +401,7 @@ export default class Config {
 		}
 
 		if (!Array.isArray(it)) {
-			throw TypeError('Value is not an array');
+			throw new TypeError(`Configuration setting ${`"${key}" ` || ''}is not an array`);
 		}
 
 		this.userDefined.add(key);
@@ -417,7 +421,7 @@ export default class Config {
 		const m = this.meta.get(key);
 
 		if (m && m.readonly) {
-			throw Error('Not allowed to delete read-only property');
+			throw new Error('Not allowed to delete read-only property');
 		}
 
 		return (function walk(parts, obj) {
@@ -454,7 +458,7 @@ export default class Config {
 	hasReadonlyDescendant(obj, key, action) {
 		const m = this.meta.get(key);
 		if (m && m.readonly) {
-			throw Error(`Not allowed to ${action} property with nested read-only property`);
+			throw new Error(`Not allowed to ${action} property with nested read-only property`);
 		}
 
 		if (obj && typeof obj === 'object') {
@@ -502,7 +506,7 @@ export default class Config {
 						dest[key] = {};
 					}
 					merger(dest[key], value, scope);
-				} else if (typeof value !== 'undefined') {
+				} else if (typeof value !== 'undefined' && value !== dest[key]) {
 					dest[key] = value;
 					if (opts.isUserDefined) {
 						this.userDefined.add(scopeKey);
@@ -533,7 +537,7 @@ export default class Config {
 		for (const key of keys) {
 			(function walk(dest, src, parts) {
 				const part = parts.shift();
-				if (part && src[part]) {
+				if (part && src[part] !== undefined) {
 					if (typeof src[part] === 'object' && !Array.isArray(src[part])) {
 						if (!dest[part]) {
 							dest[part] = {};

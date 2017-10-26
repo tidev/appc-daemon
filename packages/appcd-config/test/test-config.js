@@ -108,7 +108,7 @@ describe('load()', () => {
 			},
 			configFile: path.join(__dirname, 'fixtures', 'good-load.js')
 		});
-		expect(config.toString(0)).to.equal('{"name":"foo","age":29,"food":"nachos"}');
+		expect(config.toString(0)).to.equal('{"food":"nachos","name":"foo","age":29}');
 	});
 });
 
@@ -386,7 +386,7 @@ describe('Config', () => {
 			const config = new Config({ config: { foo: { bar: 'baz' } } });
 			expect(() => {
 				config.shift('foo.bar');
-			}).to.throw(TypeError, 'Value is not an array');
+			}).to.throw(TypeError, 'Configuration setting "foo.bar" is not an array');
 		});
 	});
 
@@ -427,7 +427,7 @@ describe('Config', () => {
 			const config = new Config({ config: { foo: { bar: 'baz' } } });
 			expect(() => {
 				config.pop('foo.bar');
-			}).to.throw(TypeError, 'Value is not an array');
+			}).to.throw(TypeError, 'Configuration setting "foo.bar" is not an array');
 		});
 	});
 

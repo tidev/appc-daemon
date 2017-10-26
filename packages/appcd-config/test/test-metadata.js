@@ -412,6 +412,16 @@ describe('Metadata', () => {
 			}).to.throw(Error, 'Invalid "foo" value "123"');
 		});
 
+		it('should validate a boolean cannot be overwritten', () => {
+			const md = new Metadata();
+			md.set('foo', {
+				type: 'boolean'
+			});
+			expect(() => {
+				expect(md.validate('foo.bar', 'baz')).to.be.true;
+			}).to.throw(Error, 'Cannot overwrite boolean "foo" value with object');
+		});
+
 		it('should validate for unknown type', () => {
 			const md = new Metadata();
 			md.set('foo', {

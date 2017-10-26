@@ -84,34 +84,40 @@ export default class ConfigService extends ServiceDispatcher {
 					throw new DispatcherError(codes.FORBIDDEN, `Not allowed to ${action} config root`);
 				}
 
-				switch (action) {
-					case 'set':
-						logger.log(`Setting "${key}" to ${JSON.stringify(data.value)}`);
-						this.config.set(key, data.value);
-						break;
+				let value;
 
-					case 'delete':
-						if (!this.config.delete(key)) {
-							ctx.response = new Response(codes.NOT_FOUND);
-							return;
-						}
-						break;
+				try {
+					switch (action) {
+						case 'set':
+							logger.log(`Setting "${key}" to ${JSON.stringify(data.value)}`);
+							this.config.set(key, data.value);
+							break;
 
-					case 'push':
-						this.config.push(key, data.value);
-						break;
+						case 'delete':
+							if (!this.config.delete(key)) {
+								ctx.response = new Response(codes.NOT_FOUND);
+								return;
+							}
+							break;
 
-					case 'pop':
-						this.config.pop(key);
-						break;
+						case 'push':
+							this.config.push(key, data.value);
+							break;
 
-					case 'shift':
-						this.config.shift(key);
-						break;
+						case 'pop':
+							value = this.config.pop(key);
+							break;
 
-					case 'unshift':
-						this.config.unshift(key, data.value);
-						break;
+						case 'shift':
+							value = this.config.shift(key);
+							break;
+
+						case 'unshift':
+							this.config.unshift(key, data.value);
+							break;
+					}
+				} catch (e) {
+					throw new DispatcherError(codes.BAD_REQUEST, e.message);
 				}
 
 				const home = this.config.get('home');
@@ -119,7 +125,7 @@ export default class ConfigService extends ServiceDispatcher {
 					await this.config.save(expandPath(home, 'config.json'));
 				}
 
-				ctx.response = new Response(codes.OK);
+				ctx.response = value || new Response(codes.OK);
 				return;
 
 			} else {
