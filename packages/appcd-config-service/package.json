@@ -19,6 +19,7 @@
     "appcd-config": "0.1.0",
     "appcd-dispatcher": "0.1.0",
     "appcd-logger": "0.1.0",
+    "appcd-path": "0.1.0",
     "appcd-response": "0.1.0",
     "source-map-support": "^0.5.0"
   },

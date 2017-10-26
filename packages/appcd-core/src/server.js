@@ -51,7 +51,7 @@ export default class Server {
 
 		// if we didn't have a `configFile`, then load the user config file
 		if (!configFile && isFile(configFile = expandPath(this.config.get('home'), 'config.json'))) {
-			this.config.load(configFile);
+			this.config.loadUserConfig(configFile);
 
 			// if we had a `config` object, then we need to re-merge it on top of the user config
 			if (config) {

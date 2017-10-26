@@ -3,9 +3,12 @@ import Config from 'appcd-config';
 import Response, { codes } from 'appcd-response';
 
 import { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
+import { expandPath } from 'appcd-path';
 
 const logger = appcdLogger('appcd:config-service');
 const { highlight } = appcdLogger.styles;
+
+const writeRegExp = /^set|delete|push|pop|shift|unshift$/;
 
 /**
  * Exposes a dispatcher service handler for observing and manipulating the config.
@@ -47,89 +50,80 @@ export default class ConfigService extends ServiceDispatcher {
 	 */
 	getTopic(ctx) {
 		const { data, params, topic } = ctx.request;
-		return topic || String(params.filter || (data && data.key) || '').replace(/^\//, '').split(/\.|\//).join('.');
+		return topic || String((params && params.filter) || (data && data.key) || '').replace(/^\//, '').split(/\.|\//).join('.');
 	}
 
 	/**
 	 * Responds to "call" service requests.
 	 *
 	 * @param {Object} ctx - A dispatcher request context.
+	 * @returns {Promise}
 	 * @access private
 	 */
-	onCall(ctx) {
+	async onCall(ctx) {
 		const { data, params } = ctx.request;
-		let key = (params.filter || '').replace(/^\//, '').split(/\.|\//).join('.');
+		let key = (params && params.filter || '').trim().replace(/^\//, '').split(/\.|\//).join('.');
 
 		if (data && data.action) {
-			if (data.key && typeof data.key !== 'string') {
-				throw new DispatcherError(codes.BAD_REQUEST, 'Missing or empty key');
-			}
-
 			if (data.key) {
-				key = data.key.replace(/^\//, '').split(/\.|\//).join('.');
+				if (typeof data.key !== 'string') {
+					throw new DispatcherError(codes.BAD_REQUEST, 'Missing or empty key');
+				}
+				key = data.key.trim().replace(/^\//, '').split(/\.|\//).join('.');
 			}
 
-			switch (data.action) {
-				case 'ls':
-				case 'list':
-				case 'get':
-					break;
+			const { action } = data;
 
-				case 'set':
-					if (!key) {
-						throw new DispatcherError(codes.FORBIDDEN, 'Not allowed to set config root');
-					}
-					logger.log(`Setting "${key}" to "${data.value}"`);
-					this.config.set(key, data.value);
-					ctx.response = new Response(codes.OK);
-					return;
+			if (action === 'get') {
+				// fall through
 
-				case 'rm':
-				case 'delete':
-					if (!key) {
-						throw new DispatcherError(codes.FORBIDDEN, 'Not allowed to delete config root');
-					}
-					if (this.config.delete(key)) {
-						ctx.response = new Response(codes.OK);
-					} else {
-						ctx.response = new Response(codes.NOT_FOUND);
-					}
-					return;
+			} else if (writeRegExp.test(action)) {
+				// performing a modifying action
 
-				case 'push':
-					if (!key) {
-						throw new DispatcherError(codes.FORBIDDEN, 'Not allowed to push onto config root');
-					}
-					this.config.push(key, data.value);
-					ctx.response = new Response(codes.OK);
-					return;
+				if (!key) {
+					throw new DispatcherError(codes.FORBIDDEN, `Not allowed to ${action} config root`);
+				}
 
-				case 'shift':
-					if (!key) {
-						throw new DispatcherError(codes.FORBIDDEN, 'Not allowed to shift config root');
-					}
-					this.config.shift(key);
-					ctx.response = new Response(codes.OK);
-					return;
+				switch (action) {
+					case 'set':
+						logger.log(`Setting "${key}" to ${JSON.stringify(data.value)}`);
+						this.config.set(key, data.value);
+						break;
 
-				case 'pop':
-					if (!key) {
-						throw new DispatcherError(codes.FORBIDDEN, 'Not allowed to pop config root');
-					}
-					this.config.pop(key);
-					ctx.response = new Response(codes.OK);
-					return;
+					case 'delete':
+						if (!this.config.delete(key)) {
+							ctx.response = new Response(codes.NOT_FOUND);
+							return;
+						}
+						break;
 
-				case 'unshift':
-					if (!key) {
-						throw new DispatcherError(codes.FORBIDDEN, 'Not allowed to unshift onto config root');
-					}
-					this.config.unshift(key, data.value);
-					ctx.response = new Response(codes.OK);
-					return;
+					case 'push':
+						this.config.push(key, data.value);
+						break;
 
-				default:
-					throw new DispatcherError(codes.BAD_REQUEST, `Invalid action: ${data.action}`);
+					case 'pop':
+						this.config.pop(key);
+						break;
+
+					case 'shift':
+						this.config.shift(key);
+						break;
+
+					case 'unshift':
+						this.config.unshift(key, data.value);
+						break;
+				}
+
+				const home = this.config.get('home');
+				if (home) {
+					await this.config.save(expandPath(home, 'config.json'));
+				}
+
+				ctx.response = new Response(codes.OK);
+				return;
+
+			} else {
+				throw new DispatcherError(codes.BAD_REQUEST, `Invalid action: ${action}`);
 			}
 		}
 

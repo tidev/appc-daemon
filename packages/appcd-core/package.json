@@ -31,7 +31,7 @@
     "appcd-subprocess": "0.1.0",
     "appcd-telemetry": "0.1.0",
     "appcd-util": "0.1.1",
-    "cli-kit": "^0.0.3",
+    "cli-kit": "^0.0.5",
     "fs-extra": "^4.0.2",
     "gawk": "^4.3.0",
     "msgpack-lite": "^0.1.26"
@@ -50,6 +50,6 @@
     "url": "git+https://github.com/appcelerator/appc-daemon.git"
   },
   "engines": {
-    "node": "8.8.0"
+    "node": "8.8.1"
   }
 }

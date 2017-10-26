@@ -19,7 +19,7 @@ describe('Config Service', () => {
 		}).to.throw(TypeError, 'Expected config to be a valid config object');
 	});
 
-	it('should implicitly get a config', () => {
+	it('should implicitly get a config', async () => {
 		const json = {
 			foo: 'bar'
 		};
@@ -32,20 +32,20 @@ describe('Config Service', () => {
 					action: null,
 					key: null,
 					value: null
+				},
+				params: {
+					filter: null
 				}
-			},
-			params: {
-				key: null
 			},
 			response: null
 		};
 
-		cs.onCall(ctx);
+		await cs.onCall(ctx);
 
 		expect(ctx.response).to.deep.equal(json);
 	});
 
-	it('should explicitly get a config', () => {
+	it('should explicitly get a config', async () => {
 		const json = {
 			foo: 'bar'
 		};
@@ -58,20 +58,20 @@ describe('Config Service', () => {
 					action: 'get',
 					key: null,
 					value: null
+				},
+				params: {
+					filter: null
 				}
-			},
-			params: {
-				key: null
 			},
 			response: null
 		};
 
-		cs.onCall(ctx);
+		await cs.onCall(ctx);
 
 		expect(ctx.response).to.deep.equal(json);
 	});
 
-	it('should get a nested config value using dots', () => {
+	it('should get a nested config value using dots', async () => {
 		const cs = createConfigService({
 			foo: {
 				bar: 'baz'
@@ -84,20 +84,20 @@ describe('Config Service', () => {
 					action: 'get',
 					key: 'foo.bar',
 					value: null
+				},
+				params: {
+					filter: null
 				}
-			},
-			params: {
-				key: null
 			},
 			response: null
 		};
 
-		cs.onCall(ctx);
+		await cs.onCall(ctx);
 
 		expect(ctx.response).to.equal('baz');
 	});
 
-	it('should get a nested config value using slashes', () => {
+	it('should get a nested config value using slashes', async () => {
 		const cs = createConfigService({
 			foo: {
 				bar: 'baz'
@@ -110,20 +110,20 @@ describe('Config Service', () => {
 					action: 'get',
 					key: '/foo/bar',
 					value: null
+				},
+				params: {
+					filter: null
 				}
-			},
-			params: {
-				key: null
 			},
 			response: null
 		};
 
-		cs.onCall(ctx);
+		await cs.onCall(ctx);
 
 		expect(ctx.response).to.equal('baz');
 	});
 
-	it('should error if key is not valid', () => {
+	it('should error if key is not valid', async () => {
 		const cs = createConfigService({
 			foo: 'bar'
 		});
@@ -134,20 +134,26 @@ describe('Config Service', () => {
 					action: 'get',
 					key: 123,
 					value: null
+				},
+				params: {
+					filter: null
 				}
-			},
-			params: {
-				key: null
 			},
 			response: null
 		};
 
-		expect(() => {
-			cs.onCall(ctx);
-		}).to.throw(DispatcherError, 'Missing or empty key');
+		try {
+			await cs.onCall(ctx);
+		} catch (e) {
+			expect(e).to.be.instanceof(DispatcherError);
+			expect(e.message).to.equal('Missing or empty key');
+			return;
+		}
+
+		throw new Error('Expected error to throw');
 	});
 
-	it('should error if action is not valid', () => {
+	it('should error if action is not valid', async () => {
 		const cs = createConfigService({
 			foo: 'bar'
 		});
@@ -158,20 +164,26 @@ describe('Config Service', () => {
 					action: 'foo',
 					key: null,
 					value: null
+				},
+				params: {
+					filter: null
 				}
-			},
-			params: {
-				key: null
 			},
 			response: null
 		};
 
-		expect(() => {
-			cs.onCall(ctx);
-		}).to.throw(DispatcherError, 'Invalid action: foo');
+		try {
+			await cs.onCall(ctx);
+		} catch (e) {
+			expect(e).to.be.instanceof(DispatcherError);
+			expect(e.message).to.equal('Invalid action: foo');
+			return;
+		}
+
+		throw new Error('Expected error to throw');
 	});
 
-	it('should error if key not found', () => {
+	it('should error if key not found', async () => {
 		const cs = createConfigService({});
 
 		const ctx = {
@@ -180,20 +192,26 @@ describe('Config Service', () => {
 					action: null,
 					key: null,
 					value: null
+				},
+				params: {
+					filter: 'foo'
 				}
-			},
-			params: {
-				key: 'foo'
 			},
 			response: null
 		};
 
-		expect(() => {
-			cs.onCall(ctx);
-		}).to.throw(DispatcherError, 'Not Found: foo');
+		try {
+			await cs.onCall(ctx);
+		} catch (e) {
+			expect(e).to.be.instanceof(DispatcherError);
+			expect(e.message).to.equal('Not Found: foo');
+			return;
+		}
+
+		throw new Error('Expected error to throw');
 	});
 
-	it('should error when setting a config value without a key', () => {
+	it('should error when setting a config value without a key', async () => {
 		const cs = createConfigService({});
 
 		const ctx = {
@@ -202,20 +220,26 @@ describe('Config Service', () => {
 					action: 'set',
 					key: null,
 					value: 'bar'
+				},
+				params: {
+					filter: null
 				}
-			},
-			params: {
-				key: null
 			},
 			response: null
 		};
 
-		expect(() => {
-			cs.onCall(ctx);
-		}).to.throw(DispatcherError, 'Not allowed to set config root');
+		try {
+			await cs.onCall(ctx);
+		} catch (e) {
+			expect(e).to.be.instanceof(DispatcherError);
+			expect(e.message).to.equal('Not allowed to set config root');
+			return;
+		}
+
+		throw new Error('Expected error to throw');
 	});
 
-	it('should set a config value', () => {
+	it('should set a config value', async () => {
 		const cs = createConfigService({});
 
 		let ctx = {
@@ -224,15 +248,15 @@ describe('Config Service', () => {
 					action: 'set',
 					key: 'foo',
 					value: 'bar'
+				},
+				params: {
+					filter: null
 				}
-			},
-			params: {
-				key: null
 			},
 			response: null
 		};
 
-		cs.onCall(ctx);
+		await cs.onCall(ctx);
 
 		expect(ctx.response).to.be.instanceof(Response);
 		expect(ctx.response.statusCode).to.equal(200);
@@ -243,20 +267,20 @@ describe('Config Service', () => {
 					action: 'get',
 					key: 'foo',
 					value: null
+				},
+				params: {
+					filter: null
 				}
-			},
-			params: {
-				key: null
 			},
 			response: null
 		};
 
-		cs.onCall(ctx);
+		await cs.onCall(ctx);
 
 		expect(ctx.response).to.equal('bar');
 	});
 
-	it('should error deleting a config value without a key', () => {
+	it('should error deleting a config value without a key', async () => {
 		const cs = createConfigService({
 			foo: 'bar'
 		});
@@ -267,20 +291,26 @@ describe('Config Service', () => {
 					action: 'delete',
 					key: null,
 					value: null
+				},
+				params: {
+					filter: null
 				}
-			},
-			params: {
-				key: null
 			},
 			response: null
 		};
 
-		expect(() => {
-			cs.onCall(ctx);
-		}).to.throw(DispatcherError, 'Not allowed to delete config root');
+		try {
+			await cs.onCall(ctx);
+		} catch (e) {
+			expect(e).to.be.instanceof(DispatcherError);
+			expect(e.message).to.equal('Not allowed to delete config root');
+			return;
+		}
+
+		throw new Error('Expected error to throw');
 	});
 
-	it('should error deleting a config value that does not exist', () => {
+	it('should error deleting a config value that does not exist', async () => {
 		const cs = createConfigService({
 			foo: 'bar'
 		});
@@ -291,21 +321,21 @@ describe('Config Service', () => {
 					action: 'delete',
 					key: 'baz',
 					value: null
+				},
+				params: {
+					filter: null
 				}
-			},
-			params: {
-				key: null
 			},
 			response: null
 		};
 
-		cs.onCall(ctx);
+		await cs.onCall(ctx);
 
 		expect(ctx.response).to.be.instanceof(Response);
 		expect(ctx.response.statusCode).to.equal(404);
 	});
 
-	it('should deleting a config value', () => {
+	it('should deleting a config value', async () => {
 		const cs = createConfigService({
 			foo: 'bar'
 		});
@@ -316,15 +346,15 @@ describe('Config Service', () => {
 					action: 'delete',
 					key: 'foo',
 					value: null
+				},
+				params: {
+					filter: null
 				}
-			},
-			params: {
-				key: null
 			},
 			response: null
 		};
 
-		cs.onCall(ctx);
+		await cs.onCall(ctx);
 
 		expect(ctx.response).to.be.instanceof(Response);
 		expect(ctx.response.statusCode).to.equal(200);
@@ -335,20 +365,20 @@ describe('Config Service', () => {
 					action: 'get',
 					key: null,
 					value: null
+				},
+				params: {
+					filter: null
 				}
-			},
-			params: {
-				key: null
 			},
 			response: null
 		};
 
-		cs.onCall(ctx);
+		await cs.onCall(ctx);
 
 		expect(ctx.response).to.deep.equal({});
 	});
 
-	it.only('should support push', () => {
+	it('should support push', async () => {
 		const cs = createConfigService({
 			foo: 'bar'
 		});
@@ -359,15 +389,15 @@ describe('Config Service', () => {
 					action: 'push',
 					key: 'foo',
 					value: 'baz'
+				},
+				params: {
+					filter: null
 				}
-			},
-			params: {
-				key: null
 			},
 			response: null
 		};
 
-		cs.onCall(ctx);
+		await cs.onCall(ctx);
 
 		expect(ctx.response).to.be.instanceof(Response);
 		expect(ctx.response.statusCode).to.equal(200);
@@ -378,20 +408,20 @@ describe('Config Service', () => {
 					action: 'get',
 					key: null,
 					value: null
+				},
+				params: {
+					filter: null
 				}
-			},
-			params: {
-				key: null
 			},
 			response: null
 		};
 
-		cs.onCall(ctx);
+		await cs.onCall(ctx);
 
 		expect(ctx.response).to.deep.equal({ foo: [ 'bar', 'baz' ] });
 	});
 
-	it.only('should support unshift', () => {
+	it('should support unshift', async () => {
 		const cs = createConfigService({
 			foo: 'bar'
 		});
@@ -402,15 +432,15 @@ describe('Config Service', () => {
 					action: 'unshift',
 					key: 'foo',
 					value: 'baz'
+				},
+				params: {
+					filter: null
 				}
-			},
-			params: {
-				key: null
 			},
 			response: null
 		};
 
-		cs.onCall(ctx);
+		await cs.onCall(ctx);
 
 		expect(ctx.response).to.be.instanceof(Response);
 		expect(ctx.response.statusCode).to.equal(200);
@@ -421,20 +451,20 @@ describe('Config Service', () => {
 					action: 'get',
 					key: null,
 					value: null
+				},
+				params: {
+					filter: null
 				}
-			},
-			params: {
-				key: null
 			},
 			response: null
 		};
 
-		cs.onCall(ctx);
+		await cs.onCall(ctx);
 
 		expect(ctx.response).to.deep.equal({ foo: [ 'baz', 'bar' ] });
 	});
 
-	it.only('should support pop', () => {
+	it('should support pop', async () => {
 		const cs = createConfigService({
 			foo: [ 'baz', 'bar' ]
 		});
@@ -444,15 +474,15 @@ describe('Config Service', () => {
 				data: {
 					action: 'pop',
 					key: 'foo'
+				},
+				params: {
+					filter: null
 				}
-			},
-			params: {
-				key: null
 			},
 			response: null
 		};
 
-		cs.onCall(ctx);
+		await cs.onCall(ctx);
 
 		expect(ctx.response).to.be.instanceof(Response);
 		expect(ctx.response.statusCode).to.equal(200);
@@ -463,20 +493,20 @@ describe('Config Service', () => {
 					action: 'get',
 					key: null,
 					value: null
+				},
+				params: {
+					filter: null
 				}
-			},
-			params: {
-				key: null
 			},
 			response: null
 		};
 
-		cs.onCall(ctx);
+		await cs.onCall(ctx);
 
 		expect(ctx.response).to.deep.equal({ foo: [ 'baz' ] });
 	});
 
-	it.only('should support shift', () => {
+	it('should support shift', async () => {
 		const cs = createConfigService({
 			foo: [ 'baz', 'bar' ]
 		});
@@ -486,15 +516,15 @@ describe('Config Service', () => {
 				data: {
 					action: 'shift',
 					key: 'foo'
+				},
+				params: {
+					filter: null
 				}
-			},
-			params: {
-				key: null
 			},
 			response: null
 		};
 
-		cs.onCall(ctx);
+		await cs.onCall(ctx);
 
 		expect(ctx.response).to.be.instanceof(Response);
 		expect(ctx.response.statusCode).to.equal(200);
@@ -505,25 +535,27 @@ describe('Config Service', () => {
 					action: 'get',
 					key: null,
 					value: null
+				},
+				params: {
+					filter: null
 				}
-			},
-			params: {
-				key: null
 			},
 			response: null
 		};
 
-		cs.onCall(ctx);
+		await cs.onCall(ctx);
 
 		expect(ctx.response).to.deep.equal({ foo: [ 'bar' ] });
 	});
 
-	it('should subscribe and unsubscribe to config changes', () => {
+	it('should subscribe and unsubscribe to config changes', async () => {
 		const cs = createConfigService({});
 
 		const ctx = {
-			params: {
-				key: null
+			request: {
+				params: {
+					filter: null
+				}
 			}
 		};
 
@@ -544,7 +576,7 @@ describe('Config Service', () => {
 			}
 		};
 
-		cs.initSubscription({ publish });
+		cs.initSubscription({ ctx, publish });
 		cs.config.set('foo', 'bar');
 		cs.config.delete('foo');
 		cs.destroySubscription({ publish });

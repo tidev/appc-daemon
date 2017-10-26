@@ -1,108 +1,153 @@
-import { createInstanceWithDefaults, StdioStream } from 'appcd-logger';
 import Response, { codes } from 'appcd-response';
+
 import { banner, createRequest, loadConfig } from './common';
 
-const logger = createInstanceWithDefaults().config({ theme: 'compact' }).enable('*').pipe(new StdioStream());
-const { log } = logger;
-const { highlight, underline } = logger.styles;
-
-const getterActions = [ 'ls', 'list', 'get' ];
-const setterActions = [ 'set', 'rm', 'delete', 'push', 'pop', 'shift', 'unshift' ];
 const cmd = {
+	desc: 'get and set config options',
 	options: {
 		'--json': { desc: 'outputs the config as JSON' }
 	},
+	args: [ 'action', 'key', 'value' ],
 	action({ argv, _ }) {
 		const cfg = loadConfig(argv);
 		const [ action, key, value ] = _;
 		const data = {
 			action,
 			key,
-			value: convertValue(value)
+			value
 		};
+
+		try {
+			data.value = JSON.parse(data.value);
+		} catch (e) {
+			// squelch
+		}
+
 		const { client, request } = createRequest(cfg, '/appcd/config', data);
 
 		request
-			.once('error', err => {
-				const { code, errorCode } = err;
-				let config;
-				let val;
-				let response;
-				if (code === 'ECONNREFUSED') {
+			.once('error', async (err) => {
+				// let config;
+				// let val;
+				// let response;
+
+				if (err.code === 'ECONNREFUSED') {
 					try {
-						if (setterActions.includes(action) && !key) {
-							response = new Response(codes.FORBIDDEN, `Not allowed to ${action} config root`);
-							logIt({ response });
-							process.exit(1);
+						if (/^set|delete|rm|unset|push|pop|shift|unshift$/.test(action) && !key) {
+							throw new Error(`${action} requires a config key modify`);
 						}
-						switch (action) {
-							case 'set':
-								cfg.set(key, value);
-								break;
 
-							case 'rm':
-							case 'delete':
-								cfg.delete(key);
-								break;
-
-							case 'push':
-								cfg.push(key, value);
-								break;
-
-							case 'shift':
-								cfg.shift(key);
-								break;
-
-							case 'pop':
-								val = cfg.pop(key);
-								break;
-
-							case 'unshift':
-								cfg.unshift(key, value);
-								break;
-
-							case 'ls':
-							case 'get':
-							case 'list':
-							case undefined:
-								const filter = key && key.split(/\.|\//).join('.') || undefined;
-								config = cfg.get(filter || undefined);
-								if (!config) {
-									response = new Response(codes.NOT_FOUND, `Not found: ${filter || ''}`);
-								}
-								break;
-
-							default:
-								response = new Response(codes.BAD_REQUEST, `Invalid action: ${data.action}`);
-						}
+						// switch (action) {
+						// 	case 'set':
+						// 		cfg.set(key, value);
+						// 		break;
+						//
+						// 	case 'rm':
+						// 	case 'unset':
+						// 	case 'delete':
+						// 		cfg.delete(key);
+						// 		break;
+						//
+						// 	case 'push':
+						// 		cfg.push(key, value);
+						// 		break;
+						//
+						// 	case 'shift':
+						// 		cfg.shift(key);
+						// 		break;
+						//
+						// 	case 'pop':
+						// 		val = cfg.pop(key);
+						// 		break;
+						//
+						// 	case 'unshift':
+						// 		cfg.unshift(key, value);
+						// 		break;
+						//
+						// 	case 'ls':
+						// 	case 'get':
+						// 	case 'list':
+						// 	case undefined:
+						// 		const filter = key && key.split(/\.|\//).join('.') || undefined;
+						// 		config = cfg.get(filter || undefined);
+						// 		if (!config) {
+						// 			response = new Response(codes.NOT_FOUND, `Not found: ${filter || ''}`);
+						// 		}
+						// 		break;
+						//
+						// 	default:
+						// 		response = new Response(codes.BAD_REQUEST, `Invalid action: ${action}`);
+						// }
 					} catch (ex) {
-						response = ex;
-						logIt({ response });
+						// response = ex;
+						// logIt({ response });
 					}
-					if (argv.json) {
-						log(response || config);
-					} else {
-						logIt({ action, key, value, config, response });
-					}
-				}  else if (argv.json) {
-					log(err);
+
+					// if (argv.json) {
+					// 	log(response || config);
+					// } else {
+					// 	logIt({ action, key, value, config, response });
+					// }
+
 				} else {
-					logIt({ response: err });
+					if (argv.json) {
+						console.log(JSON.stringify({
+							code: err.errorCode,
+							message: err.message,
+							stack: err.stack
+						}, null, 2));
+					} else {
+						console.log(err.toString());
+					}
+					process.exit(1);
 				}
-				process.exit(1);
 			})
 			.on('response', message => {
 				client.disconnect();
+
 				if (argv.json) {
-					log(message);
-					process.exit(0);
+					console.log(message);
+				} else {
+					print(message);
 				}
-				logIt({ action, key, value, config: message });
+
 				process.exit(0);
 			});
 	}
 };
 
+export default cmd;
+
+function print(message) {
+	console.log(banner());
+
+	if (message && typeof message === 'object') {
+		let width = 0;
+		const rows = [];
+
+		(function walk(scope, segments) {
+			for (const key of Object.keys(scope)) {
+				segments.push(key);
+				if (scope[key] && typeof scope[key] === 'object') {
+					walk(scope[key], segments);
+				} else {
+					const path = segments.join('.');
+					width = Math.max(width, path.length);
+					rows.push([ path, scope[key] ]);
+				}
+				segments.pop();
+			}
+		}(message, []));
+
+		for (const row of rows) {
+			console.log(row[0].padEnd(width) + ' = ' + row[1]);
+		}
+	} else {
+		console.log(message.code === 200 ? 'Saved' : message);
+	}
+}
+
+/*
 function logIt({ action, key, value, config, response }) {
 	log(banner());
 	if (response) {
@@ -115,18 +160,18 @@ function logIt({ action, key, value, config, response }) {
 	switch (action) {
 		case 'push':
 		case 'unshift':
-			log(`Added ${highlight(value)} to ${underline(key)}`);
+			log(`Added ${value} to ${key}`);
 			break;
 		case 'set':
-			log(`Set ${underline(key)} to ${highlight(value)}`);
+			log(`Set ${key} to ${value}`);
 			break;
 		case 'rm':
 		case 'delete':
-			log(`Removed ${underline(key)}`);
+			log(`Removed ${key}`);
 			break;
 		case 'pop':
 		case 'shift':
-			log(`Removed value from ${underline(key)}`);
+			log(`Removed value from ${key}`);
 			break;
 		case 'ls':
 		case 'list':
@@ -137,7 +182,7 @@ function logIt({ action, key, value, config, response }) {
 	}
 }
 
-function prettyConfig (config, key) {
+function prettyConfig(config, key) {
 	const results = {};
 	function walk(obj, parent) {
 		Object.keys(obj).forEach(function (name) {
@@ -154,7 +199,7 @@ function prettyConfig (config, key) {
 		walk(config, key && key.split('.'));
 	} else {
 		// We have just a single value, return it;
-		return `${underline(key)} = ${highlight(config)}`;
+		return `${key} = ${config}`;
 	}
 	const maxlen = Object.keys(results).reduce(function (a, b) {
 		return Math.max(a, b.length + 1);
@@ -162,17 +207,8 @@ function prettyConfig (config, key) {
 	let string = '';
 	Object.keys(results).sort().forEach(function (k) {
 		const padding = maxlen - k.length;
-		string += `${underline(k)} ${('=').padStart(padding)} ${highlight(results[k])}\n`;
+		string += `${k} ${('=').padStart(padding)} ${results[k]}\n`;
 	});
 	return string;
 }
-
-function convertValue(value) {
-	if (typeof value === 'object') {
-		return JSON.parse(value);
-	} else {
-		return value;
-	}
-}
-
-export default cmd;
+*/

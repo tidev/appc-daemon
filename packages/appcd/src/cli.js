@@ -22,6 +22,7 @@ new CLI({
 		logcat,
 		status
 	},
+	name: 'appcd',
 	options: {
 		'--config <json>':      { type: 'json', desc: 'serialized JSON string to mix into the appcd config' },
 		'--config-file <file>': { type: 'file', desc: 'path to a appcd JS config file' },
