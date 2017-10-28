@@ -889,11 +889,15 @@ fs-extra@^4.0.2:
     jsonfile "^4.0.0"
     universalify "^0.1.0"
 
-gawk@^4.3.0:
-  version "4.3.0"
-  resolved "https://registry.yarnpkg.com/gawk/-/gawk-4.3.0.tgz#a826a9bcd9e4e33c9379c03fc16afe9ba4140fb3"
+gawk@^4.4.0:
+  version "4.4.0"
+  resolved "https://registry.yarnpkg.com/gawk/-/gawk-4.4.0.tgz#4513192b775cea25761fd096bffa9a578b534f6b"
   dependencies:
-    source-map-support "^0.4.16"
+    babel-core "^6.26.0"
+    esdoc "^1.0.3"
+    esdoc-ecmascript-proposal-plugin "^1.0.0"
+    esdoc-standard-plugin "^1.0.0"
+    source-map-support "^0.5.0"
 
 gaze@^0.5.1:
   version "0.5.2"
