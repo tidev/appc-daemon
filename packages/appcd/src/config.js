@@ -1,5 +1,3 @@
-import Response, { codes } from 'appcd-response';
-
 import { createRequest, loadConfig } from './common';
 import { expandPath } from 'appcd-path';
 
