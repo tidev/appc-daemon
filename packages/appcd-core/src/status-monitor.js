@@ -4,23 +4,23 @@ import os from 'os';
 import Response, { codes } from 'appcd-response';
 import appcdLogger from './logger';
 
-import { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
+import { DataServiceDispatcher, DispatcherError } from 'appcd-dispatcher';
 
 const logger = appcdLogger('appcd:core:status');
-const { alert, highlight, note, ok } = appcdLogger.styles;
+const { alert, note, ok } = appcdLogger.styles;
 const { arrowUp, arrowDown } = appcdLogger.symbols;
 const { filesize } = appcdLogger.humanize;
 
 /**
  * Monitors the Appc Daemon status.
  */
-export default class StatusMonitor extends ServiceDispatcher {
+export default class StatusMonitor extends DataServiceDispatcher {
 	/**
 	 * Initalizes the status and kicks off the timers to refresh the dynamic
 	 * status information.
 	 */
 	constructor() {
-		super('/:filter*');
+		super();
 
 		/**
 		 * The user and system time this process has used.
@@ -38,7 +38,7 @@ export default class StatusMonitor extends ServiceDispatcher {
 		 * The daemon status wrapped in a gawk object.
 		 * @type {Object}
 		 */
-		this.status = gawk({
+		this.data = gawk({
 			pid:          process.pid,
 			memory:       undefined,
 			uptime:       process.uptime(),
@@ -79,7 +79,7 @@ export default class StatusMonitor extends ServiceDispatcher {
 			.on('stats', stats => {
 				this.stats = stats;
 
-				gawk.mergeDeep(this.status, {
+				gawk.mergeDeep(this.data, {
 					memory: {
 						heapTotal: stats.heapTotal,
 						heapUsed:  stats.heapUsed,
@@ -99,18 +99,6 @@ export default class StatusMonitor extends ServiceDispatcher {
 	}
 
 	/**
-	 * Determines the topic for the incoming request.
-	 *
-	 * @param {DispatcherContext} ctx - The dispatcher request context object.
-	 * @returns {String}
-	 * @access private
-	 */
-	getTopic(ctx) {
-		const { params, topic } = ctx.request;
-		return topic || (params && params.filter && params.filter.replace(/^\//, '').split(/\.|\//).join('.')) || '';
-	}
-
-	/**
 	 * Responds to "call" service requests.
 	 *
 	 * @param {Object} ctx - A dispatcher request context.
@@ -124,80 +112,8 @@ export default class StatusMonitor extends ServiceDispatcher {
 			this.merge(ctx.data);
 			ctx.response = new Response(codes.OK);
 		} else {
-			const node = this.get(this.getTopic(ctx));
-			if (!node) {
-				throw new DispatcherError(codes.NOT_FOUND);
-			}
-			ctx.response = node;
+			super.onCall(ctx);
 		}
-	}
-
-	/**
-	 * Initializes the status watch for the filter.
-	 *
-	 * @param {Object} params - Various parameters.
-	 * @param {String} [params.topic] - The filter to apply.
-	 * @param {Function} params.publish - A function used to publish data to a dispatcher client.
-	 * @access private
-	 */
-	initSubscription({ topic: filter, publish }) {
-		logger.debug('Starting status gawk watch: %s', highlight(filter || 'no filter'));
-		gawk.watch(this.status, filter, publish);
-	}
-
-	/**
-	 * Handles a new subscriber.
-	 *
-	 * @param {Object} params - Various parameters.
-	 * @param {String} [params.topic] - The filter to apply.
-	 * @param {Function} params.publish - A function used to publish data to a dispatcher client.
-	 * @access private
-	 */
-	onSubscribe({ topic: filter, publish }) {
-		publish(this.get(filter));
-	}
-
-	/**
-	 * Stops watching status updates.
-	 *
-	 * @param {Object} params - Various parameters.
-	 * @param {Function} params.publish - The function used to publish data to a dispatcher client.
-	 * This is the same publish function as the one passed to `onSubscribe()`.
-	 * @access private
-	 */
-	destroySubscription({ publish }) {
-		logger.debug('Removing status gawk watch');
-		gawk.unwatch(this.status, publish);
-	}
-
-	/**
-	 * Returns the complete or filtered status values.
-	 *
-	 * Important! This function returns an internal reference and it's critical that the result is
-	 * not modified. If you need to modify the status result, then clone it first.
-	 *
-	 * @param {Array.<String>} [filter] - An array of namespaces used to filter and return a deep
-	 * object.
-	 * @return {*}
-	 * @access public
-	 */
-	get(filter) {
-		if (filter && !Array.isArray(filter)) {
-			throw new TypeError('Expected filter to be an array');
-		}
-
-		let obj = this.status;
-
-		if (filter) {
-			for (let i = 0, len = filter.length; obj && typeof obj === 'object' && i < len; i++) {
-				if (!obj.hasOwnProperty(filter[i])) {
-					return null;
-				}
-				obj = obj[filter[i]];
-			}
-		}
-
-		return obj;
 	}
 
 	/**
@@ -208,7 +124,7 @@ export default class StatusMonitor extends ServiceDispatcher {
 	 * @access public
 	 */
 	merge(obj) {
-		gawk.mergeDeep(this.status, obj);
+		gawk.mergeDeep(this.data, obj);
 		return this;
 	}
 
@@ -263,7 +179,7 @@ export default class StatusMonitor extends ServiceDispatcher {
 		}
 		this.prevCPUUsage = currentCPUUsage;
 
-		const currentMemoryUsage = this.status.memory;
+		const currentMemoryUsage = this.data.memory;
 		const heapUsed  = filesize(currentMemoryUsage.heapUsed).toUpperCase();
 		const heapTotal = filesize(currentMemoryUsage.heapTotal).toUpperCase();
 		const rss       = filesize(currentMemoryUsage.rss).toUpperCase();
@@ -303,7 +219,7 @@ export default class StatusMonitor extends ServiceDispatcher {
 			`CPU: ${cpuUsage}  `
 			+ `Heap:${heapUsage}  ` // purposely don't put a space after the ':', heapUsage is already left padded
 			+ `RSS: ${rssUsage}  `
-			+ `Uptime: ${note(`${(this.status.uptime / 60).toFixed(2)}m`)}`
+			+ `Uptime: ${note(`${(this.data.uptime / 60).toFixed(2)}m`)}`
 		);
 	}
 }

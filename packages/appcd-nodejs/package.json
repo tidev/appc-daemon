@@ -25,7 +25,7 @@
     "source-map-support": "^0.5.0",
     "tar-stream": "^1.5.4",
     "tmp": "^0.0.33",
-    "yauzl": "^2.8.0"
+    "yauzl": "^2.9.1"
   },
   "devDependencies": {
     "appcd-gulp": "0.1.3",
