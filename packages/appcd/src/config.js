@@ -2,22 +2,22 @@ import { createRequest, loadConfig } from './common';
 import { expandPath } from 'appcd-path';
 
 const readActions = {
-	'get':     'get',
-	'ls':      'get',
-	'list':    'get'
+	get:     'get',
+	ls:      'get',
+	list:    'get'
 };
 
 const writeActions = {
-	'set':     'set',
+	set:     'set',
 
-	'delete':  'delete',
-	'rm':      'delete',
-	'unset':   'delete',
+	delete:  'delete',
+	rm:      'delete',
+	unset:   'delete',
 
-	'push':    'push',
-	'pop':     'pop',
-	'shift':   'shift',
-	'unshift': 'unshift'
+	push:    'push',
+	pop:     'pop',
+	shift:   'shift',
+	unshift: 'unshift'
 };
 
 const cmd = {

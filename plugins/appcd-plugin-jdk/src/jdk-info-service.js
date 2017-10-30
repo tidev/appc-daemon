@@ -3,22 +3,14 @@ import gawk from 'gawk';
 
 import * as registry from 'appcd-winreg';
 
-import { codes } from 'appcd-response';
+import { DataServiceDispatcher } from 'appcd-dispatcher';
 import { detect, jdkLocations } from 'jdklib';
-import { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
 import { exe } from 'appcd-subprocess';
 
 /**
  * The JDK info service.
  */
-export default class JDKInfoService extends ServiceDispatcher {
-	/**
-	 * Initializes the service path.
-	 */
-	constructor() {
-		super('/:filter*');
-	}
-
+export default class JDKInfoService extends DataServiceDispatcher {
 	/**
 	 * Starts the detect engine.
 	 *
@@ -39,7 +31,7 @@ export default class JDKInfoService extends ServiceDispatcher {
 			paths:                jdkLocations[process.platform]
 		});
 
-		this.results = gawk([]);
+		this.data = gawk([]);
 
 		return new Promise((resolve, reject) => {
 			this.handle = engine
@@ -48,7 +40,7 @@ export default class JDKInfoService extends ServiceDispatcher {
 					redetect: true
 				})
 				.on('results', jdks => {
-					this.results.splice.apply(this.results, [ 0, this.results.length ].concat(jdks));
+					gawk.set(this.data, jdks);
 					resolve();
 				})
 				.on('error', err => {
@@ -174,99 +166,5 @@ export default class JDKInfoService extends ServiceDispatcher {
 				};
 			})
 			.catch(() => ({}));
-	}
-
-	/**
-	 * Determines the topic for the incoming request.
-	 *
-	 * @param {DispatcherContext} ctx - The dispatcher request context object.
-	 * @returns {String}
-	 * @access private
-	 */
-	getTopic(ctx) {
-		const { params, topic } = ctx.request;
-		return topic || (params.filter && params.filter.replace(/^\//, '').split('/').join('.')) || undefined;
-	}
-
-	/**
-	 * Responds to "call" service requests.
-	 *
-	 * @param {Object} ctx - A dispatcher request context.
-	 * @access private
-	 */
-	onCall(ctx) {
-		const filter = ctx.request.params.filter && ctx.request.params.filter.replace(/^\//, '').split('/') || undefined;
-		const node = this.get(filter);
-
-		if (!node) {
-			throw new DispatcherError(codes.NOT_FOUND);
-		}
-
-		ctx.response = node;
-	}
-
-	/**
-	 * Initializes the jdk watch for the filter.
-	 *
-	 * @param {Object} params - Various parameters.
-	 * @param {Function} params.publish - A function used to publish data to a dispatcher client.
-	 * @access private
-	 */
-	initSubscription({ ctx, publish }) {
-		const filter = ctx.request.params.filter && ctx.request.params.filter.replace(/^\//, '').split('/') || undefined;
-		console.log('Starting jdk gawk watch: %s', filter || 'no filter');
-		gawk.watch(this.results, filter && filter.split('.'), publish);
-	}
-
-	/**
-	 * Handles a new subscriber.
-	 *
-	 * @param {Object} params - Various parameters.
-	 * @param {Function} params.publish - A function used to publish data to a dispatcher client.
-	 * @access private
-	 */
-	onSubscribe({ ctx, publish }) {
-		const filter = ctx.request.params.filter && ctx.request.params.filter.replace(/^\//, '').split('/') || undefined;
-		publish(this.get(filter));
-	}
-
-	/**
-	 * Stops watching the jdk updates.
-	 *
-	 * @param {Object} params - Various parameters.
-	 * @param {Function} params.publish - The function used to publish data to a dispatcher client.
-	 * This is the same publish function as the one passed to `onSubscribe()`.
-	 * @access private
-	 */
-	destroySubscription({ publish }) {
-		console.log('Removing jdk gawk watch');
-		gawk.unwatch(this.results, publish);
-	}
-
-	/**
-	 * Returns the complete or filtered status values.
-	 *
-	 * @param {Array.<String>} [filter] - An array of namespaces used to filter and return a deep
-	 * object.
-	 * @return {*}
-	 * @access private
-	 */
-	get(filter) {
-		if (filter && !Array.isArray(filter)) {
-			throw new TypeError('Expected filter to be an array');
-		}
-
-		let obj = this.results;
-
-		if (filter) {
-			for (let i = 0, len = filter.length; obj && typeof obj === 'object' && i < len; i++) {
-				if (!obj.hasOwnProperty(filter[i])) {
-					return null;
-				}
-				obj = obj[filter[i]];
-			}
-		}
-
-		return obj;
 	}
 }

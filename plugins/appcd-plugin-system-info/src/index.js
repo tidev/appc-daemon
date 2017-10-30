@@ -10,22 +10,23 @@ import path from 'path';
 
 import { arch } from 'appcd-util';
 import { cmd, run, which } from 'appcd-subprocess';
-import { codes } from 'appcd-response';
-import { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
+import { DataServiceDispatcher } from 'appcd-dispatcher';
 import { expandPath } from 'appcd-path';
 import { isFile } from 'appcd-fs';
 
 /**
  * Aggregrates system info from Android, iOS, JDK, and Windows libraries.
  */
-class SystemInfoService extends ServiceDispatcher {
+class SystemInfoService extends DataServiceDispatcher {
 	/**
-	 * Initializes the service path.
+	 * Initializes the OS info and subscribes to the various specific information services.
+	 *
+	 * @param {Config} cfg - An Appc Daemon config object
+	 * @returns {Promise}
+	 * @access public
 	 */
-	constructor() {
-		super('/:filter*');
-
-		this.results = gawk({
+	activate(cfg) {
+		this.data = gawk({
 			android: null,
 			ios: null,
 			jdks: null,
@@ -46,16 +47,7 @@ class SystemInfoService extends ServiceDispatcher {
 			titanium: null,
 			windows: null
 		});
-	}
 
-	/**
-	 * Initializes the OS info and subscribes to the various specific information services.
-	 *
-	 * @param {Config} cfg - An Appc Daemon config object
-	 * @returns {Promise}
-	 * @access public
-	 */
-	activate(cfg) {
 		return Promise.all([
 			// get the os info
 			this.initOSInfo(),
@@ -91,14 +83,14 @@ class SystemInfoService extends ServiceDispatcher {
 				.then(({ response }) => {
 					response.on('data', data => {
 						if (data.type === 'event' && data.message && typeof data.message === 'object') {
-							if (!this.results[type]) {
-								this.results[type] = {};
+							if (!this.data[type]) {
+								this.data[type] = {};
 							}
 
 							if (Array.isArray(data.message)) {
-								this.results[type] = data.message;
+								this.data[type] = data.message;
 							} else {
-								gawk.mergeDeep(this.results[type], data.message);
+								gawk.set(this.data[type], data.message);
 							}
 
 							resolve();
@@ -125,35 +117,35 @@ class SystemInfoService extends ServiceDispatcher {
 					const { stdout } = await run('sw_vers');
 					let m = stdout.match(/ProductName:\s+(.+)/i);
 					if (m) {
-						this.results.os.name = m[1];
+						this.data.os.name = m[1];
 					}
 					m = stdout.match(/ProductVersion:\s+(.+)/i);
 					if (m) {
-						this.results.os.version = m[1];
+						this.data.os.version = m[1];
 					}
 				}
 				break;
 
 			case 'linux':
-				this.results.os.name = 'GNU/Linux';
+				this.data.os.name = 'GNU/Linux';
 
 				if (isFile('/etc/lsb-release')) {
 					const contents = fs.readFileSync('/etc/lsb-release').toString();
 					let m = contents.match(/DISTRIB_DESCRIPTION=(.+)/i);
 					if (m) {
-						this.results.os.name = m[1].replace(/"/g, '');
+						this.data.os.name = m[1].replace(/"/g, '');
 					}
 					m = contents.match(/DISTRIB_RELEASE=(.+)/i);
 					if (m) {
-						this.results.os.version = m[1].replace(/"/g, '');
+						this.data.os.version = m[1].replace(/"/g, '');
 					}
 				} else if (fs.existsSync('/etc/system-release')) {
 					const parts = fs.readFileSync('/etc/system-release').toString().split(' ');
 					if (parts[0]) {
-						this.results.os.name = parts[0];
+						this.data.os.name = parts[0];
 					}
 					if (parts[2]) {
-						this.results.os.version = parts[2];
+						this.data.os.version = parts[2];
 					}
 				}
 				break;
@@ -163,10 +155,10 @@ class SystemInfoService extends ServiceDispatcher {
 					const { stdout } = await run('wmic', [ 'os', 'get', 'Caption,Version' ]);
 					const s = stdout.split('\n')[1].split(/ {2,}/);
 					if (s.length > 0) {
-						this.results.os.name = s[0].trim() || 'Windows';
+						this.data.os.name = s[0].trim() || 'Windows';
 					}
 					if (s.length > 1) {
-						this.results.os.version = s[1].trim() || '';
+						this.data.os.version = s[1].trim() || '';
 					}
 				}
 				break;
@@ -203,7 +195,7 @@ class SystemInfoService extends ServiceDispatcher {
 			return;
 		}
 
-		this.results.npm = {
+		this.data.npm = {
 			home:    path.dirname(npmPkgJson),
 			path:    npm,
 			version: null
@@ -219,7 +211,7 @@ class SystemInfoService extends ServiceDispatcher {
 				// squeltch
 			}
 
-			this.results.npm.version = ver || null;
+			this.data.npm.version = ver || null;
 		};
 
 		readPkgJson();
@@ -238,100 +230,6 @@ class SystemInfoService extends ServiceDispatcher {
 				readPkgJson();
 			}
 		});
-	}
-
-	/**
-	 * Determines the topic for the incoming request.
-	 *
-	 * @param {DispatcherContext} ctx - The dispatcher request context object.
-	 * @returns {String}
-	 * @access private
-	 */
-	getTopic(ctx) {
-		const { params, topic } = ctx.request;
-		return topic || (params.filter && params.filter.replace(/^\//, '').split(/\.|\//)) || undefined;
-	}
-
-	/**
-	 * Responds to "call" service requests.
-	 *
-	 * @param {Object} ctx - A dispatcher request context.
-	 * @access private
-	 */
-	onCall(ctx) {
-		const filter = this.getTopic(ctx);
-		const node = this.get(filter);
-
-		if (!node) {
-			throw new DispatcherError(codes.NOT_FOUND);
-		}
-
-		ctx.response = node;
-	}
-
-	/**
-	 * Initializes the system info watch for the filter.
-	 *
-	 * @param {Object} params - Various parameters.
-	 * @param {String} [params.topic] - The filter to apply.
-	 * @param {Function} params.publish - A function used to publish data to a dispatcher client.
-	 * @access private
-	 */
-	initSubscription({ topic: filter, publish }) {
-		console.log('Starting system info gawk watch: %s', filter || 'no filter');
-		gawk.watch(this.results, filter, publish);
-	}
-
-	/**
-	 * Handles a new subscriber.
-	 *
-	 * @param {Object} params - Various parameters.
-	 * @param {String} [params.topic] - The filter to apply.
-	 * @param {Function} params.publish - A function used to publish data to a dispatcher client.
-	 * @access private
-	 */
-	onSubscribe({ topic: filter, publish }) {
-		publish(this.get(filter));
-	}
-
-	/**
-	 * Stops watching the system info updates.
-	 *
-	 * @param {Object} params - Various parameters.
-	 * @param {Function} params.publish - The function used to publish data to a dispatcher client.
-	 * This is the same publish function as the one passed to `onSubscribe()`.
-	 * @access private
-	 */
-	destroySubscription({ publish }) {
-		console.log('Removing system info gawk watch');
-		gawk.unwatch(this.results, publish);
-	}
-
-	/**
-	 * Returns the complete or filtered status values.
-	 *
-	 * @param {Array.<String>} [filter] - An array of namespaces used to filter and return a deep
-	 * object.
-	 * @return {*}
-	 * @access private
-	 */
-	get(filter) {
-		if (filter && !Array.isArray(filter)) {
-			throw new TypeError('Expected filter to be an array');
-		}
-
-		let obj = this.results;
-
-		if (filter) {
-			for (let i = 0, len = filter.length; obj && typeof obj === 'object' && i < len; i++) {
-				if (!obj.hasOwnProperty(filter[i])) {
-					return null;
-				}
-				obj = obj[filter[i]];
-			}
-		}
-
-		return obj;
 	}
 }
 
