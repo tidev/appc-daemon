@@ -14,6 +14,7 @@ import types from './types';
 import { EventEmitter } from 'events';
 import { expandPath } from 'appcd-path';
 import { isDir, isFile } from 'appcd-fs';
+import { Readable } from 'stream';
 import { states } from './plugin-base';
 
 const logger = appcdLogger(process.connected ? 'appcd:plugin:host:plugin' : 'appcd:plugin');
@@ -293,10 +294,16 @@ export default class Plugin extends EventEmitter {
 		};
 
 		return this.impl.dispatch(ctx, next)
-			.then(result => {
-				this.info.activeRequests--;
+			.then(ctx => {
+				if (ctx.response instanceof Readable) {
+					ctx.response.on('end', () => {
+						this.info.activeRequests--;
+					});
+				} else {
+					this.info.activeRequests--;
+				}
 				resetTimer();
-				return result;
+				return ctx;
 			})
 			.catch(err => {
 				this.info.activeRequests--;
