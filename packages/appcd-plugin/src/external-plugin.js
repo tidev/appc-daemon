@@ -73,7 +73,8 @@ export default class ExternalPlugin extends PluginBase {
 		}
 
 		const startTime = new Date();
-		const { path, type } = ctx.request;
+		const { path } = ctx;
+		const { type } = ctx.request;
 		const logRequest = status => {
 			const style = status < 400 ? ok : alert;
 			let msg = `Plugin dispatcher: ${highlight(`/${this.plugin.name}/${this.plugin.version}${path}`)} ${style(status)}`;
