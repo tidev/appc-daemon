@@ -672,8 +672,8 @@ export default class DetectEngine {
 
 				// single result
 				} else if (isGawked(existingValue)) {
-					log('    Merging results into existing value:', results);
-					gawk.mergeDeep(existingValue, results);
+					log('    Replacing results into existing value:', results);
+					gawk.set(existingValue, results);
 				} else {
 					log('    Setting new value:', results);
 					container.results = results;

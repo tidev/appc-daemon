@@ -1,0 +1,22 @@
+{
+  "name": "appcd-default-plugins",
+  "version": "0.1.0",
+  "description": "A psuedo package that bundles all default appcd plugins.",
+  "author": "Axway, Inc. <npmjs@appcelerator.com>",
+  "maintainers": [
+    "Chris Barber <cbarber@axway.com>"
+  ],
+  "license": "Apache-2.0",
+  "dependencies": {
+    "appcd-plugin-ios": "*",
+    "appcd-plugin-jdk": "*",
+    "appcd-plugin-system-info": "*",
+    "appcd-plugin-windows": "*"
+  },
+  "homepage": "https://github.com/appcelerator/appc-daemon#readme",
+  "bugs": "https://github.com/appcelerator/appc-daemon/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/appcelerator/appc-daemon.git"
+  }
+}

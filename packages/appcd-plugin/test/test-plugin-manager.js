@@ -41,9 +41,6 @@ const config = new Config({
 		}
 	}
 });
-config.values = gawk(config.values);
-config.watch = (filter, listener) => gawk.watch(config.values, filter, listener);
-config.unwatch = listener => gawk.unwatch(config.values, listener);
 
 describe('PluginManager', () => {
 	before(function () {

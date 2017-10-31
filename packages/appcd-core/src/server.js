@@ -166,7 +166,7 @@ export default class Server {
 		this.systems.pluginManager = new PluginManager({
 			paths: [
 				// built-in plugins
-				path.resolve(__dirname, '..', '..', '..', 'plugins'),
+				path.resolve(__dirname, '..', 'node_modules', 'appcd-default-plugins', 'node_modules'),
 
 				// globally installed plugins
 				path.join(homeDir, 'plugins')

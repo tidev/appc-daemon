@@ -1,7 +1,7 @@
 import Dispatcher from 'appcd-dispatcher';
 import DetectEngine from '../dist/detect-engine';
 import fs from 'fs-extra';
-import FSWatchManager from 'appcd-fswatcher';
+import FSWatchManager, { renderTree } from 'appcd-fswatcher';
 import gawk from 'gawk';
 import path from 'path';
 import tmp from 'tmp';
@@ -691,6 +691,42 @@ describe('Detect Engine', () => {
 							break;
 					}
 				});
+		});
+
+		it.skip('should watch a directory and wire up fs watchers for found items', function (done) {
+			this.timeout(5000);
+			this.slow(4000);
+
+			const tmp = makeTempDir();
+			let counter = 0;
+
+			const engine = new DetectEngine({
+				checkDir(dir) {
+					console.log('CHECKING', dir);
+					switch (++counter) {
+						case 1:
+							throw new Error('Nope');
+						case 2:
+							return {
+								foo: 'bar'
+							};
+					}
+				},
+				depth:                1,
+				multiple:             true,
+				processResults(items, previousValue, engine) {
+					// noop
+				},
+				paths: [ tmp ]
+			});
+
+			console.log(renderTree());
+
+			this.handle = engine.detect({ watch: true, redetect: true });
+
+			console.log(renderTree());
+
+			done();
 		});
 	});
 });
