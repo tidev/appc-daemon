@@ -24,7 +24,7 @@
     "babylon": "^6.17.4",
     "doctrine": "^2.0.0",
     "fs-extra": "^4.0.2",
-    "gawk": "^4.4.0",
+    "gawk": "^4.4.1",
     "source-map-support": "^0.5.0"
   },
   "devDependencies": {

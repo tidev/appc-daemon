@@ -28,7 +28,7 @@
     "appcd-subprocess": "0.1.0",
     "appcd-util": "0.1.1",
     "builtin-modules": "^1.1.1",
-    "gawk": "^4.4.0",
+    "gawk": "^4.4.1",
     "globule": "^1.2.0",
     "hook-emitter": "^2.1.0",
     "pretty-ms": "^3.0.1",
