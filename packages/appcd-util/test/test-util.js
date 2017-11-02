@@ -61,6 +61,10 @@ describe('util', () => {
 			expect(util.arrayify(123)).to.deep.equal([ 123 ]);
 		});
 
+		it('should convert a set to an array', () => {
+			expect(util.arrayify(new Set([ 'a', 'b' ]))).to.deep.equal([ 'a', 'b' ]);
+		});
+
 		it('should return the original array', () => {
 			expect(util.arrayify([ 'foo', 'bar' ])).to.deep.equal([ 'foo', 'bar' ]);
 		});
@@ -132,6 +136,87 @@ describe('util', () => {
 			expect(() => {
 				util.assertNodeEngineVersion({ engines: { node: '7.0.0' } });
 			}).to.throw(Error, 'Requires Node.js \'7.0.0\', but the current version is \'v6.9.4\'');
+		});
+	});
+
+	describe('block()', () => {
+		it('should error if name is not a string', done => {
+			util.block()
+				.then(() => done(new Error('Expected rejection')))
+				.catch(err => {
+					expect(err).to.be.an.instanceof(TypeError);
+					expect(err.message).to.equal('Expected name to be a non-empty string');
+					done();
+				});
+		});
+
+		it('should error if fn is not a function', done => {
+			util.block('foo', 'bar')
+				.then(() => done(new Error('Expected rejection')))
+				.catch(err => {
+					expect(err).to.be.an.instanceof(TypeError);
+					expect(err.message).to.equal('Expected fn to be a function');
+					done();
+				});
+		});
+
+		it('should queue up multiple calls', done => {
+			let count = 0;
+
+			const fn = () => {
+				return util.block('foo', () => {
+					return ++count;
+				});
+			};
+
+			Promise
+				.all([ fn(), fn(), fn() ])
+				.then(results => {
+					expect(count).to.equal(3);
+					expect(results).to.have.lengthOf(3);
+					expect(results[1]).to.equal(results[0] + 1);
+					expect(results[2]).to.equal(results[0] + 2);
+					done();
+				})
+				.catch(done);
+		});
+
+		it('should queue up multiple async calls', done => {
+			let count = 0;
+
+			const fn = () => {
+				return util.block('foo', () => {
+					return new Promise(resolve => {
+						resolve(++count);
+					});
+				});
+			};
+
+			Promise
+				.all([ fn(), fn(), fn() ])
+				.then(results => {
+					expect(count).to.equal(1);
+					expect(results).to.have.lengthOf(3);
+					expect(results[1]).to.equal(results[0]);
+					expect(results[2]).to.equal(results[0]);
+					done();
+				})
+				.catch(done);
+		});
+
+		it('should catch errors', done => {
+			util
+				.block('foo', () => {
+					throw new Error('oh snap');
+				})
+				.then(() => {
+					done(new Error('Expected error to be caught'));
+				})
+				.catch(err => {
+					expect(err).to.be.instanceof(Error);
+					expect(err.message).to.equal('oh snap');
+					done();
+				});
 		});
 	});
 
@@ -405,8 +490,7 @@ describe('util', () => {
 
 			const fn = () => {
 				return util.mutex('foo', () => {
-					count++;
-					return Math.random();
+					return ++count;
 				});
 			};
 
@@ -428,8 +512,7 @@ describe('util', () => {
 			const fn = () => {
 				return util.mutex('foo', () => {
 					return new Promise(resolve => {
-						count++;
-						resolve(Math.random());
+						resolve(++count);
 					});
 				});
 			};
@@ -437,10 +520,10 @@ describe('util', () => {
 			Promise
 				.all([ fn(), fn(), fn() ])
 				.then(results => {
-					expect(count).to.equal(1);
+					expect(count).to.equal(3);
 					expect(results).to.have.lengthOf(3);
-					expect(results[1]).to.equal(results[0]);
-					expect(results[2]).to.equal(results[0]);
+					expect(results[1]).to.equal(results[0] + 1);
+					expect(results[2]).to.equal(results[0] + 2);
 					done();
 				})
 				.catch(done);

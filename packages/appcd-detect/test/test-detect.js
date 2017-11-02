@@ -1,7 +1,8 @@
+import appcdLogger from 'appcd-logger';
+import Detector from '../dist/detect';
 import Dispatcher from 'appcd-dispatcher';
-import DetectEngine from '../dist/detect-engine';
 import fs from 'fs-extra';
-import FSWatchManager, { renderTree } from 'appcd-fswatcher';
+import FSWatchManager, { renderTree, status } from 'appcd-fswatcher';
 import gawk from 'gawk';
 import path from 'path';
 import tmp from 'tmp';
@@ -10,6 +11,8 @@ import { exe } from 'appcd-subprocess';
 import { isFile } from 'appcd-fs';
 import { real } from 'appcd-path';
 import { sleep } from 'appcd-util';
+
+const { log } = appcdLogger('test:appcd:detect');
 
 const _tmpDir = tmp.dirSync({
 	prefix: 'appcd-detect-test-',
@@ -27,7 +30,7 @@ function makeTempDir() {
 	return dir;
 }
 
-describe('Detect Engine', () => {
+describe('Detect', () => {
 	before(function () {
 		this.fsw = new FSWatchManager();
 		Dispatcher.register('/appcd/fswatch', this.fsw.dispatcher);
@@ -49,204 +52,155 @@ describe('Detect Engine', () => {
 		delete process.env.DETECT_TEST_PATH2;
 	});
 
-	describe('constructor', () => {
-		it('should throw if checkDir is not a function', () => {
+	describe('Validation', () => {
+		it('should reject if checkDir is not a function', () => {
 			expect(() => {
-				new DetectEngine({ checkDir: 123 });
-			}).to.throw(TypeError, 'Expected checkDir to be a function');
+				new Detector({
+					checkDir: 123
+				});
+			}).to.throw(TypeError, 'Expected "checkDir" option to be a function');
 		});
 
-		it('should throw if env is not a string', () => {
+		it('should reject if env is not a string', () => {
 			expect(() => {
-				new DetectEngine({ env: 123 });
-			}).to.throw(TypeError, 'Expected env to be a string or an array of strings');
+				new Detector({
+					env: 123
+				});
+			}).to.throw(TypeError, 'Expected "env" option to be a string or an array of strings');
 		});
 
-		it('should throw if env is not an array of strings', () => {
+		it('should reject if env is not an array of strings', () => {
 			expect(() => {
-				new DetectEngine({ env: [ 'foo', 123 ] });
-			}).to.throw(TypeError, 'Expected env to be a string or an array of strings');
+				new Detector({
+					env: [ 'foo', 123 ]
+				});
+			}).to.throw(TypeError, 'Expected "env" option to be a string or an array of strings');
 		});
 
-		it('should throw if exe is not a string', () => {
+		it('should reject if exe is not a string', () => {
 			expect(() => {
-				new DetectEngine({ exe: 123 });
-			}).to.throw(TypeError, 'Expected exe to be a non-empty string');
+				new Detector({
+					exe: 123
+				});
+			}).to.throw(TypeError, 'Expected "exe" option to be a non-empty string');
 		});
 
-		it('should throw if paths is not a string', () => {
+		it('should reject if exe is an empty string', () => {
 			expect(() => {
-				new DetectEngine({ paths: 123 });
-			}).to.throw(TypeError, 'Expected paths to be a string or an array of strings');
+				new Detector({
+					exe: ''
+				});
+			}).to.throw(TypeError, 'Expected "exe" option to be a non-empty string');
 		});
 
-		it('should throw if paths is not an array of strings', () => {
+		it('should reject if paths is not a string', () => {
 			expect(() => {
-				new DetectEngine({ paths: [ 'foo', 123 ] });
-			}).to.throw(TypeError, 'Expected paths to be a string or an array of strings');
+				new Detector({
+					paths: 123
+				});
+			}).to.throw(TypeError, 'Expected "paths" option to be a non-empty string or an array or set of non-empty strings');
 		});
 
-		it('should throw if processResults() is not a function', () => {
+		it('should reject if paths is not an array of strings', () => {
 			expect(() => {
-				new DetectEngine({ processResults: 123 });
-			}).to.throw(TypeError, 'Expected processResults() to be a function');
+				new Detector({
+					paths: [ 'foo', 123 ]
+				});
+			}).to.throw(TypeError, 'Expected "paths" option to be a non-empty string or an array or set of non-empty strings');
 		});
 
-		it('should throw if registryKeys is null', () => {
+		it('should reject if processResults() is not a function', () => {
 			expect(() => {
-				new DetectEngine({ registryKeys: null });
-			}).to.throw(TypeError, 'Expected registryKeys to be an object, array of objects, or a function');
+				new Detector({
+					processResults: 123
+				});
+			}).to.throw(TypeError, 'Expected "processResults" option to be a function');
 		});
 
-		it('should throw if registryKeys is not a function or object', () => {
+		it('should reject if registryCallback is not a function', () => {
 			expect(() => {
-				new DetectEngine({ registryKeys: 'foo' });
-			}).to.throw(TypeError, 'Expected registryKeys to be an object, array of objects, or a function');
+				new Detector({
+					registryCallback: 123
+				});
+			}).to.throw(TypeError, 'Expected "registryCallback" option to be a function');
 		});
 
-		it('should throw if registryKeys is an array with a non-object', () => {
+		it('should reject if registryKeys is not a function or object', () => {
 			expect(() => {
-				new DetectEngine({ registryKeys: [ 'foo' ] });
-			}).to.throw(TypeError, 'Expected registryKeys to be an array of objects with a "key" and "name"');
+				new Detector({
+					registryKeys: 'foo'
+				});
+			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
 		});
 
-		it('should throw if registryKeys is an array with object missing key', () => {
+		it('should reject if registryKeys is an array with a non-object', () => {
 			expect(() => {
-				new DetectEngine({ registryKeys: [ { foo: 'bar' } ] });
-			}).to.throw(TypeError, 'Expected registryKeys to be an array of objects with a "key" and "name"');
+				new Detector({
+					registryKeys: [ 'foo' ]
+				});
+			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
 		});
 
-		it('should throw if registryKeys is an array with object missing name', () => {
+		it('should reject if registryKeys is an array with object missing a hive', () => {
 			expect(() => {
-				new DetectEngine({ registryKeys: [ { key: 'foo' } ] });
-			}).to.throw(TypeError, 'Expected registryKeys to be an array of objects with a "key" and "name"');
+				new Detector({
+					registryKeys: [ { foo: 'bar' } ]
+				});
+			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
 		});
 
-		it('should throw if registryKeys is an object missing key', () => {
+		it('should reject if registryKeys is an array with object missing a key', () => {
 			expect(() => {
-				new DetectEngine({ registryKeys: { foo: 'bar' } });
-			}).to.throw(TypeError, 'Expected registryKeys to be an object with a "key" and "name"');
+				new Detector({
+					registryKeys: [ { hive: 'HKLM' } ]
+				});
+			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
 		});
 
-		it('should throw if registryKeys is an object missing name', () => {
+		it('should reject if registryKeys is an array with object missing a name', () => {
 			expect(() => {
-				new DetectEngine({ registryKeys: { key: 'foo' } });
-			}).to.throw(TypeError, 'Expected registryKeys to be an object with a "key" and "name"');
+				new Detector({
+					registryKeys: [ { hive: 'HKLM', key: 'foo' } ]
+				});
+			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
+		});
+
+		it('should reject if registryKeys is an object missing a hive', () => {
+			expect(() => {
+				new Detector({
+					registryKeys: { foo: 'bar' }
+				});
+			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
+		});
+
+		it('should reject if registryKeys is an object missing a key', () => {
+			expect(() => {
+				new Detector({
+					registryKeys: { hive: 'HKLM' }
+				});
+			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
+		});
+
+		it('should reject if registryKeys is an object missing a name', () => {
+			expect(() => {
+				new Detector({
+					registryKeys: { hive: 'HKLM', key: 'foo' }
+				});
+			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
 		});
 	});
 
-	describe('getPaths()', () => {
-		it('should return an empty array', done => {
-			const engine = new DetectEngine();
-			engine.getPaths()
-				.then(results => {
-					expect(results).to.be.an('array');
-					expect(results).to.have.lengthOf(0);
-					done();
-				})
-				.catch(done);
-		});
-
-		it('should return an array with an environment variable path', done => {
-			process.env.DETECT_TEST_PATH = __dirname;
-
-			const engine = new DetectEngine({ env: 'DETECT_TEST_PATH' });
-			engine.getPaths()
-				.then(results => {
-					expect(results).to.be.an('array');
-					expect(results).to.have.lengthOf(1);
-					expect(results[0]).to.equal(__dirname);
-					done();
-				})
-				.catch(done);
-		});
-
-		it('should return an array with multiple environment variable paths', done => {
-			process.env.DETECT_TEST_PATH = __dirname;
-			process.env.DETECT_TEST_PATH2 = path.join(__dirname, 'foo');
-
-			const engine = new DetectEngine({ env: [ 'DETECT_TEST_PATH', 'DETECT_TEST_PATH2' ] });
-			engine.getPaths()
-				.then(results => {
-					expect(results).to.be.an('array');
-					expect(results).to.have.lengthOf(2);
-					expect(results[0]).to.equal(__dirname);
-					expect(results[1]).to.equal(path.join(__dirname, 'foo'));
-					done();
-				})
-				.catch(done);
-		});
-
-		it('should return an array with the executable directory', done => {
-			process.env.PATH = path.join(__dirname, 'mocks');
-
-			const executable = 'test' + exe;
-			const engine = new DetectEngine({ exe: executable });
-			engine.getPaths()
-				.then(results => {
-					expect(results).to.be.an('array');
-					expect(results).to.have.lengthOf(1);
-					expect(results[0]).to.equal(process.env.PATH);
-					done();
-				})
-				.catch(done);
-		});
-
-		it('should not find a path when executable does not exist', done => {
-			process.env.PATH = path.join(__dirname, 'mocks');
-
-			const executable = 'doesnotexist' + exe;
-			const engine = new DetectEngine({ exe: executable });
-			engine.getPaths()
-				.then(results => {
-					expect(results).to.be.an('array');
-					expect(results).to.have.lengthOf(0);
-					done();
-				})
-				.catch(done);
-		});
-
-		it('should return an array with a single path', done => {
-			const engine = new DetectEngine({ paths: __dirname });
-			engine.getPaths()
-				.then(results => {
-					expect(results).to.be.an('array');
-					expect(results).to.have.lengthOf(1);
-					expect(results[0]).to.equal(__dirname);
-					done();
-				})
-				.catch(done);
-		});
-
-		it('should return an array with multiple paths', done => {
-			const engine = new DetectEngine({ paths: [ __dirname, '', path.join(__dirname, 'foo') ] });
-			engine.getPaths()
-				.then(results => {
-					expect(results).to.be.an('array');
-					expect(results).to.have.lengthOf(2);
-					expect(results[0]).to.equal(__dirname);
-					expect(results[1]).to.equal(path.join(__dirname, 'foo'));
-					done();
-				})
-				.catch(done);
-		});
-
-		it('should not find a path when the path is not a directory', done => {
-			const engine = new DetectEngine({ paths: __filename });
-			engine.getPaths()
-				.then(results => {
-					expect(results).to.be.an('array');
-					expect(results).to.have.lengthOf(0);
-					done();
-				})
-				.catch(done);
+	describe('Scanning', () => {
+		it('should do nothing if there are no paths to scan', async () => {
+			const results = await new Detector().start();
+			expect(results).to.be.undefined;
 		});
 	});
 
-	describe('detect()', () => {
-		afterEach(function () {
+	/*
+		afterEach(async function () {
 			if (this.handle) {
-				this.handle.stop();
+				await this.handle.stop();
 			}
 		});
 
@@ -503,9 +457,8 @@ describe('Detect Engine', () => {
 
 			let counter = 0;
 			const engine = new DetectEngine({
-				processResults() {
-					counter++;
-					return sleep(counter === 1 ? 500 : 50);
+				async processResults() {
+					await sleep(++counter === 1 ? 500 : 50);
 				}
 			});
 
@@ -521,7 +474,7 @@ describe('Detect Engine', () => {
 			engine
 				.detect({ paths: __dirname })
 				.on('results', () => {
-					expect(counter++).to.equal(1);
+					expect(counter).to.equal(1);
 					finish();
 				})
 				.on('error', finish);
@@ -530,7 +483,7 @@ describe('Detect Engine', () => {
 				engine
 					.detect({ paths: __dirname })
 					.on('results', () => {
-						expect(counter++).to.equal(2);
+						expect(counter).to.equal(2);
 						finish();
 					})
 					.on('error', finish);
@@ -539,6 +492,12 @@ describe('Detect Engine', () => {
 	});
 
 	describe('watch', () => {
+		afterEach(async function () {
+			if (this.handle) {
+				await this.handle.stop();
+			}
+		});
+
 		it('should watch a path for changes', function (done) {
 			this.timeout(5000);
 			this.slow(4000);
@@ -569,17 +528,18 @@ describe('Detect Engine', () => {
 
 			setTimeout(() => {
 				fs.writeFileSync(path.join(tmp, 'foo.txt'), 'bar');
-			}, 100);
+			}, 250);
 		});
 
 		it('should watch for updates in a detected path', function (done) {
 			this.timeout(5000);
 			this.slow(4000);
 
-			let counter = 0;
 			const tmp = makeTempDir();
 			const testFile = path.join(tmp, 'test.txt');
 			fs.writeFileSync(testFile, 'foo');
+
+			let updated = false;
 
 			const engine = new DetectEngine({
 				checkDir(dir) {
@@ -593,10 +553,10 @@ describe('Detect Engine', () => {
 			this.handle = engine
 				.detect({ paths: tmp, watch: true, redetect: true })
 				.on('results', results => {
-					counter++;
-					if (counter === 1) {
+					console.log(results);
+					if (!updated) {
 						expect(results).to.deep.equal({ contents: 'foo' });
-					} else if (counter === 2) {
+					} else {
 						expect(results).to.deep.equal({ contents: 'bar' });
 						this.handle.stop();
 						done();
@@ -606,11 +566,13 @@ describe('Detect Engine', () => {
 
 			setTimeout(() => {
 				// update the test file to trigger re-detection
+				console.log('Writing bar');
+				updated = true;
 				fs.writeFileSync(testFile, 'bar');
 			}, 1000);
 		});
 
-		it('should recursivly watch for updateds in a detected path', function (done) {
+		it('should recursivly watch for updates in a detected path', function (done) {
 			this.timeout(5000);
 			this.slow(4000);
 
@@ -693,40 +655,87 @@ describe('Detect Engine', () => {
 				});
 		});
 
-		it.skip('should watch a directory and wire up fs watchers for found items', function (done) {
-			this.timeout(5000);
-			this.slow(4000);
+		it.only('should watch a directory and wire up fs watchers for found items', function (done) {
+			this.timeout(10000);
+			this.slow(9000);
 
 			const tmp = makeTempDir();
+			const dir = path.join(tmp, 'foo');
+			fs.mkdirsSync(dir);
 			let counter = 0;
 
 			const engine = new DetectEngine({
 				checkDir(dir) {
-					console.log('CHECKING', dir);
-					switch (++counter) {
-						case 1:
-							throw new Error('Nope');
+					counter++;
+					console.log(counter, dir);
+					switch (counter) {
 						case 2:
+						case 5:
 							return {
 								foo: 'bar'
 							};
 					}
 				},
-				depth:                1,
-				multiple:             true,
-				processResults(items, previousValue, engine) {
-					// noop
-				},
+				depth: 1,
+				multiple: true,
 				paths: [ tmp ]
 			});
 
-			console.log(renderTree());
+			log('Before detect...');
+			log(renderTree());
+			let stats = status();
+			log(stats);
+			expect(stats.watchers).to.equal(0);
 
 			this.handle = engine.detect({ watch: true, redetect: true });
 
-			console.log(renderTree());
+			this.handle.on('results', results => {
+				log('Emitted results:');
+				log(results);
+			});
 
-			done();
+			this.handle.on('ready', async (results) => {
+				try {
+					gawk.watch(results, obj => {
+						log('Gawk watch results:');
+						log(obj);
+					});
+
+					log('After ready...');
+					log(renderTree());
+					let stats = status();
+					log(stats);
+					expect(stats.watchers).to.equal(2);
+
+					await sleep(500);
+
+					log(`Removing ${dir}`);
+					fs.removeSync(dir);
+
+					await sleep(500);
+
+					log('After removal...');
+					log(renderTree());
+					log(stats = status());
+					expect(stats.watchers).to.equal(1);
+
+					await sleep(500);
+
+					log('Adding back dir');
+					fs.mkdirsSync(dir);
+
+					await sleep(500);
+
+					log(renderTree());
+					log(stats = status());
+					expect(stats.watchers).to.equal(2);
+
+					done();
+				} catch (e) {
+					done(e);
+				}
+			});
 		});
 	});
+	*/
 });

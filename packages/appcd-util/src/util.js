@@ -18,11 +18,11 @@ const FSEvent = process.binding('fs_event_wrap').FSEvent;
 let archCache = null;
 
 /**
- * Returns the current machine's architecture. Possible values are `x64` for
- * 64-bit and `x86` for 32-bit (i386/ia32) systems.
+ * Returns the current machine's architecture. Possible values are `x64` for 64-bit and `x86` for
+ * 32-bit (i386/ia32) systems.
  *
- * @param {Boolean} bypassCache=false - When true, re-detects the system
- * architecture, though it will never change.
+ * @param {Boolean} bypassCache=false - When true, re-detects the system architecture, though it
+ * will never change.
  * @returns {String}
  */
 export function arch(bypassCache) {
@@ -55,20 +55,19 @@ export function arch(bypassCache) {
  * @returns {Array}
  */
 export function arrayify(it, removeFalsey) {
-	const arr = Array.isArray(it) ? it : [ it ];
+	const arr = typeof it === 'undefined' ? [] : it instanceof Set ? Array.from(it) : Array.isArray(it) ? it : [ it ];
 	return removeFalsey ? arr.filter(v => typeof v !== 'undefined' && v !== null && v !== '' && v !== false && (typeof v !== 'number' || !isNaN(v))) : arr;
 }
 
 /**
- * Validates that the current Node.js version strictly equals the Node engine
- * version in the specified package.json.
+ * Validates that the current Node.js version strictly equals the Node engine version in the
+ * specified package.json.
  *
- * @param {Object|String} pkgJson - The pkgJson object or the path to the
- * package.json file.
- * @returns {String} Returns the Node.js version if the current Node.js version
- * is the exact version required, otherwise throws an error.
- * @throws {Error} Either the package.json cannot be parsed or the current
- * Node.js version does not satisfy the required version.
+ * @param {Object|String} pkgJson - The pkgJson object or the path to the package.json file.
+ * @returns {Boolean} Returns `true` if the current Node.js version is the exact version required,
+ * otherwise throws an error.
+ * @throws {Error} Either the package.json cannot be parsed or the current Node.js version does not
+ * satisfy the required version.
  */
 export function assertNodeEngineVersion(pkgJson) {
 	if (!pkgJson) {
@@ -104,11 +103,74 @@ export function assertNodeEngineVersion(pkgJson) {
 }
 
 /**
+ * A map of block names to each caller's promise callbacks.
+ * @type {Object}
+ */
+export const pendingBlocks = {};
+
+/**
+ * Ensures that only a function is executed by a single task at a time. If a task is already
+ * running, then additional requests are queued. When the task completes, the result is immediately
+ * shared with the queued up callers.
+ *
+ * @param {String} name - The mutex name.
+ * @param {Function} fn - A function to call if value is not cached.
+ * @returns {Promise} Resolves whatever value `fn` returns/resolves.
+ */
+export function block(name, fn) {
+	// ensure this function is async
+	return new Promise(setImmediate)
+		.then(() => new Promise((resolve, reject) => {
+			// we want this promise to resolve as soon as `fn()` finishes
+			if (typeof name !== 'string' || !name) {
+				return reject(new TypeError('Expected name to be a non-empty string'));
+			}
+
+			if (typeof fn !== 'function') {
+				return reject(new TypeError('Expected fn to be a function'));
+			}
+
+			// if another function is current running, add this function to the queue and wait
+			if (pendingBlocks[name]) {
+				pendingBlocks[name].push({ resolve, reject });
+				return;
+			}
+
+			// init the queue
+			pendingBlocks[name] = [ { resolve, reject } ];
+
+			const dispatch = (type, result) => {
+				const pending = pendingBlocks[name];
+				delete pendingBlocks[name];
+				for (const p of pending) {
+					p[type](result);
+				}
+			};
+
+			// call the function
+			let result;
+			try {
+				result = fn();
+			} catch (err) {
+				return dispatch('reject', err);
+			}
+
+			if (result instanceof Promise) {
+				result
+					.then(result => dispatch('resolve', result))
+					.catch(err => dispatch('reject', err));
+			} else {
+				dispatch('resolve', result);
+			}
+		}));
+}
+
+/**
  * Prevents a function from being called too many times.
  *
  * @param {Function} fn - The function to debounce.
- * @param {Number} [wait=200] - The number of milliseconds to wait between calls
- * to the returned function before firing the specified `fn`.
+ * @param {Number} [wait=200] - The number of milliseconds to wait between calls to the returned
+ * function before firing the specified `fn`.
  * @returns {Function}
  */
 export function debounce(fn, wait = 200) {
@@ -277,73 +339,78 @@ export function mergeDeep(dest, src) {
 }
 
 /**
- * A map of named promise callbacks.
+ * A map of mutex names to each caller's function and promise callbacks.
  * @type {Object}
  */
 export const pendingMutexes = {};
 
 /**
- * Ensures that only a function is executed by a single task at a time. If the
- * function is currently being run, then additional requests are queued and are
- * resolved when the function completes.
+ * Ensures that only a function is executed by a single task at a time. If the function is currently
+ * being run, then additional requests are queued and areexecuted in order when the function
+ * completes.
  *
  * @param {String} name - The mutex name.
  * @param {Function} fn - A function to call if value is not cached.
  * @returns {Promise} Resolves whatever value `fn` returns/resolves.
  */
 export function mutex(name, fn) {
-	return new Promise((resolve, reject) => setImmediate(() => {
-		if (typeof name !== 'string' || !name) {
-			return reject(new TypeError('Expected name to be a non-empty string'));
-		}
-
-		if (typeof fn !== 'function') {
-			return reject(new TypeError('Expected fn to be a function'));
-		}
-
-		if (pendingMutexes.hasOwnProperty(name)) {
-			pendingMutexes[name].push({ resolve, reject });
-			return;
-		}
-
-		pendingMutexes[name] = [ { resolve, reject } ];
-
-		const dispatchSuccess = value => {
-			const pending = pendingMutexes[name];
-			delete pendingMutexes[name];
-			resolve(value);
-			for (const p of pending) {
-				p.resolve(value);
+	// ensure this function is async
+	return new Promise(setImmediate)
+		.then(() => new Promise((resolve, reject) => {
+			// we want this promise to resolve as soon as `fn()` finishes
+			if (typeof name !== 'string' || !name) {
+				return reject(new TypeError('Expected name to be a non-empty string'));
 			}
-		};
 
-		const dispatchError = err => {
-			const pending = pendingMutexes[name];
-			delete pendingMutexes[name];
-			reject(err);
-			for (const p of pending) {
-				p.reject(err);
+			if (typeof fn !== 'function') {
+				return reject(new TypeError('Expected fn to be a function'));
 			}
-		};
 
-		try {
-			const result = fn();
-			if (result instanceof Promise) {
-				result.then(dispatchSuccess, dispatchError);
-			} else {
-				dispatchSuccess(result);
+			// if another function is current running, add this function to the queue and wait
+			if (pendingMutexes[name]) {
+				pendingMutexes[name].push({ fn, resolve, reject });
+				return;
 			}
-		} catch (err) {
-			dispatchError(err);
-		}
-	}));
+
+			// init the queue
+			pendingMutexes[name] = [ { fn, resolve, reject } ];
+
+			// start a recursive function that drains the queue
+			(function next() {
+				const pending = pendingMutexes[name] && pendingMutexes[name].shift();
+				if (!pending) {
+					// all done
+					delete pendingMutexes[name];
+					return;
+				}
+
+				// call the function
+				let result;
+				try {
+					result = pending.fn();
+				} catch (err) {
+					pending.reject(err);
+					return next();
+				}
+
+				if (result instanceof Promise) {
+					result
+						.then(pending.resolve)
+						.catch(err => pending.reject(err))
+						.then(() => next());
+				} else {
+					pending.resolve(result);
+					next();
+				}
+			}());
+		}));
 }
 
 /**
  * Returns the specified number of random bytes as a hex string.
  *
- * @param {Number} howMany - The number of random bytes to generate. Must be
- * greater than or equal to zero.
+ * @param {Number} howMany - The number of random bytes to generate. Must be greater than or equal
+ * to zero.
  * @returns {String}
  */
 export function randomBytes(howMany) {
