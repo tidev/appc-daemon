@@ -2,7 +2,7 @@
   "name": "appcd-detect",
   "version": "0.1.0",
   "description": "A engine for detecting various things.",
-  "main": "./dist/detect",
+  "main": "./dist/detect-engine",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
     "Chris Barber <cbarber@axway.com>"
@@ -23,7 +23,7 @@
     "appcd-subprocess": "0.1.0",
     "appcd-util": "0.1.1",
     "appcd-winreg": "0.1.0",
-    "gawk": "^4.4.1",
+    "gawk": "^4.4.3",
     "source-map-support": "^0.5.0"
   },
   "devDependencies": {

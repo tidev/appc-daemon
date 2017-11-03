@@ -103,69 +103,6 @@ export function assertNodeEngineVersion(pkgJson) {
 }
 
 /**
- * A map of block names to each caller's promise callbacks.
- * @type {Object}
- */
-export const pendingBlocks = {};
-
-/**
- * Ensures that only a function is executed by a single task at a time. If a task is already
- * running, then additional requests are queued. When the task completes, the result is immediately
- * shared with the queued up callers.
- *
- * @param {String} name - The mutex name.
- * @param {Function} fn - A function to call if value is not cached.
- * @returns {Promise} Resolves whatever value `fn` returns/resolves.
- */
-export function block(name, fn) {
-	// ensure this function is async
-	return new Promise(setImmediate)
-		.then(() => new Promise((resolve, reject) => {
-			// we want this promise to resolve as soon as `fn()` finishes
-			if (typeof name !== 'string' || !name) {
-				return reject(new TypeError('Expected name to be a non-empty string'));
-			}
-
-			if (typeof fn !== 'function') {
-				return reject(new TypeError('Expected fn to be a function'));
-			}
-
-			// if another function is current running, add this function to the queue and wait
-			if (pendingBlocks[name]) {
-				pendingBlocks[name].push({ resolve, reject });
-				return;
-			}
-
-			// init the queue
-			pendingBlocks[name] = [ { resolve, reject } ];
-
-			const dispatch = (type, result) => {
-				const pending = pendingBlocks[name];
-				delete pendingBlocks[name];
-				for (const p of pending) {
-					p[type](result);
-				}
-			};
-
-			// call the function
-			let result;
-			try {
-				result = fn();
-			} catch (err) {
-				return dispatch('reject', err);
-			}
-
-			if (result instanceof Promise) {
-				result
-					.then(result => dispatch('resolve', result))
-					.catch(err => dispatch('reject', err));
-			} else {
-				dispatch('resolve', result);
-			}
-		}));
-}
-
-/**
  * Prevents a function from being called too many times.
  *
  * @param {Function} fn - The function to debounce.
@@ -445,6 +382,69 @@ export function sleep(ms) {
 
 		setTimeout(() => resolve(), ms);
 	});
+}
+
+/**
+ * A map of tailgate names to each caller's promise callbacks.
+ * @type {Object}
+ */
+export const pendingTailgaters = {};
+
+/**
+ * Ensures that only a function is executed by a single task at a time. If a task is already
+ * running, then additional requests are queued. When the task completes, the result is immediately
+ * shared with the queued up callers.
+ *
+ * @param {String} name - The mutex name.
+ * @param {Function} fn - A function to call if value is not cached.
+ * @returns {Promise} Resolves whatever value `fn` returns/resolves.
+ */
+export function tailgate(name, fn) {
+	// ensure this function is async
+	return new Promise(setImmediate)
+		.then(() => new Promise((resolve, reject) => {
+			// we want this promise to resolve as soon as `fn()` finishes
+			if (typeof name !== 'string' || !name) {
+				return reject(new TypeError('Expected name to be a non-empty string'));
+			}
+
+			if (typeof fn !== 'function') {
+				return reject(new TypeError('Expected fn to be a function'));
+			}
+
+			// if another function is current running, add this function to the queue and wait
+			if (pendingTailgaters[name]) {
+				pendingTailgaters[name].push({ resolve, reject });
+				return;
+			}
+
+			// init the queue
+			pendingTailgaters[name] = [ { resolve, reject } ];
+
+			const dispatch = (type, result) => {
+				const pending = pendingTailgaters[name];
+				delete pendingTailgaters[name];
+				for (const p of pending) {
+					p[type](result);
+				}
+			};
+
+			// call the function
+			let result;
+			try {
+				result = fn();
+			} catch (err) {
+				return dispatch('reject', err);
+			}
+
+			if (result instanceof Promise) {
+				result
+					.then(result => dispatch('resolve', result))
+					.catch(err => dispatch('reject', err));
+			} else {
+				dispatch('resolve', result);
+			}
+		}));
 }
 
 /**

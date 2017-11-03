@@ -18,36 +18,28 @@ export default class JDKInfoService extends DataServiceDispatcher {
 	 * @returns {Promise}
 	 * @access public
 	 */
-	activate(cfg) {
-		const engine = new DetectEngine({
+	async activate(cfg) {
+		this.data = gawk([]);
+
+		this.engine = new DetectEngine({
 			checkDir:             this.checkDir.bind(this),
 			depth:                1,
 			env:                  'JAVA_HOME',
 			exe:                  `javac${exe}`,
 			multiple:             true,
+			paths:                jdkLocations[process.platform],
 			processResults:       this.processResults.bind(this),
-			registryKeys:         this.scanRegistry.bind(this),
-			registryPollInterval: 15000,
-			paths:                jdkLocations[process.platform]
+			redetect:             true,
+			refreshPathsInterval: 15000,
+			registryCallback:     this.registryCallback.bind(this),
+			watch:                true
 		});
 
-		this.data = gawk([]);
-
-		return new Promise((resolve, reject) => {
-			this.handle = engine
-				.detect({
-					watch: true,
-					redetect: true
-				})
-				.on('results', jdks => {
-					gawk.set(this.data, jdks);
-					resolve();
-				})
-				.on('error', err => {
-					console.error(err);
-					reject(err);
-				});
+		this.engine.on('results', results => {
+			gawk.set(this.data, results);
 		});
+
+		await this.engine.start();
 	}
 
 	/**
@@ -56,9 +48,9 @@ export default class JDKInfoService extends DataServiceDispatcher {
 	 * @access public
 	 */
 	async deactivate() {
-		if (this.handle) {
-			await this.handle.stop();
-			this.handle = null;
+		if (this.engine) {
+			await this.engine.stop();
+			this.engine = null;
 		}
 	}
 
@@ -81,12 +73,10 @@ export default class JDKInfoService extends DataServiceDispatcher {
 	 * Sorts the JDKs and assigns a default.
 	 *
 	 * @param {Array.<JDK>} jdks - An array of JDKs.
-	 * @param {Array.<JDK>|undefined} previousValue - The previous value or `undefined` if there is
-	 * no previous value.
 	 * @param {DetectEngine} engine - The detect engine instance.
 	 * @access private
 	 */
-	processResults(jdks, previousValue, engine) {
+	processResults(jdks, engine) {
 		// sort the jdks
 		if (jdks.length > 1) {
 			jdks.sort((a, b) => {
@@ -121,7 +111,7 @@ export default class JDKInfoService extends DataServiceDispatcher {
 	 * @returns {Promise} Resolves object containing an array of paths and a default path.
 	 * @access private
 	 */
-	scanRegistry() {
+	registryCallback() {
 		const scanRegistry = async (key) => {
 			// try to get the current version, but if this fails, no biggie
 			let currentVersion;

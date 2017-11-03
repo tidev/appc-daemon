@@ -74,9 +74,9 @@ export default class FSWatchManager extends EventEmitter {
 		}
 
 		logger.log('Starting FSWatcher: %s', highlight(path));
-		const { data } = ctx.request;
+		const { depth, recursive } = ctx.request.data || {};
 
-		const watcher = new FSWatcher(path, { recursive: data && !!data.recursive });
+		const watcher = new FSWatcher(path, { depth, recursive });
 		watcher.on('change', publish);
 		this.watchers[sid] = watcher;
 
@@ -93,7 +93,7 @@ export default class FSWatchManager extends EventEmitter {
 	 * the same publish function as the one passed to `onSubscribe()`.
 	 * @access private
 	 */
-	onUnsubscribe({ ctx, sid }) {
+	onUnsubscribe({ sid }) {
 		const watcher = sid && this.watchers[sid];
 		if (watcher) {
 			logger.log('Stopping FSWatcher: %s', highlight(sid));

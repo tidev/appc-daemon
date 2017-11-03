@@ -239,9 +239,9 @@ fs-exists-sync@^0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/fs-exists-sync/-/fs-exists-sync-0.1.0.tgz#982d6893af918e72d08dec9e8673ff2b5a8d6add"
 
-gawk@^4.4.1:
-  version "4.4.1"
-  resolved "https://registry.yarnpkg.com/gawk/-/gawk-4.4.1.tgz#e5eff350c918e8b47498886d1523445d088f19a7"
+gawk@^4.4.3:
+  version "4.4.3"
+  resolved "https://registry.yarnpkg.com/gawk/-/gawk-4.4.3.tgz#79ca4dcd5401ea04323f44eb055a5721d4b298a6"
   dependencies:
     source-map-support "^0.5.0"
 
