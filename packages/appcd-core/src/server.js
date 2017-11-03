@@ -156,11 +156,11 @@ export default class Server {
 
 		// init the fs watch manager
 		this.systems.fswatchManager = new FSWatchManager();
-		Dispatcher.register('/appcd/fswatch', this.systems.fswatchManager.dispatcher);
+		Dispatcher.register('/appcd/fswatch', this.systems.fswatchManager);
 
 		// init the subprocess manager
 		this.systems.subprocessManager = new SubprocessManager();
-		Dispatcher.register('/appcd/subprocess', this.systems.subprocessManager.dispatcher);
+		Dispatcher.register('/appcd/subprocess', this.systems.subprocessManager);
 
 		// init the plugin manager
 		this.systems.pluginManager = new PluginManager({
@@ -172,7 +172,7 @@ export default class Server {
 				path.join(homeDir, 'plugins')
 			]
 		});
-		Dispatcher.register('/appcd/plugin', this.systems.pluginManager.dispatcher);
+		Dispatcher.register('/appcd/plugin', this.systems.pluginManager);
 
 		// start the status monitor
 		this.systems.statusMonitor

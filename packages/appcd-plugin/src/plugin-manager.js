@@ -16,7 +16,7 @@ const { highlight } = appcdLogger.styles;
 /**
  * Detects, starts, and stops Appc Daemon plugins.
  */
-export default class PluginManager extends EventEmitter {
+export default class PluginManager extends Dispatcher {
 	/**
 	 * Creates a plugin manager instance.
 	 *
@@ -31,36 +31,36 @@ export default class PluginManager extends EventEmitter {
 
 		super();
 
-		/**
-		 * The plugin manager dispatcher.
-		 * @type {Dispatcher}
-		 */
-		this.dispatcher = new Dispatcher()
-			.register('/register', ctx => {
-				return this.register(ctx.request.data.path)
-					.then(() => {
-						ctx.response = new Response(codes.PLUGIN_REGISTERED);
-						return ctx;
-					})
-					.catch(err => {
-						logger.warn(err);
-						throw err;
-					});
-			})
-			.register('/unregister', ctx => {
-				return this.unregister(ctx.request.data.path)
-					.then(() => {
-						ctx.response = new Response(codes.PLUGIN_UNREGISTERED);
-						return ctx;
-					})
-					.catch(err => {
-						logger.warn(err);
-						throw err;
-					});
-			})
-			.register('/status', ctx => {
-				ctx.response = this.plugins;
-			});
+		const emitter = new EventEmitter();
+		this.on = emitter.on.bind(emitter);
+
+		this.register('/register', ctx => {
+			return this.registerPluginPath(ctx.request.data.path)
+				.then(() => {
+					ctx.response = new Response(codes.PLUGIN_REGISTERED);
+					return ctx;
+				})
+				.catch(err => {
+					logger.warn(err);
+					throw err;
+				});
+		});
+
+		this.register('/unregister', ctx => {
+			return this.unregisterPluginPath(ctx.request.data.path)
+				.then(() => {
+					ctx.response = new Response(codes.PLUGIN_UNREGISTERED);
+					return ctx;
+				})
+				.catch(err => {
+					logger.warn(err);
+					throw err;
+				});
+		});
+
+		this.register('/status', ctx => {
+			ctx.response = this.plugins;
+		});
 
 		/**
 		 * A map of namespaces to versions to plugins
@@ -73,7 +73,7 @@ export default class PluginManager extends EventEmitter {
 		 * @type {GawkArray}
 		 * @access private
 		 */
-		this.plugins = gawk.watch(gawk([]), (obj, src) => this.emit('change', obj, src));
+		this.plugins = gawk.watch(gawk([]), (obj, src) => emitter.emit('change', obj, src));
 
 		/**
 		 * A map of plugin search paths to the list of plugins found in that path.
@@ -90,7 +90,7 @@ export default class PluginManager extends EventEmitter {
 
 			for (let dir of opts.paths) {
 				if (dir) {
-					this.register(dir);
+					this.registerPluginPath(dir);
 				}
 			}
 		}
@@ -113,7 +113,7 @@ export default class PluginManager extends EventEmitter {
 	 * @returns {Promise}
 	 * @access public
 	 */
-	async register(pluginPath) {
+	async registerPluginPath(pluginPath) {
 		if (!pluginPath || typeof pluginPath !== 'string') {
 			throw new PluginError('Invalid plugin path');
 		}
@@ -303,7 +303,7 @@ export default class PluginManager extends EventEmitter {
 	 * @returns {Promise}
 	 * @access public
 	 */
-	async unregister(pluginPath) {
+	async unregisterPluginPath(pluginPath) {
 		if (!pluginPath || typeof pluginPath !== 'string') {
 			throw new PluginError('Invalid plugin path');
 		}
@@ -328,6 +328,6 @@ export default class PluginManager extends EventEmitter {
 	shutdown() {
 		const paths = Object.keys(this.pluginPaths);
 		logger.log(appcdLogger.pluralize(`Shutting down plugin manager and ${highlight(paths.length)} plugin path`, paths.length));
-		return Promise.all(paths.map(this.unregister.bind(this)));
+		return Promise.all(paths.map(this.unregisterPluginPath.bind(this)));
 	}
 }

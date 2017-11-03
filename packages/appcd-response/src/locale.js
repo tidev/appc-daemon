@@ -1,11 +1,11 @@
-import { run } from 'appcd-subprocess';
 import { get } from 'appcd-winreg';
+import { spawnSync } from 'child_process';
 
 let cachedLocale;
 
 /**
  * Determines the current locale of this machine.
- * @async
+ *
  * @returns {Promise<String>}
  */
 export async function locale() {
@@ -22,8 +22,7 @@ export async function locale() {
 			cachedLocale = m ? m[1].replace(/_/g, '-') : null;
 		}
 	} else {
-		const { stdout } = await run('locale');
-		const m = stdout.toString().match(/^LANG="?([^".\s]+)/);
+		let m = spawnSync('locale').stdout.toString().match(/^LANG="?([^".\s]+)/);
 		cachedLocale = m ? m[1].replace(/_/g, '-') : null;
 	}
 

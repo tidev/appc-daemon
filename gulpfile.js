@@ -160,7 +160,7 @@ gulp.task('upgrade', cb => {
 /*
  * lint tasks
  */
-gulp.task('lint', () => {
+gulp.task('lint', [ 'cyclic' ], () => {
 	return gulp
 		.src([
 			path.join(__dirname, 'packages/*/gulpfile.js'),
@@ -174,7 +174,7 @@ gulp.task('lint', () => {
 /*
  * build tasks
  */
-gulp.task('build', () => {
+gulp.task('build', [ 'cyclic' ], () => {
 	runLerna(['run', '--parallel', 'build']);
 });
 
@@ -521,6 +521,7 @@ gulp.task('default', () => {
 	table.push([cyan('watch'),            'builds all packages, then starts watching them']);
 	table.push([cyan('watch-only'),       'starts watching all packages to perform build']);
 	table.push([cyan('check'),            'checks missing/outdated dependencies/link, security issues, and code stats']);
+	table.push([cyan('cyclic'),           'detects cyclic dependencies (which are bad) in appcd packages and plugins']);
 	table.push([cyan('fix'),              'fixes any missing dependencies or links']);
 	table.push([cyan('stats'),            'displays stats about the code']);
 	// table.push([cyan('package'),          'builds and packages an appc daemon distribution archive']);
@@ -553,6 +554,56 @@ function buildDepList(pkg) {
 	}(pkg));
 
 	return list;
+}
+
+gulp.task('cyclic', () => {
+	const results = checkCyclic();
+	const pkgs = Object.keys(results);
+	if (pkgs.length) {
+		for (const name of pkgs.sort()) {
+			console.log(name);
+			for (const deps of results[name]) {
+				console.log('  > ' + deps.map((s, i, a) => i + 1 === a.length ? gutil.colors.red(s) : s).join(' > '));
+			}
+			console.log();
+		}
+		const e = new Error(gutil.colors.red(`Found ${pkgs.length} package${pkgs.length === 1 ? '' : 's'} with cyclic dependencies!`));
+		e.showStack = false;
+		throw e;
+	} else {
+		console.log('No cyclic dependencies found');
+	}
+});
+
+function checkCyclic() {
+	const packages = getDepMap();
+	const cyclic = {};
+
+	function test(name, trail) {
+		if (!trail) {
+			trail = [ name ];
+		} else if (trail.includes(name)) {
+			if (!cyclic[trail[0]]) {
+				cyclic[trail[0]] = [];
+			}
+			cyclic[trail[0]].push([ ...trail.slice(1), name ]);
+			return;
+		} else {
+			trail.push(name);
+		}
+
+		for (const dep of packages[name]) {
+			test(dep, trail);
+		}
+
+		trail.pop();
+	}
+
+	for (const name of Object.keys(packages)) {
+		test(name);
+	}
+
+	return cyclic;
 }
 
 function run(cmd, args, opts) {
@@ -1165,6 +1216,24 @@ function renderPackages(results) {
 		console.log();
 	}
 
+	console.log(magenta('Cyclic Dependencies') + '\n');
+	const cyclicDeps = checkCyclic();
+	const cyclicPkgs = Object.keys(cyclicDeps);
+	const cyclicDepCount = cyclicPkgs.length;
+	if (cyclicDepCount) {
+		for (const name of cyclicPkgs.sort()) {
+			console.log(name);
+			for (const deps of cyclicDeps[name]) {
+				console.log('  > ' + deps.map((s, i, a) => i + 1 === a.length ? red(s) : s).join(' > '));
+			}
+			console.log();
+		}
+		console.log(red(`Found ${cyclicDepCount} package${cyclicDepCount === 1 ? '' : 's'} with cyclic dependencies!`));
+	} else {
+		console.log('No cyclic dependencies found');
+	}
+	console.log();
+
 	displayStats(results);
 
 	console.log(magenta('Summary') + '\n');
@@ -1196,6 +1265,10 @@ function renderPackages(results) {
 	table.push([
 		'Yarn Issues',
 		results.yarnIssues > 0 ? red(results.yarnIssues) : green(results.yarnIssues)
+	]);
+	table.push([
+		'Cyclic Dependencies',
+		cyclicDepCount > 0 ? red(cyclicDepCount) : green(cyclicDepCount)
 	]);
 	console.log(table.toString() + '\n');
 

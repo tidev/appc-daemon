@@ -1,11 +1,6 @@
-/* istanbul ignore if */
-if (!Error.prepareStackTrace) {
-	require('source-map-support/register');
-}
-
 import appcdLogger from 'appcd-logger';
 import Detector from './detector';
-import gawk, { isGawked } from 'gawk';
+import gawk from 'gawk';
 import path from 'path';
 
 import * as winreg from 'appcd-winreg';

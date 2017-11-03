@@ -11,10 +11,12 @@ source license.
 
 ### Release Process
 
+> :warning: THIS IS NOT TESTED OR FINAL!
+
 1. Run `gulp check` to ensure there are no security issues
 2. Run `gulp coverage` to ensure all tests pass
-3. Run `gulp package` to build a distribution tarball (`.tgz`)
-4. Run `npm publish dist/appcd-<version>.tgz`
+3. Bump version `lerna.json`
+4. Run `lerna publish`
 
 ### Offline Releases
 

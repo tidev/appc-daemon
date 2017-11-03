@@ -1,5 +1,5 @@
 import appcdLogger from 'appcd-logger';
-import DetectEngine from '../dist/detect-engine';
+import DetectEngine from '../dist/index';
 import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs-extra';
 import FSWatchManager, { status } from 'appcd-fswatcher';
@@ -38,11 +38,11 @@ describe('Detect', () => {
 	before(function () {
 		Dispatcher.register('/appcd/status', statusHandler);
 		this.fsw = new FSWatchManager();
-		Dispatcher.register('/appcd/fswatch', this.fsw.dispatcher);
+		Dispatcher.register('/appcd/fswatch', this.fsw);
 	});
 
 	after(function () {
-		Dispatcher.unregister('/appcd/fswatch', this.fsw.dispatcher);
+		Dispatcher.unregister('/appcd/fswatch', this.fsw);
 		this.fsw.shutdown();
 		Dispatcher.unregister('/appcd/status', statusHandler);
 		fs.removeSync(tmpDir);
