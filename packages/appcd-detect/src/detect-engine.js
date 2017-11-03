@@ -355,20 +355,10 @@ export default class DetectEngine extends EventEmitter {
 	 * @access private
 	 */
 	async processResults(results) {
-		log('A Gawked?', isGawked(results));
 		if (this.opts.processResults) {
 			log('  Processing results...');
 			results = (await this.opts.processResults(results, this)) || results;
 		}
-
-		log('  Saving results...');
-		log('B Gawked?', isGawked(results));
-		log(results);
-		const arr = arrayify(results, true);
-		log('C Gawked?', isGawked(arr));
-		log(arr);
-		log('D Gawked?', isGawked(this.results));
-		log(this.results);
-		gawk.set(this.results, arr);
+		gawk.set(this.results, arrayify(results, true));
 	}
 }

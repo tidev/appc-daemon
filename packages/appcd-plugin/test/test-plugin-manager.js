@@ -4,7 +4,6 @@ import ConfigService from 'appcd-config-service';
 import Dispatcher, { DispatcherError } from 'appcd-dispatcher';
 import fs from 'fs-extra';
 import FSWatchManager, { renderTree } from 'appcd-fswatcher';
-import gawk from 'gawk';
 import path from 'path';
 import PluginError from '../dist/plugin-error';
 import PluginManager from '../dist/index';
