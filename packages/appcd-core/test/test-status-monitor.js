@@ -8,13 +8,6 @@ describe('StatusMonitor', () => {
 		expect(uptime).to.be.at.least(0);
 	});
 
-	it('should fail if get() not passed an array', () => {
-		expect(() => {
-			const sm = new StatusMonitor();
-			const uptime = sm.get('uptime');
-		}).to.throw(TypeError, 'Expected filter to be an array');
-	});
-
 	it('should return null when getting non-existent status value', () => {
 		const sm = new StatusMonitor();
 		expect(sm.get([ 'foo' ])).to.be.null;

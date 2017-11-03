@@ -12,7 +12,7 @@ const { highlight } = appcdLogger.styles;
 /**
  * Starts and stops file system watches and sends notifications when a fs event occurs.
  */
-export default class FSWatchManager extends EventEmitter {
+export default class FSWatchManager extends ServiceDispatcher {
 	/**
 	 * Creates the fs watch manager dispatcher and initializes it as a service dispatcher.
 	 *
@@ -21,11 +21,8 @@ export default class FSWatchManager extends EventEmitter {
 	constructor() {
 		super();
 
-		/**
-		 * The service dispatcher instance.
-		 * @type {ServiceDispatcher}
-		 */
-		this.dispatcher = new ServiceDispatcher(this);
+		this.emitter = new EventEmitter();
+		this.on = this.emitter.on.bind(this.emitter);
 
 		/**
 		 * A map of paths to `FSWatcher` instances.
@@ -34,9 +31,9 @@ export default class FSWatchManager extends EventEmitter {
 		this.watchers = {};
 
 		rootEmitter
-			.on('change', evt => this.emit('change', evt))
+			.on('change', evt => this.emitter.emit('change', evt))
 			.on('stats', stats => {
-				this.emit('stats', stats);
+				this.emitter.emit('stats', stats);
 				Dispatcher
 					.call('/appcd/status', { data: { fs: stats } })
 					.catch(err => {

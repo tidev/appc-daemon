@@ -16,7 +16,7 @@ const { highlight } = appcdLogger.styles;
 /**
  * Detects, starts, and stops Appc Daemon plugins.
  */
-export default class PluginManager extends EventEmitter {
+export default class PluginManager extends Dispatcher {
 	/**
 	 * Creates a plugin manager instance.
 	 *
@@ -31,36 +31,36 @@ export default class PluginManager extends EventEmitter {
 
 		super();
 
-		/**
-		 * The plugin manager dispatcher.
-		 * @type {Dispatcher}
-		 */
-		this.dispatcher = new Dispatcher()
-			.register('/register', ctx => {
-				return this.register(ctx.request.data.path)
-					.then(() => {
-						ctx.response = new Response(codes.PLUGIN_REGISTERED);
-						return ctx;
-					})
-					.catch(err => {
-						logger.warn(err);
-						throw err;
-					});
-			})
-			.register('/unregister', ctx => {
-				return this.unregister(ctx.request.data.path)
-					.then(() => {
-						ctx.response = new Response(codes.PLUGIN_UNREGISTERED);
-						return ctx;
-					})
-					.catch(err => {
-						logger.warn(err);
-						throw err;
-					});
-			})
-			.register('/status', ctx => {
-				ctx.response = this.plugins;
-			});
+		const emitter = new EventEmitter();
+		this.on = emitter.on.bind(this.emitter);
+
+		this.register('/register', ctx => {
+			return this.register(ctx.request.data.path)
+				.then(() => {
+					ctx.response = new Response(codes.PLUGIN_REGISTERED);
+					return ctx;
+				})
+				.catch(err => {
+					logger.warn(err);
+					throw err;
+				});
+		});
+
+		this.register('/unregister', ctx => {
+			return this.unregister(ctx.request.data.path)
+				.then(() => {
+					ctx.response = new Response(codes.PLUGIN_UNREGISTERED);
+					return ctx;
+				})
+				.catch(err => {
+					logger.warn(err);
+					throw err;
+				});
+		});
+
+		this.register('/status', ctx => {
+			ctx.response = this.plugins;
+		});
 
 		/**
 		 * A map of namespaces to versions to plugins
@@ -73,7 +73,7 @@ export default class PluginManager extends EventEmitter {
 		 * @type {GawkArray}
 		 * @access private
 		 */
-		this.plugins = gawk.watch(gawk([]), (obj, src) => this.emit('change', obj, src));
+		this.plugins = gawk.watch(gawk([]), (obj, src) => emitter.emit('change', obj, src));
 
 		/**
 		 * A map of plugin search paths to the list of plugins found in that path.

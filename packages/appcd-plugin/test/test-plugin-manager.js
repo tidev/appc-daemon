@@ -46,8 +46,8 @@ describe('PluginManager', () => {
 		this.fm = new FSWatchManager();
 		this.sm = new SubprocessManager();
 
-		Dispatcher.register('/appcd/fs/watch', this.fm.dispatcher);
-		Dispatcher.register('/appcd/subprocess', this.sm.dispatcher);
+		Dispatcher.register('/appcd/fs/watch', this.fm);
+		Dispatcher.register('/appcd/subprocess', this.sm);
 		Dispatcher.register('/appcd/config', new ConfigService(config));
 		Dispatcher.register('/appcd/status', () => {
 			// squeltch
