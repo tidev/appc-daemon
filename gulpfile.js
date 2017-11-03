@@ -152,7 +152,7 @@ gulp.task('upgrade', cb => {
 	Promise.resolve()
 		.then(() => checkPackages())
 		.then(results => upgradeDeps(results.packagesToUpdate))
-		.then(() => checkPackages())
+		.then(() => checkPackages({ skipSecurity: true }))
 		.then(results => renderPackages(results))
 		.then(() => cb(), cb);
 });
@@ -170,18 +170,6 @@ gulp.task('lint', () => {
 		.pipe(plumber())
 		.pipe(chug({ tasks: [ 'lint' ] }));
 });
-
-function runLerna (args) {
-	let execPath = '';
-	if (isWindows) {
-		execPath = path.join(__dirname, 'node_modules', '.bin', 'lerna.cmd');
-	} else {
-		args.unshift('./node_modules/.bin/lerna');
-		execPath = process.execPath;
-	}
-	gutil.log(`Running ${execPath} ${args.join(' ')}`)
-	spawnSync(execPath, args, { stdio: 'inherit' });
-}
 
 /*
  * build tasks
@@ -629,6 +617,19 @@ function runYarn(cwd) {
 		});
 }
 
+
+function runLerna(args) {
+	let execPath = '';
+	if (isWindows) {
+		execPath = path.join(__dirname, 'node_modules', '.bin', 'lerna.cmd');
+	} else {
+		args.unshift('./node_modules/.bin/lerna');
+		execPath = process.execPath;
+	}
+	gutil.log(`Running ${execPath} ${args.join(' ')}`)
+	spawnSync(execPath, args, { stdio: 'inherit' });
+}
+
 function runNPM(cwd) {
 	return run('npm', Array.prototype.slice.call(arguments, 1), { shell: true });
 }
@@ -657,7 +658,7 @@ function runDavid(pkgJson, type, dest) {
 	});
 }
 
-function checkPackages() {
+function checkPackages({ skipSecurity } = {}) {
 	const packages = {};
 	const deprecatedMap = {};
 	const limit = promiseLimit(4);
@@ -717,7 +718,7 @@ function checkPackages() {
 
 				Promise
 					.all([
-						new Promise(resolve => {
+						!skipSecurity && new Promise(resolve => {
 							Nsp.check({
 								package: pkgJson
 							}, (err, results) => {
@@ -759,7 +760,7 @@ function checkPackages() {
 							});
 						}),
 
-						limit(() => {
+						!skipSecurity && limit(() => {
 							let { execPath } = process;
 							const args = [
 								'--node',
@@ -1352,21 +1353,7 @@ function upgradeDeps(list) {
 		fs.writeFileSync(pkgJsonFile, JSON.stringify(pkgJson, null, 2));
 	}
 
-	// next run `yarn upgrade`
-	return Object.keys(components).reduce((promise, pkgJsonFile) => {
-		const cwd = path.dirname(pkgJsonFile);
-		return promise
-			.then(() => runYarn(cwd, 'upgrade'))
-			.then(result => {
-				if (result.status) {
-					gutil.log();
-					gutil.log(gutil.colors.red(`Failed to upgrade deps for ${cwd}`));
-					gutil.log();
-					result.stderr.toString().trim().split('\n').forEach(line => gutil.log(gutil.colors.red(line)));
-					gutil.log();
-				}
-			});
-	}, Promise.resolve());
+	runLerna([ 'bootstrap' ]);
 }
 
 function computeSloc(type) {
