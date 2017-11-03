@@ -32,10 +32,10 @@ export default class PluginManager extends Dispatcher {
 		super();
 
 		const emitter = new EventEmitter();
-		this.on = emitter.on.bind(this.emitter);
+		this.on = emitter.on.bind(emitter);
 
 		this.register('/register', ctx => {
-			return this.register(ctx.request.data.path)
+			return this.registerPluginPath(ctx.request.data.path)
 				.then(() => {
 					ctx.response = new Response(codes.PLUGIN_REGISTERED);
 					return ctx;
@@ -47,7 +47,7 @@ export default class PluginManager extends Dispatcher {
 		});
 
 		this.register('/unregister', ctx => {
-			return this.unregister(ctx.request.data.path)
+			return this.unregisterPluginPath(ctx.request.data.path)
 				.then(() => {
 					ctx.response = new Response(codes.PLUGIN_UNREGISTERED);
 					return ctx;
@@ -90,7 +90,7 @@ export default class PluginManager extends Dispatcher {
 
 			for (let dir of opts.paths) {
 				if (dir) {
-					this.register(dir);
+					this.registerPluginPath(dir);
 				}
 			}
 		}
@@ -113,7 +113,7 @@ export default class PluginManager extends Dispatcher {
 	 * @returns {Promise}
 	 * @access public
 	 */
-	async register(pluginPath) {
+	async registerPluginPath(pluginPath) {
 		if (!pluginPath || typeof pluginPath !== 'string') {
 			throw new PluginError('Invalid plugin path');
 		}
@@ -303,7 +303,7 @@ export default class PluginManager extends Dispatcher {
 	 * @returns {Promise}
 	 * @access public
 	 */
-	async unregister(pluginPath) {
+	async unregisterPluginPath(pluginPath) {
 		if (!pluginPath || typeof pluginPath !== 'string') {
 			throw new PluginError('Invalid plugin path');
 		}
@@ -328,6 +328,6 @@ export default class PluginManager extends Dispatcher {
 	shutdown() {
 		const paths = Object.keys(this.pluginPaths);
 		logger.log(appcdLogger.pluralize(`Shutting down plugin manager and ${highlight(paths.length)} plugin path`, paths.length));
-		return Promise.all(paths.map(this.unregister.bind(this)));
+		return Promise.all(paths.map(this.unregisterPluginPath.bind(this)));
 	}
 }

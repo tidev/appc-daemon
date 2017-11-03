@@ -37,17 +37,17 @@ describe('SubprocessManager', () => {
 				stdio: 'ignore',
 				windowsHide: false
 			};
-			const sm = new SubprocessManager();
+			const subprocessMgr = new SubprocessManager();
 			let count = 0;
 			let killedPid = null;
 
-			sm.on('change', () => {
+			subprocessMgr.on('change', () => {
 				count++;
 			});
 
-			sm.on('spawn', () => {
+			subprocessMgr.on('spawn', () => {
 				if (count === 5) {
-					sm.dispatcher
+					subprocessMgr
 						.call('/status')
 						.then(ctx => {
 							expect(ctx.response).to.be.an.instanceof(Array);
@@ -66,7 +66,7 @@ describe('SubprocessManager', () => {
 
 							const { pid } = ctx.response[0];
 
-							return sm.dispatcher
+							return subprocessMgr
 								.call(`/kill/${pid}`)
 								.then(ctx => {
 									expect(ctx.response.toString()).to.equal('OK');
@@ -77,7 +77,7 @@ describe('SubprocessManager', () => {
 										setTimeout(() => {
 											expect(killedPid).to.equal(pid);
 
-											sm.dispatcher
+											subprocessMgr
 												.call('/status')
 												.then(ctx => {
 													expect(ctx.response).to.be.an.instanceof(Array);
@@ -102,13 +102,13 @@ describe('SubprocessManager', () => {
 				}
 			});
 
-			sm.on('kill', pid => {
+			subprocessMgr.on('kill', pid => {
 				killedPid = pid;
 			});
 
 			const calls = [];
 			for (let i = 0; i < 5; i++) {
-				sm.dispatcher
+				subprocessMgr
 					.call('/spawn', {
 						data: {
 							command: process.execPath,
@@ -132,9 +132,9 @@ describe('SubprocessManager', () => {
 		});
 
 		it('should fail if spawn call is via http', done => {
-			const sm = new SubprocessManager();
+			const subprocessMgr = new SubprocessManager();
 
-			sm.dispatcher
+			subprocessMgr
 				.call('/spawn', {
 					source: 'http',
 					data: {
@@ -158,8 +158,8 @@ describe('SubprocessManager', () => {
 		});
 
 		it('should fail if command does not exist', done => {
-			const sm = new SubprocessManager();
-			sm.dispatcher
+			const subprocessMgr = new SubprocessManager();
+			subprocessMgr
 				.call('/spawn', {
 					data: {
 						command: 'no_way_does_this_exist'
@@ -175,8 +175,8 @@ describe('SubprocessManager', () => {
 		});
 
 		it('should read stdout and stderr', done => {
-			const sm = new SubprocessManager();
-			sm.dispatcher
+			const subprocessMgr = new SubprocessManager();
+			subprocessMgr
 				.call('/spawn', {
 					data: {
 						command: process.execPath,
@@ -204,8 +204,8 @@ describe('SubprocessManager', () => {
 		});
 
 		it('should return exit code 0', done => {
-			const sm = new SubprocessManager();
-			sm.dispatcher
+			const subprocessMgr = new SubprocessManager();
+			subprocessMgr
 				.call('/spawn', {
 					data: {
 						command: process.execPath,
@@ -234,8 +234,8 @@ describe('SubprocessManager', () => {
 		});
 
 		it('should return exit code 1', done => {
-			const sm = new SubprocessManager();
-			sm.dispatcher
+			const subprocessMgr = new SubprocessManager();
+			subprocessMgr
 				.call('/spawn', {
 					data: {
 						command: process.execPath,
@@ -264,8 +264,8 @@ describe('SubprocessManager', () => {
 		});
 
 		it('should fail if missing command', done => {
-			const sm = new SubprocessManager();
-			sm.dispatcher
+			const subprocessMgr = new SubprocessManager();
+			subprocessMgr
 				.call('/spawn')
 				.then(() => {
 					done(new Error('Expected error'));
@@ -280,8 +280,8 @@ describe('SubprocessManager', () => {
 
 	describe('ipc', () => {
 		it('should spawn a command with ipc', done => {
-			const sm = new SubprocessManager();
-			sm.dispatcher
+			const subprocessMgr = new SubprocessManager();
+			subprocessMgr
 				.call('/spawn', {
 					data: {
 						command: process.execPath,
@@ -338,8 +338,8 @@ describe('SubprocessManager', () => {
 		});
 
 		it('should throw error if sending without ipc', done => {
-			const sm = new SubprocessManager();
-			sm.dispatcher
+			const subprocessMgr = new SubprocessManager();
+			subprocessMgr
 				.call('/spawn', {
 					data: {
 						command: process.execPath,
@@ -357,8 +357,8 @@ describe('SubprocessManager', () => {
 		});
 
 		it('should spawn a command with ipc and ignore stdout/stderr', done => {
-			const sm = new SubprocessManager();
-			sm.dispatcher
+			const subprocessMgr = new SubprocessManager();
+			subprocessMgr
 				.call('/spawn', {
 					data: {
 						command: process.execPath,
@@ -404,8 +404,8 @@ describe('SubprocessManager', () => {
 		});
 
 		it('should spawn a command with ipc and custom stdio', done => {
-			const sm = new SubprocessManager();
-			sm.dispatcher
+			const subprocessMgr = new SubprocessManager();
+			subprocessMgr
 				.call('/spawn', {
 					data: {
 						command: process.execPath,
@@ -469,8 +469,8 @@ describe('SubprocessManager', () => {
 				ctx.response = tmpDir;
 			});
 
-			const sm = new SubprocessManager();
-			sm.dispatcher
+			const subprocessMgr = new SubprocessManager();
+			subprocessMgr
 				.call('/spawn/node', {
 					data: {
 						args: path.join(__dirname, 'fixtures', 'node-version.js')
@@ -505,8 +505,8 @@ describe('SubprocessManager', () => {
 				ctx.response = tmpDir;
 			});
 
-			const sm = new SubprocessManager();
-			sm.dispatcher
+			const subprocessMgr = new SubprocessManager();
+			subprocessMgr
 				.call('/spawn/node/6.9.5', {
 					data: {
 						args: [ path.join(__dirname, 'fixtures', 'node-version.js') ]
@@ -533,9 +533,9 @@ describe('SubprocessManager', () => {
 		});
 
 		it('should fail if spawn node call is via http', done => {
-			const sm = new SubprocessManager();
+			const subprocessMgr = new SubprocessManager();
 
-			sm.dispatcher
+			subprocessMgr
 				.call('/spawn/node', {
 					source: 'http',
 					data: {
@@ -561,8 +561,8 @@ describe('SubprocessManager', () => {
 
 	describe('Kill', () => {
 		it('should fail if missing pid', done => {
-			const sm = new SubprocessManager();
-			sm.dispatcher
+			const subprocessMgr = new SubprocessManager();
+			subprocessMgr
 				.call('/kill')
 				.then(() => {
 					done(new Error('Expected error'));
@@ -575,8 +575,8 @@ describe('SubprocessManager', () => {
 		});
 
 		it('should fail if pid is not a number', done => {
-			const sm = new SubprocessManager();
-			sm.dispatcher
+			const subprocessMgr = new SubprocessManager();
+			subprocessMgr
 				.call('/kill/it')
 				.then(() => {
 					done(new Error('Expected error'));
@@ -589,8 +589,8 @@ describe('SubprocessManager', () => {
 		});
 
 		it('should determine if pid is running', done => {
-			const sm = new SubprocessManager();
-			sm.dispatcher
+			const subprocessMgr = new SubprocessManager();
+			subprocessMgr
 				.call(`/kill/${process.pid}`, { data: { signal: '0' } })
 				.then(result => {
 					expect(result.response.status).to.equal(200);
@@ -611,8 +611,8 @@ describe('SubprocessManager', () => {
 				}
 			}
 
-			const sm = new SubprocessManager();
-			sm.dispatcher
+			const subprocessMgr = new SubprocessManager();
+			subprocessMgr
 				.call(`/kill/${pid}`, { data: { signal: 0 } })
 				.then(result => {
 					expect(result.status).to.equal(404);
@@ -622,8 +622,8 @@ describe('SubprocessManager', () => {
 		});
 
 		it('should error if signal is invalid', done => {
-			const sm = new SubprocessManager();
-			sm.dispatcher
+			const subprocessMgr = new SubprocessManager();
+			subprocessMgr
 				.call(`/kill/${process.pid}`, { data: { signal: 'foo' } })
 				.then(() => {
 					done(new Error('Expected error'));
@@ -637,19 +637,19 @@ describe('SubprocessManager', () => {
 
 	describe('Shutdown', () => {
 		it('should shutdown when there are no subprocesses', () => {
-			const sm = new SubprocessManager();
-			sm.shutdown();
-			expect(sm.subprocesses).to.have.lengthOf(0);
+			const subprocessMgr = new SubprocessManager();
+			subprocessMgr.shutdown();
+			expect(subprocessMgr.subprocesses).to.have.lengthOf(0);
 		});
 
 		it('should shutdown 2 spawned processes', done => {
-			const sm = new SubprocessManager();
+			const subprocessMgr = new SubprocessManager();
 
-			sm.on('spawn', () => {
-				if (sm.subprocesses.length === 1) {
-					sm.shutdown()
+			subprocessMgr.on('spawn', () => {
+				if (subprocessMgr.subprocesses.length === 1) {
+					subprocessMgr.shutdown()
 						.then(() => {
-							expect(sm.subprocesses).to.have.lengthOf(0);
+							expect(subprocessMgr.subprocesses).to.have.lengthOf(0);
 							done();
 						})
 						.catch(done);
@@ -657,7 +657,7 @@ describe('SubprocessManager', () => {
 			});
 
 			for (let i = 0; i < 1; i++) {
-				sm.dispatcher.call('/spawn', {
+				subprocessMgr.call('/spawn', {
 					data: {
 						command: process.execPath,
 						args: [
@@ -674,14 +674,14 @@ describe('SubprocessManager', () => {
 			this.timeout(8000);
 			this.slow(8000);
 
-			const sm = new SubprocessManager();
+			const subprocessMgr = new SubprocessManager();
 
-			sm.on('spawn', () => {
+			subprocessMgr.on('spawn', () => {
 				setTimeout(async () => {
 					try {
-						expect(sm.subprocesses).to.have.lengthOf(1);
-						await sm.shutdown();
-						expect(sm.subprocesses).to.have.lengthOf(0);
+						expect(subprocessMgr.subprocesses).to.have.lengthOf(1);
+						await subprocessMgr.shutdown();
+						expect(subprocessMgr.subprocesses).to.have.lengthOf(0);
 						done();
 					} catch (e) {
 						done(e);
@@ -689,7 +689,7 @@ describe('SubprocessManager', () => {
 				}, 500);
 			});
 
-			sm.dispatcher.call('/spawn', {
+			subprocessMgr.call('/spawn', {
 				data: {
 					command: process.execPath,
 					args: [ path.join(__dirname, 'fixtures', 'ignore-sigterm.js') ]
@@ -698,9 +698,9 @@ describe('SubprocessManager', () => {
 		});
 
 		it('should shutdown if a subprocess has already exited', done => {
-			const sm = new SubprocessManager();
+			const subprocessMgr = new SubprocessManager();
 
-			sm.dispatcher.call('/spawn', {
+			subprocessMgr.call('/spawn', {
 				data: {
 					command: process.execPath,
 					args: [
@@ -711,13 +711,13 @@ describe('SubprocessManager', () => {
 			});
 
 			let proc;
-			sm.on('spawn', p => {
+			subprocessMgr.on('spawn', p => {
 				proc = p;
 				proc.on('exit', () => {
 					// put the dead proc back in the list... which you shouldn't actually do
-					sm.subprocesses.push(proc);
+					subprocessMgr.subprocesses.push(proc);
 
-					sm.shutdown()
+					subprocessMgr.shutdown()
 						.then(() => done())
 						.catch(done);
 				});
@@ -728,9 +728,9 @@ describe('SubprocessManager', () => {
 			this.timeout(8000);
 			this.slow(8000);
 
-			const sm = new SubprocessManager();
+			const subprocessMgr = new SubprocessManager();
 
-			sm.dispatcher
+			subprocessMgr
 				.call('/spawn', {
 					data: {
 						command: process.execPath,
@@ -752,7 +752,7 @@ describe('SubprocessManager', () => {
 							childPid = parseInt(data.output.trim());
 							logger.log('Child PID = %s', childPid);
 							if (childPid) {
-								sm.shutdown()
+								subprocessMgr.shutdown()
 									.then(() => {
 										setTimeout(() => {
 											// check that both pids are dead

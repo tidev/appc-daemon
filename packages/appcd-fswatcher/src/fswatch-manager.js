@@ -21,8 +21,8 @@ export default class FSWatchManager extends ServiceDispatcher {
 	constructor() {
 		super();
 
-		this.emitter = new EventEmitter();
-		this.on = this.emitter.on.bind(this.emitter);
+		const emitter = new EventEmitter();
+		this.on = emitter.on.bind(emitter);
 
 		/**
 		 * A map of paths to `FSWatcher` instances.
@@ -31,9 +31,9 @@ export default class FSWatchManager extends ServiceDispatcher {
 		this.watchers = {};
 
 		rootEmitter
-			.on('change', evt => this.emitter.emit('change', evt))
+			.on('change', evt => emitter.emit('change', evt))
 			.on('stats', stats => {
-				this.emitter.emit('stats', stats);
+				emitter.emit('stats', stats);
 				Dispatcher
 					.call('/appcd/status', { data: { fs: stats } })
 					.catch(err => {

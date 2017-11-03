@@ -9,7 +9,7 @@ class CurrentTimeService extends ServiceDispatcher {
 		ctx.response = new Date().toISOString();
 	}
 
-	onSubscribe(ctx, publish) {
+	onSubscribe({ publish }) {
 		console.log('Starting interval');
 		this.timer = setInterval(() => {
 			publish({
@@ -18,7 +18,7 @@ class CurrentTimeService extends ServiceDispatcher {
 		}, 1000);
 	}
 
-	onUnsubscribe(ctx, publish) {
+	onUnsubscribe() {
 		console.log('Stopping interval');
 		clearInterval(this.timer);
 	}

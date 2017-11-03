@@ -92,7 +92,7 @@ describe('PluginManager', () => {
 		});
 	});
 
-	describe('Register/unregister', () => {
+	describe('Register/unregister Plugin Path', () => {
 		it('should not watch when no paths specified', async function () {
 			pm = new PluginManager();
 
@@ -133,7 +133,7 @@ describe('PluginManager', () => {
 			let err;
 
 			try {
-				await pm.register(dir);
+				await pm.registerPluginPath(dir);
 				err = new Error('Expected an error');
 			} catch (e) {
 				expect(e).to.be.instanceof(PluginError);
@@ -155,7 +155,7 @@ describe('PluginManager', () => {
 			const dir = path.join(__dirname, 'fixtures', 'empty');
 			pm = new PluginManager({ paths: [ dir ] });
 
-			return pm.register({})
+			return pm.registerPluginPath({})
 				.then(() => {
 					throw new Error('Expected error');
 				}, err => {
@@ -168,7 +168,7 @@ describe('PluginManager', () => {
 			const dir = path.join(__dirname, 'fixtures', 'empty');
 			pm = new PluginManager({ paths: [ dir ] });
 
-			return pm.register(__dirname)
+			return pm.registerPluginPath(__dirname)
 				.then(() => {
 					throw new Error('Expected error');
 				}, err => {
@@ -181,7 +181,7 @@ describe('PluginManager', () => {
 			const dir = path.join(__dirname, 'fixtures', 'empty');
 			pm = new PluginManager({ paths: [ dir ] });
 
-			return pm.register(path.join(dir, 'foo'))
+			return pm.registerPluginPath(path.join(dir, 'foo'))
 				.then(() => {
 					throw new Error('Expected error');
 				}, err => {
@@ -193,7 +193,7 @@ describe('PluginManager', () => {
 		it('should error unregistering if plugin path is invalid', function () {
 			pm = new PluginManager();
 
-			return pm.unregister(null)
+			return pm.unregisterPluginPath(null)
 				.then(() => {
 					throw new Error('Expected error');
 				}, err => {
@@ -206,7 +206,7 @@ describe('PluginManager', () => {
 			const dir = path.join(__dirname, 'fixtures', 'empty');
 			pm = new PluginManager();
 
-			return pm.unregister(dir)
+			return pm.unregisterPluginPath(dir)
 				.then(() => {
 					throw new Error('Expected error');
 				}, err => {
@@ -233,7 +233,7 @@ describe('PluginManager', () => {
 					.then(async (ctx) => {
 						expect(ctx.response).to.equal(9);
 
-						await pm.unregister(pluginDir);
+						await pm.unregisterPluginPath(pluginDir);
 
 						setTimeout(() => {
 							try {
@@ -256,7 +256,7 @@ describe('PluginManager', () => {
 
 			pm = new PluginManager();
 
-			pm.dispatcher
+			pm
 				.call('/register', {
 					data: {
 						path: pluginDir
@@ -414,7 +414,7 @@ describe('PluginManager', () => {
 			pm = new PluginManager();
 
 			setTimeout(() => {
-				pm.dispatcher
+				pm
 					.call('/register', {
 						data: {
 							path: pluginDir
@@ -444,7 +444,7 @@ describe('PluginManager', () => {
 						expect(ctx.response).to.equal(27);
 
 						log('Unregistering plugin');
-						return pm.dispatcher
+						return pm
 							.call('/unregister', {
 								data: {
 									path: pluginDir
@@ -467,7 +467,7 @@ describe('PluginManager', () => {
 
 			pm = new PluginManager();
 
-			pm.dispatcher
+			pm
 				.call('/register', {
 					data: {
 						path: pluginDir
@@ -569,7 +569,7 @@ describe('PluginManager', () => {
 				Dispatcher.call('/good/1.2.3/square', { data: { num: 3 } })
 					.then(ctx => {
 						expect(ctx.response).to.equal(9);
-						return pm.unregister(pluginDir);
+						return pm.unregisterPluginPath(pluginDir);
 					})
 					.then(() => sleep(1000))
 					.then(() => {
@@ -578,7 +578,7 @@ describe('PluginManager', () => {
 					.then(() => {
 						throw new Error('Expected 404');
 					}, err => {
-						expect(err).to.be.instanceof(DispatcherError);
+						expect(err).to.be.instanceof(PluginError);
 						expect(err.statusCode).to.equal(404);
 						done();
 					})

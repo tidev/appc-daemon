@@ -29,8 +29,8 @@ export default class SubprocessManager extends Dispatcher {
 	constructor() {
 		super();
 
-		this.emitter = new EventEmitter();
-		this.on = this.emitter.on.bind(this.emitter);
+		const emitter = new EventEmitter();
+		this.on = emitter.on.bind(emitter);
 
 		const subprocesses = this.subprocesses = gawk([]);
 
@@ -222,7 +222,7 @@ export default class SubprocessManager extends Dispatcher {
 						proc.emit('exit', code);
 					});
 
-					this.emit('spawn', proc);
+					emitter.emit('spawn', proc);
 
 					// we resolve as soon as possible since spawn is async
 					resolve();
@@ -251,7 +251,7 @@ export default class SubprocessManager extends Dispatcher {
 			return this.kill(pid, signal)
 				.then(result => {
 					ctx.response = new Response(result);
-					this.emit('kill', pid);
+					emitter.emit('kill', pid);
 				});
 		});
 
@@ -260,7 +260,7 @@ export default class SubprocessManager extends Dispatcher {
 		});
 
 		gawk.watch(this.subprocesses, (subprocesses, src) => {
-			this.emitter.emit('change', subprocesses, src);
+			emitter.emit('change', subprocesses, src);
 			Dispatcher
 				.call('/appcd/status', { data: { subprocesses } })
 				.catch(err => {

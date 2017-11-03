@@ -33,7 +33,7 @@ describe('FSWatchManager', () => {
 
 			Promise.resolve()
 				.then(() => new Promise(resolve => {
-					manager.dispatcher.handler({
+					manager.handler({
 						path: '/',
 						request: {},
 						response: {
@@ -61,7 +61,7 @@ describe('FSWatchManager', () => {
 
 			Promise.resolve()
 				.then(() => new Promise(() => {
-					manager.dispatcher.handler({
+					manager.handler({
 						path: '/',
 						request: {
 							sessionId: 0,
@@ -127,7 +127,7 @@ describe('FSWatchManager', () => {
 				Promise.resolve()
 					.then(() => new Promise((resolve, reject) => {
 						log('Subscribing');
-						manager.dispatcher.handler({
+						manager.handler({
 							request: {
 								data: { path: tmp },
 								type: 'subscribe'
@@ -190,12 +190,12 @@ describe('FSWatchManager', () => {
 																}
 															}
 														};
-														manager.dispatcher.handler(ctx, () => Promise.resolve());
+														manager.handler(ctx, () => Promise.resolve());
 
 														expect(ctx.response.toString()).to.equal('Unsubscribed');
 														expect(ctx.response.status).to.equal(200);
 														expect(ctx.response.statusCode).to.equal('200.1');
-														expect(Object.keys(manager.dispatcher.subscriptions)).to.have.lengthOf(0);
+														expect(Object.keys(manager.subscriptions)).to.have.lengthOf(0);
 
 														expect(roots).to.deep.equal({});
 
@@ -239,7 +239,7 @@ describe('FSWatchManager', () => {
 
 			const manager = new FSWatchManager();
 
-			manager.dispatcher.handler({
+			manager.handler({
 				request: {
 					data: { path: fooDir },
 					sessionId: 0,
@@ -258,7 +258,7 @@ describe('FSWatchManager', () => {
 				}
 			}, () => Promise.resolve());
 
-			manager.dispatcher.handler({
+			manager.handler({
 				request: {
 					data: { path: barDir },
 					sessionId: 1,
