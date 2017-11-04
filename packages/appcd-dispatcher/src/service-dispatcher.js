@@ -169,6 +169,7 @@ export default class ServiceDispatcher {
 
 			if (descriptor.subs.has(subscriptionId)) {
 				logger.log(`Stream ${err ? 'errored' : 'ended'}, cleaning up`);
+				descriptor.subs.delete(subscriptionId);
 				this.unsubscribe(ctx);
 			} else {
 				logger.log(`Stream ${err ? 'errored' : 'ended'}, subscription already cleaned up`);
@@ -244,22 +245,25 @@ export default class ServiceDispatcher {
 
 		logger.log('%s Unsubscribing: %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
 		delete this.subscriptions[subscriptionId];
-		descriptor.subs.delete(subscriptionId);
 
 		const response = new Response(codes.UNSUBSCRIBED);
 		ctx.response = response;
 
 		// send the unsubscribe event and close the stream
 		try {
-			originalResponse.write({
-				message: response,
-				sid: subscriptionId,
-				topic,
-				type: 'unsubscribe'
-			});
+			if (originalResponse) {
+				descriptor.subs.delete(subscriptionId);
 
-			logger.log('%s Ending response: %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
-			originalResponse.end();
+				originalResponse.write({
+					message: response,
+					sid: subscriptionId,
+					topic,
+					type: 'unsubscribe'
+				});
+
+				logger.log('%s Ending response: %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
+				originalResponse.end();
+			}
 		} catch (e) {
 			// squeltch
 		}

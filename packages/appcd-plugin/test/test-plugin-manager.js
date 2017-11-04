@@ -578,7 +578,8 @@ describe('PluginManager', () => {
 					.then(() => {
 						throw new Error('Expected 404');
 					}, err => {
-						expect(err).to.be.instanceof(PluginError);
+						expect(err).to.be.instanceof(DispatcherError);
+						expect(err.status).to.equal(404);
 						expect(err.statusCode).to.equal(404);
 						done();
 					})

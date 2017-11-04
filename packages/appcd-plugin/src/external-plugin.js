@@ -1,6 +1,7 @@
 import Agent from 'appcd-agent';
 import appcdLogger from 'appcd-logger';
 import Dispatcher, { DispatcherError } from 'appcd-dispatcher';
+import gawk from 'gawk';
 import path from 'path';
 import PluginBase, { states } from './plugin-base';
 import PluginError from './plugin-error';
@@ -173,6 +174,22 @@ export default class ExternalPlugin extends PluginBase {
 				});
 		};
 
+		const cancelConfigSubscription = async () => {
+			const sid = this.configSubscriptionId;
+			if (sid) {
+				this.configSubscriptionId = null;
+				try {
+					await this.globals.appcd.call('/appcd/config', {
+						sid,
+						type: 'unsubscribe'
+					});
+				} catch (err) {
+					logger.warn('Failed to unsubscribe from config');
+					logger.warn(err);
+				}
+			}
+		};
+
 		// external plugin running in the plugin host
 		this.tunnel = new Tunnel(process, (req, send) => {
 			// message from parent process that needs to be dispatched
@@ -182,19 +199,7 @@ export default class ExternalPlugin extends PluginBase {
 
 			if (req.message.type === 'deactivate') {
 				return Promise.resolve()
-					.then(async () => {
-						if (this.configSubscriptionId) {
-							try {
-								await this.globals.appcd.call('/appcd/config', {
-									sid: this.configSubscriptionId,
-									type: 'unsubscribe'
-								});
-							} catch (err) {
-								logger.warn('Failed to unsubscribe from config');
-								logger.warn(err);
-							}
-						}
-					})
+					.then(cancelConfigSubscription)
 					.then(() => {
 						if (this.module && typeof this.module.deactivate === 'function') {
 							return this.module.deactivate();
@@ -286,19 +291,15 @@ export default class ExternalPlugin extends PluginBase {
 		return this.globals.appcd
 			.call('/appcd/config', { type: 'subscribe' })
 			.then(({ response }) => new Promise(resolve => {
-				let initialized = false;
-				response.on('data', response => {
-					if (response.type === 'event') {
-						this.config = response.message;
-						this.configSubscriptionId = response.sid;
+				response.on('data', ({ message, sid, type }) => {
+					if (type === 'subscribe') {
+						this.configSubscriptionId = sid;
+						resolve();
+					} else if (type === 'event') {
+						gawk.set(this.config, message);
 
 						if (this.config.server && this.config.server.agentPollInterval) {
 							this.agent.pollInterval = Math.max(1000, this.config.server.agentPollInterval);
-						}
-
-						if (!initialized) {
-							initialized = true;
-							resolve();
 						}
 					}
 				});
@@ -308,8 +309,10 @@ export default class ExternalPlugin extends PluginBase {
 			})
 			.then(() => this.activate())
 			.then(() => this.tunnel.emit({ type: 'activated' }))
-			.catch(err => {
+			.catch(async (err) => {
 				this.logger.error(err);
+
+				await cancelConfigSubscription();
 
 				this.tunnel.emit({
 					message: err.message,
