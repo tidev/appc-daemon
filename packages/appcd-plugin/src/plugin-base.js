@@ -49,7 +49,7 @@ export default class PluginBase extends EventEmitter {
 		 * The Appc Daemon config.
 		 * @type {Object}
 		 */
-		this.config = {};
+		this.config = gawk({});
 
 		/**
 		 * The plugin's exports.
