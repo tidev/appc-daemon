@@ -37,7 +37,6 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 			this.wireupDetection('selectedVisualStudio', 5 * 60000, () => this.detectSelectedVisualStudio()),
 			this.wireupDetection('winstore', 5 * 6000, () => this.detectWinstore()),
 			this.wireupDetection('windowsphone', 5 * 6000, () => this.detectWindowsphone())
-
 		]);
 	}
 
@@ -58,9 +57,14 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 			.then(({ name, result, issues }) => {
 				console.log(`Updating data for ${name}`);
 				if (this.data[name]) {
-					gawk.set(this.data[name], result);
+					if (Array.isArray(result)) {
+						gawk.set(this.data[name], result);
+					} else {
+						gawk.mergeDeep(this.data[name], result);
+					}
 				} else {
 					this.data[name] = result;
+
 				}
 
 				if (this.data.issues) {
