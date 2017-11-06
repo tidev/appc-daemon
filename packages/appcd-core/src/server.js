@@ -105,6 +105,7 @@ export default class Server {
 		const pid = this.isRunning();
 		if (pid) {
 			const err = new Error(`Server is already running! (pid: ${pid})`);
+			process.send('already running');
 			err.code = 4;
 			throw err;
 		}

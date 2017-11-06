@@ -118,7 +118,7 @@ export function startServer({ cfg, argv }) {
 	const { config, configFile, debug } = argv;
 	const args = [];
 	const detached = debug ? false : cfg.get('server.daemonize');
-	const stdio = detached ? [ 'ignore', 'ignore', 'ignore', 'ipc' ] : 'inherit';
+	const stdio = detached ? [ 'ignore', 'ignore', 'ignore', 'ipc' ] : [ 'inherit', 'inherit', 'inherit', 'ipc' ];
 	const v8mem = cfg.get('core.v8.memory');
 	const corePkgJson = JSON.parse(fs.readFileSync(require.resolve('appcd-core/package.json'), 'utf8'));
 
@@ -169,19 +169,21 @@ export function startServer({ cfg, argv }) {
 			return spawn(process.execPath, args, { stdio });
 		})
 		.then(child => new Promise((resolve, reject) => {
-			if (detached) {
-				child.on('message', msg => {
-					if (msg === 'booted') {
+			child.on('message', msg => {
+				if (msg === 'booted') {
+					if (detached) {
 						child.disconnect();
 						child.unref();
-						resolve();
 					}
-				});
+					resolve();
+				} else if (msg === 'already running') {
+					reject(4);
+				}
+			});
 
-				child.on('close', code => {
-					reject(code);
-				});
-			}
+			child.on('close', code => {
+				reject(code);
+			});
 		}));
 }
 
