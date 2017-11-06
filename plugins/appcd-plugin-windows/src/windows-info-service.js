@@ -29,11 +29,11 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 		this.timers = {};
 		await Promise.all([
 			this.wireupDetection('assemblies', 60000, () => this.detectAssemblies()),
-			this.wireupDetection('devices', 5000, () => this.detectDevices()),
+			this.wireupDetection('devices', 2500, () => this.detectDevices()),
 			this.wireupDetection('emulators', 5 * 60000, () => this.detectEmulators()),
 			this.wireupDetection('os', 60000, () => this.detectOS()),
 			this.wireupDetection('powershell', 60000, () => this.detectPowershell()),
-			this.wireupDetection('visualstudio', 5 * 60000, () => this.detectVisualStudios()),
+			this.wireupDetection('visualstudio', 10 * 60000, () => this.detectVisualStudios()),
 			this.wireupDetection('selectedVisualStudio', 5 * 60000, () => this.detectSelectedVisualStudio()),
 			this.wireupDetection('winstore', 5 * 6000, () => this.detectWinstore()),
 			this.wireupDetection('windowsphone', 5 * 6000, () => this.detectWindowsphone())
@@ -56,8 +56,7 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 	async wireupDetection(type, interval, callback) {
 		await callback()
 			.then(({ name, result, issues }) => {
-				console.log(name);
-				console.log(result);
+				console.log(`Updating data for ${name}`);
 				if (this.data[name]) {
 					gawk.set(this.data[name], result);
 				} else {
@@ -69,7 +68,6 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 				} else {
 					this.data.issues = issues;
 				}
-				console.log(this.data);
 			})
 			.catch(err => {
 				console.log(err);
@@ -83,7 +81,8 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 
 	detectAssemblies() {
 		return new Promise((resolve, reject) => {
-			windowslib.assemblies.detect((err, { issues, assemblies }) => {
+			console.log('Detecting assemblies info');
+			windowslib.assemblies.detect({ bypassCache: true }, (err, { issues, assemblies }) => {
 				if (err) {
 					reject(err);
 				} else {
@@ -95,7 +94,8 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 
 	detectOS() {
 		return new Promise((resolve, reject) => {
-			windowslib.env.detect((err, { issues, os }) => {
+			console.log('Detecting os info');
+			windowslib.env.detect({ bypassCache: true }, (err, { issues, os }) => {
 				if (err) {
 					reject(err);
 				} else {
@@ -107,7 +107,8 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 
 	detectPowershell() {
 		return new Promise((resolve, reject) => {
-			windowslib.env.detect((err, { issues, powershell }) => {
+			console.log('Detecting powershell info');
+			windowslib.env.detect({ bypassCache: true }, (err, { issues, powershell }) => {
 				if (err) {
 					reject(err);
 				} else {
@@ -119,7 +120,8 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 
 	detectDevices() {
 		return new Promise((resolve, reject) => {
-			windowslib.device.detect((err, { issues, devices }) => {
+			console.log('Detecting devices info');
+			windowslib.device.detect({ bypassCache: true }, (err, { issues, devices }) => {
 				if (err) {
 					reject(err);
 				} else {
@@ -131,7 +133,8 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 
 	detectEmulators() {
 		return new Promise((resolve, reject) => {
-			windowslib.emulator.detect((err, { issues, emulators }) => {
+			console.log('Detecting emulator info');
+			windowslib.emulator.detect({ bypassCache: true }, (err, { issues, emulators }) => {
 				if (err) {
 					reject(err);
 				} else {
@@ -143,7 +146,8 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 
 	detectSelectedVisualStudio() {
 		return new Promise((resolve, reject) => {
-			windowslib.visualstudio.detect((err, { issues, selectedVisualStudio }) => {
+			console.log('Detecting selectedVisualStudio info');
+			windowslib.visualstudio.detect({ bypassCache: true }, (err, { issues, selectedVisualStudio }) => {
 				if (err) {
 					reject(err);
 				} else {
@@ -155,7 +159,8 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 
 	detectVisualStudios() {
 		return new Promise((resolve, reject) => {
-			windowslib.visualstudio.detect((err, { issues, visualstudio }) => {
+			console.log('Detecting visualstudio info');
+			windowslib.visualstudio.detect({ bypassCache: true }, (err, { issues, visualstudio }) => {
 				if (err) {
 					reject(err);
 				} else {
@@ -167,7 +172,8 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 
 	detectWindowsphone() {
 		return new Promise((resolve, reject) => {
-			windowslib.windowsphone.detect((err, { issues, windowsphone }) => {
+			console.log('Detecting windowsphone info');
+			windowslib.windowsphone.detect({ bypassCache: true }, (err, { issues, windowsphone }) => {
 				if (err) {
 					reject(err);
 				} else {
@@ -179,7 +185,8 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 
 	detectWinstore() {
 		return new Promise((resolve, reject) => {
-			windowslib.winstore.detect((err, { issues, windows }) => {
+			console.log('Detecting windows store info');
+			windowslib.winstore.detect({ bypassCache: true }, (err, { issues, windows }) => {
 				if (err) {
 					reject(err);
 				} else {
