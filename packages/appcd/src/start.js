@@ -26,6 +26,7 @@ const cmd = {
 					console.error('Error: Daemon cannot be run as root');
 					break;
 			}
+			process.exit(code);
 		}
 	}
 };
