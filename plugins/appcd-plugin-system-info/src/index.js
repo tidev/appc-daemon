@@ -173,7 +173,7 @@ class SystemInfoService extends DataServiceDispatcher {
 	 */
 	async npmInfo() {
 		let npm = null;
-		let prefix = process.platform === 'win32' ? '%ProgramFiles%\\Node.js' : '/usr/local';
+		let prefix = process.platform === 'win32' ? '%ProgramFiles%\\nodejs' : '/usr/local';
 
 		try {
 			npm = await which(`npm${cmd}`);
