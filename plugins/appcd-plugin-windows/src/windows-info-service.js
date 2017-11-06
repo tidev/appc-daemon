@@ -9,6 +9,7 @@ import { DataServiceDispatcher } from 'appcd-dispatcher';
 export default class WindowsInfoService extends DataServiceDispatcher {
 
 	/**
+	 * Initializes the various functions to detect Windows information
 	 * @param {Config} cfg - An Appc Daemon config object
 	 * @access public
 	 */
@@ -37,7 +38,6 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 	}
 
 	/**
-	 * ?
 	 *
 	 * @access public
 	 */
