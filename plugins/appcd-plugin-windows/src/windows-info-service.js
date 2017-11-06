@@ -9,47 +9,61 @@ import { DataServiceDispatcher } from 'appcd-dispatcher';
 export default class WindowsInfoService extends DataServiceDispatcher {
 
 	/**
-	 * Initializes the various functions to detect Windows information
-	 * @param {Config} cfg - An Appc Daemon config object
+	 * Initializes the timers for polling Windows information.
+	 *
+	 * @param {Config} cfg - An Appc Daemon config object.
+	 * @returns {Promise}
 	 * @access public
 	 */
 	async activate(cfg) {
-		// TODO: Allow config override for the timing?
 		this.data = gawk({
-			windows: {},
-			windowsphone: {},
-			powershell: {},
-			visualstudio: {},
+			devices: [],
 			emulators: {},
-			devices: []
+			powershell: {},
+			windows: {},
+			visualstudio: {},
+			windowsphone: {}
 		});
+
 		this.timers = {};
+
+		// TODO: Allow config override for the timing?
 		await Promise.all([
-			this.wireupDetection('devices',              2500,       () => this.detectDevices()),
-			this.wireupDetection('emulators',            5 * 60000,  () => this.detectEmulators()),
-			this.wireupDetection('powershell',           60000,      () => this.detectPowershell()),
-			this.wireupDetection('visualstudio',         10 * 60000, () => this.detectVisualStudios()),
-			this.wireupDetection('winstore',             5 * 6000,   () => this.detectWinstore()),
-			this.wireupDetection('windowsphone',         5 * 6000,   () => this.detectWindowsphone())
+			this.wireupDetection('devices',      2500,       () => this.detectDevices()),
+			this.wireupDetection('emulators',    60000 * 5,  () => this.detectEmulators()),
+			this.wireupDetection('powershell',   60000,      () => this.detectPowershell()),
+			this.wireupDetection('visualstudio', 60000 * 10, () => this.detectVisualStudios()),
+			this.wireupDetection('windows',      60000 / 2,  () => this.detectWindows())
+			this.wireupDetection('windowsphone', 60000 / 2,  () => this.detectWindowsPhone()),
 		]);
 	}
 
 	/**
+	 * Stops all active timers.
 	 *
 	 * @access public
 	 */
-	async deactivate() {
+	deactivate() {
 		for (const timer of Object.values(this.timers)) {
 			clearTimeout(timer);
 		}
 		this.timers = {};
 	}
 
+	/**
+	 * Executes a detect function, then stores the result and schedules the next check.
+	 *
+	 * @param {String} type - The bucket name for the detected results.
+	 * @param {Number} interval - The amount of milliseconds until the next check.
+	 * @param {Function} callback - A function to call that performs the detection.
+	 * @returns {Promise}
+	 * @access private
+	 */
 	wireupDetection(type, interval, callback) {
 		return callback()
-			.then(({ name, result }) => {
+			.then(result => {
 				console.log(`Updating data for ${name}`);
-				gawk.set(this.data[name], result);
+				gawk.set(this.data[type], result);
 			})
 			.catch(err => {
 				console.log(err);
@@ -61,19 +75,12 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 			});
 	}
 
-	detectPowershell() {
-		return new Promise((resolve, reject) => {
-			console.log('Detecting powershell info');
-			windowslib.env.detect({ bypassCache: true }, (err, { powershell }) => {
-				if (err) {
-					reject(err);
-				} else {
-					resolve({ name: 'powershell', result: powershell });
-				}
-			});
-		});
-	}
-
+	/**
+	 * Detect Windows Phone devices.
+	 *
+	 * @returns {Promise<Array.<Object>>}
+	 * @access private
+	 */
 	detectDevices() {
 		return new Promise((resolve, reject) => {
 			console.log('Detecting devices info');
@@ -81,12 +88,18 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 				if (err) {
 					reject(err);
 				} else {
-					resolve({ name: 'devices', result: devices });
+					resolve(devices);
 				}
 			});
 		});
 	}
 
+	/**
+	 * Detect Windows Phone emulators.
+	 *
+	 * @returns {Promise<Object>}
+	 * @access private
+	 */
 	detectEmulators() {
 		return new Promise((resolve, reject) => {
 			console.log('Detecting emulator info');
@@ -94,12 +107,37 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 				if (err) {
 					reject(err);
 				} else {
-					resolve({ name: 'emulators', result: emulators });
+					resolve(emulators);
 				}
 			});
 		});
 	}
 
+	/**
+	 * Detect Powershell information.
+	 *
+	 * @returns {Promise<Object>}
+	 * @access private
+	 */
+	detectPowershell() {
+		return new Promise((resolve, reject) => {
+			console.log('Detecting powershell info');
+			windowslib.env.detect({ bypassCache: true }, (err, { powershell }) => {
+				if (err) {
+					reject(err);
+				} else {
+					resolve(powershell);
+				}
+			});
+		});
+	}
+
+	/**
+	 * Detect Visual Studio installations.
+	 *
+	 * @returns {Promise<Object>}
+	 * @access private
+	 */
 	detectVisualStudios() {
 		return new Promise((resolve, reject) => {
 			console.log('Detecting visualstudio info');
@@ -107,33 +145,45 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 				if (err) {
 					reject(err);
 				} else {
-					resolve({ name: 'visualstudio', result: visualstudio });
+					resolve(visualstudio);
 				}
 			});
 		});
 	}
 
-	detectWindowsphone() {
-		return new Promise((resolve, reject) => {
-			console.log('Detecting windowsphone info');
-			windowslib.windowsphone.detect({ bypassCache: true }, (err, { windowsphone }) => {
-				if (err) {
-					reject(err);
-				} else {
-					resolve({ name: 'windowsphone', result: windowsphone });
-				}
-			});
-		});
-	}
-
-	detectWinstore() {
+	/**
+	 * Detect Windows Store SDK information.
+	 *
+	 * @returns {Promise<Object>}
+	 * @access private
+	 */
+	detectWindows() {
 		return new Promise((resolve, reject) => {
 			console.log('Detecting windows store info');
 			windowslib.winstore.detect({ bypassCache: true }, (err, { windows }) => {
 				if (err) {
 					reject(err);
 				} else {
-					resolve({ name: 'windows', result: windows });
+					resolve(windows);
+				}
+			});
+		});
+	}
+
+	/**
+	 * Detect Windows Phone SDK information.
+	 *
+	 * @returns {Promise<Object>}
+	 * @access private
+	 */
+	detectWindowsPhone() {
+		return new Promise((resolve, reject) => {
+			console.log('Detecting windowsphone info');
+			windowslib.windowsphone.detect({ bypassCache: true }, (err, { windowsphone }) => {
+				if (err) {
+					reject(err);
+				} else {
+					resolve(windowsphone);
 				}
 			});
 		});
