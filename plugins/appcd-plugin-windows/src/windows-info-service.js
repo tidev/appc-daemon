@@ -1,33 +1,44 @@
-import DetectEngine from 'appcd-detect';
 import gawk from 'gawk';
 import windowslib from 'windowslib';
 
-import * as registry from 'appcd-winreg';
-
-import { codes } from 'appcd-response';
-import { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
-import { exe } from 'appcd-subprocess';
+import { DataServiceDispatcher } from 'appcd-dispatcher';
 
 /**
  * The Windows info service.
  */
-export default class WindowsInfoService extends ServiceDispatcher {
-	/**
-	 * Initializes the service path.
-	 */
-	constructor() {
-		super('/:filter*');
-	}
+export default class WindowsInfoService extends DataServiceDispatcher {
 
 	/**
-	 * ?
-	 *
 	 * @param {Config} cfg - An Appc Daemon config object
-	 * @returns {Promise}
 	 * @access public
 	 */
-	activate(cfg) {
-		// TODO
+	async activate(cfg) {
+		// TODO: Allow config override for the timing?
+		this.data = gawk({
+			issues: [],
+			assemblies: {},
+			windows: {},
+			windowsphone: {},
+			os: {},
+			powershell: {},
+			selectedVisualStudio: {},
+			visualstudio: {},
+			emulators: {},
+			devices: []
+		});
+		this.timers = {};
+		await Promise.all([
+			this.wireupDetection('assemblies', 60000, () => this.detectAssemblies()),
+			this.wireupDetection('devices', 5000, () => this.detectDevices()),
+			this.wireupDetection('emulators', 5 * 60000, () => this.detectEmulators()),
+			this.wireupDetection('os', 60000, () => this.detectOS()),
+			this.wireupDetection('powershell', 60000, () => this.detectPowershell()),
+			this.wireupDetection('visualstudio', 5 * 60000, () => this.detectVisualStudios()),
+			this.wireupDetection('selectedVisualStudio', 5 * 60000, () => this.detectSelectedVisualStudio()),
+			this.wireupDetection('winstore', 5 * 6000, () => this.detectWinstore()),
+			this.wireupDetection('windowsphone', 5 * 6000, () => this.detectWindowsphone())
+
+		]);
 	}
 
 	/**
@@ -36,100 +47,145 @@ export default class WindowsInfoService extends ServiceDispatcher {
 	 * @access public
 	 */
 	async deactivate() {
-		// TODO
-	}
-
-	/**
-	 * Determines the topic for the incoming request.
-	 *
-	 * @param {DispatcherContext} ctx - The dispatcher request context object.
-	 * @returns {String}
-	 * @access private
-	 */
-	getTopic(ctx) {
-		const { params, topic } = ctx.request;
-		return topic || (params.filter && params.filter.replace(/^\//, '').split('/').join('.')) || undefined;
-	}
-
-	/**
-	 * Responds to "call" service requests.
-	 *
-	 * @param {Object} ctx - A dispatcher request context.
-	 * @access private
-	 */
-	onCall(ctx) {
-		const filter = ctx.request.params.filter && ctx.request.params.filter.replace(/^\//, '').split('/') || undefined;
-		const node = this.get(filter);
-
-		if (!node) {
-			throw new DispatcherError(codes.NOT_FOUND);
+		for (const timer of Object.values(this.timers)) {
+			clearTimeout(timer);
 		}
-
-		ctx.response = node;
+		this.timers = {};
 	}
 
-	/**
-	 * Initializes the Windows watch for the filter.
-	 *
-	 * @param {Object} params - Various parameters.
-	 * @param {Function} params.publish - A function used to publish data to a dispatcher client.
-	 * @access private
-	 */
-	initSubscription({ ctx, publish }) {
-		const filter = ctx.request.params.filter && ctx.request.params.filter.replace(/^\//, '').split('/') || undefined;
-		console.log('Starting Windows gawk watch: %s', filter || 'no filter');
-		gawk.watch(this.results, filter && filter.split('.'), publish);
-	}
-
-	/**
-	 * Handles a new subscriber.
-	 *
-	 * @param {Object} params - Various parameters.
-	 * @param {Function} params.publish - A function used to publish data to a dispatcher client.
-	 * @access private
-	 */
-	onSubscribe({ ctx, publish }) {
-		const filter = ctx.request.params.filter && ctx.request.params.filter.replace(/^\//, '').split('/') || undefined;
-		publish(this.get(filter));
-	}
-
-	/**
-	 * Stops watching the Windows updates.
-	 *
-	 * @param {Object} params - Various parameters.
-	 * @param {Function} params.publish - The function used to publish data to a dispatcher client.
-	 * This is the same publish function as the one passed to `onSubscribe()`.
-	 * @access private
-	 */
-	destroySubscription({ publish }) {
-		console.log('Removing Windows gawk watch');
-		gawk.unwatch(this.results, publish);
-	}
-
-	/**
-	 * Returns the complete or filtered status values.
-	 *
-	 * @param {Array.<String>} [filter] - An array of namespaces used to filter and return a deep
-	 * object.
-	 * @return {*}
-	 * @access private
-	 */
-	get(filter) {
-		if (filter && !Array.isArray(filter)) {
-			throw new TypeError('Expected filter to be an array');
-		}
-
-		let obj = this.results;
-
-		if (filter) {
-			for (let i = 0, len = filter.length; obj && typeof obj === 'object' && i < len; i++) {
-				if (!obj.hasOwnProperty(filter[i])) {
-					return null;
+	async wireupDetection(type, interval, callback) {
+		await callback()
+			.then(({ name, result, issues }) => {
+				console.log(name);
+				console.log(result);
+				if (this.data[name]) {
+					gawk.set(this.data[name], result);
+				} else {
+					this.data[name] = result;
 				}
-				obj = obj[filter[i]];
-			}
-		}
 
-		return obj;
+				if (this.data.issues) {
+					gawk.set(this.data.issues, issues);
+				} else {
+					this.data.issues = issues;
+				}
+				console.log(this.data);
+			})
+			.catch(err => {
+				console.log(err);
+			})
+			.then(() => {
+				this.timers[type] = setTimeout(() => {
+					this.wireupDetection(type, interval, callback);
+				}, interval);
+			});
+	}
+
+	detectAssemblies() {
+		return new Promise((resolve, reject) => {
+			windowslib.assemblies.detect((err, { issues, assemblies }) => {
+				if (err) {
+					reject(err);
+				} else {
+					resolve({ name: 'assemblies', result: assemblies, issues });
+				}
+			});
+		});
+	}
+
+	detectOS() {
+		return new Promise((resolve, reject) => {
+			windowslib.env.detect((err, { issues, os }) => {
+				if (err) {
+					reject(err);
+				} else {
+					resolve({ name: 'os', result: os, issues });
+				}
+			});
+		});
+	}
+
+	detectPowershell() {
+		return new Promise((resolve, reject) => {
+			windowslib.env.detect((err, { issues, powershell }) => {
+				if (err) {
+					reject(err);
+				} else {
+					resolve({ name: 'powershell', result: powershell, issues });
+				}
+			});
+		});
+	}
+
+	detectDevices() {
+		return new Promise((resolve, reject) => {
+			windowslib.device.detect((err, { issues, devices }) => {
+				if (err) {
+					reject(err);
+				} else {
+					resolve({ name: 'devices', result: devices, issues });
+				}
+			});
+		});
+	}
+
+	detectEmulators() {
+		return new Promise((resolve, reject) => {
+			windowslib.emulator.detect((err, { issues, emulators }) => {
+				if (err) {
+					reject(err);
+				} else {
+					resolve({ name: 'emulators', result: emulators, issues });
+				}
+			});
+		});
+	}
+
+	detectSelectedVisualStudio() {
+		return new Promise((resolve, reject) => {
+			windowslib.visualstudio.detect((err, { issues, selectedVisualStudio }) => {
+				if (err) {
+					reject(err);
+				} else {
+					resolve({ name: 'selectedVisualStudio', result: selectedVisualStudio, issues });
+				}
+			});
+		});
+	}
+
+	detectVisualStudios() {
+		return new Promise((resolve, reject) => {
+			windowslib.visualstudio.detect((err, { issues, visualstudio }) => {
+				if (err) {
+					reject(err);
+				} else {
+					resolve({ name: 'visualstudio', result: visualstudio, issues });
+				}
+			});
+		});
+	}
+
+	detectWindowsphone() {
+		return new Promise((resolve, reject) => {
+			windowslib.windowsphone.detect((err, { issues, windowsphone }) => {
+				if (err) {
+					reject(err);
+				} else {
+					resolve({ name: 'windowsphone', result: windowsphone, issues });
+				}
+			});
+		});
+	}
+
+	detectWinstore() {
+		return new Promise((resolve, reject) => {
+			windowslib.winstore.detect((err, { issues, windows }) => {
+				if (err) {
+					reject(err);
+				} else {
+					resolve({ name: 'windows', result: windows, issues });
+				}
+			});
+		});
 	}
 }
