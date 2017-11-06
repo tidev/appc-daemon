@@ -305,7 +305,7 @@ export default class SubprocessManager extends Dispatcher {
 						try {
 							process.kill(child.PID, signal);
 						} catch (e) {
-							// squeltch
+							// squelch
 						}
 					}
 				} else {

@@ -211,7 +211,7 @@ export default class DetectEngine extends EventEmitter {
 				defaultPath = path.dirname(real(await which(this.opts.exe)));
 				searchPaths.add(defaultPath);
 			} catch (e) {
-				// squeltch
+				// squelch
 			}
 		}
 

@@ -64,7 +64,7 @@ export default class JDKInfoService extends DataServiceDispatcher {
 	async checkDir(dir) {
 		try {
 			return await detect(dir);
-		} catch (ex) {
+		} catch (e) {
 			// `dir` is not a jdk
 		}
 	}
@@ -80,6 +80,7 @@ export default class JDKInfoService extends DataServiceDispatcher {
 		// sort the jdks
 		if (jdks.length > 1) {
 			jdks.sort((a, b) => {
+				// TODO: need to perform an actual version compare
 				let r = 0; // version.compare(a.version, b.version);
 				if (r !== 0) {
 					return r;
@@ -94,13 +95,20 @@ export default class JDKInfoService extends DataServiceDispatcher {
 		}
 
 		// loop over all of the new jdks and set default version
-		let foundDefault = false;
-		for (const result of jdks) {
-			if (!foundDefault && (!engine.defaultPath || result.path === engine.defaultPath)) {
-				result.default = true;
-				foundDefault = true;
-			} else {
-				result.default = false;
+		if (jdks.length) {
+			let foundDefault = false;
+			for (const result of jdks) {
+				if (!foundDefault && (!engine.defaultPath || result.path === engine.defaultPath)) {
+					result.default = true;
+					foundDefault = true;
+				} else {
+					result.default = false;
+				}
+			}
+
+			// no default found the system path, so just select the last/newest one as the default
+			if (!foundDefault) {
+				jdks[jdks.length - 1].default = true;
 			}
 		}
 	}
@@ -118,7 +126,7 @@ export default class JDKInfoService extends DataServiceDispatcher {
 			try {
 				currentVersion = await registry.get('HKLM', key, 'CurrentVersion');
 			} catch (ex) {
-				// squeltch
+				// squelch
 			}
 			const defaultKey = currentVersion && `${key}\\${currentVersion}`;
 
@@ -136,7 +144,7 @@ export default class JDKInfoService extends DataServiceDispatcher {
 					.then(jdks => Object.assign.apply(null, jdks))
 					.catch(() => ({}));
 			} catch (ex) {
-				// squeltch
+				// squelch
 			}
 		};
 

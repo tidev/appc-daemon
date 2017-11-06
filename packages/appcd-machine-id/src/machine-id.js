@@ -56,7 +56,7 @@ export default function getMachineId(midFile) {
 					});
 			}
 		})
-		.catch(() => Promise.resolve()) // squeltch errors
+		.catch(() => {}) // squelch errors
 		.then(machineId => {
 			if (machineId) {
 				log('Native Machine ID: %s', highlight(machineId));

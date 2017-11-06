@@ -291,7 +291,7 @@ export default class PluginManager extends Dispatcher {
 				})
 			})
 			.catch(() => {
-				// squeltch
+				// squelch
 			});
 	}
 

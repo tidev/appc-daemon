@@ -10,10 +10,10 @@
   "coming soon": {
     "appcd-plugin-android": "*",
     "appcd-plugin-genymotion": "*",
-    "appcd-plugin-ios": "*",
     "appcd-plugin-titanium": "*"
   },
   "dependencies": {
+    "appcd-plugin-ios": "*",
     "appcd-plugin-jdk": "*",
     "appcd-plugin-system-info": "*",
     "appcd-plugin-windows": "*"

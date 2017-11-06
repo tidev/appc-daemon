@@ -34,7 +34,7 @@ export function loadCodes(dir) {
 				}
 			}
 		} catch (e) {
-			// squeltch
+			// squelch
 		}
 	}
 }

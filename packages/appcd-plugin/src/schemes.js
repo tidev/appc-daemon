@@ -412,7 +412,7 @@ export function detectScheme(dir) {
 			return PluginScheme;
 		}
 	} catch (e) {
-		// squeltch
+		// squelch
 	}
 
 	try {
@@ -420,7 +420,7 @@ export function detectScheme(dir) {
 			return PluginsDirScheme;
 		}
 	} catch (e) {
-		// squeltch
+		// squelch
 	}
 
 	try {
@@ -428,7 +428,7 @@ export function detectScheme(dir) {
 			return NestedPluginsDirScheme;
 		}
 	} catch (e) {
-		// squeltch
+		// squelch
 	}
 
 	return InvalidScheme;

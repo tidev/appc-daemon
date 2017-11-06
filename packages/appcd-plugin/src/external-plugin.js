@@ -548,7 +548,7 @@ export default class ExternalPlugin extends PluginBase {
 										try {
 											this.streams[sid].end();
 										} catch (e) {
-											// squeltch
+											// squelch
 										}
 										delete this.streams[sid];
 									}

@@ -180,7 +180,7 @@ class SystemInfoService extends DataServiceDispatcher {
 			const { stdout } = run(npm, 'prefix', '-g');
 			prefix = stdout.split('\n')[0].replace(/^"|"$/g, '');
 		} catch (e) {
-			// squeltch
+			// squelch
 		}
 
 		let npmPkgJson = expandPath(prefix, 'node_modules', 'npm', 'package.json');
@@ -208,7 +208,7 @@ class SystemInfoService extends DataServiceDispatcher {
 				const json = JSON.parse(fs.readFileSync(npmPkgJson));
 				ver = json && json.version;
 			} catch (e) {
-				// squeltch
+				// squelch
 			}
 
 			this.data.npm.version = ver || null;

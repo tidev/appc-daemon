@@ -1,0 +1,15 @@
+._*
+.babelrc
+.DS_Store
+.eslintrc
+.git*
+.travis.yml
+/coverage
+/docs
+gulpfile.js
+junit.xml
+node_modules
+npm-debug.log
+yarn-error.log
+/src
+/test
