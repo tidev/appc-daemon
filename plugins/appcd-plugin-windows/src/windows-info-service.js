@@ -18,9 +18,7 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 		this.data = gawk({
 			windows: {},
 			windowsphone: {},
-			os: {},
 			powershell: {},
-			selectedVisualStudio: {},
 			visualstudio: {},
 			emulators: {},
 			devices: []
@@ -29,7 +27,6 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 		await Promise.all([
 			this.wireupDetection('devices',              2500,       () => this.detectDevices()),
 			this.wireupDetection('emulators',            5 * 60000,  () => this.detectEmulators()),
-			this.wireupDetection('os',                   60000,      () => this.detectOS()),
 			this.wireupDetection('powershell',           60000,      () => this.detectPowershell()),
 			this.wireupDetection('visualstudio',         10 * 60000, () => this.detectVisualStudios()),
 			this.wireupDetection('winstore',             5 * 6000,   () => this.detectWinstore()),
@@ -62,19 +59,6 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 					this.wireupDetection(type, interval, callback);
 				}, interval);
 			});
-	}
-
-	detectOS() {
-		return new Promise((resolve, reject) => {
-			console.log('Detecting os info');
-			windowslib.env.detect({ bypassCache: true }, (err, { os }) => {
-				if (err) {
-					reject(err);
-				} else {
-					resolve({ name: 'os', result: os });
-				}
-			});
-		});
 	}
 
 	detectPowershell() {
