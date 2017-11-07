@@ -16,10 +16,10 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-detect": "0.1.0",
-    "appcd-dispatcher": "0.1.0",
-    "appcd-subprocess": "0.1.0",
-    "appcd-winreg": "0.1.0",
+    "appcd-detect": "0.1.4",
+    "appcd-dispatcher": "0.1.4",
+    "appcd-subprocess": "0.1.4",
+    "appcd-winreg": "0.1.4",
     "gawk": "^4.4.3",
     "jdklib": "^2.1.0",
     "source-map-support": "^0.5.0"

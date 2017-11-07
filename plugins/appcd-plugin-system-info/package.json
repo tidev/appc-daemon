@@ -16,11 +16,11 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-dispatcher": "0.1.0",
-    "appcd-fs": "0.1.0",
-    "appcd-path": "0.1.0",
-    "appcd-subprocess": "0.1.0",
-    "appcd-util": "0.1.1",
+    "appcd-dispatcher": "0.1.4",
+    "appcd-fs": "0.1.4",
+    "appcd-path": "0.1.4",
+    "appcd-subprocess": "0.1.4",
+    "appcd-util": "0.1.4",
     "gawk": "^4.4.3",
     "source-map-support": "^0.5.0"
   },
