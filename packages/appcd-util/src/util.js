@@ -103,6 +103,35 @@ export function assertNodeEngineVersion(pkgJson) {
 }
 
 /**
+ * A map of store names to cached results.
+ * @type {Object}
+ */
+const cacheStore = {};
+
+/**
+ * Calls a function and caches the result for future calls.
+ *
+ * @param {String} name - The name to cache the result under.
+ * @param {Boolean} [force] - When `true` skips the cache and invokes the function.
+ * @param {Function} callback - A function to call to get results.
+ * @returns {Promise<Object>}
+ */
+export async function cache(name, force, callback) {
+	await new Promise(setImmediate);
+
+	if (typeof force === 'function') {
+		callback = force;
+		force = false;
+	}
+
+	if (!force && cacheStore[name]) {
+		return cacheStore[name];
+	}
+
+	return cacheStore[name] = await tailgate(name, callback);
+}
+
+/**
  * Prevents a function from being called too many times.
  *
  * @param {Function} fn - The function to debounce.
@@ -287,30 +316,30 @@ export const pendingMutexes = {};
  * completes.
  *
  * @param {String} name - The mutex name.
- * @param {Function} fn - A function to call if value is not cached.
- * @returns {Promise} Resolves whatever value `fn` returns/resolves.
+ * @param {Function} callback - A function to call mutually exclusive.
+ * @returns {Promise} Resolves whatever value `callback` returns/resolves.
  */
-export function mutex(name, fn) {
+export function mutex(name, callback) {
 	// ensure this function is async
 	return new Promise(setImmediate)
 		.then(() => new Promise((resolve, reject) => {
-			// we want this promise to resolve as soon as `fn()` finishes
+			// we want this promise to resolve as soon as `callback()` finishes
 			if (typeof name !== 'string' || !name) {
 				return reject(new TypeError('Expected name to be a non-empty string'));
 			}
 
-			if (typeof fn !== 'function') {
-				return reject(new TypeError('Expected fn to be a function'));
+			if (typeof callback !== 'function') {
+				return reject(new TypeError('Expected callback to be a function'));
 			}
 
 			// if another function is current running, add this function to the queue and wait
 			if (pendingMutexes[name]) {
-				pendingMutexes[name].push({ fn, resolve, reject });
+				pendingMutexes[name].push({ callback, resolve, reject });
 				return;
 			}
 
 			// init the queue
-			pendingMutexes[name] = [ { fn, resolve, reject } ];
+			pendingMutexes[name] = [ { callback, resolve, reject } ];
 
 			// start a recursive function that drains the queue
 			(function next() {
@@ -324,7 +353,7 @@ export function mutex(name, fn) {
 				// call the function
 				let result;
 				try {
-					result = pending.fn();
+					result = pending.callback();
 				} catch (err) {
 					pending.reject(err);
 					return next();
@@ -395,21 +424,21 @@ export const pendingTailgaters = {};
  * running, then additional requests are queued. When the task completes, the result is immediately
  * shared with the queued up callers.
  *
- * @param {String} name - The mutex name.
- * @param {Function} fn - A function to call if value is not cached.
- * @returns {Promise} Resolves whatever value `fn` returns/resolves.
+ * @param {String} name - The tailgate name.
+ * @param {Function} callback - A function to call to get results.
+ * @returns {Promise} Resolves whatever value `callback` returns/resolves.
  */
-export function tailgate(name, fn) {
+export function tailgate(name, callback) {
 	// ensure this function is async
 	return new Promise(setImmediate)
 		.then(() => new Promise((resolve, reject) => {
-			// we want this promise to resolve as soon as `fn()` finishes
+			// we want this promise to resolve as soon as `callback()` finishes
 			if (typeof name !== 'string' || !name) {
 				return reject(new TypeError('Expected name to be a non-empty string'));
 			}
 
-			if (typeof fn !== 'function') {
-				return reject(new TypeError('Expected fn to be a function'));
+			if (typeof callback !== 'function') {
+				return reject(new TypeError('Expected callback to be a function'));
 			}
 
 			// if another function is current running, add this function to the queue and wait
@@ -432,7 +461,7 @@ export function tailgate(name, fn) {
 			// call the function
 			let result;
 			try {
-				result = fn();
+				result = callback();
 			} catch (err) {
 				return dispatch('reject', err);
 			}
