@@ -16,17 +16,17 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-agent": "^0.1.5",
-    "appcd-config": "^0.1.5",
-    "appcd-config-service": "^0.1.5",
-    "appcd-dispatcher": "^0.1.5",
-    "appcd-fs": "^0.1.5",
-    "appcd-fswatcher": "^0.1.5",
-    "appcd-logger": "^0.1.5",
-    "appcd-path": "^0.1.5",
-    "appcd-response": "^0.1.5",
-    "appcd-subprocess": "^0.1.5",
-    "appcd-util": "^0.1.5",
+    "appcd-agent": "0.1.5",
+    "appcd-config": "0.1.5",
+    "appcd-config-service": "0.1.5",
+    "appcd-dispatcher": "0.1.5",
+    "appcd-fs": "0.1.5",
+    "appcd-fswatcher": "0.1.5",
+    "appcd-logger": "0.1.5",
+    "appcd-path": "0.1.5",
+    "appcd-response": "0.1.5",
+    "appcd-subprocess": "0.1.5",
+    "appcd-util": "0.1.5",
     "builtin-modules": "^1.1.1",
     "gawk": "^4.4.3",
     "globule": "^1.2.0",
@@ -38,7 +38,7 @@
     "uuid": "^3.1.0"
   },
   "devDependencies": {
-    "appcd-gulp": "^0.1.5",
+    "appcd-gulp": "0.1.5",
     "fs-extra": "^4.0.2",
     "gulp": "^3.9.1",
     "tmp": "^0.0.33"

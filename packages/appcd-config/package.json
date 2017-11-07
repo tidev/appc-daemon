@@ -16,9 +16,9 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-fs": "^0.1.5",
-    "appcd-logger": "^0.1.5",
-    "appcd-path": "^0.1.5",
+    "appcd-fs": "0.1.5",
+    "appcd-logger": "0.1.5",
+    "appcd-path": "0.1.5",
     "babel-traverse": "^6.26.0",
     "babel-types": "^6.26.0",
     "babylon": "^6.17.4",
@@ -28,7 +28,7 @@
     "source-map-support": "^0.5.0"
   },
   "devDependencies": {
-    "appcd-gulp": "^0.1.5",
+    "appcd-gulp": "0.1.5",
     "gulp": "^3.9.1",
     "tmp": "^0.0.33"
   },

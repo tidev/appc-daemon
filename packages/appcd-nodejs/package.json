@@ -16,10 +16,10 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-fs": "^0.1.5",
-    "appcd-logger": "^0.1.5",
-    "appcd-request": "^0.1.5",
-    "appcd-util": "^0.1.5",
+    "appcd-fs": "0.1.5",
+    "appcd-logger": "0.1.5",
+    "appcd-request": "0.1.5",
+    "appcd-util": "0.1.5",
     "fs-extra": "^4.0.2",
     "progress": "^2.0.0",
     "source-map-support": "^0.5.0",
@@ -28,7 +28,7 @@
     "yauzl": "^2.9.1"
   },
   "devDependencies": {
-    "appcd-gulp": "^0.1.5",
+    "appcd-gulp": "0.1.5",
     "gulp": "^3.9.1"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",

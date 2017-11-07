@@ -16,15 +16,15 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-config": "^0.1.5",
-    "appcd-dispatcher": "^0.1.5",
-    "appcd-logger": "^0.1.5",
-    "appcd-path": "^0.1.5",
-    "appcd-response": "^0.1.5",
+    "appcd-config": "0.1.5",
+    "appcd-dispatcher": "0.1.5",
+    "appcd-logger": "0.1.5",
+    "appcd-path": "0.1.5",
+    "appcd-response": "0.1.5",
     "source-map-support": "^0.5.0"
   },
   "devDependencies": {
-    "appcd-gulp": "^0.1.5",
+    "appcd-gulp": "0.1.5",
     "gulp": "^3.9.1"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
