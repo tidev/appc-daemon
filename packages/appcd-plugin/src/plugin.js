@@ -33,10 +33,8 @@ export default class Plugin extends EventEmitter {
 	 * the external plugin to spawn the plugin host process.
 	 * @access public
 	 */
-	constructor(pluginPath, isParent) {
+	constructor(pluginPath, isParent = false) {
 		super();
-
-		console.log('isParent', isParent);
 
 		this.isParent = isParent;
 
