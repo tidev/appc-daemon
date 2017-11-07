@@ -139,6 +139,97 @@ describe('util', () => {
 		});
 	});
 
+	describe('cache()', () => {
+		it('should error if namespace is not a string', async () => {
+			try {
+				await util.cache();
+			} catch (e) {
+				expect(e).to.be.instanceof(TypeError);
+				expect(e.message).to.equal('Expected name to be a non-empty string');
+				return;
+			}
+
+			throw new Error('Expected rejection');
+		});
+
+		it('should error if callback is not a function', async () => {
+			try {
+				await util.cache('foo', 'bar');
+			} catch (e) {
+				expect(e).to.be.instanceof(TypeError);
+				expect(e.message).to.equal('Expected callback to be a function');
+				return;
+			}
+
+			throw new Error('Expected rejection');
+		});
+
+		it('should cache a value', async () => {
+			let counter = 0;
+			const obj = { foo: 'bar' };
+			const obj2 = { baz: 'pow' };
+
+			const value = await util.cache('foo', () => {
+				counter++;
+				return obj;
+			});
+			expect(counter).to.equal(1);
+			expect(value).to.be.an('object');
+			expect(value).to.deep.equal(obj);
+
+			const value2 = await util.cache('foo', () => {
+				counter++;
+				return obj2;
+			});
+			expect(counter).to.equal(1);
+			expect(value2).to.be.an('object');
+			expect(value2).to.deep.equal(obj);
+
+			const value3 = await util.cache('foo', true, () => {
+				counter++;
+				return obj2;
+			});
+			expect(counter).to.equal(2);
+			expect(value3).to.be.an('object');
+			expect(value3).to.deep.equal(obj2);
+		});
+
+		it('should queue multiple calls', async () => {
+			let counter = 0;
+			const obj = { foo: 'bar' };
+			const obj2 = { baz: 'pow' };
+
+			const results = await Promise.all([
+				util.cache('foo', true, async () => {
+					await util.sleep(250);
+					counter++;
+					return obj;
+				}),
+				util.cache('foo', true, async () => {
+					counter++;
+					return obj2;
+				})
+			]);
+
+			expect(counter).to.equal(1);
+			expect(results).to.deep.equal([ obj, obj ]);
+		});
+
+		it('should catch errors', async () => {
+			try {
+				const results = await util.cache('foo', true, () => {
+					throw new Error('oh snap');
+				});
+			} catch (e) {
+				expect(e).to.be.instanceof(Error);
+				expect(e.message).to.equal('oh snap');
+				return;
+			}
+
+			throw new Error('Expected rejection');
+		});
+	});
+
 	describe('debounce()', () => {
 		it('should debounce multiple calls using default timeout', function (done) {
 			this.slow(2000);
@@ -394,12 +485,12 @@ describe('util', () => {
 				});
 		});
 
-		it('should error if fn is not a function', done => {
+		it('should error if callback is not a function', done => {
 			util.mutex('foo', 'bar')
 				.then(() => done(new Error('Expected rejection')))
 				.catch(err => {
 					expect(err).to.be.an.instanceof(TypeError);
-					expect(err.message).to.equal('Expected fn to be a function');
+					expect(err.message).to.equal('Expected callback to be a function');
 					done();
 				});
 		});
@@ -580,12 +671,12 @@ describe('util', () => {
 				});
 		});
 
-		it('should error if fn is not a function', done => {
+		it('should error if callback is not a function', done => {
 			util.tailgate('foo', 'bar')
 				.then(() => done(new Error('Expected rejection')))
 				.catch(err => {
 					expect(err).to.be.an.instanceof(TypeError);
-					expect(err.message).to.equal('Expected fn to be a function');
+					expect(err.message).to.equal('Expected callback to be a function');
 					done();
 				});
 		});
