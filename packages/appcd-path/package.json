@@ -1,6 +1,6 @@
 {
   "name": "appcd-path",
-  "version": "0.1.0",
+  "version": "0.1.4",
   "description": "Library for working with file paths.",
   "main": "./dist/path",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
@@ -19,7 +19,7 @@
     "source-map-support": "^0.5.0"
   },
   "devDependencies": {
-    "appcd-gulp": "0.1.3",
+    "appcd-gulp": "0.1.4",
     "gulp": "^3.9.1",
     "tmp": "^0.0.33"
   },
