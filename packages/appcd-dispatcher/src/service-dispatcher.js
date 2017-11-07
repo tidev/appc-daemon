@@ -265,7 +265,7 @@ export default class ServiceDispatcher {
 				originalResponse.end();
 			}
 		} catch (e) {
-			// squeltch
+			// squelch
 		}
 
 		if (typeof this.instance.onUnsubscribe === 'function') {

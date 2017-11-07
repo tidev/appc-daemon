@@ -1,11 +1,11 @@
 {
-  "name": "appcd-detect",
+  "name": "appcd-plugin-ios",
   "version": "0.1.0",
-  "description": "A engine for detecting and watching filesystem directories for things of interest",
+  "description": "iOS service for the Appc Daemon.",
   "main": "./dist/index",
-  "author": "Axway, Inc. <npmjs@appcelerator.com>",
+  "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
-    "Chris Barber <cbarber@axway.com>"
+    "Chris Barber <cbarber@appcelerator.com>"
   ],
   "license": "Apache-2.0",
   "scripts": {
@@ -16,20 +16,15 @@
     "test": "gulp test"
   },
   "dependencies": {
+    "appcd-detect": "0.1.0",
     "appcd-dispatcher": "0.1.0",
-    "appcd-fs": "0.1.0",
-    "appcd-logger": "0.1.0",
-    "appcd-path": "0.1.0",
     "appcd-subprocess": "0.1.0",
-    "appcd-util": "0.1.1",
-    "appcd-winreg": "0.1.0",
+    "appcd-util": "0.1.0",
     "gawk": "^4.4.3",
     "source-map-support": "^0.5.0"
   },
   "devDependencies": {
     "appcd-gulp": "0.1.3",
-    "appcd-fswatcher": "0.1.0",
-    "fs-extra": "^4.0.2",
     "gulp": "^3.9.1"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
@@ -38,7 +33,8 @@
     "type": "git",
     "url": "git+https://github.com/appcelerator/appc-daemon.git"
   },
-  "engines": {
-    "node": ">=8.0.0"
+  "appcd-plugin": {
+    "name": "ios",
+    "type": "external"
   }
 }

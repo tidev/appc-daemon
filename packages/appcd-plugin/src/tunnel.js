@@ -6,7 +6,6 @@ import uuid from 'uuid';
 import { DispatcherContext, DispatcherError } from 'appcd-dispatcher';
 import { PassThrough } from 'stream';
 
-const { log } = appcdLogger(process.connected ? 'appcd:plugin:tunnel:child' : 'appcd:plugin:tunnel:parent');
 const { highlight, magenta } = appcdLogger.styles;
 
 /**
@@ -18,10 +17,11 @@ export default class Tunnel {
 	 * Creates a tunnel for the specified process.
 	 *
 	 * @param {ChildProcess|Process} proc - The process object.
+	 * @param {Boolean} isParent - Indicates that the tunnel is being created by the parent process.
 	 * @param {Function} handler - A callback to handle incoming requests.
 	 * @access public
 	 */
-	constructor(proc, handler) {
+	constructor(proc, isParent, handler) {
 		if (!proc || typeof proc.send !== 'function' || typeof proc.on !== 'function') {
 			throw new Error('Invalid process object');
 		}
@@ -30,7 +30,9 @@ export default class Tunnel {
 			throw new TypeError('Expected handler to be a function');
 		}
 
-		this.remoteName = process.connected ? 'parent' : proc.pid;
+		this.logger = appcdLogger(isParent ? 'appcd:plugin:tunnel:parent' : 'appcd:plugin:tunnel:child');
+
+		this.remoteName = isParent ? proc.pid : 'parent';
 
 		const onMessage = req => {
 			if (!req || typeof req !== 'object') {
@@ -79,7 +81,7 @@ export default class Tunnel {
 					message
 				};
 
-				log('Sending tunnel response to %s:', highlight(this.remoteName), response);
+				this.logger.log('Sending tunnel response to %s:', highlight(this.remoteName), response);
 				this.proc.send(response);
 			});
 		};
@@ -139,11 +141,11 @@ export default class Tunnel {
 					ctx.status = message.status;
 				}
 
-				log('Received response from %s:', highlight(this.remoteName), message);
+				this.logger.log('Received response from %s:', highlight(this.remoteName), message);
 
 				switch (message.type) {
 					case 'error':
-						log('Deleting request handler: %s', highlight(id), magenta(ctx.request.path));
+						this.logger.log('Deleting request handler: %s', highlight(id), magenta(ctx.request.path));
 						delete this.requests[id];
 
 						const status = message.statusCode || message.status;
@@ -179,14 +181,14 @@ export default class Tunnel {
 
 					case 'fin':
 						if (this.requests[id]) {
-							log('Deleting request handler: %s', highlight(id), magenta(ctx.request.path));
+							this.logger.log('Deleting request handler: %s', highlight(id), magenta(ctx.request.path));
 							delete this.requests[id];
 						}
 						ctx.response.end();
 						break;
 
 					default:
-						log('Deleting request handler: %s %s', highlight(id), magenta(ctx.request.path));
+						this.logger.log('Deleting request handler: %s %s', highlight(id), magenta(ctx.request.path));
 						delete this.requests[id];
 						if (message.status) {
 							ctx.status = message.status;
@@ -202,7 +204,7 @@ export default class Tunnel {
 				type: 'request'
 			};
 
-			log('Sending tunnel request to %s:', highlight(this.remoteName), req);
+			this.logger.log('Sending tunnel request to %s:', highlight(this.remoteName), req);
 			this.proc.send(req);
 		});
 	}

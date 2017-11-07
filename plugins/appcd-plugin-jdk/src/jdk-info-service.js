@@ -7,6 +7,12 @@ import { DataServiceDispatcher } from 'appcd-dispatcher';
 import { detect, jdkLocations } from 'jdklib';
 import { exe } from 'appcd-subprocess';
 
+const version = {
+	compare(a, b) {
+		return a === b ? 0 : a < b ? -1 : 1;
+	}
+};
+
 /**
  * The JDK info service.
  */
@@ -64,7 +70,7 @@ export default class JDKInfoService extends DataServiceDispatcher {
 	async checkDir(dir) {
 		try {
 			return await detect(dir);
-		} catch (ex) {
+		} catch (e) {
 			// `dir` is not a jdk
 		}
 	}
@@ -72,15 +78,15 @@ export default class JDKInfoService extends DataServiceDispatcher {
 	/**
 	 * Sorts the JDKs and assigns a default.
 	 *
-	 * @param {Array.<JDK>} jdks - An array of JDKs.
+	 * @param {Array.<JDK>} results - An array of JDKs.
 	 * @param {DetectEngine} engine - The detect engine instance.
 	 * @access private
 	 */
-	processResults(jdks, engine) {
+	processResults(results, engine) {
 		// sort the jdks
-		if (jdks.length > 1) {
-			jdks.sort((a, b) => {
-				let r = 0; // version.compare(a.version, b.version);
+		if (results.length > 1) {
+			results.sort((a, b) => {
+				let r = version.compare(a.version, b.version);
 				if (r !== 0) {
 					return r;
 				}
@@ -94,13 +100,20 @@ export default class JDKInfoService extends DataServiceDispatcher {
 		}
 
 		// loop over all of the new jdks and set default version
-		let foundDefault = false;
-		for (const result of jdks) {
-			if (!foundDefault && (!engine.defaultPath || result.path === engine.defaultPath)) {
-				result.default = true;
-				foundDefault = true;
-			} else {
-				result.default = false;
+		if (results.length) {
+			let foundDefault = false;
+			for (const result of results) {
+				if (!foundDefault && (!engine.defaultPath || result.path === engine.defaultPath)) {
+					result.default = true;
+					foundDefault = true;
+				} else {
+					result.default = false;
+				}
+			}
+
+			// no default found the system path, so just select the last/newest one as the default
+			if (!foundDefault) {
+				results[results.length - 1].default = true;
 			}
 		}
 	}
@@ -118,7 +131,7 @@ export default class JDKInfoService extends DataServiceDispatcher {
 			try {
 				currentVersion = await registry.get('HKLM', key, 'CurrentVersion');
 			} catch (ex) {
-				// squeltch
+				// squelch
 			}
 			const defaultKey = currentVersion && `${key}\\${currentVersion}`;
 
@@ -136,7 +149,7 @@ export default class JDKInfoService extends DataServiceDispatcher {
 					.then(jdks => Object.assign.apply(null, jdks))
 					.catch(() => ({}));
 			} catch (ex) {
-				// squeltch
+				// squelch
 			}
 		};
 

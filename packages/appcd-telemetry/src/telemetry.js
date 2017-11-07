@@ -250,7 +250,7 @@ export default class Telemetry extends Dispatcher {
 					try {
 						json.push(JSON.parse(fs.readFileSync(file)));
 					} catch (e) {
-						// Rather then squeltch the error we'll remove here
+						// Rather then squelch the error we'll remove here
 						log(`Failed to read ${highlight(file)}, removing`);
 						fs.unlinkSync(file);
 					}

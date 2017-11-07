@@ -268,7 +268,7 @@ export function stopServer({ cfg, force }) {
 					sendKill(pid).then(resolve, reject);
 					return;
 				} catch (e) {
-					// squeltch
+					// squelch
 				}
 
 				resolve(wasRunning);

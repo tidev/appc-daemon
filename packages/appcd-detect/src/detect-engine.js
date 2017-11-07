@@ -151,7 +151,7 @@ export default class DetectEngine extends EventEmitter {
 	 */
 	async start() {
 		try {
-			await this.scan(await this.getPaths());
+			await this.rescan();
 			if (this.opts.watch) {
 				this.refreshPaths();
 			}
@@ -184,6 +184,16 @@ export default class DetectEngine extends EventEmitter {
 	}
 
 	/**
+	 * Forces a rescan.
+	 *
+	 * @returns {Promise}
+	 * @access public
+	 */
+	async rescan() {
+		await this.scan(await this.getPaths());
+	}
+
+	/**
 	 * Determines the list of search paths and the default path.
 	 *
 	 * @returns {Promise<Object>}
@@ -211,7 +221,7 @@ export default class DetectEngine extends EventEmitter {
 				defaultPath = path.dirname(real(await which(this.opts.exe)));
 				searchPaths.add(defaultPath);
 			} catch (e) {
-				// squeltch
+				// squelch
 			}
 		}
 

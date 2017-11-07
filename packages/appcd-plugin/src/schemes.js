@@ -121,7 +121,7 @@ export class PluginScheme extends Scheme {
 		 */
 		this.checkIfPlugin = debounce(() => {
 			try {
-				this.plugin = new Plugin(this.path);
+				this.plugin = new Plugin(this.path, true);
 				this.emit('plugin-added', this.plugin);
 				return;
 			} catch (e) {
@@ -157,7 +157,7 @@ export class PluginScheme extends Scheme {
 			});
 
 		try {
-			this.plugin = new Plugin(this.path);
+			this.plugin = new Plugin(this.path, true);
 			this.emit('plugin-added', this.plugin);
 		} catch (e) {
 			warn(e);
@@ -412,7 +412,7 @@ export function detectScheme(dir) {
 			return PluginScheme;
 		}
 	} catch (e) {
-		// squeltch
+		// squelch
 	}
 
 	try {
@@ -420,7 +420,7 @@ export function detectScheme(dir) {
 			return PluginsDirScheme;
 		}
 	} catch (e) {
-		// squeltch
+		// squelch
 	}
 
 	try {
@@ -428,7 +428,7 @@ export function detectScheme(dir) {
 			return NestedPluginsDirScheme;
 		}
 	} catch (e) {
-		// squeltch
+		// squelch
 	}
 
 	return InvalidScheme;

@@ -12,7 +12,6 @@ import { debounce } from 'appcd-util';
 import { FSWatcher } from 'appcd-fswatcher';
 import { Readable } from 'stream';
 
-const logger = appcdLogger(process.connected ? 'appcd:plugin:external:child' : 'appcd:plugin:external:parent');
 const { alert, highlight, notice, ok } = appcdLogger.styles;
 
 /**
@@ -45,6 +44,8 @@ export default class ExternalPlugin extends PluginBase {
 		 * @type {Object}
 		 */
 		this.watchers = {};
+
+		this.appcdLogger = appcdLogger(this.plugin.isParent ? 'appcd:plugin:external:parent' : 'appcd:plugin:external:child');
 
 		this.globals.appcd.call = (path, data) => {
 			if (!this.tunnel) {
@@ -82,10 +83,10 @@ export default class ExternalPlugin extends PluginBase {
 			if (ctx.type !== 'event') {
 				msg += ` ${highlight(`${new Date() - startTime}ms`)}`;
 			}
-			logger.log(msg);
+			this.appcdLogger.log(msg);
 		};
 
-		logger.log('Sending request: %s', highlight(path));
+		this.appcdLogger.log('Sending request: %s', highlight(path));
 
 		return this.tunnel
 			.send(ctx)
@@ -104,7 +105,7 @@ export default class ExternalPlugin extends PluginBase {
 			})
 			.catch(err => {
 				if (err.status === 404) {
-					logger.log('Plugin did not have handler, passing to next route');
+					this.appcdLogger.log('Plugin did not have handler, passing to next route');
 				} else {
 					logRequest(err.status);
 				}
@@ -119,7 +120,7 @@ export default class ExternalPlugin extends PluginBase {
 	 * @access private
 	 */
 	onStart() {
-		return process.connected ? this.startChild() : this.startParent();
+		return this.plugin.isParent ? this.startParent() : this.startChild();
 	}
 
 	/**
@@ -140,13 +141,13 @@ export default class ExternalPlugin extends PluginBase {
 		// stop all filesystem watchers
 		const dirs = Object.keys(this.watchers);
 		if (dirs.length) {
-			logger.log(appcdLogger.pluralize(`Closing ${dirs.length} fs watcher`, dirs.length));
+			this.appcdLogger.log(appcdLogger.pluralize(`Closing ${dirs.length} fs watcher`, dirs.length));
 			for (const dir of dirs) {
 				this.watchers[dir].close();
 				delete this.watchers[dir];
 			}
 		} else {
-			logger.log('No open fs watchers');
+			this.appcdLogger.log('No open fs watchers');
 		}
 	}
 
@@ -160,14 +161,14 @@ export default class ExternalPlugin extends PluginBase {
 	startChild() {
 		// we need to override the global root dispatcher instance so that we can redirect all calls
 		// back to the parent process
-		logger.log('Patching root dispatcher');
+		this.appcdLogger.log('Patching root dispatcher');
 		const rootDispatcher = Dispatcher.root;
 		const origCall = rootDispatcher.call;
 		rootDispatcher.call = (path, payload) => {
 			return origCall.call(rootDispatcher, path, payload)
 				.catch(err => {
 					if (err instanceof DispatcherError && err.statusCode === 404) {
-						logger.log(`No route for ${highlight(path)} in child process, forwarding to parent process`);
+						this.appcdLogger.log(`No route for ${highlight(path)} in child process, forwarding to parent process`);
 						return this.globals.appcd.call(path, payload);
 					}
 					throw err;
@@ -184,18 +185,18 @@ export default class ExternalPlugin extends PluginBase {
 						type: 'unsubscribe'
 					});
 				} catch (err) {
-					logger.warn('Failed to unsubscribe from config');
-					logger.warn(err);
+					this.appcdLogger.warn('Failed to unsubscribe from config');
+					this.appcdLogger.warn(err);
 				}
 			}
 		};
 
 		// external plugin running in the plugin host
-		this.tunnel = new Tunnel(process, (req, send) => {
+		this.tunnel = new Tunnel(process, false, (req, send) => {
 			// message from parent process that needs to be dispatched
 
-			logger.log('Received request from parent:');
-			logger.log(req);
+			this.appcdLogger.log('Received request from parent:');
+			this.appcdLogger.log(req);
 
 			if (req.message.type === 'deactivate') {
 				return Promise.resolve()
@@ -211,7 +212,7 @@ export default class ExternalPlugin extends PluginBase {
 					});
 			}
 
-			logger.log('Dispatching %s', highlight(req.message.path), req.message.data);
+			this.appcdLogger.log('Dispatching %s', highlight(req.message.path), req.message.data);
 
 			this.dispatcher
 				.call(req.message.path, req.message.data)
@@ -258,8 +259,8 @@ export default class ExternalPlugin extends PluginBase {
 								}
 							})
 							.once('error', err => {
-								logger.error('Response stream error:');
-								logger.error(err);
+								this.appcdLogger.error('Response stream error:');
+								this.appcdLogger.error(err);
 								this.send({
 									message: err.message || err,
 									stack: err.stack,
@@ -304,13 +305,13 @@ export default class ExternalPlugin extends PluginBase {
 					}
 				});
 			}), err => {
-				this.logger.warn('Failed to subscribe to config');
-				this.logger.warn(err);
+				this.appcdLogger.warn('Failed to subscribe to config');
+				this.appcdLogger.warn(err);
 			})
 			.then(() => this.activate())
 			.then(() => this.tunnel.emit({ type: 'activated' }))
 			.catch(async (err) => {
-				this.logger.error(err);
+				this.appcdLogger.error(err);
 
 				await cancelConfigSubscription();
 
@@ -331,7 +332,7 @@ export default class ExternalPlugin extends PluginBase {
 	 * @access private
 	 */
 	startParent() {
-		logger.log('Spawning plugin host');
+		this.appcdLogger.log('Spawning plugin host');
 
 		const args = [
 			path.resolve(__dirname, '..', 'bin', 'appcd-plugin-host'),
@@ -346,15 +347,15 @@ export default class ExternalPlugin extends PluginBase {
 		}
 
 		const onFilesystemChange = debounce(() => {
-			logger.log('Detected change in plugin source file, stopping external plugin: %s', highlight(this.plugin.toString()));
+			this.appcdLogger.log('Detected change in plugin source file, stopping external plugin: %s', highlight(this.plugin.toString()));
 			this.stop()
 				.then(() => {
 					// reset the plugin error state
-					logger.log('Reseting error state');
+					this.appcdLogger.log('Reseting error state');
 					this.info.error = null;
 				})
 				.catch(err => {
-					logger.error('Failed to restart %s plugin: %s', highlight(this.plugin.toString()), err);
+					this.appcdLogger.error('Failed to restart %s plugin: %s', highlight(this.plugin.toString()), err);
 				});
 		}, 2000);
 
@@ -364,10 +365,10 @@ export default class ExternalPlugin extends PluginBase {
 				if (autoReload) {
 					const { directories } = this.plugin;
 					if (directories.size) {
-						logger.log('Watching plugin source directories for changes...');
+						this.appcdLogger.log('Watching plugin source directories for changes...');
 						for (const dir of directories) {
 							if (this.watchers[dir]) {
-								logger.log('Already watching plugin directory %s', highlight(dir));
+								this.appcdLogger.log('Already watching plugin directory %s', highlight(dir));
 							} else {
 								this.watchers[dir] = new FSWatcher(dir)
 									.on('change', onFilesystemChange);
@@ -377,7 +378,7 @@ export default class ExternalPlugin extends PluginBase {
 				}
 			})
 			.catch(err => {
-				logger.warn('Failed to wire up %s fs watcher: %s', this.plugin.toString(), err.message);
+				this.appcdLogger.warn('Failed to wire up %s fs watcher: %s', this.plugin.toString(), err.message);
 			})
 			.then(() => {
 				return Dispatcher
@@ -392,10 +393,10 @@ export default class ExternalPlugin extends PluginBase {
 					});
 			})
 			.then(ctx => new Promise((resolve, reject) => {
-				this.tunnel = new Tunnel(ctx.proc, (req, send) => {
+				this.tunnel = new Tunnel(ctx.proc, true, (req, send) => {
 					switch (req.type) {
 						case 'activated':
-							logger.log('External plugin is activated');
+							this.appcdLogger.log('External plugin is activated');
 							resolve();
 							break;
 
@@ -436,7 +437,7 @@ export default class ExternalPlugin extends PluginBase {
 										if (ctx.type !== 'event') {
 											msg += ` ${highlight(`${new Date() - startTime}ms`)}`;
 										}
-										logger.log(msg);
+										this.appcdLogger.log(msg);
 
 										if (response instanceof Readable) {
 											// we have a stream
@@ -450,7 +451,7 @@ export default class ExternalPlugin extends PluginBase {
 
 													if (message.type === 'subscribe') {
 														sid = message.sid;
-														logger.log('Detected new subscription: %s', highlight(sid));
+														this.appcdLogger.log('Detected new subscription: %s', highlight(sid));
 														this.streams[sid] = response;
 													}
 
@@ -470,8 +471,8 @@ export default class ExternalPlugin extends PluginBase {
 												.once('error', err => {
 													delete this.streams[sid];
 
-													logger.error('Response stream error:');
-													logger.error(err);
+													this.appcdLogger.error('Response stream error:');
+													this.appcdLogger.error(err);
 													send({
 														message: err.message || err,
 														stack: err.stack,
@@ -513,7 +514,7 @@ export default class ExternalPlugin extends PluginBase {
 
 							// case 'stdout':
 							// 	data.output.trim().split('\n').forEach(line => {
-							// 		logger.log('STDOUT', line);
+							// 		this.appcdLogger.log('STDOUT', line);
 							// 	});
 							// 	break;
 
@@ -522,8 +523,8 @@ export default class ExternalPlugin extends PluginBase {
 									data.output.trim().split('\n').some(line => {
 										const m = line.match(debuggerRegExp);
 										if (m) {
-											logger.log(`${this.plugin.toString()} ready to debug`);
-											logger.log(notice(`chrome-devtools://devtools/bundled/inspector.html?experiments=true&v8only=true&ws=localhost:${debugPort}/${m[1]}`));
+											this.appcdLogger.log(`${this.plugin.toString()} ready to debug`);
+											this.appcdLogger.log(notice(`chrome-devtools://devtools/bundled/inspector.html?experiments=true&v8only=true&ws=localhost:${debugPort}/${m[1]}`));
 
 											// we don't need to output any more
 											debugEnabled = false;
@@ -535,7 +536,7 @@ export default class ExternalPlugin extends PluginBase {
 								break;
 
 							case 'exit':
-								logger.log('Plugin host exited: %s', highlight(data.code));
+								this.appcdLogger.log('Plugin host exited: %s', highlight(data.code));
 								this.tunnel = null;
 								this.info.pid = null;
 								let err;
@@ -543,17 +544,17 @@ export default class ExternalPlugin extends PluginBase {
 								// close any open response streams (i.e. subscriptions)
 								const sids = Object.keys(this.streams);
 								if (sids.length) {
-									logger.log(appcdLogger.pluralize('orphaned stream', sids.length, true));
+									this.appcdLogger.log(appcdLogger.pluralize('orphaned stream', sids.length, true));
 									for (const sid of sids) {
 										try {
 											this.streams[sid].end();
 										} catch (e) {
-											// squeltch
+											// squelch
 										}
 										delete this.streams[sid];
 									}
 								} else {
-									logger.log('No orphan streams');
+									this.appcdLogger.log('No orphan streams');
 								}
 
 								if (data.code) {
@@ -575,7 +576,7 @@ export default class ExternalPlugin extends PluginBase {
 					});
 			}))
 			.catch(err => {
-				logger.error('Failed to activate plugin: %s', highlight(this.plugin.toString()));
+				this.appcdLogger.error('Failed to activate plugin: %s', highlight(this.plugin.toString()));
 				this.setState(states.STOPPED, err);
 				throw err;
 			});

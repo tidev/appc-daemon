@@ -71,11 +71,28 @@ module.exports = (opts) => {
 	 * lint tasks
 	 */
 	function lint(pattern, eslintFile='eslint.json') {
+		const baseConfig = require(path.resolve(__dirname, '..', eslintFile));
+
+		// check if the user has a custom .eslintrc in the root of the project
+		let custom = path.join(opts.projectDir, '.eslintrc');
+		if (fs.existsSync(custom)) {
+			(function merge(dest, src) {
+				for (const key of Object.keys(src)) {
+					if (src[key] && typeof src[key] === 'object' && !Array.isArray(src[key])) {
+						if (!dest[key] || typeof dest[key] !== 'object' || Array.isArray(dest[key])) {
+							dest[key] = {};
+						}
+						merge(dest[key], src[key]);
+					} else {
+						dest[key] = src[key];
+					}
+				}
+			}(baseConfig, JSON.parse(fs.readFileSync(custom))));
+		}
+
 		return gulp.src(pattern)
 			.pipe($.plumber())
-			.pipe($.eslint({
-				configFile: path.resolve(__dirname, '..', eslintFile)
-			}))
+			.pipe($.eslint({ baseConfig }))
 			.pipe($.eslint.format())
 			.pipe($.eslint.failAfterError());
 	}

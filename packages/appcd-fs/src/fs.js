@@ -31,7 +31,7 @@ export function isDir(dir) {
 	try {
 		return fs.statSync(dir).isDirectory();
 	} catch (e) {
-		// squeltch
+		// squelch
 	}
 	return false;
 }
@@ -46,7 +46,7 @@ export function isFile(file) {
 	try {
 		return fs.statSync(file).isFile();
 	} catch (e) {
-		// squeltch
+		// squelch
 	}
 	return false;
 }

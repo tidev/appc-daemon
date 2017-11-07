@@ -17,7 +17,6 @@ import { isDir, isFile } from 'appcd-fs';
 import { Readable } from 'stream';
 import { states } from './plugin-base';
 
-const logger = appcdLogger(process.connected ? 'appcd:plugin:host:plugin' : 'appcd:plugin');
 const { highlight } = appcdLogger.styles;
 
 let inactivityTimerID = 1;
@@ -30,10 +29,18 @@ export default class Plugin extends EventEmitter {
 	 * Determines if the specified directory is a plugin and then loads it's meta data.
 	 *
 	 * @param {String} pluginPath - The path to the plugin.
+	 * @param {Boolean} [isParent=false] - When `true` and this is an external plugin, it will let
+	 * the external plugin to spawn the plugin host process.
 	 * @access public
 	 */
-	constructor(pluginPath) {
+	constructor(pluginPath, isParent) {
 		super();
+
+		console.log('isParent', isParent);
+
+		this.isParent = isParent;
+
+		this.logger = appcdLogger(isParent ? 'appcd:plugin' : 'appcd:plugin:host:plugin');
 
 		/**
 		 * Internal plugin information storage. Since a `Plugin` object cannot be gawked, we store
@@ -204,9 +211,9 @@ export default class Plugin extends EventEmitter {
 
 		// initialize the plugin implementation
 		if (this.type === 'external') {
-			this.impl = new ExternalPlugin(this);
+			this.impl = new ExternalPlugin(this, this.isParent);
 		} else {
-			this.impl = new InternalPlugin(this);
+			this.impl = new InternalPlugin(this, this.isParent);
 		}
 
 		// watch the plugin info changes and merge them into the public plugin info
@@ -240,7 +247,7 @@ export default class Plugin extends EventEmitter {
 	 */
 	stop() {
 		if (this.inactivityTimer) {
-			logger.log('Resetting inactivity timer: %s', this.inactivityTimer.id);
+			this.logger.log('Resetting inactivity timer: %s', this.inactivityTimer.id);
 			clearTimeout(this.inactivityTimer);
 			this.inactivityTimer = null;
 		}
@@ -263,7 +270,7 @@ export default class Plugin extends EventEmitter {
 		});
 
 		if (this.inactivityTimer) {
-			logger.log('Resetting inactivity timer: %s', this.inactivityTimer.id);
+			this.logger.log('Resetting inactivity timer: %s', this.inactivityTimer.id);
 			clearTimeout(this.inactivityTimer);
 			this.inactivityTimer = null;
 		}
@@ -281,14 +288,14 @@ export default class Plugin extends EventEmitter {
 						// restart the inactivity timer
 						this.inactivityTimer = setTimeout(() => {
 							if (this.info.activeRequests === 0) {
-								logger.log('Deactivating plugin after %s of inactivity: %s', prettyMs(timeout, { verbose: true }), highlight(this.toString()));
+								this.logger.log('Deactivating plugin after %s of inactivity: %s', prettyMs(timeout, { verbose: true }), highlight(this.toString()));
 								this.stop();
 							}
 						}, timeout);
 
 						this.inactivityTimer.id = inactivityTimerID++;
 
-						logger.log('Setting inactivity timer for %s ms: %s', timeout, this.inactivityTimer.id);
+						this.logger.log('Setting inactivity timer for %s ms: %s', timeout, this.inactivityTimer.id);
 					}
 				});
 		};
