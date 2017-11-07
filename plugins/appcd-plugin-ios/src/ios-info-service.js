@@ -10,6 +10,13 @@ import { run, which } from 'appcd-subprocess';
 const KEYCHAIN_META_FILE = 1;
 const KEYCHAIN_PATHS = 2;
 const PROVISIONING_PROFILES_DIR = 3;
+const GLOBAL_SIM_PROFILES = 4;
+
+const version = {
+	compare(a, b) {
+		return a === b ? 0 : a < b ? -1 : 1;
+	}
+};
 
 /**
  * The iOS info service.
@@ -35,6 +42,10 @@ export default class iOSInfoService extends DataServiceDispatcher {
 			xcode: {}
 		});
 
+		/**
+		 * A map of buckets to a list of active fs watch subscription ids.
+		 * @type {Object}
+		 */
 		this.subscriptions = {};
 
 		if (cfg.ios) {
@@ -210,17 +221,18 @@ export default class iOSInfoService extends DataServiceDispatcher {
 			// squelch
 		}
 
-		const paths = [ ...ioslib.xcode.xcodeLocations ];
-		let defaultPath = null;
-
-		if (xcodeSelect) {
-			try {
+		const getDefaultXcodePath = async () => {
+			if (xcodeSelect) {
 				const { stdout } = await run(xcodeSelect, [ '--print-path' ]);
-				defaultPath = path.dirname(path.dirname(stdout.trim()));
-				paths.unshift(defaultPath);
-			} catch (e) {
-				// squelch
+				return path.resolve(stdout.trim(), '../..');
 			}
+			return null;
+		};
+
+		const paths = [ ...ioslib.xcode.xcodeLocations ];
+		const defaultPath = await getDefaultXcodePath();
+		if (defaultPath) {
+			paths.unshift(defaultPath);
 		}
 
 		this.xcodeDetectEngine = new DetectEngine({
@@ -229,26 +241,81 @@ export default class iOSInfoService extends DataServiceDispatcher {
 					return new ioslib.xcode.Xcode(dir);
 				} catch (e) {
 					// 'dir' is not an Xcode
-					if (dir === '/Applications/Xcode.app') {
-						console.error(e);
-					}
 				}
 			},
 			depth: 1,
 			multiple: true,
 			paths,
-			processResults(results, engine) {
-				//
+			processResults: async (results, engine) => {
+				if (results.length > 1) {
+					results.sort((a, b) => {
+						let r = version.compare(a.version, b.version);
+						if (r !== 0) {
+							return r;
+						}
+						return a.build.localeCompare(b.build);
+					});
+				}
+
+				if (results.length) {
+					const defaultPath = await getDefaultXcodePath();
+					let foundDefault = false;
+					if (defaultPath) {
+						for (const xcode of results) {
+							if (!foundDefault && defaultPath === xcode.path) {
+								xcode.default = true;
+								foundDefault = true;
+							} else {
+								xcode.default = false;
+							}
+						}
+					}
+					if (!foundDefault) {
+						results[results.length - 1].default = true;
+					}
+				}
 			},
 			redetect: true,
 			watch: true
 		});
 
 		this.xcodeDetectEngine.on('results', results => {
-			gawk.set(this.data.xcode, results);
+			const obj = {};
+			const xcodeIds = new Set(Object.keys(this.data.xcode));
+
+			// convert the array of Xcodes into an object of Xcode ids to the xcode info
+			// also start watching this Xcode's SDKs and simProfiles
+			for (const xcode of results) {
+				obj[xcode.id] = xcode;
+				xcodeIds.delete(xcode.id);
+
+				if (!this.subscriptions[xcode.id]) {
+					const paths = [
+						// sdks
+						path.join(xcode.path, 'Platforms/iPhoneOS.platform/Developer/SDKs'),
+						path.join(xcode.path, 'Platforms/WatchOS.platform/Developer/SDKs')
+					];
+
+					// device types and runtimes
+					for (const name of [ 'iPhoneSimulator', 'iPhoneOS', 'WatchSimulator', 'WatchOS' ]) {
+						paths.push(path.join(xcode.path, `Platforms/${name}.platform/Developer/Library/CoreSimulator/Profiles/DeviceTypes`));
+						paths.push(path.join(xcode.path, `Platforms/${name}.platform/Developer/Library/CoreSimulator/Profiles/Runtimes`));
+					}
+
+					this.watch(xcode.id, paths, () => this.xcodeDetectEngine.rescan());
+				}
+			}
+
+			for (const id of xcodeIds) {
+				this.unwatch(id);
+			}
+
+			gawk.set(this.data.xcode, obj);
 		});
 
 		await this.xcodeDetectEngine.start();
+
+		this.watch(GLOBAL_SIM_PROFILES, [ ioslib.xcode.globalSimProfilesPath ], () => this.xcodeDetectEngine.rescan());
 	}
 
 	/**
@@ -293,11 +360,16 @@ export default class iOSInfoService extends DataServiceDispatcher {
 	 * Unsubscribes a list of filesystem watcher subscription ids.
 	 *
 	 * @param {Number} type - The type of subscription.
-	 * @param {Array.<String>} sids - An array of subscription ids to unsubscribe.
+	 * @param {Array.<String>} [sids] - An array of subscription ids to unsubscribe. If not
+	 * specified, defaults to all sids for the specified types.
 	 * @returns {Promise}
 	 * @access private
 	 */
 	async unwatch(type, sids) {
+		if (!sids) {
+			sids = Object.keys(this.subscriptions[type]);
+		}
+
 		for (const sid of sids) {
 			await appcd.call('/appcd/fswatch', {
 				sid,
@@ -305,6 +377,10 @@ export default class iOSInfoService extends DataServiceDispatcher {
 			});
 
 			delete this.subscriptions[type][sid];
+		}
+
+		if (!Object.keys(this.subscriptions[type])) {
+			delete this.subscriptions[type];
 		}
 	}
 
@@ -327,7 +403,7 @@ export default class iOSInfoService extends DataServiceDispatcher {
 
 		if (this.subscriptions) {
 			for (const type of Object.keys(this.subscriptions)) {
-				await this.unwatch(type, Object.keys(this.subscriptions[type]));
+				await this.unwatch(type);
 			}
 		}
 	}

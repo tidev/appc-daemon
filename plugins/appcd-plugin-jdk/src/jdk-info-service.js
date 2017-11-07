@@ -7,6 +7,12 @@ import { DataServiceDispatcher } from 'appcd-dispatcher';
 import { detect, jdkLocations } from 'jdklib';
 import { exe } from 'appcd-subprocess';
 
+const version = {
+	compare(a, b) {
+		return a === b ? 0 : a < b ? -1 : 1;
+	}
+};
+
 /**
  * The JDK info service.
  */
@@ -72,16 +78,15 @@ export default class JDKInfoService extends DataServiceDispatcher {
 	/**
 	 * Sorts the JDKs and assigns a default.
 	 *
-	 * @param {Array.<JDK>} jdks - An array of JDKs.
+	 * @param {Array.<JDK>} results - An array of JDKs.
 	 * @param {DetectEngine} engine - The detect engine instance.
 	 * @access private
 	 */
-	processResults(jdks, engine) {
+	processResults(results, engine) {
 		// sort the jdks
-		if (jdks.length > 1) {
-			jdks.sort((a, b) => {
-				// TODO: need to perform an actual version compare
-				let r = 0; // version.compare(a.version, b.version);
+		if (results.length > 1) {
+			results.sort((a, b) => {
+				let r = version.compare(a.version, b.version);
 				if (r !== 0) {
 					return r;
 				}
@@ -95,9 +100,9 @@ export default class JDKInfoService extends DataServiceDispatcher {
 		}
 
 		// loop over all of the new jdks and set default version
-		if (jdks.length) {
+		if (results.length) {
 			let foundDefault = false;
-			for (const result of jdks) {
+			for (const result of results) {
 				if (!foundDefault && (!engine.defaultPath || result.path === engine.defaultPath)) {
 					result.default = true;
 					foundDefault = true;
@@ -108,7 +113,7 @@ export default class JDKInfoService extends DataServiceDispatcher {
 
 			// no default found the system path, so just select the last/newest one as the default
 			if (!foundDefault) {
-				jdks[jdks.length - 1].default = true;
+				results[results.length - 1].default = true;
 			}
 		}
 	}

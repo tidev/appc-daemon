@@ -33,8 +33,8 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 			this.wireupDetection('emulators',    60000 * 5,  () => this.detectEmulators()),
 			this.wireupDetection('powershell',   60000,      () => this.detectPowershell()),
 			this.wireupDetection('visualstudio', 60000 * 10, () => this.detectVisualStudios()),
-			this.wireupDetection('windows',      60000 / 2,  () => this.detectWindows())
-			this.wireupDetection('windowsphone', 60000 / 2,  () => this.detectWindowsPhone()),
+			this.wireupDetection('windows',      60000 / 2,  () => this.detectWindows()),
+			this.wireupDetection('windowsphone', 60000 / 2,  () => this.detectWindowsPhone())
 		]);
 	}
 
@@ -62,7 +62,7 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 	wireupDetection(type, interval, callback) {
 		return callback()
 			.then(result => {
-				console.log(`Updating data for ${name}`);
+				console.log(`Updating data for ${type}`);
 				gawk.set(this.data[type], result);
 			})
 			.catch(err => {

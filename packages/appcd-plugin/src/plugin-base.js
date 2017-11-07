@@ -5,7 +5,6 @@ import PluginModule from './plugin-module';
 
 import { EventEmitter } from 'events';
 
-const logger = appcdLogger(process.connected ? 'appcd:plugin:base:child' : 'appcd:plugin:base:parent');
 const { highlight } = appcdLogger.styles;
 
 /**
@@ -122,6 +121,8 @@ export default class PluginBase extends EventEmitter {
 
 			console: this.logger
 		};
+
+		this.appcdLogger = appcdLogger(plugin.isParent ? 'appcd:plugin:base:parent' : 'appcd:plugin:base:child');
 	}
 
 	/**
@@ -134,7 +135,7 @@ export default class PluginBase extends EventEmitter {
 	async activate() {
 		const { main } = this.plugin;
 
-		logger.log('Activating plugin: %s', highlight(main));
+		this.appcdLogger.log('Activating plugin: %s', highlight(main));
 
 		const exports = PluginModule.load(this, main);
 
@@ -177,19 +178,19 @@ export default class PluginBase extends EventEmitter {
 	 */
 	async start() {
 		if (this.info.state === states.STARTED) {
-			logger.log('Plugin %s already started', highlight(this.plugin.toString()));
+			this.appcdLogger.log('Plugin %s already started', highlight(this.plugin.toString()));
 			return;
 		}
 
 		if (this.info.state === states.STARTING) {
-			logger.log('Plugin %s already starting... waiting', highlight(this.plugin.toString()));
+			this.appcdLogger.log('Plugin %s already starting... waiting', highlight(this.plugin.toString()));
 			await this.waitUntil(states.STARTED);
 			return;
 		}
 
 		// if the plugin is stopping, then wait for it to finish stopping
 		if (this.info.state === states.STOPPING) {
-			logger.log('Plugin %s stopping... waiting to start', highlight(this.plugin.toString()));
+			this.appcdLogger.log('Plugin %s stopping... waiting to start', highlight(this.plugin.toString()));
 			await this.waitUntil(states.STOPPED);
 		}
 
@@ -215,29 +216,29 @@ export default class PluginBase extends EventEmitter {
 	async stop() {
 		// if the plugin is already stopped, then nothing to do
 		if (this.info.state === states.STOPPED) {
-			logger.log('Plugin %s already stopped', highlight(this.plugin.toString()));
+			this.appcdLogger.log('Plugin %s already stopped', highlight(this.plugin.toString()));
 			this.deactivate();
 			return;
 		}
 
 		// if the plugin is already stopping, then wait for it to be stopped before resolving
 		if (this.info.state === states.STOPPING) {
-			logger.log('Plugin %s already stopping... waiting', highlight(this.plugin.toString()));
+			this.appcdLogger.log('Plugin %s already stopping... waiting', highlight(this.plugin.toString()));
 			await this.waitUntil(states.STOPPED);
-			logger.log('Plugin %s finally stopped', highlight(this.plugin.toString()));
+			this.appcdLogger.log('Plugin %s finally stopped', highlight(this.plugin.toString()));
 			return;
 		}
 
 		// if the plugin is starting, then wait for it to finish starting
 		if (this.info.state === states.STARTING) {
-			logger.log('Plugin %s starting... waiting to start before stopping', highlight(this.plugin.toString()));
+			this.appcdLogger.log('Plugin %s starting... waiting to start before stopping', highlight(this.plugin.toString()));
 			await this.waitUntil(states.STARTED);
-			logger.log('Plugin %s started, stopping...', highlight(this.plugin.toString()));
+			this.appcdLogger.log('Plugin %s started, stopping...', highlight(this.plugin.toString()));
 		}
 
 		// the plugin is started and can now be stopped
 
-		logger.log('Deactivating plugin: %s', highlight(this.plugin.main));
+		this.appcdLogger.log('Deactivating plugin: %s', highlight(this.plugin.main));
 
 		this.setState(states.STOPPING);
 		await this.onStop();

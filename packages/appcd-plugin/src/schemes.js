@@ -121,7 +121,7 @@ export class PluginScheme extends Scheme {
 		 */
 		this.checkIfPlugin = debounce(() => {
 			try {
-				this.plugin = new Plugin(this.path);
+				this.plugin = new Plugin(this.path, true);
 				this.emit('plugin-added', this.plugin);
 				return;
 			} catch (e) {
@@ -157,7 +157,7 @@ export class PluginScheme extends Scheme {
 			});
 
 		try {
-			this.plugin = new Plugin(this.path);
+			this.plugin = new Plugin(this.path, true);
 			this.emit('plugin-added', this.plugin);
 		} catch (e) {
 			warn(e);
