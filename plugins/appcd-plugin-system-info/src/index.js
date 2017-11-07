@@ -28,6 +28,7 @@ class SystemInfoService extends DataServiceDispatcher {
 	activate(cfg) {
 		this.data = gawk({
 			android: null,
+			genymotion: null,
 			ios: null,
 			jdks: null,
 			node: {
@@ -57,6 +58,9 @@ class SystemInfoService extends DataServiceDispatcher {
 
 			// subscribe to android service
 			this.wireup('android', '/android/latest/info'),
+
+			// subscribe to genymotion service
+			this.wireup('genymotion', '/genymotion/latest/info'),
 
 			// subscribe to ios service
 			process.platform === 'darwin' && this.wireup('ios', '/ios/latest/info'),
