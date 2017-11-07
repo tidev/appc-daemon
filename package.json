@@ -23,7 +23,7 @@
     "ignore": "^3.3.7",
     "istanbul": "^0.4.5",
     "lerna": "^2.5.1",
-    "nsp": "^3.1.0",
+    "nsp": "^2.8.1",
     "promise-limit": "^2.5.0",
     "retire": "^1.4.0",
     "run-sequence": "^2.2.0",
