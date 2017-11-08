@@ -21,7 +21,7 @@ class SystemInfoService extends DataServiceDispatcher {
 	/**
 	 * Initializes the OS info and subscribes to the various specific information services.
 	 *
-	 * @param {Config} cfg - An Appc Daemon config object
+	 * @param {Config} cfg - An Appc Daemon config object.
 	 * @returns {Promise}
 	 * @access public
 	 */

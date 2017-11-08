@@ -1,4 +1,0 @@
-{
-	"presets": ["nodejs-lts"],
-	"plugins": ["transform-decorators-legacy"]
-}

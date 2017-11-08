@@ -7,6 +7,10 @@ import * as ioslib from 'ioslib2';
 import { DataServiceDispatcher } from 'appcd-dispatcher';
 import { mergeDeep } from 'appcd-util';
 
+/**
+ * Constants to identify the subscription id list.
+ * @type {Number}
+ */
 const KEYCHAIN_META_FILE        = 1;
 const KEYCHAIN_PATHS            = 2;
 const PROVISIONING_PROFILES_DIR = 3;
@@ -26,7 +30,7 @@ export default class iOSInfoService extends DataServiceDispatcher {
 	/**
 	 * Starts the detect all macOS and iOS related information.
 	 *
-	 * @param {Config} cfg - An Appc Daemon config object
+	 * @param {Config} cfg - An Appc Daemon config object.
 	 * @returns {Promise}
 	 * @access public
 	 */

@@ -4,7 +4,7 @@ iOS service for the Appc Daemon.
 
 ## Info
 
-The `info` service uses [ioslib2](https://github.com/appcelerator/ioslib2) to detect the installed
+The `info` service uses [ioslib](https://github.com/appcelerator/ioslib) to detect the installed
 Xcodes, Simulators, certs, etc and returns the information.
 
 ```js
