@@ -13,10 +13,10 @@
     "appcd-plugin-titanium": "*"
   },
   "dependencies": {
-    "appcd-plugin-ios": "0.1.5",
-    "appcd-plugin-jdk": "0.1.5",
-    "appcd-plugin-system-info": "0.1.5",
-    "appcd-plugin-windows": "0.1.5"
+    "appcd-plugin-ios": "*",
+    "appcd-plugin-jdk": "*",
+    "appcd-plugin-system-info": "*",
+    "appcd-plugin-windows": "*"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
