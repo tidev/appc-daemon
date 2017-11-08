@@ -70,8 +70,8 @@ export default class FSWatchManager extends ServiceDispatcher {
 			throw new DispatcherError(codes.MISSING_ARGUMENT, 'Missing required parameter "%s"', 'path');
 		}
 
-		logger.log('Starting FSWatcher: %s', highlight(path));
 		const { depth, recursive } = ctx.request.data || {};
+		logger.log('Starting FSWatcher: %s (depth=%s, recursive=%s)', highlight(path), depth || 0, !!recursive);
 
 		const watcher = new FSWatcher(path, { depth, recursive });
 		watcher.on('change', publish);
