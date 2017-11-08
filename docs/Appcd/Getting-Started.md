@@ -14,12 +14,19 @@ sudo npm install -g appcd
 
 ### Installing from Github
 
-#### Dependencies
+#### Requirements
 
 On client machines, Node.js 8 or newer is required.
 
 However, developing on the Appc Daemon requires Node.js >=8.7.0, Gulp 3.9 (but NOT Gulp 4.x),
-Yarn >=1.2, and Lerna.
+Yarn >=1.2, and Lerna >=2.5.
+
+For development, you will need at least 400 MB of free space for all of the code, the local git
+checkout, and all of the npm dependencies and dev dependencies.
+
+> :bulb: Note: The Appc Daemon use Yarn Workspaces which optimizes the `node_modules` directory and
+> saves a significant amount of disk space. Without workspaces, a development checkout is
+> approximately 2.3 GB, however with workspaces this size drops to 371 MB.
 
 ##### Node.js
 
