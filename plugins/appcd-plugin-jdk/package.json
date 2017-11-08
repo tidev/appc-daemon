@@ -1,6 +1,6 @@
 {
   "name": "appcd-plugin-jdk",
-  "version": "0.1.5",
+  "version": "1.0.0",
   "description": "JDK service for the Appc Daemon.",
   "main": "./dist/index",
   "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",

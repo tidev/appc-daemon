@@ -1,6 +1,6 @@
 {
   "name": "appcd-plugin-ios",
-  "version": "0.1.5",
+  "version": "1.0.0",
   "description": "iOS service for the Appc Daemon.",
   "main": "./dist/index",
   "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
@@ -20,7 +20,7 @@
     "appcd-dispatcher": "0.1.5",
     "appcd-util": "0.1.5",
     "gawk": "^4.4.3",
-    "ioslib2": "^2.0.0-beta.1",
+    "ioslib2": "^2.0.0-beta.2",
     "source-map-support": "^0.5.0"
   },
   "devDependencies": {

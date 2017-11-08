@@ -40,6 +40,10 @@ const fixReasons = {
 	nuke: 'reinstall'
 };
 
+const dontUpdate = [
+	'nsp'
+];
+
 process.env.FORCE_COLOR = 1;
 
 if (process.argv.indexOf('--silent') !== -1) {
@@ -1029,15 +1033,19 @@ function processPackages(packages) {
 						const range = dep.installed ? `<=${dep.installed}` : (semver.validRange(dep.required) || '');
 						const version = dep.stable || dep.latest;
 						if (version && range && !semver.satisfies(version, range)) {
-							const m = dep.required.match(/^(\^|~|>|>=)/);
-							results.packagesToUpdate.push({
-								path: key,
-								name: name,
-								current: dep.required,
-								updated: (m ? m[1] : '') + dep.stable
-							});
-							if (!dep.status) {
-								dep.status = 'out-of-date';
+							if (dontUpdate.indexOf(name) === -1) {
+								const m = dep.required.match(/^(\^|~|>|>=)/);
+								results.packagesToUpdate.push({
+									path: key,
+									name: name,
+									current: dep.required,
+									updated: (m ? m[1] : '') + dep.stable
+								});
+								if (!dep.status) {
+									dep.status = 'out-of-date';
+								}
+							} else {
+								dep.status = 'skipping latest';
 							}
 						}
 					}
