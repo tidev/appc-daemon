@@ -5,12 +5,13 @@ import path from 'path';
 import * as ioslib from 'ioslib2';
 
 import { DataServiceDispatcher } from 'appcd-dispatcher';
-import { run, which } from 'appcd-subprocess';
+import { mergeDeep } from 'appcd-util';
 
-const KEYCHAIN_META_FILE = 1;
-const KEYCHAIN_PATHS = 2;
+const KEYCHAIN_META_FILE        = 1;
+const KEYCHAIN_PATHS            = 2;
 const PROVISIONING_PROFILES_DIR = 3;
-const GLOBAL_SIM_PROFILES = 4;
+const GLOBAL_SIM_PROFILES       = 4;
+const SIMULATOR_PATH            = 5;
 
 const version = {
 	compare(a, b) {
@@ -49,7 +50,7 @@ export default class iOSInfoService extends DataServiceDispatcher {
 		this.subscriptions = {};
 
 		if (cfg.ios) {
-			Object.assign(ioslib.options.executables, cfg.ios.executables);
+			mergeDeep(ioslib.options, cfg.ios);
 		}
 
 		await this.initCerts();
@@ -57,7 +58,26 @@ export default class iOSInfoService extends DataServiceDispatcher {
 		await this.initKeychains();
 		await this.initProvisioningProfiles();
 		await this.initTeams();
-		await this.initXcodes();
+		await this.initXcodeAndSimulators();
+	}
+
+	/**
+	 * Returns a config setting using the dot-notation name.
+	 *
+	 * @param {String} name - The config setting name.
+	 * @returns {*}
+	 * @access private
+	 */
+	getConfig(name) {
+		let obj = this.cfg;
+		try {
+			for (const key of name.split('.')) {
+				obj = obj[key];
+			}
+		} catch (e) {
+			return null;
+		}
+		return obj;
 	}
 
 	/**
@@ -95,28 +115,32 @@ export default class iOSInfoService extends DataServiceDispatcher {
 	async initKeychains() {
 		this.data.keychains = await ioslib.keychains.getKeychains();
 
-		this.watch(KEYCHAIN_META_FILE, [ ioslib.keychains.keychainMetaFile ], async () => {
-			console.log('Keychain plist changed, refreshing keychains and possibly certs');
+		this.watch({
+			type: KEYCHAIN_META_FILE,
+			paths: [ ioslib.keychains.keychainMetaFile ],
+			handler: async () => {
+				console.log('Keychain plist changed, refreshing keychains and possibly certs');
 
-			const keychains = await ioslib.keychains.getKeychains();
+				const keychains = await ioslib.keychains.getKeychains();
 
-			// did the keychains change?
-			if (JSON.stringify(this.data.keychains) !== JSON.stringify(keychains)) {
-				const k = this.data.keychains;
-				k.splice.apply(k, [ 0, k.length ].concat(keychains));
+				// did the keychains change?
+				if (JSON.stringify(this.data.keychains) !== JSON.stringify(keychains)) {
+					const k = this.data.keychains;
+					k.splice.apply(k, [ 0, k.length ].concat(keychains));
 
-				// get a list of all existing subscriptions
-				const sids = this.subscriptions[KEYCHAIN_PATHS] ? Object.keys(this.subscriptions[KEYCHAIN_PATHS]) : [];
+					// get a list of all existing subscriptions
+					const sids = this.subscriptions[KEYCHAIN_PATHS] ? Object.keys(this.subscriptions[KEYCHAIN_PATHS]) : [];
 
-				// watch the new paths before unsubscribing from the existing watchers so that we
-				// don't have to teardown all of the watchers and re-initialize them
-				this.watchKeychainPaths();
+					// watch the new paths before unsubscribing from the existing watchers so that we
+					// don't have to teardown all of the watchers and re-initialize them
+					this.watchKeychainPaths();
 
-				// unwatch the old subscriptions
-				await this.unwatch(KEYCHAIN_PATHS, sids);
+					// unwatch the old subscriptions
+					await this.unwatch(KEYCHAIN_PATHS, sids);
 
-				console.log('Refreshing certs');
-				gawk.set(this.data.certs, await ioslib.certs.getCerts());
+					console.log('Refreshing certs');
+					gawk.set(this.data.certs, await ioslib.certs.getCerts());
+				}
 			}
 		});
 	}
@@ -128,9 +152,13 @@ export default class iOSInfoService extends DataServiceDispatcher {
 	 * @access private
 	 */
 	watchKeychainPaths() {
-		this.watch(KEYCHAIN_PATHS, this.data.keychains.map(k => k.path), async () => {
-			console.log('Refreshing certs');
-			gawk.set(this.data.certs, await ioslib.certs.getCerts());
+		this.watch({
+			type: KEYCHAIN_PATHS,
+			paths: this.data.keychains.map(k => k.path),
+			handler: async () => {
+				console.log('Refreshing certs');
+				gawk.set(this.data.certs, await ioslib.certs.getCerts());
+			}
 		});
 	}
 
@@ -143,59 +171,63 @@ export default class iOSInfoService extends DataServiceDispatcher {
 	async initProvisioningProfiles() {
 		gawk.set(this.data.provisioning, await ioslib.provisioning.getProvisioningProfiles());
 
-		this.watch(PROVISIONING_PROFILES_DIR, [ ioslib.provisioning.getProvisioningProfileDir() ], message => {
-			return Promise.resolve()
-				.then(async () => {
-					const { provisioning } = this.data;
+		this.watch({
+			type: PROVISIONING_PROFILES_DIR,
+			paths: [ ioslib.provisioning.getProvisioningProfileDir() ],
+			handler(message) {
+				return Promise.resolve()
+					.then(async () => {
+						const { provisioning } = this.data;
 
-					if (message.action === 'delete') {
-						// find the provisioning file in the data store and remove it
-						for (const type of Object.keys(provisioning)) {
-							for (let i = 0, len = provisioning[type].length; i < len; i++) {
-								if (provisioning[type][i].file === message.file) {
-									console.log('Removing provisioning profile:', message.file);
-									provisioning[type].splice(i, 1);
-									return provisioning;
+						if (message.action === 'delete') {
+							// find the provisioning file in the data store and remove it
+							for (const type of Object.keys(provisioning)) {
+								for (let i = 0, len = provisioning[type].length; i < len; i++) {
+									if (provisioning[type][i].file === message.file) {
+										console.log('Removing provisioning profile:', message.file);
+										provisioning[type].splice(i, 1);
+										return provisioning;
+									}
 								}
 							}
+
+							// couldn't find it, so return
+							return;
 						}
 
-						// couldn't find it, so return
-						return;
-					}
+						// add or change
+						try {
+							const profile = await ioslib.provisioning.parseProvisioningProfileFile(message.file);
+							if (!provisioning[profile.type]) {
+								provisioning[profile.type] = {};
+							}
 
-					// add or change
-					try {
-						const profile = await ioslib.provisioning.parseProvisioningProfileFile(message.file);
-						if (!provisioning[profile.type]) {
-							provisioning[profile.type] = {};
-						}
-
-						if (message.action === 'change') {
-							// try to find the original
-							for (const pp of provisioning[profile.type]) {
-								if (pp.file === message.file) {
-									console.log('Updating provisioning profile:', message.file);
-									gawk.set(pp, profile);
-									return provisioning;
+							if (message.action === 'change') {
+								// try to find the original
+								for (const pp of provisioning[profile.type]) {
+									if (pp.file === message.file) {
+										console.log('Updating provisioning profile:', message.file);
+										gawk.set(pp, profile);
+										return provisioning;
+									}
 								}
 							}
-						}
 
-						console.log('Adding provisioning profile:', message.file);
-						provisioning[profile.type].push(profile);
-						return provisioning;
-					} catch (ex) {
-						// squelch
-					}
-				})
-				.then(provisioning => {
-					// if the list of provisioning profiles was changed, then rebuild the list of teams
-					if (provisioning) {
-						console.log('Refreshing teams');
-						gawk.set(this.data.teams, ioslib.teams.buildTeamsFromProvisioningProfiles(provisioning));
-					}
-				});
+							console.log('Adding provisioning profile:', message.file);
+							provisioning[profile.type].push(profile);
+							return provisioning;
+						} catch (ex) {
+							// squelch
+						}
+					})
+					.then(provisioning => {
+						// if the list of provisioning profiles was changed, then rebuild the list of teams
+						if (provisioning) {
+							console.log('Refreshing teams');
+							gawk.set(this.data.teams, ioslib.teams.buildTeamsFromProvisioningProfiles(provisioning));
+						}
+					});
+			}
 		});
 	}
 
@@ -213,24 +245,9 @@ export default class iOSInfoService extends DataServiceDispatcher {
 	 *
 	 * @returns {Promise}
 	 */
-	async initXcodes() {
-		let xcodeSelect;
-		try {
-			xcodeSelect = await which('xcode-select');
-		} catch (e) {
-			// squelch
-		}
-
-		const getDefaultXcodePath = async () => {
-			if (xcodeSelect) {
-				const { stdout } = await run(xcodeSelect, [ '--print-path' ]);
-				return path.resolve(stdout.trim(), '../..');
-			}
-			return null;
-		};
-
+	async initXcodeAndSimulators() {
 		const paths = [ ...ioslib.xcode.xcodeLocations ];
-		const defaultPath = await getDefaultXcodePath();
+		const defaultPath = await ioslib.xcode.getDefaultXcodePath(this.get('ios.executables.xcodeselect'));
 		if (defaultPath) {
 			paths.unshift(defaultPath);
 		}
@@ -258,7 +275,7 @@ export default class iOSInfoService extends DataServiceDispatcher {
 				}
 
 				if (results.length) {
-					const defaultPath = await getDefaultXcodePath();
+					const defaultPath = await ioslib.xcode.getDefaultXcodePath(this.get('ios.executables.xcodeselect'));
 					let foundDefault = false;
 					if (defaultPath) {
 						for (const xcode of results) {
@@ -279,6 +296,7 @@ export default class iOSInfoService extends DataServiceDispatcher {
 			watch: true
 		});
 
+		// listen for xcode results
 		this.xcodeDetectEngine.on('results', results => {
 			const obj = {};
 			const xcodeIds = new Set(Object.keys(this.data.xcode));
@@ -302,7 +320,13 @@ export default class iOSInfoService extends DataServiceDispatcher {
 						paths.push(path.join(xcode.path, `Platforms/${name}.platform/Developer/Library/CoreSimulator/Profiles/Runtimes`));
 					}
 
-					this.watch(xcode.id, paths, () => this.xcodeDetectEngine.rescan());
+					this.watch({
+						type: xcode.id,
+						paths,
+						handler() {
+							this.xcodeDetectEngine.rescan();
+						}
+					});
 				}
 			}
 
@@ -313,24 +337,54 @@ export default class iOSInfoService extends DataServiceDispatcher {
 			gawk.set(this.data.xcode, obj);
 		});
 
-		await this.xcodeDetectEngine.start();
+		// if xcodes change, then update the simulators
+		gawk.watch(this.data.xcode, async (xcodeInfo) => {
+			gawk.set(this.data.simulators, await ioslib.simulator.getSimulators(xcodeInfo));
+		});
 
-		this.watch(GLOBAL_SIM_PROFILES, [ ioslib.xcode.globalSimProfilesPath ], () => this.xcodeDetectEngine.rescan());
+		// watch the global simulator profiles directory for changes
+		this.watch({
+			type: GLOBAL_SIM_PROFILES,
+			paths: [ ioslib.xcode.globalSimProfilesPath ],
+			handler() {
+				this.xcodeDetectEngine.rescan();
+			}
+		});
+
+		this.watch({
+			type: SIMULATOR_PATH,
+			paths: [ ioslib.simulator.simulatorPath ],
+			depth: 1,
+			handler: async () => {
+				gawk.set(this.data.simulators, await ioslib.simulator.getSimulators(this.data.xcode));
+			}
+		});
+
+		// detect the Xcodes which in turn will detect the simulators
+		await this.xcodeDetectEngine.start();
 	}
 
 	/**
 	 * Subscribes to filesystem events for the specified paths.
 	 *
-	 * @param {String} type - The type of subscription.
-	 * @param {Array.<String>} paths - One or more paths to watch.
-	 * @param {Function} handler - A callback function to fire when a fs event occurs.
+	 * @param {Object} params - Various parameters.
+	 * @param {String} params.type - The type of subscription.
+	 * @param {Array.<String>} params.paths - One or more paths to watch.
+	 * @param {Function} params.handler - A callback function to fire when a fs event occurs.
+	 * @param {Number} [params.depth] - The max depth to recursively watch.
 	 * @access private
 	 */
-	watch(type, paths, handler) {
+	watch({ type, paths, handler, depth }) {
 		for (const path of paths) {
+			const data = { path };
+			if (depth) {
+				data.recursive = true;
+				data.depth = 1;
+			}
+
 			appcd
 				.call('/appcd/fswatch', {
-					data: { path },
+					data,
 					type: 'subscribe'
 				})
 				.then(ctx => {

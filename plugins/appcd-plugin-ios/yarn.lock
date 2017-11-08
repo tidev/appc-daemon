@@ -147,27 +147,6 @@ ansi-styles@^3.1.0:
   dependencies:
     color-convert "^1.9.0"
 
-appcd-detect@0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/appcd-detect/-/appcd-detect-0.1.0.tgz#87f3072ac5b3c9913c986d432aa2cadcad2ae3a7"
-  dependencies:
-    appcd-dispatcher "0.1.0"
-    appcd-logger "0.1.0"
-    appcd-path "0.1.0"
-    appcd-util "0.1.0"
-    gawk "^4.3.0"
-    source-map-support "^0.5.0"
-
-appcd-dispatcher@0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/appcd-dispatcher/-/appcd-dispatcher-0.1.0.tgz#0ef8c21496d63612ede02ca408aee45ed98da6e4"
-  dependencies:
-    appcd-logger "0.1.0"
-    appcd-response "0.1.0"
-    path-to-regexp "^2.0.0"
-    source-map-support "^0.4.16"
-    uuid "^3.1.0"
-
 appcd-dispatcher@0.1.4:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/appcd-dispatcher/-/appcd-dispatcher-0.1.4.tgz#8790b6c7e746ebbe44658e30a337ec87de086318"
@@ -178,12 +157,6 @@ appcd-dispatcher@0.1.4:
     path-to-regexp "^2.1.0"
     source-map-support "^0.5.0"
     uuid "^3.1.0"
-
-appcd-fs@0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/appcd-fs/-/appcd-fs-0.1.0.tgz#b5c4325f529ae0af97d99f87a31a5acada07cabe"
-  dependencies:
-    source-map-support "^0.4.16"
 
 appcd-fs@0.1.4, appcd-fs@^0.1.4:
   version "0.1.4"
@@ -228,34 +201,12 @@ appcd-gulp@0.1.3:
     sinon "^4.0.1"
     sinon-chai "^2.14.0"
 
-appcd-logger@0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/appcd-logger/-/appcd-logger-0.1.0.tgz#f4bf70c87560fcf7f09a4c7eb9cbd007b4f3f4ed"
-  dependencies:
-    snooplogg "^1.8.0"
-    source-map-support "^0.4.16"
-
 appcd-logger@0.1.4:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/appcd-logger/-/appcd-logger-0.1.4.tgz#c3c41ecff127e42417aea229fb92a36584d2356b"
   dependencies:
     snooplogg "^1.8.0"
     source-map-support "^0.5.0"
-
-appcd-nodejs@0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/appcd-nodejs/-/appcd-nodejs-0.1.0.tgz#ec6c9446dd4a8e8c1344e298586e66d4a75388da"
-  dependencies:
-    appcd-fs "0.1.0"
-    appcd-logger "0.1.0"
-    appcd-request "0.1.0"
-    appcd-util "0.1.0"
-    fs-extra "^4.0.1"
-    progress "^2.0.0"
-    source-map-support "^0.4.16"
-    tar-stream "^1.5.4"
-    tmp "^0.0.33"
-    yauzl "^2.8.0"
 
 appcd-nodejs@0.1.4:
   version "0.1.4"
@@ -272,27 +223,11 @@ appcd-nodejs@0.1.4:
     tmp "^0.0.33"
     yauzl "^2.9.1"
 
-appcd-path@0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/appcd-path/-/appcd-path-0.1.0.tgz#162027668f26949f4a32042372a20559aad81b96"
-  dependencies:
-    source-map-support "^0.4.16"
-
 appcd-path@0.1.4, appcd-path@^0.1.4:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/appcd-path/-/appcd-path-0.1.4.tgz#380820e8243275149f1be550d1d9585a30ad231e"
   dependencies:
     source-map-support "^0.5.0"
-
-appcd-request@0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/appcd-request/-/appcd-request-0.1.0.tgz#04fa9a65947feaa4f1268d56655b1bb8247bcfbe"
-  dependencies:
-    appcd-dispatcher "0.1.0"
-    appcd-fs "0.1.0"
-    appcd-logger "0.1.0"
-    request "^2.81.0"
-    source-map-support "^0.4.16"
 
 appcd-request@0.1.4:
   version "0.1.4"
@@ -304,14 +239,6 @@ appcd-request@0.1.4:
     request "^2.83.0"
     source-map-support "^0.5.0"
 
-appcd-response@0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/appcd-response/-/appcd-response-0.1.0.tgz#c94c84fe39d62eef741c4cdd55c02ef8c86fd7f2"
-  dependencies:
-    appcd-fs "0.1.0"
-    source-map-support "^0.4.16"
-    sprintf-js "^1.1.1"
-
 appcd-response@0.1.4:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/appcd-response/-/appcd-response-0.1.4.tgz#9d6558d66c090eb020c8604e29270c93ae684843"
@@ -320,20 +247,6 @@ appcd-response@0.1.4:
     appcd-winreg "0.1.4"
     source-map-support "^0.5.0"
     sprintf-js "^1.1.1"
-
-appcd-subprocess@0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/appcd-subprocess/-/appcd-subprocess-0.1.0.tgz#8c41e0cd74667d5ec49487bce4abcb2dd01a0703"
-  dependencies:
-    appcd-dispatcher "0.1.0"
-    appcd-logger "0.1.0"
-    appcd-nodejs "0.1.0"
-    appcd-path "0.1.0"
-    appcd-response "0.1.0"
-    gawk "^4.3.0"
-    ps-tree "^1.1.0"
-    source-map-support "^0.4.16"
-    which "^1.3.0"
 
 appcd-subprocess@^0.1.4:
   version "0.1.4"
@@ -348,14 +261,6 @@ appcd-subprocess@^0.1.4:
     ps-tree "^1.1.0"
     source-map-support "^0.5.0"
     which "^1.3.0"
-
-appcd-util@0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/appcd-util/-/appcd-util-0.1.0.tgz#67c6d2a0a70cb47eb8864284dfbd92d89d692c8e"
-  dependencies:
-    appcd-fs "0.1.0"
-    semver "^5.4.1"
-    source-map-support "^0.4.16"
 
 appcd-util@0.1.4, appcd-util@^0.1.4:
   version "0.1.4"
@@ -2056,7 +1961,7 @@ fs-extra@1.0.0:
     jsonfile "^2.1.0"
     klaw "^1.0.0"
 
-fs-extra@^4.0.1, fs-extra@^4.0.2:
+fs-extra@^4.0.2:
   version "4.0.2"
   resolved "https://registry.yarnpkg.com/fs-extra/-/fs-extra-4.0.2.tgz#f91704c53d1b461f893452b0c307d9997647ab6b"
   dependencies:
@@ -2106,7 +2011,7 @@ gauge@~2.7.3:
     strip-ansi "^3.0.1"
     wide-align "^1.1.0"
 
-gawk@^4.3.0, gawk@^4.4.3:
+gawk@^4.4.3:
   version "4.4.3"
   resolved "https://registry.yarnpkg.com/gawk/-/gawk-4.4.3.tgz#79ca4dcd5401ea04323f44eb055a5721d4b298a6"
   dependencies:
@@ -3757,7 +3662,7 @@ path-to-regexp@^1.7.0:
   dependencies:
     isarray "0.0.1"
 
-path-to-regexp@^2.0.0, path-to-regexp@^2.1.0:
+path-to-regexp@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/path-to-regexp/-/path-to-regexp-2.1.0.tgz#7e30f9f5b134bd6a28ffc2e3ef1e47075ac5259b"
 
@@ -4053,7 +3958,7 @@ request@2.81.0:
     tunnel-agent "^0.6.0"
     uuid "^3.0.0"
 
-request@^2.55.0, request@^2.81.0, request@^2.83.0:
+request@^2.55.0, request@^2.83.0:
   version "2.83.0"
   resolved "https://registry.yarnpkg.com/request/-/request-2.83.0.tgz#ca0b65da02ed62935887808e6f510381034e3356"
   dependencies:
@@ -4854,7 +4759,7 @@ yargs@~3.10.0:
     decamelize "^1.0.0"
     window-size "0.1.0"
 
-yauzl@^2.8.0, yauzl@^2.9.1:
+yauzl@^2.9.1:
   version "2.9.1"
   resolved "https://registry.yarnpkg.com/yauzl/-/yauzl-2.9.1.tgz#a81981ea70a57946133883f029c5821a89359a7f"
   dependencies:

@@ -32,6 +32,10 @@ export default class DetectEngine extends EventEmitter {
 	 */
 	detectors = new Map();
 
+	/**
+	 * A random id that identifies this detect engine instance when creating tailgates.
+	 * @type {String}
+	 */
 	id = randomBytes(10);
 
 	/**
