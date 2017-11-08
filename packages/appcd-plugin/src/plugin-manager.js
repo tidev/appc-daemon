@@ -152,8 +152,6 @@ export default class PluginManager extends Dispatcher {
 					return;
 				}
 
-				logger.log('Plugin added: %s', highlight(`${plugin.name}@${plugin.version}`));
-
 				// sanity check the plugin hasn't been added twice
 				for (let i = 0; i < this.plugins.length; i++) {
 					if (this.plugins[i].path === plugin.path || (this.plugins[i].name === plugin.name && this.plugins[i].version === plugin.version)) {
@@ -164,67 +162,74 @@ export default class PluginManager extends Dispatcher {
 
 				this.plugins.push(plugin.info);
 
-				let ns = this.namespaces[plugin.name];
+				if (plugin.supported) {
+					logger.log('Plugin found: %s', highlight(`${plugin.name}@${plugin.version}`));
 
-				if (!ns) {
-					// initialize the namespace
-					ns = this.namespaces[plugin.name] = {
-						handler: async (ctx, next) => {
-							const versions = Object.keys(ns.versions).sort(semver.rcompare);
-							let version = ctx.request.params.version || null;
+					let ns = this.namespaces[plugin.name];
 
-							if (!version) {
-								logger.log('No version specified, return list of versions');
-								ctx.response = versions;
-								return;
-							}
+					if (!ns) {
+						// initialize the namespace
+						ns = this.namespaces[plugin.name] = {
+							handler: async (ctx, next) => {
+								const versions = Object.keys(ns.versions).sort(semver.rcompare);
+								let version = ctx.request.params.version || null;
 
-							let plugin = ns.versions[version];
-							if (!plugin) {
-								if (version === 'latest') {
-									version = versions[0];
-									logger.log('Remapping plugin version %s -> %s', highlight('latest'), highlight(version));
-								} else {
-									for (const v of versions) {
-										if (semver.satisfies(v, version)) {
-											logger.log('Remapping plugin version %s -> %s', highlight(version), highlight(v));
-											version = v;
-											break;
+								if (!version) {
+									logger.log('No version specified, return list of versions');
+									ctx.response = versions;
+									return;
+								}
+
+								let plugin = ns.versions[version];
+								if (!plugin) {
+									if (version === 'latest') {
+										version = versions[0];
+										logger.log('Remapping plugin version %s -> %s', highlight('latest'), highlight(version));
+									} else {
+										for (const v of versions) {
+											if (semver.satisfies(v, version)) {
+												logger.log('Remapping plugin version %s -> %s', highlight(version), highlight(v));
+												version = v;
+												break;
+											}
 										}
 									}
+
+									plugin = version && ns.versions[version];
 								}
 
-								plugin = version && ns.versions[version];
-							}
+								if (plugin) {
+									// forward request to the plugin's dispatcher
+									ctx.path = '/' + (ctx.request.params.path || '');
 
-							if (plugin) {
-								// forward request to the plugin's dispatcher
-								ctx.path = '/' + (ctx.request.params.path || '');
-								logger.log('Starting plugin %s', highlight(plugin.toString()));
-								plugin.error = null;
-								await plugin.start();
+									logger.log('Starting plugin %s', highlight(plugin.toString()));
+									await plugin.start();
 
-								if (plugin.error) {
-									logger.log('Plugin %s errored during start', highlight(plugin.toString()));
-								} else {
-									logger.log('Plugin %s started', highlight(plugin.toString()));
+									if (plugin.error) {
+										logger.log('Plugin %s errored during start', highlight(plugin.toString()));
+									} else {
+										logger.log('Plugin %s started', highlight(plugin.toString()));
+									}
+
+									return plugin.dispatch(ctx, next);
 								}
 
-								return plugin.dispatch(ctx, next);
-							}
+								// not found, continue
+								return next();
+							},
+							path: `/${plugin.name}/:version?/:path*`,
+							versions: {}
+						};
 
-							// not found, continue
-							return next();
-						},
-						path: `/${plugin.name}/:version?/:path*`,
-						versions: {}
-					};
+						Dispatcher.register(ns.path, ns.handler);
+					} else {
 
-					Dispatcher.register(ns.path, ns.handler);
+						logger.log('Unsupported plugin found: %s', highlight(`${plugin.name}@${plugin.version}`));
+					}
+
+					// add this version to the namespace
+					ns.versions[plugin.version] = plugin;
 				}
-
-				// add this version to the namespace
-				ns.versions[plugin.version] = plugin;
 
 				this.sendTelemetry('plugin.added', plugin);
 			})
