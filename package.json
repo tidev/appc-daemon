@@ -2,11 +2,6 @@
   "name": "appc-daemon",
   "version": "0.0.0",
   "private": true,
-  "scripts": {
-    "build": "gulp build",
-    "postinstall": "lerna bootstrap",
-    "watch": "gulp watch"
-  },
   "dependencies": {
     "archiver": "^2.1.0",
     "cli-table2": "^0.2.0",
