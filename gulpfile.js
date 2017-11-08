@@ -86,10 +86,17 @@ gulp.task('clean', () => {
 			const file = path.join(dir, name);
 			if (fs.statSync(file).isDirectory()) {
 				switch (name) {
+					case 'docs':
+						if (dir === __dirname) {
+							break;
+						}
+					case 'node_modules':
+						if (dir.includes('test/fixtures')) {
+							break;
+						}
+					case '.nyc_output':
 					case 'coverage':
 					case 'dist':
-					case 'docs':
-					case 'node_modules':
 						nuke.push(file);
 						break;
 					default:
@@ -98,7 +105,6 @@ gulp.task('clean', () => {
 			} else {
 				switch (name) {
 					case '.DS_Store':
-					case '.nyc_output':
 					case 'junit.xml':
 					case 'lerna-debug.log':
 					case 'npm-debug.log':
