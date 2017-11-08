@@ -94,6 +94,7 @@ gulp.task('clean', () => {
 						if (dir.includes('test/fixtures')) {
 							break;
 						}
+					case '.nyc_output':
 					case 'coverage':
 					case 'dist':
 						nuke.push(file);
@@ -104,7 +105,6 @@ gulp.task('clean', () => {
 			} else {
 				switch (name) {
 					case '.DS_Store':
-					case '.nyc_output':
 					case 'junit.xml':
 					case 'lerna-debug.log':
 					case 'npm-debug.log':
