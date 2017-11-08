@@ -33,6 +33,7 @@
   },
   "appcd-plugin": {
     "name": "windows",
+    "os": [ "win32" ],
     "type": "external"
   }
 }

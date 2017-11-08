@@ -11,6 +11,7 @@ import semver from 'semver';
 import slug from 'slugg';
 import types from './types';
 
+import { arrayify } from 'appcd-util';
 import { EventEmitter } from 'events';
 import { expandPath } from 'appcd-path';
 import { isDir, isFile } from 'appcd-fs';
@@ -141,6 +142,8 @@ export default class Plugin extends EventEmitter {
 		}
 		this.main = main;
 
+		this.os = null;
+
 		const appcdPlugin = pkgJson['appcd-plugin'];
 		if (appcdPlugin) {
 			if (typeof appcdPlugin !== 'object') {
@@ -161,8 +164,11 @@ export default class Plugin extends EventEmitter {
 				this.type = appcdPlugin.type;
 			}
 
-			if (appcdPlugin.allowProcessExit) {
-				this.allowProcessExit = !!appcdPlugin.allowProcessExit;
+			if (appcdPlugin.os) {
+				this.os = arrayify(appcdPlugin.os, true);
+				if (this.os.length === 0) {
+					this.os = null;
+				}
 			}
 
 			if (appcdPlugin.inactivityTimeout) {
@@ -185,9 +191,16 @@ export default class Plugin extends EventEmitter {
 
 		// reset the error
 		this.error = null;
+		this.supported = true;
 
-		if (this.type === 'internal' && this.nodeVersion && !semver.satisfies(process.version, this.nodeVersion)) {
+		if (this.os && !this.os.includes(process.platform)) {
+			this.error = `Unsupported platform "${process.platform}"`;
+			this.supported = false;
+		}
+
+		if (!this.error && this.type === 'internal' && this.nodeVersion && !semver.satisfies(process.version, this.nodeVersion)) {
 			this.error = `Internal plugin requires Node.js ${this.nodeVersion}, but currently running ${process.version}`;
+			this.supported = false;
 		}
 
 		/**
@@ -205,6 +218,12 @@ export default class Plugin extends EventEmitter {
 					this.directories.add(path.isAbsolute(dir) ? dir : path.resolve(pluginPath, dir));
 				}
 			}
+		}
+
+		this.impl = null;
+
+		if (this.error) {
+			return this;
 		}
 
 		// initialize the plugin implementation
@@ -233,7 +252,13 @@ export default class Plugin extends EventEmitter {
 	 * @returns {Promise}
 	 * @access public
 	 */
-	start() {
+	async start() {
+		if (!this.impl) {
+			throw new PluginError(this.error || 'Plugin not initialized');
+		}
+
+		this.error = null;
+
 		return this.impl.start();
 	}
 
@@ -250,7 +275,9 @@ export default class Plugin extends EventEmitter {
 			this.inactivityTimer = null;
 		}
 
-		return this.impl.stop();
+		if (this.impl) {
+			return this.impl.stop();
+		}
 	}
 
 	/**
@@ -297,6 +324,10 @@ export default class Plugin extends EventEmitter {
 					}
 				});
 		};
+
+		if (!this.impl) {
+			return next();
+		}
 
 		return this.impl.dispatch(ctx, next)
 			.then(ctx => {

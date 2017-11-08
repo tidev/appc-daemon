@@ -2536,9 +2536,9 @@ invert-kv@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/invert-kv/-/invert-kv-1.0.0.tgz#104a8e4aaca6d3d8cd157a8ef8bfab2d7a3ffdb6"
 
-ioslib2@^2.0.0-beta.2:
+ioslib@^2.0.0-beta.2:
   version "2.0.0-beta.2"
-  resolved "https://registry.yarnpkg.com/ioslib2/-/ioslib2-2.0.0-beta.2.tgz#888a0ca4674be9c4c38c83f16898fa5e699ac990"
+  resolved "https://registry.yarnpkg.com/ioslib/-/ioslib-2.0.0-beta.2.tgz#e3d183a0d703a299b026fe9cbf4f42ddd6ef811a"
   dependencies:
     always-tail "0.2.0"
     appcd-fs "^0.1.4"

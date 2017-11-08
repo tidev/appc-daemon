@@ -78,6 +78,63 @@ gulp.task('check', cb => {
 		.catch(cb);
 });
 
+gulp.task('clean', () => {
+	const nuke = [];
+
+	(function walk(dir) {
+		for (const name of fs.readdirSync(dir)) {
+			const file = path.join(dir, name);
+			if (fs.statSync(file).isDirectory()) {
+				switch (name) {
+					case 'coverage':
+					case 'dist':
+					case 'docs':
+					case 'node_modules':
+						nuke.push(file);
+						break;
+					default:
+						walk(file);
+				}
+			} else {
+				switch (name) {
+					case '.DS_Store':
+					case '.nyc_output':
+					case 'junit.xml':
+					case 'lerna-debug.log':
+					case 'npm-debug.log':
+					case 'retire_output.json':
+					case 'yarn-error.log':
+						nuke.push(file);
+						break;
+					default:
+						if (name.startsWith('gulpfile.tmp.') || name.startsWith('._')) {
+							nuke.push(file);
+						}
+				}
+			}
+		}
+	}(__dirname));
+
+	const s = nuke.length !== 1 ? 's' : '';
+	const ies = nuke.length !== 1 ? 'ies' : 'y';
+
+	if (!process.argv.includes('--commit')) {
+		for (const file of nuke) {
+			console.log(file);
+		}
+		console.log(`\nFound ${nuke.length} file${s}/director${ies} to nuke\n`);
+		console.log('Run "gulp clean --commit" to perform the actual delete\n');
+		return;
+	}
+
+	for (const file of nuke) {
+		console.log('Deleting:', file);
+		fs.removeSync(file);
+	}
+
+	console.log(`\nNuked ${nuke.length} file${s}/director${ies}\n`);
+});
+
 gulp.task('fix', cb => {
 	Promise.resolve()
 		.then(() => checkPackages())

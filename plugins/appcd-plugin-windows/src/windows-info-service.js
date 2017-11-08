@@ -84,11 +84,11 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 	detectDevices() {
 		return new Promise((resolve, reject) => {
 			console.log('Detecting devices info');
-			windowslib.device.detect({ bypassCache: true }, (err, { devices }) => {
+			windowslib.device.detect({ bypassCache: true }, (err, results) => {
 				if (err) {
 					reject(err);
 				} else {
-					resolve(devices);
+					resolve(results.devices);
 				}
 			});
 		});
@@ -103,11 +103,11 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 	detectEmulators() {
 		return new Promise((resolve, reject) => {
 			console.log('Detecting emulator info');
-			windowslib.emulator.detect({ bypassCache: true }, (err, { emulators }) => {
+			windowslib.emulator.detect({ bypassCache: true }, (err, results) => {
 				if (err) {
 					reject(err);
 				} else {
-					resolve(emulators);
+					resolve(results.emulators);
 				}
 			});
 		});
@@ -122,11 +122,11 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 	detectPowershell() {
 		return new Promise((resolve, reject) => {
 			console.log('Detecting powershell info');
-			windowslib.env.detect({ bypassCache: true }, (err, { powershell }) => {
+			windowslib.env.detect({ bypassCache: true }, (err, results) => {
 				if (err) {
 					reject(err);
 				} else {
-					resolve(powershell);
+					resolve(results.powershell);
 				}
 			});
 		});
@@ -141,11 +141,11 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 	detectVisualStudios() {
 		return new Promise((resolve, reject) => {
 			console.log('Detecting visualstudio info');
-			windowslib.visualstudio.detect({ bypassCache: true }, (err, { visualstudio }) => {
+			windowslib.visualstudio.detect({ bypassCache: true }, (err, results) => {
 				if (err) {
 					reject(err);
 				} else {
-					resolve(visualstudio);
+					resolve(results.visualstudio);
 				}
 			});
 		});
@@ -160,11 +160,11 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 	detectWindows() {
 		return new Promise((resolve, reject) => {
 			console.log('Detecting windows store info');
-			windowslib.winstore.detect({ bypassCache: true }, (err, { windows }) => {
+			windowslib.winstore.detect({ bypassCache: true }, (err, results) => {
 				if (err) {
 					reject(err);
 				} else {
-					resolve(windows);
+					resolve(results.windows);
 				}
 			});
 		});
@@ -179,11 +179,11 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 	detectWindowsPhone() {
 		return new Promise((resolve, reject) => {
 			console.log('Detecting windowsphone info');
-			windowslib.windowsphone.detect({ bypassCache: true }, (err, { windowsphone }) => {
+			windowslib.windowsphone.detect({ bypassCache: true }, (err, results) => {
 				if (err) {
 					reject(err);
 				} else {
-					resolve(windowsphone);
+					resolve(results.windowsphone);
 				}
 			});
 		});
