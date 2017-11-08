@@ -5,7 +5,7 @@ import fs from 'fs';
 
 import { DataServiceDispatcher } from 'appcd-dispatcher';
 import { exe } from 'appcd-subprocess';
-import { sleep } from 'appcd-util';
+import { debounce, sleep } from 'appcd-util';
 
 import { genymotionLocations, detect as genyDetect, getEmulators } from './genymotion';
 import { virtualBoxLocations, VirtualBox } from './virtualbox';
@@ -48,21 +48,22 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 			watch:                true
 		});
 
+		const onFSChange = debounce(async ({ file, filename, action }) => {
+			if (action !== 'delete' && !fs.existsSync(path.join(file, `${filename}.vbox`))) {
+				await sleep(8000);
+			}
+			gawk.set(this.data.emulators, await getEmulators(this.data.virtualbox || {}));
+		});
+
 		this.genyEngine.on('results', results => {
 			results.virtualbox = this.data.virtualbox || {};
-
+			const deployedDir = path.join(results.home, 'deployed');
 			this.watch({
 				type: GENYMOTION_HOME,
-				paths : [ path.join(results.home, 'deployed') ],
-				depth: 3,
+				paths: [ deployedDir ],
+				depth: 1,
 				resursive: true,
-				handler: async (file) => {
-					if (file.action !== 'delete' && !fs.existsSync(path.join(file.file, `${file.filename}.vbox`))) {
-						await sleep(10000);
-					}
-					gawk.set(this.data.emulators, await getEmulators(this.data.virtualbox || {}));
-
-				}
+				handler: onFSChange
 			});
 
 			gawk.set(this.data, results);

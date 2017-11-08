@@ -3,6 +3,7 @@ if (!Error.prepareStackTrace) {
 	require('source-map-support/register');
 }
 
+import { EOL } from 'os';
 import path from 'path';
 
 import { isDir, isFile } from 'appcd-fs';
@@ -39,7 +40,7 @@ export const genymotionHomeLocations = {
 		'~/.Genymotion'
 	],
 	win32: [
-		'%AppData%/Local/Genymobile/Genymotion'
+		'%LocalAppData%/Genymobile/Genymotion'
 	]
 };
 
@@ -81,7 +82,7 @@ export class Genymotion {
 		if (process.platform === 'darwin') {
 			this.executables.player = path.join(dir, 'player.app', 'Contents', 'MacOS', 'player');
 		} else {
-			this.executables.player = path.join(dir, 'player');
+			this.executables.player = path.join(dir, 'player.exe');
 		}
 
 		if (!Object.values(this.executables).every(cmd => isFile(cmd))) {
@@ -90,6 +91,7 @@ export class Genymotion {
 
 		const homeDirs = genymotionHomeLocations[process.platform];
 		for (const homeDir of homeDirs) {
+			console.log(expandPath(homeDir));
 			if (isDir(expandPath(homeDir))) {
 				this.home = expandPath(homeDir);
 				break;
@@ -122,7 +124,7 @@ export async function getEmulators(virtualBoxInfo) {
 
 	const vbox = new VirtualBoxExe(vboxmanage);
 	const vms = await vbox.list();
-	const vminfos = await Promise.all(vms.split('\n').map(async vm => {
+	let vminfos = await Promise.all(vms.split(EOL).map(async vm => {
 		const info = vm.trim().match(/^"(.+)" \{(.+)\}$/);
 		if (!info) {
 			return null;
@@ -134,41 +136,45 @@ export async function getEmulators(virtualBoxInfo) {
 		}
 	}));
 	emulators = await Promise.all(vminfos.map(async vm => {
-		const info = await vbox.vmInfo(vm.guid);
-		if (info) {
-			info.split('\n').forEach(line => {
-				const m = line.trim().match(/Name: (\S+), value: (\S*), timestamp:/);
-				if (m) {
-					switch (m[1]) {
-						case 'android_version':
-							vm['sdk-version'] = vm.target = m[2];
-							break;
-						case 'genymotion_version':
-							vm.genymotion = m[2];
-							break;
-						case 'hardware_opengl':
-							vm.hardwareOpenGL = !!parseInt(m[2]);
-							break;
-						case 'vbox_dpi':
-							vm.dpi = ~~m[2];
-							break;
-						case 'vbox_graph_mode':
-							vm.display = m[2];
-							break;
-						case 'androvm_ip_management':
-							vm.ipaddress = m[2];
-							break;
+		if (vm) {
+			const info = await vbox.vmInfo(vm.guid);
+			if (info) {
+				info.split(EOL).forEach(line => {
+					const m = line.trim().match(/Name: (\S+), value: (\S*), timestamp:/);
+					if (m) {
+						switch (m[1]) {
+							case 'android_version':
+								vm['sdk-version'] = vm.target = m[2];
+								break;
+							case 'genymotion_player_version':
+							case 'genymotion_version':
+								vm.genymotion = m[2];
+								break;
+							case 'hardware_opengl':
+								vm.hardwareOpenGL = !!parseInt(m[2]);
+								break;
+							case 'vbox_dpi':
+								vm.dpi = ~~m[2];
+								break;
+							case 'vbox_graph_mode':
+								vm.display = m[2];
+								break;
+							case 'androvm_ip_management':
+								vm.ipaddress = m[2];
+								break;
+						}
 					}
+				});
+				if (vm.genymotion) {
+					vm.abi = 'x86';
+					vm.googleApis = null; // null means maybe since we don't know for sure unless the emulator is running
 				}
-			});
-			if (vm.genymotion) {
-				vm.abi = 'x86';
-				vm.googleApis = null; // null means maybe since we don't know for sure unless the emulator is running
+				return vm;
 			}
-			return vm;
 		}
 	}));
-	return emulators.filter(emu => emu.genymotion);
+	console.log(emulators);
+	return emulators.filter(emu => emu && emu.genymotion);
 }
 
 export async function detect(dir, virtualBoxInfo) {

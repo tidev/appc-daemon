@@ -23,10 +23,8 @@ export const virtualBoxLocations = {
 		'~'
 	],
 	win32: [
-		'%SystemDrive%',
-		'%ProgramFiles%',
-		'%ProgramFiles(x86)%',
-		'~'
+		'%ProgramFiles%\\Oracle\\VirtualBox',
+		'%ProgramFiles(x86)%\\Oracle\\VirtualBox',
 	]
 };
 
@@ -76,8 +74,10 @@ export class VirtualBoxExe {
 	}
 
 	async list() {
-		const { stdout } = await run(this.bin, [ 'list', 'vms' ]);
-		return stdout.trim();
+		return this.tryVbox([ 'list', 'vms' ])
+			.then(output => {
+				return output;
+			});
 	}
 
 	vmInfo(guid) {
