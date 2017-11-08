@@ -6,8 +6,10 @@ if (!Error.prepareStackTrace) {
 import path from 'path';
 
 import { isDir, isFile } from 'appcd-fs';
-import { expandPath, real } from 'appcd-path';
-import { exe, run } from 'appcd-subprocess';
+import { expandPath } from 'appcd-path';
+import { exe } from 'appcd-subprocess';
+
+import { getVirtualBox, VirtualBoxExe } from './virtualbox';
 
 export const genymotionLocations = {
 	darwin: [
@@ -94,68 +96,84 @@ export class Genymotion {
 			}
 		}
 
+		if (!this.home) {
+			throw new Error('Unable to find Genymotion home directory');
+		}
+
 		console.log(`Found a Genymotion install, but need to init: ${dir}`);
 	}
 
 	/**
 	 * Fetches the Genymotion version and installed emulators
 	 */
-	async init(vboxmanage) {
+	async init(virtualBoxInfo) {
 		try {
-			const { stdout } = await run(vboxmanage, [ 'list', 'vms' ]);
-			stdout.split('\n').forEach(async vm => {
-				vm = vm.trim();
-				console.log(vm);
-				const match = vm.match(/^"(.+)" \{(.+)\}$/);
-				if (!match) {
-					return;
-				}
-				let emu = {
-					name: match[1],
-					guid: match[2],
-					type: 'genymotion',
-					abi: 'x86',
-					googleApis: null, // null means maybe since we don't know for sure unless the emulator is running
-					'sdk-version': null
-				};
-				const { stdout } = await run(vboxmanage, [ 'guestproperty', 'enumerate', emu.guid ]);
-				stdout.split('\n').forEach(line => {
-					const m = line.trim().match(/Name: (\S+), value: (\S*), timestamp:/);
-					if (m) {
-						switch (m[1]) {
-							case 'android_version':
-								emu['sdk-version'] = emu.target = m[2];
-								break;
-							case 'genymotion_version':
-								emu.genymotion = m[2];
-								break;
-							case 'hardware_opengl':
-								emu.hardwareOpenGL = !!parseInt(m[2]);
-								break;
-							case 'vbox_dpi':
-								emu.dpi = ~~m[2];
-								break;
-							case 'vbox_graph_mode':
-								emu.display = m[2];
-								break;
-							case 'androvm_ip_management':
-								emu.ipaddress = m[2];
-								break;
-						}
-					}
-				});
-				if (emu.genymotion) {
-					console.log(emu);
-					this.emulators.push(emu);
-				}
-			});
+			this.emulators = await getEmulators(virtualBoxInfo);
 		} catch (e) {
-
+			// squelch
 		}
 		return this;
 	}
 }
 
-export async function detect(dir, vboxmanage) {
-	return await new Genymotion(dir).init(vboxmanage);
+export async function getEmulators(virtualBoxInfo) {
+	const vboxmanage = virtualBoxInfo.executables.vboxmanage;
+	let emulators = [];
+
+	const vbox = new VirtualBoxExe(vboxmanage);
+	const vms = await vbox.list();
+	const vminfos = await Promise.all(vms.split('\n').map(async vm => {
+		const info = vm.trim().match(/^"(.+)" \{(.+)\}$/);
+		if (!info) {
+			return null;
+		} else {
+			return {
+				name: info[1],
+				guid: info[2],
+			};
+		}
+	}));
+	emulators = await Promise.all(vminfos.map(async vm => {
+		const info = await vbox.vmInfo(vm.guid);
+		if (info) {
+			info.split('\n').forEach(line => {
+				const m = line.trim().match(/Name: (\S+), value: (\S*), timestamp:/);
+				if (m) {
+					switch (m[1]) {
+						case 'android_version':
+							vm['sdk-version'] = vm.target = m[2];
+							break;
+						case 'genymotion_version':
+							vm.genymotion = m[2];
+							break;
+						case 'hardware_opengl':
+							vm.hardwareOpenGL = !!parseInt(m[2]);
+							break;
+						case 'vbox_dpi':
+							vm.dpi = ~~m[2];
+							break;
+						case 'vbox_graph_mode':
+							vm.display = m[2];
+							break;
+						case 'androvm_ip_management':
+							vm.ipaddress = m[2];
+							break;
+					}
+				}
+			});
+			if (vm.genymotion) {
+				vm.abi = 'x86';
+				vm.googleApis = null; // null means maybe since we don't know for sure unless the emulator is running
+			}
+			return vm;
+		}
+	}));
+	return emulators.filter(emu => emu.genymotion);
+}
+
+export async function detect(dir, virtualBoxInfo) {
+	if (!virtualBoxInfo) {
+		virtualBoxInfo = await getVirtualBox();
+	}
+	return await new Genymotion(dir).init(virtualBoxInfo);
 }

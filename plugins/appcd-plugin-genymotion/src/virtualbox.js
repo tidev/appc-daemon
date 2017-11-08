@@ -5,9 +5,11 @@ if (!Error.prepareStackTrace) {
 
 import path from 'path';
 
+import { cache, sleep } from 'appcd-util';
 import { isDir, isFile } from 'appcd-fs';
-import { expandPath, real } from 'appcd-path';
+import { expandPath } from 'appcd-path';
 import { exe, run } from 'appcd-subprocess';
+import { spawnSync } from 'child_process';
 
 export const virtualBoxLocations = {
 	darwin: [
@@ -58,24 +60,68 @@ export class VirtualBox {
 			throw new Error('Directory does not contain vboxmanage executable');
 		}
 
-		console.log(`Found a VirtualBox install, but need to init: ${dir}`);
-	}
+		const { status, stdout } = spawnSync(this.executables.vboxmanage, [ '-version' ]);
 
-	/**
-	 * Fetches the Genymotion version and installed emulators
-	 */
-	async init() {
-		const vboxManage = this.executables.vboxmanage;
-		try {
-			const { stdout } = await run(vboxManage, [ '-version' ]);
-			this.version = stdout.split('\n')[0].trim();
-		} catch (err) {
-			console.log('Failed to get VirtualBox version', err);
+		if (status === 0) {
+			this.version = stdout.toString().split('\n')[0].trim();
+		} else {
+			console.log('Unable to get VirtualBox version');
 		}
-		return this;
 	}
 }
 
-export async function detect(dir) {
-	return await new VirtualBox(dir).init();
+export class VirtualBoxExe {
+	constructor(bin) {
+		this.bin = bin;
+	}
+
+	async list() {
+		const { stdout } = await run(this.bin, [ 'list', 'vms' ]);
+		return stdout.trim();
+	}
+
+	vmInfo(guid) {
+		return this.tryVbox([ 'guestproperty', 'enumerate', guid ])
+			.then(output => {
+				return output;
+			});
+	}
+
+	tryVbox(args, maxTries) {
+		let timeout = 100;
+
+		const attempt = async (remainingTries) => {
+			if (remainingTries < 0) {
+				throw new Error('Failed to run vbox');
+			}
+
+			try {
+				const { stdout } = await run(this.bin, args);
+				return stdout.trim();
+			} catch (e) {
+
+				await sleep(timeout);
+				timeout *= 2;
+
+				return attempt(remainingTries - 1);
+			}
+		};
+
+		return attempt(Math.max(maxTries || 4, 1));
+	}
+}
+
+export function getVirtualBox(force) {
+	return cache('virtualbox', force, async () => {
+		let virtualbox;
+		for (let dir of virtualBoxLocations[process.platform]) {
+			dir = expandPath(dir);
+			try {
+				virtualbox = new VirtualBox(dir);
+			} catch (e) {
+				// blah
+			}
+		}
+		return virtualbox;
+	});
 }
