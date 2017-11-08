@@ -86,10 +86,16 @@ gulp.task('clean', () => {
 			const file = path.join(dir, name);
 			if (fs.statSync(file).isDirectory()) {
 				switch (name) {
+					case 'docs':
+						if (dir === __dirname) {
+							break;
+						}
+					case 'node_modules':
+						if (dir.includes('test/fixtures')) {
+							break;
+						}
 					case 'coverage':
 					case 'dist':
-					case 'docs':
-					case 'node_modules':
 						nuke.push(file);
 						break;
 					default:
