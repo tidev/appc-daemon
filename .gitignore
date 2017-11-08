@@ -1,8 +1,7 @@
 ._*
 .DS_Store*
 .nyc_output
-coverage
-dist
+/coverage
 gulpfile.tmp.*
 junit.xml
 lerna-debug.log

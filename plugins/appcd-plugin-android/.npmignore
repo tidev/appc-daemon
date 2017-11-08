@@ -3,10 +3,12 @@
 .DS_Store
 .eslintrc
 .git*
+.nyc_output
 .travis.yml
 /coverage
 /docs
 gulpfile.js
+junit.xml
 node_modules
 npm-debug.log
 yarn-error.log
