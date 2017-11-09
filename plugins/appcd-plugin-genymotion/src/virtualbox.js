@@ -59,41 +59,22 @@ export class VirtualBox {
 		}
 	}
 
-	list() {
-		return this.tryVBox([ 'list', 'vms' ])
-			.then(output => {
-				return output;
-			});
+	async list() {
+		try {
+			const { stdout } = await run(this.executables.vboxmanage, [ 'list', 'vms' ]);
+			return stdout.trim();
+		} catch (e) {
+			return null;
+		}
 	}
 
-	getVMInfo(guid) {
-		return this.tryVBox([ 'guestproperty', 'enumerate', guid ])
-			.then(output => {
-				return output;
-			});
-	}
-
-	tryVBox(args, maxTries) {
-		let timeout = 100;
-
-		const attempt = async (remainingTries) => {
-			if (remainingTries < 0) {
-				throw new Error('Failed to run vbox');
-			}
-
-			try {
-				const { stdout } = await run(this.executables.vboxmanage, args);
-				return stdout.trim();
-			} catch (e) {
-
-				await sleep(timeout);
-				timeout *= 2;
-
-				return attempt(remainingTries - 1);
-			}
-		};
-
-		return attempt(Math.max(maxTries || 4, 1));
+	async getVMInfo(guid) {
+		try {
+			const { stdout } = await run(this.executables.vboxmanage, [ 'guestproperty', 'enumerate', guid ]);
+			return stdout.trim();
+		} catch (e) {
+			return null;
+		}
 	}
 }
 
