@@ -87,7 +87,12 @@ export default class Detector extends EventEmitter {
 			if (!this.sid) {
 				this.sid = await this.watch({
 					dir: this.dir,
-					onFSEvent: async ({ action, file }) => {
+					depth: opts.depth,
+					onFSEvent: async ({ action, file, filename }) => {
+						if (filename === '.DS_Store') {
+							return;
+						}
+
 						if (file === this.dir) {
 							if (action === 'delete') {
 								log('Directory was deleted, stopping and requesting rescan...');
@@ -101,13 +106,14 @@ export default class Detector extends EventEmitter {
 							// something changed in this directory
 							this.emit('rescan');
 						}
-					}
+					},
+					recursive: opts.recursive
 				});
 			}
 
 			if (foundPaths.size && opts.redetect) {
 				log(pluralize(`Watching ${highlight(foundPaths.size)} subdirectory`, foundPaths.size));
-				log(foundPaths);
+				log(Array.from(foundPaths));
 				await Promise.all([ ...foundPaths ].map(subdir => {
 					if (this.sids.has(subdir)) {
 						return null;
@@ -122,7 +128,11 @@ export default class Detector extends EventEmitter {
 						.watch({
 							depth: opts.depth,
 							dir: subdir,
-							onFSEvent: async ({ action, file }, sid) => {
+							onFSEvent: async ({ action, file, filename }, sid) => {
+								if (filename === '.DS_Store') {
+									return;
+								}
+
 								if (file === this.dir && action === 'delete') {
 									log(`Parent directory ${highlight(file)} was deleted, letting primary fs watcher respond`);
 									return;

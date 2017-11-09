@@ -3,7 +3,7 @@ import gawk from 'gawk';
 
 import * as androidlib from 'androidlib';
 
-import { bat } from 'appcd-subprocess';
+import { bat, cmd } from 'appcd-subprocess';
 import { DataServiceDispatcher } from 'appcd-dispatcher';
 import { get } from 'appcd-util';
 
@@ -50,7 +50,33 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 	 * @access private
 	 */
 	async initNDKs() {
-		//
+		this.ndkDetectEngine = new DetectEngine({
+			checkDir(dir) {
+				try {
+					return new androidlib.ndk.NDK(dir);
+				} catch (e) {
+					// 'dir' is not an NDK
+				}
+			},
+			depth:     1,
+			env:       'ANDROID_NDK',
+			exe:       `ndk-build${cmd}`,
+			multiple:  true,
+			paths:     androidlib.ndk.ndkLocations[process.platform],
+			// processResults: async (results, engine) => {
+			//
+			// },
+			recursive: true,
+			redetect:  true,
+			watch:     true
+		});
+
+		// listen for ndk results
+		this.ndkDetectEngine.on('results', results => {
+			gawk.set(this.data.ndk, results);
+		});
+
+		await this.ndkDetectEngine.start();
 	}
 
 	/**
@@ -82,6 +108,7 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 			// processResults: async (results, engine) => {
 			//
 			// },
+			recursive: true,
 			registryKeys: [
 				{
 					hive: 'HKLM',
@@ -124,6 +151,11 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 		if (this.sdkDetectEngine) {
 			await this.sdkDetectEngine.stop();
 			this.sdkDetectEngine = null;
+		}
+
+		if (this.ndkDetectEngine) {
+			await this.ndkDetectEngine.stop();
+			this.ndkDetectEngine = null;
 		}
 	}
 }
