@@ -5,6 +5,7 @@ import * as androidlib from 'androidlib';
 
 import { bat } from 'appcd-subprocess';
 import { DataServiceDispatcher } from 'appcd-dispatcher';
+import { get } from 'appcd-util';
 
 /**
  * The Android info service.
@@ -18,7 +19,7 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 	 * @access public
 	 */
 	async activate(cfg) {
-		this.cfg = cfg;
+		this.config = cfg;
 
 		this.data = gawk({
 			devices: [],
@@ -30,25 +31,6 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 		await this.initDevices();
 		await this.initNDKs();
 		await this.initSDKsAndEmulators();
-	}
-
-	/**
-	 * Returns a config setting using the dot-notation name.
-	 *
-	 * @param {String} name - The config setting name.
-	 * @returns {*}
-	 * @access private
-	 */
-	getConfig(name) {
-		let obj = this.cfg;
-		try {
-			for (const key of name.split('.')) {
-				obj = obj[key];
-			}
-		} catch (e) {
-			return null;
-		}
-		return obj;
 	}
 
 	/**
@@ -79,7 +61,7 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 	 */
 	async initSDKsAndEmulators() {
 		const paths = [ ...androidlib.sdk.sdkLocations[process.platform] ];
-		const defaultPath = this.getConfig('android.sdkPath');
+		const defaultPath = get(this.config, 'android.sdkPath');
 		if (defaultPath) {
 			paths.unshift(defaultPath);
 		}
@@ -100,11 +82,18 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 			// processResults: async (results, engine) => {
 			//
 			// },
-			registryKeys: {
-				hive: 'HKLM',
-				key: 'Software\\Wow6432Node\\Android SDK Tools',
-				name: 'Path'
-			},
+			registryKeys: [
+				{
+					hive: 'HKLM',
+					key: 'SOFTWARE\\Wow6432Node\\Android SDK Tools',
+					name: 'Path'
+				},
+				{
+					hive: 'HKLM',
+					key: 'SOFTWARE\\Android Studio',
+					name: 'SdkPath'
+				}
+			],
 			redetect: true,
 			watch: true
 		});
