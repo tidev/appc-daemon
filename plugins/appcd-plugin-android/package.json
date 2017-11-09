@@ -16,14 +16,15 @@
     "test": "gulp test"
   },
   "dependencies": {
+    "androidlib": "2.0.0-beta.1",
     "appcd-detect": "0.1.5",
     "appcd-dispatcher": "0.1.5",
-    "appcd-util": "0.1.5",
+    "appcd-subprocess": "0.1.5",
     "gawk": "^4.4.3",
     "source-map-support": "^0.5.0"
   },
   "devDependencies": {
-    "appcd-gulp": "0.1.3",
+    "appcd-gulp": "0.1.5",
     "gulp": "^3.9.1"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",

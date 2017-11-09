@@ -251,7 +251,7 @@ export default class iOSInfoService extends DataServiceDispatcher {
 	 */
 	async initXcodeAndSimulators() {
 		const paths = [ ...ioslib.xcode.xcodeLocations ];
-		const defaultPath = await ioslib.xcode.getDefaultXcodePath(this.get('ios.executables.xcodeselect'));
+		const defaultPath = await ioslib.xcode.getDefaultXcodePath(this.getConfig('ios.executables.xcodeselect'));
 		if (defaultPath) {
 			paths.unshift(defaultPath);
 		}
@@ -279,7 +279,7 @@ export default class iOSInfoService extends DataServiceDispatcher {
 				}
 
 				if (results.length) {
-					const defaultPath = await ioslib.xcode.getDefaultXcodePath(this.get('ios.executables.xcodeselect'));
+					const defaultPath = await ioslib.xcode.getDefaultXcodePath(this.getConfig('ios.executables.xcodeselect'));
 					let foundDefault = false;
 					if (defaultPath) {
 						for (const xcode of results) {
@@ -341,7 +341,7 @@ export default class iOSInfoService extends DataServiceDispatcher {
 			gawk.set(this.data.xcode, obj);
 		});
 
-		// if xcodes change, then update the simulators
+		// if xcodes change, then refresh the simulators
 		gawk.watch(this.data.xcode, async (xcodeInfo) => {
 			gawk.set(this.data.simulators, await ioslib.simulator.getSimulators(xcodeInfo));
 		});
