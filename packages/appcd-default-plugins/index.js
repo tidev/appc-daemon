@@ -7,7 +7,7 @@ const dirs = path.resolve(__dirname).split(path.sep);
 module.exports = [];
 
 while (dirs.length) {
-	const modulesDir = path.join(dirs.join(path.sep), 'node_modules');
+	const modulesDir = path.join(...dirs, 'node_modules');
 
 	if (!deps.size) {
 		// all done
