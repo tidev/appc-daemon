@@ -234,7 +234,11 @@ module.exports = (opts) => {
 		$.util.log('Running: ' + $.util.colors.cyan(execPath + ' ' + args.join(' ')));
 
 		// run!
-		spawnSync(execPath, args, { stdio: 'inherit' });
+		if (spawnSync(execPath, args, { stdio: 'inherit' }).status) {
+			const err = new Error('At least one test failed :(');
+			err.showStack = false;
+			throw err;
+		}
 	}
 
 	function resolveModule(name) {
