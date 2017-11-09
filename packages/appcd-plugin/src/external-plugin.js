@@ -288,6 +288,7 @@ export default class ExternalPlugin extends PluginBase {
 				this.tunnel.emit({ type: 'stats', stats });
 			})
 			.start();
+		let loadedConfig = false;
 
 		return this.globals.appcd
 			.call('/appcd/config', { type: 'subscribe' })
@@ -295,12 +296,15 @@ export default class ExternalPlugin extends PluginBase {
 				response.on('data', ({ message, sid, type }) => {
 					if (type === 'subscribe') {
 						this.configSubscriptionId = sid;
-						resolve();
 					} else if (type === 'event') {
 						gawk.set(this.config, message);
 
 						if (this.config.server && this.config.server.agentPollInterval) {
 							this.agent.pollInterval = Math.max(1000, this.config.server.agentPollInterval);
+						}
+						if (!loadedConfig) {
+							resolve();
+							loadedConfig = true;
 						}
 					}
 				});
