@@ -17,14 +17,14 @@
   },
   "dependencies": {
     "androidlib": "2.0.0-beta.1",
-    "appcd-detect": "^1.0.0-0",
-    "appcd-dispatcher": "^1.0.0-0",
-    "appcd-subprocess": "^1.0.0-0",
+    "appcd-detect": "1.0.0-0",
+    "appcd-dispatcher": "1.0.0-0",
+    "appcd-subprocess": "1.0.0-0",
     "gawk": "^4.4.3",
     "source-map-support": "^0.5.0"
   },
   "devDependencies": {
-    "appcd-gulp": "^1.0.0-0",
+    "appcd-gulp": "1.0.0-0",
     "gulp": "^3.9.1"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
