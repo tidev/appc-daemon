@@ -1,14 +1,9 @@
-/* istanbul ignore if */
-if (!Error.prepareStackTrace) {
-	require('source-map-support/register');
-}
-
 import path from 'path';
 
 import { cache, sleep } from 'appcd-util';
-import { isDir, isFile } from 'appcd-fs';
 import { expandPath } from 'appcd-path';
 import { exe, run } from 'appcd-subprocess';
+import { isDir, isFile } from 'appcd-fs';
 import { spawnSync } from 'child_process';
 
 export const virtualBoxLocations = {
@@ -32,12 +27,11 @@ export const virtualBoxLocations = {
  * Genymotion information
  */
 export class VirtualBox {
-
 	/**
 	 * Performs tests to see if this is a Genymotion install directory,
 	 * and then initializes the info.
-	 * @param  {String} dir Directory to scan
-	 * @access public
+	 * @param  {String} dir Directory to scan.
+ 	 * @access public
 	 */
 	constructor(dir) {
 		if (typeof dir !== 'string' || !dir) {
@@ -62,32 +56,24 @@ export class VirtualBox {
 
 		if (status === 0) {
 			this.version = stdout.toString().split('\n')[0].trim();
-		} else {
-			console.log('Unable to get VirtualBox version');
 		}
 	}
-}
 
-export class VirtualBoxExe {
-	constructor(bin) {
-		this.bin = bin;
-	}
-
-	async list() {
-		return this.tryVbox([ 'list', 'vms' ])
+	list() {
+		return this.tryVBox([ 'list', 'vms' ])
 			.then(output => {
 				return output;
 			});
 	}
 
-	vmInfo(guid) {
-		return this.tryVbox([ 'guestproperty', 'enumerate', guid ])
+	getVMInfo(guid) {
+		return this.tryVBox([ 'guestproperty', 'enumerate', guid ])
 			.then(output => {
 				return output;
 			});
 	}
 
-	tryVbox(args, maxTries) {
+	tryVBox(args, maxTries) {
 		let timeout = 100;
 
 		const attempt = async (remainingTries) => {
@@ -96,7 +82,7 @@ export class VirtualBoxExe {
 			}
 
 			try {
-				const { stdout } = await run(this.bin, args);
+				const { stdout } = await run(this.executables.vboxmanage, args);
 				return stdout.trim();
 			} catch (e) {
 

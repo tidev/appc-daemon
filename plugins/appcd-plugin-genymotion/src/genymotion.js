@@ -1,20 +1,13 @@
-/* istanbul ignore if */
-if (!Error.prepareStackTrace) {
-	require('source-map-support/register');
-}
-
-import { EOL } from 'os';
 import path from 'path';
 
-import { isDir, isFile } from 'appcd-fs';
-import { expandPath } from 'appcd-path';
 import { exe } from 'appcd-subprocess';
-
-import { getVirtualBox, VirtualBoxExe } from './virtualbox';
+import { expandPath } from 'appcd-path';
+import { getVirtualBox } from './virtualbox';
+import { isDir, isFile } from 'appcd-fs';
 
 export const genymotionLocations = {
 	darwin: [
-		'/Applications/Genymotion.app/Contents',
+		'/Applications/Genymotion.app/',
 		'~/Applications/Genymotion.app/'
 	],
 	linux: [
@@ -48,11 +41,11 @@ export const genymotionHomeLocations = {
  * Genymotion information
  */
 export class Genymotion {
-
 	/**
 	 * Performs tests to see if this is a Genymotion install directory,
 	 * and then initializes the info.
-	 * @param  {String} dir Directory to scan
+	 *
+	 * @param {String} dir - Directory to scan.
 	 * @access public
 	 */
 	constructor(dir) {
@@ -82,7 +75,7 @@ export class Genymotion {
 		if (process.platform === 'darwin') {
 			this.executables.player = path.join(dir, 'player.app', 'Contents', 'MacOS', 'player');
 		} else {
-			this.executables.player = path.join(dir, 'player.exe');
+			this.executables.player = path.join(dir, `player${exe}`);
 		}
 
 		if (!Object.values(this.executables).every(cmd => isFile(cmd))) {
@@ -90,10 +83,10 @@ export class Genymotion {
 		}
 
 		const homeDirs = genymotionHomeLocations[process.platform];
-		for (const homeDir of homeDirs) {
-			console.log(expandPath(homeDir));
-			if (isDir(expandPath(homeDir))) {
-				this.home = expandPath(homeDir);
+		for (let homeDir of homeDirs) {
+			homeDir = expandPath(homeDir);
+			if (isDir(homeDir)) {
+				this.home = homeDir;
 				break;
 			}
 		}
@@ -101,16 +94,17 @@ export class Genymotion {
 		if (!this.home) {
 			throw new Error('Unable to find Genymotion home directory');
 		}
-
-		console.log(`Found a Genymotion install, but need to init: ${dir}`);
 	}
 
 	/**
-	 * Fetches the Genymotion version and installed emulators
+	 * Fetches the Genymotion version and installed emulators.
+	 *
+	 * @param {Object} vbox - Object containing information about the VirtualBox install
+	 * @return {Object} - Stuff
 	 */
-	async init(virtualBoxInfo) {
+	async init(vbox) {
 		try {
-			this.emulators = await getEmulators(virtualBoxInfo);
+			this.emulators = await getEmulators(vbox);
 		} catch (e) {
 			// squelch
 		}
@@ -118,28 +112,21 @@ export class Genymotion {
 	}
 }
 
-export async function getEmulators(virtualBoxInfo) {
-	const vboxmanage = virtualBoxInfo.executables.vboxmanage;
-	let emulators = [];
-
-	const vbox = new VirtualBoxExe(vboxmanage);
+export async function getEmulators(vbox) {
+	const emulators = [];
 	const vms = await vbox.list();
-	let vminfos = await Promise.all(vms.split(EOL).map(async vm => {
+	await Promise.all(vms.split(/\r?\n/).map(async vm => {
 		const info = vm.trim().match(/^"(.+)" \{(.+)\}$/);
 		if (!info) {
 			return null;
 		} else {
-			return {
+			vm = {
 				name: info[1],
 				guid: info[2],
 			};
-		}
-	}));
-	emulators = await Promise.all(vminfos.map(async vm => {
-		if (vm) {
-			const info = await vbox.vmInfo(vm.guid);
-			if (info) {
-				info.split(EOL).forEach(line => {
+			const vminfo = await vbox.getVMInfo(vm.guid);
+			if (vminfo) {
+				for (const line of vminfo.split(/\r?\n/)) {
 					const m = line.trim().match(/Name: (\S+), value: (\S*), timestamp:/);
 					if (m) {
 						switch (m[1]) {
@@ -164,22 +151,28 @@ export async function getEmulators(virtualBoxInfo) {
 								break;
 						}
 					}
-				});
+				}
 				if (vm.genymotion) {
 					vm.abi = 'x86';
 					vm.googleApis = null; // null means maybe since we don't know for sure unless the emulator is running
+					emulators.push(vm);
+					return;
 				}
-				return vm;
 			}
 		}
 	}));
-	console.log(emulators);
-	return emulators.filter(emu => emu && emu.genymotion);
+	return emulators;
 }
 
-export async function detect(dir, virtualBoxInfo) {
-	if (!virtualBoxInfo) {
-		virtualBoxInfo = await getVirtualBox();
+/**
+ * Detect the Genymotion install, and emulators.
+ * @param  {String} dir            The directory to scan.
+ * @param  {Object} vbox VirtualBox install info.
+ * @return {Stuff}                 Stuff.
+ */
+export async function detect(dir, vbox) {
+	if (!vbox) {
+		vbox = await getVirtualBox();
 	}
-	return await new Genymotion(dir).init(virtualBoxInfo);
+	return await new Genymotion(dir).init(vbox);
 }

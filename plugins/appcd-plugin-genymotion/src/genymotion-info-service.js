@@ -4,23 +4,23 @@ import path from 'path';
 import fs from 'fs';
 
 import { DataServiceDispatcher } from 'appcd-dispatcher';
-import { exe } from 'appcd-subprocess';
 import { debounce, sleep } from 'appcd-util';
-
+import { exe } from 'appcd-subprocess';
 import { genymotionLocations, detect as genyDetect, getEmulators } from './genymotion';
 import { virtualBoxLocations, VirtualBox } from './virtualbox';
 
 const GENYMOTION_HOME = 1;
+let DEPLOYED_DIR;
+let VBOX;
 
 /**
- * The iOS info service.
+ * The Genymotion and VirtualBox info service.
  */
 export default class GenymotionInfoService extends DataServiceDispatcher {
 	/**
-	 * Starts the detect all macOS and iOS related information.
+	 * Starts the detect all Genymotion and VirtualBox service
 	 *
 	 * @param {Config} cfg - An Appc Daemon config object
-	 * @returns {Promise}
 	 * @access public
 	 */
 	async activate(cfg) {
@@ -36,33 +36,47 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 		});
 
 		this.genyEngine = new DetectEngine({
-			checkDir:             this.checkGenyDir.bind(this),
+			checkDir: async (dir) => {
+				try {
+					return await genyDetect(dir);
+				} catch (e) {
+					// squelch
+				}
+			},
 			depth:                1,
 			exe:                  `genymotion${exe}`,
 			multiple:             false,
 			paths:                genymotionLocations[process.platform],
-			processResults:       this.processResults.bind(this),
 			redetect:             true,
-			refreshPathsInterval: 5000,
+			refreshPathsInterval: 15000,
 			// registryCallback:     this.registryCallback.bind(this),
 			watch:                true
 		});
 
 		const onFSChange = debounce(async ({ file, filename, action }) => {
-			if (action !== 'delete' && !fs.existsSync(path.join(file, `${filename}.vbox`))) {
+			let { emulators } = this.data;
+			if (action !== 'delete') {
 				await sleep(8000);
+				emulators = await getEmulators(VBOX || {});
+			} else if (action === 'delete' && (path.dirname(file) === DEPLOYED_DIR)) {
+				// find the emulator in the data store and remove it
+				for (let i = 0, len = emulators.length; i < len; i++) {
+					if (emulators[i].name === filename) {
+						emulators.splice(i, 1);
+					}
+				}
 			}
-			gawk.set(this.data.emulators, await getEmulators(this.data.virtualbox || {}));
+
+			gawk.set(this.data.emulators, emulators);
 		});
 
 		this.genyEngine.on('results', results => {
 			results.virtualbox = this.data.virtualbox || {};
-			const deployedDir = path.join(results.home, 'deployed');
+			DEPLOYED_DIR = path.join(results.home, 'deployed');
 			this.watch({
 				type: GENYMOTION_HOME,
-				paths: [ deployedDir ],
-				depth: 1,
-				resursive: true,
+				paths: [ DEPLOYED_DIR ],
+				depth: 2,
 				handler: onFSChange
 			});
 
@@ -72,7 +86,7 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 		this.vboxEngine = new DetectEngine({
 			checkDir(dir) {
 				try {
-					return new VirtualBox(dir);
+					return VBOX = new VirtualBox(dir);
 				} catch (e) {
 					// Squelch
 				}
@@ -81,43 +95,17 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 			exe:                  `vboxmanage${exe}`,
 			multiple:             false,
 			paths:                virtualBoxLocations[process.platform],
-			processResults:       this.processResults.bind(this),
 			redetect:             true,
-			refreshPathsInterval: 5000,
+			refreshPathsInterval: 15000,
 			watch:                true
 		});
 
-		this.vboxEngine.on('results', async results => {
+		this.vboxEngine.on('results', results => {
 			gawk.set(this.data.virtualbox, results);
 		});
 
 		await this.vboxEngine.start();
 		await this.genyEngine.start();
-	}
-
-	/**
-	 * Determines if the specified directory is a Genymotion install.
-	 *
-	 * @param {String} dir - The directory to check.
-	 * @returns {Promise}
-	 * @access private
-	 */
-	async checkGenyDir(dir) {
-		try {
-			return await genyDetect(dir);
-		} catch (e) {
-			// squelch
-		}
-	}
-
-	/**
-	 *
-	 * @param {Object} results - The results object
-	 * @param {DetectEngine} engine - The detect engine instance.
-	 * @access private
-	 */
-	processResults(results, engine) {
-		return;
 	}
 
 	/**
@@ -135,7 +123,7 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 			const data = { path };
 			if (depth) {
 				data.recursive = true;
-				data.depth = 1;
+				data.depth = depth;
 			}
 
 			appcd
@@ -172,7 +160,6 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 	 * @param {Number} type - The type of subscription.
 	 * @param {Array.<String>} [sids] - An array of subscription ids to unsubscribe. If not
 	 * specified, defaults to all sids for the specified types.
-	 * @returns {Promise}
 	 * @access private
 	 */
 	async unwatch(type, sids) {
@@ -197,7 +184,6 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 	/**
 	 * Stops the Genymotion-related environment watchers.
 	 *
-	 * @returns {Promise}
 	 * @access public
 	 */
 	async deactivate() {
