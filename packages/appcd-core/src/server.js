@@ -1,5 +1,6 @@
 import appcdLogger, { logcat, StdioStream } from './logger';
 import ConfigService from 'appcd-config-service';
+import defaultPluginPaths from 'appcd-default-plugins';
 import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs-extra';
 import FSWatchManager from 'appcd-fswatcher';
@@ -166,13 +167,14 @@ export default class Server {
 		// init the plugin manager
 		this.systems.pluginManager = new PluginManager({
 			paths: [
-				// built-in plugins
-				path.resolve(__dirname, '..', 'node_modules', 'appcd-default-plugins', 'node_modules'),
+				// default plugins
+				...defaultPluginPaths,
 
 				// globally installed plugins
 				path.join(homeDir, 'plugins')
 			]
 		});
+
 		Dispatcher.register('/appcd/plugin', this.systems.pluginManager);
 
 		// start the status monitor

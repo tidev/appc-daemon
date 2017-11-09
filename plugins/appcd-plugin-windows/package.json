@@ -22,7 +22,7 @@
     "windowslib": "^0.6.0"
   },
   "devDependencies": {
-    "appcd-gulp": "0.1.3",
+    "appcd-gulp": "0.1.5",
     "gulp": "^3.9.1"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",

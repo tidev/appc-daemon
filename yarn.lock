@@ -157,15 +157,18 @@ align-text@^0.1.1, align-text@^0.1.3:
     longest "^1.0.1"
     repeat-string "^1.5.2"
 
-always-tail@0.2.0:
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/always-tail/-/always-tail-0.2.0.tgz#339b1af44d50250aa07a0e87eccc3a24ec444ffe"
-  dependencies:
-    debug "~0.7.2"
-
 amdefine@>=0.0.4:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/amdefine/-/amdefine-1.0.1.tgz#4a5282ac164729e93619bcfd3ad151f817ce91f5"
+
+androidlib@2.0.0-beta.1:
+  version "2.0.0-beta.1"
+  resolved "https://registry.yarnpkg.com/androidlib/-/androidlib-2.0.0-beta.1.tgz#fc03f2b817715f4361499f242607a60a0b7450de"
+  dependencies:
+    appcd-fs "^0.1.4"
+    appcd-path "^0.1.4"
+    appcd-subprocess "^0.1.4"
+    source-map-support "^0.5.0"
 
 ansi-align@^2.0.0:
   version "2.0.0"
@@ -206,43 +209,6 @@ ansistyles@~0.1.3:
 any-promise@^1.0.0, any-promise@^1.1.0:
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/any-promise/-/any-promise-1.3.0.tgz#abc6afeedcea52e809cdc0376aed3ce39635d17f"
-
-appcd-gulp@0.1.3:
-  version "0.1.3"
-  resolved "https://registry.yarnpkg.com/appcd-gulp/-/appcd-gulp-0.1.3.tgz#21d50e5b75c562da1ba1a452b1aaacb7c9da9ae6"
-  dependencies:
-    babel-eslint "^8.0.1"
-    babel-plugin-dynamic-import-node "^1.1.0"
-    babel-plugin-istanbul "^4.1.5"
-    babel-plugin-transform-async-to-generator "^6.24.1"
-    babel-plugin-transform-class-properties "^6.24.1"
-    babel-plugin-transform-decorators-legacy "^1.3.4"
-    babel-plugin-transform-es2015-destructuring "^6.23.0"
-    babel-plugin-transform-es2015-modules-commonjs "^6.26.0"
-    babel-plugin-transform-es2015-parameters "^6.24.1"
-    babel-plugin-transform-object-rest-spread "^6.26.0"
-    babel-polyfill "^6.26.0"
-    babel-preset-minify "^0.2.0"
-    babel-register "^6.26.0"
-    chai "^4.1.2"
-    del "^3.0.0"
-    esdoc "^1.0.3"
-    esdoc-ecmascript-proposal-plugin "^1.0.0"
-    esdoc-standard-plugin "^1.0.0"
-    eslint-config-axway "^2.0.3"
-    eslint-plugin-mocha "^4.11.0"
-    gulp-babel "^7.0.0"
-    gulp-chug "^0.5.1"
-    gulp-debug "^3.1.0"
-    gulp-eslint "^4.0.0"
-    gulp-load-plugins "^1.5.0"
-    gulp-plumber "^1.1.0"
-    gulp-util "^3.0.8"
-    mocha "^4.0.1"
-    mocha-jenkins-reporter "^0.3.9"
-    nyc "^11.2.1"
-    sinon "^4.0.1"
-    sinon-chai "^2.14.0"
 
 append-transform@^0.4.0:
   version "0.4.0"
@@ -441,7 +407,7 @@ babel-core@^6.26.0:
     slash "^1.0.0"
     source-map "^0.5.6"
 
-babel-eslint@^8.0.1, babel-eslint@^8.0.2:
+babel-eslint@^8.0.2:
   version "8.0.2"
   resolved "https://registry.yarnpkg.com/babel-eslint/-/babel-eslint-8.0.2.tgz#e44fb9a037d749486071d52d65312f5c20aa7530"
   dependencies:
@@ -1742,10 +1708,6 @@ debug@2.6.8:
   dependencies:
     ms "2.0.0"
 
-debug@~0.7.2:
-  version "0.7.4"
-  resolved "https://registry.yarnpkg.com/debug/-/debug-0.7.4.tgz#06e1ea8082c2cb14e39806e22e2f6f757f92af39"
-
 debuglog@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/debuglog/-/debuglog-1.0.1.tgz#aa24ffb9ac3df9a2351837cfb2d279360cd78492"
@@ -2183,7 +2145,7 @@ esdoc@^1.0.3:
     minimist "1.2.0"
     taffydb "2.7.2"
 
-eslint-config-axway@^2.0.3, eslint-config-axway@^2.0.6:
+eslint-config-axway@^2.0.6:
   version "2.0.6"
   resolved "https://registry.yarnpkg.com/eslint-config-axway/-/eslint-config-axway-2.0.6.tgz#105f45fb84b765f1bf8d8d7532a8cfab53c9ec8c"
   dependencies:
@@ -3452,16 +3414,14 @@ invert-kv@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/invert-kv/-/invert-kv-1.0.0.tgz#104a8e4aaca6d3d8cd157a8ef8bfab2d7a3ffdb6"
 
-ioslib@^2.0.0-beta.2:
-  version "2.0.0-beta.2"
-  resolved "https://registry.yarnpkg.com/ioslib/-/ioslib-2.0.0-beta.2.tgz#e3d183a0d703a299b026fe9cbf4f42ddd6ef811a"
+ioslib@^2.0.0-beta.3:
+  version "2.0.0-beta.3"
+  resolved "https://registry.yarnpkg.com/ioslib/-/ioslib-2.0.0-beta.3.tgz#18ea323935eb5b08d2b77325a383ac05582d5f96"
   dependencies:
-    always-tail "0.2.0"
     appcd-fs "^0.1.4"
     appcd-path "^0.1.4"
     appcd-subprocess "^0.1.4"
-    appcd-util "^0.1.4"
-    eslint-plugin-mocha "^4.11.0"
+    appcd-util "^0.1.5"
     node-forge "^0.7.1"
     node-ios-device "1.4.0"
     promise-limit "^2.5.0"
@@ -4630,7 +4590,7 @@ mkdirp@0.5.1, mkdirp@0.5.x, "mkdirp@>=0.5 0", mkdirp@^0.5.0, mkdirp@^0.5.1, mkdi
   dependencies:
     minimist "0.0.8"
 
-mocha-jenkins-reporter@^0.3.10, mocha-jenkins-reporter@^0.3.9:
+mocha-jenkins-reporter@^0.3.10:
   version "0.3.10"
   resolved "https://registry.yarnpkg.com/mocha-jenkins-reporter/-/mocha-jenkins-reporter-0.3.10.tgz#11b04b84f7bef0ffa2baae6cf6ae9c1c2a0c121b"
   dependencies:
@@ -5075,7 +5035,7 @@ number-is-nan@^1.0.0:
   version "1.4.3"
   resolved "https://registry.yarnpkg.com/nwmatcher/-/nwmatcher-1.4.3.tgz#64348e3b3d80f035b40ac11563d278f8b72db89c"
 
-nyc@^11.2.1, nyc@^11.3.0:
+nyc@^11.3.0:
   version "11.3.0"
   resolved "https://registry.yarnpkg.com/nyc/-/nyc-11.3.0.tgz#a42bc17b3cfa41f7b15eb602bc98b2633ddd76f0"
   dependencies:
@@ -6071,7 +6031,7 @@ sinon-chai@^2.14.0:
   version "2.14.0"
   resolved "https://registry.yarnpkg.com/sinon-chai/-/sinon-chai-2.14.0.tgz#da7dd4cc83cd6a260b67cca0f7a9fdae26a1205d"
 
-sinon@^4.0.1, sinon@^4.1.2:
+sinon@^4.1.2:
   version "4.1.2"
   resolved "https://registry.yarnpkg.com/sinon/-/sinon-4.1.2.tgz#65610521d926fb53742dd84cd599f0b89a82f440"
   dependencies:
