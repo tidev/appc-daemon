@@ -91,7 +91,7 @@ gulp.task('clean', () => {
 							break;
 						}
 					case 'node_modules':
-						if (dir.includes('test/fixtures')) {
+						if (dir.includes('test/fixtures') || dir.includes('test\\fixtures')) {
 							break;
 						}
 					case '.nyc_output':
