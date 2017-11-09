@@ -210,6 +210,113 @@ any-promise@^1.0.0, any-promise@^1.1.0:
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/any-promise/-/any-promise-1.3.0.tgz#abc6afeedcea52e809cdc0376aed3ce39635d17f"
 
+appcd-dispatcher@0.1.4:
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/appcd-dispatcher/-/appcd-dispatcher-0.1.4.tgz#8790b6c7e746ebbe44658e30a337ec87de086318"
+  dependencies:
+    appcd-logger "0.1.4"
+    appcd-response "0.1.4"
+    gawk "^4.4.3"
+    path-to-regexp "^2.1.0"
+    source-map-support "^0.5.0"
+    uuid "^3.1.0"
+
+appcd-fs@0.1.4:
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/appcd-fs/-/appcd-fs-0.1.4.tgz#08d9d1a13c8b3d1076b3afc8922bfc8fb71deabb"
+  dependencies:
+    source-map-support "^0.5.0"
+
+appcd-fs@0.1.5, appcd-fs@^0.1.0, appcd-fs@^0.1.4:
+  version "0.1.5"
+  resolved "https://registry.yarnpkg.com/appcd-fs/-/appcd-fs-0.1.5.tgz#fbc26d1532d2f4b9293e5294c08187755134066d"
+  dependencies:
+    source-map-support "^0.5.0"
+
+appcd-logger@0.1.4, appcd-logger@^0.1.0:
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/appcd-logger/-/appcd-logger-0.1.4.tgz#c3c41ecff127e42417aea229fb92a36584d2356b"
+  dependencies:
+    snooplogg "^1.8.0"
+    source-map-support "^0.5.0"
+
+appcd-nodejs@0.1.4:
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/appcd-nodejs/-/appcd-nodejs-0.1.4.tgz#49158c94951b7c19d65f8be00a9fd8a6486adb57"
+  dependencies:
+    appcd-fs "0.1.4"
+    appcd-logger "0.1.4"
+    appcd-request "0.1.4"
+    appcd-util "0.1.4"
+    fs-extra "^4.0.2"
+    progress "^2.0.0"
+    source-map-support "^0.5.0"
+    tar-stream "^1.5.4"
+    tmp "^0.0.33"
+    yauzl "^2.9.1"
+
+appcd-path@0.1.4, appcd-path@^0.1.0, appcd-path@^0.1.4:
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/appcd-path/-/appcd-path-0.1.4.tgz#380820e8243275149f1be550d1d9585a30ad231e"
+  dependencies:
+    source-map-support "^0.5.0"
+
+appcd-request@0.1.4:
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/appcd-request/-/appcd-request-0.1.4.tgz#515b2c4fbf62925dce6e14353ac327ebf6b53aaf"
+  dependencies:
+    appcd-dispatcher "0.1.4"
+    appcd-fs "0.1.4"
+    appcd-logger "0.1.4"
+    request "^2.83.0"
+    source-map-support "^0.5.0"
+
+appcd-response@0.1.4:
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/appcd-response/-/appcd-response-0.1.4.tgz#9d6558d66c090eb020c8604e29270c93ae684843"
+  dependencies:
+    appcd-fs "0.1.4"
+    appcd-winreg "0.1.4"
+    source-map-support "^0.5.0"
+    sprintf-js "^1.1.1"
+
+appcd-subprocess@^0.1.0, appcd-subprocess@^0.1.4:
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/appcd-subprocess/-/appcd-subprocess-0.1.4.tgz#4820b45b870fbf098557a9b767d0c8e0f36f5cbb"
+  dependencies:
+    appcd-dispatcher "0.1.4"
+    appcd-logger "0.1.4"
+    appcd-nodejs "0.1.4"
+    appcd-path "0.1.4"
+    appcd-response "0.1.4"
+    gawk "^4.4.3"
+    ps-tree "^1.1.0"
+    source-map-support "^0.5.0"
+    which "^1.3.0"
+
+appcd-util@0.1.4:
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/appcd-util/-/appcd-util-0.1.4.tgz#c3731c6a2e2d196acb8185af7803b324715901c1"
+  dependencies:
+    appcd-fs "0.1.4"
+    semver "^5.4.1"
+    source-map-support "^0.5.0"
+
+appcd-util@^0.1.5:
+  version "0.1.5"
+  resolved "https://registry.yarnpkg.com/appcd-util/-/appcd-util-0.1.5.tgz#4f0b7a62f0cde00c91207ae19d50842147b16cd2"
+  dependencies:
+    appcd-fs "0.1.5"
+    semver "^5.4.1"
+    source-map-support "^0.5.0"
+
+appcd-winreg@0.1.4:
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/appcd-winreg/-/appcd-winreg-0.1.4.tgz#0d5230a068002cc28366be4428c2dbbba596adf4"
+  dependencies:
+    source-map-support "^0.5.0"
+    winreg "^1.2.4"
+
 append-transform@^0.4.0:
   version "0.4.0"
   resolved "https://registry.yarnpkg.com/append-transform/-/append-transform-0.4.0.tgz#d76ebf8ca94d276e247a36bad44a4b74ab611991"
