@@ -1,16 +1,14 @@
 import DetectEngine from 'appcd-detect';
 import gawk from 'gawk';
 import path from 'path';
-import fs from 'fs';
 
 import { DataServiceDispatcher } from 'appcd-dispatcher';
-import { debounce, sleep } from 'appcd-util';
+import { debounce, get } from 'appcd-util';
 import { exe } from 'appcd-subprocess';
 import { genymotionLocations, detect as genyDetect, getEmulators } from './genymotion';
 import { virtualBoxLocations, VirtualBox } from './virtualbox';
 
 const GENYMOTION_HOME = 1;
-let DEPLOYED_DIR;
 let VBOX;
 
 /**
@@ -24,7 +22,7 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 	 * @access public
 	 */
 	async activate(cfg) {
-		this.cfg = cfg;
+		this.config = cfg;
 
 		this.data = gawk({
 			emulators: [],
@@ -36,7 +34,7 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 		});
 
 		const paths = [ ...genymotionLocations[process.platform] ];
-		const defaultPath = this.getConfig('genymotion.installDir');
+		const defaultPath = get(this.config, 'genymotion.installDir');
 		if (defaultPath) {
 			paths.unshift(defaultPath);
 		}
@@ -58,13 +56,12 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 		});
 
 		const onEmulatorAdd = debounce(async () => {
-			await sleep(10000);
-			gawk.set(this.data.emulators, await getEmulators(VBOX || {}));
-		});
+			gawk.set(this.data.emulators, await getEmulators(this.data.virtualbox));
+		}, 10000);
 
 		this.genyEngine.on('results', results => {
 			results.virtualbox = this.data.virtualbox || {};
-			DEPLOYED_DIR = path.join(results.home, 'deployed');
+			const DEPLOYED_DIR = path.join(results.home, 'deployed');
 			this.watch({
 				type: GENYMOTION_HOME,
 				paths: [ DEPLOYED_DIR ],
@@ -75,9 +72,10 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 						await onEmulatorAdd();
 					}  else if (action === 'delete' && (path.dirname(file) === DEPLOYED_DIR)) {
 						// find the emulator in the data store and remove it
-						for (let i = 0, len = emulators.length; i < len; i++) {
+						for (let i = 0; i < emulators.length; i++) {
 							if (emulators[i].name === filename) {
-								emulators.splice(i, 1);
+								emulators.splice(i--, 1);
+								break;
 							}
 						}
 						gawk.set(this.data.emulators, emulators);
@@ -91,7 +89,7 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 		this.vboxEngine = new DetectEngine({
 			checkDir(dir) {
 				try {
-					return VBOX = new VirtualBox(dir);
+					return new VirtualBox(dir);
 				} catch (e) {
 					// Squelch
 				}
@@ -112,29 +110,11 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 
 		this.vboxEngine.on('results', results => {
 			gawk.set(this.data.virtualbox, results);
+			this.genyEngine.rescan(this.data.virtualbox);
 		});
 
 		await this.vboxEngine.start();
 		await this.genyEngine.start();
-	}
-
-	/**
-	 * Returns a config setting using the dot-notation name.
-	 *
-	 * @param {String} name - The config setting name.
-	 * @returns {*}
-	 * @access private
-	 */
-	getConfig(name) {
-		let obj = this.cfg;
-		try {
-			for (const key of name.split('.')) {
-				obj = obj[key];
-			}
-		} catch (e) {
-			return null;
-		}
-		return obj;
 	}
 
 	/**

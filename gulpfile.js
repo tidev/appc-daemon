@@ -91,7 +91,7 @@ gulp.task('clean', () => {
 							break;
 						}
 					case 'node_modules':
-						if (dir.includes('test/fixtures') || dir.includes('test\\fixtures')) {
+						if (dir.includes(`test${path.sep}fixtures`)) {
 							break;
 						}
 					case '.nyc_output':
@@ -162,7 +162,7 @@ gulp.task('fix', cb => {
 			});
 			for (const pkg of Object.keys(results.needsFixing)) {
 				const rel = path.relative(__dirname, pkg) || path.basename(pkg);
-				table.push([rel, fixReasons[results.needsFixing[pkg]] || 'unknown']);
+				table.push([ rel, fixReasons[results.needsFixing[pkg]] || 'unknown' ]);
 				if (results.needsFixing[pkg]) {
 					nuke.push(pkg);
 				}
@@ -242,7 +242,7 @@ gulp.task('lint', [ 'cyclic' ], () => {
  * build tasks
  */
 gulp.task('build', [ 'cyclic' ], () => {
-	runLerna(['run', '--parallel', 'build']);
+	runLerna([ 'run', '--parallel', 'build' ]);
 });
 
 /*
@@ -584,15 +584,15 @@ gulp.task('default', () => {
 		}
 	});
 
-	table.push([cyan('build'),            'performs a full build']);
-	table.push([cyan('watch'),            'builds all packages, then starts watching them']);
-	table.push([cyan('watch-only'),       'starts watching all packages to perform build']);
-	table.push([cyan('check'),            'checks missing/outdated dependencies/link, security issues, and code stats']);
-	table.push([cyan('cyclic'),           'detects cyclic dependencies (which are bad) in appcd packages and plugins']);
-	table.push([cyan('fix'),              'fixes any missing dependencies or links']);
-	table.push([cyan('stats'),            'displays stats about the code']);
+	table.push([ cyan('build'),            'performs a full build' ]);
+	table.push([ cyan('watch'),            'builds all packages, then starts watching them' ]);
+	table.push([ cyan('watch-only'),       'starts watching all packages to perform build' ]);
+	table.push([ cyan('check'),            'checks missing/outdated dependencies/link, security issues, and code stats' ]);
+	table.push([ cyan('cyclic'),           'detects cyclic dependencies (which are bad) in appcd packages and plugins' ]);
+	table.push([ cyan('fix'),              'fixes any missing dependencies or links' ]);
+	table.push([ cyan('stats'),            'displays stats about the code' ]);
 	// table.push([cyan('package'),          'builds and packages an appc daemon distribution archive']);
-	table.push([cyan('ugprade'),          'detects latest npm deps, updates package.json, and runs upgrade']);
+	table.push([ cyan('ugprade'),          'detects latest npm deps, updates package.json, and runs upgrade' ]);
 
 	console.log(table.toString() + '\n');
 });
@@ -735,7 +735,6 @@ function runYarn(cwd) {
 		});
 }
 
-
 function runLerna(args) {
 	let execPath = '';
 	if (isWindows) {
@@ -744,7 +743,7 @@ function runLerna(args) {
 		args.unshift('./node_modules/.bin/lerna');
 		execPath = process.execPath;
 	}
-	gutil.log(`Running ${execPath} ${args.join(' ')}`)
+	gutil.log(`Running ${execPath} ${args.join(' ')}`);
 	spawnSync(execPath, args, { stdio: 'inherit' });
 }
 
@@ -889,11 +888,11 @@ function checkPackages({ skipSecurity } = {}) {
 							if (isWindows) {
 								execPath = path.join(__dirname, 'node_modules', '.bin', 'retire.cmd');
 							} else {
-								args.unshift(path.join(__dirname, 'node_modules', '.bin', 'retire'))
+								args.unshift(path.join(__dirname, 'node_modules', '.bin', 'retire'));
 							}
 							return run(execPath, args, { cwd: packagePath })
 								.then(result => new Promise(resolve => {
-									const outFile = path.join(packagePath, 'retire_output.json')
+									const outFile = path.join(packagePath, 'retire_output.json');
 
 									if (result.status !== 13) {
 										try {
@@ -1003,7 +1002,7 @@ function checkPackages({ skipSecurity } = {}) {
 				}))
 				.then(() => {
 					// update the package information object
-					gutil.log('Updating package table...')
+					gutil.log('Updating package table...');
 					for (const packagePath of Object.keys(packages)) {
 						for (const type of [ 'dependencies', 'devDependencies', 'optionalDependencies' ]) {
 							if (packages[packagePath][type]) {
@@ -1172,7 +1171,7 @@ function renderPackages(results) {
 
 		[ 'dependencies', 'devDependencies', 'optionalDependencies' ].forEach(type => {
 			if (pkg[type] && Object.keys(pkg[type]).length) {
-				table.push([{ colSpan: 6, content: gray(typeLabels[type]) }]);
+				table.push([ { colSpan: 6, content: gray(typeLabels[type]) } ]);
 
 				for (const name of Object.keys(pkg[type])) {
 					const dep = pkg[type][name];
@@ -1209,7 +1208,6 @@ function renderPackages(results) {
 					}
 
 					console.log('   • ' + bold(name + '@' + ver) + ' ' + gray('(' + tools.join(', ') + ')'));
-
 
 					table = new Table({
 						chars: cliTableChars,
@@ -1358,7 +1356,7 @@ function renderPackages(results) {
 			});
 			for (const pkg of results.packagesToUpdate) {
 				const rel = path.relative(__dirname, pkg.path) || path.basename(pkg.path);
-				table.push([rel, pkg.name, pkg.current, '→', hlVer(pkg.updated, pkg.current)]);
+				table.push([ rel, pkg.name, pkg.current, '→', hlVer(pkg.updated, pkg.current) ]);
 			}
 			console.log(table.toString() + '\n');
 		}
@@ -1375,7 +1373,7 @@ function renderPackages(results) {
 			});
 			for (const pkg of Object.keys(results.needsFixing)) {
 				const rel = path.relative(__dirname, pkg) || path.basename(pkg);
-				table.push([rel, fixReasons[results.needsFixing[pkg]] || 'unknown']);
+				table.push([ rel, fixReasons[results.needsFixing[pkg]] || 'unknown' ]);
 			}
 			console.log(table.toString() + '\n');
 		}
@@ -1486,7 +1484,7 @@ function upgradeDeps(list) {
 		for (const packageName of Object.keys(components[pkgJsonFile])) {
 			[ 'dependencies', 'devDependencies', 'optionalDependencies' ].forEach(type => {
 				if (pkgJson[type] && pkgJson[type].hasOwnProperty(packageName)) {
-					table.push([packageName, pkgJson[type][packageName], '→', hlVer(components[pkgJsonFile][packageName], pkgJson[type][packageName])]);
+					table.push([ packageName, pkgJson[type][packageName], '→', hlVer(components[pkgJsonFile][packageName], pkgJson[type][packageName]) ]);
 					pkgJson[type][packageName] = components[pkgJsonFile][packageName];
 				}
 			});
@@ -1536,13 +1534,13 @@ function computeSloc(type) {
 }
 
 function formatNumber(num, dontSign) {
-	const n = parseFloat(num)
+	const n = parseFloat(num);
 	if (isNaN(n)) {
 		return num;
 	}
 	const pos = String(Math.abs(n)).split('.');
-	const val = pos[0].replace(/./g, function(c, i, a) {
-	    return i && c !== "." && ((a.length - i) % 3 === 0) ? ',' + c : c;
+	const val = pos[0].replace(/./g, function (c, i, a) {
+	    return i && c !== '.' && ((a.length - i) % 3 === 0) ? ',' + c : c;
 	}) + (pos.length > 1 ? ('.' + pos[1]) : '');
 
 	return dontSign && n < 0 ? `(${val})` : val;

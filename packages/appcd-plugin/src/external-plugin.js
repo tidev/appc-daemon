@@ -302,9 +302,10 @@ export default class ExternalPlugin extends PluginBase {
 						if (this.config.server && this.config.server.agentPollInterval) {
 							this.agent.pollInterval = Math.max(1000, this.config.server.agentPollInterval);
 						}
+
 						if (!loadedConfig) {
-							resolve();
 							loadedConfig = true;
+							resolve();
 						}
 					}
 				});

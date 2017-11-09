@@ -1,11 +1,15 @@
 import path from 'path';
 
-import { cache, sleep } from 'appcd-util';
+import { cache } from 'appcd-util';
 import { expandPath } from 'appcd-path';
 import { exe, run } from 'appcd-subprocess';
 import { isDir, isFile } from 'appcd-fs';
 import { spawnSync } from 'child_process';
 
+/**
+ * Common VirtualBox install locations
+ * @type {Object}
+ */
 export const virtualBoxLocations = {
 	darwin: [
 		'/usr/local/bin'
@@ -24,13 +28,13 @@ export const virtualBoxLocations = {
 };
 
 /**
- * Genymotion information
+ * VirtualBox information
  */
 export class VirtualBox {
 	/**
-	 * Performs tests to see if this is a Genymotion install directory,
+	 * Performs tests to see if this is a VirtualBox install directory,
 	 * and then initializes the info.
-	 * @param  {String} dir Directory to scan.
+	 * @param {String} dir - Directory to scan.
  	 * @access public
 	 */
 	constructor(dir) {
@@ -48,7 +52,7 @@ export class VirtualBox {
 		};
 		this.version = null;
 
-		if (!Object.values(this.executables).every(cmd => isFile(cmd))) {
+		if (!isFile(this.executables.vboxmanage)) {
 			throw new Error('Directory does not contain vboxmanage executable');
 		}
 
@@ -60,46 +64,48 @@ export class VirtualBox {
 	}
 
 	/**
-	 * List all VirtualBox VMs
+	 * List all VirtualBox VMs.
 	 *
-	 * @async
-	 * @return {Promise<String|null>} - The output of the list vms command, or null if command errored
+	 * @return {Promise<Object|null>} - Array of VMs, or null if command errored.
 	 */
 	async list() {
 		try {
 			const { stdout } = await run(this.executables.vboxmanage, [ 'list', 'vms' ]);
-			return stdout.trim();
+			return stdout.trim().split(/\r?\n/);
 		} catch (e) {
 			return null;
 		}
 	}
 
 	/**
-	 * Query the guestproperties of a VM
-	 * @param  {String}  guid - The guid for the VirtualBox VM
-	 * @return {Promise<String|null>} - The output of the command, or null if command errored
+	 * Query the guestproperties of a VM.
+	 * @param {String}  guid - The guid for the VirtualBox VM.
+	 * @return {Promise<Array|null>} - Array of properties, or null if command errored.
 	 */
 	async getVMInfo(guid) {
 		try {
 			const { stdout } = await run(this.executables.vboxmanage, [ 'guestproperty', 'enumerate', guid ]);
-			return stdout.trim();
+			return stdout.trim().split(/\r?\n/);
 		} catch (e) {
 			return null;
 		}
 	}
 }
 
+/**
+ * Detect installations of VirtualBox
+ * @param {Boolean} force - Force function to be ran
+ * @return {Promise<VirtualBox>}
+ */
 export function getVirtualBox(force) {
 	return cache('virtualbox', force, async () => {
-		let virtualbox;
 		for (let dir of virtualBoxLocations[process.platform]) {
 			dir = expandPath(dir);
 			try {
-				virtualbox = new VirtualBox(dir);
+				return new VirtualBox(dir);
 			} catch (e) {
 				// blah
 			}
 		}
-		return virtualbox;
 	});
 }

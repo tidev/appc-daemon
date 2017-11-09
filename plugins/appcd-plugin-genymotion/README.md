@@ -4,7 +4,8 @@ Genymotion service for the Appc Daemon.
 
 ## Info
 
-The `info` service uses [genymotion.js](./src/genymotion.js) and [virtualbox.js](./src/virtualbox.js) to detect the install Genymotion install and emulators, and Virtualbox install.
+The `info` service uses [genymotion.js](./src/genymotion.js) and [virtualbox.js]
+(./src/virtualbox.js) to detect the install Genymotion install and emulators, and Virtualbox install.
 
 ```js
 appcd.call('/genymotion/latest/info', ctx => {
