@@ -185,17 +185,30 @@ export default class PluginManager extends Dispatcher {
 									if (version === 'latest') {
 										version = versions[0];
 										logger.log('Remapping plugin version %s -> %s', highlight('latest'), highlight(version));
+										plugin = version && ns.versions[version];
 									} else {
 										for (const v of versions) {
 											if (semver.satisfies(v, version)) {
 												logger.log('Remapping plugin version %s -> %s', highlight(version), highlight(v));
-												version = v;
+												plugin = ns.versions[v];
 												break;
 											}
 										}
-									}
 
-									plugin = version && ns.versions[version];
+										if (!plugin) {
+											// while technically not semver, loop over the versions
+											// again, but this time convert any pre-release versions
+											// to regular versions
+											for (const v of versions) {
+												const p = v.indexOf('-');
+												if (p !== -1 && semver.satisfies(v.substring(0, p), version)) {
+													logger.log('Remapping plugin version %s -> %s', highlight(version), highlight(v));
+													plugin = ns.versions[v];
+													break;
+												}
+											}
+										}
+									}
 								}
 
 								if (plugin) {

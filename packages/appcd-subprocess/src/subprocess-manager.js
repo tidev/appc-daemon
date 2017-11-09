@@ -161,7 +161,13 @@ export default class SubprocessManager extends Dispatcher {
 								if (!ipc) {
 									throw new Error('IPC not enabled for this process');
 								}
-								child.send(value);
+								try {
+									child.send(value);
+								} catch (e) {
+									if (e.code !== 'ERR_IPC_CHANNEL_CLOSED') {
+										throw e;
+									}
+								}
 							}
 						}
 					});

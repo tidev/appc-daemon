@@ -5,6 +5,7 @@ if (!Error.prepareStackTrace) {
 
 import crypto from 'crypto';
 import fs from 'fs';
+import get from 'lodash.get';
 import semver from 'semver';
 
 import { ChildProcess, execSync } from 'child_process';
@@ -203,6 +204,19 @@ export function decodeOctalUTF8(input) {
 export function formatNumber(n) {
 	return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
+
+/**
+ * Re-export of lodash's `get()` function.
+ *
+ * For more information, visit {@link https://www.npmjs.com/package/lodash.get} or
+ * {@link https://lodash.com/docs/4.17.4#get}.
+ *
+ * @param {Object} obj - The object to query.
+ * @param {Array.<String>|String} [path] - The path of the property to get.
+ * @param {*} [defaultValue] - The value returned for `undefined` resolved values.
+ * @returns {*}
+ */
+export { get };
 
 /**
  * Returns an object with active socket, server, timer, and other handles.
