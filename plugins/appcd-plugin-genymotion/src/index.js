@@ -10,7 +10,7 @@ const genymotionInfo = new GenymotionInfoService();
 /**
  * Activates and wires up the Genymotion info service.
  *
- * @param {Config} cfg - An Appc Daemon config object
+ * @param {Config} cfg - An Appc Daemon config object.
  * @returns {Promise}
  */
 export async function activate(cfg) {
@@ -23,6 +23,6 @@ export async function activate(cfg) {
  *
  * @returns {Promise}
  */
-export async function deactivate() {
-	await genymotionInfo.deactivate();
+export function deactivate() {
+	return genymotionInfo.deactivate();
 }

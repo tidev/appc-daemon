@@ -46,7 +46,7 @@ export class VirtualBox {
 		this.executables = {
 			vboxmanage: path.join(dir, `vboxmanage${exe}`)
 		};
-		this.version	 = null;
+		this.version = null;
 
 		if (!Object.values(this.executables).every(cmd => isFile(cmd))) {
 			throw new Error('Directory does not contain vboxmanage executable');
@@ -59,6 +59,12 @@ export class VirtualBox {
 		}
 	}
 
+	/**
+	 * List all VirtualBox VMs
+	 *
+	 * @async
+	 * @return {Promise<String|null>} - The output of the list vms command, or null if command errored
+	 */
 	async list() {
 		try {
 			const { stdout } = await run(this.executables.vboxmanage, [ 'list', 'vms' ]);
@@ -68,6 +74,11 @@ export class VirtualBox {
 		}
 	}
 
+	/**
+	 * Query the guestproperties of a VM
+	 * @param  {String}  guid - The guid for the VirtualBox VM
+	 * @return {Promise<String|null>} - The output of the command, or null if command errored
+	 */
 	async getVMInfo(guid) {
 		try {
 			const { stdout } = await run(this.executables.vboxmanage, [ 'guestproperty', 'enumerate', guid ]);
