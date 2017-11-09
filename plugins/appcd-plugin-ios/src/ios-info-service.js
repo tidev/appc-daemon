@@ -2,7 +2,7 @@ import DetectEngine from 'appcd-detect';
 import gawk from 'gawk';
 import path from 'path';
 
-import * as ioslib from 'ioslib2';
+import * as ioslib from 'ioslib';
 
 import { DataServiceDispatcher } from 'appcd-dispatcher';
 import { mergeDeep } from 'appcd-util';
@@ -11,11 +11,11 @@ import { mergeDeep } from 'appcd-util';
  * Constants to identify the subscription id list.
  * @type {Number}
  */
-const KEYCHAIN_META_FILE        = 1;
-const KEYCHAIN_PATHS            = 2;
-const PROVISIONING_PROFILES_DIR = 3;
-const GLOBAL_SIM_PROFILES       = 4;
-const SIMULATOR_PATH            = 5;
+const KEYCHAIN_META_FILE          = 1;
+const KEYCHAIN_PATHS              = 2;
+const PROVISIONING_PROFILES_DIR   = 3;
+const GLOBAL_SIM_PROFILES         = 4;
+const CORE_SIMULATOR_DEVICES_PATH = 5;
 
 const version = {
 	compare(a, b) {
@@ -356,8 +356,8 @@ export default class iOSInfoService extends DataServiceDispatcher {
 		});
 
 		this.watch({
-			type: SIMULATOR_PATH,
-			paths: [ ioslib.simulator.simulatorPath ],
+			type: CORE_SIMULATOR_DEVICES_PATH,
+			paths: [ ioslib.simulator.getCoreSimulatorDevicesDir() ],
 			depth: 1,
 			handler: async () => {
 				gawk.set(this.data.simulators, await ioslib.simulator.getSimulators(this.data.xcode));
