@@ -5,7 +5,7 @@ import path from 'path';
 import * as ioslib from 'ioslib';
 
 import { DataServiceDispatcher } from 'appcd-dispatcher';
-import { mergeDeep } from 'appcd-util';
+import { get, mergeDeep } from 'appcd-util';
 
 /**
  * Constants to identify the subscription id list.
@@ -35,7 +35,7 @@ export default class iOSInfoService extends DataServiceDispatcher {
 	 * @access public
 	 */
 	async activate(cfg) {
-		this.cfg = cfg;
+		this.config = cfg;
 
 		this.data = gawk({
 			certs: {},
@@ -63,25 +63,6 @@ export default class iOSInfoService extends DataServiceDispatcher {
 		await this.initProvisioningProfiles();
 		await this.initTeams();
 		await this.initXcodeAndSimulators();
-	}
-
-	/**
-	 * Returns a config setting using the dot-notation name.
-	 *
-	 * @param {String} name - The config setting name.
-	 * @returns {*}
-	 * @access private
-	 */
-	getConfig(name) {
-		let obj = this.cfg;
-		try {
-			for (const key of name.split('.')) {
-				obj = obj[key];
-			}
-		} catch (e) {
-			return null;
-		}
-		return obj;
 	}
 
 	/**
@@ -251,7 +232,7 @@ export default class iOSInfoService extends DataServiceDispatcher {
 	 */
 	async initXcodeAndSimulators() {
 		const paths = [ ...ioslib.xcode.xcodeLocations ];
-		const defaultPath = await ioslib.xcode.getDefaultXcodePath(this.getConfig('ios.executables.xcodeselect'));
+		const defaultPath = await ioslib.xcode.getDefaultXcodePath(get(this.config, 'ios.executables.xcodeselect'));
 		if (defaultPath) {
 			paths.unshift(defaultPath);
 		}
@@ -279,7 +260,7 @@ export default class iOSInfoService extends DataServiceDispatcher {
 				}
 
 				if (results.length) {
-					const defaultPath = await ioslib.xcode.getDefaultXcodePath(this.getConfig('ios.executables.xcodeselect'));
+					const defaultPath = await ioslib.xcode.getDefaultXcodePath(get(this.config, 'ios.executables.xcodeselect'));
 					let foundDefault = false;
 					if (defaultPath) {
 						for (const xcode of results) {

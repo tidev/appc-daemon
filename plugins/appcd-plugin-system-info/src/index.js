@@ -57,19 +57,19 @@ class SystemInfoService extends DataServiceDispatcher {
 			this.npmInfo(),
 
 			// subscribe to android service
-			this.wireup('android', '/android/latest/info'),
+			this.wireup('android', '/android/1.x/info'),
 
 			// subscribe to genymotion service
-			this.wireup('genymotion', '/genymotion/latest/info'),
+			this.wireup('genymotion', '/genymotion/1.x/info'),
 
 			// subscribe to ios service
-			process.platform === 'darwin' && this.wireup('ios', '/ios/latest/info'),
+			process.platform === 'darwin' && this.wireup('ios', '/ios/1.x/info'),
 
 			// subscribe to jdk service
-			this.wireup('jdks', '/jdk/latest/info'),
+			this.wireup('jdks', '/jdk/1.x/info'),
 
 			// subscribe to windows service
-			process.platform === 'win32' && this.wireup('windows', '/windows/latest/info')
+			process.platform === 'win32' && this.wireup('windows', '/windows/1.x/info')
 		]);
 	}
 
