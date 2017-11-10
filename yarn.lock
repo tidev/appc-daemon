@@ -161,9 +161,9 @@ amdefine@>=0.0.4:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/amdefine/-/amdefine-1.0.1.tgz#4a5282ac164729e93619bcfd3ad151f817ce91f5"
 
-androidlib@2.0.0-beta.1:
-  version "2.0.0-beta.1"
-  resolved "https://registry.yarnpkg.com/androidlib/-/androidlib-2.0.0-beta.1.tgz#fc03f2b817715f4361499f242607a60a0b7450de"
+androidlib@2.0.0-2:
+  version "2.0.0-2"
+  resolved "https://registry.yarnpkg.com/androidlib/-/androidlib-2.0.0-2.tgz#6514cfbaf0d6a3f0fbc82d8d424eb9e4bb223ebe"
   dependencies:
     appcd-fs "^0.1.4"
     appcd-path "^0.1.4"

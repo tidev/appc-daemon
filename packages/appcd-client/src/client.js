@@ -81,47 +81,51 @@ export default class Client {
 		// need to delay request so event emitter can be returned and events can
 		// be wired up
 		setImmediate(async () => {
-			if (this.socket) {
-				emitter.emit('connected', this);
-				return;
-			}
-
-			const socket = this.socket = new WebSocket(`ws://${this.host}:${this.port}`, {
-				headers: {
-					'Accept-Language': process.env.APPCD_LOCALE || await locale(),
-					'User-Agent': this.userAgent
+			try {
+				if (this.socket) {
+					emitter.emit('connected', this);
+					return;
 				}
-			});
 
-			socket.on('message', data => {
-				let json = null;
-				if (typeof data === 'string') {
-					try {
-						json = JSON.parse(data);
-					} catch (e) {
-						// bad response, shouldn't ever happen
-						emitter.emit('warning', `Server returned invalid JSON: ${e.message}`);
-						return;
+				const socket = this.socket = new WebSocket(`ws://${this.host}:${this.port}`, {
+					headers: {
+						'Accept-Language': process.env.APPCD_LOCALE || await locale(),
+						'User-Agent': this.userAgent
 					}
-				} else {
-					json = msgpack.decode(data);
-				}
-
-				if (json && typeof json === 'object' && this.requests[json.id]) {
-					this.requests[json.id](json);
-				} else {
-					emitter.emit('warning', 'Server response is not an object or has an invalid id');
-				}
-			});
-
-			socket
-				.on('open', () => emitter.emit('connected', this))
-				.once('close', () => emitter.emit('close'))
-				.once('error', err => {
-					socket.close();
-					this.socket = null;
-					emitter.emit('error', err);
 				});
+
+				socket.on('message', data => {
+					let json = null;
+					if (typeof data === 'string') {
+						try {
+							json = JSON.parse(data);
+						} catch (e) {
+							// bad response, shouldn't ever happen
+							emitter.emit('warning', `Server returned invalid JSON: ${e.message}`);
+							return;
+						}
+					} else {
+						json = msgpack.decode(data);
+					}
+
+					if (json && typeof json === 'object' && this.requests[json.id]) {
+						this.requests[json.id](json);
+					} else {
+						emitter.emit('warning', 'Server response is not an object or has an invalid id');
+					}
+				});
+
+				socket
+					.on('open', () => emitter.emit('connected', this))
+					.once('close', () => emitter.emit('close'))
+					.once('error', err => {
+						socket.close();
+						this.socket = null;
+						emitter.emit('error', err);
+					});
+			} catch (e) {
+				emitter.emit('error', e);
+			}
 		});
 
 		return emitter;
