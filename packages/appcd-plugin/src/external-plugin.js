@@ -288,6 +288,7 @@ export default class ExternalPlugin extends PluginBase {
 				this.tunnel.emit({ type: 'stats', stats });
 			})
 			.start();
+
 		let loadedConfig = false;
 
 		return this.globals.appcd

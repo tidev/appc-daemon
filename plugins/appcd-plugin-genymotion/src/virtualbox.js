@@ -27,6 +27,9 @@ export const virtualBoxLocations = {
 	]
 };
 
+const VM_INFO_REGEX = /^"(.+)" \{(.+)\}$/;
+const GUESTPROPERTY_REGEX = /Name: (\S+), value: (\S*), timestamp:/;
+
 /**
  * VirtualBox information
  */
@@ -34,6 +37,7 @@ export class VirtualBox {
 	/**
 	 * Performs tests to see if this is a VirtualBox install directory,
 	 * and then initializes the info.
+	 *
 	 * @param {String} dir - Directory to scan.
  	 * @access public
 	 */
@@ -66,12 +70,22 @@ export class VirtualBox {
 	/**
 	 * List all VirtualBox VMs.
 	 *
-	 * @return {Promise<Object|null>} - Array of VMs, or null if command errored.
+	 * @return {Promise<Array.<Object>|null>} - Array of VM objects with guid and name, or null if command errored.
 	 */
 	async list() {
 		try {
 			const { stdout } = await run(this.executables.vboxmanage, [ 'list', 'vms' ]);
-			return stdout.trim().split(/\r?\n/);
+			const vms = [];
+			for (const vm of stdout.trim().split(/\r?\n/)) {
+				const info = VM_INFO_REGEX.exec(vm);
+				if (info) {
+					vms.push({
+						name: info[1],
+						guid: info[2],
+					});
+				}
+			}
+			return vms;
 		} catch (e) {
 			return null;
 		}
@@ -79,13 +93,25 @@ export class VirtualBox {
 
 	/**
 	 * Query the guestproperties of a VM.
+	 *
 	 * @param {String}  guid - The guid for the VirtualBox VM.
-	 * @return {Promise<Array|null>} - Array of properties, or null if command errored.
+	 * @return {Promise<Array.<Object>|null>} - Array of guestproperty objects with name and value,
+	 * or null if command errored.
 	 */
-	async getVMInfo(guid) {
+	async getGuestproperties(guid) {
 		try {
 			const { stdout } = await run(this.executables.vboxmanage, [ 'guestproperty', 'enumerate', guid ]);
-			return stdout.trim().split(/\r?\n/);
+			const properties = [];
+			for (const guestproperty of stdout.trim().split(/\r?\n/)) {
+				const propertyInfo = GUESTPROPERTY_REGEX.exec(guestproperty);
+				if (propertyInfo) {
+					properties.push({
+						name: propertyInfo[1],
+						value: propertyInfo[2]
+					});
+				}
+			}
+			return properties;
 		} catch (e) {
 			return null;
 		}
@@ -93,8 +119,9 @@ export class VirtualBox {
 }
 
 /**
- * Detect installations of VirtualBox
- * @param {Boolean} force - Force function to be ran
+ * Detect installations of VirtualBox.
+ *
+ * @param {Boolean} force - Force function to be ran.
  * @return {Promise<VirtualBox>}
  */
 export function getVirtualBox(force) {

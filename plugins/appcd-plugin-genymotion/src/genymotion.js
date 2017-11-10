@@ -68,9 +68,14 @@ export class Genymotion {
 
 		// on OS X, it lives in Contents/MacOS
 		if (process.platform === 'darwin') {
-			const p = path.join(dir, 'Contents', 'MacOS');
+			let p = path.join(dir, 'Contents', 'MacOS');
 			if (isDir(p)) {
 				dir = p;
+			} else {
+				p = path.join(dir, '..', 'Contents', 'MacOS');
+				if (isDir(p)) {
+					dir = p;
+				}
 			}
 		}
 
@@ -80,14 +85,17 @@ export class Genymotion {
 		this.path 		 = dir;
 
 		this.executables.genymotion = path.join(dir, `genymotion${exe}`);
+
 		if (process.platform === 'darwin') {
 			this.executables.player = path.join(dir, 'player.app', 'Contents', 'MacOS', 'player');
 		} else {
 			this.executables.player = path.join(dir, `player${exe}`);
 		}
 
-		if (!Object.values(this.executables).every(cmd => isFile(cmd))) {
-			throw new Error('Directory missing required program');
+		for (const name of Object.keys(this.executables)) {
+			if (!isFile(this.executables[name])) {
+				throw new Error(`Directory does not contain the "${name}" executable`);
+			}
 		}
 
 		const homeDirs = genymotionHomeLocations[process.platform];
@@ -105,84 +113,57 @@ export class Genymotion {
 	}
 
 	/**
-	 * Fetches the Genymotion version and installed emulators.
+	 * Get the Genymotion emulators installed on a system.
 	 *
-	 * @param {Object} vbox - Object containing information about the VirtualBox install
-	 * @return {Object}
-	 * @access public
+	 * @param  {Object} vbox Object containing information about the VirtualBox install.
+	 * @return {Array<Object>}      The installed emulators.
 	 */
-	async init(vbox) {
-		try {
-			this.emulators = await getEmulators(vbox);
-		} catch (e) {
-			// squelch
+	async getEmulators(vbox) {
+		if (!vbox) {
+			return;
 		}
-		return this;
-	}
-}
-
-/**
- * Get the Genymotion emulators installed on a system
- * @param  {Object} vbox Object containing information about the VirtualBox install
- * @return {Array<Object>}      The installed emulators
- */
-export async function getEmulators(vbox) {
-	const emulators = [];
-	if (!vbox) {
-		vbox = await getVirtualBox();
-	}
-	const vms = await vbox.list();
-	await Promise.all(vms.map(async vm => {
-		const info = vm.trim().match(/^"(.+)" \{(.+)\}$/);
-		if (!info) {
-			return null;
-		}
-		vm = {
-			name: info[1],
-			guid: info[2],
-		};
-		const vminfo = await vbox.getVMInfo(vm.guid);
-		if (vminfo) {
-			for (const line of vminfo) {
-				const m = line.trim().match(/Name: (\S+), value: (\S*), timestamp:/);
-				if (m) {
-					switch (m[1]) {
-						case 'android_version':
-							vm['sdk-version'] = vm.target = m[2];
-							break;
-						case 'genymotion_player_version':
-						case 'genymotion_version':
-							vm.genymotion = m[2];
-							break;
-						case 'hardware_opengl':
-							vm.hardwareOpenGL = !!parseInt(m[2]);
-							break;
-						case 'vbox_dpi':
-							vm.dpi = ~~m[2];
-							break;
-						case 'vbox_graph_mode':
-							vm.display = m[2];
-							break;
-						case 'androvm_ip_management':
-							vm.ipaddress = m[2];
-							break;
-					}
+		this.emulators = [];
+		const vms = await vbox.list();
+		await Promise.all(vms.map(async vm => {
+			const vminfo = await vbox.getGuestproperties(vm.guid);
+			for (const info of vminfo) {
+				switch (info.name) {
+					case 'android_version':
+						vm['sdk-version'] = vm.target = info.value;
+						break;
+					case 'genymotion_player_version':
+					case 'genymotion_version':
+						vm.genymotion = info.value;
+						break;
+					case 'hardware_opengl':
+						vm.hardwareOpenGL = !!parseInt(info.value);
+						break;
+					case 'vbox_dpi':
+						vm.dpi = ~~info.value;
+						break;
+					case 'vbox_graph_mode':
+						vm.display = info.value;
+						break;
+					case 'androvm_ip_management':
+						vm.ipaddress = info.value;
+						break;
 				}
 			}
 			if (vm.genymotion) {
 				vm.abi = 'x86';
 				vm.googleApis = null; // null means maybe since we don't know for sure unless the emulator is running
-				emulators.push(vm);
+				this.emulators.push(vm);
 				return;
 			}
-		}
-	}));
+		}));
 
-	return emulators;
+		return this.emulators;
+	}
 }
 
 /**
  * Detect the Genymotion install, and emulators.
+ *
  * @param {String} dir - The directory to scan.
  * @param {Object} vbox - VirtualBox install info.
  * @return {Promise} A Genymotion instance

@@ -5,7 +5,7 @@ import path from 'path';
 import { DataServiceDispatcher } from 'appcd-dispatcher';
 import { debounce, get } from 'appcd-util';
 import { exe } from 'appcd-subprocess';
-import { genymotionLocations, detect as genyDetect, getEmulators } from './genymotion';
+import { genymotionLocations, Genymotion } from './genymotion';
 import { virtualBoxLocations, VirtualBox } from './virtualbox';
 
 const GENYMOTION_HOME = 1;
@@ -15,7 +15,7 @@ const GENYMOTION_HOME = 1;
  */
 export default class GenymotionInfoService extends DataServiceDispatcher {
 	/**
-	 * Starts the detect all Genymotion and VirtualBox service
+	 * Starts the detect all Genymotion and VirtualBox service.
 	 *
 	 * @param {Config} cfg - An Appc Daemon config object.
 	 * @access public
@@ -29,18 +29,21 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 			home: null,
 			path: null,
 			version: null,
-			virtualbox: {},
+			virtualbox: null
 		});
 
 		const paths = [ ...genymotionLocations[process.platform] ];
-		const defaultPath = get(this.config, 'genymotion.installDir');
+		const defaultPath = get(this.config, 'genymotion.path');
 		if (defaultPath) {
 			paths.unshift(defaultPath);
 		}
+
 		this.genyEngine = new DetectEngine({
 			checkDir: async (dir) => {
 				try {
-					return await genyDetect(dir);
+					this.geny = new Genymotion(dir);
+					this.geny.emulators = await this.geny.getEmulators(this.vbox);
+					return this.geny;
 				} catch (e) {
 					// squelch
 				}
@@ -55,21 +58,21 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 		});
 
 		const onEmulatorAdd = debounce(async () => {
-			gawk.set(this.data.emulators, await getEmulators(this.vbox));
+			gawk.set(this.data.emulators, await this.geny.getEmulators(this.vbox));
 		}, 8000);
 
 		this.genyEngine.on('results', results => {
 			results.virtualbox = this.data.virtualbox || {};
-			const DEPLOYED_DIR = path.join(results.home, 'deployed');
+			const deployedDir = path.join(results.home, 'deployed');
 			this.watch({
 				type: GENYMOTION_HOME,
-				paths: [ DEPLOYED_DIR ],
+				paths: [ deployedDir ],
 				depth: 1,
 				handler: async ({ file, filename, action }) => {
 					const { emulators } = this.data;
-					if ((action === 'add' || action === 'change') && (path.dirname(file) === DEPLOYED_DIR)) {
+					if ((action === 'add' || action === 'change') && (path.dirname(file) === deployedDir)) {
 						await onEmulatorAdd();
-					}  else if (action === 'delete' && (path.dirname(file) === DEPLOYED_DIR)) {
+					}  else if (action === 'delete' && (path.dirname(file) === deployedDir)) {
 						// find the emulator in the data store and remove it
 						for (let i = 0; i < emulators.length; i++) {
 							if (emulators[i].name === filename) {
@@ -90,7 +93,7 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 				try {
 					// We need to store a reference to the class as we lose the
 					// functions in the gawk.set() call
-					return this.vbox = new VirtualBox(dir);
+					return new VirtualBox(dir);
 				} catch (e) {
 					// Squelch
 				}
@@ -110,7 +113,8 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 		});
 
 		this.vboxEngine.on('results', results => {
-			gawk.set(this.data.virtualbox, results);
+			this.vbox = results;
+			this.data.virtualbox = gawk.set(this.data.virtualbox || {}, results) || null;
 			this.genyEngine.rescan(this.data.virtualbox);
 		});
 
