@@ -12,7 +12,7 @@ while (dirs.length) {
 		break;
 	}
 
-	const modulesDir = path.join(...dirs, 'node_modules');
+	const modulesDir = path.resolve(...dirs, 'node_modules');
 
 	for (const dep of deps) {
 		try {

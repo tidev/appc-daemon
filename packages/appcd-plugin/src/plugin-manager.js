@@ -7,6 +7,7 @@ import PluginError from './plugin-error';
 import PluginPath from './plugin-path';
 import semver from 'semver';
 
+import { arrayify } from 'appcd-util';
 import { EventEmitter } from 'events';
 import { expandPath } from 'appcd-path';
 
@@ -59,7 +60,7 @@ export default class PluginManager extends Dispatcher {
 		});
 
 		this.register('/status', ctx => {
-			ctx.response = this.plugins;
+			ctx.response = this.status();
 		});
 
 		/**
@@ -83,15 +84,19 @@ export default class PluginManager extends Dispatcher {
 		this.pluginPaths = {};
 
 		// register all paths and detect plugins
-		if (opts.paths) {
-			if (!Array.isArray(opts.paths)) {
-				throw new TypeError('Expected paths option to be an array');
-			}
+		if (opts.paths && !Array.isArray(opts.paths)) {
+			throw new TypeError('Expected paths option to be an array');
+		}
 
-			for (let dir of opts.paths) {
-				if (dir) {
-					this.registerPluginPath(dir);
-				}
+		/**
+		 * The list of all paths to scan for plugins.
+		 * @type {Array.<String>}
+		 */
+		this.paths = arrayify(opts.paths, true);
+
+		for (const dir of this.paths) {
+			if (dir) {
+				this.registerPluginPath(dir);
 			}
 		}
 
@@ -347,5 +352,17 @@ export default class PluginManager extends Dispatcher {
 		const paths = Object.keys(this.pluginPaths);
 		logger.log(appcdLogger.pluralize(`Shutting down plugin manager and ${highlight(paths.length)} plugin path`, paths.length));
 		return Promise.all(paths.map(this.unregisterPluginPath.bind(this)));
+	}
+
+	/**
+	 * Returns an object with the plugin status.
+	 *
+	 * @returns {Object}
+	 */
+	status() {
+		return {
+			paths:      this.paths,
+			registered: this.plugins
+		};
 	}
 }

@@ -183,7 +183,7 @@ export default class Server {
 				version:      this.version,
 				fs:           this.systems.fswatchManager.status(),
 				subprocesses: this.systems.subprocessManager.subprocesses,
-				plugins:      this.systems.pluginManager.plugins
+				plugins:      this.systems.pluginManager.status()
 			})
 			.start();
 

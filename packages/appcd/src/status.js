@@ -1,7 +1,8 @@
 import Table from 'cli-table2';
 
-import { createInstanceWithDefaults, StdioStream } from 'appcd-logger';
 import { banner, createRequest, loadConfig } from './common';
+import { createInstanceWithDefaults, StdioStream } from 'appcd-logger';
+import { inspect } from 'util';
 
 const logger = createInstanceWithDefaults().config({ theme: 'compact' }).enable('*').pipe(new StdioStream());
 const { log } = logger;
@@ -34,7 +35,7 @@ const cmd = {
 			.on('response', status => {
 				client.disconnect();
 				if (argv.json) {
-					log(status);
+					log(JSON.stringify(status, null, '  '));
 					return;
 				}
 
@@ -77,10 +78,10 @@ const cmd = {
 				log();
 
 				// plugin information
-				if (status.plugins.length) {
+				if (status.plugins && status.plugins.registered.length) {
 					params.head = [ 'Plugin', 'Version', 'Type', 'Path', 'Node.js', 'Status', 'Active/Total Requests' ];
 					table = new Table(params);
-					for (const plugin of status.plugins) {
+					for (const plugin of status.plugins.registered) {
 						let status = '';
 						if (plugin.error) {
 							status = alert(plugin.error);
