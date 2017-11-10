@@ -177,11 +177,11 @@ class SystemInfoService extends DataServiceDispatcher {
 	 */
 	async npmInfo() {
 		let npm = null;
-		let prefix = process.platform === 'win32' ? '%ProgramFiles%\\nodejs' : '/usr/local';
+		let prefix;
 
 		try {
 			npm = await which(`npm${cmd}`);
-			const { stdout } = run(npm, 'prefix', '-g');
+			const { stdout } = await run(npm, [ 'prefix', '-g' ]);
 			prefix = stdout.split('\n')[0].replace(/^"|"$/g, '');
 		} catch (e) {
 			// squelch
@@ -189,8 +189,16 @@ class SystemInfoService extends DataServiceDispatcher {
 
 		let npmPkgJson = expandPath(prefix, 'node_modules', 'npm', 'package.json');
 		if (!isFile(npmPkgJson)) {
+			prefix = process.platform === 'win32' ? '%ProgramFiles%\\nodejs' : '/usr/local';
 			// on Linux and macOS, the `node_modules` is inside a `lib` directory
-			npmPkgJson = expandPath(prefix, 'lib', 'node_modules', 'npm', 'package.json');
+			npmPkgJson = expandPath(prefix, 'node_modules', 'npm', 'package.json');
+			if (!isFile(npmPkgJson)) {
+				if (process.platform !== 'win32') {
+					npmPkgJson = expandPath(prefix, 'lib', 'node_modules', 'npm', 'package.json');
+				} else {
+					npmPkgJson = expandPath('%ProgramFiles(x86)%\\nodejs', 'node_modules', 'npm', 'package.json');
+				}
+			}
 		}
 
 		if (!isFile(npmPkgJson)) {
