@@ -241,23 +241,23 @@ export default class DetectEngine extends EventEmitter {
 					warn('Failed to get registry key: %s', e.message);
 				}
 			}));
-		}
 
-		if (typeof this.opts.registryCallback === 'function') {
-			try {
-				const result = await this.opts.registryCallback();
-				if (result && typeof result === 'string') {
-					searchPaths.add(real(result));
-				} else if (result && typeof result === 'object') {
-					for (const dir of arrayify(result.paths, true)) {
-						searchPaths.add(real(dir));
+			if (typeof this.opts.registryCallback === 'function') {
+				try {
+					const result = await this.opts.registryCallback();
+					if (result && typeof result === 'string') {
+						searchPaths.add(real(result));
+					} else if (result && typeof result === 'object') {
+						for (const dir of arrayify(result.paths, true)) {
+							searchPaths.add(real(dir));
+						}
+						if (result.defaultPath && typeof result.defaultPath === 'string') {
+							defaultPath = result.defaultPath;
+						}
 					}
-					if (result.defaultPath && typeof result.defaultPath === 'string') {
-						defaultPath = result.defaultPath;
-					}
+				} catch (e) {
+					warn('Registry callback threw error: %s', e.message);
 				}
-			} catch (e) {
-				warn('Registry callback threw error: %s', e.message);
 			}
 		}
 
