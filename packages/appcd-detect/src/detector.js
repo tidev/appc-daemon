@@ -87,7 +87,6 @@ export default class Detector extends EventEmitter {
 			if (!this.sid) {
 				this.sid = await this.watch({
 					dir: this.dir,
-					depth: opts.depth,
 					onFSEvent: async ({ action, file, filename }) => {
 						if (filename === '.DS_Store') {
 							return;
@@ -106,8 +105,7 @@ export default class Detector extends EventEmitter {
 							// something changed in this directory
 							this.emit('rescan');
 						}
-					},
-					recursive: opts.recursive
+					}
 				});
 			}
 
@@ -126,7 +124,7 @@ export default class Detector extends EventEmitter {
 
 					return this
 						.watch({
-							depth: opts.depth,
+							depth: opts.recursiveWatchDepth,
 							dir: subdir,
 							onFSEvent: async ({ action, file, filename }, sid) => {
 								if (filename === '.DS_Store') {
