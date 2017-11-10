@@ -9,7 +9,6 @@ import { genymotionLocations, detect as genyDetect, getEmulators } from './genym
 import { virtualBoxLocations, VirtualBox } from './virtualbox';
 
 const GENYMOTION_HOME = 1;
-let VBOX;
 
 /**
  * The Genymotion and VirtualBox info service.
@@ -56,8 +55,8 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 		});
 
 		const onEmulatorAdd = debounce(async () => {
-			gawk.set(this.data.emulators, await getEmulators(this.data.virtualbox));
-		}, 10000);
+			gawk.set(this.data.emulators, await getEmulators(this.vbox));
+		}, 8000);
 
 		this.genyEngine.on('results', results => {
 			results.virtualbox = this.data.virtualbox || {};
@@ -89,7 +88,9 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 		this.vboxEngine = new DetectEngine({
 			checkDir(dir) {
 				try {
-					return new VirtualBox(dir);
+					// We need to store a reference to the class as we lose the
+					// functions in the gawk.set() call
+					return this.vbox = new VirtualBox(dir);
 				} catch (e) {
 					// Squelch
 				}
