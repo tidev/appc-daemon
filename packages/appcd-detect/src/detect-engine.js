@@ -68,10 +68,10 @@ export default class DetectEngine extends EventEmitter {
 	 * @param {Object} [opts] - Various detect options.
 	 * @param {Function} [opts.checkDir] - A function that is called for each directory when
 	 * scanning to check if the specified directory is of interest.
-	 * @param {Number} [opts.depth=0] - The max depth to scan each search path. Must be greater than
-	 * or equal to zero. If the `depth` is `0`, it will not scan subdirectories of each path.
 	 * @param {String|Array<String>|Set} [opts.env] - One or more environment variables containing a
 	 * path.
+	 * @param {Number} [opts.depth=0] - The max depth to scan each search path. Must be greater than
+	 * or equal to zero. If the `depth` is `0`, it will not scan subdirectories of each path.
 	 * @param {String} [opts.exe] - The name of the executable to search the system path for. If
 	 * found, the directory is returned and the value will be marked as the primary path.
 	 * @param {Boolean} [opts.multiple=false] - When true, the scanner will continue to scan paths
@@ -81,6 +81,8 @@ export default class DetectEngine extends EventEmitter {
 	 * complete and the results may be modified.
 	 * @param {Boolean} [opts.recursive=false] - When `true`, recursively watches a path for
 	 * changes to trigger a redetect.
+	 * @param {Number} [opts.recursiveWatchDepth=0] - The max depth to recursively watch a found
+	 * path. Requires `opts.recursive` to be `true`.
 	 * @param {Boolean} [opts.redetect=false] - When `true`, re-runs detection when a path changes.
 	 * Requires `watch` to be `true`.
 	 * @param {Number} [opts.refreshPathsInterval=30000] - The number of milliseconds to check for
@@ -119,6 +121,8 @@ export default class DetectEngine extends EventEmitter {
 		if (opts.processResults !== undefined && typeof opts.processResults !== 'function') {
 			throw new TypeError('Expected "processResults" option to be a function');
 		}
+
+		opts.recursiveWatchDepth = Math.max(~~opts.recursiveWatchDepth, 0);
 
 		opts.redetect = !opts.redetect || opts.watch;
 
