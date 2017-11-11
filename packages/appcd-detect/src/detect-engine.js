@@ -72,8 +72,9 @@ export default class DetectEngine extends EventEmitter {
 	 * path.
 	 * @param {Number} [opts.depth=0] - The max depth to scan each search path. Must be greater than
 	 * or equal to zero. If the `depth` is `0`, it will not scan subdirectories of each path.
-	 * @param {String} [opts.exe] - The name of the executable to search the system path for. If
-	 * found, the directory is returned and the value will be marked as the primary path.
+	 * @param {String|Array<String>|Set} [opts.exe] - The name of the executable to search the
+	 * system path for. If found, the directory is returned and the value will be marked as the
+	 * primary path.
 	 * @param {Boolean} [opts.multiple=false] - When true, the scanner will continue to scan paths
 	 * even after a result has been found.
 	 * @param {String|Array<String>|Set} [opts.paths] - One or more global search paths to search.
@@ -109,8 +110,9 @@ export default class DetectEngine extends EventEmitter {
 			throw new TypeError('Expected "env" option to be a string or an array of strings');
 		}
 
-		if (opts.exe !== undefined && (typeof opts.exe !== 'string' || !opts.exe)) {
-			throw new TypeError('Expected "exe" option to be a non-empty string');
+		opts.exe = arrayify(opts.exe, true);
+		if (opts.exe.some(s => !s || typeof s !== 'string')) {
+			throw new TypeError('Expected "exe" option to be a non-empty string or an array or set of non-empty strings');
 		}
 
 		opts.paths = arrayify(opts.paths, true);
@@ -223,10 +225,9 @@ export default class DetectEngine extends EventEmitter {
 		defaultPath = searchPaths.values().next().value;
 
 		// finish the initialization of the original list of paths
-		if (this.opts.exe) {
-			// we have a executable, so we're going to try to find it using the system PATH
+		for (const exe of this.opts.exe) {
 			try {
-				defaultPath = path.dirname(real(await which(this.opts.exe)));
+				defaultPath = path.dirname(real(await which(exe)));
 				searchPaths.add(defaultPath);
 			} catch (e) {
 				// squelch

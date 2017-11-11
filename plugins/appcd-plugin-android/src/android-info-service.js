@@ -3,9 +3,9 @@ import gawk from 'gawk';
 
 import * as androidlib from 'androidlib';
 
-import { bat, cmd } from 'appcd-subprocess';
+import { bat, cmd, exe } from 'appcd-subprocess';
 import { DataServiceDispatcher } from 'appcd-dispatcher';
-import { get } from 'appcd-util';
+import { get, mergeDeep } from 'appcd-util';
 
 /**
  * The Android info service.
@@ -44,7 +44,7 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 	 * @access private
 	 */
 	async initDevices() {
-		this.trackDeviceHandle = androidlib.devices
+		this.trackDeviceHandle = await androidlib.devices
 			.trackDevices()
 			.on('devices', devices => {
 				console.log('Devices changed');
