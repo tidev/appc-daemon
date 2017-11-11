@@ -28,6 +28,10 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 			sdk: []
 		});
 
+		if (cfg.android) {
+			mergeDeep(androidlib.options, cfg.android);
+		}
+
 		await this.initDevices();
 		await this.initNDKs();
 		await this.initSDKsAndEmulators();
@@ -40,7 +44,15 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 	 * @access private
 	 */
 	async initDevices() {
-		// TODO
+		this.trackDeviceHandle = androidlib.devices
+			.trackDevices()
+			.on('devices', devices => {
+				console.log('Devices changed');
+				gawk.set(this.data.devices, devices);
+			})
+			.on('error', err => {
+				console.log('Track devices returned error: %s', err.message);
+			});
 	}
 
 	/**
@@ -102,7 +114,7 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 			},
 			depth: 1,
 			env: [ 'ANDROID_SDK', 'ANDROID_SDK_ROOT' ],
-			exe: `android${bat}`,
+			exe: [ `adb${exe}`, `android${bat}` ],
 			multiple: true,
 			paths,
 			// processResults: async (results, engine) => {

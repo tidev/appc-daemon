@@ -30,7 +30,7 @@
     "esdoc": "^1.0.3",
     "esdoc-ecmascript-proposal-plugin": "^1.0.0",
     "esdoc-standard-plugin": "^1.0.0",
-    "eslint": "^4.10.0",
+    "eslint": "^4.11.0",
     "eslint-config-axway": "^2.0.6",
     "eslint-plugin-mocha": "^4.11.0",
     "gulp-babel": "^7.0.0",

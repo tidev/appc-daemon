@@ -72,7 +72,7 @@ export default class iOSInfoService extends DataServiceDispatcher {
 	 * @access private
 	 */
 	async initCerts() {
-		this.data.certs = await ioslib.certs.getCerts();
+		this.data.certs = await ioslib.certs.getCerts(true);
 		this.watchKeychainPaths();
 	}
 
@@ -98,7 +98,7 @@ export default class iOSInfoService extends DataServiceDispatcher {
 	 * @access private
 	 */
 	async initKeychains() {
-		this.data.keychains = await ioslib.keychains.getKeychains();
+		this.data.keychains = await ioslib.keychains.getKeychains(true);
 
 		this.watch({
 			type: KEYCHAIN_META_FILE,
@@ -106,7 +106,7 @@ export default class iOSInfoService extends DataServiceDispatcher {
 			handler: async () => {
 				console.log('Keychain plist changed, refreshing keychains and possibly certs');
 
-				const keychains = await ioslib.keychains.getKeychains();
+				const keychains = await ioslib.keychains.getKeychains(true);
 
 				// did the keychains change?
 				if (JSON.stringify(this.data.keychains) !== JSON.stringify(keychains)) {
@@ -124,7 +124,7 @@ export default class iOSInfoService extends DataServiceDispatcher {
 					await this.unwatch(KEYCHAIN_PATHS, sids);
 
 					console.log('Refreshing certs');
-					gawk.set(this.data.certs, await ioslib.certs.getCerts());
+					gawk.set(this.data.certs, await ioslib.certs.getCerts(true));
 				}
 			}
 		});
@@ -142,7 +142,7 @@ export default class iOSInfoService extends DataServiceDispatcher {
 			paths: this.data.keychains.map(k => k.path),
 			handler: async () => {
 				console.log('Refreshing certs');
-				gawk.set(this.data.certs, await ioslib.certs.getCerts());
+				gawk.set(this.data.certs, await ioslib.certs.getCerts(true));
 			}
 		});
 	}
@@ -154,7 +154,7 @@ export default class iOSInfoService extends DataServiceDispatcher {
 	 * @access private
 	 */
 	async initProvisioningProfiles() {
-		gawk.set(this.data.provisioning, await ioslib.provisioning.getProvisioningProfiles());
+		gawk.set(this.data.provisioning, await ioslib.provisioning.getProvisioningProfiles(true));
 
 		this.watch({
 			type: PROVISIONING_PROFILES_DIR,
@@ -222,7 +222,7 @@ export default class iOSInfoService extends DataServiceDispatcher {
 	 * @returns {Promise}
 	 */
 	async initTeams() {
-		gawk.set(this.data.teams, await ioslib.teams.getTeams());
+		gawk.set(this.data.teams, await ioslib.teams.getTeams(true));
 	}
 
 	/**

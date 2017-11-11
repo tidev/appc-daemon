@@ -22,7 +22,7 @@ export async function locale() {
 			cachedLocale = m ? m[1].replace(/_/g, '-') : null;
 		}
 	} else {
-		let m = spawnSync('locale').stdout.toString().match(/^LANG="?([^".\s]+)/);
+		const m = spawnSync('locale').stdout.toString().match(/^LANG="?([^".\s]+)/);
 		cachedLocale = m ? m[1].replace(/_/g, '-') : null;
 	}
 
