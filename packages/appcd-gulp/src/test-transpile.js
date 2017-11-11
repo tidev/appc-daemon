@@ -59,10 +59,12 @@ if (process.env.APPCD_COVERAGE) {
 	const realcwd = fs.realpathSync(cwd);
 	const distDir = path.join(cwd, 'dist');
 	const srcDir = path.join(cwd, 'src');
+	const distRegExp = /[\//]dist[\//]/;
+	const distGRegExp = /([/\\])dist([/\\])/g;
 
 	Module._resolveFilename = function (request, parent, isMain) {
-		if (parent && (parent.id.indexOf(cwd) === 0 || parent.id.indexOf(realcwd) === 0)) {
-			request = request.replace(/([/\\])dist([/\\])/, (m, q1, q2) => `${q1}src${q2}`);
+		if (distRegExp.test(request) && parent && (parent.id.startsWith(cwd) || parent.id.startsWith(realcwd))) {
+			request = request.replace(distGRegExp, (m, q1, q2) => `${q1}src${q2}`);
 		}
 		return originalResolveFilename(request, parent, isMain);
 	};
