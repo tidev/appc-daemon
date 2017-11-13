@@ -115,8 +115,8 @@ export class Genymotion {
 	/**
 	 * Get the Genymotion emulators installed on a system.
 	 *
-	 * @param  {Object} vbox Object containing information about the VirtualBox install.
-	 * @return {Array<Object>}      The installed emulators.
+	 * @param  {Object} vbox - Object containing information about the VirtualBox install.
+	 * @return {Array<Object>} The installed emulators.
 	 */
 	async getEmulators(vbox) {
 		if (!vbox) {
@@ -125,39 +125,59 @@ export class Genymotion {
 		this.emulators = [];
 		const vms = await vbox.list();
 		await Promise.all(vms.map(async vm => {
-			const vminfo = await vbox.getGuestproperties(vm.guid);
-			for (const info of vminfo) {
-				switch (info.name) {
-					case 'android_version':
-						vm['sdk-version'] = vm.target = info.value;
-						break;
-					case 'genymotion_player_version':
-					case 'genymotion_version':
-						vm.genymotion = info.value;
-						break;
-					case 'hardware_opengl':
-						vm.hardwareOpenGL = !!parseInt(info.value);
-						break;
-					case 'vbox_dpi':
-						vm.dpi = ~~info.value;
-						break;
-					case 'vbox_graph_mode':
-						vm.display = info.value;
-						break;
-					case 'androvm_ip_management':
-						vm.ipaddress = info.value;
-						break;
-				}
-			}
+			Object.assign(vm, await this.getEmulatorInfo(vm.guid, vbox));
 			if (vm.genymotion) {
-				vm.abi = 'x86';
-				vm.googleApis = null; // null means maybe since we don't know for sure unless the emulator is running
 				this.emulators.push(vm);
-				return;
 			}
+			return;
 		}));
 
 		return this.emulators;
+	}
+
+	/**
+	 * Get the information for a specific vm.
+	 * @param  {String}  guid - The VM guid.
+	 * @param  {Object}  vbox - Object containing information about the VirtualBox install.
+	 * @return {Promise<Object>} Object containing information about the VM
+	 */
+	async getEmulatorInfo(guid, vbox) {
+		if (!guid) {
+			return new TypeError('Guid must be a string');
+		}
+		if (!vbox) {
+			return;
+		}
+		const emulator = {};
+		const vminfo = await vbox.getGuestproperties(guid);
+		for (const info of vminfo) {
+			switch (info.name) {
+				case 'android_version':
+					emulator['sdk-version'] = emulator.target = info.value;
+					break;
+				case 'genymotion_player_version':
+				case 'genymotion_version':
+					emulator.genymotion = info.value;
+					break;
+				case 'hardware_opengl':
+					emulator.hardwareOpenGL = !!parseInt(info.value);
+					break;
+				case 'vbox_dpi':
+					emulator.dpi = ~~info.value;
+					break;
+				case 'vbox_graph_mode':
+					emulator.display = info.value;
+					break;
+				case 'androvm_ip_management':
+					emulator.ipaddress = info.value;
+					break;
+			}
+		}
+		if (emulator.genymotion) {
+			emulator.abi = 'x86';
+			emulator.googleApis = null; // null means maybe since we don't know for sure unless the emulator is running
+			return emulator;
+		}
 	}
 }
 
