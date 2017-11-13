@@ -5,10 +5,11 @@ import path from 'path';
 import { DataServiceDispatcher } from 'appcd-dispatcher';
 import { debounce, get } from 'appcd-util';
 import { exe } from 'appcd-subprocess';
-import { genymotionLocations, Genymotion } from './genymotion';
+import { genymotionLocations, genymotionPlist, Genymotion } from './genymotion';
 import { virtualBoxLocations, VirtualBox } from './virtualbox';
 
 const GENYMOTION_HOME = 1;
+const GENYMOTION_PLIST = 1;
 
 /**
  * The Genymotion and VirtualBox info service.
@@ -24,6 +25,7 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 		this.config = cfg;
 
 		this.data = gawk({
+			deployedDir: null,
 			emulators: [],
 			executables: {},
 			home: null,
@@ -57,47 +59,21 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 			watch:                true
 		});
 
-		const onEmulatorAdd = debounce(async () => {
-			gawk.set(this.data.emulators, await this.geny.getEmulators(this.vbox));
-		}, 8000);
-
-		const onEmulatorChange = debounce(async (file) => {
-			const { emulators } = this.data;
-			for (let i = 0; i < emulators.length; i++) {
-				if (emulators[i].name === path.basename(file, '.vbox')) {
-					const emulator = await this.geny.getEmulatorInfo(emulators[i].guid, this.vbox);
-					emulator.name = emulators[i].name;
-					emulator.guid = emulators[i].guid;
-					emulators[i] = emulator;
-					gawk.set(this.data.emulators, emulators);
-					break;
-				}
-			}
-		});
-
 		this.genyEngine.on('results', results => {
 			results.virtualbox = this.data.virtualbox || {};
-			const deployedDir = path.join(results.home, 'deployed');
+			this.watchGenymotionDeployed(results.deployedDir);
+
 			this.watch({
-				type: GENYMOTION_HOME,
-				paths: [ deployedDir ],
+				type: GENYMOTION_PLIST,
+				paths: [ genymotionPlist ],
 				depth: 2,
-				handler: async ({ file, filename, action }) => {
-					const { emulators } = this.data;
-					if (action === 'add' && path.dirname(file) === deployedDir) {
-						await onEmulatorAdd();
-					}  else if (action === 'delete' && (path.dirname(file) === deployedDir)) {
-						// find the emulator in the data store and remove it
-						for (let i = 0; i < emulators.length; i++) {
-							if (emulators[i].name === filename) {
-								emulators.splice(i--, 1);
-								break;
-							}
-						}
-						gawk.set(this.data.emulators, emulators);
-					} else if (action === 'change' && path.extname(file) === '.vbox') {
-						await onEmulatorChange(file);
-					}
+				handler: async () => {
+					const sids = this.subscriptions[GENYMOTION_HOME] ? Object.keys(this.subscriptions[GENYMOTION_HOME]) : [];
+
+					this.genyEngine.rescan(this.data.virtualbox);
+					// unwatch the old subscriptions
+					await this.unwatch(GENYMOTION_HOME, sids);
+
 				}
 			});
 
@@ -136,6 +112,53 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 
 		await this.vboxEngine.start();
 		await this.genyEngine.start();
+	}
+
+	/**
+	 * Watch the given Genymotion deploy directory.
+	 * @param {String} deployedDir - The path to the directory.
+	 */
+	watchGenymotionDeployed(deployedDir) {
+		const onEmulatorAdd = debounce(async () => {
+			gawk.set(this.data.emulators, await this.geny.getEmulators(this.vbox));
+		}, 8000);
+
+		const onEmulatorChange = debounce(async (file) => {
+			const { emulators } = this.data;
+			for (let i = 0; i < emulators.length; i++) {
+				if (emulators[i].name === path.basename(file, '.vbox')) {
+					const emulator = await this.geny.getEmulatorInfo(emulators[i].guid, this.vbox);
+					emulator.name = emulators[i].name;
+					emulator.guid = emulators[i].guid;
+					emulators[i] = emulator;
+					gawk.set(this.data.emulators, emulators);
+					break;
+				}
+			}
+		});
+
+		this.watch({
+			type: GENYMOTION_HOME,
+			paths: [ deployedDir ],
+			depth: 2,
+			handler: async ({ file, filename, action }) => {
+				const { emulators } = this.data;
+				if (action === 'add' && path.dirname(file) === deployedDir) {
+					await onEmulatorAdd();
+				}  else if (action === 'delete' && (path.dirname(file) === deployedDir)) {
+					// find the emulator in the data store and remove it
+					for (let i = 0; i < emulators.length; i++) {
+						if (emulators[i].name === filename) {
+							emulators.splice(i--, 1);
+							break;
+						}
+					}
+					gawk.set(this.data.emulators, emulators);
+				} else if (action === 'change' && path.extname(file) === '.vbox') {
+					await onEmulatorChange(file);
+				}
+			}
+		});
 	}
 
 	/**
@@ -225,6 +248,12 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 		if (this.vboxEngine) {
 			await this.vboxEngine.stop();
 			this.vboxEngine = null;
+		}
+
+		if (this.subscriptions) {
+			for (const type of Object.keys(this.subscriptions)) {
+				await this.unwatch(type);
+			}
 		}
 	}
 }

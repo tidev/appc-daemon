@@ -1,8 +1,8 @@
 import path from 'path';
+import plist from 'simple-plist';
 
 import { exe } from 'appcd-subprocess';
 import { expandPath } from 'appcd-path';
-import { getVirtualBox } from './virtualbox';
 import { isDir, isFile } from 'appcd-fs';
 
 /**
@@ -45,6 +45,8 @@ export const genymotionHomeLocations = {
 	]
 };
 
+export const genymotionPlist = '~/Library/Preferences/com.genymobile.Genymotion.plist';
+
 /**
  * Genymotion information
  */
@@ -83,7 +85,7 @@ export class Genymotion {
 		this.executables = {};
 		this.home 		 = null;
 		this.path 		 = dir;
-
+		this.deployedDir = plist.readFileSync(expandPath(genymotionPlist))['vms·path'];
 		this.executables.genymotion = path.join(dir, `genymotion${exe}`);
 
 		if (process.platform === 'darwin') {
@@ -110,6 +112,8 @@ export class Genymotion {
 		if (!this.home) {
 			throw new Error('Unable to find Genymotion home directory');
 		}
+		console.log(this);
+		console.log('-----------------');
 	}
 
 	/**
@@ -179,15 +183,4 @@ export class Genymotion {
 			return emulator;
 		}
 	}
-}
-
-/**
- * Detect the Genymotion install, and emulators.
- *
- * @param {String} dir - The directory to scan.
- * @param {Object} vbox - VirtualBox install info.
- * @return {Promise} A Genymotion instance
- */
-export async function detect(dir, vbox) {
-	return await new Genymotion(dir).init(vbox);
 }
