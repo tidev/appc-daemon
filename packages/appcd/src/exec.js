@@ -2,13 +2,14 @@ import { createRequest, loadConfig } from './common';
 import { inspect } from 'util';
 
 const cmd = {
-	options: {
-		'--subscribe': { desc: 'request a subscription' }
-	},
 	args: [
 		{ name: 'path', required: true, regex: /^\//, desc: 'the path to request' },
 		{ name: 'json', type: 'json', desc: 'an option JSON payload to send' }
 	],
+	desc: 'connects to the Appc Daemon and executes the request',
+	options: {
+		'--subscribe': { desc: 'request a subscription' }
+	},
 	action({ argv, _ }) {
 		const cfg = loadConfig(argv);
 		const [ path, json ] = _;

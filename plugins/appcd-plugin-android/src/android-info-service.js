@@ -1,11 +1,12 @@
 import DetectEngine from 'appcd-detect';
 import gawk from 'gawk';
+import path from 'path';
 
 import * as androidlib from 'androidlib';
 
-import { bat, cmd } from 'appcd-subprocess';
+import { bat, cmd, exe } from 'appcd-subprocess';
 import { DataServiceDispatcher } from 'appcd-dispatcher';
-import { get } from 'appcd-util';
+import { get, mergeDeep } from 'appcd-util';
 
 /**
  * The Android info service.
@@ -28,9 +29,20 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 			sdk: []
 		});
 
+		/**
+		 * A map of buckets to a list of active fs watch subscription ids.
+		 * @type {Object}
+		 */
+		this.subscriptions = {};
+
+		if (cfg.android) {
+			mergeDeep(androidlib.options, cfg.android);
+		}
+
 		await this.initDevices();
+		await this.initEmulators();
 		await this.initNDKs();
-		await this.initSDKsAndEmulators();
+		await this.initSDKs();
 	}
 
 	/**
@@ -40,7 +52,37 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 	 * @access private
 	 */
 	async initDevices() {
-		// TODO
+		this.trackDeviceHandle = await androidlib.devices
+			.trackDevices()
+			.on('devices', devices => {
+				console.log('Devices changed');
+				gawk.set(this.data.devices, devices);
+			})
+			.on('error', err => {
+				console.log('Track devices returned error: %s', err.message);
+			});
+	}
+
+	/**
+	 * Initializes the fs watcher Android emulators and starts the initial scan.
+	 *
+	 * @returns {Promise}
+	 * @access private
+	 */
+	async initEmulators() {
+		const emulators = await androidlib.emulators.getEmulators(null, true);
+		gawk.set(this.data.emulators, emulators);
+
+		this.watch({
+			type: 'avd',
+			depth: 1,
+			paths: [ androidlib.emulators.getAvdDir() ],
+			handler: async () => {
+				console.log('Rescanning Android emulators...');
+				const emulators = await androidlib.emulators.getEmulators(null, true);
+				gawk.set(this.data.emulators, emulators);
+			}
+		});
 	}
 
 	/**
@@ -63,9 +105,10 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 			exe:       `ndk-build${cmd}`,
 			multiple:  true,
 			paths:     androidlib.ndk.ndkLocations[process.platform],
-			// processResults: async (results, engine) => {
-			//
-			// },
+			processResults: async (results, engine) => {
+				// TODO: sort results
+				// TODO: assign default ndk
+			},
 			recursive: true,
 			redetect:  true,
 			watch:     true
@@ -85,7 +128,7 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 	 * @returns {Promise}
 	 * @access private
 	 */
-	async initSDKsAndEmulators() {
+	async initSDKs() {
 		const paths = [ ...androidlib.sdk.sdkLocations[process.platform] ];
 		const defaultPath = get(this.config, 'android.sdkPath');
 		if (defaultPath) {
@@ -102,12 +145,13 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 			},
 			depth: 1,
 			env: [ 'ANDROID_SDK', 'ANDROID_SDK_ROOT' ],
-			exe: `android${bat}`,
+			exe: [ `adb${exe}`, `android${bat}` ],
 			multiple: true,
 			paths,
-			// processResults: async (results, engine) => {
-			//
-			// },
+			processResults: async (results, engine) => {
+				// TODO: sort results
+				// TODO: assign default sdk
+			},
 			recursive: true,
 			registryKeys: [
 				{
@@ -132,13 +176,87 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 
 		// if sdks change, then refresh the emulators
 		gawk.watch(this.data.sdk, async (obj, src) => {
-			// redetect emulators
-			console.log('SDKs changed');
-			console.log(src);
+			// TODO: redetect emulators if the default sdk changed
+			// console.log('SDKs changed');
+			// console.log(src);
 		});
 
 		// detect the sdks which in turn will detect the emulators
 		await this.sdkDetectEngine.start();
+	}
+
+	/**
+	 * Subscribes to filesystem events for the specified paths.
+	 *
+	 * @param {Object} params - Various parameters.
+	 * @param {String} params.type - The type of subscription.
+	 * @param {Array.<String>} params.paths - One or more paths to watch.
+	 * @param {Function} params.handler - A callback function to fire when a fs event occurs.
+	 * @param {Number} [params.depth] - The max depth to recursively watch.
+	 * @access private
+	 */
+	watch({ type, paths, handler, depth }) {
+		for (const path of paths) {
+			const data = { path };
+			if (depth) {
+				data.recursive = true;
+				data.depth = 1;
+			}
+
+			appcd
+				.call('/appcd/fswatch', {
+					data,
+					type: 'subscribe'
+				})
+				.then(ctx => {
+					let sid;
+					ctx.response
+						.on('data', async (data) => {
+							if (data.type === 'subscribe') {
+								sid = data.sid;
+								if (!this.subscriptions[type]) {
+									this.subscriptions[type] = {};
+								}
+								this.subscriptions[type][data.sid] = 1;
+							} else if (data.type === 'event') {
+								handler(data.message);
+							}
+						})
+						.on('end', () => {
+							if (sid) {
+								delete this.subscriptions[type][sid];
+							}
+						});
+				});
+		}
+	}
+
+	/**
+	 * Unsubscribes a list of filesystem watcher subscription ids.
+	 *
+	 * @param {Number} type - The type of subscription.
+	 * @param {Array.<String>} [sids] - An array of subscription ids to unsubscribe. If not
+	 * specified, defaults to all sids for the specified types.
+	 * @returns {Promise}
+	 * @access private
+	 */
+	async unwatch(type, sids) {
+		if (!sids) {
+			sids = Object.keys(this.subscriptions[type]);
+		}
+
+		for (const sid of sids) {
+			await appcd.call('/appcd/fswatch', {
+				sid,
+				type: 'unsubscribe'
+			});
+
+			delete this.subscriptions[type][sid];
+		}
+
+		if (!Object.keys(this.subscriptions[type])) {
+			delete this.subscriptions[type];
+		}
 	}
 
 	/**
@@ -156,6 +274,17 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 		if (this.ndkDetectEngine) {
 			await this.ndkDetectEngine.stop();
 			this.ndkDetectEngine = null;
+		}
+
+		if (this.avdDetectEngine) {
+			await this.avdDetectEngine.stop();
+			this.avdDetectEngine = null;
+		}
+
+		if (this.subscriptions) {
+			for (const type of Object.keys(this.subscriptions)) {
+				await this.unwatch(type);
+			}
 		}
 	}
 }

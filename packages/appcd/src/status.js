@@ -10,6 +10,7 @@ const { alert, highlight, note } = logger.styles;
 const { filesize, numberFormat, relativeTime } = logger.humanize;
 
 const cmd = {
+	desc: 'displays the Appc Daemon status',
 	options: {
 		'--json': { desc: 'outputs the status as JSON' }
 	},

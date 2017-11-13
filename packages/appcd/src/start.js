@@ -1,6 +1,7 @@
 import { banner, loadConfig, startServer } from './common';
 
 const cmd = {
+	desc: 'starts the Appc Daemon if it\'s not already running',
 	options: {
 		'--debug': { desc: 'don\'t run as a background daemon' }
 	},

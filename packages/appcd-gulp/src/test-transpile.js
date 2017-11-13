@@ -1,9 +1,11 @@
+const fs = require('fs');
 const Module = require('module');
 const path = require('path');
 
 const babelRE = /^(babel-\w+-)/;
 const babel = require('./babel.json');
-const conf = babel[process.env.APPCD_BABEL_CONF || 'node4'] || {};
+const conf = babel[process.env.APPCD_BABEL_CONF || 'node8'] || {};
+const originalResolveFilename = Module._resolveFilename;
 
 if (process.env.APPCD_COVERAGE && conf.plugins.indexOf('istanbul') === -1) {
 	// inject the istanbul babel plugin
@@ -22,7 +24,7 @@ Object.keys(conf).forEach(function (key) {
 			if (name.indexOf('babili') !== -1) {
 				conf[key].splice(i--, 1);
 			} else {
-				name = Module._resolveFilename(babelRE.test(name) ? name : 'babel-' + key.slice(0, -1) + '-' + name, module);
+				name = originalResolveFilename(babelRE.test(name) ? name : 'babel-' + key.slice(0, -1) + '-' + name, module);
 				if (isArr) {
 					conf[key][i][0] = name;
 				} else {
@@ -54,13 +56,15 @@ require('babel-polyfill');
  */
 if (process.env.APPCD_COVERAGE) {
 	const cwd = process.cwd();
-	const distDir = cwd + '/dist/';
-	const srcDir = cwd + '/src/';
-	const originalResolveFilename = Module._resolveFilename;
+	const realcwd = fs.realpathSync(cwd);
+	const distDir = path.join(cwd, 'dist');
+	const srcDir = path.join(cwd, 'src');
+	const distRegExp = /[\//]dist[\//]/;
+	const distGRegExp = /([/\\])dist([/\\])/g;
 
 	Module._resolveFilename = function (request, parent, isMain) {
-		if (request.indexOf('/dist/') !== -1 && parent.id.indexOf(cwd) === 0) {
-			request = request.replace(/\/dist\//g, '/src/');
+		if (distRegExp.test(request) && parent && (parent.id.startsWith(cwd) || parent.id.startsWith(realcwd))) {
+			request = request.replace(distGRegExp, (m, q1, q2) => `${q1}src${q2}`);
 		}
 		return originalResolveFilename(request, parent, isMain);
 	};

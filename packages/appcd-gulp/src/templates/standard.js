@@ -61,11 +61,11 @@ module.exports = (opts) => {
 	 */
 	gulp.task('clean', ['clean-coverage', 'clean-dist', 'clean-docs']);
 
-	gulp.task('clean-coverage', done => { del([coverageDir]).then(() => done()) });
+	gulp.task('clean-coverage', done => { del(coverageDir, { force: true }).then(() => done()) });
 
-	gulp.task('clean-dist', done => { del([distDir]).then(() => done()) });
+	gulp.task('clean-dist', done => { del(distDir, { force: true }).then(() => done()) });
 
-	gulp.task('clean-docs', done => { del([docsDir]).then(() => done()) });
+	gulp.task('clean-docs', done => { del(docsDir, { force: true }).then(() => done()) });
 
 	/*
 	 * lint tasks
