@@ -1,6 +1,7 @@
 import { banner, loadConfig, stopServer } from './common';
 
 const cmd = {
+	desc: 'stops the Appc Daemon if running',
 	options: {
 		'--force': { desc: 'force the daemon to stop' }
 	},

@@ -137,9 +137,13 @@ export function spawn(params = {}) {
  *
  * @param {String|Array.<String>} executables - An array of executables to search
  * until it finds a valid executable.
+ * @param {Object} [opts] - Options to pass into `which`.
+ * @param {String|RegExp} [opts.colon] - The pattern used to split the list of paths.
+ * @param {String} [opts.path] - A delimited list of paths. `which` defaults to `process.env.PATH`.
+ * @param {String} [opts.pathExt] - A delimited list of executable extensions. Windows only.
  * @returns {Promise} Resolves the specified executable.
  */
-export function which(executables) {
+export function which(executables, opts) {
 	if (!Array.isArray(executables)) {
 		executables = [ executables ];
 	}
@@ -153,7 +157,7 @@ export function which(executables) {
 			}
 
 			return new Promise((resolve, reject) => {
-				_which(executable, (err, file) => {
+				_which(executable, opts || {}, (err, file) => {
 					if (err) {
 						next().then(resolve).catch(reject);
 					} else {

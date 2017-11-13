@@ -85,7 +85,7 @@ describe('Detect', () => {
 					checkDir() {},
 					exe: 123
 				});
-			}).to.throw(TypeError, 'Expected "exe" option to be a non-empty string');
+			}).to.throw(TypeError, 'Expected "exe" option to be a non-empty string or an array or set of non-empty strings');
 		});
 
 		it('should reject if exe is an empty string', () => {
@@ -94,7 +94,7 @@ describe('Detect', () => {
 					checkDir() {},
 					exe: ''
 				});
-			}).to.throw(TypeError, 'Expected "exe" option to be a non-empty string');
+			}).to.throw(TypeError, 'Expected "exe" option to be a non-empty string or an array or set of non-empty strings');
 		});
 
 		it('should reject if paths is not a string', () => {

@@ -1,6 +1,7 @@
 import { createRequest, loadConfig } from './common';
 
 const cmd = {
+	desc: 'streams Appc Daemon debug log output',
 	options: {
 		'--no-colors': { desc: 'disables colors' }
 	},
