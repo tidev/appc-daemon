@@ -1,11 +1,13 @@
 import DetectEngine from 'appcd-detect';
 import gawk from 'gawk';
 import path from 'path';
+import * as registry from 'appcd-winreg';
 
 import { DataServiceDispatcher } from 'appcd-dispatcher';
-import { debounce, get } from 'appcd-util';
+import { debounce, get, sleep } from 'appcd-util';
+import { expandPath } from 'appcd-path';
 import { exe } from 'appcd-subprocess';
-import { genymotionLocations, genymotionPlist, Genymotion } from './genymotion';
+import { genymotionLocations, genymotionPlist, detect } from './genymotion';
 import { virtualBoxLocations, VirtualBox } from './virtualbox';
 
 const GENYMOTION_HOME = 1;
@@ -23,6 +25,8 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 	 */
 	async activate(cfg) {
 		this.config = cfg;
+
+		this.timers = {};
 
 		this.data = gawk({
 			deployedDir: null,
@@ -43,9 +47,7 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 		this.genyEngine = new DetectEngine({
 			checkDir: async (dir) => {
 				try {
-					this.geny = new Genymotion(dir);
-					this.geny.emulators = await this.geny.getEmulators(this.vbox);
-					return this.geny;
+					return this.geny = await detect(dir, this.vbox);
 				} catch (e) {
 					// squelch
 				}
@@ -62,21 +64,20 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 		this.genyEngine.on('results', results => {
 			results.virtualbox = this.data.virtualbox || {};
 			this.watchGenymotionDeployed(results.deployedDir);
+			if (process.platform === 'darwin') {
+				this.watch({
+					type: GENYMOTION_PLIST,
+					paths: [ genymotionPlist ],
+					depth: 2,
+					handler: async () => {
+						const sids = this.subscriptions[GENYMOTION_HOME] ? Object.keys(this.subscriptions[GENYMOTION_HOME]) : [];
 
-			this.watch({
-				type: GENYMOTION_PLIST,
-				paths: [ genymotionPlist ],
-				depth: 2,
-				handler: async () => {
-					const sids = this.subscriptions[GENYMOTION_HOME] ? Object.keys(this.subscriptions[GENYMOTION_HOME]) : [];
-
-					this.genyEngine.rescan(this.data.virtualbox);
-					// unwatch the old subscriptions
-					await this.unwatch(GENYMOTION_HOME, sids);
-
-				}
-			});
-
+						this.genyEngine.rescan(this.data.virtualbox);
+						// unwatch the old subscriptions
+						await this.unwatch(GENYMOTION_HOME, sids);
+					}
+				});
+			}
 			gawk.set(this.data, results);
 		});
 

@@ -1,5 +1,6 @@
 import path from 'path';
 import plist from 'simple-plist';
+import * as registry from 'appcd-winreg';
 
 import { exe } from 'appcd-subprocess';
 import { expandPath } from 'appcd-path';
@@ -85,7 +86,11 @@ export class Genymotion {
 		this.executables = {};
 		this.home 		 = null;
 		this.path 		 = dir;
-		this.deployedDir = plist.readFileSync(expandPath(genymotionPlist))['vms·path'];
+		if (process.platform === 'darwin') {
+			this.deployedDir = plist.readFileSync(expandPath(genymotionPlist))['vms·path'];
+		} else {
+			this.deployedDir = null;
+		}
 		this.executables.genymotion = path.join(dir, `genymotion${exe}`);
 
 		if (process.platform === 'darwin') {
@@ -112,8 +117,29 @@ export class Genymotion {
 		if (!this.home) {
 			throw new Error('Unable to find Genymotion home directory');
 		}
-		console.log(this);
-		console.log('-----------------');
+	}
+
+	async init(vbox) {
+		const detectRegistry = async () => {
+			let deployedDir;
+			try {
+				deployedDir = await registry.get('HKCU', '\\Software\\Genymobile\\Genymotion', 'vms.path');
+			} catch (ex) {
+				// squelch
+			}
+
+			return expandPath(deployedDir);
+		};
+
+		await Promise.all([
+			await this.getEmulators(vbox),
+			await detectRegistry()
+		])
+			.then(results => {
+				this.emulators = results[0];
+				this.deployedDir = results[1];
+			});
+		return this;
 	}
 
 	/**
@@ -183,4 +209,15 @@ export class Genymotion {
 			return emulator;
 		}
 	}
+}
+
+/**
+ * Detect the Genymotion install, and emulators.
+ *
+ * @param {String} dir - The directory to scan.
+ * @param {Object} vbox - VirtualBox install info.
+ * @return {Promise} A Genymotion instance
+ */
+export async function detect(dir, vbox) {
+	return await new Genymotion(dir).init(vbox);
 }
