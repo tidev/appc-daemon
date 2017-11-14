@@ -348,7 +348,7 @@ export function generateV8MemoryArgument(value, arch) {
 	}
 
 	if (value) {
-		return `--max_old_space_size=${value}`;
+		return `--max_old_space_size=${Math.round(value)}`;
 	}
 }
 
