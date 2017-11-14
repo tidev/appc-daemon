@@ -161,9 +161,9 @@ amdefine@>=0.0.4:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/amdefine/-/amdefine-1.0.1.tgz#4a5282ac164729e93619bcfd3ad151f817ce91f5"
 
-androidlib@2.0.0-2:
-  version "2.0.0-2"
-  resolved "https://registry.yarnpkg.com/androidlib/-/androidlib-2.0.0-2.tgz#6514cfbaf0d6a3f0fbc82d8d424eb9e4bb223ebe"
+androidlib@^2.0.0-5:
+  version "2.0.0-beta.1"
+  resolved "https://registry.yarnpkg.com/androidlib/-/androidlib-2.0.0-beta.1.tgz#fc03f2b817715f4361499f242607a60a0b7450de"
   dependencies:
     appcd-fs "^0.1.4"
     appcd-path "^0.1.4"
@@ -3570,7 +3570,7 @@ invert-kv@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/invert-kv/-/invert-kv-1.0.0.tgz#104a8e4aaca6d3d8cd157a8ef8bfab2d7a3ffdb6"
 
-ioslib@^2.0.0-beta.3:
+ioslib@^2.0.0-4:
   version "2.0.0-beta.3"
   resolved "https://registry.yarnpkg.com/ioslib/-/ioslib-2.0.0-beta.3.tgz#18ea323935eb5b08d2b77325a383ac05582d5f96"
   dependencies:
@@ -4799,13 +4799,17 @@ moment@2.11.2:
   version "2.11.2"
   resolved "https://registry.yarnpkg.com/moment/-/moment-2.11.2.tgz#87968e5f95ac038c2e42ac959c75819cd3f52901"
 
-moment@2.x.x, moment@^2.6.0:
-  version "2.18.1"
-  resolved "https://registry.yarnpkg.com/moment/-/moment-2.18.1.tgz#c36193dd3ce1c2eed2adb7c802dbbc77a81b1c0f"
+moment@2.x.x:
+  version "2.19.2"
+  resolved "https://registry.yarnpkg.com/moment/-/moment-2.19.2.tgz#8a7f774c95a64550b4c7ebd496683908f9419dbe"
 
 moment@^2.18.1:
   version "2.19.1"
   resolved "https://registry.yarnpkg.com/moment/-/moment-2.19.1.tgz#56da1a2d1cbf01d38b7e1afc31c10bcfa1929167"
+
+moment@^2.6.0:
+  version "2.18.1"
+  resolved "https://registry.yarnpkg.com/moment/-/moment-2.18.1.tgz#c36193dd3ce1c2eed2adb7c802dbbc77a81b1c0f"
 
 move-concurrently@~1.0.1:
   version "1.0.1"
@@ -5672,7 +5676,7 @@ raw-body@^2.2.0:
     iconv-lite "0.4.19"
     unpipe "1.0.0"
 
-rc@^1.0.1, rc@^1.1.2, rc@^1.1.6:
+rc@^1.0.1, rc@^1.1.6:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/rc/-/rc-1.2.1.tgz#2e03e8e42ee450b8cb3dce65be1bf8974e1dfd95"
   dependencies:
@@ -5681,7 +5685,7 @@ rc@^1.0.1, rc@^1.1.2, rc@^1.1.6:
     minimist "^1.2.0"
     strip-json-comments "~2.0.1"
 
-rc@^1.1.7:
+rc@^1.1.2, rc@^1.1.7:
   version "1.2.2"
   resolved "https://registry.yarnpkg.com/rc/-/rc-1.2.2.tgz#d8ce9cb57e8d64d9c7badd9876c7c34cbe3c7077"
   dependencies:
