@@ -1,15 +1,16 @@
 import DetectEngine from 'appcd-detect';
 import gawk from 'gawk';
 import path from 'path';
+
+
 import * as registry from 'appcd-winreg';
 
 import { DataServiceDispatcher } from 'appcd-dispatcher';
 import { debounce, get } from 'appcd-util';
 import { expandPath } from 'appcd-path';
 import { exe } from 'appcd-subprocess';
+import { genymotion, virtualbox } from 'androidlib';
 import { isDir } from 'appcd-fs';
-import { genymotionLocations, genymotionPlist, detect } from './genymotion';
-import { virtualBoxLocations, VirtualBox } from './virtualbox';
 
 const GENYMOTION_HOME = 1;
 const GENYMOTION_PLIST = 1;
@@ -39,7 +40,7 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 			virtualbox: null
 		});
 
-		const paths = [ ...genymotionLocations[process.platform] ];
+		const paths = [ ...genymotion.genymotionLocations[process.platform] ];
 		const defaultPath = get(this.config, 'genymotion.path');
 		if (defaultPath) {
 			paths.unshift(defaultPath);
@@ -50,7 +51,7 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 				try {
 					// We need to store a reference to the class as we lose the
 					// functions in the gawk.set() call
-					return this.geny = await detect(dir, this.vbox);
+					return this.geny = await genymotion.detect(dir, this.vbox);
 				} catch (e) {
 					// squelch
 				}
@@ -70,7 +71,7 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 			if (process.platform === 'darwin') {
 				this.watch({
 					type: GENYMOTION_PLIST,
-					paths: [ genymotionPlist ],
+					paths: [ genymotion.genymotionPlist ],
 					depth: 2,
 					handler: async () => {
 						const sids = this.subscriptions[GENYMOTION_HOME] ? Object.keys(this.subscriptions[GENYMOTION_HOME]) : [];
@@ -89,7 +90,8 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 		this.vboxEngine = new DetectEngine({
 			checkDir(dir) {
 				try {
-					return new VirtualBox(dir);
+					return new virtualbox.VirtualBox(dir);
+					// return new androidlib.VirtualBox(dir);
 				} catch (e) {
 					// Squelch
 				}
@@ -97,7 +99,7 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 			depth:                1,
 			exe:                  `vboxmanage${exe}`,
 			multiple:             false,
-			paths:                virtualBoxLocations[process.platform],
+			paths:                virtualbox.virtualBoxLocations[process.platform],
 			redetect:             true,
 			refreshPathsInterval: 15000,
 			registryKeys: {
