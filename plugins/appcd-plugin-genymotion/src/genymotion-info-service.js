@@ -4,9 +4,10 @@ import path from 'path';
 import * as registry from 'appcd-winreg';
 
 import { DataServiceDispatcher } from 'appcd-dispatcher';
-import { debounce, get, sleep } from 'appcd-util';
+import { debounce, get } from 'appcd-util';
 import { expandPath } from 'appcd-path';
 import { exe } from 'appcd-subprocess';
+import { isDir } from 'appcd-fs';
 import { genymotionLocations, genymotionPlist, detect } from './genymotion';
 import { virtualBoxLocations, VirtualBox } from './virtualbox';
 
@@ -47,6 +48,8 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 		this.genyEngine = new DetectEngine({
 			checkDir: async (dir) => {
 				try {
+					// We need to store a reference to the class as we lose the
+					// functions in the gawk.set() call
 					return this.geny = await detect(dir, this.vbox);
 				} catch (e) {
 					// squelch
@@ -77,6 +80,8 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 						await this.unwatch(GENYMOTION_HOME, sids);
 					}
 				});
+			} else if (process.platform === 'win32') {
+				this.refreshDeployPath();
 			}
 			gawk.set(this.data, results);
 		});
@@ -84,8 +89,6 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 		this.vboxEngine = new DetectEngine({
 			checkDir(dir) {
 				try {
-					// We need to store a reference to the class as we lose the
-					// functions in the gawk.set() call
 					return new VirtualBox(dir);
 				} catch (e) {
 					// Squelch
@@ -113,6 +116,30 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 
 		await this.vboxEngine.start();
 		await this.genyEngine.start();
+	}
+
+	/**
+	 * Poll the registry for the vms.path value
+	 */
+	refreshDeployPath() {
+		this.refreshDeployPathTimer = setTimeout(async () => {
+			try {
+				const dir = expandPath(await registry.get('HKCU', 'Software\\Genymobile\\Genymotion', 'vms.path'));
+
+				if (isDir(dir) && this.data.deployedDir !== dir) {
+
+					const sids = this.subscriptions[GENYMOTION_HOME] ? Object.keys(this.subscriptions[GENYMOTION_HOME]) : [];
+
+					this.genyEngine.rescan(this.data.virtualbox);
+
+					await this.unwatch(GENYMOTION_HOME, sids);
+				}
+			} catch (err) {
+				// squelch
+			}
+
+			this.refreshDeployPath();
+		}, 15000);
 	}
 
 	/**
@@ -255,6 +282,11 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 			for (const type of Object.keys(this.subscriptions)) {
 				await this.unwatch(type);
 			}
+		}
+
+		if (this.refreshDeployPathTimer) {
+			clearTimeout(this.refreshDeployPathTimer);
+			this.refreshDeployPathTimer = null;
 		}
 	}
 }
