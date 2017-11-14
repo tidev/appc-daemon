@@ -2,7 +2,6 @@ import DetectEngine from 'appcd-detect';
 import gawk from 'gawk';
 import path from 'path';
 
-
 import * as registry from 'appcd-winreg';
 
 import { DataServiceDispatcher } from 'appcd-dispatcher';
@@ -151,21 +150,23 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 	watchGenymotionDeployed(deployedDir) {
 		const onEmulatorAdd = debounce(async () => {
 			gawk.set(this.data.emulators, await this.geny.getEmulators(this.vbox));
-		}, 8000);
+		}, 10000);
 
 		const onEmulatorChange = debounce(async (file) => {
 			const { emulators } = this.data;
 			for (let i = 0; i < emulators.length; i++) {
 				if (emulators[i].name === path.basename(file, '.vbox')) {
-					const emulator = await this.geny.getEmulatorInfo(emulators[i].guid, this.vbox);
-					emulator.name = emulators[i].name;
-					emulator.guid = emulators[i].guid;
-					emulators[i] = emulator;
-					gawk.set(this.data.emulators, emulators);
-					break;
+					const emulator = await this.geny.getEmulatorInfo({ guid: emulators[i].guid, vbox: this.vbox });
+					if (emulator) {
+						emulator.name = emulators[i].name;
+						emulator.guid = emulators[i].guid;
+						emulators[i] = emulator;
+						gawk.set(this.data.emulators, emulators);
+						break;
+					}
 				}
 			}
-		});
+		}, 500);
 
 		this.watch({
 			type: GENYMOTION_HOME,
@@ -175,7 +176,9 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 				const { emulators } = this.data;
 				if (action === 'add' && path.dirname(file) === deployedDir) {
 					await onEmulatorAdd();
-				}  else if (action === 'delete' && (path.dirname(file) === deployedDir)) {
+				} else if (action === 'change' && path.extname(file) === '.vbox') {
+					await onEmulatorChange(file);
+				} else if (action === 'delete' && (path.dirname(file) === deployedDir)) {
 					// find the emulator in the data store and remove it
 					for (let i = 0; i < emulators.length; i++) {
 						if (emulators[i].name === filename) {
@@ -184,8 +187,6 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 						}
 					}
 					gawk.set(this.data.emulators, emulators);
-				} else if (action === 'change' && path.extname(file) === '.vbox') {
-					await onEmulatorChange(file);
 				}
 			}
 		});
