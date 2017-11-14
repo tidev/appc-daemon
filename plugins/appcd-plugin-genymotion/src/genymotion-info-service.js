@@ -149,17 +149,15 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 	 */
 	watchGenymotionDeployed(deployedDir) {
 		const onEmulatorAdd = debounce(async () => {
-			gawk.set(this.data.emulators, await this.geny.getEmulators(this.vbox));
+			gawk.set(this.data.emulators, await genymotion.getEmulators(this.vbox));
 		}, 10000);
 
 		const onEmulatorChange = debounce(async (file) => {
 			const { emulators } = this.data;
 			for (let i = 0; i < emulators.length; i++) {
 				if (emulators[i].name === path.basename(file, '.vbox')) {
-					const emulator = await this.geny.getEmulatorInfo({ guid: emulators[i].guid, vbox: this.vbox });
+					const emulator = await genymotion.getEmulatorInfo({ vm: emulators[i], vbox: this.vbox });
 					if (emulator) {
-						emulator.name = emulators[i].name;
-						emulator.guid = emulators[i].guid;
 						emulators[i] = emulator;
 						gawk.set(this.data.emulators, emulators);
 						break;
@@ -167,16 +165,18 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 				}
 			}
 		}, 500);
-
+		let detecting;
 		this.watch({
 			type: GENYMOTION_HOME,
 			paths: [ deployedDir ],
 			depth: 2,
 			handler: async ({ file, filename, action }) => {
 				const { emulators } = this.data;
-				if (action === 'add' && path.dirname(file) === deployedDir) {
+				if (action === 'add' && path.dirname(file) === deployedDir && !detecting) {
+					detecting = true;
 					await onEmulatorAdd();
-				} else if (action === 'change' && path.extname(file) === '.vbox') {
+					detecting = false;
+				} else if (action === 'change' && path.extname(file) === '.vbox' && !detecting) {
 					await onEmulatorChange(file);
 				} else if (action === 'delete' && (path.dirname(file) === deployedDir)) {
 					// find the emulator in the data store and remove it
