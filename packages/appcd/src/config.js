@@ -78,7 +78,7 @@ const cmd = {
 					// it's a write operation
 
 					try {
-						let result = { success: true, message: 'Saved'  };
+						let result = 'Saved';
 						let value;
 
 						switch (action) {
@@ -87,27 +87,45 @@ const cmd = {
 								break;
 
 							case 'delete':
-								if (!cfg.delete(key)) {
+								if (!cfg.has(key)) {
+									printAndExit(null, `Not Found: ${key}`, argv.json, 6, '404');
+								} else if (!cfg.delete(key)) {
 									printAndExit(null, `Error: Unable to delete key "${key}"`, argv.json, 1, '400');
 								}
 								break;
 
 							case 'push':
 								cfg.push(key, data.value);
+								result = cfg.get(key);
+								if (!argv.json) {
+									result = JSON.stringify(result);
+								}
 								break;
 
 							case 'pop':
-								value = cfg.pop(key);
-								result.message = value || null;
+								if (!cfg.has(key)) {
+									printAndExit(null, `Not Found: ${key}`, argv.json, 6, '404');
+								} else {
+									value = cfg.pop(key);
+									result = value || (argv.json ? null : '<empty>');
+								}
 								break;
 
 							case 'shift':
-								value = cfg.shift(key);
-								result.message = value || null;
+								if (!cfg.has(key)) {
+									printAndExit(null, `Not Found: ${key}`, argv.json, 6, '404');
+								} else {
+									value = cfg.shift(key);
+									result = value || (argv.json ? null : '<empty>');
+								}
 								break;
 
 							case 'unshift':
 								cfg.unshift(key, data.value);
+								result = cfg.get(key);
+								if (!argv.json) {
+									result = JSON.stringify(result);
+								}
 								break;
 						}
 
@@ -118,30 +136,26 @@ const cmd = {
 
 						await cfg.save(expandPath(home, 'config.json'));
 
-						printAndExit(null, argv.json ? result : 'Saved', argv.json);
+						printAndExit(null, result, argv.json);
 
 					} catch (ex) {
 						err = ex;
 					}
 				}
 
-				printAndExit(null, argv.json ? {
-					code: err.code || 400,
-					message: err.message
-				} : err.toString(), argv.json, 1);
+				printAndExit(null, argv.json ? err.message : err.toString(), argv.json, 1);
 			})
 			.on('response', message => {
 				client.disconnect();
 
 				let result = 'Saved';
 				if (message !== 'OK') {
-					result = argv.json ? { success: true, message } : message;
+					result = message;
 				} else if (argv.json) {
 					// if a pop() or shift() returns OK, then that means there's no more items and
 					// thus we have to force undefined
-					result = { success: true, message: result };
 					if (/^pop|shift$/.test(action)) {
-						result.message = '';
+						result = '';
 					}
 				}
 
@@ -164,30 +178,16 @@ export default cmd;
  */
 function printAndExit(key, value, json, exitCode = 0, code = '0') {
 	if (json) {
-		if (value && typeof value === 'object' && !Array.isArray(value)) {
-			if (!value.code) {
-				value.code = code;
-			}
-			if (value.code && !value.success) {
-				value.success = value.code === '0' ? 'true' : 'false';
-			} else if (!value.success) {
-				value.success = code === '0' ? 'true' : 'false';
-			}
-			console.log(JSON.stringify(value, null, 2));
-		} else {
-			const obj = {
-				code,
-				message: value,
-				success: code === '0' ? 'true' : 'false'
-			};
-			console.log(JSON.stringify(obj, null, 2));
-		}
+		console.log(JSON.stringify({
+			code: exitCode,
+			result: value
+		}, null, 2));
 	} else if (value && typeof value === 'object') {
 		let width = 0;
 		const rows = [];
 
 		(function walk(scope, segments) {
-			for (const key of Object.keys(scope)) {
+			for (const key of Object.keys(scope).sort()) {
 				segments.push(key);
 				if (scope[key] && typeof scope[key] === 'object') {
 					walk(scope[key], segments);

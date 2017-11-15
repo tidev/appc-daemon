@@ -1,6 +1,6 @@
 import DetectEngine from 'appcd-detect';
 import gawk from 'gawk';
-import path from 'path';
+import version from './version';
 
 import * as androidlib from 'androidlib';
 
@@ -70,16 +70,8 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 	 * @access private
 	 */
 	async initEmulators() {
-		const compareEmulators = (dest, src) => {
-			if (dest instanceof androidlib.Emulator && src instanceof androidlib.Emulator) {
-				return dest.path === src.path;
-			}
-			// eslint-disable-next-line eqeqeq
-			return (typeof dest === 'object' ? dest.valueOf() : dest) == (typeof src === 'object' ? src.valueOf() : src);
-		};
-
 		const emulators = await androidlib.emulators.getEmulators({ force: true });
-		gawk.set(this.data.emulators, emulators, compareEmulators);
+		gawk.set(this.data.emulators, emulators);
 
 		this.watch({
 			type: 'avd',
@@ -88,7 +80,7 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 			handler: async () => {
 				console.log('Rescanning Android emulators...');
 				const emulators = await androidlib.emulators.getEmulators({ force: true });
-				gawk.set(this.data.emulators, emulators, compareEmulators);
+				gawk.set(this.data.emulators, emulators);
 			}
 		});
 	}
@@ -114,8 +106,27 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 			multiple:  true,
 			paths:     androidlib.ndk.ndkLocations[process.platform],
 			processResults: async (results, engine) => {
-				// TODO: sort results
-				// TODO: assign default ndk
+				if (results.length > 1) {
+					results.sort((a, b) => version.compare(a.version, b.version));
+				}
+
+				// loop over all of the new ndks and set default version
+				if (results.length) {
+					let foundDefault = false;
+					for (const result of results) {
+						if (!foundDefault && (!engine.defaultPath || result.path === engine.defaultPath)) {
+							result.default = true;
+							foundDefault = true;
+						} else {
+							result.default = false;
+						}
+					}
+
+					// no default found the system path, so just select the last/newest one as the default
+					if (!foundDefault) {
+						results[results.length - 1].default = true;
+					}
+				}
 			},
 			recursive: true,
 			redetect:  true,
@@ -157,8 +168,23 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 			multiple: true,
 			paths,
 			processResults: async (results, engine) => {
-				// TODO: sort results
-				// TODO: assign default sdk
+				// loop over all of the new sdks and set default version
+				if (results.length) {
+					let foundDefault = false;
+					for (const result of results) {
+						if (!foundDefault && (!engine.defaultPath || result.path === engine.defaultPath)) {
+							result.default = true;
+							foundDefault = true;
+						} else {
+							result.default = false;
+						}
+					}
+
+					// no default found the system path, so just select the last/newest one as the default
+					if (!foundDefault) {
+						results[results.length - 1].default = true;
+					}
+				}
 			},
 			recursive: true,
 			registryKeys: [

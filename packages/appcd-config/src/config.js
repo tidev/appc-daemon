@@ -216,6 +216,31 @@ export default class Config {
 	}
 
 	/**
+	 * Checks if the config key exists.
+	 *
+	 * @param {String} key - The dot-notation config key.
+	 * @returns {Boolean}
+	 * @access public
+	 */
+	has(key) {
+		if (!key || typeof key !== 'string') {
+			throw new TypeError('Expected key to be a string');
+		}
+
+		let it = this.values;
+		const parts = key.split('.');
+
+		for (let i = 0, k; it !== undefined && (k = parts[i++]);) {
+			if (typeof it !== 'object' || Array.isArray(it)) {
+				return false;
+			}
+			it = it[k];
+		}
+
+		return it !== undefined;
+	}
+
+	/**
 	 * Sets a config setting.
 	 *
 	 * @param {String|Object} key - The dot-notation config key.

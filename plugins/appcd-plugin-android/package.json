@@ -21,6 +21,7 @@
     "appcd-dispatcher": "^1.0.0-6",
     "appcd-subprocess": "^1.0.0-6",
     "gawk": "^4.4.4",
+    "semver": "^5.4.1",
     "source-map-support": "^0.5.0"
   },
   "devDependencies": {
