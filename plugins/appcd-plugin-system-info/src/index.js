@@ -15,6 +15,18 @@ import { expandPath } from 'appcd-path';
 import { isFile } from 'appcd-fs';
 
 /**
+ * A map of dependent services and their endpoints.
+ * @type {Object}
+ */
+const dependencies = {
+	android:    '/android/1.x/info',
+	genymotion: '/genymotion/1.x/info',
+	ios:        '/ios/1.x/info',
+	jdks:       '/jdk/1.x/info',
+	windows:    '/windows/1.x/info'
+};
+
+/**
  * Aggregrates system info from Android, iOS, JDK, and Windows libraries.
  */
 class SystemInfoService extends DataServiceDispatcher {
@@ -49,6 +61,8 @@ class SystemInfoService extends DataServiceDispatcher {
 			windows: null
 		});
 
+		this.subscriptions = {};
+
 		return Promise.all([
 			// get the os info
 			this.initOSInfo(),
@@ -57,20 +71,53 @@ class SystemInfoService extends DataServiceDispatcher {
 			this.npmInfo(),
 
 			// subscribe to android service
-			this.wireup('android', '/android/1.x/info'),
+			this.wireup('android'),
 
 			// subscribe to genymotion service
-			this.wireup('genymotion', '/genymotion/1.x/info'),
+			this.wireup('genymotion'),
 
 			// subscribe to ios service
-			process.platform === 'darwin' && this.wireup('ios', '/ios/1.x/info'),
+			process.platform === 'darwin' && this.wireup('ios'),
 
 			// subscribe to jdk service
-			this.wireup('jdks', '/jdk/1.x/info'),
+			this.wireup('jdks'),
 
 			// subscribe to windows service
-			process.platform === 'win32' && this.wireup('windows', '/windows/1.x/info')
+			process.platform === 'win32' && this.wireup('windows')
 		]);
+	}
+
+	/**
+	 * Responds to "call" service requests.
+	 *
+	 * @param {DispatcherContext} ctx - A dispatcher request context.
+	 * @returns {Promise}
+	 * @access private
+	 */
+	async onCall(ctx) {
+		for (const name of Object.keys(dependencies)) {
+			if (!this.subscriptions[name]) {
+				await this.wireup(name);
+			}
+		}
+
+		super.onCall(ctx);
+	}
+
+	/**
+	 * Handles the new subscriber.
+	 *
+	 * @param {Object} params - Various parameters to forward on to the super method.
+	 * @access private
+	 */
+	async onSubscribe(params) {
+		for (const name of Object.keys(dependencies)) {
+			if (!this.subscriptions[name]) {
+				await this.wireup(name);
+			}
+		}
+
+		super.onSubscribe(params);
 	}
 
 	/**
@@ -81,12 +128,16 @@ class SystemInfoService extends DataServiceDispatcher {
 	 * @returns {Promise}
 	 * @access private
 	 */
-	wireup(type, endpoint) {
+	wireup(type) {
+		const endpoint = dependencies[type];
+
 		return new Promise(resolve => {
 			appcd.call(endpoint, { type: 'subscribe' })
 				.then(({ response }) => {
 					response.on('data', data => {
-						if (data.type === 'event' && data.message && typeof data.message === 'object') {
+						if (data.type === 'subscribe') {
+							this.subscriptions[type] = data.sid;
+						} else if (data.type === 'event' && data.message && typeof data.message === 'object') {
 							if (!this.data[type]) {
 								this.data[type] = {};
 							}
@@ -99,6 +150,10 @@ class SystemInfoService extends DataServiceDispatcher {
 
 							resolve();
 						}
+					});
+
+					response.on('end', () => {
+						delete this.subscriptions[type];
 					});
 				})
 				.catch(err => {

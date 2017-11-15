@@ -78,7 +78,7 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 			return (typeof dest === 'object' ? dest.valueOf() : dest) == (typeof src === 'object' ? src.valueOf() : src);
 		};
 
-		const emulators = await androidlib.emulators.getEmulators(null, true);
+		const emulators = await androidlib.emulators.getEmulators({ force: true });
 		gawk.set(this.data.emulators, emulators, compareEmulators);
 
 		this.watch({
@@ -87,7 +87,7 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 			paths: [ androidlib.avd.getAvdDir() ],
 			handler: async () => {
 				console.log('Rescanning Android emulators...');
-				const emulators = await androidlib.emulators.getEmulators(null, true);
+				const emulators = await androidlib.emulators.getEmulators({ force: true });
 				gawk.set(this.data.emulators, emulators, compareEmulators);
 			}
 		});
