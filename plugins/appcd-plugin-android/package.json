@@ -20,7 +20,7 @@
     "appcd-detect": "1.0.0-2",
     "appcd-dispatcher": "1.0.0-2",
     "appcd-subprocess": "1.0.0-2",
-    "gawk": "^4.4.3",
+    "gawk": "^4.4.4",
     "source-map-support": "^0.5.0"
   },
   "devDependencies": {

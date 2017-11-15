@@ -727,9 +727,14 @@ async function checkPackages({ skipSecurity } = {}) {
 					// figure out if the depenency is installed and what version
 					let installed = false;
 					try {
-						let depModulePath = path.dirname(require.resolve(dep, { paths: [ path.join(packagePath, 'node_modules') ] }));
-						while (!fs.existsSync(path.join(depModulePath, 'package.json'))) {
-							depModulePath = path.dirname(depModulePath);
+						let depModulePath = path.join(packagePath, 'node_modules', dep);
+						if (!fs.existsSync(path.join(depModulePath, 'package.json'))) {
+							let last = null;
+							depModulePath = require.resolve(dep, { paths: [ path.join(packagePath, 'node_modules') ] });
+							while (depModulePath !== last && !fs.existsSync(path.join(depModulePath, 'package.json'))) {
+								last = depModulePath;
+								depModulePath = path.dirname(depModulePath);
+							}
 						}
 						const depPkgJson = JSON.parse(fs.readFileSync(path.join(depModulePath, 'package.json')));
 						installed = depPkgJson.version;
@@ -819,7 +824,6 @@ async function checkPackages({ skipSecurity } = {}) {
 		const version = task[2];
 
 		// gutil.log(`Running task ${taskCounter++}/${totalTasks}: ${action} ${pkg}${version ? `@${version}` : ''}`);
-		bar.tick();
 
 		switch (action) {
 			case 'nsp':
@@ -838,9 +842,11 @@ async function checkPackages({ skipSecurity } = {}) {
 							issue.nsp = true;
 							dependencies[pkg].versions[version].push(issue);
 						}
+						bar.tick();
 					})
 					.catch(err => {
 						gutil.log(yellow(`nsp failed for ${pkg}@${version}: ${err.message}`));
+						bar.tick();
 					});
 
 			case 'retire':
@@ -885,6 +891,7 @@ async function checkPackages({ skipSecurity } = {}) {
 							gutil.log(result.stderr);
 						}
 
+						bar.tick();
 						resolve();
 					}));
 				break;
@@ -903,6 +910,8 @@ async function checkPackages({ skipSecurity } = {}) {
 							dependencies[pkg].nextTimestamp   = next && info[latest].time[next] || null;
 							dependencies[pkg].deprecated      = info[latest].deprecated;
 						}
+
+						bar.tick();
 						resolve();
 					});
 				});
@@ -1267,7 +1276,7 @@ function upgradeDeps(list) {
 	for (const pkg of list) {
 		const pkgJsonFile = path.join(pkg.path, 'package.json');
 		components[pkgJsonFile] || (components[pkgJsonFile] = {});
-		components[pkgJsonFile][pkg.name] = pkg.updated;
+		components[pkgJsonFile][pkg.name] = pkg.latest;
 	}
 
 	let table;
