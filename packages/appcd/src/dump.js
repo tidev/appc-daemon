@@ -12,55 +12,73 @@ const cmd = {
 	args: [
 		{ name: 'file', desc: 'the file to dump the info to, otherwise stdout' },
 	],
-	async action({ argv, _ }) {
+	action({ argv, _ }) {
 		const cfg = loadConfig(argv);
 		const results = {
-			config: cfg,
+			config: {},
 			status: {},
 			log: []
 		};
 		let [ file ] = _;
 
-		await Promise.all([
-			new Promise(resolve => {
-				const { client, request } = createRequest(cfg, '/appcd/status');
-				request
-					.on('response', status => {
+		return Promise
+			.all([
+				new Promise(resolve => {
+					const { client, request } = createRequest(cfg, '/appcd/config');
+					request
+						.on('response', config => {
+							client.disconnect();
+							results.config = config;
+							resolve();
+						})
+						.once('error', err => {
+							results.config = cfg;
+							resolve();
+						});
+				}),
+
+				new Promise(resolve => {
+					const { client, request } = createRequest(cfg, '/appcd/status');
+					request
+						.on('response', status => {
+							client.disconnect();
+							results.status = status;
+							resolve();
+						})
+						.once('error', err => {
+							results.status = err;
+							resolve();
+						});
+				}),
+
+				new Promise((resolve, reject) => {
+					const { client, request } = createRequest(cfg, '/appcd/logcat', { colors: false });
+					const done = debounce(() => {
 						client.disconnect();
-						results.status = status;
-						resolve();
-					})
-					.once('error', err => {
-						results.status = err;
 						resolve();
 					});
-			}),
 
-			new Promise(resolve => {
-				const { client, request } = createRequest(cfg, '/appcd/logcat', { colors: false });
-				const done = debounce(() => {
-					client.disconnect();
-					resolve();
-				});
-
-				request
-					.on('response', response => {
-						results.log.push(response);
-						done();
-					})
-					.once('error', () => {
-						resolve();
-					});
-			})
-		]);
-
-		if (file) {
-			file = path.resolve(file);
-			fs.writeFileSync(file, JSON.stringify(results, null, '  '));
-			log(`Wrote dump to ${file}`);
-		} else {
-			log(JSON.stringify(results, null, '  '));
-		}
+					request
+						.on('response', response => {
+							results.log.push(response);
+							done();
+						})
+						.once('error', (err) => {
+							resolve();
+						});
+				})
+			])
+			.then(() => results)
+			.catch(err => err)
+			.then(results => {
+				if (file) {
+					file = path.resolve(file);
+					fs.writeFileSync(file, JSON.stringify(results, null, '  '));
+					log(`Wrote dump to ${file}`);
+				} else {
+					log(JSON.stringify(results, null, '  '));
+				}
+			});
 	}
 };
 
