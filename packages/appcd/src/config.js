@@ -69,7 +69,7 @@ const cmd = {
 						const filter = key && key.split(/\.|\//).join('.') || undefined;
 						const value = cfg.get(filter);
 						if (value === undefined) {
-							printAndExit(key, value, argv.json, 6);
+							printAndExit(key, `Not Found: ${key}`, argv.json, 6, '404');
 						} else {
 							printAndExit(key, value, argv.json);
 						}
@@ -88,7 +88,7 @@ const cmd = {
 
 							case 'delete':
 								if (!cfg.delete(key)) {
-									printAndExit(null, `Error: Unable to delete key "${key}"`, argv.json, 1, 400);
+									printAndExit(null, `Error: Unable to delete key "${key}"`, argv.json, 1, '400');
 								}
 								break;
 
@@ -113,7 +113,7 @@ const cmd = {
 
 						const home = cfg.get('home');
 						if (!home) {
-							printAndExit(null, 'The "home" directory is not configured and the change was not saved', argv.json, 1);
+							printAndExit(null, 'The "home" directory is not configured and the change was not saved', argv.json, '1');
 						}
 
 						await cfg.save(expandPath(home, 'config.json'));
@@ -162,16 +162,23 @@ export default cmd;
  * @param {Number} [exitCode=0] - The exit code to return after printing the value.
  * @param {Number} [code=0] - The code to return in a json response
  */
-function printAndExit(key, value, json, exitCode = 0, code = 0) {
+function printAndExit(key, value, json, exitCode = 0, code = '0') {
 	if (json) {
 		if (value && typeof value === 'object') {
-			value.code = code;
+			if (!value.code) {
+				value.code = code;
+			}
+			if (value.code && !value.success) {
+				value.success = value.code === '0' ? 'true' : 'false';
+			} else if (!value.success) {
+				value.success = code === '0' ? 'true' : 'false';
+			}
 			console.log(JSON.stringify(value, null, 2));
 		} else {
 			const obj = {
 				code,
 				message: value,
-				success: code === 0 ? 'true' : 'false'
+				success: code === '0' ? 'true' : 'false'
 			};
 			console.log(JSON.stringify(obj, null, 2));
 		}
