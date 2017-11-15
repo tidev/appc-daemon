@@ -56,7 +56,7 @@ gulp.task('node-info', () => {
  */
 gulp.task('check', cb => {
 	if (process.argv.indexOf('--json') !== -1 && process.argv.indexOf('--silent') === -1) {
-		console.error(gutil.colors.red('Please rerun using the --silent option'));
+		console.error(red('Please rerun using the --silent option'));
 		process.exit(1);
 	}
 
@@ -406,11 +406,11 @@ function runTests(cover, cb) {
 			}
 
 			if (failedProjects.length === 1) {
-				gutil.log(gutil.colors.red('1 failured project:'));
+				gutil.log(red('1 failured project:'));
 			} else {
-				gutil.log(gutil.colors.red(`${failedProjects.length} failured projects:`));
+				gutil.log(red(`${failedProjects.length} failured projects:`));
 			}
-			failedProjects.forEach(p => gutil.log(gutil.colors.red(p)));
+			failedProjects.forEach(p => gutil.log(red(p)));
 			process.exit(1);
 		})
 		.catch(cb);
@@ -440,13 +440,13 @@ gulp.task('watch-only', cb => {
 			evt.path = evt.path.replace(/\\/g, '/');
 			const m = evt.path.match(new RegExp('^(' +  __dirname.replace(/\\/g, '/') + '/(packages/([^\/]+)))'));
 			if (m) {
-				gutil.log('Detected change: ' + gutil.colors.cyan(evt.path));
+				gutil.log('Detected change: ' + cyan(evt.path));
 				stopDaemon();
 				buildDepList(m[2])
 					.reduce((promise, dir) => {
 						return promise.then(() => new Promise((resolve, reject) => {
 							console.log();
-							gutil.log(gutil.colors.cyan('Rebuilding ' + dir));
+							gutil.log(cyan('Rebuilding ' + dir));
 							gulp
 								.src(__dirname + '/' + dir + '/gulpfile.js')
 								.pipe(chug({ tasks: [ 'build' ] }))
@@ -502,7 +502,6 @@ gulp.task('watch-only', cb => {
 gulp.task('watch', cb => runSequence('build', 'start-daemon', 'watch-only', cb));
 
 gulp.task('default', () => {
-	const cyan = gutil.colors.cyan;
 	console.log('\nAvailable tasks:');
 	const table = new Table({
 		chars: cliTableChars,
@@ -558,11 +557,11 @@ gulp.task('cyclic', () => {
 		for (const name of pkgs.sort()) {
 			console.log(name);
 			for (const deps of results[name]) {
-				console.log('  > ' + deps.map((s, i, a) => i + 1 === a.length ? gutil.colors.red(s) : s).join(' > '));
+				console.log('  > ' + deps.map((s, i, a) => i + 1 === a.length ? red(s) : s).join(' > '));
 			}
 			console.log();
 		}
-		const e = new Error(gutil.colors.red(`Found ${pkgs.length} package${pkgs.length === 1 ? '' : 's'} with cyclic dependencies!`));
+		const e = new Error(red(`Found ${pkgs.length} package${pkgs.length === 1 ? '' : 's'} with cyclic dependencies!`));
 		e.showStack = false;
 		throw e;
 	} else {
@@ -1208,9 +1207,6 @@ function renderPackages(results) {
 }
 
 function displayStats(results) {
-	const gray = gutil.colors.gray;
-	const green = gutil.colors.green;
-	const magenta = gutil.colors.magenta;
 	console.log(magenta('Source Code Stats') + '\n');
 
 	let table = new Table({ chars: cliTableChars, head: [], style: { head: [ 'bold' ], border: [] } });
@@ -1242,7 +1238,6 @@ function displayStats(results) {
 }
 
 function hlVer(ver, ref) {
-	const green = gutil.colors.green;
 	const version = [];
 	const m = ver.match(/^([^\d]+)?(.+)$/);
 	const to = (m ? m[2] : ver).split('.');
@@ -1285,7 +1280,7 @@ function upgradeDeps(list) {
 				throw new Error();
 			}
 		} catch (e) {
-			gutil.log(gutil.color.red(`Unable to locate ${pkgJsonFile}`));
+			gutil.log(red(`Unable to locate ${pkgJsonFile}`));
 			continue;
 		}
 
@@ -1293,11 +1288,11 @@ function upgradeDeps(list) {
 		try {
 			pkgJson = JSON.parse(fs.readFileSync(pkgJsonFile));
 		} catch (e) {
-			gutil.log(gutil.color.red(`Unable to locate ${pkgJsonFile}`));
+			gutil.log(red(`Unable to locate ${pkgJsonFile}`));
 			continue;
 		}
 
-		console.log(gutil.colors.magenta(pkgJsonFile));
+		console.log(magenta(pkgJsonFile));
 
 		table = new Table({
 			chars: cliTableChars,
