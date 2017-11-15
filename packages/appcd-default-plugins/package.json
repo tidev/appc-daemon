@@ -9,11 +9,11 @@
   ],
   "license": "Apache-2.0",
   "coming soon": {
-    "appcd-plugin-genymotion": "*",
     "appcd-plugin-titanium": "*"
   },
   "dependencies": {
     "appcd-plugin-android": "^1.0.0-3",
+    "appcd-plugin-genymotion": "1.0.0-3",
     "appcd-plugin-ios": "^1.0.0-3",
     "appcd-plugin-jdk": "^1.0.0-3",
     "appcd-plugin-system-info": "^1.0.0-3",

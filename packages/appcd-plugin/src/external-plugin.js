@@ -289,18 +289,24 @@ export default class ExternalPlugin extends PluginBase {
 			})
 			.start();
 
+		let loadedConfig = false;
+
 		return this.globals.appcd
 			.call('/appcd/config', { type: 'subscribe' })
 			.then(({ response }) => new Promise(resolve => {
 				response.on('data', ({ message, sid, type }) => {
 					if (type === 'subscribe') {
 						this.configSubscriptionId = sid;
-						resolve();
 					} else if (type === 'event') {
 						gawk.set(this.config, message);
 
 						if (this.config.server && this.config.server.agentPollInterval) {
 							this.agent.pollInterval = Math.max(1000, this.config.server.agentPollInterval);
+						}
+
+						if (!loadedConfig) {
+							loadedConfig = true;
+							resolve();
 						}
 					}
 				});

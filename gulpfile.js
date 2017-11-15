@@ -85,7 +85,7 @@ gulp.task('clean', () => {
 							break;
 						}
 					case 'node_modules':
-						if (dir.includes('test/fixtures') || dir === __dirname) {
+						if (dir.includes(`test${path.sep}fixtures`) || dir === __dirname) {
 							break;
 						}
 					case '.nyc_output':
@@ -171,7 +171,7 @@ gulp.task('lint', [ 'cyclic' ], () => {
  * build tasks
  */
 gulp.task('build', [ 'cyclic' ], () => {
-	runLerna(['run', '--parallel', 'build']);
+	runLerna([ 'run', '--parallel', 'build' ]);
 });
 
 /*
@@ -512,14 +512,14 @@ gulp.task('default', () => {
 		}
 	});
 
-	table.push([cyan('build'),            'performs a full build']);
-	table.push([cyan('watch'),            'builds all packages, then starts watching them']);
-	table.push([cyan('watch-only'),       'starts watching all packages to perform build']);
-	table.push([cyan('check'),            'checks missing/outdated dependencies/link, security issues, and code stats']);
-	table.push([cyan('cyclic'),           'detects cyclic dependencies (which are bad) in appcd packages and plugins']);
-	table.push([cyan('stats'),            'displays stats about the code']);
-	// table.push([cyan('package'),          'builds and packages an appc daemon distribution archive']);
-	table.push([cyan('upgrade'),          'detects latest npm deps, updates package.json, and runs upgrade']);
+	table.push([ cyan('build'),            'performs a full build' ]);
+	table.push([ cyan('watch'),            'builds all packages, then starts watching them' ]);
+	table.push([ cyan('watch-only'),       'starts watching all packages to perform build' ]);
+	table.push([ cyan('check'),            'checks missing/outdated dependencies/link, security issues, and code stats' ]);
+	table.push([ cyan('cyclic'),           'detects cyclic dependencies (which are bad) in appcd packages and plugins' ]);
+	table.push([ cyan('stats'),            'displays stats about the code' ]);
+	// table.push([ cyan('package'),          'builds and packages an appc daemon distribution archive' ]);
+	table.push([ cyan('upgrade'),          'detects latest npm deps, updates package.json, and runs upgrade' ]);
 
 	console.log(table.toString() + '\n');
 });
@@ -670,7 +670,6 @@ function runYarn(cwd) {
 		});
 }
 
-
 function runLerna(args) {
 	let execPath = '';
 	if (isWindows) {
@@ -679,7 +678,7 @@ function runLerna(args) {
 		args.unshift('./node_modules/.bin/lerna');
 		execPath = process.execPath;
 	}
-	gutil.log(`Running ${execPath} ${args.join(' ')}`)
+	gutil.log(`Running ${execPath} ${args.join(' ')}`);
 	spawnSync(execPath, args, { stdio: 'inherit' });
 }
 
@@ -1034,7 +1033,7 @@ function renderPackages(results) {
 
 		[ 'dependencies', 'devDependencies', 'optionalDependencies' ].forEach(type => {
 			if (pkg[type] && Object.keys(pkg[type]).length) {
-				table.push([{ colSpan: 6, content: gray(typeLabels[type]) }]);
+				table.push([ { colSpan: 6, content: gray(typeLabels[type]) } ]);
 
 				for (const name of Object.keys(pkg[type])) {
 					const dep = pkg[type][name];
@@ -1315,7 +1314,7 @@ function upgradeDeps(list) {
 		for (const packageName of Object.keys(components[pkgJsonFile])) {
 			[ 'dependencies', 'devDependencies', 'optionalDependencies' ].forEach(type => {
 				if (pkgJson[type] && pkgJson[type].hasOwnProperty(packageName)) {
-					table.push([packageName, pkgJson[type][packageName], '→', hlVer(components[pkgJsonFile][packageName], pkgJson[type][packageName])]);
+					table.push([ packageName, pkgJson[type][packageName], '→', hlVer(components[pkgJsonFile][packageName], pkgJson[type][packageName]) ]);
 					pkgJson[type][packageName] = components[pkgJsonFile][packageName];
 				}
 			});
@@ -1365,13 +1364,13 @@ function computeSloc(type) {
 }
 
 function formatNumber(num, dontSign) {
-	const n = parseFloat(num)
+	const n = parseFloat(num);
 	if (isNaN(n)) {
 		return num;
 	}
 	const pos = String(Math.abs(n)).split('.');
-	const val = pos[0].replace(/./g, function(c, i, a) {
-	    return i && c !== "." && ((a.length - i) % 3 === 0) ? ',' + c : c;
+	const val = pos[0].replace(/./g, function (c, i, a) {
+	    return i && c !== '.' && ((a.length - i) % 3 === 0) ? ',' + c : c;
 	}) + (pos.length > 1 ? ('.' + pos[1]) : '');
 
 	return dontSign && n < 0 ? `(${val})` : val;
