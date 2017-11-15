@@ -150,7 +150,7 @@ export default class Server {
 		Dispatcher.register('/appcd/config', new ConfigService(this.config));
 
 		// init logcat
-		Dispatcher.register('/appcd/logcat', ctx => logcat(ctx.response));
+		Dispatcher.register('/appcd/logcat', ctx => logcat(ctx.request, ctx.response));
 
 		// init the status monitor
 		this.systems.statusMonitor = new StatusMonitor();

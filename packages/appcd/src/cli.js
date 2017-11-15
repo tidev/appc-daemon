@@ -4,25 +4,27 @@ if (!Error.prepareStackTrace) {
 }
 
 import CLI from 'cli-kit';
-import start from './start';
-import stop from './stop';
-import restart from './restart';
 import config from './config';
+import dump from './dump';
 import exec from './exec';
 import logcat from './logcat';
+import restart from './restart';
+import start from './start';
 import status from './status';
+import stop from './stop';
 
 import { getAppcdVersion } from './common';
 
 new CLI({
 	commands: {
-		start,
-		stop,
-		restart,
 		config,
+		dump,
 		exec,
 		logcat,
-		status
+		restart,
+		start,
+		status,
+		stop
 	},
 	help: true,
 	helpExitCode: 2,

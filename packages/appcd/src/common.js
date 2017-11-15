@@ -138,6 +138,7 @@ export function startServer({ cfg, argv }) {
 	}
 
 	process.env.APPCD_BOOTSTRAP = appcdVersion;
+	process.env.FORCE_COLOR = 1;
 
 	return Promise.resolve()
 		.then(() => {
