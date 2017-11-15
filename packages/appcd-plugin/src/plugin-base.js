@@ -2,6 +2,7 @@ import appcdLogger from 'appcd-logger';
 import Dispatcher from 'appcd-dispatcher';
 import gawk from 'gawk';
 import PluginModule from './plugin-module';
+import util from 'util';
 
 import { EventEmitter } from 'events';
 
@@ -41,8 +42,20 @@ export default class PluginBase extends EventEmitter {
 		 * The plugin's namespaced logger.
 		 * @type {SnoopLogg}
 		 */
-		this.logger = appcdLogger(plugin.toString());
-		Object.defineProperty(this.logger, 'trace', { value: console.trace.bind(console) });
+		const { log } = this.logger = appcdLogger(plugin.toString());
+		Object.defineProperty(this.logger, 'trace', {
+			value: (...args) => {
+				const err = {
+					name: 'Trace',
+					message: util.format.apply(null, args),
+					toString() {
+						return this.name + (this.message ? `: ${this.message}` : '');
+					}
+				};
+				Error.captureStackTrace(err);
+				log(err.stack);
+			}
+		});
 
 		/**
 		 * The Appc Daemon config.
