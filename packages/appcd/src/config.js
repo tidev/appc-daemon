@@ -44,8 +44,7 @@ const cmd = {
 
 		if (writeActions[action]) {
 			if (!key) {
-				console.error(`Error: Missing the configuration key to ${action}`);
-				process.exit(1);
+				printAndExit(null, `Error: Missing the configuration key to ${action}`, argv.json, 1, 400);
 			}
 
 			try {
@@ -55,8 +54,7 @@ const cmd = {
 			}
 
 			if ((action === 'set' || action === 'push' || action === 'unshift') && data.value === undefined) {
-				console.error(`Error: Missing the configuration value to ${action}`);
-				process.exit(1);
+				printAndExit(null, `Error: Missing the configuration value to ${action}`, argv.json, 1, 400);
 			}
 		}
 
@@ -80,7 +78,8 @@ const cmd = {
 					// it's a write operation
 
 					try {
-						let result = true;
+						let result = { success: true, message: 'Saved'  };
+						let value;
 
 						switch (action) {
 							case 'set':
@@ -89,8 +88,7 @@ const cmd = {
 
 							case 'delete':
 								if (!cfg.delete(key)) {
-									console.error(`Error: Unable to delete key "${key}"`);
-									process.exit(1);
+									printAndExit(null, `Error: Unable to delete key "${key}"`, argv.json, 1, 400);
 								}
 								break;
 
@@ -99,11 +97,13 @@ const cmd = {
 								break;
 
 							case 'pop':
-								result = cfg.pop(key);
+								value = cfg.pop(key);
+								result.message = value || null;
 								break;
 
 							case 'shift':
-								result = cfg.shift(key);
+								value = cfg.shift(key);
+								result.message = value || null;
 								break;
 
 							case 'unshift':
@@ -113,8 +113,7 @@ const cmd = {
 
 						const home = cfg.get('home');
 						if (!home) {
-							console.error('The "home" directory is not configured and the change was not saved');
-							process.exit(1);
+							printAndExit(null, 'The "home" directory is not configured and the change was not saved', argv.json, 1);
 						}
 
 						await cfg.save(expandPath(home, 'config.json'));
@@ -127,7 +126,7 @@ const cmd = {
 				}
 
 				printAndExit(null, argv.json ? {
-					code: err.code,
+					code: err.code || 400,
 					message: err.message
 				} : err.toString(), argv.json, 1);
 			})
@@ -136,11 +135,14 @@ const cmd = {
 
 				let result = 'Saved';
 				if (message !== 'OK') {
-					result = message;
+					result = argv.json ? { success: true, message } : message;
 				} else if (argv.json) {
 					// if a pop() or shift() returns OK, then that means there's no more items and
 					// thus we have to force undefined
-					result = /^pop|shift$/.test(action) ? undefined : true;
+					result = { success: true, message: result };
+					if (/^pop|shift$/.test(action)) {
+						result.message = '';
+					}
 				}
 
 				printAndExit(key, result, argv.json);
@@ -158,10 +160,21 @@ export default cmd;
  * @param {*} value - The resulting value.
  * @param {Boolean} [json=false] - When `true`, displays the output as json.
  * @param {Number} [exitCode=0] - The exit code to return after printing the value.
+ * @param {Number} [code=0] - The code to return in a json response
  */
-function printAndExit(key, value, json, exitCode = 0) {
+function printAndExit(key, value, json, exitCode = 0, code = 0) {
 	if (json) {
-		console.log(JSON.stringify(value, null, 2));
+		if (value && typeof value === 'object') {
+			value.code = code;
+			console.log(JSON.stringify(value, null, 2));
+		} else {
+			const obj = {
+				code,
+				message: value,
+				success: code === 0 ? 'true' : 'false'
+			};
+			console.log(JSON.stringify(obj, null, 2));
+		}
 	} else if (value && typeof value === 'object') {
 		let width = 0;
 		const rows = [];
