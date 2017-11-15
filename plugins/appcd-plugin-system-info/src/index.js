@@ -242,16 +242,26 @@ class SystemInfoService extends DataServiceDispatcher {
 			// squelch
 		}
 
-		let npmPkgJson = expandPath(prefix, 'node_modules', 'npm', 'package.json');
-		if (!isFile(npmPkgJson)) {
-			prefix = process.platform === 'win32' ? '%ProgramFiles%\\nodejs' : '/usr/local';
-			// on Linux and macOS, the `node_modules` is inside a `lib` directory
-			npmPkgJson = expandPath(prefix, 'node_modules', 'npm', 'package.json');
+		const checknpmPath = (prefix) => {
+			let npmPath = expandPath(prefix, 'node_modules', 'npm', 'package.json');
+			if (isFile(npmPath)) {
+				return npmPath;
+			}
+			npmPath = expandPath(prefix, 'lib', 'node_modules', 'npm', 'package.json');
+			if (isFile(npmPath)) {
+				return npmPath;
+			}
+			return false;
+		};
+
+		let npmPkgJson = checknpmPath(prefix);
+		if (!npmPkgJson) {
 			if (!isFile(npmPkgJson)) {
-				if (process.platform !== 'win32') {
-					npmPkgJson = expandPath(prefix, 'lib', 'node_modules', 'npm', 'package.json');
-				} else {
-					npmPkgJson = expandPath('%ProgramFiles(x86)%\\nodejs', 'node_modules', 'npm', 'package.json');
+				prefix = process.platform === 'win32' ? '%ProgramFiles%\\nodejs' : '/usr/local';
+				// on Linux and macOS, the `node_modules` is inside a `lib` directory
+				npmPkgJson = checknpmPath(prefix);
+				if (!npmPkgJson) {
+					npmPkgJson = checknpmPath('%ProgramFiles(x86)%\\nodejs');
 				}
 			}
 		}
