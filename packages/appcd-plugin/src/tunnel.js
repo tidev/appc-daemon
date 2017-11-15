@@ -81,7 +81,7 @@ export default class Tunnel {
 					message
 				};
 
-				this.logger.log('Sending tunnel response to %s:', highlight(this.remoteName), response);
+				// this.logger.log('Sending tunnel response to %s:', highlight(this.remoteName), response);
 				this.proc.send(response);
 			});
 		};

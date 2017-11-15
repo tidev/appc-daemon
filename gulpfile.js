@@ -146,7 +146,7 @@ gulp.task('stats', () => {
 
 gulp.task('upgrade', cb => {
 	Promise.resolve()
-		.then(() => checkPackages())
+		.then(() => checkPackages({ skipSecurity: true }))
 		.then(results => upgradeDeps(results.packagesToUpdate))
 		.then(() => checkPackages({ skipSecurity: true }))
 		.then(results => renderPackages(results))
@@ -882,6 +882,9 @@ async function checkPackages({ skipSecurity } = {}) {
 										const dep = obj.component;
 										const version = obj.version;
 										issue.retire = true;
+										if (!dependencies[dep].versions[version]) {
+											dependencies[dep].versions[version] = [];
+										}
 										dependencies[dep].versions[version].push(issue);
 									}
 								}
