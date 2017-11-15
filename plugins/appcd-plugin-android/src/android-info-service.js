@@ -84,7 +84,7 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 		this.watch({
 			type: 'avd',
 			depth: 1,
-			paths: [ androidlib.emulators.getAvdDir() ],
+			paths: [ androidlib.avd.getAvdDir() ],
 			handler: async () => {
 				console.log('Rescanning Android emulators...');
 				const emulators = await androidlib.emulators.getEmulators(null, true);
