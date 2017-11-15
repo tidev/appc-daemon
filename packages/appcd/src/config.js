@@ -164,7 +164,7 @@ export default cmd;
  */
 function printAndExit(key, value, json, exitCode = 0, code = '0') {
 	if (json) {
-		if (value && typeof value === 'object') {
+		if (value && typeof value === 'object' && !Array.isArray(value)) {
 			if (!value.code) {
 				value.code = code;
 			}
