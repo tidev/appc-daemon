@@ -5,7 +5,6 @@
   "dependencies": {
     "archiver": "^2.1.0",
     "cli-table2": "^0.2.0",
-    "david": "^11.0.0",
     "del": "^3.0.0",
     "double-stack": "^2.1.0",
     "fs-extra": "^4.0.2",
@@ -18,7 +17,9 @@
     "ignore": "^3.3.7",
     "istanbul": "^0.4.5",
     "lerna": "^2.5.1",
-    "nsp": "^2.8.1",
+    "npm": "^5.5.1",
+    "nsp": "^3.1.0",
+    "progress": "^2.0.0",
     "promise-limit": "^2.5.0",
     "retire": "^1.4.0",
     "run-sequence": "^2.2.0",

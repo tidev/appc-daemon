@@ -1,6 +1,6 @@
 {
   "name": "appcd-gulp",
-  "version": "1.0.0-2",
+  "version": "1.0.0-3",
   "description": "Common gulp tasks and utilities.",
   "main": "./src/index",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
@@ -11,7 +11,7 @@
   "dependencies": {
     "babel-core": "^6.26.0",
     "babel-eslint": "^8.0.2",
-    "babel-plugin-dynamic-import-node": "^1.1.0",
+    "babel-plugin-dynamic-import-node": "^1.2.0",
     "babel-plugin-istanbul": "^4.1.5",
     "babel-plugin-transform-async-to-generator": "^6.24.1",
     "babel-plugin-transform-class-properties": "^6.24.1",
@@ -27,7 +27,7 @@
     "chai-as-promised": "^7.1.1",
     "core-js": "^2.5.1",
     "del": "^3.0.0",
-    "esdoc": "^1.0.3",
+    "esdoc": "^1.0.4",
     "esdoc-ecmascript-proposal-plugin": "^1.0.0",
     "esdoc-standard-plugin": "^1.0.0",
     "eslint": "^4.11.0",
