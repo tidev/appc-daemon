@@ -21,10 +21,6 @@ const cmd = {
 		};
 		let [ file ] = _;
 
-		if (file) {
-			file = path.resolve(file);
-		}
-
 		await Promise.all([
 			new Promise(resolve => {
 				const { client, request } = createRequest(cfg, '/appcd/status');
@@ -59,6 +55,7 @@ const cmd = {
 		]);
 
 		if (file) {
+			file = path.resolve(file);
 			fs.writeFileSync(file, JSON.stringify(results, null, '  '));
 			log(`Wrote dump to ${file}`);
 		} else {
