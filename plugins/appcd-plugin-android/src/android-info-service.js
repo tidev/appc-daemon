@@ -70,17 +70,25 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 	 * @access private
 	 */
 	async initEmulators() {
+		const compareEmulators = (dest, src) => {
+			if (dest instanceof androidlib.Emulator && src instanceof androidlib.Emulator) {
+				return dest.path === src.path;
+			}
+			// eslint-disable-next-line eqeqeq
+			return (typeof dest === 'object' ? dest.valueOf() : dest) == (typeof src === 'object' ? src.valueOf() : src);
+		};
+
 		const emulators = await androidlib.emulators.getEmulators(null, true);
-		gawk.set(this.data.emulators, emulators);
+		gawk.set(this.data.emulators, emulators, compareEmulators);
 
 		this.watch({
 			type: 'avd',
 			depth: 1,
-			paths: [ androidlib.emulators.getAvdDir() ],
+			paths: [ androidlib.avd.getAvdDir() ],
 			handler: async () => {
 				console.log('Rescanning Android emulators...');
 				const emulators = await androidlib.emulators.getEmulators(null, true);
-				gawk.set(this.data.emulators, emulators);
+				gawk.set(this.data.emulators, emulators, compareEmulators);
 			}
 		});
 	}

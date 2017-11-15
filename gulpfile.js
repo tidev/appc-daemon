@@ -2,7 +2,6 @@
 
 // dependency mappings used to wiring up yarn links and build order
 const chug         = require('gulp-chug');
-const david        = require('david');
 const debug        = require('gulp-debug');
 const del          = require('del');
 const fs           = require('fs-extra');
@@ -10,10 +9,12 @@ const globule      = require('globule');
 const gulp         = require('gulp');
 const gutil        = require('gulp-util');
 const istanbul     = require('istanbul');
-const Nsp          = require('nsp');
+const npm          = require('npm');
+const nspAPI       = require('nsp/lib/api');
 const PassThrough  = require('stream').PassThrough;
 const path         = require('path');
 const plumber      = require('gulp-plumber');
+const progress     = require('progress');
 const promiseLimit = require('promise-limit');
 const runSequence  = require('run-sequence');
 const semver       = require('semver');
@@ -26,6 +27,8 @@ const util         = require('util');
 const appcdRE = /^appcd-/;
 const isWindows = process.platform === 'win32';
 
+const { bold, red, yellow, green, cyan, magenta, gray } = gutil.colors;
+
 const cliTableChars = {
 	bottom: '', 'bottom-left': '', 'bottom-mid': '', 'bottom-right': '',
 	left: '', 'left-mid': '',
@@ -34,15 +37,7 @@ const cliTableChars = {
 	top: '', 'top-left': '', 'top-mid': '', 'top-right': ''
 };
 
-const fixReasons = {
-	install: 'install missing packages',
-	link: 'link missing dependencies',
-	nuke: 'reinstall'
-};
-
-const dontUpdate = [
-	'nsp'
-];
+const dontUpdate = [];
 
 process.env.FORCE_COLOR = 1;
 
@@ -61,20 +56,19 @@ gulp.task('node-info', () => {
  */
 gulp.task('check', cb => {
 	if (process.argv.indexOf('--json') !== -1 && process.argv.indexOf('--silent') === -1) {
-		console.error(gutil.colors.red('Please rerun using the --silent option'));
+		console.error(red('Please rerun using the --silent option'));
 		process.exit(1);
 	}
 
-	Promise.resolve()
-		.then(() => checkPackages())
+	checkPackages()
 		.then(results => {
 			if (process.argv.indexOf('--json') !== -1) {
 				console.log(JSON.stringify(results, null, 2));
 			} else {
 				renderPackages(results);
 			}
+			cb();
 		})
-		.then(() => cb())
 		.catch(cb);
 });
 
@@ -91,7 +85,7 @@ gulp.task('clean', () => {
 							break;
 						}
 					case 'node_modules':
-						if (dir.includes(`test${path.sep}fixtures`)) {
+						if (dir.includes(`test${path.sep}fixtures`) || dir === __dirname) {
 							break;
 						}
 					case '.nyc_output':
@@ -121,6 +115,8 @@ gulp.task('clean', () => {
 		}
 	}(__dirname));
 
+	nuke.push(path.join(__dirname, 'node_modules'));
+
 	const s = nuke.length !== 1 ? 's' : '';
 	const ies = nuke.length !== 1 ? 'ies' : 'y';
 
@@ -139,73 +135,6 @@ gulp.task('clean', () => {
 	}
 
 	console.log(`\nNuked ${nuke.length} file${s}/director${ies}\n`);
-});
-
-gulp.task('fix', cb => {
-	Promise.resolve()
-		.then(() => checkPackages())
-		.then(results => {
-			if (!Object.keys(results.needsFixing).length) {
-				gutil.log('Everything looks good to go, nothing to fix');
-				return;
-			}
-
-			const nuke = [];
-
-			const table = new Table({
-				chars: cliTableChars,
-				head: [ 'Component', 'Action' ],
-				style: {
-					head: [ 'bold', 'gray' ],
-					border: []
-				}
-			});
-			for (const pkg of Object.keys(results.needsFixing)) {
-				const rel = path.relative(__dirname, pkg) || path.basename(pkg);
-				table.push([ rel, fixReasons[results.needsFixing[pkg]] || 'unknown' ]);
-				if (results.needsFixing[pkg]) {
-					nuke.push(pkg);
-				}
-			}
-			console.log('\n' + table.toString() + '\n');
-
-			if (nuke.indexOf(__dirname) !== -1) {
-				gutil.log(gutil.colors.red('You must manually `rm -rf node_modules && yarn`'));
-				process.exit(1);
-			}
-
-			for (const pkg of nuke) {
-				const p = `${pkg}/node_modules`;
-				gutil.log(`Deleting ${p}`);
-				fs.removeSync(p);
-			}
-
-			runLerna([ 'bootstrap' ]);
-
-			return nuke.reduce((promise, cwd) => {
-				return promise
-					.then(() => runYarn(cwd))
-					.then(result => {
-						if (result.status) {
-							gutil.log();
-							gutil.log(gutil.colors.red(`Failed to install deps for ${cwd}`));
-							gutil.log();
-							result.stderr.toString().trim().split('\n').forEach(line => gutil.log(gutil.colors.red(line)));
-							gutil.log();
-						}
-					});
-			}, Promise.resolve());
-		})
-		.then(() => checkPackages())
-		.then(results => {
-			if (process.argv.indexOf('--json') !== -1) {
-				console.log(JSON.stringify(results, null, 2));
-			} else {
-				renderPackages(results);
-			}
-		})
-		.then(() => cb())
-		.catch(cb);
 });
 
 gulp.task('stats', () => {
@@ -477,11 +406,11 @@ function runTests(cover, cb) {
 			}
 
 			if (failedProjects.length === 1) {
-				gutil.log(gutil.colors.red('1 failured project:'));
+				gutil.log(red('1 failured project:'));
 			} else {
-				gutil.log(gutil.colors.red(`${failedProjects.length} failured projects:`));
+				gutil.log(red(`${failedProjects.length} failured projects:`));
 			}
-			failedProjects.forEach(p => gutil.log(gutil.colors.red(p)));
+			failedProjects.forEach(p => gutil.log(red(p)));
 			process.exit(1);
 		})
 		.catch(cb);
@@ -511,13 +440,13 @@ gulp.task('watch-only', cb => {
 			evt.path = evt.path.replace(/\\/g, '/');
 			const m = evt.path.match(new RegExp('^(' +  __dirname.replace(/\\/g, '/') + '/(packages/([^\/]+)))'));
 			if (m) {
-				gutil.log('Detected change: ' + gutil.colors.cyan(evt.path));
+				gutil.log('Detected change: ' + cyan(evt.path));
 				stopDaemon();
 				buildDepList(m[2])
 					.reduce((promise, dir) => {
 						return promise.then(() => new Promise((resolve, reject) => {
 							console.log();
-							gutil.log(gutil.colors.cyan('Rebuilding ' + dir));
+							gutil.log(cyan('Rebuilding ' + dir));
 							gulp
 								.src(__dirname + '/' + dir + '/gulpfile.js')
 								.pipe(chug({ tasks: [ 'build' ] }))
@@ -573,7 +502,6 @@ gulp.task('watch-only', cb => {
 gulp.task('watch', cb => runSequence('build', 'start-daemon', 'watch-only', cb));
 
 gulp.task('default', () => {
-	const cyan = gutil.colors.cyan;
 	console.log('\nAvailable tasks:');
 	const table = new Table({
 		chars: cliTableChars,
@@ -589,10 +517,9 @@ gulp.task('default', () => {
 	table.push([ cyan('watch-only'),       'starts watching all packages to perform build' ]);
 	table.push([ cyan('check'),            'checks missing/outdated dependencies/link, security issues, and code stats' ]);
 	table.push([ cyan('cyclic'),           'detects cyclic dependencies (which are bad) in appcd packages and plugins' ]);
-	table.push([ cyan('fix'),              'fixes any missing dependencies or links' ]);
 	table.push([ cyan('stats'),            'displays stats about the code' ]);
-	// table.push([cyan('package'),          'builds and packages an appc daemon distribution archive']);
-	table.push([ cyan('ugprade'),          'detects latest npm deps, updates package.json, and runs upgrade' ]);
+	// table.push([ cyan('package'),          'builds and packages an appc daemon distribution archive' ]);
+	table.push([ cyan('upgrade'),          'detects latest npm deps, updates package.json, and runs upgrade' ]);
 
 	console.log(table.toString() + '\n');
 });
@@ -630,11 +557,11 @@ gulp.task('cyclic', () => {
 		for (const name of pkgs.sort()) {
 			console.log(name);
 			for (const deps of results[name]) {
-				console.log('  > ' + deps.map((s, i, a) => i + 1 === a.length ? gutil.colors.red(s) : s).join(' > '));
+				console.log('  > ' + deps.map((s, i, a) => i + 1 === a.length ? red(s) : s).join(' > '));
 			}
 			console.log();
 		}
-		const e = new Error(gutil.colors.red(`Found ${pkgs.length} package${pkgs.length === 1 ? '' : 's'} with cyclic dependencies!`));
+		const e = new Error(red(`Found ${pkgs.length} package${pkgs.length === 1 ? '' : 's'} with cyclic dependencies!`));
 		e.showStack = false;
 		throw e;
 	} else {
@@ -642,7 +569,13 @@ gulp.task('cyclic', () => {
 	}
 });
 
+let cyclicCache = null;
+
 function checkCyclic() {
+	if (cyclicCache) {
+		return cyclicCache;
+	}
+
 	const packages = getDepMap();
 	const cyclic = {};
 
@@ -670,14 +603,16 @@ function checkCyclic() {
 		test(name);
 	}
 
-	return cyclic;
+	return cyclicCache = cyclic;
 }
 
 function run(cmd, args, opts) {
 	return new Promise((resolve, reject) => {
 		opts || (opts = {});
 		opts.cwd || (opts.cwd = process.cwd());
-		gutil.log('Running: CWD=' + opts.cwd, cmd, args.join(' '));
+		if (!opts.quiet) {
+			gutil.log('Running: CWD=' + opts.cwd, cmd, args.join(' '));
+		}
 		const child = spawn(cmd, args, opts);
 		let out = '';
 		let err = '';
@@ -751,386 +686,321 @@ function runNPM(cwd) {
 	return run('npm', Array.prototype.slice.call(arguments, 1), { shell: true });
 }
 
-function runDavid(pkgJson, type, dest) {
-	return new Promise((resolve, reject) => {
-		if (!pkgJson[type]) {
-			return resolve();
-		}
+async function checkPackages({ skipSecurity } = {}) {
+	const cleanVersionRegExp = /^[\^~><=v\s]*/;
 
-		david.getDependencies({
-			name: pkgJson.name,
-			dependencies: pkgJson[type]
-		}, { npm: { progress: false } }, (err, deps) => {
-			if (err) {
-				gutil.log(gutil.colors.red('David failed! ' + (err.message || err.toString())));
-			} else {
-				for (const dep of Object.keys(deps)) {
-					for (const key of Object.keys(deps[dep])) {
-						dest[type][dep][key] = deps[dep][key];
-					}
-				}
-			}
-			resolve();
-		});
-	});
-}
+	// const packages = JSON.parse(fs.readFileSync('packages.json'));
+	// const dependencies = JSON.parse(fs.readFileSync('dependencies.json'));
 
-function checkPackages({ skipSecurity } = {}) {
 	const packages = {};
-	const deprecatedMap = {};
-	const limit = promiseLimit(4);
+	const dependencies = {};
+	const tasks = [];
 
 	gutil.log('Checking packages...');
 
-	return Promise
-		.all(globule.find([ './package.json', 'packages/*/package.json', 'plugins/*/package.json' ]).map(packageJsonFile => new Promise((resolve, reject) => {
-			packageJsonFile = path.resolve(packageJsonFile);
-			fs.readFile(packageJsonFile, (err, contents) => {
-				if (err) {
-					gutil.log('ERROR:', err);
-					return resolve();
-				}
+	for (let file of globule.find([ './package.json', 'packages/*/package.json', 'plugins/*/package.json' ])) {
+		file = path.resolve(file);
+		const packagePath = path.dirname(file);
+		const pkgJson = JSON.parse(fs.readFileSync(file));
+		const info = {
+			name: pkgJson.name,
+			path: packagePath,
+			package: pkgJson,
+			appcdDependencies: [],
+			dependencies: {},
+			devDependencies: {},
+			optionalDependencies: {},
+			deprecated: {},
+			securityIssues: []
+		};
 
-				let pkgJson;
-				try {
-					pkgJson = JSON.parse(contents);
-				} catch (err) {
-					gutil.log(gutil.colors.red(err));
-					return resolve();
-				}
+		if (!skipSecurity) {
+			tasks.push([ 'retire', packagePath ]);
+		}
 
-				const packagePath = path.dirname(packageJsonFile);
-				packages[packagePath] = {
-					name: pkgJson.name,
-					path: packagePath,
-					packageJson: packageJsonFile,
-					nodeSecurityIssues: {},
-					yarnIssues: [],
-					deprecated: {},
-					dependencies: {},
-					devDependencies: {},
-					optionalDependencies: {}
-				};
+		for (const type of [ 'dependencies', 'devDependencies', 'optionalDependencies' ]) {
+			if (pkgJson[type]) {
+				info[type] = {};
 
-				[ 'dependencies', 'devDependencies', 'optionalDependencies' ].forEach(type => {
-					if (pkgJson[type]) {
-						packages[packagePath][type] = {};
-						for (const dep of Object.keys(pkgJson[type])) {
-							let installed = false;
-							try {
-								const depPkgJson = JSON.parse(fs.readFileSync(path.join(packagePath, 'node_modules', dep, 'package.json')));
-								installed = depPkgJson.version;
-							} catch (e) {}
-
-							deprecatedMap[dep] = null;
-
-							packages[packagePath][type][dep] = {
-								installed: installed,
-								required: pkgJson[type][dep],
-								deprecated: false
-							};
-						}
-					}
-				});
-
-				Promise
-					.all([
-						!skipSecurity && new Promise(resolve => {
-							Nsp.check({
-								package: pkgJson
-							}, (err, results) => {
-								if (err) {
-									gutil.log('NSP failed!', err);
-									return resolve();
-								}
-
-								for (const data of results) {
-									const ver = data.version;
-									let n = packages[packagePath].nodeSecurityIssues[data.module];
-									if (!n) {
-										n = packages[packagePath].nodeSecurityIssues[data.module] = {};
-									}
-									if (!n[ver]) {
-										n[ver] = {
-											vulnerabilities: {},
-											paths:           {}
-										};
-									}
-									n[ver].nsp = true;
-
-									if (!n[ver].vulnerabilities[data.advisory]) {
-										n[ver].vulnerabilities[data.advisory] = {};
-									}
-
-									Object.assign(n[ver].vulnerabilities[data.advisory], {
-										title:               data.title,
-										vulnerable_versions: data.vulnerable_versions,
-										patched_versions:    data.patched_versions,
-										publish_date:        data.publish_date,
-										updated_at:          data.updated_at
-									});
-
-									n[ver].paths[data.path.join(' > ')] = data.path;
-								}
-
-								resolve();
-							});
-						}),
-
-						!skipSecurity && limit(() => {
-							let { execPath } = process;
-							const args = [
-								'--node',
-								'--package',
-								'--outputformat', 'json',
-								'--outputpath', 'retire_output.json'
-							];
-							if (isWindows) {
-								execPath = path.join(__dirname, 'node_modules', '.bin', 'retire.cmd');
-							} else {
-								args.unshift(path.join(__dirname, 'node_modules', '.bin', 'retire'));
-							}
-							return run(execPath, args, { cwd: packagePath })
-								.then(result => new Promise(resolve => {
-									const outFile = path.join(packagePath, 'retire_output.json');
-
-									if (result.status !== 13) {
-										try {
-											fs.unlinkSync(outFile);
-										} catch (e) {
-											// squeltch
-										}
-										if (result.status !== 0) {
-											gutil.log(result.stderr);
-										}
-										return resolve();
-									}
-
-									fs.readFile(outFile, (err, contents) => {
-										if (err) {
-											guilt.log('Retire failed!', err);
-											return resolve();
-										}
-
-										fs.unlinkSync(outFile);
-
-										const issues = JSON.parse(contents);
-										for (const issue of issues) {
-											for (const result of issue.results) {
-												const ver = result.version;
-												const path = [];
-												(function walk(n) {
-													if (n.parent) {
-														walk(n.parent);
-													}
-													path.push(`${n.component}@${n.version}`);
-												}(result));
-
-												if (path.length === 1 || !appcdRE.test(path[1])) {
-													let n = packages[packagePath].nodeSecurityIssues[result.component];
-													if (!n) {
-														n = packages[packagePath].nodeSecurityIssues[result.component] = {};
-													}
-
-													if (!n[ver]) {
-														n[ver] = {
-															vulnerabilities: {},
-															paths:           {}
-														};
-													}
-
-													for (const v of result.vulnerabilities) {
-														const advisory = v.info && v.info.pop();
-														if (advisory && !n[ver].vulnerabilities[advisory]) {
-															n[ver].vulnerabilities[advisory] = {
-																title: v.identifiers && v.identifiers.summary || advisory
-															};
-														}
-													}
-
-													n[ver].retire = true;
-													n[ver].paths[path.join(' > ')] = path;
-												}
-											}
-										}
-
-										resolve();
-									});
-								}));
-						}),
-
-						runDavid(pkgJson, 'dependencies', packages[packagePath]),
-						runDavid(pkgJson, 'devDependencies', packages[packagePath]),
-						runDavid(pkgJson, 'optionalDependencies', packages[packagePath]),
-
-						runYarn(packagePath, 'check', '--json', '--non-interactive')
-							.then(result => {
-								if (result.status) {
-									const lines = result.stderr.toString().trim().split('\n');
-									for (let line of lines) {
-										try {
-											line = JSON.parse(line);
-											if (line.type === 'error' && !/^Found \d+ errors\.$/.test(line.data)) {
-												packages[packagePath].yarnIssues.push(line.data);
-											}
-										} catch (e) {}
-									}
-								}
-							})
-					])
-					.then(resolve, reject);
-			});
-		})))
-		.then(() => {
-			// now that we have a list of all unique dependencies, we need to
-			// call `npm info` for each and see if the module is deprecated
-			const deps = Object.keys(deprecatedMap).sort();
-			gutil.log('Checking deprecations...');
-			return Promise
-				.all(deps.map(dep => {
-					if (deprecatedMap[dep] === null && !appcdRE.test(dep)) {
-						return runNPM(null, 'info', dep, '--json')
-							.then(result => {
-								if (!result.status) {
-									try {
-										const info = JSON.parse(result.stdout);
-										deprecatedMap[dep] = info.deprecated || false;
-									} catch (e) {}
-								}
-							});
-					}
-				}))
-				.then(() => {
-					// update the package information object
-					gutil.log('Updating package table...');
-					for (const packagePath of Object.keys(packages)) {
-						for (const type of [ 'dependencies', 'devDependencies', 'optionalDependencies' ]) {
-							if (packages[packagePath][type]) {
-								for (const dep of Object.keys(packages[packagePath][type])) {
-									if (deprecatedMap[dep]) {
-										packages[packagePath].deprecated[dep] = deprecatedMap[dep];
-										packages[packagePath][type][dep].deprecated = deprecatedMap[dep];
-									}
-								}
+				for (const [ dep, required ] of Object.entries(pkgJson[type])) {
+					// figure out if the depenency is installed and what version
+					let installed = false;
+					try {
+						let depModulePath = path.join(packagePath, 'node_modules', dep);
+						if (!fs.existsSync(path.join(depModulePath, 'package.json'))) {
+							let last = null;
+							depModulePath = require.resolve(dep, { paths: [ path.join(packagePath, 'node_modules') ] });
+							while (depModulePath !== last && !fs.existsSync(path.join(depModulePath, 'package.json'))) {
+								last = depModulePath;
+								depModulePath = path.dirname(depModulePath);
 							}
 						}
-					}
-				});
-		})
-		.then(() => processPackages(packages));
-}
+						const depPkgJson = JSON.parse(fs.readFileSync(path.join(depModulePath, 'package.json')));
+						installed = depPkgJson.version;
+					} catch (e) {}
 
-function processPackages(packages) {
-	const results = {
-		packages: packages,
-		missingDeps: 0,
-		missingLinks: 0,
-		needsFixing: {},
-		securityIssues: 0,
-		dependencySecurityIssues: 0,
-		yarnIssues: 0,
-		deprecated: 0,
-		packagesToUpdate: [],
-		stats: computeSloc(),
-		testStats: computeSloc('test')
+					if (!dependencies[dep]) {
+						dependencies[dep] = {
+							deprecated:      null,
+							latest:          null,
+							latestTimestamp: null,
+							next:            null,
+							nextTimestamp:   null,
+							versions:        {}
+						};
+					}
+
+					const version = required.replace(cleanVersionRegExp, '');
+					if (!dependencies[dep].versions[version]) {
+						dependencies[dep].versions[version] = [];
+						if (!skipSecurity) {
+							tasks.push([ 'nsp', dep, version ]);
+						}
+					}
+
+					// check if the dependency is an appcd-* dependency
+					if (appcdRE.test(dep)) {
+						info.appcdDependencies.push(dep);
+					}
+
+					tasks.push([ 'npm info', dep ]); // gets most recent version and deprecation
+
+					info[type][dep] = {
+						installed,
+						required
+					};
+				}
+			}
+		}
+
+		packages[packagePath] = info;
+	}
+
+	// at this point, we have a map of all packages and their info, a appcd dep map, and a list of
+	// tasks to perform async
+
+	let taskCounter = 1;
+	const totalTasks = tasks.length;
+
+	gutil.log(`Found ${cyan(Object.keys(packages).length)} packages`);
+	gutil.log(`Found ${cyan(Object.keys(dependencies).length)} dependencies`);
+	gutil.log(`Processing ${cyan(totalTasks)} tasks`);
+
+	const bar = new progress('  [:bar] :percent :etas', {
+		clear: true,
+		complete: '=',
+		incomplete: ' ',
+		width: 50,
+		total: totalTasks
+	});
+
+	// console.log(util.inspect(packages, { depth: null }));
+	// console.log(dependencies);
+	// console.log(tasks);
+
+	const nspConf = {
+		baseUrl: 'https://api.nodesecurity.io'
 	};
-	const depmap = getDepMap();
+
+	await new Promise((resolve, reject) => {
+		npm.load({
+			silent: true
+		}, err => {
+			if (err) {
+				reject(err);
+			} else {
+				resolve();
+			}
+		});
+	});
+
+	const limit = promiseLimit(20);
+
+	await Promise.all(tasks.map(task => limit(async () => {
+		const action = task[0];
+		const dir = task[1];
+		const pkg = task[1];
+		const version = task[2];
+
+		// gutil.log(`Running task ${taskCounter++}/${totalTasks}: ${action} ${pkg}${version ? `@${version}` : ''}`);
+
+		switch (action) {
+			case 'nsp':
+				return new nspAPI(nspConf)
+					.check({}, {
+						package: {
+							name: `check-${pkg}-${Date.now()}`,
+							version: '0.0.0',
+							dependencies: {
+								[pkg]: version
+							}
+						}
+					})
+					.then(({ data }) => {
+						for (const issue of data) {
+							issue.nsp = true;
+							dependencies[pkg].versions[version].push(issue);
+						}
+						bar.tick();
+					})
+					.catch(err => {
+						gutil.log(yellow(`nsp failed for ${pkg}@${version}: ${err.message}`));
+						bar.tick();
+					});
+
+			case 'retire':
+				let { execPath } = process;
+				const args = [
+					'--node',
+					'--package',
+					'--outputformat', 'json',
+					'--outputpath', 'retire_output.json'
+				];
+				if (isWindows) {
+					execPath = path.join(__dirname, 'node_modules', '.bin', 'retire.cmd');
+				} else {
+					args.unshift(path.join(__dirname, 'node_modules', '.bin', 'retire'))
+				}
+
+				return run(execPath, args, { cwd: dir, quiet: true })
+					.then(result => new Promise(resolve => {
+						const outFile = path.join(dir, 'retire_output.json');
+						const allIssues = result.status === 13 ? JSON.parse(fs.readFileSync(outFile)) : null;
+						try {
+							fs.unlinkSync(outFile);
+						} catch (e) {}
+
+						if (result.status === 13) {
+							for (const issues of allIssues) {
+								for (const issue of issues.results) {
+									let obj = issue;
+									while (obj.level > 1) {
+										obj = obj.parent;
+									}
+
+									if (obj) {
+										const dep = obj.component;
+										const version = obj.version;
+										issue.retire = true;
+										dependencies[dep].versions[version].push(issue);
+									}
+								}
+							}
+						} else if (result.status !== 0) {
+							gutil.log(result.stderr);
+						}
+
+						bar.tick();
+						resolve();
+					}));
+				break;
+
+			case 'npm info':
+				return new Promise(resolve => {
+					npm.commands.view([ pkg ], true, (err, info) => {
+						if (err) {
+							gutil.log(yellow(`npm view failed for ${pkg}@${version}: ${err.message}`));
+						} else {
+							const latest = Object.keys(info)[0];
+							const next = info[latest]['dist-tags'] && info[latest]['dist-tags'].next || null;
+							dependencies[pkg].latest          = latest;
+							dependencies[pkg].latestTimestamp = info[latest].time[latest] || null;
+							dependencies[pkg].next            = next;
+							dependencies[pkg].nextTimestamp   = next && info[latest].time[next] || null;
+							dependencies[pkg].deprecated      = info[latest].deprecated;
+						}
+
+						bar.tick();
+						resolve();
+					});
+				});
+		}
+	})));
+
+	// console.log('writing');
+	// fs.writeFileSync('packages.json', JSON.stringify(packages, null, '\t'));
+	// fs.writeFileSync('dependencies.json', JSON.stringify(dependencies, null, '\t'));
+	// console.log('done');
+
+	const results = {
+		packages:                 packages,
+		dependencies:             dependencies,
+		missingDeps:              0,
+		securityIssues:           0,
+		deprecated:               0,
+		cyclic:                   checkCyclic(),
+		packagesToUpdate:         [],
+		stats:                    computeSloc(),
+		testStats:                computeSloc('test')
+	};
 
 	gutil.log('Processing packages...');
+
+	for (const [ packageName, dependency ] of Object.entries(dependencies)) {
+		if (dependency.deprecated) {
+			results.deprecated++;
+		}
+
+		for (const issues of Object.values(dependency.versions)) {
+			results.securityIssues += issues.length;
+		}
+	}
 
 	for (const key of Object.keys(packages)) {
 		const pkg = packages[key];
 
-		results.dependencySecurityIssues += Object.keys(pkg.nodeSecurityIssues).length;
-
-		// check yarn issues
-		for (const issue of pkg.yarnIssues) {
-			// note: we don't do anything for wrong versions of deps because
-			// even running `yarn install` again doesn't fix it
-			if (/Lockfile does not contain pattern/i.test(issue)) {
-				results.needsFixing[key] = 'nuke';
-			} else if (/not installed/.test(issue) && results.needsFixing[key] !== 'nuke') {
-				results.needsFixing[key] = 'install';
+		for (const type of [ 'dependencies', 'devDependencies', 'optionalDependencies' ]) {
+			if (!pkg[type]) {
+				continue;
 			}
-		}
 
-		results.deprecated += Object.keys(pkg.deprecated).length;
+			for (const name of Object.keys(pkg[type])) {
+				const dep = pkg[type][name];
+				const { installed, required } = dep;
+				const { deprecated, latest, latestTimestamp, next, nextTimestamp } = dependencies[name];
 
-		// check yarn links
-		if (!results.needsFixing[key]) {
-			const rel = path.relative(__dirname, key);
-			if (depmap[rel]) {
-				for (const link of depmap[rel]) {
-					try {
-						if (!fs.lstatSync(path.join(key, 'node_modules', path.basename(link))).isSymbolicLink()) {
-							throw new Error('bad link');
-						}
-					} catch (e) {
-						results.missingLinks++;
-						if (!results.needsFixing[key]) {
-							results.needsFixing[key] = 'link';
-						}
-						break;
-					}
+				if (!installed) {
+					results.missingDeps++;
+					dep.status = 'not installed';
 				}
-			}
-		}
 
-		[ 'dependencies', 'devDependencies', 'optionalDependencies' ].forEach(type => {
-			if (pkg[type] && Object.keys(pkg[type]).length) {
-				for (const name of Object.keys(pkg[type])) {
-					const dep = pkg[type][name];
-
-					if (!dep.installed) {
-						results.missingDeps++;
-						if (!dep.status) {
-							dep.status = 'not installed';
-						}
-					} else if (pkg.nodeSecurityIssues[name] && Object.keys(pkg.nodeSecurityIssues[name]).some(ver => semver.eq(ver, dep.installed))) {
-						results.securityIssues++;
-						dep.status = 'security vulnerability';
-					}
-
-					if (dep.required !== 'latest' && dep.required !== 'next' && dep.required !== '*') {
-						const range = dep.installed ? `<=${dep.installed}` : (semver.validRange(dep.required) || '');
-						const version = dep.stable || dep.latest;
-						if (version && range && !semver.satisfies(version, range)) {
-							if (dontUpdate.indexOf(name) === -1) {
-								const m = dep.required.match(/^(\^|~|>|>=)/);
-								results.packagesToUpdate.push({
-									path: key,
-									name: name,
-									current: dep.required,
-									updated: (m ? m[1] : '') + dep.stable
-								});
-								if (!dep.status) {
-									dep.status = 'out-of-date';
-								}
-							} else {
-								dep.status = 'skipping latest';
-							}
-						}
-					}
-
-					if (dep.deprecated) {
-						if (dep.status) {
-							dep.status += ', deprecated';
+				if (required !== 'latest' && required !== 'next' && required !== '*') {
+					// is the dependency up-to-date?
+					if (semver.lt(dep.required.replace(cleanVersionRegExp, ''), latest)) {
+						if (dontUpdate.includes(name)) {
+							dep.status = (dep.status ? ', ' : '') + 'skipping latest';
 						} else {
-							dep.status = 'deprecated';
+							dep.status = (dep.status ? ', ' : '') + 'out-of-date';
+
+							const m = required.match(/^(\^|~|>|>=)/);
+							results.packagesToUpdate.push({
+								path: key,
+								name,
+								current: required,
+								latest: (m ? m[1] : '') + latest,
+								latestTimestamp,
+								next: next ? `^${next}` : null,
+								nextTimestamp
+							});
 						}
 					}
+				}
 
-					if (!dep.status) {
-						dep.status = 'ok';
+				if (deprecated) {
+					pkg.deprecated[name] = deprecated;
+					if (dep.status) {
+						dep.status += ', deprecated';
+					} else {
+						dep.status = 'deprecated';
 					}
 				}
+
+				if (!dep.status) {
+					dep.status = 'ok';
+				}
 			}
-		});
-
-		results.yarnIssues += pkg.yarnIssues.length;
+		}
 	}
-
-	results.dependencySecurityIssues -= results.securityIssues;
 
 	return results;
 }
@@ -1138,15 +1008,7 @@ function processPackages(packages) {
 function renderPackages(results) {
 	console.log();
 
-	const packages = results.packages;
-
-	const bold    = gutil.colors.bold;
-	const cyan    = gutil.colors.cyan;
-	const gray    = gutil.colors.gray;
-	const green   = gutil.colors.green;
-	const magenta = gutil.colors.magenta;
-	const red     = gutil.colors.red;
-	const yellow  = gutil.colors.yellow;
+	const { dependencies, packages } = results;
 
 	const typeLabels = {
 		dependencies: 'Dependencies',
@@ -1162,7 +1024,7 @@ function renderPackages(results) {
 
 		table = new Table({
 			chars: cliTableChars,
-			head: [ 'Name', 'Required', 'Installed', 'Stable', 'Latest', 'Status' ],
+			head: [ 'Name', 'Required', 'Installed', 'Latest', 'Next', 'Status' ],
 			style: {
 				head: [ 'bold' ],
 				border: []
@@ -1175,18 +1037,19 @@ function renderPackages(results) {
 
 				for (const name of Object.keys(pkg[type])) {
 					const dep = pkg[type][name];
+					const { latest, next } = dependencies[name]
 					const packageName = '  ' + name;
 
 					if (dep.status === 'ok') {
-						table.push([ packageName, dep.required, dep.installed, dep.stable, dep.latest, green(dep.status) ]);
+						table.push([ packageName, dep.required, dep.installed, latest, next, green(dep.status) ]);
 					} else if (dep.status.indexOf('out-of-date') !== -1) {
-						table.push([ packageName, dep.required, red(dep.installed), green(dep.stable), dep.latest, red(dep.status) ]);
+						table.push([ packageName, dep.required, red(dep.installed), green(latest), next, red(dep.status) ]);
 					} else if (dep.status === 'deprecated') {
-						table.push([ packageName, dep.required, dep.installed, dep.stable, dep.latest, red(dep.status) ]);
+						table.push([ packageName, dep.required, dep.installed, latest, next, red(dep.status) ]);
 					} else if (dep.status === 'skipping latest') {
-						table.push([ packageName, dep.required, dep.installed, dep.stable, dep.latest, yellow(dep.status) ]);
+						table.push([ packageName, dep.required, dep.installed, latest, next, yellow(dep.status) ]);
 					} else {
-						table.push([ packageName, dep.required, red(dep.installed), dep.stable, dep.latest, red(dep.status) ]);
+						table.push([ packageName, dep.required, red(dep.installed), latest, next, red(dep.status) ]);
 					}
 				}
 			}
@@ -1194,75 +1057,70 @@ function renderPackages(results) {
 
 		console.log(table.toString() + '\n');
 
-		if (Object.keys(pkg.nodeSecurityIssues).length) {
+		if (Object.keys(pkg.securityIssues).length) {
 			console.log(gray(' Node Security Issues:'));
-			for (const name of Object.keys(pkg.nodeSecurityIssues)) {
-				for (const ver of Object.keys(pkg.nodeSecurityIssues[name])) {
-					const info = pkg.nodeSecurityIssues[name][ver];
-					const tools = [];
-					if (info.nsp) {
-						tools.push('nsp');
-					}
-					if (info.retire) {
-						tools.push('retire');
-					}
-
-					console.log('   • ' + bold(name + '@' + ver) + ' ' + gray('(' + tools.join(', ') + ')'));
-
-					table = new Table({
-						chars: cliTableChars,
-						head: [ gray('Vulnerability'), gray('Info'), gray('Vulnerable'), gray('Patched'), gray('Published'), gray('Updated') ],
-						style: {
-							head: [ 'bold' ],
-							border: []
-						}
-					});
-
-					for (const advisory of Object.keys(info.vulnerabilities)) {
-						const issue = info.vulnerabilities[advisory];
-
-						table.push([
-							red(issue.title),
-							advisory,
-							issue.vulnerable_versions || 'n/a',
-							issue.patched_versions || 'n/a',
-							issue.publish_date ? new Date(issue.publish_date).toLocaleDateString() : 'n/a',
-							issue.updated_at ? new Date(issue.updated_at).toLocaleDateString() : 'n/a'
-						]);
-
-						console.log(table.toString().split('\n').map(s => '    ' + s).join('\n'));
-					}
-
-					const tree = [];
-					for (const pp of Object.values(info.paths)) {
-						let n = tree;
-						for (const p of pp) {
-							let found = false;
-							for (let i = 0; i < n.length; i++) {
-								if (n[i].name === p) {
-									found = true;
-									n = n[i].children;
-								}
-							}
-
-							if (!found) {
-								n.push({
-									name: p,
-									children: []
-								});
-							}
-						}
-					}
-
-					console.log(treePrinter(tree).split('\n').slice(1).map(l => '       ' + l).join('\n'));
-				}
-			}
-		}
-
-		if (pkg.yarnIssues.length) {
-			console.log(gray(' Yarn Issues:'));
-			for (const err of pkg.yarnIssues) {
-				console.log(`   • ${red(err)}`);
+			for (const issue of pkg.securityIssues) {
+				console.log(JSON.stringify(issue));
+				// for (const ver of Object.keys(pkg.nodeSecurityIssues[name])) {
+				// 	const info = pkg.nodeSecurityIssues[name][ver];
+				// 	const tools = [];
+				// 	if (info.nsp) {
+				// 		tools.push('nsp');
+				// 	}
+				// 	if (info.retire) {
+				// 		tools.push('retire');
+				// 	}
+                //
+				// 	console.log('   • ' + bold(name + '@' + ver) + ' ' + gray('(' + tools.join(', ') + ')'));
+                //
+                //
+				// 	table = new Table({
+				// 		chars: cliTableChars,
+				// 		head: [ gray('Vulnerability'), gray('Info'), gray('Vulnerable'), gray('Patched'), gray('Published'), gray('Updated') ],
+				// 		style: {
+				// 			head: [ 'bold' ],
+				// 			border: []
+				// 		}
+				// 	});
+                //
+				// 	for (const advisory of Object.keys(info.vulnerabilities)) {
+				// 		const issue = info.vulnerabilities[advisory];
+                //
+				// 		table.push([
+				// 			red(issue.title),
+				// 			advisory,
+				// 			issue.vulnerable_versions || 'n/a',
+				// 			issue.patched_versions || 'n/a',
+				// 			issue.publish_date ? new Date(issue.publish_date).toLocaleDateString() : 'n/a',
+				// 			issue.updated_at ? new Date(issue.updated_at).toLocaleDateString() : 'n/a'
+				// 		]);
+                //
+				// 		console.log(table.toString().split('\n').map(s => '    ' + s).join('\n'));
+				// 	}
+                //
+				// 	const tree = [];
+				// 	for (const pp of Object.values(info.paths)) {
+				// 		let n = tree;
+				// 		for (const p of pp) {
+				// 			let found = false;
+				// 			for (let i = 0; i < n.length; i++) {
+				// 				if (n[i].name === p) {
+				// 					found = true;
+				// 					n = n[i].children;
+				// 				}
+				// 			}
+                //
+				// 			if (!found) {
+				// 				n.push({
+				// 					name: p,
+				// 					children: []
+				// 				});
+				// 			}
+				// 		}
+				// 	}
+                //
+				// 	console.log(treePrinter(tree).split('\n').slice(1).map(l => '       ' + l).join('\n'));
+				// }
 			}
 		}
 
@@ -1286,13 +1144,12 @@ function renderPackages(results) {
 	}
 
 	console.log(magenta('Cyclic Dependencies') + '\n');
-	const cyclicDeps = checkCyclic();
-	const cyclicPkgs = Object.keys(cyclicDeps);
+	const cyclicPkgs = Object.keys(results.cyclic);
 	const cyclicDepCount = cyclicPkgs.length;
 	if (cyclicDepCount) {
 		for (const name of cyclicPkgs.sort()) {
 			console.log(name);
-			for (const deps of cyclicDeps[name]) {
+			for (const deps of results.cyclic[name]) {
 				console.log('  > ' + deps.map((s, i, a) => i + 1 === a.length ? red(s) : s).join(' > '));
 			}
 			console.log();
@@ -1312,10 +1169,6 @@ function renderPackages(results) {
 		results.missingDeps > 0 ? red(results.missingDeps) : green(results.missingDeps)
 	]);
 	table.push([
-		'Missing links',
-		results.missingLinks > 0 ? red(results.missingLinks) : green(results.missingLinks)
-	]);
-	table.push([
 		'Out-of-date',
 		results.packagesToUpdate.length > 0 ? red(results.packagesToUpdate.length) : green(results.packagesToUpdate.length)
 	]);
@@ -1328,20 +1181,12 @@ function renderPackages(results) {
 		results.securityIssues > 0 ? red(results.securityIssues) : green(results.securityIssues)
 	]);
 	table.push([
-		'Deep Node Dependency Security Issues',
-		results.dependencySecurityIssues > 0 ? red(results.dependencySecurityIssues) : green(results.dependencySecurityIssues)
-	]);
-	table.push([
-		'Yarn Issues',
-		results.yarnIssues > 0 ? red(results.yarnIssues) : green(results.yarnIssues)
-	]);
-	table.push([
 		'Cyclic Dependencies',
 		cyclicDepCount > 0 ? red(cyclicDepCount) : green(cyclicDepCount)
 	]);
 	console.log(table.toString() + '\n');
 
-	if (results.packagesToUpdate.length || Object.keys(results.needsFixing).length) {
+	if (results.packagesToUpdate.length) {
 		console.log(magenta('Recommendations') + '\n');
 
 		if (results.packagesToUpdate.length) {
@@ -1356,24 +1201,13 @@ function renderPackages(results) {
 			});
 			for (const pkg of results.packagesToUpdate) {
 				const rel = path.relative(__dirname, pkg.path) || path.basename(pkg.path);
-				table.push([ rel, pkg.name, pkg.current, '→', hlVer(pkg.updated, pkg.current) ]);
-			}
-			console.log(table.toString() + '\n');
-		}
-
-		if (Object.keys(results.needsFixing).length) {
-			console.log(`Run ${cyan('gulp fix')} to fix node_modules:`);
-			table = new Table({
-				chars: cliTableChars,
-				head: [ 'Component', 'Action' ],
-				style: {
-					head: [ 'bold', 'gray' ],
-					border: []
-				}
-			});
-			for (const pkg of Object.keys(results.needsFixing)) {
-				const rel = path.relative(__dirname, pkg) || path.basename(pkg);
-				table.push([ rel, fixReasons[results.needsFixing[pkg]] || 'unknown' ]);
+				table.push([
+					rel,
+					magenta(pkg.name),
+					pkg.current,
+					'→',
+					hlVer(pkg.latest, pkg.current) + (pkg.latestTimestamp ? gray(` (published ${new Date(pkg.latestTimestamp).toDateString()})`) : '')
+				]);
 			}
 			console.log(table.toString() + '\n');
 		}
@@ -1381,9 +1215,6 @@ function renderPackages(results) {
 }
 
 function displayStats(results) {
-	const gray = gutil.colors.gray;
-	const green = gutil.colors.green;
-	const magenta = gutil.colors.magenta;
 	console.log(magenta('Source Code Stats') + '\n');
 
 	let table = new Table({ chars: cliTableChars, head: [], style: { head: [ 'bold' ], border: [] } });
@@ -1415,7 +1246,6 @@ function displayStats(results) {
 }
 
 function hlVer(ver, ref) {
-	const green = gutil.colors.green;
 	const version = [];
 	const m = ver.match(/^([^\d]+)?(.+)$/);
 	const to = (m ? m[2] : ver).split('.');
@@ -1445,7 +1275,7 @@ function upgradeDeps(list) {
 	for (const pkg of list) {
 		const pkgJsonFile = path.join(pkg.path, 'package.json');
 		components[pkgJsonFile] || (components[pkgJsonFile] = {});
-		components[pkgJsonFile][pkg.name] = pkg.updated;
+		components[pkgJsonFile][pkg.name] = pkg.latest;
 	}
 
 	let table;
@@ -1458,7 +1288,7 @@ function upgradeDeps(list) {
 				throw new Error();
 			}
 		} catch (e) {
-			gutil.log(gutil.color.red(`Unable to locate ${pkgJsonFile}`));
+			gutil.log(red(`Unable to locate ${pkgJsonFile}`));
 			continue;
 		}
 
@@ -1466,11 +1296,11 @@ function upgradeDeps(list) {
 		try {
 			pkgJson = JSON.parse(fs.readFileSync(pkgJsonFile));
 		} catch (e) {
-			gutil.log(gutil.color.red(`Unable to locate ${pkgJsonFile}`));
+			gutil.log(red(`Unable to locate ${pkgJsonFile}`));
 			continue;
 		}
 
-		console.log(gutil.colors.magenta(pkgJsonFile));
+		console.log(magenta(pkgJsonFile));
 
 		table = new Table({
 			chars: cliTableChars,
