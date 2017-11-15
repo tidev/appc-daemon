@@ -149,7 +149,7 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 	 */
 	watchGenymotionDeployed(deployedDir) {
 		const onEmulatorAdd = debounce(async () => {
-			gawk.set(this.data.emulators, await genymotion.getEmulators(this.vbox));
+			gawk.set(this.data.emulators, await genymotion.getEmulators({ force: true, vbox: this.vbox }));
 		}, 10000);
 
 		const onEmulatorChange = debounce(async (file) => {
