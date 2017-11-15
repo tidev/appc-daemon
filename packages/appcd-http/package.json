@@ -1,6 +1,6 @@
 {
   "name": "appcd-http",
-  "version": "1.0.0-5",
+  "version": "1.0.0-6",
   "description": "HTTP server with WebSocket support, router, and various middlewares.",
   "main": "./dist/index",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
@@ -16,8 +16,8 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-fs": "^1.0.0-5",
-    "appcd-logger": "^1.0.0-5",
+    "appcd-fs": "^1.0.0-6",
+    "appcd-logger": "^1.0.0-6",
     "koa": "^2.4.1",
     "koa-bodyparser": "^4.2.0",
     "koa-helmet": "^3.3.0",
@@ -27,7 +27,7 @@
     "ws": "^3.3.1"
   },
   "devDependencies": {
-    "appcd-gulp": "^1.0.0-5",
+    "appcd-gulp": "^1.0.0-6",
     "gulp": "^3.9.1",
     "supertest": "^3.0.0"
   },
