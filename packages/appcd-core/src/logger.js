@@ -1,4 +1,4 @@
-import { createInstanceWithDefaults, Format, StdioStream } from 'appcd-logger';
+import { createInstanceWithDefaults, Format, StdioStream, StripColors } from 'appcd-logger';
 
 const instance = createInstanceWithDefaults()
 	.snoop()
@@ -14,8 +14,14 @@ export default instance;
 
 export { StdioStream };
 
-export function logcat(stream) {
-	const formatter = new Format();
+export function logcat(request, response) {
+	let formatter;
+	if (!request.data || request.data.colors !== false) {
+		formatter = new Format();
+	} else {
+		formatter = new StripColors();
+	}
+
+	formatter.pipe(response);
 	instance.pipe(formatter, { flush: true });
-	formatter.pipe(stream);
 }
