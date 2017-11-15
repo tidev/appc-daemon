@@ -42,20 +42,7 @@ export default class PluginBase extends EventEmitter {
 		 * The plugin's namespaced logger.
 		 * @type {SnoopLogg}
 		 */
-		const { log } = this.logger = appcdLogger(plugin.toString());
-		Object.defineProperty(this.logger, 'trace', {
-			value: (...args) => {
-				const err = {
-					name: 'Trace',
-					message: util.format.apply(null, args),
-					toString() {
-						return this.name + (this.message ? `: ${this.message}` : '');
-					}
-				};
-				Error.captureStackTrace(err);
-				log(err.stack);
-			}
-		});
+		this.logger = appcdLogger(plugin.toString());
 
 		/**
 		 * The Appc Daemon config.

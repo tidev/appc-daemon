@@ -42,6 +42,7 @@ export default class iOSInfoService extends DataServiceDispatcher {
 			devices: [],
 			keychains: [],
 			provisioning: {},
+			simulatorDevicePairCompatibility: ioslib.xcode.simulatorDevicePairCompatibility,
 			simulators: {},
 			teams: {},
 			xcode: {}
@@ -322,16 +323,12 @@ export default class iOSInfoService extends DataServiceDispatcher {
 			gawk.set(this.data.xcode, obj);
 		});
 
-		// if xcodes change, then refresh the simulators
-		gawk.watch(this.data.xcode, async (xcodeInfo) => {
-			gawk.set(this.data.simulators, await ioslib.simulator.getSimulators(xcodeInfo));
-		});
-
 		// watch the global simulator profiles directory for changes
 		this.watch({
 			type: GLOBAL_SIM_PROFILES,
 			paths: [ ioslib.xcode.globalSimProfilesPath ],
 			handler() {
+				console.log('Global sim profiles directory changed, rescanning Xcodes');
 				this.xcodeDetectEngine.rescan();
 			}
 		});
@@ -341,12 +338,28 @@ export default class iOSInfoService extends DataServiceDispatcher {
 			paths: [ ioslib.simulator.getCoreSimulatorDevicesDir() ],
 			depth: 1,
 			handler: async () => {
+				console.log('Detected filesystem change in the CoreSimulator/Devices directory, rescanning simulators');
 				gawk.set(this.data.simulators, await ioslib.simulator.getSimulators(this.data.xcode));
 			}
 		});
 
-		// detect the Xcodes which in turn will detect the simulators
-		await this.xcodeDetectEngine.start();
+		let initialized = false;
+
+		return new Promise((resolve, reject) => {
+			// if xcodes change, then refresh the simulators
+			gawk.watch(this.data.xcode, async (xcodeInfo) => {
+				console.log('Xcode changed, rescanning simulators');
+				gawk.set(this.data.simulators, await ioslib.simulator.getSimulators(xcodeInfo));
+
+				if (!initialized) {
+					initialized = true;
+					resolve();
+				}
+			});
+
+			// detect the Xcodes which in turn will detect the simulators
+			this.xcodeDetectEngine.start().catch(reject);
+		});
 	}
 
 	/**
