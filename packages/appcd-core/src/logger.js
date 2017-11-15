@@ -3,7 +3,7 @@ import { createInstanceWithDefaults, Format, StdioStream, StripColors } from 'ap
 const instance = createInstanceWithDefaults()
 	.snoop()
 	.config({
-		maxBufferSize: 250,
+		maxBufferSize: 500,
 		minBrightness: 80,
 		maxBrightness: 210,
 		theme: 'detailed'

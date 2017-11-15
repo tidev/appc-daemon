@@ -213,14 +213,6 @@ export default class DetectEngine extends EventEmitter {
 		let defaultPath = null;
 		let searchPaths = new Set(this.opts.paths.map(dir => real(dir)));
 
-		// environment paths
-		for (const name of this.opts.env) {
-			const dir = process.env[name];
-			if (dir) {
-				searchPaths.add(real(dir));
-			}
-		}
-
 		// we grab the first path as the default
 		defaultPath = searchPaths.values().next().value;
 
@@ -231,6 +223,14 @@ export default class DetectEngine extends EventEmitter {
 				searchPaths.add(defaultPath);
 			} catch (e) {
 				// squelch
+			}
+		}
+
+		// environment paths
+		for (const name of this.opts.env) {
+			const dir = process.env[name];
+			if (dir) {
+				searchPaths.add(defaultPath = real(dir));
 			}
 		}
 

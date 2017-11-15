@@ -1,17 +1,12 @@
 import DetectEngine from 'appcd-detect';
 import gawk from 'gawk';
+import version from './version';
 
 import * as registry from 'appcd-winreg';
 
 import { DataServiceDispatcher } from 'appcd-dispatcher';
 import { detect, jdkLocations } from 'jdklib';
 import { exe } from 'appcd-subprocess';
-
-const version = {
-	compare(a, b) {
-		return a === b ? 0 : a < b ? -1 : 1;
-	}
-};
 
 /**
  * The JDK info service.
