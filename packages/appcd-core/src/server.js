@@ -1,4 +1,4 @@
-import appcdLogger, { logcat, StdioStream } from './logger';
+import appcdCoreLogger, { logcat } from './logger';
 import ConfigService from 'appcd-config-service';
 import defaultPluginPaths from 'appcd-default-plugins';
 import Dispatcher from 'appcd-dispatcher';
@@ -21,8 +21,8 @@ import { load as loadConfig } from 'appcd-config';
 
 const { __n } = i18n();
 
-const logger = appcdLogger('appcd:server');
-const { highlight, notice } = appcdLogger.styles;
+const logger = appcdCoreLogger('appcd:server');
+const { highlight, notice } = appcdCoreLogger.styles;
 
 /**
  * The main server logic for the Appc Daemon. It controls all core aspects of the daemon including
@@ -80,11 +80,6 @@ export default class Server {
 	 * @access public
 	 */
 	async start() {
-		// enable logging
-		appcdLogger
-			.enable('*')
-			.pipe(new StdioStream(), { flush: true });
-
 		// check if the current user is root
 		let uid, gid;
 		if (process.getuid && process.getuid() === 0) {
@@ -150,7 +145,7 @@ export default class Server {
 		Dispatcher.register('/appcd/config', new ConfigService(this.config));
 
 		// init logcat
-		Dispatcher.register('/appcd/logcat', ctx => logcat(ctx.request, ctx.response));
+		Dispatcher.register('/appcd/logcat', logcat);
 
 		// init the status monitor
 		this.systems.statusMonitor = new StatusMonitor();

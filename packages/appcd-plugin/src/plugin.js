@@ -55,6 +55,7 @@ export default class Plugin extends EventEmitter {
 			type:           'external',
 			nodeVersion:    undefined,
 			error:          null,
+			supported:      null,
 			activeRequests: 0,
 			totalRequests:  0
 		});

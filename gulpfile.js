@@ -969,11 +969,24 @@ async function checkPackages({ skipSecurity } = {}) {
 
 				if (required !== 'latest' && required !== 'next' && required !== '*') {
 					// is the dependency up-to-date?
-					if (semver.lt(dep.required.replace(cleanVersionRegExp, ''), latest)) {
-						if (dontUpdate.includes(name)) {
-							dep.status = (dep.status ? ', ' : '') + 'skipping latest';
-						} else {
+					if (dontUpdate.includes(name)) {
+						dep.status = (dep.status ? ', ' : '') + 'skipping latest';
+					} else {
+						if (installed && semver.lt(installed, latest)) {
 							dep.status = (dep.status ? ', ' : '') + 'out-of-date';
+
+							const m = required.match(/^(\^|~|>|>=)/);
+							results.packagesToUpdate.push({
+								path: key,
+								name,
+								current: required,
+								latest: (m ? m[1] : '') + latest,
+								latestTimestamp,
+								next: next ? `^${next}` : null,
+								nextTimestamp
+							});
+						} else if (!installed && semver.lt(required.replace(cleanVersionRegExp, ''), latest)) {
+							dep.status = (dep.status ? ', ' : '') + 'update available';
 
 							const m = required.match(/^(\^|~|>|>=)/);
 							results.packagesToUpdate.push({
@@ -1248,24 +1261,41 @@ function displayStats(results) {
 	console.log(table.toString() + '\n');
 }
 
-function hlVer(ver, ref) {
+function hlVer(toVer, fromVer) {
 	const version = [];
-	const m = ver.match(/^([^\d]+)?(.+)$/);
-	const to = (m ? m[2] : ver).split('.');
-	const from = ref.replace(/[^\.\d]/g, '').split('.');
+
+	let [ from, fromTag ] = fromVer.split(/-(.+)/);
+	from = from.replace(/[^\.\d]/g, '').split('.').map(x => parseInt(x));
+
+	let [ to, toTag ] = toVer.split(/-(.+)/);
+	const toMatch = to.match(/^([^\d]+)?(.+)$/);
+	to = (toMatch ? toMatch[2] : to).split('.').map(x => parseInt(x));
+
+	const tag = () => {
+		if (toTag) {
+			const toNum = toTag.match(/\d+$/);
+			const fromNum = fromTag && fromTag.match(/\d+$/);
+			if (fromNum && parseInt(fromNum[0]) >= parseInt(toNum)) {
+				return `-${toTag}`;
+			} else {
+				return green(`-${toTag}`);
+			}
+		}
+		return '';
+	}
 
 	while (to.length) {
-		if (parseInt(to[0]) > parseInt(from[0])) {
+		if (to[0] > from[0]) {
 			if (version.length) {
-				return (m && m[1] || '') + version.concat(green(to.join('.'))).join('.');
+				return (toMatch && toMatch[1] || '') + version.concat(green(to.join('.') + tag())).join('.');
 			}
-			return green((m && m[1] || '') + to.join('.'));
+			return green((toMatch && toMatch[1] || '') + to.join('.') + tag());
 		}
 		version.push(to.shift());
 		from.shift();
 	}
 
-	return (m && m[1] || '') + version.join('.');
+	return (toMatch && toMatch[1] || '') + version.join('.') + tag();
 }
 
 function upgradeDeps(list) {

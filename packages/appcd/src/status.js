@@ -84,7 +84,7 @@ const cmd = {
 					for (const plugin of status.plugins.registered) {
 						let status = '';
 						if (plugin.error) {
-							status = alert(plugin.error);
+							status = plugin.error;
 						} else if (plugin.pid) {
 							if (plugin.type === 'external') {
 								status = `Active, PID=${plugin.pid || 'null'}`;
@@ -95,15 +95,28 @@ const cmd = {
 							status = 'Inactive';
 						}
 
-						table.push([
-							highlight(plugin.name),
+						const row = [
+							plugin.name,
 							plugin.version,
 							plugin.type,
 							plugin.path,
 							plugin.nodeVersion,
 							status,
 							`${numberFormat(plugin.activeRequests, 0)} / ${numberFormat(plugin.totalRequests, 0)}`
-						]);
+						];
+
+						if (plugin.supported) {
+							row[0] = highlight(row[0]);
+							if (plugin.error) {
+								row[5] = alert(row[5]);
+							}
+						} else {
+							for (let i = 0; i < row.length; i++) {
+								row[i] = note(row[i]);
+							}
+						}
+
+						table.push(row);
 					}
 					log(table.toString());
 				} else {
