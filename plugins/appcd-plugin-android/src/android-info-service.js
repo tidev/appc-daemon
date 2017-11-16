@@ -51,16 +51,19 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 	 * @returns {Promise}
 	 * @access private
 	 */
-	async initDevices() {
-		this.trackDeviceHandle = await androidlib.devices
-			.trackDevices()
-			.on('devices', devices => {
-				console.log('Devices changed');
-				gawk.set(this.data.devices, devices);
-			})
-			.on('error', err => {
-				console.log('Track devices returned error: %s', err.message);
-			});
+	initDevices() {
+		return new Promise((resolve, reject) => {
+			this.trackDeviceHandle = androidlib.devices.trackDevices()
+				.on('devices', devices => {
+					console.log('Devices changed');
+					gawk.set(this.data.devices, devices);
+					resolve();
+				})
+				.once('error', err => {
+					console.log('Track devices returned error: %s', err.message);
+					reject(err);
+				});
+		});
 	}
 
 	/**
