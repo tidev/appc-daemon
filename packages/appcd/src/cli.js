@@ -31,7 +31,8 @@ new CLI({
 	name: 'appcd',
 	options: {
 		'--config <json>':      { type: 'json', desc: 'serialized JSON string to mix into the appcd config' },
-		'--config-file <file>': { type: 'file', desc: 'path to a appcd JS config file' }
+		'--config-file <file>': { type: 'file', desc: 'path to a appcd JS config file' },
+		'--no-colors':          { type: 'bool', desc: 'disables colors' }
 	},
 	version: getAppcdVersion()
 }).exec()

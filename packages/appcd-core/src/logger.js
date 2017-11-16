@@ -1,4 +1,9 @@
-import { createInstanceWithDefaults, Format, StdioStream, StripColors } from 'appcd-logger';
+import {
+	createInstanceWithDefaults,
+	Format,
+	StdioStream,
+	StripColors
+} from 'appcd-logger';
 
 const instance = createInstanceWithDefaults()
 	.snoop()
@@ -8,13 +13,20 @@ const instance = createInstanceWithDefaults()
 		maxBrightness: 210,
 		theme: 'detailed'
 	})
-	.enable(process.env.SNOOPLOGG || process.env.DEBUG);
+	.enable('*');
+
+if (~~process.env.APPCD_NO_COLORS) {
+	// need to strip colors
+	const formatter = new StripColors();
+	formatter.pipe(new StdioStream());
+	instance.pipe(formatter, { flush: true });
+} else {
+	instance.pipe(new StdioStream(), { flush: true });
+}
 
 export default instance;
 
-export { StdioStream };
-
-export function logcat(request, response) {
+export function logcat({ request, response }) {
 	let formatter;
 	if (!request.data || request.data.colors !== false) {
 		formatter = new Format();
