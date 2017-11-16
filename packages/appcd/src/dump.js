@@ -83,10 +83,10 @@ const cmd = {
 			.then(results => {
 				if (file) {
 					file = path.resolve(file);
-					fs.writeFileSync(file, JSON.stringify(results, null, '  '));
+					fs.writeFileSync(file, JSON.stringify(results, null, 2));
 					log(`Wrote dump to ${file}`);
 				} else {
-					log(JSON.stringify(results, null, '  '));
+					log(JSON.stringify(results, null, 2));
 				}
 			});
 	}

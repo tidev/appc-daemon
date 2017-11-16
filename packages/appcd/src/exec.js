@@ -18,7 +18,7 @@ const cmd = {
 			.request
 			.on('response', (message, response) => {
 				if (!argv.subscribe) {
-					console.log(inspect(message, { depth: null }));
+					console.log(JSON.stringify(message, null, 2));
 					process.exit(0);
 				}
 
@@ -26,7 +26,7 @@ const cmd = {
 					if (response.fin) {
 						process.exit(0);
 					}
-					console.log(inspect(message, { depth: null }));
+					console.log(JSON.stringify(message, null, 2));
 				}
 			})
 			.on('error', err => {
