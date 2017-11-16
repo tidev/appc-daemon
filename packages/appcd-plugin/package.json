@@ -1,6 +1,6 @@
 {
   "name": "appcd-plugin",
-  "version": "1.0.0-8",
+  "version": "1.0.0-9",
   "description": "Library for loading and executing plugins.",
   "main": "./dist/index",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
@@ -16,17 +16,17 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-agent": "^1.0.0-8",
-    "appcd-config": "^1.0.0-8",
-    "appcd-config-service": "^1.0.0-8",
-    "appcd-dispatcher": "^1.0.0-8",
-    "appcd-fs": "^1.0.0-8",
-    "appcd-fswatcher": "^1.0.0-8",
-    "appcd-logger": "^1.0.0-8",
-    "appcd-path": "^1.0.0-8",
-    "appcd-response": "^1.0.0-8",
-    "appcd-subprocess": "^1.0.0-8",
-    "appcd-util": "^1.0.0-8",
+    "appcd-agent": "^1.0.0-9",
+    "appcd-config": "^1.0.0-9",
+    "appcd-config-service": "^1.0.0-9",
+    "appcd-dispatcher": "^1.0.0-9",
+    "appcd-fs": "^1.0.0-9",
+    "appcd-fswatcher": "^1.0.0-9",
+    "appcd-logger": "^1.0.0-9",
+    "appcd-path": "^1.0.0-9",
+    "appcd-response": "^1.0.0-9",
+    "appcd-subprocess": "^1.0.0-9",
+    "appcd-util": "^1.0.0-9",
     "builtin-modules": "^2.0.0",
     "gawk": "^4.4.4",
     "globule": "^1.2.0",
@@ -38,7 +38,7 @@
     "uuid": "^3.1.0"
   },
   "devDependencies": {
-    "appcd-gulp": "^1.0.0-8",
+    "appcd-gulp": "^1.0.0-9",
     "fs-extra": "^4.0.2",
     "gulp": "^3.9.1",
     "tmp": "^0.0.33"
