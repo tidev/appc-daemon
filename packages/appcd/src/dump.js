@@ -22,24 +22,23 @@ const cmd = {
 		};
 		let [ file ] = _;
 
-		return Promise
-			.all([
-				// get the logs first to avoid noise from getting the config, status, and health
-				new Promise(resolve => {
-					const { client, request } = createRequest(cfg, '/appcd/logcat', { colors: false });
-					const done = debounce(() => {
-						client.disconnect();
-						resolve();
-					});
+		return Promise.resolve()
+			// get the logs first to avoid noise from getting the config, status, and health
+			.then(() => new Promise(resolve => {
+				const { client, request } = createRequest(cfg, '/appcd/logcat', { colors: false });
+				const done = debounce(() => {
+					client.disconnect();
+					resolve();
+				});
 
-					request
-						.on('response', response => {
-							results.log.push(response);
-							done();
-						})
-						.once('error', () => resolve());
-				}),
-
+				request
+					.on('response', response => {
+						results.log.push(response);
+						done();
+					})
+					.once('error', () => resolve());
+			}))
+			.then(() => Promise.all([
 				new Promise(resolve => {
 					const { client, request } = createRequest(cfg, '/appcd/config');
 					request
@@ -78,7 +77,8 @@ const cmd = {
 							resolve();
 						});
 				})
-			])
+			]))
+			.then(() => results)
 			.catch(err => err)
 			.then(results => {
 				if (file) {
