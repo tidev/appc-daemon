@@ -33,6 +33,10 @@ export function getAppcdVersion() {
  * @returns {String}
  */
 export function banner() {
+	if (process.env.APPC_ENV) {
+		return '';
+	}
+
 	return `${highlight('Appcelerator Daemon')}, version ${getAppcdVersion()}\n`
 		+ 'Copyright (c) 2016-2017, Axway, Inc. All Rights Reserved.\n';
 }
