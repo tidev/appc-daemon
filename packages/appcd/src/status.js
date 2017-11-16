@@ -35,7 +35,7 @@ const cmd = {
 			.on('response', status => {
 				client.disconnect();
 				if (argv.json) {
-					log(JSON.stringify(status, null, '  '));
+					log(JSON.stringify(status, null, 2));
 					return;
 				}
 
