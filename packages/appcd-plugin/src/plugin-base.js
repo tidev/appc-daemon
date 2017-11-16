@@ -213,6 +213,8 @@ export default class PluginBase extends EventEmitter {
 	 * @access public
 	 */
 	async stop() {
+		this.info.stats = {};
+
 		// if the plugin is already stopped, then nothing to do
 		if (this.info.state === states.STOPPED) {
 			this.appcdLogger.log('Plugin %s already stopped', highlight(this.plugin.toString()));

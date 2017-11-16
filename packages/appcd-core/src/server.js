@@ -222,7 +222,7 @@ export default class Server {
 			memory:      os.totalmem(),
 			nodeVersion: process.version,
 			platform:    process.platform,
-			plugins:     this.systems.pluginManager.plugins.map(p => ({
+			plugins:     this.systems.pluginManager.registered.map(p => ({
 				name:        p.name,
 				nodeVersion: p.nodeVersion,
 				version:     p.version,

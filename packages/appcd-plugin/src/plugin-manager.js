@@ -59,6 +59,29 @@ export default class PluginManager extends Dispatcher {
 				});
 		});
 
+		this.register('/stop', async (ctx) => {
+			const pluginPath = ctx.request.data.path;
+			if (!pluginPath) {
+				throw new PluginError('Missing plugin path');
+			}
+
+			let code = codes.NOT_FOUND;
+			const plugin = this.registry[pluginPath];
+
+			if (plugin) {
+				if (plugin.type === 'internal') {
+					code = codes.PLUGIN_CANNOT_STOP_INTERNAL_PLUGIN;
+				} else if (!plugin.impl || !plugin.info.pid) {
+					code = codes.PLUGIN_ALREADY_STOPPED;
+				} else {
+					await plugin.stop();
+					code = codes.OK;
+				}
+			}
+
+			ctx.response = new Response(code);
+		});
+
 		this.register('/', ctx => {
 			ctx.response = this.status();
 		});
@@ -68,13 +91,6 @@ export default class PluginManager extends Dispatcher {
 		 * @access private
 		 */
 		this.namespaces = {};
-
-		/**
-		 * A list of all detected plugins. Plugins are added and removed automatically.
-		 * @type {GawkArray}
-		 * @access private
-		 */
-		this.plugins = gawk.watch(gawk([]), (obj, src) => emitter.emit('change', obj, src));
 
 		/**
 		 * A map of plugin search paths to the list of plugins found in that path.
@@ -94,11 +110,18 @@ export default class PluginManager extends Dispatcher {
 		 */
 		this.paths = arrayify(opts.paths, true);
 
-		for (const dir of this.paths) {
-			if (dir) {
-				this.registerPluginPath(dir);
-			}
-		}
+		/**
+		 * A list of all detected plugins. Plugins are added and removed automatically.
+		 * @type {GawkArray}
+		 * @access private
+		 */
+		this.registered = gawk.watch(gawk([]), (obj, src) => emitter.emit('change', obj, src));
+
+		/**
+		 * A map of all registered plugins by path.
+		 * @type {Object}
+		 */
+		this.registry = {};
 
 		/**
 		 * Indicates that telemetry data should be captured.
@@ -109,6 +132,13 @@ export default class PluginManager extends Dispatcher {
 		 * @type {Boolean}
 		 */
 		this.telemetryEnabled = true;
+
+		// register all plugins the initial list of paths
+		for (const dir of this.paths) {
+			if (dir) {
+				this.registerPluginPath(dir);
+			}
+		}
 	}
 
 	/**
@@ -153,19 +183,13 @@ export default class PluginManager extends Dispatcher {
 
 		this.pluginPaths[pluginPath] = new PluginPath(pluginPath)
 			.on('added', plugin => {
-				if (this.plugins.indexOf(plugin.info) !== -1) {
+				if (this.registry[plugin.path]) {
+					logger.error('Plugin already registered: %s', highlight(plugin.toString()));
 					return;
 				}
 
-				// sanity check the plugin hasn't been added twice
-				for (let i = 0; i < this.plugins.length; i++) {
-					if (this.plugins[i].path === plugin.path || (this.plugins[i].name === plugin.name && this.plugins[i].version === plugin.version)) {
-						logger.error('Plugin already registered: %s', highlight(plugin.toString()));
-						return;
-					}
-				}
-
-				this.plugins.push(plugin.info);
+				this.registered.push(plugin.info);
+				this.registry[plugin.path] = plugin;
 
 				if (plugin.supported) {
 					logger.log('Plugin found: %s', highlight(`${plugin.name}@${plugin.version}`));
@@ -253,9 +277,11 @@ export default class PluginManager extends Dispatcher {
 			})
 			.on('removed', async (plugin) => {
 				try {
-					for (let i = 0; i < this.plugins.length; i++) {
-						if (this.plugins[i].path === plugin.path) {
-							this.plugins.splice(i, 1);
+					delete this.registry[plugin.path];
+
+					for (let i = 0; i < this.registered.length; i++) {
+						if (this.registered[i].path === plugin.path) {
+							this.registered.splice(i, 1);
 							break;
 						}
 					}
@@ -299,7 +325,7 @@ export default class PluginManager extends Dispatcher {
 					path:    plugin.path,
 					version: plugin.version
 				},
-				plugins:     this.plugins.map(p => {
+				plugins:     this.registered.map(p => {
 					const info = {
 						name:        p.name,
 						nodeVersion: p.nodeVersion,
@@ -362,7 +388,7 @@ export default class PluginManager extends Dispatcher {
 	status() {
 		return {
 			paths:      this.paths,
-			registered: this.plugins
+			registered: this.registered
 		};
 	}
 
@@ -374,9 +400,7 @@ export default class PluginManager extends Dispatcher {
 	 */
 	health() {
 		return Promise
-			.all(Object.values(this.pluginPaths).map(pluginPath => {
-				return Promise.all(Object.values(pluginPath.plugins).map(plugin => plugin.health()));
-			}))
+			.all(Object.values(this.registry).map(plugin => plugin.health()))
 			.then(results => {
 				results = [].concat.apply([], results);
 				return results.filter(n => n);
