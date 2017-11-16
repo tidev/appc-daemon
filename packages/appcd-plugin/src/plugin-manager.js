@@ -59,7 +59,7 @@ export default class PluginManager extends Dispatcher {
 				});
 		});
 
-		this.register('/status', ctx => {
+		this.register('/', ctx => {
 			ctx.response = this.status();
 		});
 
@@ -153,7 +153,7 @@ export default class PluginManager extends Dispatcher {
 
 		this.pluginPaths[pluginPath] = new PluginPath(pluginPath)
 			.on('added', plugin => {
-				if (this.plugins.indexOf(plugin) !== -1) {
+				if (this.plugins.indexOf(plugin.info) !== -1) {
 					return;
 				}
 
@@ -364,5 +364,22 @@ export default class PluginManager extends Dispatcher {
 			paths:      this.paths,
 			registered: this.plugins
 		};
+	}
+
+	/**
+	 * Generates a snapshot of the collected data across all active plugins.
+	 *
+	 * @returns {Promise<Array<Object>>}
+	 * @access public
+	 */
+	health() {
+		return Promise
+			.all(Object.values(this.pluginPaths).map(pluginPath => {
+				return Promise.all(Object.values(pluginPath.plugins).map(plugin => plugin.health()));
+			}))
+			.then(results => {
+				results = [].concat.apply([], results);
+				return results.filter(n => n);
+			});
 	}
 }

@@ -366,4 +366,14 @@ export default class Plugin extends EventEmitter {
 	toString() {
 		return `${this.name}@${this.version}`;
 	}
+
+	/**
+	 * If this plugin is an external plugin, this function will retrieve its health report from the
+	 * agent running in the external plugin.
+	 *
+	 * @returns {Promise<Object>}
+	 */
+	health() {
+		return this.type === 'external' && this.impl ? this.impl.health() : null;
+	}
 }

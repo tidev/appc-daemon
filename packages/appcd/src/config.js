@@ -44,7 +44,7 @@ const cmd = {
 
 		if (writeActions[action]) {
 			if (!key) {
-				printAndExit(null, `Error: Missing the configuration key to ${action}`, argv.json, 1, 400);
+				printAndExit(null, `Error: Missing the configuration key to ${action}`, argv.json, 1);
 			}
 
 			try {
@@ -54,7 +54,7 @@ const cmd = {
 			}
 
 			if ((action === 'set' || action === 'push' || action === 'unshift') && data.value === undefined) {
-				printAndExit(null, `Error: Missing the configuration value to ${action}`, argv.json, 1, 400);
+				printAndExit(null, `Error: Missing the configuration value to ${action}`, argv.json, 1);
 			}
 		}
 
@@ -69,7 +69,7 @@ const cmd = {
 						const filter = key && key.split(/\.|\//).join('.') || undefined;
 						const value = cfg.get(filter);
 						if (value === undefined) {
-							printAndExit(key, `Not Found: ${key}`, argv.json, 6, '404');
+							printAndExit(key, `Not Found: ${key}`, argv.json, 6);
 						} else {
 							printAndExit(key, value, argv.json);
 						}
@@ -88,9 +88,9 @@ const cmd = {
 
 							case 'delete':
 								if (!cfg.has(key)) {
-									printAndExit(null, `Not Found: ${key}`, argv.json, 6, '404');
+									printAndExit(null, `Not Found: ${key}`, argv.json, 6);
 								} else if (!cfg.delete(key)) {
-									printAndExit(null, `Error: Unable to delete key "${key}"`, argv.json, 1, '400');
+									printAndExit(null, `Error: Unable to delete key "${key}"`, argv.json, 1);
 								}
 								break;
 
@@ -176,7 +176,7 @@ export default cmd;
  * @param {Number} [exitCode=0] - The exit code to return after printing the value.
  * @param {Number} [code=0] - The code to return in a json response
  */
-function printAndExit(key, value, json, exitCode = 0, code = '0') {
+function printAndExit(key, value, json, exitCode = 0) {
 	if (json) {
 		console.log(JSON.stringify({
 			code: exitCode,

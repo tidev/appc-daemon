@@ -3,6 +3,7 @@
 ## Commands
 
 * [config](config.md)
+* [dump](dump.md)
 * [exec](exec.md)
 * [help](help.md)
 * [logcat](logcat.md)

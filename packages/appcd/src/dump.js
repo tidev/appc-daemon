@@ -8,7 +8,7 @@ import { debounce } from 'appcd-util';
 const { log } = createInstanceWithDefaults().config({ theme: 'compact' }).enable('*').pipe(new StdioStream());
 
 const cmd = {
-	desc: 'dumps the Appc Daemon\'s config, status, and logs to a file',
+	desc: 'dumps the config, status, health, and debug logs to a file',
 	args: [
 		{ name: 'file', desc: 'the file to dump the info to, otherwise stdout' },
 	],
@@ -17,12 +17,29 @@ const cmd = {
 		const results = {
 			config: {},
 			status: {},
+			health: [],
 			log: []
 		};
 		let [ file ] = _;
 
 		return Promise
 			.all([
+				// get the logs first to avoid noise from getting the config, status, and health
+				new Promise(resolve => {
+					const { client, request } = createRequest(cfg, '/appcd/logcat', { colors: false });
+					const done = debounce(() => {
+						client.disconnect();
+						resolve();
+					});
+
+					request
+						.on('response', response => {
+							results.log.push(response);
+							done();
+						})
+						.once('error', () => resolve());
+				}),
+
 				new Promise(resolve => {
 					const { client, request } = createRequest(cfg, '/appcd/config');
 					request
@@ -31,10 +48,21 @@ const cmd = {
 							results.config = config;
 							resolve();
 						})
-						.once('error', err => {
+						.once('error', () => {
 							results.config = cfg;
 							resolve();
 						});
+				}),
+
+				new Promise(resolve => {
+					const { client, request } = createRequest(cfg, '/appcd/health');
+					request
+						.on('response', health => {
+							client.disconnect();
+							results.health = health;
+							resolve();
+						})
+						.once('error', () => resolve());
 				}),
 
 				new Promise(resolve => {
@@ -49,26 +77,8 @@ const cmd = {
 							results.status = err;
 							resolve();
 						});
-				}),
-
-				new Promise((resolve, reject) => {
-					const { client, request } = createRequest(cfg, '/appcd/logcat', { colors: false });
-					const done = debounce(() => {
-						client.disconnect();
-						resolve();
-					});
-
-					request
-						.on('response', response => {
-							results.log.push(response);
-							done();
-						})
-						.once('error', (err) => {
-							resolve();
-						});
 				})
 			])
-			.then(() => results)
 			.catch(err => err)
 			.then(results => {
 				if (file) {

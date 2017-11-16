@@ -2,7 +2,6 @@ import appcdLogger from 'appcd-logger';
 import Dispatcher from 'appcd-dispatcher';
 import gawk from 'gawk';
 import PluginModule from './plugin-module';
-import util from 'util';
 
 import { EventEmitter } from 'events';
 

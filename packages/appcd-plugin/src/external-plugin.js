@@ -212,6 +212,24 @@ export default class ExternalPlugin extends PluginBase {
 					});
 			}
 
+			if (req.message.type === 'health') {
+				if (this.agent) {
+					return send({
+						message: {
+							pid:   process.pid,
+							title: process.title,
+							desc:  this.plugin.toString(),
+							...this.agent.health()
+						},
+						status: codes.OK
+					});
+				}
+				return send({
+					message: null,
+					status: codes.SERVER_ERROR
+				});
+			}
+
 			this.appcdLogger.log('Dispatching %s', highlight(req.message.path), req.message.data);
 
 			this.dispatcher
@@ -586,5 +604,19 @@ export default class ExternalPlugin extends PluginBase {
 				this.setState(states.STOPPED, err);
 				throw err;
 			});
+	}
+
+	/**
+	 * Returns a snapshot of the external plugin's health from the agent.
+	 *
+	 * @returns {Promise<Object>}
+	 */
+	async health() {
+		if (this.info.pid && this.tunnel) {
+			const { response } = await this.tunnel.send({
+				type: 'health'
+			});
+			return response;
+		}
 	}
 }

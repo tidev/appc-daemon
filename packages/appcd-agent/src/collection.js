@@ -55,7 +55,7 @@ export default class Collection {
 	}
 
 	/**
-	 * ?
+	 * Returns a snapshot of the contents of this collection.
 	 *
 	 * @returns {Object}
 	 * @access public
@@ -63,9 +63,9 @@ export default class Collection {
 	get stats() {
 		return {
 			values: Array.from(this.values),
-			min: this.min,
-			max: this.max,
-			avg: this.avg
+			min:    this.min,
+			max:    this.max,
+			avg:    this.avg
 		};
 	}
 }

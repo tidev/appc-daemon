@@ -5,6 +5,7 @@ import path from 'path';
 
 import { EventEmitter } from 'events';
 import { isDir } from 'appcd-fs';
+import { real } from 'appcd-path';
 
 const { log, warn } = appcdLogger('appcd:detect:detector');
 const { highlight } = appcdLogger.styles;
@@ -40,15 +41,15 @@ export default class Detector extends EventEmitter {
 	/**
 	 * Scans the directory for items of interest.
 	 *
+	 * @param {Object} results - An object containing the results found so far.
 	 * @returns {Promise}
 	 * @access public
 	 */
-	async scan() {
-		log('Scanning %s', highlight(this.dir));
+	async scan(results) {
+		log(`Scanning ${highlight(this.dir)}`);
 
 		const { opts } = this.engine;
 		const foundPaths = new Set();
-		let results = [];
 
 		const checkDir = async (dir, depth) => {
 			if (!isDir(this.dir)) {
@@ -57,11 +58,16 @@ export default class Detector extends EventEmitter {
 
 			log(`  checkDir(${highlight(`'${dir}'`)}) depth=${highlight(depth)}`);
 
+			if (results[dir]) {
+				log('      Already found a result for this path');
+				return true;
+			}
+
 			const result = await opts.checkDir(dir);
 			if (result) {
-				log('      Got result, returning:', result);
-				results = results.concat(result);
-				foundPaths.add(dir);
+				log('      Found result');
+				results[results.path || dir] = Array.isArray(result) ? result : [ result ];
+				foundPaths.add(results.path || dir);
 				return;
 			}
 
@@ -73,9 +79,8 @@ export default class Detector extends EventEmitter {
 			// dir is not what we're looking for, check subdirectories
 			log('    Walking subdirectories');
 			for (const name of fs.readdirSync(dir)) {
-				const subdir = path.join(dir, name);
-				await checkDir(subdir, depth - 1);
-				if (results.length && !opts.multiple) {
+				const subdir = real(path.join(dir, name));
+				if (await checkDir(subdir, depth - 1) || (Object.keys(results).length && !opts.multiple)) {
 					return;
 				}
 			}

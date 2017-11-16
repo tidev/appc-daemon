@@ -88,15 +88,6 @@ describe('Detect', () => {
 			}).to.throw(TypeError, 'Expected "exe" option to be a non-empty string or an array or set of non-empty strings');
 		});
 
-		it('should reject if exe is an empty string', () => {
-			expect(() => {
-				new DetectEngine({
-					checkDir() {},
-					exe: ''
-				});
-			}).to.throw(TypeError, 'Expected "exe" option to be a non-empty string or an array or set of non-empty strings');
-		});
-
 		it('should reject if paths is not a string', () => {
 			expect(() => {
 				new DetectEngine({
@@ -598,6 +589,40 @@ describe('Detect', () => {
 					log(stats = status());
 					expect(stats.watchers).to.equal(2);
 
+					done();
+				})
+				.catch(done);
+		});
+
+		it('should not detect something that was already recursively detected', function (done) {
+			this.timeout(10000);
+			this.slow(9000);
+
+			const tmp = makeTempDir();
+			const fooDir = path.join(tmp, 'foo');
+			const realFooDir = real(fooDir);
+			fs.mkdirsSync(fooDir);
+
+			this.engine = new DetectEngine({
+				checkDir(dir) {
+					if (dir === realFooDir) {
+						return { foo: 'bar' };
+					}
+					return;
+				},
+				depth: 1,
+				multiple: true,
+				paths: [
+					tmp,
+					fooDir
+				],
+				redetect: true,
+				watch: true
+			});
+
+			this.engine.start()
+				.then(results => {
+					expect(results).to.deep.equal([ { foo: 'bar' } ]);
 					done();
 				})
 				.catch(done);

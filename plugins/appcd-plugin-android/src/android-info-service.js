@@ -148,11 +148,7 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 	 * @access private
 	 */
 	async initSDKs() {
-		const paths = [ ...androidlib.sdk.sdkLocations[process.platform] ];
-		const defaultPath = get(this.config, 'android.sdkPath');
-		if (defaultPath) {
-			paths.unshift(defaultPath);
-		}
+		const paths = [ get(this.config, 'android.sdkPath'), ...androidlib.sdk.sdkLocations[process.platform] ];
 
 		this.sdkDetectEngine = new DetectEngine({
 			checkDir(dir) {
@@ -164,7 +160,7 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 			},
 			depth: 1,
 			env: [ 'ANDROID_SDK', 'ANDROID_SDK_ROOT' ],
-			exe: [ `adb${exe}`, `android${bat}` ],
+			exe: [ `../../adb${exe}`, `../../android${bat}` ],
 			multiple: true,
 			paths,
 			processResults: async (results, engine) => {
@@ -180,9 +176,9 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 						}
 					}
 
-					// no default found the system path, so just select the last/newest one as the default
 					if (!foundDefault) {
-						results[results.length - 1].default = true;
+						// since sdks aren't in any particular order, the first one is a good one
+						results[0].default = true;
 					}
 				}
 			},
@@ -209,11 +205,11 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 		});
 
 		// if sdks change, then refresh the emulators
-		gawk.watch(this.data.sdk, async (obj, src) => {
-			// TODO: redetect emulators if the default sdk changed
-			// console.log('SDKs changed');
-			// console.log(src);
-		});
+		// gawk.watch(this.data.sdk, async (obj, src) => {
+		// TODO: redetect emulators if the default sdk changed
+		// console.log('SDKs changed');
+		// console.log(src);
+		// });
 
 		// detect the sdks which in turn will detect the emulators
 		await this.sdkDetectEngine.start();

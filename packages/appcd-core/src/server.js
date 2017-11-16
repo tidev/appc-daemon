@@ -187,6 +187,17 @@ export default class Server {
 			})
 			.start();
 
+		Dispatcher.register('/appcd/health', async (ctx) => {
+			ctx.response = [
+				{
+					pid:   process.pid,
+					title: process.title,
+					desc:  'appcd-core',
+					...this.systems.statusMonitor.agent.health()
+				}
+			].concat(await this.systems.pluginManager.health());
+		});
+
 		// listen for fswatcher stats and update the status
 		this.systems.fswatchManager.on('stats', stats => {
 			this.systems.statusMonitor.merge({ fs: stats });
