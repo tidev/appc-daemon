@@ -417,10 +417,13 @@ export default class ExternalPlugin extends PluginBase {
 					});
 			})
 			.then(ctx => new Promise((resolve, reject) => {
+				let activated = false;
+
 				this.tunnel = new Tunnel(ctx.proc, true, (req, send) => {
 					switch (req.type) {
 						case 'activated':
 							this.appcdLogger.log('External plugin is activated');
+							activated = true;
 							resolve();
 							break;
 
@@ -563,6 +566,7 @@ export default class ExternalPlugin extends PluginBase {
 								this.appcdLogger.log('Plugin host exited: %s', highlight(data.code));
 								this.tunnel = null;
 								this.info.pid = null;
+								this.info.exitCode = data.code || 0;
 								let err;
 
 								// close any open response streams (i.e. subscriptions)
@@ -581,18 +585,22 @@ export default class ExternalPlugin extends PluginBase {
 									this.appcdLogger.log('No orphan streams');
 								}
 
-								if (data.code) {
-									this.info.exitCode = data.code;
-									if (this.info.state === states.STARTING) {
-										if (!this.info.error) {
+								if (this.info.state === states.STARTING) {
+									this.appcdLogger.log('Plugin has not finished activating yet');
+
+									if (!this.info.error) {
+										if (this.info.exitCode === 0) {
+											this.info.error = 'Plugin stopped while starting';
+										} else {
 											this.info.error = `Failed to activate plugin (code ${data.code})`;
 										}
-										err = new PluginError(this.info.error);
-										if (this.info.stack) {
-											err.stack = this.info.stack;
-										}
-										reject(err);
 									}
+
+									err = new PluginError(this.info.error);
+									if (this.info.stack) {
+										err.stack = this.info.stack;
+									}
+									reject(err);
 								}
 
 								this.setState(states.STOPPED, err);

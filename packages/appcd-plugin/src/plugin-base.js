@@ -230,18 +230,14 @@ export default class PluginBase extends EventEmitter {
 			return;
 		}
 
-		// if the plugin is starting, then wait for it to finish starting
-		if (this.info.state === states.STARTING) {
-			this.appcdLogger.log('Plugin %s starting... waiting to start before stopping', highlight(this.plugin.toString()));
-			await this.waitUntil(states.STARTED);
-			this.appcdLogger.log('Plugin %s started, stopping...', highlight(this.plugin.toString()));
-		}
-
-		// the plugin is started and can now be stopped
+		// the plugin is starting/started and can now be stopped
 
 		this.appcdLogger.log('Deactivating plugin: %s', highlight(this.plugin.main));
 
-		this.setState(states.STOPPING);
+		if (this.info.state === states.STARTED) {
+			this.setState(states.STOPPING);
+		}
+
 		await this.onStop();
 		this.deactivate();
 	}
