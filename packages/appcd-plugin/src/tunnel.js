@@ -173,8 +173,10 @@ export default class Tunnel {
 					case 'subscribe':
 						resolve(ctx);
 						// fallthrough
+
 					case 'event':
 						ctx.request.sid = message.sid;
+
 					case 'unsubscribe':
 						ctx.response.write(message);
 						break;

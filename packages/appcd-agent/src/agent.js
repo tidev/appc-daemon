@@ -195,4 +195,18 @@ export default class Agent extends EventEmitter {
 			})
 			.catch(err => this.emit('error', err));
 	}
+
+	/**
+	 * Generates a snapshot of the collected data.
+	 *
+	 * @returns {Object}
+	 * @access public
+	 */
+	health() {
+		const result = {};
+		for (const [ name, bucket ] of Object.entries(this.buckets)) {
+			result[name] = bucket.collection.stats;
+		}
+		return result;
+	}
 }

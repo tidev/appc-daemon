@@ -60,7 +60,7 @@ export default class DetectEngine extends EventEmitter {
 	 * A list of all active search paths.
 	 * @type {Set}
 	 */
-	searchPaths = null;
+	searchPaths = [];
 
 	/**
 	 * Initializes the detect engine instance and validates the options.
@@ -74,7 +74,8 @@ export default class DetectEngine extends EventEmitter {
 	 * or equal to zero. If the `depth` is `0`, it will not scan subdirectories of each path.
 	 * @param {String|Array<String>|Set} [opts.exe] - The name of the executable to search the
 	 * system path for. If found, the directory is returned and the value will be marked as the
-	 * primary path.
+	 * primary path. Each exe may be prefixed by one or more `../` paths which will be stripped off
+	 * prior to searching for the executable, but then applied to the result.
 	 * @param {Boolean} [opts.multiple=false] - When true, the scanner will continue to scan paths
 	 * even after a result has been found.
 	 * @param {String|Array<String>|Set} [opts.paths] - One or more global search paths to search.
@@ -219,7 +220,12 @@ export default class DetectEngine extends EventEmitter {
 		// finish the initialization of the original list of paths
 		for (const exe of this.opts.exe) {
 			try {
-				defaultPath = path.dirname(real(await which(exe)));
+				const p = Math.max(exe.lastIndexOf('/'), exe.lastIndexOf('\\'));
+				if (p === -1) {
+					defaultPath = path.dirname(real(await which(exe)));
+				} else {
+					defaultPath = real(path.resolve(await which(exe.substring(p)), exe.substring(0, p)));
+				}
 				searchPaths.add(defaultPath);
 			} catch (e) {
 				// squelch
@@ -290,17 +296,18 @@ export default class DetectEngine extends EventEmitter {
 			log('  default path:', highlight(defaultPath || 'n/a'));
 
 			this.defaultPath = defaultPath;
+			this.searchPaths = searchPaths;
 
 			const previousDetectors = this.detectors;
 			this.detectors = new Map();
 
 			for (const dir of searchPaths) {
 				if (previousDetectors.has(dir)) {
-					log('  Preserving detector: %s', highlight(dir));
+					log(`  Preserving detector: ${highlight(dir)}`);
 					this.detectors.set(dir, previousDetectors.get(dir));
 					previousDetectors.delete(dir);
 				} else {
-					log('  Adding new detector: %s', highlight(dir));
+					log(`  Adding new detector: ${highlight(dir)}`);
 					const detector = new Detector(dir, this);
 					detector.on('rescan', debounce(() => {
 						log(`  Detector ${highlight(dir)} requested a rescan`);
@@ -312,26 +319,24 @@ export default class DetectEngine extends EventEmitter {
 
 			// stop the stale detectors
 			for (const [ dir, detector ] of previousDetectors) {
-				log('  Stopping stale detector: %s', highlight(dir));
+				log(`  Stopping stale detector: ${highlight(dir)}`);
 				await detector.stop();
 			}
 			previousDetectors.clear();
 
-			let results = [];
+			const results = {};
 
 			log('  Starting scan...');
 			for (const detector of this.detectors.values()) {
-				const result = await detector.scan();
-				if (result) {
-					results = results.concat(result);
-					if (!this.opts.multiple) {
-						break;
-					}
+				await detector.scan(results);
+				if (Object.keys(results).length && !this.opts.multiple) {
+					break;
 				}
 			}
-			log(pluralize(`  Scanning complete, found ${highlight(results.length)} item`, results.length));
 
-			await this.processResults(results);
+			log(pluralize(`  Scanning complete, found ${highlight(Object.keys(results).length)} item`, Object.keys(results).length));
+
+			await this.processResults([].concat.apply([], Object.values(results)));
 		});
 
 		log('  Exiting scan tailgate');
