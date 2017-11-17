@@ -1,5 +1,4 @@
 import { createRequest, loadConfig } from './common';
-import { inspect } from 'util';
 
 const cmd = {
 	args: [

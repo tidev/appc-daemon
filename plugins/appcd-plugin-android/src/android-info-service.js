@@ -6,7 +6,7 @@ import * as androidlib from 'androidlib';
 
 import { bat, cmd, exe } from 'appcd-subprocess';
 import { DataServiceDispatcher } from 'appcd-dispatcher';
-import { debounce, get, mergeDeep } from 'appcd-util';
+import { debounce as debouncer, get, mergeDeep } from 'appcd-util';
 
 /**
  * The Android info service.
@@ -39,9 +39,11 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 			mergeDeep(androidlib.options, cfg.android);
 		}
 
-		await this.initDevices();
-		await this.initNDKs();
-		await this.initSDKsAndEmulators();
+		await Promise.all([
+			this.initDevices(),
+			this.initNDKs(),
+			this.initSDKsAndEmulators()
+		]);
 	}
 
 	/**
@@ -50,19 +52,17 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 	 * @returns {Promise}
 	 * @access private
 	 */
-	initDevices() {
-		return new Promise((resolve, reject) => {
-			this.trackDeviceHandle = androidlib.devices.trackDevices()
-				.on('devices', devices => {
-					console.log('Devices changed');
-					gawk.set(this.data.devices, devices);
-					resolve();
-				})
-				.once('error', err => {
-					console.log('Track devices returned error: %s', err.message);
-					reject(err);
-				});
-		});
+	async initDevices() {
+		gawk.set(this.data.devices, await androidlib.devices.getDevices());
+
+		this.trackDeviceHandle = androidlib.devices.trackDevices()
+			.on('devices', devices => {
+				console.log('Devices changed');
+				gawk.set(this.data.devices, devices);
+			})
+			.once('error', err => {
+				console.log('Track devices returned error: %s', err.message);
+			});
 	}
 
 	/**
@@ -190,6 +190,7 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 			type: 'avd',
 			depth: 1,
 			paths: [ androidlib.avd.getAvdDir() ],
+			debounce: true,
 			handler: async () => {
 				console.log('Rescanning Android emulators...');
 				gawk.set(this.data.emulators, await androidlib.emulators.getEmulators({ force: true, sdks: this.data.sdk }));
@@ -207,6 +208,7 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 					resolve();
 				}
 			});
+
 			this.sdkDetectEngine.start().catch(reject);
 		});
 	}
@@ -215,18 +217,21 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 	 * Subscribes to filesystem events for the specified paths.
 	 *
 	 * @param {Object} params - Various parameters.
-	 * @param {String} params.type - The type of subscription.
-	 * @param {Array.<String>} params.paths - One or more paths to watch.
-	 * @param {Function} params.handler - A callback function to fire when a fs event occurs.
+	 * @param {Boolean} [params.debounce=false] - When `true`, wraps the `handler` with a debouncer.
 	 * @param {Number} [params.depth] - The max depth to recursively watch.
+	 * @param {Function} params.handler - A callback function to fire when a fs event occurs.
+	 * @param {Array.<String>} params.paths - One or more paths to watch.
+	 * @param {String} params.type - The type of subscription.
 	 * @access private
 	 */
-	watch({ type, paths, handler, depth }) {
+	watch({ debounce, depth, handler, paths, type }) {
+		const callback = debounce ? debouncer(handler) : handler;
+
 		for (const path of paths) {
 			const data = { path };
 			if (depth) {
 				data.recursive = true;
-				data.depth = 1;
+				data.depth = depth;
 			}
 
 			appcd
@@ -245,11 +250,11 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 								}
 								this.subscriptions[type][data.sid] = 1;
 							} else if (data.type === 'event') {
-								handler(data.message);
+								callback(data.message);
 							}
 						})
 						.on('end', () => {
-							if (sid) {
+							if (sid && this.subscriptions[type]) {
 								delete this.subscriptions[type][sid];
 							}
 						});
