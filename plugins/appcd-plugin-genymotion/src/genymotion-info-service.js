@@ -260,7 +260,7 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 			delete this.subscriptions[type][sid];
 		}
 
-		if (!Object.keys(this.subscriptions[type])) {
+		if (!Object.keys(this.subscriptions[type]).length) {
 			delete this.subscriptions[type];
 		}
 	}

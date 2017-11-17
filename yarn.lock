@@ -3634,7 +3634,7 @@ invert-kv@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/invert-kv/-/invert-kv-1.0.0.tgz#104a8e4aaca6d3d8cd157a8ef8bfab2d7a3ffdb6"
 
-ioslib@^2.0.0-8:
+ioslib@^2.0.0-11:
   version "2.0.0-beta.3"
   resolved "https://registry.yarnpkg.com/ioslib/-/ioslib-2.0.0-beta.3.tgz#18ea323935eb5b08d2b77325a383ac05582d5f96"
   dependencies:
