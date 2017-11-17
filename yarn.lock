@@ -166,31 +166,16 @@ amdefine@>=0.0.4:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/amdefine/-/amdefine-1.0.1.tgz#4a5282ac164729e93619bcfd3ad151f817ce91f5"
 
-androidlib@^2.0.0-6:
-  version "2.0.0-6"
-  resolved "https://registry.yarnpkg.com/androidlib/-/androidlib-2.0.0-6.tgz#533fa531e9ea2e60d55e8c53a2730db560df5740"
+androidlib@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/androidlib/-/androidlib-2.0.0.tgz#070350ab4983e448e94f41544fd329937917be81"
   dependencies:
-    appcd-fs "^1.0.0-3"
-    appcd-logger "^1.0.0-3"
-    appcd-path "^1.0.0-3"
-    appcd-subprocess "^1.0.0-3"
-    appcd-util "^1.0.0-3"
-    appcd-winreg "^1.0.0-3"
-    cli-kit "^0.0.7"
-    fs-extra "^4.0.2"
-    simple-plist "^0.2.1"
-    source-map-support "^0.5.0"
-
-androidlib@^2.0.0-7:
-  version "2.0.0-7"
-  resolved "https://registry.yarnpkg.com/androidlib/-/androidlib-2.0.0-7.tgz#cf5d529204f38f20f2dfc9ae4ea35089563b7a38"
-  dependencies:
-    appcd-fs "^1.0.0-7"
-    appcd-logger "^1.0.0-7"
-    appcd-path "^1.0.0-7"
-    appcd-subprocess "^1.0.0-7"
-    appcd-util "^1.0.0-7"
-    appcd-winreg "^1.0.0-7"
+    appcd-fs "^1.0.0-10"
+    appcd-logger "^1.0.0-10"
+    appcd-path "^1.0.0-10"
+    appcd-subprocess "^1.0.0-10"
+    appcd-util "^1.0.0-10"
+    appcd-winreg "^1.0.0-10"
     cli-kit "^0.0.7"
     fs-extra "^4.0.2"
     simple-plist "^0.2.1"
@@ -253,7 +238,7 @@ appcd-fs@0.1.4:
   dependencies:
     source-map-support "^0.5.0"
 
-appcd-fs@0.1.5, appcd-fs@^0.1.0, appcd-fs@^0.1.4:
+appcd-fs@^0.1.0:
   version "0.1.5"
   resolved "https://registry.yarnpkg.com/appcd-fs/-/appcd-fs-0.1.5.tgz#fbc26d1532d2f4b9293e5294c08187755134066d"
   dependencies:
@@ -281,7 +266,7 @@ appcd-nodejs@0.1.4:
     tmp "^0.0.33"
     yauzl "^2.9.1"
 
-appcd-path@0.1.4, appcd-path@^0.1.0, appcd-path@^0.1.4:
+appcd-path@0.1.4, appcd-path@^0.1.0:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/appcd-path/-/appcd-path-0.1.4.tgz#380820e8243275149f1be550d1d9585a30ad231e"
   dependencies:
@@ -306,7 +291,7 @@ appcd-response@0.1.4:
     source-map-support "^0.5.0"
     sprintf-js "^1.1.1"
 
-appcd-subprocess@^0.1.0, appcd-subprocess@^0.1.4:
+appcd-subprocess@^0.1.0:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/appcd-subprocess/-/appcd-subprocess-0.1.4.tgz#4820b45b870fbf098557a9b767d0c8e0f36f5cbb"
   dependencies:
@@ -325,14 +310,6 @@ appcd-util@0.1.4:
   resolved "https://registry.yarnpkg.com/appcd-util/-/appcd-util-0.1.4.tgz#c3731c6a2e2d196acb8185af7803b324715901c1"
   dependencies:
     appcd-fs "0.1.4"
-    semver "^5.4.1"
-    source-map-support "^0.5.0"
-
-appcd-util@^0.1.5:
-  version "0.1.5"
-  resolved "https://registry.yarnpkg.com/appcd-util/-/appcd-util-0.1.5.tgz#4f0b7a62f0cde00c91207ae19d50842147b16cd2"
-  dependencies:
-    appcd-fs "0.1.5"
     semver "^5.4.1"
     source-map-support "^0.5.0"
 
@@ -3634,14 +3611,15 @@ invert-kv@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/invert-kv/-/invert-kv-1.0.0.tgz#104a8e4aaca6d3d8cd157a8ef8bfab2d7a3ffdb6"
 
-ioslib@^2.0.0-11:
-  version "2.0.0-beta.3"
-  resolved "https://registry.yarnpkg.com/ioslib/-/ioslib-2.0.0-beta.3.tgz#18ea323935eb5b08d2b77325a383ac05582d5f96"
+ioslib@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/ioslib/-/ioslib-2.0.0.tgz#2015e3d02c824ea900d4b4ccaa49cdfff1219f14"
   dependencies:
-    appcd-fs "^0.1.4"
-    appcd-path "^0.1.4"
-    appcd-subprocess "^0.1.4"
-    appcd-util "^0.1.5"
+    appcd-fs "^1.0.0-10"
+    appcd-path "^1.0.0-10"
+    appcd-subprocess "^1.0.0-10"
+    appcd-util "^1.0.0-10"
+    cli-kit "^0.0.7"
     node-forge "^0.7.1"
     node-ios-device "1.4.0"
     promise-limit "^2.5.0"
