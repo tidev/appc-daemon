@@ -10,7 +10,6 @@ import { EventEmitter } from 'events';
 import { real } from 'appcd-path';
 import { which } from 'appcd-subprocess';
 
-const { log, warn } = appcdLogger('appcd:detect');
 const { highlight } = appcdLogger.styles;
 const { pluralize } = appcdLogger;
 
@@ -36,7 +35,7 @@ export default class DetectEngine extends EventEmitter {
 	 * A random id that identifies this detect engine instance when creating tailgates.
 	 * @type {String}
 	 */
-	id = randomBytes(10);
+	id = randomBytes(4);
 
 	/**
 	 * A cleaned up version of the options passed into the detect engine constructor.
@@ -144,6 +143,8 @@ export default class DetectEngine extends EventEmitter {
 
 		this.opts = opts;
 
+		this.logger = appcdLogger(`appcd:detect:${this.id}`);
+
 		// we need to have at least one 'error' handler
 		this.on('error', () => {});
 
@@ -180,14 +181,14 @@ export default class DetectEngine extends EventEmitter {
 	 * @access public
 	 */
 	async stop() {
-		log('stop()');
+		this.logger.log('stop()');
 		if (this.refreshPathsTimer) {
-			log('  Cancelling refresh paths timer');
+			this.logger.log('  Cancelling refresh paths timer');
 			clearTimeout(this.refreshPathsTimer);
 			this.refreshPathsTimer = null;
 		}
 
-		log(pluralize(`  Stopping ${highlight(this.detectors.size)} detector`, this.detectors.size));
+		this.logger.log(pluralize(`  Stopping ${highlight(this.detectors.size)} detector`, this.detectors.size));
 		for (const detector of this.detectors.values()) {
 			await detector.stop();
 		}
@@ -245,7 +246,7 @@ export default class DetectEngine extends EventEmitter {
 				try {
 					searchPaths.add(real(await winreg.get(obj.hive, obj.key, obj.name)));
 				} catch (e) {
-					warn('Failed to get registry key: %s', e.message);
+					this.logger.warn('Failed to get registry key: %s', e.message);
 				}
 			}));
 
@@ -263,7 +264,7 @@ export default class DetectEngine extends EventEmitter {
 						}
 					}
 				} catch (e) {
-					warn('Registry callback threw error: %s', e.message);
+					this.logger.warn('Registry callback threw error: %s', e.message);
 				}
 			}
 		}
@@ -284,16 +285,18 @@ export default class DetectEngine extends EventEmitter {
 	 * @access private
 	 */
 	async scan({ defaultPath, searchPaths }) {
-		log('scan()');
-		log('  Entering scan tailgate');
+		const tailgateId = `appcd-detect/engine/${this.id}`;
 
-		await tailgate('appcd-detect/engine/${this.id}', async () => {
-			log('  id:',           highlight(this.id));
-			log('  multiple:',     highlight(!!this.opts.multiple));
-			log('  recursive:',    highlight(!!this.opts.recursive));
-			log('  redetect:',     highlight(!!this.opts.redetect));
-			log('  watch:',        highlight(!!this.opts.watch));
-			log('  default path:', highlight(defaultPath || 'n/a'));
+		this.logger.log('scan()');
+		this.logger.log(`  Entering scan tailgate: ${highlight(tailgateId)}`);
+
+		await tailgate(tailgateId, async () => {
+			this.logger.log('  id:',           highlight(this.id));
+			this.logger.log('  multiple:',     highlight(!!this.opts.multiple));
+			this.logger.log('  recursive:',    highlight(!!this.opts.recursive));
+			this.logger.log('  redetect:',     highlight(!!this.opts.redetect));
+			this.logger.log('  watch:',        highlight(!!this.opts.watch));
+			this.logger.log('  default path:', highlight(defaultPath || 'n/a'));
 
 			this.defaultPath = defaultPath;
 			this.searchPaths = searchPaths;
@@ -303,14 +306,14 @@ export default class DetectEngine extends EventEmitter {
 
 			for (const dir of searchPaths) {
 				if (previousDetectors.has(dir)) {
-					log(`  Preserving detector: ${highlight(dir)}`);
+					this.logger.log(`  Preserving detector: ${highlight(dir)}`);
 					this.detectors.set(dir, previousDetectors.get(dir));
 					previousDetectors.delete(dir);
 				} else {
-					log(`  Adding new detector: ${highlight(dir)}`);
+					this.logger.log(`  Adding new detector: ${highlight(dir)}`);
 					const detector = new Detector(dir, this);
 					detector.on('rescan', debounce(() => {
-						log(`  Detector ${highlight(dir)} requested a rescan`);
+						this.logger.log(`  Detector ${highlight(dir)} requested a rescan`);
 						this.getPaths().then(paths => this.scan(paths));
 					}));
 					this.detectors.set(dir, detector);
@@ -319,14 +322,14 @@ export default class DetectEngine extends EventEmitter {
 
 			// stop the stale detectors
 			for (const [ dir, detector ] of previousDetectors) {
-				log(`  Stopping stale detector: ${highlight(dir)}`);
+				this.logger.log(`  Stopping stale detector: ${highlight(dir)}`);
 				await detector.stop();
 			}
 			previousDetectors.clear();
 
 			const results = {};
 
-			log('  Starting scan...');
+			this.logger.log('  Starting scan...');
 			for (const detector of this.detectors.values()) {
 				await detector.scan(results);
 				if (Object.keys(results).length && !this.opts.multiple) {
@@ -334,12 +337,12 @@ export default class DetectEngine extends EventEmitter {
 				}
 			}
 
-			log(pluralize(`  Scanning complete, found ${highlight(Object.keys(results).length)} item`, Object.keys(results).length));
+			this.logger.log(pluralize(`  Scanning complete, found ${highlight(Object.keys(results).length)} item`, Object.keys(results).length));
 
 			await this.processResults([].concat.apply([], Object.values(results)));
 		});
 
-		log('  Exiting scan tailgate');
+		this.logger.log('  Exiting scan tailgate');
 	}
 
 	/**
@@ -375,7 +378,7 @@ export default class DetectEngine extends EventEmitter {
 	 */
 	async processResults(results) {
 		if (this.opts.processResults) {
-			log('  Processing results...');
+			this.logger.log('  Processing results...');
 			results = (await this.opts.processResults(results, this)) || results;
 		}
 		gawk.set(this.results, arrayify(results, true));

@@ -1,6 +1,6 @@
 {
   "name": "appcd-gulp",
-  "version": "1.0.0-10",
+  "version": "1.0.0-11",
   "description": "Common gulp tasks and utilities.",
   "main": "./src/index",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
@@ -31,7 +31,7 @@
     "esdoc-ecmascript-proposal-plugin": "^1.0.0",
     "esdoc-standard-plugin": "^1.0.0",
     "eslint": "^4.11.0",
-    "eslint-config-axway": "^2.0.6",
+    "eslint-config-axway": "^2.0.7",
     "eslint-plugin-mocha": "^4.11.0",
     "gulp-babel": "^7.0.0",
     "gulp-chug": "^0.5.1",
