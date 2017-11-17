@@ -65,8 +65,12 @@ export default class Detector extends EventEmitter {
 
 			const result = await opts.checkDir(dir);
 			if (result) {
-				log('      Found result');
-				results[results.path || dir] = Array.isArray(result) ? result : [ result ];
+				log('     Found result');
+				if (Array.isArray(result)) {
+					results[dir] = result;
+				} else {
+					results[result.path || dir] = [ result ];
+				}
 				foundPaths.add(results.path || dir);
 				return;
 			}
