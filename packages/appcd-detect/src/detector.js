@@ -7,7 +7,6 @@ import { EventEmitter } from 'events';
 import { isDir } from 'appcd-fs';
 import { real } from 'appcd-path';
 
-const { log, warn } = appcdLogger('appcd:detect:detector');
 const { highlight } = appcdLogger.styles;
 const { pluralize } = appcdLogger;
 
@@ -36,6 +35,7 @@ export default class Detector extends EventEmitter {
 		super();
 		this.dir = dir;
 		this.engine = engine;
+		this.logger = appcdLogger(`appcd:detect:detector:${engine.id}`);
 	}
 
 	/**
@@ -46,7 +46,7 @@ export default class Detector extends EventEmitter {
 	 * @access public
 	 */
 	async scan(results) {
-		log(`Scanning ${highlight(this.dir)}`);
+		this.logger.log(`Scanning ${highlight(this.dir)}`);
 
 		const { opts } = this.engine;
 		const foundPaths = new Set();
@@ -56,16 +56,16 @@ export default class Detector extends EventEmitter {
 				return;
 			}
 
-			log(`  checkDir(${highlight(`'${dir}'`)}) depth=${highlight(depth)}`);
+			this.logger.log(`  checkDir(${highlight(`'${dir}'`)}) depth=${highlight(depth)}`);
 
 			if (results[dir]) {
-				log('      Already found a result for this path');
+				this.logger.log('      Already found a result for this path');
 				return;
 			}
 
 			const result = await opts.checkDir(dir);
 			if (result) {
-				log('     Found result');
+				this.logger.log('     Found result');
 				if (Array.isArray(result)) {
 					results[dir] = result;
 				} else {
@@ -76,12 +76,12 @@ export default class Detector extends EventEmitter {
 			}
 
 			if (depth <= 0) {
-				log('    No result, hit max depth, returning');
+				this.logger.log('    No result, hit max depth, returning');
 				return;
 			}
 
 			// dir is not what we're looking for, check subdirectories
-			log('    Walking subdirectories');
+			this.logger.log('    Walking subdirectories');
 			for (const name of fs.readdirSync(dir)) {
 				const subdir = real(path.join(dir, name));
 				await checkDir(subdir, depth - 1);
@@ -104,11 +104,11 @@ export default class Detector extends EventEmitter {
 
 						if (file === this.dir) {
 							if (action === 'delete') {
-								log('Directory was deleted, stopping and requesting rescan...');
+								this.logger.log('Directory was deleted, stopping and requesting rescan...');
 								await this.stop();
 								this.emit('rescan');
 							} else if (action === 'add') {
-								log('Directory was added, requesting rescan...');
+								this.logger.log('Directory was added, requesting rescan...');
 								this.emit('rescan');
 							}
 						} else {
@@ -120,8 +120,8 @@ export default class Detector extends EventEmitter {
 			}
 
 			if (foundPaths.size && opts.redetect) {
-				log(pluralize(`Watching ${highlight(foundPaths.size)} subdirectory`, foundPaths.size));
-				log(Array.from(foundPaths));
+				this.logger.log(pluralize(`Watching ${highlight(foundPaths.size)} subdirectory`, foundPaths.size));
+				this.logger.log(Array.from(foundPaths));
 				await Promise.all([ ...foundPaths ].map(subdir => {
 					if (this.sids.has(subdir)) {
 						return null;
@@ -142,16 +142,16 @@ export default class Detector extends EventEmitter {
 								}
 
 								if (file === this.dir && action === 'delete') {
-									log(`Parent directory ${highlight(file)} was deleted, letting primary fs watcher respond`);
+									this.logger.log(`Parent directory ${highlight(file)} was deleted, letting primary fs watcher respond`);
 									return;
 								}
 
 								if (file === subdir && action === 'delete') {
-									log(`${highlight(file)} was deleted, unwatching and triggering rescan`);
+									this.logger.log(`${highlight(file)} was deleted, unwatching and triggering rescan`);
 									await this.unwatch(sid);
 									this.sids.delete(subdir);
 								} else {
-									log(`${highlight(file)} was ${action === 'add' ? 'added' : 'changed'}, triggering rescan`);
+									this.logger.log(`${highlight(file)} was ${action === 'add' ? 'added' : 'changed'}, triggering rescan`);
 								}
 
 								this.emit('rescan');
@@ -181,7 +181,7 @@ export default class Detector extends EventEmitter {
 		}
 
 		if (this.sid) {
-			log(`Stopping primary fs watcher: ${highlight(this.dir)}`);
+			this.logger.log(`Stopping primary fs watcher: ${highlight(this.dir)}`);
 			await this.unwatch(this.sid);
 			this.sid = null;
 		}
@@ -200,7 +200,7 @@ export default class Detector extends EventEmitter {
 	 * @access private
 	 */
 	watch({ depth, dir, onFSEvent, recursive }) {
-		log(`  Sending fs watch request: ${highlight(dir)}`);
+		this.logger.log(`  Sending fs watch request: ${highlight(dir)}`);
 		return Dispatcher
 			.call('/appcd/fswatch', {
 				data: {
@@ -236,8 +236,8 @@ export default class Detector extends EventEmitter {
 				type: 'unsubscribe'
 			})
 			.catch(err => {
-				warn('Failed to unsubscribe:');
-				warn(err);
+				this.logger.warn('Failed to unsubscribe:');
+				this.logger.warn(err);
 			});
 	}
 }

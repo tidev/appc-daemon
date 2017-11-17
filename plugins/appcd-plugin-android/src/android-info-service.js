@@ -209,7 +209,14 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 				}
 			});
 
-			this.sdkDetectEngine.start().catch(reject);
+			this.sdkDetectEngine.start()
+				.then(results => {
+					if (!initialized && results.length === 0) {
+						initialized = true;
+						resolve();
+					}
+				})
+				.catch(reject);
 		});
 	}
 
@@ -305,11 +312,6 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 		if (this.ndkDetectEngine) {
 			await this.ndkDetectEngine.stop();
 			this.ndkDetectEngine = null;
-		}
-
-		if (this.avdDetectEngine) {
-			await this.avdDetectEngine.stop();
-			this.avdDetectEngine = null;
 		}
 
 		if (this.subscriptions) {
