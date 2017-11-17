@@ -59,23 +59,34 @@ export default class PluginManager extends Dispatcher {
 				});
 		});
 
-		this.register('/stop', async (ctx) => {
-			const pluginPath = ctx.request.data.path;
-			if (!pluginPath) {
-				throw new PluginError('Missing plugin path');
+		this.register('/stop/:pluginName?/:version?', async (ctx) => {
+			const { pluginName, version } = ctx.request.params;
+			const paths = [];
+			let code = codes.NOT_FOUND;
+
+			if (pluginName) {
+				for (const [ pluginPath, plugin ] of Object.entries(this.registry)) {
+					if (plugin.packageName === pluginName && (!version || semver.satisfies(plugin.version, version))) {
+						paths.push(pluginPath);
+					}
+				}
+			} else if (!ctx.request.data.path) {
+				throw new PluginError('Missing name or path of plugin to stop');
+			} else if (this.registry[ctx.request.data.path]) {
+				paths.push(ctx.request.data.path);
 			}
 
-			let code = codes.NOT_FOUND;
-			const plugin = this.registry[pluginPath];
-
-			if (plugin) {
-				if (plugin.type === 'internal') {
-					code = codes.PLUGIN_CANNOT_STOP_INTERNAL_PLUGIN;
-				} else if (!plugin.impl || !plugin.info.pid) {
-					code = codes.PLUGIN_ALREADY_STOPPED;
-				} else {
-					await plugin.stop();
-					code = codes.OK;
+			for (const pluginPath of paths) {
+				const plugin = this.registry[pluginPath];
+				if (plugin) {
+					if (plugin.type === 'internal') {
+						code = code === codes.OK ? code : codes.PLUGIN_CANNOT_STOP_INTERNAL_PLUGIN;
+					} else if (!plugin.impl || !plugin.info.pid) {
+						code = code === codes.OK ? code : codes.PLUGIN_ALREADY_STOPPED;
+					} else {
+						await plugin.stop();
+						code = codes.OK;
+					}
 				}
 			}
 

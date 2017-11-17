@@ -1,11 +1,12 @@
 import DetectEngine from 'appcd-detect';
 import gawk from 'gawk';
 import path from 'path';
+import version from './version';
 
 import * as ioslib from 'ioslib';
 
 import { DataServiceDispatcher } from 'appcd-dispatcher';
-import { mergeDeep } from 'appcd-util';
+import { debounce as debouncer, mergeDeep } from 'appcd-util';
 
 /**
  * Constants to identify the subscription id list.
@@ -16,12 +17,6 @@ const KEYCHAIN_PATHS              = 2;
 const PROVISIONING_PROFILES_DIR   = 3;
 const GLOBAL_SIM_PROFILES         = 4;
 const CORE_SIMULATOR_DEVICES_PATH = 5;
-
-const version = {
-	compare(a, b) {
-		return a === b ? 0 : a < b ? -1 : 1;
-	}
-};
 
 /**
  * The iOS info service.
@@ -42,7 +37,7 @@ export default class iOSInfoService extends DataServiceDispatcher {
 			devices: [],
 			keychains: [],
 			provisioning: {},
-			simulatorDevicePairCompatibility: ioslib.xcode.simulatorDevicePairCompatibility,
+			simulatorDevicePairCompatibility: ioslib.simulator.devicePairCompatibility,
 			simulators: {},
 			teams: {},
 			xcode: {}
@@ -54,16 +49,31 @@ export default class iOSInfoService extends DataServiceDispatcher {
 		 */
 		this.subscriptions = {};
 
+		/**
+		 * A gawked array of `Simulator` instances. When this changes, it triggers a regeneration
+		 * of the final list of simulators.
+		 * @type {Array<Simulator>}
+		 */
+		this.simulators = gawk([]);
+
 		if (cfg.ios) {
 			mergeDeep(ioslib.options, cfg.ios);
 		}
 
-		await this.initCerts();
-		this.initDevices();
-		await this.initKeychains();
-		await this.initProvisioningProfiles();
-		await this.initTeams();
-		await this.initXcodeAndSimulators();
+		await Promise.all([
+			this.initCerts(),
+			this.initDevices(),
+			this.initKeychains(),
+			this.initProvisioningProfiles(),
+			this.initTeams(),
+			this.initXcodes(),
+			this.initSimulators()
+		]);
+
+		const regen = debouncer(() => this.regenerateSimulators());
+		gawk.watch(this.data.xcode, regen);
+		gawk.watch(this.simulators, regen);
+		this.regenerateSimulators();
 	}
 
 	/**
@@ -74,7 +84,6 @@ export default class iOSInfoService extends DataServiceDispatcher {
 	 */
 	async initCerts() {
 		this.data.certs = await ioslib.certs.getCerts(true);
-		this.watchKeychainPaths();
 	}
 
 	/**
@@ -104,6 +113,7 @@ export default class iOSInfoService extends DataServiceDispatcher {
 		this.watch({
 			type: KEYCHAIN_META_FILE,
 			paths: [ ioslib.keychains.keychainMetaFile ],
+			debounce: true,
 			handler: async () => {
 				console.log('Keychain plist changed, refreshing keychains and possibly certs');
 
@@ -129,6 +139,8 @@ export default class iOSInfoService extends DataServiceDispatcher {
 				}
 			}
 		});
+
+		this.watchKeychainPaths();
 	}
 
 	/**
@@ -141,6 +153,7 @@ export default class iOSInfoService extends DataServiceDispatcher {
 		this.watch({
 			type: KEYCHAIN_PATHS,
 			paths: this.data.keychains.map(k => k.path),
+			debounce: true,
 			handler: async () => {
 				console.log('Refreshing certs');
 				gawk.set(this.data.certs, await ioslib.certs.getCerts(true));
@@ -221,17 +234,19 @@ export default class iOSInfoService extends DataServiceDispatcher {
 	 * Retreives the list of teams.
 	 *
 	 * @returns {Promise}
+	 * @access private
 	 */
 	async initTeams() {
 		gawk.set(this.data.teams, await ioslib.teams.getTeams(true));
 	}
 
 	/**
-	 * Finds all Xcode installations.
+	 * Finds all Xcodes and wires up watchers.
 	 *
 	 * @returns {Promise}
+	 * @access private
 	 */
-	async initXcodeAndSimulators() {
+	async initXcodes() {
 		const paths = [ ...ioslib.xcode.xcodeLocations ];
 		const defaultPath = await ioslib.xcode.getDefaultXcodePath();
 		if (defaultPath) {
@@ -284,16 +299,18 @@ export default class iOSInfoService extends DataServiceDispatcher {
 
 		// listen for xcode results
 		this.xcodeDetectEngine.on('results', results => {
-			const obj = {};
+			const xcodes = {};
 			const xcodeIds = new Set(Object.keys(this.data.xcode));
 
 			// convert the array of Xcodes into an object of Xcode ids to the xcode info
 			// also start watching this Xcode's SDKs and simProfiles
 			for (const xcode of results) {
-				obj[xcode.id] = xcode;
+				xcodes[xcode.id] = xcode;
 				xcodeIds.delete(xcode.id);
 
-				if (!this.subscriptions[xcode.id]) {
+				if (!this.subscriptions.hasOwnProperty(xcode.id)) {
+					this.subscriptions[xcode.id] = {};
+
 					const paths = [
 						// sdks
 						path.join(xcode.path, 'Platforms/iPhoneOS.platform/Developer/SDKs'),
@@ -309,6 +326,7 @@ export default class iOSInfoService extends DataServiceDispatcher {
 					this.watch({
 						type: xcode.id,
 						paths,
+						debounce: true,
 						handler() {
 							this.xcodeDetectEngine.rescan();
 						}
@@ -320,64 +338,85 @@ export default class iOSInfoService extends DataServiceDispatcher {
 				this.unwatch(id);
 			}
 
-			gawk.set(this.data.xcode, obj);
+			gawk.set(this.data.xcode, xcodes);
 		});
 
 		// watch the global simulator profiles directory for changes
 		this.watch({
 			type: GLOBAL_SIM_PROFILES,
 			paths: [ ioslib.xcode.globalSimProfilesPath ],
+			debounce: true,
 			handler() {
 				console.log('Global sim profiles directory changed, rescanning Xcodes');
 				this.xcodeDetectEngine.rescan();
 			}
 		});
 
+		return this.xcodeDetectEngine.start();
+	}
+
+	/**
+	 * Finds all simulators and wires up watchers.
+	 *
+	 * @returns {Promise}
+	 * @access private
+	 */
+	async initSimulators() {
 		this.watch({
 			type: CORE_SIMULATOR_DEVICES_PATH,
-			paths: [ ioslib.simulator.getCoreSimulatorDevicesDir() ],
+			paths: [ ioslib.simulator.getDevicesDir() ],
 			depth: 1,
+			debounce: true,
 			handler: async () => {
 				console.log('Detected filesystem change in the CoreSimulator/Devices directory, rescanning simulators');
-				gawk.set(this.data.simulators, await ioslib.simulator.getSimulators(this.data.xcode));
+				gawk.set(this.simulators, await ioslib.simulator.getSimulators({ force: true }));
 			}
 		});
 
-		let initialized = false;
+		const sims = await ioslib.simulator.getSimulators({ force: true });
+		gawk.set(this.simulators, sims);
+	}
 
-		return new Promise((resolve, reject) => {
-			// if xcodes change, then refresh the simulators
-			gawk.watch(this.data.xcode, async () => {
-				console.log('Xcode changed, rescanning simulators');
-				gawk.set(this.data.simulators, await ioslib.simulator.getSimulators(this.data.xcode));
+	/**
+	 * Generates an object of discovered simulators based on the detected Xcodes and simulators.
+	 *
+	 * @access private
+	 */
+	regenerateSimulators() {
+		if (!this.regenerating) {
+			this.regenerating = true;
 
-				if (!initialized) {
-					initialized = true;
-					resolve();
-				}
+			console.log(`Regenerating simulator registry using ${Object.keys(this.data.xcode).length} Xcodes and ${this.simulators.length} simulators`);
+
+			const registry = ioslib.simulator.generateSimulatorRegistry({
+				simulators: this.simulators,
+				xcodes:     this.data.xcode
 			});
 
-			// detect the Xcodes which in turn will detect the simulators
-			this.xcodeDetectEngine.start().catch(reject);
-		});
+			gawk.set(this.data.simulators, registry);
+			this.regenerating = false;
+		}
 	}
 
 	/**
 	 * Subscribes to filesystem events for the specified paths.
 	 *
 	 * @param {Object} params - Various parameters.
-	 * @param {String} params.type - The type of subscription.
-	 * @param {Array.<String>} params.paths - One or more paths to watch.
-	 * @param {Function} params.handler - A callback function to fire when a fs event occurs.
+	 * @param {Boolean} [params.debounce=false] - When `true`, wraps the `handler` with a debouncer.
 	 * @param {Number} [params.depth] - The max depth to recursively watch.
+	 * @param {Function} params.handler - A callback function to fire when a fs event occurs.
+	 * @param {Array.<String>} params.paths - One or more paths to watch.
+	 * @param {String} params.type - The type of subscription.
 	 * @access private
 	 */
-	watch({ type, paths, handler, depth }) {
+	watch({ debounce, depth, handler, paths, type }) {
+		const callback = debounce ? debouncer(handler) : handler;
+
 		for (const path of paths) {
 			const data = { path };
 			if (depth) {
 				data.recursive = true;
-				data.depth = 1;
+				data.depth = depth;
 			}
 
 			appcd
@@ -396,11 +435,11 @@ export default class iOSInfoService extends DataServiceDispatcher {
 								}
 								this.subscriptions[type][data.sid] = 1;
 							} else if (data.type === 'event') {
-								handler(data.message);
+								callback(data.message);
 							}
 						})
 						.on('end', () => {
-							if (sid) {
+							if (sid && this.subscriptions[type]) {
 								delete this.subscriptions[type][sid];
 							}
 						});
@@ -431,7 +470,7 @@ export default class iOSInfoService extends DataServiceDispatcher {
 			delete this.subscriptions[type][sid];
 		}
 
-		if (!Object.keys(this.subscriptions[type])) {
+		if (!Object.keys(this.subscriptions[type]).length) {
 			delete this.subscriptions[type];
 		}
 	}

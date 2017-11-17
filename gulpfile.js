@@ -1164,15 +1164,15 @@ function renderPackages(results) {
 	const cyclicDepCount = cyclicPkgs.length;
 	if (cyclicDepCount) {
 		for (const name of cyclicPkgs.sort()) {
-			console.log(name);
+			console.log(` ${name}`);
 			for (const deps of results.cyclic[name]) {
-				console.log('  > ' + deps.map((s, i, a) => i + 1 === a.length ? red(s) : s).join(' > '));
+				console.log('   > ' + deps.map((s, i, a) => i + 1 === a.length ? red(s) : s).join(' > '));
 			}
 			console.log();
 		}
-		console.log(red(`Found ${cyclicDepCount} package${cyclicDepCount === 1 ? '' : 's'} with cyclic dependencies!`));
+		console.log(red(` Found ${cyclicDepCount} package${cyclicDepCount === 1 ? '' : 's'} with cyclic dependencies!`));
 	} else {
-		console.log('No cyclic dependencies found');
+		console.log(' No cyclic dependencies found');
 	}
 	console.log();
 

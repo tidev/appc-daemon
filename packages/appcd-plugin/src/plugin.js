@@ -117,6 +117,7 @@ export default class Plugin extends EventEmitter {
 			if (typeof pkgJson.name !== 'string') {
 				throw new PluginError('Invalid "name" property in %s', pkgJsonFile);
 			}
+			this.packageName = pkgJson.name;
 			this.name = slug(pkgJson.name);
 		}
 
@@ -154,6 +155,9 @@ export default class Plugin extends EventEmitter {
 			if (appcdPlugin.name) {
 				if (typeof appcdPlugin.name !== 'string') {
 					throw new PluginError('Invalid "name" property in the "appcd-plugin" section of %s', pkgJsonFile);
+				}
+				if (!this.packageName) {
+					this.packageName = appcdPlugin.name;
 				}
 				this.name = slug(appcdPlugin.name);
 			}

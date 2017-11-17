@@ -133,7 +133,8 @@ export async function cache(name, force, callback) {
 }
 
 /**
- * Prevents a function from being called too many times.
+ * Prevents a function from being called too many times. This function returns a function that can
+ * be used in a promise chain.
  *
  * @param {Function} fn - The function to debounce.
  * @param {Number} [wait=200] - The number of milliseconds to wait between calls to the returned
@@ -145,8 +146,10 @@ export function debounce(fn, wait = 200) {
 	wait = Math.max(~~wait, 0);
 
 	let resolveFn;
-	const promise = new Promise(resolve => {
+	let rejectFn;
+	const promise = new Promise((resolve, reject) => {
 		resolveFn = resolve;
+		rejectFn = reject;
 	});
 
 	return function debouncer(...args) {
@@ -155,8 +158,10 @@ export function debounce(fn, wait = 200) {
 
 		timer = setTimeout(() => {
 			timer = null;
-			fn.apply(ctx, args);
-			resolveFn();
+			Promise.resolve()
+				.then(() => fn.apply(ctx, args))
+				.then(resolveFn)
+				.catch(rejectFn);
 		}, wait);
 
 		return promise;

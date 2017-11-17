@@ -60,7 +60,7 @@ export default class Detector extends EventEmitter {
 
 			if (results[dir]) {
 				log('      Already found a result for this path');
-				return true;
+				return;
 			}
 
 			const result = await opts.checkDir(dir);
@@ -80,7 +80,8 @@ export default class Detector extends EventEmitter {
 			log('    Walking subdirectories');
 			for (const name of fs.readdirSync(dir)) {
 				const subdir = real(path.join(dir, name));
-				if (await checkDir(subdir, depth - 1) || (Object.keys(results).length && !opts.multiple)) {
+				await checkDir(subdir, depth - 1);
+				if (Object.keys(results).length && !opts.multiple) {
 					return;
 				}
 			}
