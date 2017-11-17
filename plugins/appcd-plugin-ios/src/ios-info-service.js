@@ -5,7 +5,7 @@ import path from 'path';
 import * as ioslib from 'ioslib';
 
 import { DataServiceDispatcher } from 'appcd-dispatcher';
-import { get, mergeDeep } from 'appcd-util';
+import { mergeDeep } from 'appcd-util';
 
 /**
  * Constants to identify the subscription id list.
@@ -233,7 +233,7 @@ export default class iOSInfoService extends DataServiceDispatcher {
 	 */
 	async initXcodeAndSimulators() {
 		const paths = [ ...ioslib.xcode.xcodeLocations ];
-		const defaultPath = await ioslib.xcode.getDefaultXcodePath(get(this.config, 'ios.executables.xcodeselect'));
+		const defaultPath = await ioslib.xcode.getDefaultXcodePath();
 		if (defaultPath) {
 			paths.unshift(defaultPath);
 		}
@@ -249,7 +249,7 @@ export default class iOSInfoService extends DataServiceDispatcher {
 			depth: 1,
 			multiple: true,
 			paths,
-			processResults: async (results, engine) => {
+			async processResults(results, engine) {
 				if (results.length > 1) {
 					results.sort((a, b) => {
 						let r = version.compare(a.version, b.version);
@@ -261,7 +261,7 @@ export default class iOSInfoService extends DataServiceDispatcher {
 				}
 
 				if (results.length) {
-					const defaultPath = await ioslib.xcode.getDefaultXcodePath(get(this.config, 'ios.executables.xcodeselect'));
+					const defaultPath = await ioslib.xcode.getDefaultXcodePath();
 					let foundDefault = false;
 					if (defaultPath) {
 						for (const xcode of results) {
@@ -347,9 +347,9 @@ export default class iOSInfoService extends DataServiceDispatcher {
 
 		return new Promise((resolve, reject) => {
 			// if xcodes change, then refresh the simulators
-			gawk.watch(this.data.xcode, async (xcodeInfo) => {
+			gawk.watch(this.data.xcode, async () => {
 				console.log('Xcode changed, rescanning simulators');
-				gawk.set(this.data.simulators, await ioslib.simulator.getSimulators(xcodeInfo));
+				gawk.set(this.data.simulators, await ioslib.simulator.getSimulators(this.data.xcode));
 
 				if (!initialized) {
 					initialized = true;
