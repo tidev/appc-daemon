@@ -241,6 +241,18 @@ module.exports = (opts) => {
 		}
 	}
 
+	gulp.task('watch', cb => {
+		gulp.watch(process.cwd() + '/src/*.js', [ 'build' ], function(event) {
+			console.log('File ' + event.path + ' was ' + event.type + ', running tasks...');
+		});
+	});
+
+	gulp.task('watch-test', cb => {
+		gulp.watch([ process.cwd() + '/src/*.js', process.cwd() + '/test/*.js' ], [ 'test' ], function(event) {
+			console.log('File ' + event.path + ' was ' + event.type + ', running tasks...');
+		});
+	});
+
 	function resolveModule(name) {
 		let dir = path.join(appcdGulpNodeModulesPath, name);
 		if (fs.existsSync(dir)) {
