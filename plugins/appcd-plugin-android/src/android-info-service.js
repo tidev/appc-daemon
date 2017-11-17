@@ -6,7 +6,7 @@ import * as androidlib from 'androidlib';
 
 import { bat, cmd, exe } from 'appcd-subprocess';
 import { DataServiceDispatcher } from 'appcd-dispatcher';
-import { get, mergeDeep } from 'appcd-util';
+import { debounce, get, mergeDeep } from 'appcd-util';
 
 /**
  * The Android info service.
@@ -40,9 +40,8 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 		}
 
 		await this.initDevices();
-		await this.initEmulators();
 		await this.initNDKs();
-		await this.initSDKs();
+		await this.initSDKsAndEmulators();
 	}
 
 	/**
@@ -63,28 +62,6 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 					console.log('Track devices returned error: %s', err.message);
 					reject(err);
 				});
-		});
-	}
-
-	/**
-	 * Initializes the fs watcher Android emulators and starts the initial scan.
-	 *
-	 * @returns {Promise}
-	 * @access private
-	 */
-	async initEmulators() {
-		const emulators = await androidlib.emulators.getEmulators({ force: true });
-		gawk.set(this.data.emulators, emulators);
-
-		this.watch({
-			type: 'avd',
-			depth: 1,
-			paths: [ androidlib.avd.getAvdDir() ],
-			handler: async () => {
-				console.log('Rescanning Android emulators...');
-				const emulators = await androidlib.emulators.getEmulators({ force: true });
-				gawk.set(this.data.emulators, emulators);
-			}
 		});
 	}
 
@@ -150,7 +127,7 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 	 * @returns {Promise}
 	 * @access private
 	 */
-	async initSDKs() {
+	async initSDKsAndEmulators() {
 		const paths = [ get(this.config, 'android.sdkPath'), ...androidlib.sdk.sdkLocations[process.platform] ];
 
 		this.sdkDetectEngine = new DetectEngine({
@@ -207,15 +184,31 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 			gawk.set(this.data.sdk, results);
 		});
 
-		// if sdks change, then refresh the emulators
-		// gawk.watch(this.data.sdk, async (obj, src) => {
-		// TODO: redetect emulators if the default sdk changed
-		// console.log('SDKs changed');
-		// console.log(src);
-		// });
+		let initialized = false;
 
-		// detect the sdks which in turn will detect the emulators
-		await this.sdkDetectEngine.start();
+		this.watch({
+			type: 'avd',
+			depth: 1,
+			paths: [ androidlib.avd.getAvdDir() ],
+			handler: async () => {
+				console.log('Rescanning Android emulators...');
+				gawk.set(this.data.emulators, await androidlib.emulators.getEmulators({ force: true, sdks: this.data.sdk }));
+			}
+		});
+
+		return new Promise((resolve, reject) => {
+			// if xcodes change, then refresh the simulators
+			gawk.watch(this.data.sdk, async () => {
+				console.log('AndroidSDK changed, rescanning emulators');
+				gawk.set(this.data.emulators, await androidlib.emulators.getEmulators({ force: true, sdks: this.data.sdk }));
+
+				if (!initialized) {
+					initialized = true;
+					resolve();
+				}
+			});
+			this.sdkDetectEngine.start().catch(reject);
+		});
 	}
 
 	/**

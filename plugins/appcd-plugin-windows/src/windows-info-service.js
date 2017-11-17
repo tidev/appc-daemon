@@ -22,7 +22,8 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 			powershell: {},
 			windows: {},
 			visualstudio: {},
-			windowsphone: {}
+			windowsphone: {},
+			selectedVisualStudio: {}
 		});
 
 		this.timers = {};
@@ -145,6 +146,11 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 				if (err) {
 					reject(err);
 				} else {
+					for (const visualstudio in results.visualstudio) {
+						if (results.visualstudio[visualstudio].selected) {
+							gawk.set(this.data.selectedVisualStudio, results.visualstudio[visualstudio]);
+						}
+					}
 					resolve(results.visualstudio);
 				}
 			});
