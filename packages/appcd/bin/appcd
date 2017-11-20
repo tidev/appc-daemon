@@ -1,8 +1,3 @@
 #!/usr/bin/env node
 
-try {
-	require('../dist/cli');
-} catch (e) {
-	console.error('appcd not built');
-	process.exit(process.argv.includes('--graceful') ? 0 : 1);
-}
+require('../dist/cli');
