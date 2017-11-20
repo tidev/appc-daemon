@@ -141,7 +141,7 @@ export function startServer({ cfg, argv }) {
 		args.push('--config-file', configFile);
 	}
 
-	process.env.APPCD_BOOTSTRAP = appcdVersion;
+	process.env.APPCD = appcdVersion;
 	if (debug && !argv.colors) {
 		process.env.APPCD_NO_COLORS = 1;
 	}
