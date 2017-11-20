@@ -14,7 +14,7 @@ import WebServer from 'appcd-http';
 import WebSocketSession from './websocket-session';
 
 import { expandPath } from 'appcd-path';
-import { arch as getArch, getActiveHandles } from 'appcd-util';
+import { arch as getArch, arrayify, get, getActiveHandles } from 'appcd-util';
 import { i18n } from 'appcd-response';
 import { isDir, isFile } from 'appcd-fs';
 import { load as loadConfig } from 'appcd-config';
@@ -135,6 +135,9 @@ export default class Server {
 			logger.debug('Creating home directory %s', homeDir);
 			fs.mkdirsSync(homeDir);
 		}
+
+		// import any Titanium CLI configuration settings
+		await this.importTiConfig();
 
 		// init the telemetry system
 		this.systems.telemetry = new Telemetry(this.config);
@@ -290,10 +293,104 @@ export default class Server {
 				return pid;
 			} catch (e) {
 				// stale pid file
-				logger.info('%s was stale', highlight(pidFile));
+				logger.log('%s was stale', highlight(pidFile));
 				fs.unlinkSync(pidFile);
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * Performs a one-time import of the Titanium CLI config file.
+	 *
+	 * @returns {Promise}
+	 * @access private
+	 */
+	async importTiConfig() {
+		if (this.config.get('titanium.configImported')) {
+			logger.log('Titanium CLI config already imported');
+			return;
+		}
+
+		const tiConf = expandPath('~', '.titanium', 'config.json');
+		if (!isFile(tiConf)) {
+			logger.log('Titanium CLI config not found, skipping import');
+			return;
+		}
+
+		const json = fs.readJsonSync(tiConf, { throws: false });
+		if (!json || typeof json !== 'object') {
+			logger.log('Titanium CLI config is invalid, skipping import');
+			return;
+		}
+
+		// start importing settings
+		this.config.set('titanium.configImported', true);
+
+		const copySetting = (src, dest, type) => {
+			if (this.config.get(dest)) {
+				return;
+			}
+
+			let value = get(json, src);
+			if (!value) {
+				return;
+			}
+
+			switch (type) {
+				case 'number':
+					value = parseInt(value, 10);
+					if (isNaN(value)) {
+						return;
+					}
+					break;
+
+				case 'array':
+					value = arrayify(value, true);
+					if (!value.length) {
+						return;
+					}
+					break;
+			}
+
+			logger.log('Importing %s => %s: %s', highlight(src), highlight(dest), highlight(value));
+			this.config.set(dest, value);
+		};
+
+		copySetting('android.adb.port',                  'android.adb.port',                'number');
+		copySetting('android.appInstallTimeout',         'android.adb.install.timeout',     'number');
+		copySetting('android.appStartTimeout',           'android.adb.start.timeout',       'number');
+		copySetting('android.appStartRetryInterval',     'android.adb.start.retryInterval', 'number');
+		copySetting('android.emulatorStartTimeout',      'android.emulator.start.timeout',  'number');
+		copySetting('android.executables.aapt',          'android.executables.aapt');
+		copySetting('android.executables.adb',           'android.executables.adb');
+		copySetting('android.executables.aidl',          'android.executables.aidl');
+		copySetting('android.executables.dx',            'android.executables.dx');
+		copySetting('android.executables.emulator',      'android.executables.emulator');
+		copySetting('android.executables.ndkbuild',      'android.executables.ndkbuild');
+		copySetting('android.executables.zipalign',      'android.executables.zipalign');
+		copySetting('android.ndkPath',                   'android.ndk.searchPaths',         'array');
+		copySetting('android.sdkPath',                   'android.sdk.searchPaths',         'array');
+
+		copySetting('genymotion.executables.genymotion', 'android.genymotion.executables.genymotion');
+		copySetting('genymotion.executables.player',     'android.genymotion.executables.player');
+		copySetting('genymotion.executables.vboxmanage', 'android.virtualbox.executables.vboxmanage');
+		copySetting('genymotion.home',                   'android.genymotion.home');
+		copySetting('genymotion.path',                   'android.genymotion.searchPaths',  'array');
+
+		copySetting('java.executables.jarsigner',        'java.executables.jarsigner');
+		copySetting('java.executables.java',             'java.executables.java');
+		copySetting('java.executables.javac',            'java.executables.javac');
+		copySetting('java.executables.keytool',          'java.executables.keytool');
+		copySetting('java.home',                         'java.home');
+
+		copySetting('osx.executables.security',          'ios.executables.security');
+		copySetting('osx.executables.xcodeSelect',       'ios.executables.xcodeSelect');
+		copySetting('paths.xcode',                       'ios.xcode.searchPaths',           'array');
+
+		const home = this.config.get('home');
+		if (home) {
+			await this.config.save(expandPath(home, 'config.json'));
+		}
 	}
 }
