@@ -435,6 +435,12 @@ gulp.task('start-daemon', () => {
 
 gulp.task('watch-only', cb => {
 	const watchers = [
+		gulp.watch(__dirname + '/packages/appcd/bin/*', evt => {
+			gutil.log('Detected change: ' + cyan(evt.path));
+			stopDaemon();
+			startDaemon();
+		}),
+
 		gulp.watch(__dirname + '/packages/*/src/**/*.js', evt => {
 			// FIXME: There's almost certainly a better way of doing this than replacing \\ with /
 			evt.path = evt.path.replace(/\\/g, '/');
