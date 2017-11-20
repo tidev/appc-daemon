@@ -2,6 +2,7 @@ import gawk from 'gawk';
 import windowslib from 'windowslib';
 
 import { DataServiceDispatcher } from 'appcd-dispatcher';
+import { get } from 'appcd-util';
 
 /**
  * The Windows info service.
@@ -19,7 +20,6 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 		this.data = gawk({
 			devices: [],
 			emulators: {},
-			powershell: {},
 			windows: {},
 			visualstudio: {},
 			windowsphone: {},
@@ -28,14 +28,14 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 
 		this.timers = {};
 
-		// TODO: Allow config override for the timing?
+		// wire up Visual Studio detection first so that we can use its result to know if we should query the other thing
+		await this.wireupDetection('visual-studio',    get(cfg, 'visualstudio.pollInterval') || 60000 * 10, () => this.detectVisualStudios());
+
 		await Promise.all([
-			this.wireupDetection('devices',      2500,       () => this.detectDevices()),
-			this.wireupDetection('emulators',    60000 * 5,  () => this.detectEmulators()),
-			this.wireupDetection('powershell',   60000,      () => this.detectPowershell()),
-			this.wireupDetection('visualstudio', 60000 * 10, () => this.detectVisualStudios()),
-			this.wireupDetection('windows',      60000 / 2,  () => this.detectWindows()),
-			this.wireupDetection('windowsphone', 60000 / 2,  () => this.detectWindowsPhone())
+			this.wireupDetection('devices',            get(cfg, 'device.pollInterval')       || 2500,       () => this.detectDevices()),
+			this.wireupDetection('emulators',          get(cfg, 'emulators.pollInterval')    || 60000 * 5,  () => this.detectEmulators()),
+			this.wireupDetection('windows-sdks',       get(cfg, 'windows.pollInterval')      || 60000 / 2,  () => this.detectWindowsSDKs()),
+			this.wireupDetection('windows-phone-sdks', get(cfg, 'windowsphone.pollInterval') || 60000 / 2,  () => this.detectWindowsPhone())
 		]);
 	}
 
@@ -63,8 +63,10 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 	wireupDetection(type, interval, callback) {
 		return callback()
 			.then(result => {
-				console.log(`Updating data for ${type}`);
-				gawk.set(this.data[type], result);
+				if (result) {
+					console.log(`Updating data for ${type}`);
+					gawk.set(this.data[type], result);
+				}
 			})
 			.catch(err => {
 				console.log(err);
@@ -77,6 +79,16 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 	}
 
 	/**
+	 * Checks if there are any Visual Studios installed.
+	 *
+	 * @returns {Boolean}
+	 * @access private
+	 */
+	haveVisualStudio() {
+		return Object.keys(this.data.visualstudio).length > 0;
+	}
+
+	/**
 	 * Detect Windows Phone devices.
 	 *
 	 * @returns {Promise<Array.<Object>>}
@@ -84,6 +96,10 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 	 */
 	detectDevices() {
 		return new Promise((resolve, reject) => {
+			if (!this.haveVisualStudio()) {
+				return resolve();
+			}
+
 			console.log('Detecting devices info');
 			windowslib.device.detect({ bypassCache: true }, (err, results) => {
 				if (err) {
@@ -103,31 +119,16 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 	 */
 	detectEmulators() {
 		return new Promise((resolve, reject) => {
+			if (!this.haveVisualStudio()) {
+				return resolve();
+			}
+
 			console.log('Detecting emulator info');
 			windowslib.emulator.detect({ bypassCache: true }, (err, results) => {
 				if (err) {
 					reject(err);
 				} else {
 					resolve(results.emulators);
-				}
-			});
-		});
-	}
-
-	/**
-	 * Detect Powershell information.
-	 *
-	 * @returns {Promise<Object>}
-	 * @access private
-	 */
-	detectPowershell() {
-		return new Promise((resolve, reject) => {
-			console.log('Detecting powershell info');
-			windowslib.env.detect({ bypassCache: true }, (err, results) => {
-				if (err) {
-					reject(err);
-				} else {
-					resolve(results.powershell);
 				}
 			});
 		});
@@ -144,15 +145,24 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 			console.log('Detecting visualstudio info');
 			windowslib.visualstudio.detect({ bypassCache: true }, (err, results) => {
 				if (err) {
-					reject(err);
-				} else {
-					for (const visualstudio in results.visualstudio) {
+					return reject(err);
+				}
+
+				let found = false;
+				if (results.visualstudio) {
+					for (const visualstudio of Object.keys(results.visualstudio)) {
 						if (results.visualstudio[visualstudio].selected) {
+							found = true;
 							gawk.set(this.data.selectedVisualStudio, results.visualstudio[visualstudio]);
+							break;
 						}
 					}
-					resolve(results.visualstudio);
 				}
+				if (!found) {
+					this.data.selectedVisualStudio = null;
+				}
+
+				resolve(results.visualstudio);
 			});
 		});
 	}
@@ -163,7 +173,7 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 	 * @returns {Promise<Object>}
 	 * @access private
 	 */
-	detectWindows() {
+	detectWindowsSDKs() {
 		return new Promise((resolve, reject) => {
 			console.log('Detecting windows store info');
 			windowslib.winstore.detect({ bypassCache: true }, (err, results) => {
