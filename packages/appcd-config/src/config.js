@@ -554,8 +554,6 @@ export default class Config {
 	 * @access public
 	 */
 	getUserConfig() {
-		log(this.userDefined);
-
 		const keys = Array.from(this.userDefined.values()).sort();
 		const result = {};
 
