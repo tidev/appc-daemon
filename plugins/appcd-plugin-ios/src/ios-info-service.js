@@ -17,6 +17,7 @@ const KEYCHAIN_PATHS              = 2;
 const PROVISIONING_PROFILES_DIR   = 3;
 const GLOBAL_SIM_PROFILES         = 4;
 const CORE_SIMULATOR_DEVICES_PATH = 5;
+const XCODE_SELECT_LINK           = 6;
 
 /**
  * The iOS info service.
@@ -280,7 +281,7 @@ export default class iOSInfoService extends DataServiceDispatcher {
 					let foundDefault = false;
 					if (defaultPath) {
 						for (const xcode of results) {
-							if (!foundDefault && defaultPath === xcode.path) {
+							if (!foundDefault && defaultPath === xcode.xcodeapp) {
 								xcode.default = true;
 								foundDefault = true;
 							} else {
@@ -346,8 +347,18 @@ export default class iOSInfoService extends DataServiceDispatcher {
 			type: GLOBAL_SIM_PROFILES,
 			paths: [ ioslib.xcode.globalSimProfilesPath ],
 			debounce: true,
-			handler() {
+			handler: () => {
 				console.log('Global sim profiles directory changed, rescanning Xcodes');
+				this.xcodeDetectEngine.rescan();
+			}
+		});
+
+		this.watch({
+			type: XCODE_SELECT_LINK,
+			paths: [ '/private/var/db/xcode_select_link' ],
+			debounce: true,
+			handler: () => {
+				console.log('xcode-select link changed, rescanning Xcodes');
 				this.xcodeDetectEngine.rescan();
 			}
 		});

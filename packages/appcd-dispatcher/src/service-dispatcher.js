@@ -170,10 +170,11 @@ export default class ServiceDispatcher {
 			if (descriptor.subs.has(subscriptionId)) {
 				logger.log(`Stream ${err ? 'errored' : 'ended'}, cleaning up`);
 				descriptor.subs.delete(subscriptionId);
-				this.unsubscribe(ctx);
 			} else {
 				logger.log(`Stream ${err ? 'errored' : 'ended'}, subscription already cleaned up`);
 			}
+
+			this.unsubscribe(ctx);
 		};
 
 		ctx.response.once('end', cleanup);
@@ -200,7 +201,7 @@ export default class ServiceDispatcher {
 		if (typeof this.instance.onSubscribe === 'function') {
 			this.instance.onSubscribe({
 				ctx,
-				publish: message => {
+				publish(message) {
 					ctx.response.write({
 						message,
 						sid: subscriptionId,
