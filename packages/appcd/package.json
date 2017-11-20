@@ -20,6 +20,7 @@
     "build": "gulp build",
     "coverage": "gulp coverage",
     "docs": "gulp docs",
+    "postinstall": "node bin/appcd stop",
     "prepare": "gulp build",
     "test": "gulp test"
   },
