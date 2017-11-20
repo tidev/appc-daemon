@@ -181,6 +181,21 @@ androidlib@^2.0.0:
     simple-plist "^0.2.1"
     source-map-support "^0.5.0"
 
+androidlib@^2.0.2:
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/androidlib/-/androidlib-2.0.2.tgz#50f1973ac1bcdcf79093f8fa2b80e8f7d1460f90"
+  dependencies:
+    appcd-fs "^1.0.0-12"
+    appcd-logger "^1.0.0-12"
+    appcd-path "^1.0.0-12"
+    appcd-subprocess "^1.0.0-12"
+    appcd-util "^1.0.0-12"
+    appcd-winreg "^1.0.0-12"
+    cli-kit "^0.0.7"
+    fs-extra "^4.0.2"
+    simple-plist "^0.2.1"
+    source-map-support "^0.5.0"
+
 ansi-align@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/ansi-align/-/ansi-align-2.0.0.tgz#c36aeccba563b89ceb556f3690f0b1d9e3547f7f"
