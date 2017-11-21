@@ -29,13 +29,13 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 		this.timers = {};
 
 		// wire up Visual Studio detection first so that we can use its result to know if we should query the other thing
-		await this.wireupDetection('visual-studio',    get(cfg, 'visualstudio.pollInterval') || 60000 * 10, () => this.detectVisualStudios());
+		await this.wireupDetection('visualstudio',    get(cfg, 'visualstudio.pollInterval') || 60000 * 10, () => this.detectVisualStudios());
 
 		await Promise.all([
 			this.wireupDetection('devices',            get(cfg, 'device.pollInterval')       || 2500,       () => this.detectDevices()),
 			this.wireupDetection('emulators',          get(cfg, 'emulators.pollInterval')    || 60000 * 5,  () => this.detectEmulators()),
-			this.wireupDetection('windows-sdks',       get(cfg, 'windows.pollInterval')      || 60000 / 2,  () => this.detectWindowsSDKs()),
-			this.wireupDetection('windows-phone-sdks', get(cfg, 'windowsphone.pollInterval') || 60000 / 2,  () => this.detectWindowsPhone())
+			this.wireupDetection('windows',       get(cfg, 'windows.pollInterval')      || 60000 / 2,  () => this.detectWindowsSDKs()),
+			this.wireupDetection('windowsphone', get(cfg, 'windowsphone.pollInterval') || 60000 / 2,  () => this.detectWindowsPhone())
 		]);
 	}
 
