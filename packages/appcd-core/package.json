@@ -35,8 +35,7 @@
     "cli-kit": "^0.0.8",
     "fs-extra": "^4.0.2",
     "gawk": "^4.4.4",
-    "msgpack-lite": "^0.1.26",
-    "windowslib": "^0.6.0"
+    "msgpack-lite": "^0.1.26"
   },
   "devDependencies": {
     "appcd-gulp": "^1.0.0-13",
