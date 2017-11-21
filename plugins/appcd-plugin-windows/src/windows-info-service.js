@@ -65,7 +65,20 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 			.then(result => {
 				if (result) {
 					console.log(`Updating data for ${type}`);
-					gawk.set(this.data[type], result);
+					switch (type) {
+						case 'visual-studio':
+							gawk.set(this.data.visualstudio, result);
+							break;
+						case 'windows-sdks':
+							gawk.set(this.data.windows, result);
+							break;
+						case 'windows-phone-sdks':
+							gawk.set(this.data.windowsphone, result);
+							break;
+						default:
+							gawk.set(this.data[type], result);
+							break;
+					}
 				}
 			})
 			.catch(err => {
