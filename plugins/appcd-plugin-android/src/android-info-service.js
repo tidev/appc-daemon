@@ -198,7 +198,7 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 		});
 
 		return new Promise((resolve, reject) => {
-			// if xcodes change, then refresh the simulators
+			// if sdks change, then refresh the simulators
 			gawk.watch(this.data.sdk, async () => {
 				console.log('AndroidSDK changed, rescanning emulators');
 				gawk.set(this.data.emulators, await androidlib.emulators.getEmulators({ force: true, sdks: this.data.sdk }));
@@ -210,9 +210,10 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 			});
 
 			this.sdkDetectEngine.start()
-				.then(results => {
+				.then(async results => {
 					if (!initialized && results.length === 0) {
 						initialized = true;
+						gawk.set(this.data.emulators, await androidlib.emulators.getEmulators({ force: true, sdks: this.data.sdk }));
 						resolve();
 					}
 				})
