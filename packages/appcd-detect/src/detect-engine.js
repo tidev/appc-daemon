@@ -32,12 +32,6 @@ export default class DetectEngine extends EventEmitter {
 	detectors = new Map();
 
 	/**
-	 * A random id that identifies this detect engine instance when creating tailgates.
-	 * @type {String}
-	 */
-	id = randomBytes(4);
-
-	/**
 	 * A cleaned up version of the options passed into the detect engine constructor.
 	 * @type {Object}
 	 */
@@ -77,6 +71,7 @@ export default class DetectEngine extends EventEmitter {
 	 * prior to searching for the executable, but then applied to the result.
 	 * @param {Boolean} [opts.multiple=false] - When true, the scanner will continue to scan paths
 	 * even after a result has been found.
+	 * @param {String} [opts.name] - A name to prepend to the detect engine instance for logging.
 	 * @param {String|Array<String>|Set} [opts.paths] - One or more global search paths to search.
 	 * @param {Function} [opts.processResults] - A function that is called after the scanning is
 	 * complete and the results may be modified.
@@ -143,6 +138,19 @@ export default class DetectEngine extends EventEmitter {
 
 		this.opts = opts;
 
+		const name = (opts.name || '').trim();
+		const id = randomBytes(4);
+
+		/**
+		 * A random id that identifies this detect engine instance when creating tailgates.
+		 * @type {String}
+		 */
+		this.id = (name ? `<${name}:${id}>` : `<${id}>`);
+
+		/**
+		 * The scoped detect engine log instance.
+		 * @type {SnoopLogg}
+		 */
 		this.logger = appcdLogger(`appcd:detect:${this.id}`);
 
 		// we need to have at least one 'error' handler
@@ -287,11 +295,10 @@ export default class DetectEngine extends EventEmitter {
 	async scan({ defaultPath, searchPaths }) {
 		const tailgateId = `appcd-detect/engine/${this.id}`;
 
-		this.logger.log('scan()');
-		this.logger.log(`  Entering scan tailgate: ${highlight(tailgateId)}`);
-
 		await tailgate(tailgateId, async () => {
+			this.logger.log('scan()');
 			this.logger.log('  id:',           highlight(this.id));
+			this.logger.log('  tailgate:',     highlight(tailgateId));
 			this.logger.log('  multiple:',     highlight(!!this.opts.multiple));
 			this.logger.log('  recursive:',    highlight(!!this.opts.recursive));
 			this.logger.log('  redetect:',     highlight(!!this.opts.redetect));
@@ -340,9 +347,9 @@ export default class DetectEngine extends EventEmitter {
 			this.logger.log(pluralize(`  Scanning complete, found ${highlight(Object.keys(results).length)} item`, Object.keys(results).length));
 
 			await this.processResults([].concat.apply([], Object.values(results)));
-		});
 
-		this.logger.log('  Exiting scan tailgate');
+			this.logger.log('  Exiting scan tailgate');
+		});
 	}
 
 	/**

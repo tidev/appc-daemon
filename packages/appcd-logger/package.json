@@ -16,7 +16,7 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "snooplogg": "^1.9.0",
+    "snooplogg": "^1.9.1",
     "source-map-support": "^0.5.0"
   },
   "devDependencies": {

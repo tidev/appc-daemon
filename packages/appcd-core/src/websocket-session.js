@@ -124,9 +124,9 @@ export default class WebSocketSession {
 				if (response instanceof Readable) {
 					// we have a stream
 
-					// listen for the WebSocket being closed and close the response stream so that
+					// listen for the WebSocket to end, then end the response stream so that
 					// whatever is writing to the stream knows that the other end has closed
-					this.ws.once('close', () => response.end());
+					this.ws.once('end', () => response.end());
 
 					// track if this stream is a pubsub stream so we know to send the `fin`
 					let pubsub = false;
