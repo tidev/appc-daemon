@@ -32,11 +32,14 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 		await this.wireupDetection('visual-studio',    get(cfg, 'visualstudio.pollInterval') || 60000 * 10, () => this.detectVisualStudios());
 
 		await Promise.all([
-			this.wireupDetection('devices',            get(cfg, 'device.pollInterval')       || 2500,       () => this.detectDevices()),
 			this.wireupDetection('emulators',          get(cfg, 'emulators.pollInterval')    || 60000 * 5,  () => this.detectEmulators()),
 			this.wireupDetection('windows-sdks',       get(cfg, 'windows.pollInterval')      || 60000 / 2,  () => this.detectWindowsSDKs()),
 			this.wireupDetection('windows-phone-sdks', get(cfg, 'windowsphone.pollInterval') || 60000 / 2,  () => this.detectWindowsPhone())
 		]);
+
+		// wire up devices after the rest to avoid DAEMON-173 where emulator and
+		// device detect functions attempt to build and write wptool at the same time
+		await this.wireupDetection('devices',          get(cfg, 'device.pollInterval')       || 2500,       () => this.detectDevices());
 	}
 
 	/**
