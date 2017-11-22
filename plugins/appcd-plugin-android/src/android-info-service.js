@@ -145,7 +145,7 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 			env:      [ 'ANDROID_SDK', 'ANDROID_SDK_ROOT' ],
 			exe:      [ `../../adb${exe}`, `../../android${bat}` ],
 			multiple: true,
-			name:     'android:ndk',
+			name:     'android:sdk',
 			paths,
 			processResults: async (results, engine) => {
 				// loop over all of the new sdks and set default version
