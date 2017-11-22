@@ -221,6 +221,7 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 							const abis = [];
 							if (item.abis) {
 								for (const type in item.abis) {
+									/* eslint-disable max-depth */
 									for (const abi of item.abis[type]) {
 										if (abis.indexOf(abi) === -1) {
 											abis.push(abi);
@@ -228,6 +229,7 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 									}
 								}
 							}
+
 							const info = {
 								id:          item.sdk,
 								abis:        abis,

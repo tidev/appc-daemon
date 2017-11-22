@@ -178,6 +178,7 @@ gulp.task('build', [ 'cyclic' ], () => {
 
 gulp.task('docs', () => {
 	const Docma = require('docma');
+	// Docma.create()
 });
 
 /*
