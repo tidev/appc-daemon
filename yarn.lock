@@ -166,17 +166,17 @@ amdefine@>=0.0.4:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/amdefine/-/amdefine-1.0.1.tgz#4a5282ac164729e93619bcfd3ad151f817ce91f5"
 
-androidlib@^2.0.2:
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/androidlib/-/androidlib-2.0.2.tgz#50f1973ac1bcdcf79093f8fa2b80e8f7d1460f90"
+androidlib@^2.0.4:
+  version "2.0.4"
+  resolved "https://registry.yarnpkg.com/androidlib/-/androidlib-2.0.4.tgz#54aa819eb99f7d2202d700caa327eb9989cea6f2"
   dependencies:
-    appcd-fs "^1.0.0-12"
-    appcd-logger "^1.0.0-12"
-    appcd-path "^1.0.0-12"
-    appcd-subprocess "^1.0.0-12"
-    appcd-util "^1.0.0-12"
-    appcd-winreg "^1.0.0-12"
-    cli-kit "^0.0.7"
+    appcd-fs "^1.0.0-15"
+    appcd-logger "^1.0.0-15"
+    appcd-path "^1.0.0-15"
+    appcd-subprocess "^1.0.0-15"
+    appcd-util "^1.0.0-15"
+    appcd-winreg "^1.0.0-15"
+    cli-kit "^0.0.8"
     fs-extra "^4.0.2"
     simple-plist "^0.2.1"
     source-map-support "^0.5.0"
@@ -1306,14 +1306,6 @@ cli-cursor@^2.1.0:
   resolved "https://registry.yarnpkg.com/cli-cursor/-/cli-cursor-2.1.0.tgz#b35dac376479facc3e94747d41d0d0f5238ffcb5"
   dependencies:
     restore-cursor "^2.0.0"
-
-cli-kit@^0.0.7:
-  version "0.0.7"
-  resolved "https://registry.yarnpkg.com/cli-kit/-/cli-kit-0.0.7.tgz#318c92ce7e12ede9e7f58c551b8f785acd7a3be7"
-  dependencies:
-    hook-emitter "^2.1.0"
-    snooplogg "^1.8.0"
-    source-map-support "^0.5.0"
 
 cli-kit@^0.0.8:
   version "0.0.8"
@@ -3619,15 +3611,15 @@ invert-kv@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/invert-kv/-/invert-kv-1.0.0.tgz#104a8e4aaca6d3d8cd157a8ef8bfab2d7a3ffdb6"
 
-ioslib@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/ioslib/-/ioslib-2.0.0.tgz#2015e3d02c824ea900d4b4ccaa49cdfff1219f14"
+ioslib@^2.0.2:
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/ioslib/-/ioslib-2.0.2.tgz#eeab367db7562f2b5b688faf9f88e780473498dc"
   dependencies:
-    appcd-fs "^1.0.0-10"
-    appcd-path "^1.0.0-10"
-    appcd-subprocess "^1.0.0-10"
-    appcd-util "^1.0.0-10"
-    cli-kit "^0.0.7"
+    appcd-fs "^1.0.0-15"
+    appcd-path "^1.0.0-15"
+    appcd-subprocess "^1.0.0-15"
+    appcd-util "^1.0.0-15"
+    cli-kit "^0.0.8"
     node-forge "^0.7.1"
     node-ios-device "1.4.0"
     promise-limit "^2.5.0"
