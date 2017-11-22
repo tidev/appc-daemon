@@ -115,7 +115,7 @@ const cacheStore = {};
  * @param {String} name - The name to cache the result under.
  * @param {Boolean} [force] - When `true` skips the cache and invokes the function.
  * @param {Function} callback - A function to call to get results.
- * @returns {Promise<Object>}
+ * @returns {Promise<*>} Resolves whatever value `callback` returns/resolves.
  */
 export async function cache(name, force, callback) {
 	await new Promise(setImmediate);
@@ -130,6 +130,35 @@ export async function cache(name, force, callback) {
 	}
 
 	return cacheStore[name] = await tailgate(name, callback);
+}
+
+/**
+ * Calls a synchronous function and caches the result for future calls.
+ *
+ * @param {String} name - The name to cache the result under.
+ * @param {Boolean} [force] - When `true` skips the cache and invokes the function.
+ * @param {Function} callback - A function to call to get results.
+ * @returns {*} Returns whatever value `callback` returns.
+ */
+export function cacheSync(name, force, callback) {
+	if (typeof force === 'function') {
+		callback = force;
+		force = false;
+	}
+
+	if (typeof name !== 'string' || !name) {
+		throw new TypeError('Expected name to be a non-empty string');
+	}
+
+	if (typeof callback !== 'function') {
+		throw new TypeError('Expected callback to be a function');
+	}
+
+	if (!force && cacheStore[name]) {
+		return cacheStore[name];
+	}
+
+	return cacheStore[name] = callback();
 }
 
 /**

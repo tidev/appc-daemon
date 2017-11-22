@@ -1,4 +1,4 @@
-import appcdCoreLogger, { logcat } from './logger';
+import appcdCoreLogger from './logger';
 import ConfigService from 'appcd-config-service';
 import defaultPluginPaths from 'appcd-default-plugins';
 import Dispatcher from 'appcd-dispatcher';
@@ -148,7 +148,9 @@ export default class Server {
 		Dispatcher.register('/appcd/config', new ConfigService(this.config));
 
 		// init logcat
-		Dispatcher.register('/appcd/logcat', logcat);
+		Dispatcher.register('/appcd/logcat', ({ response }) => {
+			appcdCoreLogger.pipe(response, { flush: true });
+		});
 
 		// init the status monitor
 		this.systems.statusMonitor = new StatusMonitor();

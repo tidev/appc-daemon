@@ -2,17 +2,13 @@ import DetectEngine from 'appcd-detect';
 import gawk from 'gawk';
 import path from 'path';
 
-import * as registry from 'appcd-winreg';
-
 import { DataServiceDispatcher } from 'appcd-dispatcher';
-import { debounce, get } from 'appcd-util';
-import { expandPath } from 'appcd-path';
+import { debounce as debouncer, get } from 'appcd-util';
 import { exe } from 'appcd-subprocess';
 import { genymotion, virtualbox } from 'androidlib';
-import { isDir } from 'appcd-fs';
 
-const GENYMOTION_HOME = 1;
-const GENYMOTION_PLIST = 1;
+const VIRTUALBOX_CONFIG = 1;
+const VM_CONFIG = 2;
 
 /**
  * The Genymotion and VirtualBox info service.
@@ -27,10 +23,9 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 	async activate(cfg) {
 		this.config = cfg;
 
-		this.timers = {};
+		this.virtualbox = null;
 
 		this.data = gawk({
-			deployedDir: null,
 			emulators: [],
 			executables: {},
 			home: null,
@@ -39,58 +34,21 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 			virtualbox: null
 		});
 
-		const paths = [ ...genymotion.genymotionLocations[process.platform] ];
-		const defaultPath = get(this.config, 'genymotion.path');
-		if (defaultPath) {
-			paths.unshift(defaultPath);
-		}
+		await this.initVirtualBox();
+		await this.initGenymotion();
+	}
 
-		this.genyEngine = new DetectEngine({
-			checkDir: async (dir) => {
-				try {
-					// We need to store a reference to the class as we lose the
-					// functions in the gawk.set() call
-					return this.geny = await genymotion.detect(dir, this.vbox);
-				} catch (e) {
-					// squelch
-				}
-			},
-			depth:                1,
-			exe:                  `genymotion${exe}`,
-			multiple:             false,
-			paths,
-			redetect:             true,
-			refreshPathsInterval: 15000,
-			watch:                true
-		});
-
-		this.genyEngine.on('results', results => {
-			results.virtualbox = this.data.virtualbox || {};
-			this.watchGenymotionDeployed(results.deployedDir);
-			if (process.platform === 'darwin') {
-				this.watch({
-					type: GENYMOTION_PLIST,
-					paths: [ genymotion.genymotionPlist ],
-					depth: 2,
-					handler: async () => {
-						const sids = this.subscriptions[GENYMOTION_HOME] ? Object.keys(this.subscriptions[GENYMOTION_HOME]) : [];
-
-						this.genyEngine.rescan(this.data.virtualbox);
-						// unwatch the old subscriptions
-						await this.unwatch(GENYMOTION_HOME, sids);
-					}
-				});
-			} else if (process.platform === 'win32') {
-				this.refreshDeployPath();
-			}
-			gawk.set(this.data, results);
-		});
-
+	/**
+	 * Detects where VirtualBox is installed.
+	 *
+	 * @returns {Promise}
+	 * @access private
+	 */
+	async initVirtualBox() {
 		this.vboxEngine = new DetectEngine({
 			checkDir(dir) {
 				try {
 					return new virtualbox.VirtualBox(dir);
-					// return new androidlib.VirtualBox(dir);
 				} catch (e) {
 					// Squelch
 				}
@@ -98,6 +56,7 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 			depth:                1,
 			exe:                  `vboxmanage${exe}`,
 			multiple:             false,
+			name:                 'virtualbox',
 			paths:                virtualbox.virtualBoxLocations[process.platform],
 			redetect:             true,
 			refreshPathsInterval: 15000,
@@ -109,100 +68,107 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 			watch:                true
 		});
 
-		this.vboxEngine.on('results', results => {
-			this.vbox = results;
-			this.data.virtualbox = gawk.set(this.data.virtualbox || {}, results) || null;
-			this.genyEngine.rescan(this.data.virtualbox);
+		const refreshVirtualBoxEmulators = () => {
+			const emulators = this.virtualbox.list();
+
+			gawk.set(
+				this.data.emulators,
+				emulators
+					.filter(vm => vm.props.genymotion_version)
+					.map(vm => new genymotion.GenymotionEmulator(vm))
+			);
+
+			const sids = this.subscriptions[VM_CONFIG] ? Object.keys(this.subscriptions[VM_CONFIG]) : [];
+
+			this.watch({
+				type: VM_CONFIG,
+				paths: emulators.map(vm => path.join(vm.path, `${vm.name}.vbox`)),
+				debounce: true,
+				handler: () => {
+					console.log('A virtual machine config changed, rescanning genymotion emulators');
+					gawk.set(
+						this.data.emulators,
+						this.virtualbox.list()
+							.filter(vm => vm.props.genymotion_version)
+							.map(vm => new genymotion.GenymotionEmulator(vm))
+					);
+				}
+			});
+
+			this.unwatch(VM_CONFIG, sids);
+		};
+
+		this.vboxEngine.on('results', vbox => {
+			this.virtualbox = vbox;
+			refreshVirtualBoxEmulators();
+		});
+
+		const vboxConfig = virtualbox.virtualBoxConfigFile[process.platform];
+		this.watch({
+			type: VIRTUALBOX_CONFIG,
+			paths: [ vboxConfig ],
+			debounce: true,
+			handler: () => {
+				console.log(`${vboxConfig} changed, rescanning genymotion emulators`);
+				refreshVirtualBoxEmulators();
+			}
 		});
 
 		await this.vboxEngine.start();
-		await this.genyEngine.start();
 	}
 
 	/**
-	 * Poll the registry for the vms.path value
+	 * Detects Genymotion and its emulators.
+	 *
+	 * @returns {Promise}
+	 * @access private
 	 */
-	refreshDeployPath() {
-		this.refreshDeployPathTimer = setTimeout(async () => {
-			try {
-				const dir = expandPath(await registry.get('HKCU', 'Software\\Genymobile\\Genymotion', 'vms.path'));
+	async initGenymotion() {
+		const paths = [ get(this.config, 'android.genymotion.searchPaths'), ...genymotion.genymotionLocations[process.platform] ];
 
-				if (isDir(dir) && this.data.deployedDir !== dir) {
-
-					const sids = this.subscriptions[GENYMOTION_HOME] ? Object.keys(this.subscriptions[GENYMOTION_HOME]) : [];
-
-					this.genyEngine.rescan(this.data.virtualbox);
-
-					await this.unwatch(GENYMOTION_HOME, sids);
+		this.genyEngine = new DetectEngine({
+			checkDir(dir) {
+				try {
+					return new genymotion.Genymotion(dir);
+				} catch (e) {
+					// squelch
 				}
-			} catch (err) {
-				// squelch
-			}
-
-			this.refreshDeployPath();
-		}, 15000);
-	}
-
-	/**
-	 * Watch the given Genymotion deploy directory.
-	 * @param {String} deployedDir - The path to the directory.
-	 */
-	watchGenymotionDeployed(deployedDir) {
-		const onEmulatorAdd = debounce(async () => {
-			gawk.set(this.data.emulators, await genymotion.getEmulators({ force: true, vbox: this.vbox }));
-		}, 10000);
-
-		const onEmulatorChange = debounce(async (file) => {
-			const { emulators } = this.data;
-			for (let i = 0; i < emulators.length; i++) {
-				if (emulators[i].name === path.basename(file, '.vbox')) {
-					const emulator = await genymotion.getEmulatorInfo({ vm: emulators[i], vbox: this.vbox });
-					if (emulator) {
-						emulators[i] = emulator;
-						gawk.set(this.data.emulators, emulators);
-						break;
-					}
+			},
+			depth:    1,
+			exe:      `genymotion${exe}`,
+			multiple: false,
+			name:     'genymotion',
+			paths,
+			processResults: (results, engine) => {
+				for (const r of results) {
+					r.virtualbox = this.virtualbox || {};
 				}
-			}
-		}, 500);
-		let detecting;
-		this.watch({
-			type: GENYMOTION_HOME,
-			paths: [ deployedDir ],
-			depth: 2,
-			handler: async ({ file, filename, action }) => {
-				const { emulators } = this.data;
-				if (action === 'add' && path.dirname(file) === deployedDir && !detecting) {
-					detecting = true;
-					await onEmulatorAdd();
-					detecting = false;
-				} else if (action === 'change' && path.extname(file) === '.vbox' && !detecting) {
-					await onEmulatorChange(file);
-				} else if (action === 'delete' && (path.dirname(file) === deployedDir)) {
-					// find the emulator in the data store and remove it
-					for (let i = 0; i < emulators.length; i++) {
-						if (emulators[i].name === filename) {
-							emulators.splice(i--, 1);
-							break;
-						}
-					}
-					gawk.set(this.data.emulators, emulators);
-				}
-			}
+			},
+			redetect: true,
+			watch:    true
 		});
+
+		this.genyEngine.on('results', async (results) => {
+			gawk.set(this.data, results);
+		});
+
+		await this.genyEngine.start();
 	}
 
 	/**
 	 * Subscribes to filesystem events for the specified paths.
 	 *
 	 * @param {Object} params - Various parameters.
-	 * @param {String} params.type - The type of subscription.
-	 * @param {Array.<String>} params.paths - One or more paths to watch.
-	 * @param {Function} params.handler - A callback function to fire when a fs event occurs.
+	 * @param {Boolean} [params.debounce=false] - When `true`, wraps the `handler` with a debouncer.
 	 * @param {Number} [params.depth] - The max depth to recursively watch.
+	 * @param {Function} params.handler - A callback function to fire when a fs event occurs.
+	 * @param {Array.<String>} params.paths - One or more paths to watch.
+	 * @param {String} params.type - The type of subscription.
 	 * @access private
 	 */
-	watch({ type, paths, handler, depth }) {
+	watch({ debounce, depth, handler, paths, type }) {
+		const callback = debounce ? debouncer(handler) : handler;
+
 		for (const path of paths) {
 			const data = { path };
 			if (depth) {
@@ -226,11 +192,11 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 								}
 								this.subscriptions[type][data.sid] = 1;
 							} else if (data.type === 'event') {
-								handler(data.message);
+								callback(data.message);
 							}
 						})
 						.on('end', () => {
-							if (sid) {
+							if (sid && this.subscriptions[type]) {
 								delete this.subscriptions[type][sid];
 							}
 						});
@@ -247,6 +213,10 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 	 * @access private
 	 */
 	async unwatch(type, sids) {
+		if (!this.subscriptions[type]) {
+			return;
+		}
+
 		if (!sids) {
 			sids = Object.keys(this.subscriptions[type]);
 		}

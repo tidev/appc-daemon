@@ -12,8 +12,38 @@ Press <kbd>CTRL-C</kbd> to quit.
 ### Usage
 
 ```
-appcd logcat [--no-colors]
+appcd logcat [<filter>] [--no-colors]
 ```
+
+### Examples
+
+To only show telemetry and dispatcher messages:
+
+```
+appcd logcat "appcd:telemetry" "appcd:dispatcher"
+
+appcd logcat "appcd:telemetry,appcd:dispatcher"
+```
+
+To show every log message except status messages:
+
+```
+appcd logcat "-appcd:core:status"
+```
+
+To show detect engine log messages:
+
+```
+appcd logcat "*appcd:detect*"
+```
+
+### Arguments
+
+#### `<filter...>`
+
+One or more logger namespace filter by. The filters may be a comma-separated list of filters or
+specified individually. Prepend the filter with a dash `-` to ignore all messages with the matching
+namespace. You may also use `*` wildcards. Specifying no filter is equivalent to `*`.
 
 ### Options
 

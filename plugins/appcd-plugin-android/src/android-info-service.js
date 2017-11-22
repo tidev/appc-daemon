@@ -72,6 +72,8 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 	 * @access private
 	 */
 	async initNDKs() {
+		const paths = [ get(this.config, 'android.ndk.searchPaths'), ...androidlib.ndk.ndkLocations[process.platform] ];
+
 		this.ndkDetectEngine = new DetectEngine({
 			checkDir(dir) {
 				try {
@@ -80,11 +82,12 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 					// 'dir' is not an NDK
 				}
 			},
-			depth:     1,
-			env:       'ANDROID_NDK',
-			exe:       `ndk-build${cmd}`,
-			multiple:  true,
-			paths:     androidlib.ndk.ndkLocations[process.platform],
+			depth:    1,
+			env:      'ANDROID_NDK',
+			exe:      `ndk-build${cmd}`,
+			multiple: true,
+			name:     'android:ndk',
+			paths,
 			processResults: async (results, engine) => {
 				if (results.length > 1) {
 					results.sort((a, b) => version.compare(a.version, b.version));
@@ -128,7 +131,7 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 	 * @access private
 	 */
 	async initSDKsAndEmulators() {
-		const paths = [ get(this.config, 'android.sdkPath'), ...androidlib.sdk.sdkLocations[process.platform] ];
+		const paths = [ get(this.config, 'android.sdk.searchPaths'), ...androidlib.sdk.sdkLocations[process.platform] ];
 
 		this.sdkDetectEngine = new DetectEngine({
 			checkDir(dir) {
@@ -138,10 +141,11 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 					// 'dir' is not an SDK
 				}
 			},
-			depth: 1,
-			env: [ 'ANDROID_SDK', 'ANDROID_SDK_ROOT' ],
-			exe: [ `../../adb${exe}`, `../../android${bat}` ],
+			depth:    1,
+			env:      [ 'ANDROID_SDK', 'ANDROID_SDK_ROOT' ],
+			exe:      [ `../../adb${exe}`, `../../android${bat}` ],
 			multiple: true,
+			name:     'android:ndk',
 			paths,
 			processResults: async (results, engine) => {
 				// loop over all of the new sdks and set default version
@@ -211,6 +215,7 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 
 			this.sdkDetectEngine.start()
 				.then(async results => {
+					// if there's no results, then the gawk watch above never gets called
 					if (!initialized && results.length === 0) {
 						initialized = true;
 						gawk.set(this.data.emulators, await androidlib.emulators.getEmulators({ force: true, sdks: this.data.sdk }));
@@ -280,6 +285,10 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 	 * @access private
 	 */
 	async unwatch(type, sids) {
+		if (!this.subscriptions[type]) {
+			return;
+		}
+
 		if (!sids) {
 			sids = Object.keys(this.subscriptions[type]);
 		}

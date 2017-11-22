@@ -468,6 +468,10 @@ export default class iOSInfoService extends DataServiceDispatcher {
 	 * @access private
 	 */
 	async unwatch(type, sids) {
+		if (!this.subscriptions[type]) {
+			return;
+		}
+
 		if (!sids) {
 			sids = Object.keys(this.subscriptions[type]);
 		}
