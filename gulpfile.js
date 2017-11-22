@@ -1,6 +1,5 @@
 'use strict';
 
-// dependency mappings used to wiring up yarn links and build order
 const chug         = require('gulp-chug');
 const debug        = require('gulp-debug');
 const del          = require('del');
@@ -8,20 +7,14 @@ const fs           = require('fs-extra');
 const globule      = require('globule');
 const gulp         = require('gulp');
 const gutil        = require('gulp-util');
-const istanbul     = require('istanbul');
-const npm          = require('npm');
-const nspAPI       = require('nsp/lib/api');
-const PassThrough  = require('stream').PassThrough;
 const path         = require('path');
 const plumber      = require('gulp-plumber');
-const progress     = require('progress');
 const promiseLimit = require('promise-limit');
 const runSequence  = require('run-sequence');
 const semver       = require('semver');
 const spawn        = require('child_process').spawn;
 const spawnSync    = require('child_process').spawnSync;
 const Table        = require('cli-table2');
-const treePrinter  = require('tree-printer');
 const util         = require('util');
 
 const appcdRE = /^appcd-/;
@@ -183,162 +176,9 @@ gulp.task('build', [ 'cyclic' ], () => {
 	runLerna([ 'run', '--parallel', 'build' ]);
 });
 
-/*
-TODO: This needs some serious fixing.
-
-gulp.task('package', [ 'build' ], cb => {
-	const pkgJson = require('./bootstrap/package.json');
-	const keepers = [ 'name', 'version', 'description', 'author', 'maintainers', 'license', 'keyword', 'bin', 'preferGlobal', 'dependencies', 'homepage', 'bugs', 'repository' ];
-
-	for (const key of Object.keys(pkgJson)) {
-		if (keepers.indexOf(key) === -1) {
-			delete pkgJson[key];
-		}
-	}
-
-	pkgJson.build = {
-		gitHash:   spawnSync('git', [ 'log', '--pretty=oneline', '-n', '1', '--no-color' ], { shell: true }).stdout.toString().split(' ')[0],
-		hostname:  require('os').hostname(),
-		platform:  process.platform,
-		timestamp: new Date().toISOString()
-	};
-
-	const found = {};
-
-	function copyDeps(deps, file) {
-		if (deps) {
-			Object.keys(deps).forEach(dep => {
-				if (!found[dep]) {
-					found[dep] = deps[dep];
-				} else if (found[dep] !== deps[dep]) {
-					throw new Error('Unable to pack: duplicate dependencies with different versions\n' +
-						dep + ' v' + found[dep] + ' already added, but ' + file + ' wants v' + deps[dep]);
-				}
-			});
-		}
-	}
-
-	copyDeps(pkgJson.dependencies);
-	pkgJson.dependencies = {};
-	pkgJson.bundledDependencies = [];
-
-	globule
-		.find([
-			'packages/     *     /package.json',
-			'!packages/appcd-gulp/    *'
-		])
-		.forEach(file => {
-			const json = require(path.resolve(file));
-			pkgJson.bundledDependencies.push(json.name);
-			pkgJson.dependencies[json.name] = './node_modules/' + json.name;
-			copyDeps(json.dependencies, file);
-		});
-
-	pkgJson.bundledDependencies.sort();
-	Object.keys(found).sort().forEach(dep => pkgJson.dependencies[dep] = found[dep]);
-
-	const distDir = path.join(__dirname, 'dist');
-	if (!exists(distDir)) {
-		fs.mkdirSync(distDir);
-	}
-
-	const outFile = path.join(distDir, pkgJson.name + '-' + pkgJson.version + '.tgz');
-	if (exists(outFile)) {
-		fs.unlinkSync(outFile);
-	}
-
-	gutil.log('Packing ' + outFile);
-
-	const archiver = require('archiver');
-	const ignore = require('ignore');
-
-	const output = fs.createWriteStream(outFile);
-	const archive = archiver('tar', {
-		gzip: true,
-		gzipOptions: {
-			level: 1
-		}
-	});
-
-	output.on('close', () => {
-		gutil.log(`Wrote ${archive.pointer()} bytes`);
-		cb();
-	});
-
-	archive.on('error', err => {
-		cb(err);
-	});
-
-	archive.pipe(output);
-
-	archive.append(JSON.stringify(pkgJson, null, '  '), { name: 'package/package.json' });
-
-	function getFiles(dir, ignoreFiles) {
-		const ig = ignore().add('yarn.lock');
-
-		if (ignoreFiles) {
-			ig.add(ignoreFiles);
-		}
-
-		const ignoreFile = path.join(dir, '.npmignore');
-		if (exists(ignoreFile)) {
-			ig.add(fs.readFileSync(ignoreFile, 'utf8').split('\n').filter(s => s && s[0] !== '#'));
-		}
-
-		const files = {};
-		for (const file of globule.find(dir + '/**')) {
-			const stat = fs.statSync(file);
-			if (stat.isFile()) {
-				files[path.relative(dir, file)] = stat.mode;
-			}
-		}
-
-		const results = {};
-		ig.filter(Object.keys(files)).forEach(file => {
-			results[file] = files[file];
-		});
-
-		return results;
-	}
-
-	function pack(dir, relPath, ignoreFiles) {
-		const files = getFiles(dir, ignoreFiles);
-		for (const file of Object.keys(files)) {
-			const dest = `${relPath}/${file}`;
-			gutil.log(` + ${dir}/${file} => ${dest}`);
-			if (/package\.json$/.test(file)) {
-				const pkgJson = JSON.parse(fs.readFileSync(path.join(dir, file)));
-				if (/^appcd/.test(pkgJson.name)) {
-					delete pkgJson.dependencies;
-					delete pkgJson.devDependencies;
-					delete pkgJson.bundledDependencies;
-					delete pkgJson.optionalDependencies;
-					delete pkgJson.appcdDependencies;
-					delete pkgJson.scripts;
-					archive.append(JSON.stringify(pkgJson, null, '  '), { name: dest });
-					continue;
-				}
-			}
-			archive.append(fs.createReadStream(path.join(dir, file)), { name: dest, mode: files[file] });
-		}
-	}
-
-	pack(path.join(__dirname, 'bootstrap'), 'package', 'package.json');
-	pack(path.join(__dirname, 'conf'), 'package/conf');
-
-	globule
-		.find([
-			'packages/*',
-			'!packages/appcd-gulp'
-		])
-		.filter(dir => fs.statSync(dir).isDirectory())
-		.forEach(dir => {
-			pack(dir, 'package/node_modules/' + path.basename(dir));
-		});
-
-	archive.finalize();
+gulp.task('docs', () => {
+	const Docma = require('docma');
 });
-*/
 
 /*
  * test tasks
@@ -347,6 +187,7 @@ gulp.task('test', [ 'node-info', 'build' ], cb => runTests(false, cb));
 gulp.task('coverage', [ 'node-info', 'build' ], cb => runTests(true, cb));
 
 function runTests(cover, cb) {
+	const istanbul = require('istanbul');
 	let task = cover ? 'coverage-only' : 'test-only';
 	let coverageDir;
 	let collector;
@@ -533,7 +374,6 @@ gulp.task('default', () => {
 	table.push([ cyan('check'),            'checks missing/outdated dependencies/link, security issues, and code stats' ]);
 	table.push([ cyan('cyclic'),           'detects cyclic dependencies (which are bad) in appcd packages and plugins' ]);
 	table.push([ cyan('stats'),            'displays stats about the code' ]);
-	// table.push([ cyan('package'),          'builds and packages an appc daemon distribution archive' ]);
 	table.push([ cyan('upgrade'),          'detects latest npm deps, updates package.json, and runs upgrade' ]);
 
 	console.log(table.toString() + '\n');
@@ -801,6 +641,7 @@ async function checkPackages({ skipSecurity } = {}) {
 	gutil.log(`Found ${cyan(Object.keys(dependencies).length)} dependencies`);
 	gutil.log(`Processing ${cyan(totalTasks)} tasks`);
 
+	const progress = require('progress');
 	const bar = new progress('  [:bar] :percent :etas', {
 		clear: true,
 		complete: '=',
@@ -813,9 +654,12 @@ async function checkPackages({ skipSecurity } = {}) {
 	// console.log(dependencies);
 	// console.log(tasks);
 
+	const npm = require('npm');
+	const nspAPI = require('nsp/lib/api');
 	const nspConf = {
 		baseUrl: 'https://api.nodesecurity.io'
 	};
+	const limit = promiseLimit(20);
 
 	await new Promise((resolve, reject) => {
 		npm.load({
@@ -828,8 +672,6 @@ async function checkPackages({ skipSecurity } = {}) {
 			}
 		});
 	});
-
-	const limit = promiseLimit(20);
 
 	await Promise.all(tasks.map(task => limit(async () => {
 		const action = task[0];
@@ -1090,6 +932,7 @@ function renderPackages(results) {
 
 		if (Object.keys(pkg.securityIssues).length) {
 			console.log(gray(' Node Security Issues:'));
+			const treePrinter = require('tree-printer');
 			for (const issue of pkg.securityIssues) {
 				console.log(JSON.stringify(issue));
 				// for (const ver of Object.keys(pkg.nodeSecurityIssues[name])) {

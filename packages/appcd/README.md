@@ -4,7 +4,7 @@ Background server for running services.
 
 ## Installation
 
-	yarn install appcd
+	npm install -g appcd
 
 ## Quick Start
 
@@ -41,59 +41,25 @@ View server log output:
 appcd is designed to use sensible defaults. However, to override these defaults
 appcd supports loading a a CommonJS formatted JavaScript file:
 
-	~/.appcelerator/appcd/config.js
+	~/.appcelerator/appcd/config.json
 
 Example:
 
 ```javascript
-module.exports = {
-	logger: {
-		colors: true,
-		silent: false
-	},
-	paths: {
-		plugins: [
-			'/path/to/a/plugin'
-		]
-	}
-};
-```
-
-## API Documentation
-
-To generate API docs into static HTML files, run:
-
-	gulp docs
-
-Currently, esdoc does not support ES7 features, so API docs for constructs such
-as class properties are ignored.
-
-## API
-
-appcd is both a server and a client. You can programmatically control the appcd
-server. You can also use the client library to issue requests to the appcd
-server.
-
-```javascript
-import { loadCore } from 'appcd';
-
-loadCore()
-	.then(appcd => {
-		const client = new appcd.Client();
-		client
-			.request('/appcd/status')
-			.on('response', status => {
-				console.log(status);
-				client.disconnect();
-			})
-			.on('error', err => {
-				console.error('ERROR!');
-				console.error(err);
-			});
-	})
-	.catch(err => {
-		console.error(err);
-	});
+{
+    "android": {
+        "ndk": {
+            "searchPaths": [
+                "/opt/android-ndk"
+            ]
+        },
+        "sdk": {
+            "searchPaths": [
+                "/opt/android-sdk"
+            ]
+        }
+    }
+}
 ```
 
 ## WebSocket Protocol
