@@ -220,8 +220,8 @@ export default class DetectEngine extends EventEmitter {
 	 * @access private
 	 */
 	async getPaths() {
+		const searchPaths = new Set(this.opts.paths.map(dir => real(dir)));
 		let defaultPath = null;
-		let searchPaths = new Set(this.opts.paths.map(dir => real(dir)));
 
 		// we grab the first path as the default
 		defaultPath = searchPaths.values().next().value;
@@ -233,8 +233,9 @@ export default class DetectEngine extends EventEmitter {
 				if (p === -1) {
 					defaultPath = path.dirname(real(await which(exe)));
 				} else {
-					defaultPath = real(path.resolve(await which(exe.substring(p)), exe.substring(0, p)));
+					defaultPath = real(path.resolve(await which(exe.substring(p + 1)), exe.substring(0, p)));
 				}
+				this.logger.log(`Adding search path from exe: ${defaultPath}`);
 				searchPaths.add(defaultPath);
 			} catch (e) {
 				// squelch
