@@ -97,7 +97,7 @@ describe('PluginManager', () => {
 			pm = new PluginManager();
 
 			expect(Object.keys(pm.pluginPaths)).to.have.lengthOf(0);
-			expect(pm.plugins).to.have.lengthOf(0);
+			expect(pm.registered).to.have.lengthOf(0);
 
 			let stats = this.fm.status();
 			expect(stats.nodes).to.equal(0);
@@ -114,7 +114,7 @@ describe('PluginManager', () => {
 			pm = new PluginManager({ paths: [ '', null, dir ] });
 
 			expect(Object.keys(pm.pluginPaths)).to.have.lengthOf(1);
-			expect(pm.plugins).to.have.lengthOf(0);
+			expect(pm.registered).to.have.lengthOf(0);
 
 			await pm.shutdown();
 			pm = null;
@@ -128,7 +128,7 @@ describe('PluginManager', () => {
 			pm = new PluginManager({ paths: [ '', null, dir ] });
 
 			expect(Object.keys(pm.pluginPaths)).to.have.lengthOf(1);
-			expect(pm.plugins).to.have.lengthOf(0);
+			expect(pm.registered).to.have.lengthOf(0);
 
 			let err;
 
@@ -186,7 +186,7 @@ describe('PluginManager', () => {
 					throw new Error('Expected error');
 				}, err => {
 					expect(err).to.be.instanceof(PluginError);
-					expect(err.message).to.equal('Plugin Path Parent Directory Already Registered');
+					expect(err.message).to.equal('Plugin path parent directory already registered');
 				});
 		});
 
@@ -237,7 +237,7 @@ describe('PluginManager', () => {
 
 						setTimeout(() => {
 							try {
-								expect(pm.plugins).to.have.lengthOf(0);
+								expect(pm.registered).to.have.lengthOf(0);
 								done();
 							} catch (e) {
 								done(e);
@@ -270,7 +270,7 @@ describe('PluginManager', () => {
 						}, err => {
 							expect(err).to.be.instanceof(PluginError);
 							expect(err.message).to.match(/Failed to load plugin: .*Unexpected token/);
-							const p = pm.plugins[0];
+							const p = pm.registered[0];
 							expect(p.state).to.equal('stopped');
 							expect(p.error).to.match(/Failed to load plugin: .*Unexpected token/);
 						});
@@ -481,7 +481,7 @@ describe('PluginManager', () => {
 						})
 						.catch(err => {
 							expect(err.message).to.match(/Failed to load plugin: .*Unexpected token/);
-							const p = pm.plugins[0];
+							const p = pm.registered[0];
 							expect(p.state).to.equal('stopped');
 							expect(p.exitCode).to.equal(6);
 							expect(p.error).to.match(/Failed to load plugin: .*Unexpected token/);

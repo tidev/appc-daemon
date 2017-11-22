@@ -127,6 +127,7 @@ describe('Plugin', () => {
 			name:           'good-main-nojs',
 			nodeVersion,
 			path:           pluginPath,
+			supported:      true,
 			totalRequests:  0,
 			type:           'external',
 			version:        '1.2.3'
