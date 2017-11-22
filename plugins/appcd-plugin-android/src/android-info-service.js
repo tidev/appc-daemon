@@ -26,7 +26,8 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 			devices: [],
 			emulators: [],
 			ndk: [],
-			sdk: []
+			sdk: [],
+			targets: {}
 		});
 
 		/**
@@ -202,11 +203,64 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 		});
 
 		return new Promise((resolve, reject) => {
-			// if sdks change, then refresh the simulators
+			// if sdks change, then refresh the simulators and update the targets object
 			gawk.watch(this.data.sdk, async () => {
+
+				const populateTargets = () => {
+					var index = 1;
+					const targets = {};
+					for (const sdk of this.data.sdk) {
+						const combo = sdk.platforms.concat(sdk.addons);
+						for (const item of combo) {
+							const abis = [];
+							if (item.abis) {
+								for (const type in item.abis) {
+									for (const abi of item.abis[type]) {
+										if (abis.indexOf(abi) === -1) {
+											abis.push(abi);
+										}
+									}
+								}
+							}
+							const info = {
+								id:          item.sdk,
+								abis:        abis,
+								skins:       item.skins,
+								name:        item.name,
+								type:        item.platform,
+								path:        item.path,
+								revision:    item.revision,
+								androidJar:  item.androidJar,
+								aidl:        item.aidl
+							};
+
+							if (item.basedOn) {
+								// This is an addon
+								info.type = 'addon';
+								info.vendor = item.vendor;
+								info.description = item.description;
+								info.version = item.basedOn.version || parseInt(String(item.basedOn).replace(/^android-/, '')) || null;
+								info['based-on'] = {
+									'android-version': item.basedOn.version,
+									'api-level': item.basedOn.apiLevel
+								};
+							} else {
+								info.type = 'platform';
+								info['api-level'] = item.apiLevel;
+								info.sdk = item.apiLevel;
+								info.version = item.version;
+							}
+
+							targets[index++] = info;
+						}
+
+					}
+					return targets;
+				};
+
 				console.log('AndroidSDK changed, rescanning emulators');
 				gawk.set(this.data.emulators, await androidlib.emulators.getEmulators({ force: true, sdks: this.data.sdk }));
-
+				gawk.set(this.data.targets, populateTargets());
 				if (!initialized) {
 					initialized = true;
 					resolve();

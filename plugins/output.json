@@ -1,0 +1,88 @@
+{
+  "1": {
+    "abis": [
+      "x86_64"
+    ],
+    "skins": [
+      "HVGA",
+      "QVGA",
+      "WQVGA400",
+      "WQVGA432",
+      "WSVGA",
+      "WVGA800",
+      "WVGA854",
+      "WXGA720",
+      "WXGA800",
+      "WXGA800-7in"
+    ],
+    "name": "Android 6.0",
+    "path": "/Users/eharris/Library/Android/foo/platforms/android-23",
+    "revision": 3,
+    "androidJar": "/Users/eharris/Library/Android/foo/platforms/android-23/android.jar",
+    "aidl": "/Users/eharris/Library/Android/foo/platforms/android-23/framework.aidl"
+  },
+  "2": {
+    "abis": [
+      "x86"
+    ],
+    "skins": [
+      "HVGA",
+      "QVGA",
+      "WQVGA400",
+      "WQVGA432",
+      "WSVGA",
+      "WVGA800",
+      "WVGA854",
+      "WXGA720",
+      "WXGA800",
+      "WXGA800-7in"
+    ],
+    "name": "Android 7.0",
+    "path": "/Users/eharris/Library/Android/foo/platforms/android-24",
+    "revision": 2,
+    "androidJar": "/Users/eharris/Library/Android/foo/platforms/android-24/android.jar",
+    "aidl": "/Users/eharris/Library/Android/foo/platforms/android-24/framework.aidl"
+  },
+  "3": {
+    "abis": [],
+    "skins": [
+      "HVGA",
+      "QVGA",
+      "WQVGA400",
+      "WQVGA432",
+      "WSVGA",
+      "WVGA800",
+      "WVGA854",
+      "WXGA720",
+      "WXGA800",
+      "WXGA800-7in"
+    ],
+    "name": "Android 7.1.1",
+    "path": "/Users/eharris/Library/Android/foo/platforms/android-25",
+    "revision": 2,
+    "androidJar": "/Users/eharris/Library/Android/foo/platforms/android-25/android.jar",
+    "aidl": "/Users/eharris/Library/Android/foo/platforms/android-25/framework.aidl"
+  },
+  "4": {
+    "abis": [
+      "x86"
+    ],
+    "skins": [
+      "HVGA",
+      "QVGA",
+      "WQVGA400",
+      "WQVGA432",
+      "WSVGA",
+      "WVGA800",
+      "WVGA854",
+      "WXGA720",
+      "WXGA800",
+      "WXGA800-7in"
+    ],
+    "name": "Android 8.0.0",
+    "path": "/Users/eharris/Library/Android/foo/platforms/android-26",
+    "revision": 1,
+    "androidJar": "/Users/eharris/Library/Android/foo/platforms/android-26/android.jar",
+    "aidl": "/Users/eharris/Library/Android/foo/platforms/android-26/framework.aidl"
+  }
+}
