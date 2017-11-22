@@ -230,6 +230,58 @@ describe('util', () => {
 		});
 	});
 
+	describe('cacheSync()', () => {
+		it('should error if namespace is not a string', () => {
+			expect(() => {
+				util.cacheSync();
+			}).to.throw(TypeError, 'Expected name to be a non-empty string');
+		});
+
+		it('should error if callback is not a function', () => {
+			expect(() => {
+				util.cacheSync('foo2', 'bar');
+			}).to.throw(TypeError, 'Expected callback to be a function');
+		});
+
+		it('should cache a value', () => {
+			let counter = 0;
+			const obj = { foo: 'bar' };
+			const obj2 = { baz: 'pow' };
+
+			const value = util.cacheSync('foo2', () => {
+				counter++;
+				return obj;
+			});
+			expect(counter).to.equal(1);
+			expect(value).to.be.an('object');
+			expect(value).to.deep.equal(obj);
+
+			const value2 = util.cacheSync('foo2', () => {
+				counter++;
+				return obj2;
+			});
+			expect(counter).to.equal(1);
+			expect(value2).to.be.an('object');
+			expect(value2).to.deep.equal(obj);
+
+			const value3 = util.cacheSync('foo2', true, () => {
+				counter++;
+				return obj2;
+			});
+			expect(counter).to.equal(2);
+			expect(value3).to.be.an('object');
+			expect(value3).to.deep.equal(obj2);
+		});
+
+		it('should passthrough errors', () => {
+			expect(() => {
+				const results = util.cacheSync('foo3', true, () => {
+					throw new Error('oh snap');
+				});
+			}).to.throw(Error, 'oh snap');
+		});
+	});
+
 	describe('debounce()', () => {
 		it('should debounce multiple calls using default timeout', function (done) {
 			this.slow(2000);

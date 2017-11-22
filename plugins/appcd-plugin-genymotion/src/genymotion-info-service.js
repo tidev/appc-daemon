@@ -3,13 +3,12 @@ import gawk from 'gawk';
 import path from 'path';
 
 import { DataServiceDispatcher } from 'appcd-dispatcher';
-import { debounce as debouncer, get, tailgate } from 'appcd-util';
-import { expandPath } from 'appcd-path';
+import { debounce as debouncer, get } from 'appcd-util';
 import { exe } from 'appcd-subprocess';
 import { genymotion, virtualbox } from 'androidlib';
 
-const GENYMOTION_DEPLOYED_DIR = 1;
-const GENYMOTION_PLIST = 2;
+const VIRTUALBOX_CONFIG = 1;
+const VM_CONFIG = 2;
 
 /**
  * The Genymotion and VirtualBox info service.
@@ -24,12 +23,9 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 	async activate(cfg) {
 		this.config = cfg;
 
-		this.timers = {};
-
-		this.virtualbox = gawk({});
+		this.virtualbox = null;
 
 		this.data = gawk({
-			deployedDir: null,
 			emulators: [],
 			executables: {},
 			home: null,
@@ -72,8 +68,50 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 			watch:                true
 		});
 
-		this.vboxEngine.on('results', results => {
-			gawk.set(this.virtualbox, results);
+		const refreshVirtualBoxEmulators = () => {
+			const emulators = this.virtualbox.list();
+
+			gawk.set(
+				this.data.emulators,
+				emulators
+					.filter(vm => vm.props.genymotion_version)
+					.map(vm => new genymotion.GenymotionEmulator(vm))
+			);
+
+			const sids = this.subscriptions[VM_CONFIG] ? Object.keys(this.subscriptions[VM_CONFIG]) : [];
+
+			this.watch({
+				type: VM_CONFIG,
+				paths: emulators.map(vm => path.join(vm.path, `${vm.name}.vbox`)),
+				debounce: true,
+				handler: () => {
+					console.log('A virtual machine config changed, rescanning genymotion emulators');
+					gawk.set(
+						this.data.emulators,
+						this.virtualbox.list()
+							.filter(vm => vm.props.genymotion_version)
+							.map(vm => new genymotion.GenymotionEmulator(vm))
+					);
+				}
+			});
+
+			this.unwatch(VM_CONFIG, sids);
+		};
+
+		this.vboxEngine.on('results', vbox => {
+			this.virtualbox = vbox;
+			refreshVirtualBoxEmulators();
+		});
+
+		const vboxConfig = virtualbox.virtualBoxConfigFile[process.platform];
+		this.watch({
+			type: VIRTUALBOX_CONFIG,
+			paths: [ vboxConfig ],
+			debounce: true,
+			handler: () => {
+				console.log(`${vboxConfig} changed, rescanning genymotion emulators`);
+				refreshVirtualBoxEmulators();
+			}
 		});
 
 		await this.vboxEngine.start();
@@ -89,9 +127,9 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 		const paths = [ get(this.config, 'android.genymotion.searchPaths'), ...genymotion.genymotionLocations[process.platform] ];
 
 		this.genyEngine = new DetectEngine({
-			checkDir: async (dir) => {
+			checkDir(dir) {
 				try {
-					return await genymotion.detect(dir, this.virtualbox);
+					return new genymotion.Genymotion(dir);
 				} catch (e) {
 					// squelch
 				}
@@ -111,118 +149,10 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 		});
 
 		this.genyEngine.on('results', async (results) => {
-			await this.watchGenymotionDeployed(this.data.deployedDir, results.deployedDir);
 			gawk.set(this.data, results);
 		});
 
-		if (process.platform === 'darwin') {
-			this.watch({
-				type: GENYMOTION_PLIST,
-				paths: [ genymotion.genymotionPlist ],
-				debounce: true,
-				handler: () => {
-					return tailgate('genymotion-rescan', async () => {
-						console.log(`${genymotion.genymotionPlist} changed, rescanning genymotion`);
-						await this.genyEngine.rescan();
-					});
-				}
-			});
-		}
-
-		if (process.platform === 'win32') {
-			this.refreshDeployPath();
-		}
-
 		await this.genyEngine.start();
-	}
-
-	/**
-	 * Poll the registry for the `vms.path` value.
-	 *
-	 * @access private
-	 */
-	refreshDeployPath() {
-		this.refreshDeployPathTimer = setTimeout(async () => {
-			try {
-				await this.watchGenymotionDeployed(this.data.deployedDir, await genymotion.getDeployedDir());
-			} catch (err) {
-				// squelch
-			}
-			this.refreshDeployPath();
-		}, get(this.config, 'android.genymotion.deployedDirPollInterval') || 15000);
-	}
-
-	/**
-	 * Watch the given Genymotion deploy directory.
-	 *
-	 * @param {String} prevDeployedDir - The previous deployed directory value.
-	 * @param {String} newDeployedDir - The new deployed directory value.
-	 * @returns {Promise}
-	 * @access private
-	 */
-	async watchGenymotionDeployed(prevDeployedDir, newDeployedDir) {
-		if (prevDeployedDir !== newDeployedDir) {
-			console.log('Deployed directory changed: %s => %s', prevDeployedDir, newDeployedDir);
-
-			await this.unwatch(GENYMOTION_DEPLOYED_DIR);
-
-			if (newDeployedDir) {
-				this.watch({
-					type: GENYMOTION_DEPLOYED_DIR,
-					paths: [ newDeployedDir ],
-					depth: 2,
-					debounce: true,
-					handler: async ({ file, filename, action }) => {
-						console.log('************************************************************************************************************************************************************');
-						console.log(action, filename, file);
-					}
-				});
-			}
-		}
-
-		// const onEmulatorAdd = debouncer(async () => {
-		// 	gawk.set(this.data.emulators, await genymotion.getEmulators({ force: true, vbox: this.vbox }));
-		// }, 10000);
-
-		// const onEmulatorChange = debouncer(async (file) => {
-		// 	const { emulators } = this.data;
-		// 	for (let i = 0; i < emulators.length; i++) {
-		// 		if (emulators[i].name === path.basename(file, '.vbox')) {
-		// 			const emulator = await genymotion.getEmulatorInfo({ vm: emulators[i], vbox: this.vbox });
-		// 			if (emulator) {
-		// 				emulators[i] = emulator;
-		// 				gawk.set(this.data.emulators, emulators);
-		// 				break;
-		// 			}
-		// 		}
-		// 	}
-		// }, 500);
-
-		// let detecting;
-		// this.watch({
-		// 	type: GENYMOTION_DEPLOYED_DIR,
-		// 	paths: [ deployedDir ],
-		// 	depth: 2,
-		// 	handler: async ({ file, filename, action }) => {
-		// 		const { emulators } = this.data;
-		// 		if (action === 'add' && path.dirname(file) === deployedDir && !detecting) {
-		// 			detecting = true;
-		// 			await onEmulatorAdd();
-		// 			detecting = false;
-		// 		} else if (action === 'change' && path.extname(file) === '.vbox' && !detecting) {
-		// 			await onEmulatorChange(file);
-		// 		} else if (action === 'delete' && (path.dirname(file) === deployedDir)) {
-		// 			// find the emulator in the data store and remove it
-		// 			for (let i = 0; i < emulators.length; i++) {
-		// 				if (emulators[i].name === filename) {
-		// 					emulators.splice(i--, 1);
-		// 					break;
-		// 				}
-		// 			}
-		// 			gawk.set(this.data.emulators, emulators);
-		// 		}
-		// 	}
-		// });
 	}
 
 	/**
