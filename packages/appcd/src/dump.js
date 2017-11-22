@@ -2,10 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 import { createRequest, loadConfig } from './common';
-import { createInstanceWithDefaults, StdioStream } from 'appcd-logger';
 import { debounce } from 'appcd-util';
-
-const { log } = createInstanceWithDefaults().config({ theme: 'compact' }).enable('*').pipe(new StdioStream());
 
 const cmd = {
 	desc: 'dumps the config, status, health, and debug logs to a file',
@@ -32,8 +29,15 @@ const cmd = {
 				});
 
 				request
-					.on('response', response => {
-						results.log.push(response);
+					.on('response', (message, response) => {
+						results.log.push({
+							args:      response.args,
+							typeStyle: response.typeStyle,
+							typeLabel: response.typeLabel,
+							ns:        response.ns,
+							nsStyle:   response.nsStyle,
+							ts:        response.ts
+						});
 						done();
 					})
 					.once('error', () => resolve());
@@ -84,9 +88,9 @@ const cmd = {
 				if (file) {
 					file = path.resolve(file);
 					fs.writeFileSync(file, JSON.stringify(results, null, 2));
-					log(`Wrote dump to ${file}`);
+					console.log(`Wrote dump to ${file}`);
 				} else {
-					log(JSON.stringify(results, null, 2));
+					console.log(JSON.stringify(results, null, 2));
 				}
 			});
 	}
