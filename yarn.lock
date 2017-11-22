@@ -7231,9 +7231,9 @@ window-size@0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/window-size/-/window-size-0.1.0.tgz#5438cd2ea93b202efa3a19fe8887aee7c94f9c9d"
 
-windowslib@^0.6.0:
-  version "0.6.0"
-  resolved "https://registry.yarnpkg.com/windowslib/-/windowslib-0.6.0.tgz#f45d8a0a3f7e1168b4b41e964d8e6aee0d758a3c"
+windowslib@^0.6.1:
+  version "0.6.1"
+  resolved "https://registry.yarnpkg.com/windowslib/-/windowslib-0.6.1.tgz#4246ab8f3d89349bec866317e72ab5dfa6c57556"
   dependencies:
     async "1.5.2"
     moment "2.11.2"

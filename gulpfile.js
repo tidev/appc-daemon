@@ -147,8 +147,17 @@ gulp.task('stats', () => {
 gulp.task('upgrade', cb => {
 	Promise.resolve()
 		.then(() => checkPackages({ skipSecurity: true }))
-		.then(results => upgradeDeps(results.packagesToUpdate))
-		.then(() => checkPackages({ skipSecurity: true }))
+		.then(results => {
+			const { packagesToUpdate } = results;
+
+			if (!packagesToUpdate.length) {
+				gutil.log('Everything looks good to go, nothing to upgrade');
+				return results;
+			}
+
+			return upgradeDeps()
+				.then(() => checkPackages({ skipSecurity: true }))
+		})
 		.then(results => renderPackages(results))
 		.then(() => cb(), cb);
 });
@@ -1305,11 +1314,6 @@ function hlVer(toVer, fromVer) {
 }
 
 function upgradeDeps(list) {
-	if (!list.length) {
-		gutil.log('Everything looks good to go, nothing to upgrade');
-		return;
-	}
-
 	const components = {};
 	for (const pkg of list) {
 		const pkgJsonFile = path.join(pkg.path, 'package.json');
