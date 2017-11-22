@@ -166,16 +166,16 @@ amdefine@>=0.0.4:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/amdefine/-/amdefine-1.0.1.tgz#4a5282ac164729e93619bcfd3ad151f817ce91f5"
 
-androidlib@^2.0.4:
-  version "2.0.4"
-  resolved "https://registry.yarnpkg.com/androidlib/-/androidlib-2.0.4.tgz#54aa819eb99f7d2202d700caa327eb9989cea6f2"
+androidlib@^2.0.7:
+  version "2.0.7"
+  resolved "https://registry.yarnpkg.com/androidlib/-/androidlib-2.0.7.tgz#8e36124ce22286575e0f1f13643a7e986e8ed148"
   dependencies:
-    appcd-fs "^1.0.0-15"
-    appcd-logger "^1.0.0-15"
-    appcd-path "^1.0.0-15"
-    appcd-subprocess "^1.0.0-15"
-    appcd-util "^1.0.0-15"
-    appcd-winreg "^1.0.0-15"
+    appcd-fs "^1.0.0-18"
+    appcd-logger "^1.0.0-18"
+    appcd-path "^1.0.0-18"
+    appcd-subprocess "^1.0.0-18"
+    appcd-util "^1.0.0-18"
+    appcd-winreg "^1.0.0-18"
     cli-kit "^0.0.8"
     fs-extra "^4.0.2"
     simple-plist "^0.2.1"
