@@ -4,9 +4,9 @@ import version from './version';
 
 import * as androidlib from 'androidlib';
 
+import { arrayify, debounce as debouncer, get, mergeDeep } from 'appcd-util';
 import { bat, cmd, exe } from 'appcd-subprocess';
 import { DataServiceDispatcher } from 'appcd-dispatcher';
-import { debounce as debouncer, get, mergeDeep } from 'appcd-util';
 
 /**
  * The Android info service.
@@ -72,7 +72,7 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 	 * @access private
 	 */
 	async initNDKs() {
-		const paths = [ get(this.config, 'android.ndk.searchPaths'), ...androidlib.ndk.ndkLocations[process.platform] ];
+		const paths = arrayify(get(this.config, 'android.ndk.searchPaths'), true).concat(androidlib.ndk.ndkLocations[process.platform]);
 
 		this.ndkDetectEngine = new DetectEngine({
 			checkDir(dir) {
@@ -131,7 +131,7 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 	 * @access private
 	 */
 	async initSDKsAndEmulators() {
-		const paths = [ get(this.config, 'android.sdk.searchPaths'), ...androidlib.sdk.sdkLocations[process.platform] ];
+		const paths = arrayify(get(this.config, 'android.sdk.searchPaths'), true).concat(androidlib.sdk.sdkLocations[process.platform]);
 
 		this.sdkDetectEngine = new DetectEngine({
 			checkDir(dir) {

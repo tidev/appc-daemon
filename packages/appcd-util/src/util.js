@@ -52,7 +52,7 @@ export function arch(bypassCache) {
  * Ensures that a value is an array. If not, it wraps the value in an array.
  *
  * @param {*} it - The value to ensure is an array.
- * @param {Boolean} [removeFalsey=false] - When true, filters out all falsey items.
+ * @param {Boolean} [removeFalsey=false] - When `true`, filters out all falsey items.
  * @returns {Array}
  */
 export function arrayify(it, removeFalsey) {

@@ -20,7 +20,7 @@
     "appcd-dispatcher": "^1.0.0-14",
     "appcd-util": "^1.0.0-14",
     "gawk": "^4.4.4",
-    "ioslib": "^2.0.0",
+    "ioslib": "^2.0.2",
     "semver": "^5.4.1",
     "source-map-support": "^0.5.0"
   },
