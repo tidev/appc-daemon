@@ -236,7 +236,7 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 
 							if (item.basedOn) {
 								// This is an addon
-								info.type = 'addon';
+								info.type = 'add-on';
 								info.vendor = item.vendor;
 								info.description = item.description;
 								info.version = item.basedOn.version || parseInt(String(item.basedOn).replace(/^android-/, '')) || null;
