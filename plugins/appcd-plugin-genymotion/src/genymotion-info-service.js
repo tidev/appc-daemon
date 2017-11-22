@@ -2,8 +2,8 @@ import DetectEngine from 'appcd-detect';
 import gawk from 'gawk';
 import path from 'path';
 
+import { arrayify, debounce as debouncer, get } from 'appcd-util';
 import { DataServiceDispatcher } from 'appcd-dispatcher';
-import { debounce as debouncer, get } from 'appcd-util';
 import { exe } from 'appcd-subprocess';
 import { genymotion, virtualbox } from 'androidlib';
 
@@ -124,7 +124,7 @@ export default class GenymotionInfoService extends DataServiceDispatcher {
 	 * @access private
 	 */
 	async initGenymotion() {
-		const paths = [ get(this.config, 'android.genymotion.searchPaths'), ...genymotion.genymotionLocations[process.platform] ];
+		const paths = arrayify(get(this.config, 'android.genymotion.searchPaths'), true).concat(genymotion.genymotionLocations[process.platform]);
 
 		this.genyEngine = new DetectEngine({
 			checkDir(dir) {
