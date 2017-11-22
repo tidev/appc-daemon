@@ -258,9 +258,21 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 					return targets;
 				};
 
+				// We need to pause gawk so two events dont fire
+				this.data.__gawk__.pause();
+				this.data.emulators.__gawk__.pause();
+				this.data.targets.__gawk__.pause();
+
 				console.log('AndroidSDK changed, rescanning emulators');
 				gawk.set(this.data.emulators, await androidlib.emulators.getEmulators({ force: true, sdks: this.data.sdk }));
+
 				gawk.set(this.data.targets, populateTargets());
+
+				// Now we need to resume gawk
+				this.data.targets.__gawk__.resume();
+				this.data.emulators.__gawk__.resume();
+				this.data.__gawk__.resume();
+
 				if (!initialized) {
 					initialized = true;
 					resolve();
