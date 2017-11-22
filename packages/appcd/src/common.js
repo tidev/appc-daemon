@@ -33,7 +33,7 @@ export function getAppcdVersion() {
  * @returns {String}
  */
 export function banner() {
-	if (process.env.hasOwnProperty('APPC_ENV')) {
+	if (process.env.hasOwnProperty('APPC_NPM_VERSION')) {
 		return '';
 	}
 
