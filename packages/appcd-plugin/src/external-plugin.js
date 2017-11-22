@@ -417,13 +417,10 @@ export default class ExternalPlugin extends PluginBase {
 					});
 			})
 			.then(ctx => new Promise((resolve, reject) => {
-				let activated = false;
-
 				this.tunnel = new Tunnel(ctx.proc, true, (req, send) => {
 					switch (req.type) {
 						case 'activated':
 							this.appcdLogger.log('External plugin is activated');
-							activated = true;
 							resolve();
 							break;
 
