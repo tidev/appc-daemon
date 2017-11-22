@@ -176,11 +176,6 @@ gulp.task('build', [ 'cyclic' ], () => {
 	runLerna([ 'run', '--parallel', 'build' ]);
 });
 
-gulp.task('docs', () => {
-	const Docma = require('docma');
-	// Docma.create()
-});
-
 /*
  * test tasks
  */
