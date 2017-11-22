@@ -1,6 +1,6 @@
 {
   "name": "appcd-config",
-  "version": "1.0.0-17",
+  "version": "1.0.0-18",
   "description": "Library for config files with metadata.",
   "main": "./dist/index",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
@@ -16,9 +16,9 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-fs": "^1.0.0-17",
-    "appcd-logger": "^1.0.0-17",
-    "appcd-path": "^1.0.0-17",
+    "appcd-fs": "^1.0.0-18",
+    "appcd-logger": "^1.0.0-18",
+    "appcd-path": "^1.0.0-18",
     "babel-traverse": "^6.26.0",
     "babel-types": "^6.26.0",
     "babylon": "^6.18.0",
@@ -28,7 +28,7 @@
     "source-map-support": "^0.5.0"
   },
   "devDependencies": {
-    "appcd-gulp": "^1.0.0-17",
+    "appcd-gulp": "^1.0.0-18",
     "gulp": "^3.9.1",
     "tmp": "^0.0.33"
   },
