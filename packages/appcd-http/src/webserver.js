@@ -155,7 +155,7 @@ export default class WebServer extends EventEmitter {
 			.then(() => {
 				const webroot = this.webroot || path.resolve(__dirname, '..', 'public');
 
-				return new Promise(resolve => {
+				return new Promise((resolve, reject) => {
 					this.httpServer = this.app
 						.use(this.router.routes())
 						.use(ctx => send(ctx, ctx.path, { index: this.index || 'index.html', root: webroot }))
@@ -173,7 +173,8 @@ export default class WebServer extends EventEmitter {
 								delete this.connections[key];
 								logger.log('%s disconnected', highlight(key));
 							});
-						});
+						})
+						.on('error', reject);
 
 					// create the websocket server and start listening
 					this.websocketServer = new WebSocketServer({
