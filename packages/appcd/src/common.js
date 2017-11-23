@@ -229,7 +229,7 @@ export function stopServer({ cfg, force }) {
 
 			log('Attempting to connect to the daemon and get the pid');
 
-			createRequest(cfg, '/appcd/pid')
+			createRequest(cfg, '/appcd/status/pid')
 				.request
 				.on('response', resolve)
 				.once('close', resolve)
