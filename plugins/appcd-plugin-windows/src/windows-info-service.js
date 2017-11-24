@@ -108,7 +108,28 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 				if (err) {
 					reject(err);
 				} else {
-					resolve(results.devices);
+					const devices = results.devices;
+					let wpsdkIndex = -1;
+					let	realDeviceIndex = -1;
+					for (let i = 0; i < devices.length; i++) {
+						const device = devices[i];
+						if (device.udid === 0 && device.wpsdk) {
+							wpsdkIndex = i;
+						} else if (device.udid !== 0 && !device.wpsdk) {
+							// now find with "real" device
+							realDeviceIndex = i;
+						}
+						if (wpsdkIndex !== -1 && realDeviceIndex !== -1) {
+							break;
+						}
+					}
+					if (wpsdkIndex !== -1 && realDeviceIndex !== -1) {
+						// set 'real' device wpsdk to the value we got from wptool binary
+						devices[realDeviceIndex].wpsdk = devices[wpsdkIndex].wpsdk;
+						// remove the wptool binary entry
+						devices.splice(wpsdkIndex, 1);
+					}
+					resolve(devices);
 				}
 			});
 		});
