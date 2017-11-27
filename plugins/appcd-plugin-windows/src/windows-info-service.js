@@ -110,7 +110,7 @@ export default class WindowsInfoService extends DataServiceDispatcher {
 				} else {
 					const devices = results.devices;
 					let wpsdkIndex = -1;
-					let	realDeviceIndex = -1;
+					let realDeviceIndex = -1;
 					for (let i = 0; i < devices.length; i++) {
 						const device = devices[i];
 						if (device.udid === 0 && device.wpsdk) {
