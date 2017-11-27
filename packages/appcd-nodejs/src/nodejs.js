@@ -437,8 +437,8 @@ export function spawnNode({ arch, args, detached, nodeHome, nodeArgs, stdio, v8m
 						return child;
 					})
 					.catch(err => {
-						if (err.code === 'ETXTBSY' && tries) {
-							logger.log('Spawn threw ETXTBSY, retrying...');
+						if ((err.code === 'ETXTBSY' || err.code === 'EBUSY') && tries) {
+							logger.log(`Spawn threw ${err.code}, retrying...`);
 							return new Promise((resolve, reject) => {
 								setTimeout(() => trySpawn().then(resolve, reject), 50);
 							});
