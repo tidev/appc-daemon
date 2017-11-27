@@ -192,7 +192,11 @@ export function startServer({ cfg, argv }) {
 			child.on('close', code => {
 				reject(code);
 			});
-		}));
+		}))
+		.catch(err => {
+			log(err);
+			return Promise.reject(1);
+		});
 }
 
 /**
