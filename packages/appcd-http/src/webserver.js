@@ -148,52 +148,50 @@ export default class WebServer extends EventEmitter {
 	 * @emits {websocket} Emitted when a new WebSocket connection has been established.
 	 * @access public
 	 */
-	listen() {
-		return Promise.resolve()
-			// make sure that if there is a previous websocket server, it's shutdown to free up the port
-			.then(() => this.shutdown())
-			.then(() => {
-				const webroot = this.webroot || path.resolve(__dirname, '..', 'public');
+	async listen() {
+		// make sure that if there is a previous websocket server, it's shutdown to free up the port
+		await this.shutdown();
 
-				return new Promise((resolve, reject) => {
-					this.httpServer = this.app
-						.use(this.router.routes())
-						.use(ctx => send(ctx, ctx.path, { index: this.index || 'index.html', root: webroot }))
-						.listen(this.port, this.hostname)
-						.once('listening', () => {
-							logger.log('Web server listening on %s', highlight(`http://${this.hostname || 'localhost'}:${this.port}`));
-							logger.log('Served web root: %s', highlight(webroot));
-							resolve();
-						})
-						.on('connection', conn => {
-							const key = conn.remoteAddress + ':' + conn.remotePort;
-							logger.log('%s connected', highlight(key));
-							this.connections[key] = conn;
-							conn.on('close', () => {
-								delete this.connections[key];
-								logger.log('%s disconnected', highlight(key));
-							});
-						})
-						.on('error', reject);
+		const webroot = this.webroot || path.resolve(__dirname, '..', 'public');
 
-					// create the websocket server and start listening
-					this.websocketServer = new WebSocketServer({
-						server: this.httpServer
+		return new Promise((resolve, reject) => {
+			this.httpServer = this.app
+				.use(this.router.routes())
+				.use(ctx => send(ctx, ctx.path, { index: this.index || 'index.html', root: webroot }))
+				.listen(this.port, this.hostname)
+				.once('listening', () => {
+					logger.log('Web server listening on %s', highlight(`http://${this.hostname || 'localhost'}:${this.port}`));
+					logger.log('Served web root: %s', highlight(webroot));
+					resolve();
+				})
+				.on('connection', conn => {
+					const key = conn.remoteAddress + ':' + conn.remotePort;
+					logger.log('%s connected', highlight(key));
+					this.connections[key] = conn;
+					conn.on('close', () => {
+						delete this.connections[key];
+						logger.log('%s disconnected', highlight(key));
 					});
+				})
+				.on('error', reject);
 
-					this.websocketServer.on('connection', (conn, req) => {
-						const { remoteAddress, remotePort } = req.socket;
-						const key = remoteAddress + ':' + remotePort;
-						logger.log('%s upgraded to WebSocket', highlight(key));
-
-						conn.on('close', () => {
-							logger.log('%s closed WebSocket', highlight(key));
-						});
-
-						this.emit('websocket', conn, req);
-					});
-				});
+			// create the websocket server and start listening
+			this.websocketServer = new WebSocketServer({
+				server: this.httpServer
 			});
+
+			this.websocketServer.on('connection', (conn, req) => {
+				const { remoteAddress, remotePort } = req.socket;
+				const key = remoteAddress + ':' + remotePort;
+				logger.log('%s upgraded to WebSocket', highlight(key));
+
+				conn.on('close', () => {
+					logger.log('%s closed WebSocket', highlight(key));
+				});
+
+				this.emit('websocket', conn, req);
+			});
+		});
 	}
 
 	/**
@@ -202,39 +200,35 @@ export default class WebServer extends EventEmitter {
 	 * @returns {Promise}
 	 * @access public
 	 */
-	shutdown() {
-		return Promise.resolve()
-			.then(() => {
-				if (this.websocketServer) {
-					return new Promise(resolve => {
-						// close the websocket server
-						logger.log('Closing WebSocket server');
-						this.websocketServer.close(() => {
-							this.websocketServer = null;
-							resolve();
-						});
-					});
-				}
-			})
-			.then(() => {
-				if (this.httpServer) {
-					return new Promise(resolve => {
-						// close the http server
-						logger.log('Closing HTTP server');
-						this.httpServer.close(() => {
-							// manually kill any open connections
-							const conns = Object.keys(this.connections);
-							logger.log(pluralize('Dropping %s connection', conns.length), highlight(conns.length));
-							for (const key of conns) {
-								this.connections[key].destroy();
-								delete this.connections[key];
-							}
-
-							this.httpServer = null;
-							resolve();
-						});
-					});
-				}
+	async shutdown() {
+		if (this.websocketServer) {
+			await new Promise(resolve => {
+				// close the websocket server
+				logger.log('Closing WebSocket server');
+				this.websocketServer.close(() => {
+					this.websocketServer = null;
+					resolve();
+				});
 			});
+		}
+
+		if (this.httpServer) {
+			await new Promise(resolve => {
+				// close the http server
+				logger.log('Closing HTTP server');
+				this.httpServer.close(() => {
+					// manually kill any open connections
+					const conns = Object.keys(this.connections);
+					logger.log(pluralize('Dropping %s connection', conns.length), highlight(conns.length));
+					for (const key of conns) {
+						this.connections[key].destroy();
+						delete this.connections[key];
+					}
+
+					this.httpServer = null;
+					resolve();
+				});
+			});
+		}
 	}
 }
