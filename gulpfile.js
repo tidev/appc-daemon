@@ -148,8 +148,8 @@ gulp.task('upgrade', cb => {
 				return results;
 			}
 
-			return upgradeDeps()
-				.then(() => checkPackages({ skipSecurity: true }))
+			upgradeDeps(packagesToUpdate);
+			return checkPackages({ skipSecurity: true });
 		})
 		.then(results => renderPackages(results))
 		.then(() => cb(), cb);
