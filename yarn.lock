@@ -1284,6 +1284,14 @@ cli-kit@^0.0.8:
     snooplogg "^1.9.1"
     source-map-support "^0.5.0"
 
+cli-kit@^0.0.9:
+  version "0.0.9"
+  resolved "https://registry.yarnpkg.com/cli-kit/-/cli-kit-0.0.9.tgz#6ed96cb502906577766729f5e6127e6c9d905517"
+  dependencies:
+    hook-emitter "^2.1.0"
+    snooplogg "^1.9.1"
+    source-map-support "^0.5.0"
+
 cli-table2@^0.2.0, cli-table2@~0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/cli-table2/-/cli-table2-0.2.0.tgz#2d1ef7f218a0e786e214540562d4bd177fe32d97"
