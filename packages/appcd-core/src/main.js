@@ -14,8 +14,8 @@ import CLI from 'cli-kit';
 import logger from './logger';
 
 process
-	.on('uncaughtException', err => logger.error('Caught exception:', err))
-	.on('unhandledRejection', (reason, p) => logger.error('Unhandled Rejection at: Promise ', p, reason));
+	.on('uncaughtException', err => logger.error('Caught unhandled exception:', err))
+	.on('unhandledRejection', (reason, p) => logger.error('Caught unhandled rejection at: Promise ', p, reason));
 
 new CLI({
 	options: {
@@ -35,6 +35,10 @@ new CLI({
 			});
 	})
 	.catch(err => {
-		console.error(err);
+		if (err.code === 'EADDRINUSE') {
+			process.send('already running');
+		} else {
+			console.error(err);
+		}
 		process.exit(err.code || 1);
 	});

@@ -215,20 +215,7 @@ export default class Server {
 			.on('websocket', (ws, req) => new WebSocketSession(ws, req));
 
 		// start the web server
-		try {
-			await this.systems.webserver.listen();
-		} catch (e) {
-			if (e.code === 'EADDRINUSE') {
-				const err = new Error('Server is already running!');
-				process.send('already running');
-				err.code = 4;
-				if (fs.existsSync(pidFile)) {
-					// Remove the pid file we wrote earlier to avoid possible confusion
-					fs.unlinkSync(pidFile);
-				}
-				throw err;
-			}
-		}
+		await this.systems.webserver.listen();
 
 		// send the server start event
 		await Dispatcher.call('/appcd/telemetry', {
