@@ -443,7 +443,7 @@ export function spawnNode({ arch, args, detached, nodeHome, nodeArgs, stdio, v8m
 								setTimeout(() => trySpawn().then(resolve, reject), 50);
 							});
 						}
-						return err;
+						throw err;
 					});
 			}());
 		});
