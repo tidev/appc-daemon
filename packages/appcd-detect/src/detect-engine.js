@@ -235,7 +235,6 @@ export default class DetectEngine extends EventEmitter {
 				} else {
 					defaultPath = real(path.resolve(await which(exe.substring(p + 1)), exe.substring(0, p)));
 				}
-				this.logger.log(`Adding search path from exe: ${defaultPath}`);
 				searchPaths.add(defaultPath);
 			} catch (e) {
 				// squelch

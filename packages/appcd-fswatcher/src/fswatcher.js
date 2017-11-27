@@ -283,7 +283,7 @@ export class Node {
 
 			if (watcher.recursive) {
 				this.recursive++;
-				this.recursiveWatch(watcher.recursive === Infinity ? Infinity : watcher.recursive - 1);
+				this.recursiveWatch(watcher.recursive === Infinity ? Infinity : watcher.recursive);
 			}
 		}
 		return this;
