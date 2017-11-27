@@ -32,7 +32,7 @@
     "appcd-subprocess": "^1.0.0-22",
     "appcd-telemetry": "^1.0.0-22",
     "appcd-util": "^1.0.0-22",
-    "cli-kit": "^0.0.8",
+    "cli-kit": "^0.0.9",
     "fs-extra": "^4.0.2",
     "gawk": "^4.4.4",
     "msgpack-lite": "^0.1.26"
