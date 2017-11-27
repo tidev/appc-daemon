@@ -199,25 +199,34 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 
 		this.watch({
 			type: 'avd',
-			depth: 1,
+			depth: 2,
 			paths: [ androidlib.avd.getAvdDir() ],
 			debounce: true,
 			handler: async () => {
 				console.log('Rescanning Android emulators...');
-				gawk.set(this.data.emulators, await androidlib.emulators.getEmulators({ force: true, sdks: this.data.sdk }));
+				const emus = await androidlib.emulators.getEmulators({ force: true, sdks: this.data.sdk });
+				console.log(`Found ${emus.length} emulators`);
+				gawk.set(this.data.emulators, emus);
 			}
 		});
 
 		return new Promise((resolve, reject) => {
 			// if sdks change, then refresh the simulators and update the targets object
 			gawk.watch(this.data.sdk, async () => {
+				// We need to pause gawk so two events dont fire
+				this.data.__gawk__.pause();
+				this.data.emulators.__gawk__.pause();
+				this.data.targets.__gawk__.pause();
 
-				const populateTargets = () => {
-					var index = 1;
-					const targets = {};
-					for (const sdk of this.data.sdk) {
-						const combo = sdk.platforms.concat(sdk.addons);
-						for (const item of combo) {
+				console.log('AndroidSDK changed, rescanning emulators');
+				gawk.set(this.data.emulators, await androidlib.emulators.getEmulators({ force: true, sdks: this.data.sdk }));
+
+				let index = 1;
+				const targets = {};
+
+				for (const sdk of this.data.sdk) {
+					for (const items of [ sdk.platforms, sdk.addons ]) {
+						for (const item of items) {
 							const abis = [];
 							if (item.abis) {
 								for (const type in item.abis) {
@@ -261,20 +270,9 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 
 							targets[index++] = info;
 						}
-
 					}
-					return targets;
-				};
-
-				// We need to pause gawk so two events dont fire
-				this.data.__gawk__.pause();
-				this.data.emulators.__gawk__.pause();
-				this.data.targets.__gawk__.pause();
-
-				console.log('AndroidSDK changed, rescanning emulators');
-				gawk.set(this.data.emulators, await androidlib.emulators.getEmulators({ force: true, sdks: this.data.sdk }));
-
-				gawk.set(this.data.targets, populateTargets());
+				}
+				gawk.set(this.data.targets, targets);
 
 				// Now we need to resume gawk
 				this.data.targets.__gawk__.resume();
