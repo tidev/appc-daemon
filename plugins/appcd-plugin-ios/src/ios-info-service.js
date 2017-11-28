@@ -353,13 +353,19 @@ export default class iOSInfoService extends DataServiceDispatcher {
 			}
 		});
 
+		const rescanXcode = debouncer(() => {
+			console.log('xcode-select link changed, rescanning Xcodes');
+			this.xcodeDetectEngine.rescan();
+		});
+
 		this.watch({
 			type: XCODE_SELECT_LINK,
-			paths: [ '/private/var/db/xcode_select_link' ],
-			debounce: true,
-			handler: () => {
-				console.log('xcode-select link changed, rescanning Xcodes');
-				this.xcodeDetectEngine.rescan();
+			paths: [ '/private/var/db' ],
+			handler: (event) => {
+				const { filename } = event;
+				if (filename === 'xcode_select_link') {
+					rescanXcode();
+				}
 			}
 		});
 
