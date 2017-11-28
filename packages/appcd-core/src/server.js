@@ -3,7 +3,7 @@ import ConfigService from 'appcd-config-service';
 import defaultPluginPaths from 'appcd-default-plugins';
 import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs-extra';
-import FSWatchManager from 'appcd-fswatcher';
+import FSWatchManager, { FSWatcher } from 'appcd-fswatcher';
 import os from 'os';
 import path from 'path';
 import PluginManager from 'appcd-plugin';
@@ -107,12 +107,21 @@ export default class Server {
 		}
 
 		// write the pid file
-		const pidFile = expandPath(this.config.get('server.pidFile'));
-		const pidDir = path.dirname(pidFile);
+		this.pidFile = expandPath(this.config.get('server.pidFile'));
+		const pidDir = path.dirname(this.pidFile);
 		if (!isDir(pidDir)) {
 			fs.mkdirsSync(pidDir);
 		}
-		fs.writeFileSync(pidFile, process.pid);
+		fs.writeFileSync(this.pidFile, process.pid);
+
+		// watch the pid to make sure it always exists
+		this.pidWatcher = new FSWatcher(this.pidFile)
+			.on('change', ({ action }) => {
+				if (action === 'delete') {
+					logger.log('pid file deleted, recreating');
+					fs.writeFileSync(this.pidFile, process.pid);
+				}
+			});
 
 		// rename the process
 		process.title = 'appcd';
@@ -260,9 +269,15 @@ export default class Server {
 				}
 			})
 			.then(() => {
-				const pidFile = expandPath(this.config.get('server.pidFile'));
-				logger.log('Removing %s', highlight(pidFile));
-				fs.unlinkSync(pidFile);
+				if (this.pidWatcher) {
+					logger.log('Stopping pid watcher');
+					this.pidWatcher.close();
+				}
+
+				if (isFile(this.pidFile)) {
+					logger.log('Removing %s', highlight(this.pidFile));
+					fs.unlinkSync(this.pidFile);
+				}
 			})
 			.then(() => {
 				const handles = getActiveHandles();
