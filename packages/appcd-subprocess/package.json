@@ -1,6 +1,6 @@
 {
   "name": "appcd-subprocess",
-  "version": "1.0.0-24",
+  "version": "1.0.0-25",
   "description": "Library for spawning and finding subprocesses.",
   "main": "./dist/index",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
@@ -16,18 +16,18 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-dispatcher": "^1.0.0-24",
-    "appcd-logger": "^1.0.0-24",
-    "appcd-nodejs": "^1.0.0-24",
-    "appcd-path": "^1.0.0-24",
-    "appcd-response": "^1.0.0-24",
+    "appcd-dispatcher": "^1.0.0-25",
+    "appcd-logger": "^1.0.0-25",
+    "appcd-nodejs": "^1.0.0-25",
+    "appcd-path": "^1.0.0-25",
+    "appcd-response": "^1.0.0-25",
     "gawk": "^4.4.4",
     "ps-tree": "^1.1.0",
     "source-map-support": "^0.5.0",
     "which": "^1.3.0"
   },
   "devDependencies": {
-    "appcd-gulp": "^1.0.0-24",
+    "appcd-gulp": "^1.0.0-25",
     "gulp": "^3.9.1",
     "tmp": "^0.0.33"
   },

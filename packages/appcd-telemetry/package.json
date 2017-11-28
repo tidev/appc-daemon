@@ -1,6 +1,6 @@
 {
   "name": "appcd-telemetry",
-  "version": "1.0.0-24",
+  "version": "1.0.0-25",
   "description": "Library for collecting and sending data to the Appcelerator cloud.",
   "main": "./dist/telemetry",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
@@ -16,21 +16,21 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-config": "^1.0.0-24",
-    "appcd-dispatcher": "^1.0.0-24",
-    "appcd-fs": "^1.0.0-24",
-    "appcd-logger": "^1.0.0-24",
-    "appcd-machine-id": "^1.0.0-24",
-    "appcd-path": "^1.0.0-24",
-    "appcd-request": "^1.0.0-24",
-    "appcd-response": "^1.0.0-24",
-    "appcd-util": "^1.0.0-24",
+    "appcd-config": "^1.0.0-25",
+    "appcd-dispatcher": "^1.0.0-25",
+    "appcd-fs": "^1.0.0-25",
+    "appcd-logger": "^1.0.0-25",
+    "appcd-machine-id": "^1.0.0-25",
+    "appcd-path": "^1.0.0-25",
+    "appcd-request": "^1.0.0-25",
+    "appcd-response": "^1.0.0-25",
+    "appcd-util": "^1.0.0-25",
     "fs-extra": "^4.0.2",
     "source-map-support": "^0.5.0",
     "uuid": "^3.1.0"
   },
   "devDependencies": {
-    "appcd-gulp": "^1.0.0-24",
+    "appcd-gulp": "^1.0.0-25",
     "gulp": "^3.9.1",
     "tmp": "^0.0.33"
   },
