@@ -77,8 +77,8 @@ export default class DetectEngine extends EventEmitter {
 	 * complete and the results may be modified.
 	 * @param {Boolean} [opts.recursive=false] - When `true`, recursively watches a path for
 	 * changes to trigger a redetect.
-	 * @param {Number} [opts.recursiveWatchDepth=0] - The max depth to recursively watch a found
-	 * path. Requires `opts.recursive` to be `true`.
+	 * @param {Number} [opts.recursiveWatchDepth=Infinity] - The max depth to recursively watch a
+	 * found path. Requires `opts.recursive` to be `true`.
 	 * @param {Boolean} [opts.redetect=false] - When `true`, re-runs detection when a path changes.
 	 * Requires `watch` to be `true`.
 	 * @param {Number} [opts.refreshPathsInterval=30000] - The number of milliseconds to check for
@@ -119,7 +119,9 @@ export default class DetectEngine extends EventEmitter {
 			throw new TypeError('Expected "processResults" option to be a function');
 		}
 
-		opts.recursiveWatchDepth = Math.max(~~opts.recursiveWatchDepth, 0);
+		if (opts.recursiveWatchDepth !== undefined) {
+			opts.recursiveWatchDepth = Math.max(~~opts.recursiveWatchDepth, 0);
+		}
 
 		opts.redetect = !opts.redetect || opts.watch;
 
