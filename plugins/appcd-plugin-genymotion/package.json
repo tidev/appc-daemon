@@ -17,7 +17,7 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "androidlib": "^2.0.9",
+    "androidlib": "^2.0.10",
     "appcd-detect": "^1.0.0-23",
     "appcd-dispatcher": "^1.0.0-23",
     "appcd-fs": "^1.0.0-23",
@@ -39,6 +39,7 @@
     "url": "git+https://github.com/appcelerator/appc-daemon.git"
   },
   "appcd-plugin": {
+    "config": "./conf/config.js",
     "name": "genymotion",
     "type": "external"
   }

@@ -10,6 +10,7 @@ import { parse } from 'babylon';
 import { wrap } from 'module';
 
 const { log } = appcdLogger('appcd:config');
+const { highlight } = appcdLogger.styles;
 
 /**
  * A config model that loads config files, retrieves/changes settings, and validates settings based
@@ -67,12 +68,14 @@ export default class Config {
 	 * metadata per config property describing the datatype and readonly access.
 	 *
 	 * @param {String} file - The path to a .js or .json config file to load.
-	 * @param {Boolean} [isUserDefined=false] - When `true`, flags the values as "user" settings
-	 * which will be persisted when the config is saved.
+	 * @param {Object} [opts] - Various options.
+	 * @param {Boolean} [opts.isUserDefined=false] - When `true`, flags the values as "user"
+	 * settings which will be persisted when the config is saved.
+	 * @param {Boolean} [opts.override=true] - When `true`, overrides existing values.
 	 * @returns {Config}
 	 * @access public
 	 */
-	load(file, isUserDefined) {
+	load(file, opts = {}) {
 		if (!file || typeof file !== 'string') {
 			throw new TypeError('Expected config file to be a string');
 		}
@@ -93,18 +96,20 @@ export default class Config {
 		let config;
 		try {
 			if (ext === '.json') {
-				log(`Loading JSON config file: ${file}`);
+				log('Loading JSON config file:', highlight(file));
 				config = JSON.parse(fs.readFileSync(file));
 			} else {
 				// .js file
-				log(`Loading JavaScript config file: ${file}`);
+				log('Loading JavaScript config file:', highlight(file));
 				config = this.parseJS(fs.readFileSync(file, 'utf8'), file);
 			}
 		} catch (e) {
 			throw new Error(`Failed to load config file: ${e}`);
 		}
 
-		return this.merge(config, { isUserDefined, overrideReadonly: true });
+		opts.overrideReadonly = true;
+
+		return this.merge(config, opts);
 	}
 
 	/**
@@ -118,7 +123,7 @@ export default class Config {
 	 * @access public
 	 */
 	loadUserConfig(file) {
-		return this.load(file, true);
+		return this.load(file, { isUserDefined: true, override: true });
 	}
 
 	/**
@@ -205,7 +210,7 @@ export default class Config {
 			const parts = key.split('.');
 
 			for (let i = 0, k; it !== undefined && (k = parts[i++]);) {
-				if (typeof it !== 'object' || Array.isArray(it)) {
+				if (typeof it !== 'object') {
 					return defaultValue;
 				}
 				it = it[k];
@@ -500,6 +505,7 @@ export default class Config {
 	 * @param {Object} [opts] - Various options.
 	 * @param {Boolean} [opts.isUserDefined=false] - When `true`, flags the values as "user" settings
 	 * which will be persisted when the config is saved.
+	 * @param {Boolean} [opts.override=true] - When `true`, overrides existing values.
  	 * @param {Boolean} [opts.overrideReadonly=false] - When `true`, does not enforce read only.
 	 * @returns {Config}
 	 * @access public
@@ -514,6 +520,7 @@ export default class Config {
 				const value = src[key];
 
 				scope.push(key);
+
 				const scopeKey = scope.join('.');
 				this.meta.validate(scopeKey, value, opts);
 
@@ -531,7 +538,7 @@ export default class Config {
 						dest[key] = {};
 					}
 					merger(dest[key], value, scope);
-				} else if (typeof value !== 'undefined' && value !== dest[key]) {
+				} else if (typeof value !== 'undefined' && value !== dest[key] && (dest[key] === undefined || opts.override !== false)) {
 					dest[key] = value;
 					if (opts.isUserDefined) {
 						this.userDefined.add(scopeKey);

@@ -169,7 +169,7 @@ The plugin host will exit with one of the following exit codes:
 ### Debugging Plugins
 
 You can debug Appc Daemon plugins using the Google Chrome Dev Tools by setting the
-`INSPECT_PLUGIN=<PLUGIN_NAME>` environment variable. You will see the URL in the log output.
+`APPCD_INSPECT_PLUGIN=<PLUGIN_NAME>` environment variable. You will see the URL in the log output.
 
 By default, it starts the inspector on port `9230`, but you can change it by setting the
-`INSPECT_PLUGIN_PORT=<PORT>` environment variable.
+`APPCD_INSPECT_PLUGIN_PORT=<PORT>` environment variable.

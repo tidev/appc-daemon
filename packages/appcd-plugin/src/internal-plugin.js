@@ -1,7 +1,11 @@
+import appcdLogger from 'appcd-logger';
 import Dispatcher from 'appcd-dispatcher';
 import PluginBase from './plugin-base';
 
 import { AppcdError, codes } from 'appcd-response';
+
+const { log } = appcdLogger('appcd:plugin:internal');
+const { highlight } = appcdLogger.styles;
 
 /**
  * Internal plugin implementation logic.
@@ -33,7 +37,20 @@ export default class InternalPlugin extends PluginBase {
 	 * @access private
 	 */
 	onStart() {
-		return this.activate()
+		return Promise.resolve()
+			.then(() => {
+				if (this.plugin.configFile) {
+					log('Loading plugin config file:', highlight(this.plugin.configFile));
+					return Dispatcher.call('/appcd/config', {
+						data: {
+							action:   'load',
+							file:     this.plugin.configFile,
+							override: false
+						}
+					});
+				}
+			})
+			.then(() => this.activate())
 			.catch(err => {
 				this.info.error = err.message;
 				this.info.stack = err.stack;
