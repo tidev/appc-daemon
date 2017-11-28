@@ -1,6 +1,6 @@
 {
   "name": "appcd-agent",
-  "version": "1.0.0-25",
+  "version": "1.0.0-26",
   "description": "Monitors a Node.js process and tracks CPU and memory usage.",
   "main": "./dist/index",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
@@ -20,7 +20,7 @@
     "source-map-support": "^0.5.0"
   },
   "devDependencies": {
-    "appcd-gulp": "^1.0.0-25",
+    "appcd-gulp": "^1.0.0-26",
     "gulp": "^3.9.1"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
