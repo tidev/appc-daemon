@@ -13,20 +13,9 @@ const cmd = {
 		try {
 			await startServer({ cfg, argv });
 			console.log('Appc Daemon started');
-		} catch (code) {
-			switch (code) {
-				case 1:
-					console.error('Failed to start the Appc Daemon');
-					break;
-
-				case 4:
-					console.log('Appc Daemon already started');
-					break;
-
-				case 5:
-					console.error('Error: Daemon cannot be run as root');
-					break;
-			}
+		} catch (err) {
+			const code = err.exitCode || 1;
+			console.error(`${err.message} (code ${code})`);
 			process.exit(code);
 		}
 	}

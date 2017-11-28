@@ -361,8 +361,7 @@ export default class iOSInfoService extends DataServiceDispatcher {
 		this.watch({
 			type: XCODE_SELECT_LINK,
 			paths: [ '/private/var/db' ],
-			handler: (event) => {
-				const { filename } = event;
+			handler({ filename }) {
 				if (filename === 'xcode_select_link') {
 					rescanXcode();
 				}

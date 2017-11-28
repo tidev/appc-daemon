@@ -131,7 +131,8 @@ export function startServer({ cfg, argv }) {
 	nodeVer = m ? `v${m[1]}` : null;
 
 	if (debug) {
-		args.push('--inspect');
+		const debugPort = process.env.APPCD_INSPECT_PORT && Math.max(parseInt(process.env.APPCD_INSPECT_PORT), 1024) || 9230;
+		args.push(`--inspect=${debugPort}`);
 	}
 	args.push(require.resolve('appcd-core'));
 	if (config) {
@@ -157,11 +158,10 @@ export function startServer({ cfg, argv }) {
 
 				return spawnNode({
 					args,
-					detached,
 					nodeHome: expandPath(cfg.get('home'), 'node'),
 					stdio,
 					v8mem,
-					version:  nodeVer
+					version: nodeVer
 				});
 			}
 
@@ -185,17 +185,32 @@ export function startServer({ cfg, argv }) {
 					}
 					resolve();
 				} else if (msg === 'already running') {
-					reject(4);
+					const err = new Error('Appc Daemon already started');
+					err.exitCode = 4;
+					reject(err);
 				}
 			});
 
 			child.on('close', code => {
-				reject(code);
+				if (code) {
+					let err;
+					if (code === 12) {
+						err = new Error('Node.js inspector address already in use');
+					} else if (code === 5) {
+						err = new Error('Daemon cannot be run as root');
+					} else {
+						err = new Error('Failed to start the Appc Daemon');
+					}
+					err.exitCode = code;
+					reject(err);
+				} else {
+					resolve();
+				}
 			});
 		}))
 		.catch(err => {
 			log(err);
-			return Promise.reject(1);
+			throw err;
 		});
 }
 
