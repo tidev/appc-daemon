@@ -1,6 +1,6 @@
 {
   "name": "appcd-machine-id",
-  "version": "1.0.0-26",
+  "version": "1.0.0-27",
   "description": "Determines and caches a unique machine identifier.",
   "main": "./dist/machine-id",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
@@ -16,19 +16,19 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-fs": "^1.0.0-26",
-    "appcd-logger": "^1.0.0-26",
-    "appcd-path": "^1.0.0-26",
-    "appcd-subprocess": "^1.0.0-26",
-    "appcd-util": "^1.0.0-26",
-    "appcd-winreg": "^1.0.0-26",
+    "appcd-fs": "^1.0.0-27",
+    "appcd-logger": "^1.0.0-27",
+    "appcd-path": "^1.0.0-27",
+    "appcd-subprocess": "^1.0.0-27",
+    "appcd-util": "^1.0.0-27",
+    "appcd-winreg": "^1.0.0-27",
     "fs-extra": "^4.0.2",
     "macaddress": "^0.2.8",
     "simple-plist": "^0.2.1",
     "source-map-support": "^0.5.0"
   },
   "devDependencies": {
-    "appcd-gulp": "^1.0.0-26",
+    "appcd-gulp": "^1.0.0-27",
     "gulp": "^3.9.1",
     "tmp": "^0.0.33"
   },
