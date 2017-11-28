@@ -290,7 +290,7 @@ export default class Metadata {
 	 */
 	_createTypeValidator(type) {
 		const tag = doctrine.parse(`@type {${type}}`).tags[0];
-		type = doctrine.type.stringify(tag.type);
+		type = doctrine.type.stringify(tag.type, { compact: true });
 
 		const fns = this._processMetaType(tag.type);
 		return {
@@ -382,7 +382,7 @@ export default class Metadata {
 					break;
 
 				case 'type':
-					data.type = doctrine.type.stringify(tag.type);
+					data.type = doctrine.type.stringify(tag.type, { compact: true });
 					if (tag.type.type === 'NonNullableType' && data.nullable) {
 						data.nullable = false;
 					}

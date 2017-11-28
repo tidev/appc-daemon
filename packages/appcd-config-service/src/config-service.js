@@ -4,8 +4,9 @@ import Response, { codes } from 'appcd-response';
 
 import { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
 import { expandPath } from 'appcd-path';
+import { isFile } from 'appcd-fs';
 
-const logger = appcdLogger('appcd:config-service');
+const { log } = appcdLogger('appcd:config-service');
 const { highlight } = appcdLogger.styles;
 
 const writeRegExp = /^set|delete|push|pop|shift|unshift$/;
@@ -74,8 +75,27 @@ export default class ConfigService extends ServiceDispatcher {
 
 			const { action } = data;
 
+			log(`Handling ${action} request`);
+
 			if (action === 'get') {
 				// fall through
+
+			} else if (action === 'load') {
+				let { file, isUserDefined, override } = data;
+				if (!file || typeof file !== 'string') {
+					throw new DispatcherError(codes.BAD_REQUEST, 'Expected file to be a non-empty string');
+				}
+
+				file = expandPath(file);
+				if (!isFile(file)) {
+					throw new DispatcherError(codes.BAD_REQUEST, `Config file not found: ${data.file}`);
+				}
+
+				log('Loading config file:', highlight(file));
+				this.config.load(file, {
+					isUserDefined: !!isUserDefined,
+					override:      override !== false
+				});
 
 			} else if (writeRegExp.test(action)) {
 				// performing a modifying action
@@ -89,7 +109,7 @@ export default class ConfigService extends ServiceDispatcher {
 				try {
 					switch (action) {
 						case 'set':
-							logger.log(`Setting "${key}" to ${JSON.stringify(data.value)}`);
+							log(`Setting "${key}" to ${JSON.stringify(data.value)}`);
 							this.config.set(key, data.value);
 							break;
 
@@ -151,7 +171,7 @@ export default class ConfigService extends ServiceDispatcher {
 	 */
 	initSubscription({ ctx, publish }) {
 		const { filter } = ctx.request.params;
-		logger.log('Starting config gawk watch: %s', highlight(filter || 'no filter'));
+		log('Starting config gawk watch: %s', highlight(filter || 'no filter'));
 		this.config.watch(filter, publish);
 	}
 
@@ -165,7 +185,7 @@ export default class ConfigService extends ServiceDispatcher {
 	 */
 	onSubscribe({ ctx, publish }) {
 		const { filter } = ctx.request.params;
-		logger.log('Sending initial config state to subscriber: %s', highlight(filter));
+		log('Sending initial config state to subscriber: %s', highlight(filter));
 		const node = this.config.get(filter);
 		publish(node);
 	}
@@ -179,7 +199,7 @@ export default class ConfigService extends ServiceDispatcher {
 	 * @access private
 	 */
 	destroySubscription({ publish }) {
-		logger.log('Removing config gawk watch');
+		log('Removing config gawk watch');
 		this.config.unwatch(publish);
 	}
 }

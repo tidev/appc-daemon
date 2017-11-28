@@ -33,6 +33,7 @@
     "url": "git+https://github.com/appcelerator/appc-daemon.git"
   },
   "appcd-plugin": {
+    "config": "./conf/config.js",
     "name": "windows",
     "os": [
       "win32"

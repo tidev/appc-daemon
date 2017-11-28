@@ -356,16 +356,14 @@ export default class ExternalPlugin extends PluginBase {
 	 * @access private
 	 */
 	startParent() {
-		this.appcdLogger.log('Spawning plugin host');
-
 		const args = [
 			path.resolve(__dirname, '..', 'bin', 'appcd-plugin-host'),
 			this.plugin.path
 		];
 
 		const debuggerRegExp = /^Debugger listening on .+\/([A-Za-z0-9-]+)$/;
-		const debugPort = process.env.INSPECT_PLUGIN_PORT && Math.max(parseInt(process.env.INSPECT_PLUGIN_PORT), 1024) || 9230;
-		let debugEnabled = process.env.INSPECT_PLUGIN === this.plugin.name;
+		const debugPort = process.env.APPCD_INSPECT_PLUGIN_PORT && Math.max(parseInt(process.env.APPCD_INSPECT_PLUGIN_PORT), 1024) || 9230;
+		let debugEnabled = process.env.APPCD_INSPECT_PLUGIN === this.plugin.name;
 		if (debugEnabled) {
 			args.unshift(`--inspect-brk=${debugPort}`);
 		}
@@ -383,7 +381,20 @@ export default class ExternalPlugin extends PluginBase {
 				});
 		}, 2000);
 
-		return Dispatcher.call('/appcd/config/plugins/autoReload')
+		return Promise.resolve()
+			.then(() => {
+				if (this.plugin.configFile) {
+					this.appcdLogger.log('Loading plugin config file:', highlight(this.plugin.configFile));
+					return Dispatcher.call('/appcd/config', {
+						data: {
+							action:   'load',
+							file:     this.plugin.configFile,
+							override: false
+						}
+					});
+				}
+			})
+			.then(() => Dispatcher.call('/appcd/config/plugins/autoReload'))
 			.then(ctx => ctx.response, () => true)
 			.then(autoReload => {
 				if (autoReload) {
@@ -405,6 +416,7 @@ export default class ExternalPlugin extends PluginBase {
 				this.appcdLogger.warn('Failed to wire up %s fs watcher: %s', this.plugin.toString(), err.message);
 			})
 			.then(() => {
+				this.appcdLogger.log('Spawning plugin host');
 				return Dispatcher
 					.call(`/appcd/subprocess/spawn/node/${this.plugin.nodeVersion}`, {
 						data: {

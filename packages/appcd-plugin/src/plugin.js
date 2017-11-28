@@ -169,6 +169,19 @@ export default class Plugin extends EventEmitter {
 				this.type = appcdPlugin.type;
 			}
 
+			if (appcdPlugin.config) {
+				let configFile = appcdPlugin.config;
+				if (typeof configFile !== 'string') {
+					throw new PluginError('Expected config to be a string');
+				}
+
+				if (!path.isAbsolute(configFile)) {
+					configFile = path.resolve(pluginPath, configFile);
+				}
+
+				this.configFile = expandPath(configFile);
+			}
+
 			if (appcdPlugin.os) {
 				this.os = arrayify(appcdPlugin.os, true);
 				if (this.os.length === 0) {
@@ -198,6 +211,10 @@ export default class Plugin extends EventEmitter {
 		this.error = null;
 		this.supported = true;
 
+		if (this.configFile && !isFile(this.configFile)) {
+			throw new PluginError(`Plugin config file not found: ${this.configFile}`);
+		}
+
 		if (this.os && !this.os.includes(process.platform)) {
 			this.error = `Unsupported platform "${process.platform}"`;
 			this.supported = false;
@@ -215,6 +232,10 @@ export default class Plugin extends EventEmitter {
 		this.directories = new Set()
 			.add(this.path)
 			.add(path.dirname(this.main));
+
+		if (this.configFile) {
+			this.directories.add(path.dirname(this.configFile));
+		}
 
 		if (typeof pkgJson.directories === 'object') {
 			for (const type of [ 'lib', 'src' ]) {
