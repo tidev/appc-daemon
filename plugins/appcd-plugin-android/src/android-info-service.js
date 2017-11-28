@@ -118,9 +118,10 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 					}
 				}
 			},
-			recursive: true,
-			redetect:  true,
-			watch:     true
+			recursive:           true,
+			recursiveWatchDepth: 0,
+			redetect:            true,
+			watch:               true
 		});
 
 		// listen for ndk results
@@ -174,6 +175,8 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 				}
 			},
 			recursive: true,
+			recursiveWatchDepth: 1,
+			redetect: true,
 			registryKeys: [
 				{
 					hive: 'HKLM',
@@ -186,7 +189,6 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 					name: 'SdkPath'
 				}
 			],
-			redetect: true,
 			watch: true
 		});
 
