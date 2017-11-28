@@ -15,16 +15,9 @@ const cmd = {
 		try {
 			await startServer({ cfg, argv });
 			console.log(wasRunning ? 'Appc Daemon restarted' : 'Appc Daemon started');
-		} catch (code) {
-			switch (code) {
-				case 1:
-					console.error('Failed to restart the Appc Daemon');
-					break;
-
-				case 5:
-					console.error('Error: Daemon cannot be run as root');
-					break;
-			}
+		} catch (err) {
+			console.error(err.message);
+			process.exit(err.exitCode || 1);
 		}
 	}
 };

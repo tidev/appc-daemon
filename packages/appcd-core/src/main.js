@@ -40,5 +40,5 @@ new CLI({
 		} else {
 			console.error(err);
 		}
-		process.exit(err.code || 1);
+		process.exit(err.code && typeof err.code === 'number' ? err.code : 1);
 	});
