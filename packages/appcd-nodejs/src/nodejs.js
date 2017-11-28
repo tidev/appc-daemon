@@ -407,8 +407,9 @@ export function spawnNode({ arch, args, detached, nodeHome, nodeArgs, stdio, v8m
 			};
 
 			if (detached) {
-				opts.detached = true;
-				opts.stdio = 'ignore';
+				opts.detached    = true;
+				opts.stdio       = 'ignore';
+				opts.windowsHide = true;
 			}
 
 			if (stdio) {
