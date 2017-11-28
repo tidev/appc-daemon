@@ -73,6 +73,14 @@ const cmd = {
 					request
 						.on('response', status => {
 							client.disconnect();
+
+							const envRegExp = /^ANDROID.*|APPC.*|ComSpec|HOME|HOMEPATH|LANG|PATH|PWD|USERPROFILE$/;
+							for (const key of Object.keys(status.process.env)) {
+								if (!envRegExp.test(key)) {
+									delete status.process.env[key];
+								}
+							}
+
 							results.status = status;
 							resolve();
 						})
