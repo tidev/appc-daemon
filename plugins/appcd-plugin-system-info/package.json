@@ -1,6 +1,6 @@
 {
   "name": "appcd-plugin-system-info",
-  "version": "1.0.0-23",
+  "version": "1.0.0-24",
   "description": "The Appc Daemon plugin for detecting system info.",
   "main": "./dist/index",
   "author": "Appcelerator, Inc. <npmjs@appcelerator.com>",
@@ -16,16 +16,16 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-dispatcher": "^1.0.0-23",
-    "appcd-fs": "^1.0.0-23",
-    "appcd-path": "^1.0.0-23",
-    "appcd-subprocess": "^1.0.0-23",
-    "appcd-util": "^1.0.0-23",
+    "appcd-dispatcher": "^1.0.0-24",
+    "appcd-fs": "^1.0.0-24",
+    "appcd-path": "^1.0.0-24",
+    "appcd-subprocess": "^1.0.0-24",
+    "appcd-util": "^1.0.0-24",
     "gawk": "^4.4.4",
     "source-map-support": "^0.5.0"
   },
   "devDependencies": {
-    "appcd-gulp": "^1.0.0-23",
+    "appcd-gulp": "^1.0.0-24",
     "gulp": "^3.9.1"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
