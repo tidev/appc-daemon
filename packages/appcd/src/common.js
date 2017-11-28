@@ -195,7 +195,7 @@ export function startServer({ cfg, argv }) {
 		}))
 		.catch(err => {
 			log(err);
-			return Promise.reject(1);
+			return Promise.reject(err || 1);
 		});
 }
 
