@@ -7,6 +7,7 @@ import gawk from 'gawk';
 import path from 'path';
 import tmp from 'tmp';
 
+import { exe } from 'appcd-subprocess';
 import { isFile } from 'appcd-fs';
 import { real } from 'appcd-path';
 import { sleep } from 'appcd-util';
@@ -115,7 +116,23 @@ describe('Detect', () => {
 			}).to.throw(TypeError, 'Expected "processResults" option to be a function');
 		});
 
-		it('should reject if registryCallback is not a function', () => {
+		it('should ensure recursiveWatchDepth is a number', () => {
+			const engine = new DetectEngine({
+				checkDir() {},
+				recursiveWatchDepth: '123'
+			});
+			expect(engine.opts.recursiveWatchDepth).to.equal(123);
+		});
+
+		it('should ensure recursiveWatchDepth is greater than or equal to zero', () => {
+			const engine = new DetectEngine({
+				checkDir() {},
+				recursiveWatchDepth: -1
+			});
+			expect(engine.opts.recursiveWatchDepth).to.equal(0);
+		});
+
+		it('should reject if registryCallback() is not a function', () => {
 			expect(() => {
 				new DetectEngine({
 					checkDir() {},
@@ -195,6 +212,92 @@ describe('Detect', () => {
 				});
 			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
 		});
+
+		it('should disable redetect if not watching', () => {
+			const engine = new DetectEngine({
+				checkDir() {},
+				redetect: true
+			});
+			expect(engine.opts.redetect).to.be.false;
+		});
+
+		it('should bake the name into the detect engine id', () => {
+			const engine = new DetectEngine({
+				checkDir() {},
+				name: 'foo'
+			});
+			expect(engine.id).to.match(/^<foo:.+>$/);
+		});
+	});
+
+	describe('Paths', () => {
+		it('should find no paths to scan', async () => {
+			const engine = new DetectEngine({
+				checkDir() {}
+			});
+
+			const paths = await engine.getPaths();
+			expect(paths.defaultPath).to.be.undefined;
+			expect(Array.from(paths.searchPaths)).to.deep.equal([]);
+		});
+
+		it('should find path based on specified paths', async () => {
+			const engine = new DetectEngine({
+				checkDir() {},
+				paths: [ __dirname ]
+			});
+
+			const paths = await engine.getPaths();
+			expect(paths.defaultPath).to.equal(__dirname);
+			expect(Array.from(paths.searchPaths)).to.deep.equal([ __dirname ]);
+		});
+
+		it('should find path based on exe', async () => {
+			const mocksDir = path.join(__dirname, 'mocks');
+			const engine = new DetectEngine({
+				checkDir() {},
+				envPath: mocksDir,
+				exe: [ `test${exe}` ]
+			});
+
+			const paths = await engine.getPaths();
+			expect(paths.defaultPath).to.equal(mocksDir);
+			expect(Array.from(paths.searchPaths)).to.deep.equal([ mocksDir ]);
+		});
+
+		it('should find path based on relative exe', async () => {
+			const engine = new DetectEngine({
+				checkDir() {},
+				envPath: path.join(__dirname, 'mocks'),
+				exe: [ `../../test${exe}` ]
+			});
+
+			const paths = await engine.getPaths();
+			expect(paths.defaultPath).to.equal(__dirname);
+			expect(Array.from(paths.searchPaths)).to.deep.equal([ __dirname ]);
+		});
+
+		it('should find path based on environment variables', async () => {
+			const fooDir = path.join(__dirname, 'foo');
+			const barDir = path.join(__dirname, 'bar');
+
+			process.env.APPCD_DETECT_TEST_FOO = fooDir;
+			process.env.APPCD_DETECT_TEST_BAR = barDir;
+
+			try {
+				const engine = new DetectEngine({
+					checkDir() {},
+					env: [ 'APPCD_DETECT_TEST_FOO', 'APPCD_DETECT_TEST_BAR' ]
+				});
+
+				const paths = await engine.getPaths();
+				expect(paths.defaultPath).to.equal(barDir);
+				expect(Array.from(paths.searchPaths)).to.deep.equal([ fooDir, barDir ]);
+			} finally {
+				delete process.env.APPCD_DETECT_TEST_FOO;
+				delete process.env.APPCD_DETECT_TEST_BAR;
+			}
+		});
 	});
 
 	describe('Detect', () => {
@@ -253,6 +356,21 @@ describe('Detect', () => {
 			const results = await this.engine.start();
 			expect(results).to.be.an('array');
 			expect(results).to.have.lengthOf(0);
+		});
+
+		it('should scan subdirectories for a single item', async function () {
+			this.engine = new DetectEngine({
+				checkDir(dir) {
+					if (dir !== __dirname) {
+						return { foo: 'bar' };
+					}
+				},
+				depth: 1,
+				paths: __dirname
+			});
+
+			const results = await this.engine.start();
+			expect(results).to.deep.equal({ foo: 'bar' });
 		});
 
 		it('should scan subdirectories if detect function returns falsey result', async function () {
