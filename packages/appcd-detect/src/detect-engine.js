@@ -65,6 +65,8 @@ export default class DetectEngine extends EventEmitter {
 	 * path.
 	 * @param {Number} [opts.depth=0] - The max depth to scan each search path. Must be greater than
 	 * or equal to zero. If the `depth` is `0`, it will not scan subdirectories of each path.
+	 * @param {String} [opts.envPath] - A string of paths to use instead of the `PATH` environment
+	 * variable.
 	 * @param {String|Array<String>|Set} [opts.exe] - The name of the executable to search the
 	 * system path for. If found, the directory is returned and the value will be marked as the
 	 * primary path. Each exe may be prefixed by one or more `../` paths which will be stripped off
@@ -123,7 +125,8 @@ export default class DetectEngine extends EventEmitter {
 			opts.recursiveWatchDepth = Math.max(~~opts.recursiveWatchDepth, 0);
 		}
 
-		opts.redetect = !opts.redetect || opts.watch;
+		// we only set redetect if we're watching
+		opts.redetect = opts.watch ? opts.redetect : false;
 
 		opts.refreshPathsInterval = Math.max(~~opts.refreshPathsInterval || 30000, 0);
 
@@ -223,19 +226,22 @@ export default class DetectEngine extends EventEmitter {
 	 */
 	async getPaths() {
 		const searchPaths = new Set(this.opts.paths.map(dir => real(dir)));
-		let defaultPath = null;
 
 		// we grab the first path as the default
-		defaultPath = searchPaths.values().next().value;
+		let defaultPath = searchPaths.values().next().value;
 
 		// finish the initialization of the original list of paths
 		for (const exe of this.opts.exe) {
 			try {
 				const p = Math.max(exe.lastIndexOf('/'), exe.lastIndexOf('\\'));
 				if (p === -1) {
-					defaultPath = path.dirname(real(await which(exe)));
+					defaultPath = path.dirname(real(await which(exe, {
+						path: this.opts.envPath
+					})));
 				} else {
-					defaultPath = real(path.resolve(await which(exe.substring(p + 1)), exe.substring(0, p)));
+					defaultPath = real(path.resolve(await which(exe.substring(p + 1), {
+						path: this.opts.envPath
+					}), exe.substring(0, p)));
 				}
 				searchPaths.add(defaultPath);
 			} catch (e) {
