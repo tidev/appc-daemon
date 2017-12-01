@@ -395,11 +395,7 @@ export default class Server {
 		copySetting('genymotion.home',                   'android.genymotion.home');
 		copySetting('genymotion.path',                   'android.genymotion.searchPaths',  'array');
 
-		copySetting('java.executables.jarsigner',        'java.executables.jarsigner');
-		copySetting('java.executables.java',             'java.executables.java');
-		copySetting('java.executables.javac',            'java.executables.javac');
-		copySetting('java.executables.keytool',          'java.executables.keytool');
-		copySetting('java.home',                         'java.home');
+		copySetting('java.home',                         'java.searchPaths',                'array');
 
 		copySetting('osx.executables.security',          'ios.executables.security');
 		copySetting('osx.executables.xcodeSelect',       'ios.executables.xcodeSelect');
