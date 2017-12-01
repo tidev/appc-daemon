@@ -25,12 +25,6 @@ export default class JDKInfoService extends DataServiceDispatcher {
 
 		const paths = arrayify(get(cfg, 'java.searchPaths'), true).concat(jdkLocations[process.platform]);
 
-		// As we previously imported the java.home value directly
-		// we will also include that in the search paths if it exists
-		if (get(cfg, 'java.home')) {
-			paths.push(get(cfg, 'java.home'));
-		}
-
 		this.engine = new DetectEngine({
 			checkDir:             this.checkDir.bind(this),
 			depth:                1,
