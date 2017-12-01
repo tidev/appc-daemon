@@ -4,6 +4,7 @@ import version from './version';
 
 import * as registry from 'appcd-winreg';
 
+import { arrayify, get } from 'appcd-util';
 import { DataServiceDispatcher } from 'appcd-dispatcher';
 import { detect, jdkLocations } from 'jdklib';
 import { exe } from 'appcd-subprocess';
@@ -22,13 +23,21 @@ export default class JDKInfoService extends DataServiceDispatcher {
 	async activate(cfg) {
 		this.data = gawk([]);
 
+		const paths = arrayify(get(cfg, 'java.searchPaths'), true).concat(jdkLocations[process.platform]);
+
+		// As we previously imported the java.home value directly
+		// we will also include that in the search paths if it exists
+		if (get(cfg, 'java.home')) {
+			paths.push(get(cfg, 'java.home'));
+		}
+
 		this.engine = new DetectEngine({
 			checkDir:             this.checkDir.bind(this),
 			depth:                1,
 			env:                  'JAVA_HOME',
 			exe:                  `javac${exe}`,
 			multiple:             true,
-			paths:                jdkLocations[process.platform],
+			paths,
 			processResults:       this.processResults.bind(this),
 			redetect:             true,
 			refreshPathsInterval: 15000,
