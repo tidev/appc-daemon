@@ -59,7 +59,7 @@ module.exports = (opts) => {
 	/*
 	 * Clean tasks
 	 */
-	gulp.task('clean', ['clean-coverage', 'clean-dist', 'clean-docs']);
+	gulp.task('clean', [ 'clean-coverage', 'clean-dist', 'clean-docs' ]);
 
 	gulp.task('clean-coverage', done => { del(coverageDir, { force: true }).then(() => done()) });
 
@@ -106,7 +106,9 @@ module.exports = (opts) => {
 	/*
 	 * build tasks
 	 */
-	gulp.task('build', ['clean-dist', 'lint-src'], () => {
+	gulp.task('build', [ 'build-src' ]);
+
+	gulp.task('build-src', [ 'clean-dist', 'lint-src' ], () => {
 		return gulp.src('src/**/*.js')
 			.pipe($.plumber())
 			.pipe($.debug({ title: 'build' }))
@@ -119,7 +121,7 @@ module.exports = (opts) => {
 			.pipe(gulp.dest(distDir));
 	})
 
-	gulp.task('docs', ['lint-src', 'clean-docs'], () => {
+	gulp.task('docs', [ 'lint-src', 'clean-docs' ], () => {
 		const esdoc = require('esdoc').default;
 
 		esdoc.generate({
@@ -151,10 +153,10 @@ module.exports = (opts) => {
 	/*
 	 * test tasks
 	 */
-	gulp.task('test', ['build', 'lint-test'], () => runTests());
-	gulp.task('test-only', ['lint-test'], () => runTests());
-	gulp.task('coverage', ['clean-coverage', 'lint-src', 'lint-test'], () => runTests(true));
-	gulp.task('coverage-only', ['clean-coverage', 'lint-test'], () => runTests(true));
+	gulp.task('test',          [ 'build', 'lint-test' ],                      () => runTests());
+	gulp.task('test-only',     [ 'lint-test' ],                               () => runTests());
+	gulp.task('coverage',      [ 'clean-coverage', 'lint-src', 'lint-test' ], () => runTests(true));
+	gulp.task('coverage-only', [ 'clean-coverage', 'lint-test' ],             () => runTests(true));
 
 	function runTests(cover) {
 		const args = [];
@@ -266,5 +268,5 @@ module.exports = (opts) => {
 		}
 	}
 
-	gulp.task('default', ['build']);
+	gulp.task('default', [ 'build' ]);
 };
