@@ -54,18 +54,14 @@ export default class AndroidInfoService extends DataServiceDispatcher {
 	 * @access private
 	 */
 	async initDevices() {
-		try {
-			gawk.set(this.data.devices, await androidlib.devices.getDevices());
-		} catch (e) {
-			if (e.message !== 'Unable to find and start adb') {
-				throw e;
-			}
-		}
-
 		this.trackDeviceHandle = androidlib.devices.trackDevices()
 			.on('devices', devices => {
 				console.log('Devices changed');
 				gawk.set(this.data.devices, devices);
+			})
+			.on('close', () => {
+				console.log('ADB connection was closed');
+				gawk.set(this.data.devices, []);
 			})
 			.once('error', err => {
 				console.log('Track devices returned error: %s', err.message);
