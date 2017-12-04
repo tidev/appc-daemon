@@ -16,7 +16,7 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "androidlib": "^2.0.11",
+    "androidlib": "^2.1.0",
     "appcd-detect": "^1.0.0-29",
     "appcd-dispatcher": "^1.0.0-29",
     "appcd-subprocess": "^1.0.0-29",
