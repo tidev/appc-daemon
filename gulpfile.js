@@ -17,7 +17,6 @@ const spawnSync    = require('child_process').spawnSync;
 const Table        = require('cli-table2');
 const util         = require('util');
 
-const appcdRE = /^appcd-/;
 const isWindows = process.platform === 'win32';
 
 const { bold, red, yellow, green, cyan, magenta, gray } = gutil.colors;
@@ -31,6 +30,9 @@ const cliTableChars = {
 };
 
 const dontUpdate = [];
+
+const appcdRE = /^appcd-/;
+const appcdPackages = new Set(fs.readdirSync(path.join(__dirname, 'packages')).filter(name => appcdRE.test(name)));
 
 process.env.FORCE_COLOR = 1;
 
@@ -487,7 +489,7 @@ function runYarn(cwd) {
 	[ 'dependencies', 'devDependencies', 'optionalDependencies' ].forEach(type => {
 		if (pkgJson[type]) {
 			for (const dep of Object.keys(pkgJson[type])) {
-				if (appcdRE.test(dep)) {
+				if (appcdPackages.has(dep)) {
 					delete pkgJson[type][dep];
 					changed = true;
 				}
@@ -610,7 +612,7 @@ async function checkPackages({ skipSecurity } = {}) {
 					}
 
 					// check if the dependency is an appcd-* dependency
-					if (appcdRE.test(dep)) {
+					if (appcdPackages.has(dep)) {
 						info.appcdDependencies.push(dep);
 					}
 
@@ -1289,7 +1291,7 @@ function getDepMap() {
 
 			if (pkgJson.dependencies) {
 				for (const dep of Object.keys(pkgJson.dependencies)) {
-					if (appcdRE.test(dep)) {
+					if (appcdPackages.has(dep)) {
 						depmapCache[name].push(dep);
 					}
 				}
@@ -1297,7 +1299,7 @@ function getDepMap() {
 
 			if (pkgJson.devDependencies) {
 				for (const dep of Object.keys(pkgJson.devDependencies)) {
-					if (appcdRE.test(dep)) {
+					if (appcdPackages.has(dep)) {
 						depmapCache[name].push(dep);
 					}
 				}

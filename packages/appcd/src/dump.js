@@ -1,4 +1,6 @@
 import fs from 'fs';
+import launch from 'appcd-dump-viewer';
+import os from 'os';
 import path from 'path';
 
 import { createRequest, loadConfig } from './common';
@@ -9,6 +11,9 @@ const cmd = {
 	args: [
 		{ name: 'file', desc: 'the file to dump the info to, otherwise stdout' },
 	],
+	options: {
+		'--view': { desc: 'open the dump in the web browser' }
+	},
 	action({ argv, _ }) {
 		const cfg = loadConfig(argv);
 		const results = {
@@ -17,6 +22,7 @@ const cmd = {
 			health: [],
 			log: []
 		};
+		const envRegExp = /^ANDROID.*|APPC.*|ComSpec|HOME|HOMEPATH|LANG|PATH|PWD|USERPROFILE$/;
 		let [ file ] = _;
 
 		return Promise.resolve()
@@ -74,13 +80,21 @@ const cmd = {
 						.on('response', status => {
 							client.disconnect();
 
-							const envRegExp = /^ANDROID.*|APPC.*|ComSpec|HOME|HOMEPATH|LANG|PATH|PWD|USERPROFILE$/;
 							for (const key of Object.keys(status.process.env)) {
 								if (!envRegExp.test(key)) {
 									delete status.process.env[key];
 								}
 							}
 
+							for (const proc of status.subprocesses) {
+								for (const key of Object.keys(proc.options.env)) {
+									if (!envRegExp.test(key)) {
+										delete proc.options.env[key];
+									}
+								}
+							}
+
+							status.dumpTime = new Date();
 							results.status = status;
 							resolve();
 						})
@@ -93,10 +107,18 @@ const cmd = {
 			.then(() => results)
 			.catch(err => err)
 			.then(results => {
+				if (argv.view && !file) {
+					file = path.join(os.tmpdir(), 'appcd-dump.json');
+				}
+
 				if (file) {
 					file = path.resolve(file);
 					fs.writeFileSync(file, JSON.stringify(results, null, 2));
 					console.log(`Wrote dump to ${file}`);
+
+					if (argv.view) {
+						launch(file);
+					}
 				} else {
 					console.log(JSON.stringify(results, null, 2));
 				}
