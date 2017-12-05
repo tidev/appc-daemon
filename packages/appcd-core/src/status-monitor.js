@@ -41,6 +41,7 @@ export default class StatusMonitor extends DataServiceDispatcher {
 		this.data = gawk({
 			pid:          process.pid,
 			memory:       undefined,
+			startupTime:  null,
 			uptime:       process.uptime(),
 
 			process: {
@@ -59,7 +60,6 @@ export default class StatusMonitor extends DataServiceDispatcher {
 				platform: process.platform,
 				arch:     process.arch,
 				cpus:     os.cpus().length,
-				hostname: os.hostname(),
 				loadavg:  undefined,
 				memory:   undefined
 			}

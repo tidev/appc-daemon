@@ -8,7 +8,7 @@ is not running, it will only return the configuration loaded from disk.
 ### Usage
 
 ```
-appcd dump [<file>]
+appcd dump [<file>] [--view]
 ```
 
 ### Arguments
@@ -16,6 +16,12 @@ appcd dump [<file>]
 #### `<file>`
 
 An optional filename to write the dump to instead of `stdout`.
+
+### Options
+
+#### `--view`
+
+Loads the dump file in the default web browser.
 
 ### Exit Codes
 

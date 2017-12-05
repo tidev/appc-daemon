@@ -226,6 +226,9 @@ export default class Server {
 		// start the web server
 		await this.systems.webserver.listen();
 
+		const startupTime = process.uptime();
+		this.systems.statusMonitor.data.startupTime = startupTime;
+
 		// send the server start event
 		await Dispatcher.call('/appcd/telemetry', {
 			arch:        getArch(),
@@ -242,7 +245,7 @@ export default class Server {
 				version:     p.version,
 				type:        p.type
 			})),
-			startupTime: process.uptime(),
+			startupTime,
 			version:     this.version
 		});
 	}
