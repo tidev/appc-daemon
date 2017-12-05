@@ -28,7 +28,7 @@
     "appcd-client": "^1.0.0-30",
     "appcd-config": "^1.0.0-30",
     "appcd-core": "^1.0.0-30",
-    "appcd-dump-viewer": "^1.0.1",
+    "appcd-dump-viewer": "^1.0.2",
     "appcd-fs": "^1.0.0-30",
     "appcd-logger": "^1.0.0-30",
     "appcd-nodejs": "^1.0.0-30",

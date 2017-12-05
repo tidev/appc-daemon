@@ -238,9 +238,9 @@ appcd-dispatcher@0.1.4:
     source-map-support "^0.5.0"
     uuid "^3.1.0"
 
-appcd-dump-viewer@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/appcd-dump-viewer/-/appcd-dump-viewer-1.0.1.tgz#c1d65eaf97e6ac5c9aa0020a84252a6936f5ba16"
+appcd-dump-viewer@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/appcd-dump-viewer/-/appcd-dump-viewer-1.0.2.tgz#b812e366b9299e883546a518cc16489703981da7"
   dependencies:
     ansi-to-html "^0.6.3"
     file-url "^2.0.2"
