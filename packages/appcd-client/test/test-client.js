@@ -155,8 +155,9 @@ describe('Client', () => {
 					try {
 						expect(req.headers).to.have.property('user-agent');
 						expect(req.headers['user-agent']).to.match(/ appcd-client\//);
-						expect(req.headers).to.have.property('accept-language');
-						expect(req.headers['accept-language']).to.match(/^([a-z]{2})(?:[-_](?:\w+[-_])?([A-Z]{2}))?$/i);
+						if (req.headers['accept-language']) {
+							expect(req.headers['accept-language']).to.match(/^([a-z]{2})(?:[-_](?:\w+[-_])?([A-Z]{2}))?$/i);
+						}
 						expect(json).to.be.an('object');
 						expect(json).to.have.keys('version', 'path', 'id', 'data');
 						expect(json.version).to.be.a('string');
