@@ -87,11 +87,17 @@ export default class Client {
 					return;
 				}
 
+				const headers = {
+					'User-Agent': this.userAgent
+				};
+
+				const localeValue = process.env.APPCD_LOCALE || await locale();
+				if (localeValue) {
+					headers['Accept-Language'] = localeValue;
+				}
+
 				const socket = this.socket = new WebSocket(`ws://${this.host}:${this.port}`, {
-					headers: {
-						'Accept-Language': process.env.APPCD_LOCALE || await locale(),
-						'User-Agent': this.userAgent
-					}
+					headers
 				});
 
 				socket.on('message', data => {
