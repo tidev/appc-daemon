@@ -26,7 +26,6 @@
     "tree-printer": "^1.1.1"
   },
   "workspaces": [
-    "packages/*",
-    "plugins/*"
+    "packages/*"
   ]
 }
