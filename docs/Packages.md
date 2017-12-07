@@ -16,4 +16,4 @@ $ gulp cyclic
 
 Last Updated 11/3/2017
 
-![Packages](../images/packages.png)
+![Packages](images/packages.png)
