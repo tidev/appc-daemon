@@ -161,8 +161,7 @@ gulp.task('upgrade', cb => {
 gulp.task('lint', [ 'cyclic' ], () => {
 	return gulp
 		.src([
-			path.join(__dirname, 'packages/*/gulpfile.js'),
-			path.join(__dirname, 'plugins/*/gulpfile.js')
+			path.join(__dirname, 'packages/*/gulpfile.js')
 		])
 		.pipe(debug({ title: 'Linting project:' }))
 		.pipe(plumber())
@@ -196,7 +195,7 @@ function runTests(cover, cb) {
 	process.env.SNOOPLOGG = '*';
 
 	const gulp = path.join(path.dirname(require.resolve('gulp')), 'bin', 'gulp.js');
-	const gulpfiles = globule.find([ 'packages/*/gulpfile.js', 'plugins/*/gulpfile.js' ]);
+	const gulpfiles = globule.find([ 'packages/*/gulpfile.js' ]);
 	const failedProjects = [];
 
 	gulpfiles
@@ -307,34 +306,6 @@ gulp.task('watch-only', cb => {
 					}, Promise.resolve())
 					.then(startDaemon);
 			}
-		}),
-
-		gulp.watch(__dirname + '/plugins/*/src/**/*.js', evt => {
-			let p = path.dirname(evt.path);
-			while (true) {
-				try {
-					let pkgJson = JSON.parse(fs.readFileSync(path.join(p, 'package.json'), 'utf-8'));
-					if (pkgJson['appcd-plugin'] && pkgJson['appcd-plugin'].type === 'internal') {
-						stopDaemon();
-						runSequence('build-plugins', startDaemon);
-					} else {
-						const args = [
-							'run',
-							'--scope', path.basename(p),
-							'build'
-						];
-
-						runLerna(args);
-					}
-					break;
-				} catch (e) {
-					const q = path.dirname(p);
-					if (p === q) {
-						break;
-					}
-					p = q;
-				}
-			}
 		})
 	];
 
@@ -368,7 +339,7 @@ gulp.task('default', () => {
 	table.push([ cyan('watch'),            'builds all packages, then starts watching them' ]);
 	table.push([ cyan('watch-only'),       'starts watching all packages to perform build' ]);
 	table.push([ cyan('check'),            'checks missing/outdated dependencies/link, security issues, and code stats' ]);
-	table.push([ cyan('cyclic'),           'detects cyclic dependencies (which are bad) in appcd packages and plugins' ]);
+	table.push([ cyan('cyclic'),           'detects cyclic dependencies (which are bad) in appcd packages' ]);
 	table.push([ cyan('stats'),            'displays stats about the code' ]);
 	table.push([ cyan('upgrade'),          'detects latest npm deps, updates package.json, and runs upgrade' ]);
 
@@ -549,7 +520,7 @@ async function checkPackages({ skipSecurity } = {}) {
 
 	gutil.log('Checking packages...');
 
-	for (let file of globule.find([ './package.json', 'packages/*/package.json', 'plugins/*/package.json' ])) {
+	for (let file of globule.find([ './package.json', 'packages/*/package.json' ])) {
 		file = path.resolve(file);
 		const packagePath = path.dirname(file);
 		const pkgJson = JSON.parse(fs.readFileSync(file));
@@ -1217,7 +1188,7 @@ function computeSloc(type) {
 	const counters = { total: 0, source: 0, comment: 0, single: 0, block: 0, mixed: 0, empty: 0, todo: 0, files: 0 };
 
 	globule
-		.find([ 'packages/*/package.json', 'plugins/*/package.json' ])
+		.find([ 'packages/*/package.json' ])
 		.forEach(pkgJson => {
 			const dir = path.join(path.dirname(path.resolve(pkgJson)), type || 'src');
 			try {
@@ -1281,7 +1252,7 @@ function getDepMap() {
 	depmapCache = {};
 
 	globule
-		.find([ 'packages/*/package.json', 'plugins/*/package.json' ])
+		.find([ 'packages/*/package.json' ])
 		.forEach(pkgJsonFile => {
 			const pkgJson = JSON.parse(fs.readFileSync(pkgJsonFile));
 			const name = pkgJson.name;
