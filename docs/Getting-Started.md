@@ -84,10 +84,35 @@ additional information.
 
 ```bash
 git clone git@github.com:appcelerator/appc-daemon.git
+
 cd appc-daemon
-yarn
-cd packages/appcd && yarn link && cd ../..
+
+sudo ln -s /usr/local/bin/appcd `pwd`/packages/appcd/bin/appcd
 ```
+
+#### Developing the Default Plugins
+
+By default, the plugins will be installed from npm. However, if you need to develop one or more of
+the default plugins, you will need to fork and clone each plugin repo to your local machine.
+
+```bash
+git clone git@github.com:appcelerator/appcd-plugin-<NAME>.git
+
+cd appcd-plugin-<NAME>
+
+yarn
+
+yarn link
+
+cd /path/to/appc-daemon
+
+yarn link appcd-plugin-<NAME>
+```
+
+From the plugin's directory you can run `gulp build` or `gulp watch` to recompile the code after
+updates. If the daemon is running, and the plugin is "external", then the daemon *should* see the
+plugin was changed and stop the plugin. The daemon will load the new plugin code on the next
+request.
 
 ### Running in Production
 
