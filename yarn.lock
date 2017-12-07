@@ -227,6 +227,20 @@ any-promise@^1.0.0, any-promise@^1.1.0:
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/any-promise/-/any-promise-1.3.0.tgz#abc6afeedcea52e809cdc0376aed3ce39635d17f"
 
+appcd-detect@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/appcd-detect/-/appcd-detect-1.0.0.tgz#d0e53b87f240040712137acdaaa0afa2c207d14c"
+  dependencies:
+    appcd-dispatcher "^1.0.0"
+    appcd-fs "^1.0.0"
+    appcd-logger "^1.0.0"
+    appcd-path "^1.0.0"
+    appcd-subprocess "^1.0.0"
+    appcd-util "^1.0.0"
+    appcd-winreg "^1.0.0"
+    gawk "^4.4.4"
+    source-map-support "^0.5.0"
+
 appcd-dispatcher@0.1.4:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/appcd-dispatcher/-/appcd-dispatcher-0.1.4.tgz#8790b6c7e746ebbe44658e30a337ec87de086318"
@@ -234,6 +248,17 @@ appcd-dispatcher@0.1.4:
     appcd-logger "0.1.4"
     appcd-response "0.1.4"
     gawk "^4.4.3"
+    path-to-regexp "^2.1.0"
+    source-map-support "^0.5.0"
+    uuid "^3.1.0"
+
+appcd-dispatcher@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/appcd-dispatcher/-/appcd-dispatcher-1.0.0.tgz#cff0065ffbdee8f922a472eb07e41268f27b0388"
+  dependencies:
+    appcd-logger "^1.0.0"
+    appcd-response "^1.0.0"
+    gawk "^4.4.4"
     path-to-regexp "^2.1.0"
     source-map-support "^0.5.0"
     uuid "^3.1.0"
@@ -263,11 +288,24 @@ appcd-fs@^0.1.0:
   dependencies:
     source-map-support "^0.5.0"
 
+appcd-fs@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/appcd-fs/-/appcd-fs-1.0.0.tgz#b11f8841865a31b85682af5d214e053e22d3833d"
+  dependencies:
+    source-map-support "^0.5.0"
+
 appcd-logger@0.1.4, appcd-logger@^0.1.0:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/appcd-logger/-/appcd-logger-0.1.4.tgz#c3c41ecff127e42417aea229fb92a36584d2356b"
   dependencies:
     snooplogg "^1.8.0"
+    source-map-support "^0.5.0"
+
+appcd-logger@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/appcd-logger/-/appcd-logger-1.0.0.tgz#dfd6f686670b8cf091b956113e5c0ff8398a900e"
+  dependencies:
+    snooplogg "^1.9.1"
     source-map-support "^0.5.0"
 
 appcd-nodejs@0.1.4:
@@ -285,11 +323,107 @@ appcd-nodejs@0.1.4:
     tmp "^0.0.33"
     yauzl "^2.9.1"
 
+appcd-nodejs@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/appcd-nodejs/-/appcd-nodejs-1.0.0.tgz#26f2ca778711de7c25229f62551129b3ad1ecd44"
+  dependencies:
+    appcd-fs "^1.0.0"
+    appcd-logger "^1.0.0"
+    appcd-request "^1.0.0"
+    appcd-util "^1.0.0"
+    fs-extra "^4.0.2"
+    progress "^2.0.0"
+    source-map-support "^0.5.0"
+    tar-stream "^1.5.5"
+    tmp "^0.0.33"
+    yauzl "^2.9.1"
+
 appcd-path@0.1.4, appcd-path@^0.1.0:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/appcd-path/-/appcd-path-0.1.4.tgz#380820e8243275149f1be550d1d9585a30ad231e"
   dependencies:
     source-map-support "^0.5.0"
+
+appcd-path@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/appcd-path/-/appcd-path-1.0.0.tgz#2a45d77dd4b4f599e1a649c842cd5e41f98425c3"
+  dependencies:
+    source-map-support "^0.5.0"
+
+appcd-plugin-android@^1.0.0-30:
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/appcd-plugin-android/-/appcd-plugin-android-1.0.0.tgz#eac5cf7371cecf4435aa150bd356792d65708687"
+  dependencies:
+    androidlib "^2.1.0"
+    appcd-detect "^1.0.0"
+    appcd-dispatcher "^1.0.0"
+    appcd-subprocess "^1.0.0"
+    gawk "^4.4.4"
+    semver "^5.4.1"
+    source-map-support "^0.5.0"
+
+appcd-plugin-genymotion@^1.0.0-30:
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/appcd-plugin-genymotion/-/appcd-plugin-genymotion-1.0.0.tgz#e2dfdc80d75c3736000fb8dbc7aecb043302c4e2"
+  dependencies:
+    androidlib "^2.1.0"
+    appcd-detect "^1.0.0"
+    appcd-dispatcher "^1.0.0"
+    appcd-fs "^1.0.0"
+    appcd-path "^1.0.0"
+    appcd-subprocess "^1.0.0"
+    appcd-util "^1.0.0"
+    gawk "^4.4.4"
+    source-map-support "^0.5.0"
+    xmldom "^0.1.27"
+
+appcd-plugin-ios@^1.0.0-30:
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/appcd-plugin-ios/-/appcd-plugin-ios-1.0.0.tgz#8144ea5f4543ef776dc52c648d05fa8d9b8fa7bd"
+  dependencies:
+    appcd-detect "^1.0.0"
+    appcd-dispatcher "^1.0.0"
+    appcd-util "^1.0.0"
+    gawk "^4.4.4"
+    ioslib "^2.0.2"
+    semver "^5.4.1"
+    source-map-support "^0.5.0"
+
+appcd-plugin-jdk@^1.0.0-30:
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/appcd-plugin-jdk/-/appcd-plugin-jdk-1.0.0.tgz#238e3deb26d4a88d33fc712234755bf8655be42e"
+  dependencies:
+    appcd-detect "^1.0.0"
+    appcd-dispatcher "^1.0.0"
+    appcd-subprocess "^1.0.0"
+    appcd-util "^1.0.0"
+    appcd-winreg "^1.0.0"
+    gawk "^4.4.4"
+    jdklib "^2.1.0"
+    semver "^5.4.1"
+    source-map-support "^0.5.0"
+
+appcd-plugin-system-info@^1.0.0-30:
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/appcd-plugin-system-info/-/appcd-plugin-system-info-1.0.0.tgz#3373d657484b92a5cf07595df80799ec82541a9e"
+  dependencies:
+    appcd-dispatcher "^1.0.0"
+    appcd-fs "^1.0.0"
+    appcd-path "^1.0.0"
+    appcd-subprocess "^1.0.0"
+    appcd-util "^1.0.0"
+    gawk "^4.4.4"
+    source-map-support "^0.5.0"
+
+appcd-plugin-windows@^1.0.0-30:
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/appcd-plugin-windows/-/appcd-plugin-windows-1.0.0.tgz#6d8e9863ea60e799462defb4f502638d55b56242"
+  dependencies:
+    appcd-dispatcher "^1.0.0"
+    appcd-util "^1.0.0"
+    gawk "^4.4.4"
+    source-map-support "^0.5.0"
+    windowslib "^0.6.3"
 
 appcd-request@0.1.4:
   version "0.1.4"
@@ -301,12 +435,31 @@ appcd-request@0.1.4:
     request "^2.83.0"
     source-map-support "^0.5.0"
 
+appcd-request@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/appcd-request/-/appcd-request-1.0.0.tgz#065f2ae52fea559faf6fcb453fec654f42d3c119"
+  dependencies:
+    appcd-dispatcher "^1.0.0"
+    appcd-fs "^1.0.0"
+    appcd-logger "^1.0.0"
+    request "^2.83.0"
+    source-map-support "^0.5.0"
+
 appcd-response@0.1.4:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/appcd-response/-/appcd-response-0.1.4.tgz#9d6558d66c090eb020c8604e29270c93ae684843"
   dependencies:
     appcd-fs "0.1.4"
     appcd-winreg "0.1.4"
+    source-map-support "^0.5.0"
+    sprintf-js "^1.1.1"
+
+appcd-response@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/appcd-response/-/appcd-response-1.0.0.tgz#3edb5652e0127a73513478c3825e903ad71ecc87"
+  dependencies:
+    appcd-fs "^1.0.0"
+    appcd-winreg "^1.0.0"
     source-map-support "^0.5.0"
     sprintf-js "^1.1.1"
 
@@ -324,6 +477,20 @@ appcd-subprocess@^0.1.0:
     source-map-support "^0.5.0"
     which "^1.3.0"
 
+appcd-subprocess@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/appcd-subprocess/-/appcd-subprocess-1.0.0.tgz#bbb55fb6f85e87e542bd9a1a69154dd267e09506"
+  dependencies:
+    appcd-dispatcher "^1.0.0"
+    appcd-logger "^1.0.0"
+    appcd-nodejs "^1.0.0"
+    appcd-path "^1.0.0"
+    appcd-response "^1.0.0"
+    gawk "^4.4.4"
+    ps-tree "^1.1.0"
+    source-map-support "^0.5.0"
+    which "^1.3.0"
+
 appcd-util@0.1.4:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/appcd-util/-/appcd-util-0.1.4.tgz#c3731c6a2e2d196acb8185af7803b324715901c1"
@@ -332,9 +499,25 @@ appcd-util@0.1.4:
     semver "^5.4.1"
     source-map-support "^0.5.0"
 
+appcd-util@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/appcd-util/-/appcd-util-1.0.0.tgz#28e2de8822ea18259d512d1319904110825932a8"
+  dependencies:
+    appcd-fs "^1.0.0"
+    lodash.get "^4.4.2"
+    semver "^5.4.1"
+    source-map-support "^0.5.0"
+
 appcd-winreg@0.1.4:
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/appcd-winreg/-/appcd-winreg-0.1.4.tgz#0d5230a068002cc28366be4428c2dbbba596adf4"
+  dependencies:
+    source-map-support "^0.5.0"
+    winreg "^1.2.4"
+
+appcd-winreg@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/appcd-winreg/-/appcd-winreg-1.0.0.tgz#4f73b39ce57b959abff3afc8aeb03f84504aaab8"
   dependencies:
     source-map-support "^0.5.0"
     winreg "^1.2.4"
