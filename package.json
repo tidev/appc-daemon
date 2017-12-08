@@ -25,6 +25,9 @@
     "sloc": "^0.2.0",
     "tree-printer": "^1.1.1"
   },
+  "scripts": {
+    "postinstall": "lerna bootstrap"
+  },
   "xworkspaces": [
     "packages/*"
   ]
