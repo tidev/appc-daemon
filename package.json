@@ -5,7 +5,7 @@
   "dependencies": {
     "cli-table2": "^0.2.0",
     "del": "^3.0.0",
-    "fs-extra": "^4.0.3",
+    "fs-extra": "^5.0.0",
     "globule": "^1.2.0",
     "gulp": "^3.9.1",
     "gulp-chug": "^0.5.1",

@@ -174,7 +174,7 @@ appcd-path@^1.0.0:
   dependencies:
     source-map-support "^0.5.0"
 
-appcd-plugin-android@^1.0.0-30:
+appcd-plugin-android@^1.0.0:
   version "1.0.0"
   resolved "https://registry.npmjs.org/appcd-plugin-android/-/appcd-plugin-android-1.0.0.tgz#eac5cf7371cecf4435aa150bd356792d65708687"
   dependencies:
@@ -186,7 +186,7 @@ appcd-plugin-android@^1.0.0-30:
     semver "^5.4.1"
     source-map-support "^0.5.0"
 
-appcd-plugin-genymotion@^1.0.0-30:
+appcd-plugin-genymotion@^1.0.0:
   version "1.0.0"
   resolved "https://registry.npmjs.org/appcd-plugin-genymotion/-/appcd-plugin-genymotion-1.0.0.tgz#e2dfdc80d75c3736000fb8dbc7aecb043302c4e2"
   dependencies:
@@ -201,7 +201,7 @@ appcd-plugin-genymotion@^1.0.0-30:
     source-map-support "^0.5.0"
     xmldom "^0.1.27"
 
-appcd-plugin-ios@^1.0.0-30:
+appcd-plugin-ios@^1.0.0:
   version "1.0.0"
   resolved "https://registry.npmjs.org/appcd-plugin-ios/-/appcd-plugin-ios-1.0.0.tgz#8144ea5f4543ef776dc52c648d05fa8d9b8fa7bd"
   dependencies:
@@ -213,7 +213,7 @@ appcd-plugin-ios@^1.0.0-30:
     semver "^5.4.1"
     source-map-support "^0.5.0"
 
-appcd-plugin-jdk@^1.0.0-30:
+appcd-plugin-jdk@^1.0.0:
   version "1.0.0"
   resolved "https://registry.npmjs.org/appcd-plugin-jdk/-/appcd-plugin-jdk-1.0.0.tgz#238e3deb26d4a88d33fc712234755bf8655be42e"
   dependencies:
@@ -227,7 +227,7 @@ appcd-plugin-jdk@^1.0.0-30:
     semver "^5.4.1"
     source-map-support "^0.5.0"
 
-appcd-plugin-system-info@^1.0.0-30:
+appcd-plugin-system-info@^1.0.0:
   version "1.0.0"
   resolved "https://registry.npmjs.org/appcd-plugin-system-info/-/appcd-plugin-system-info-1.0.0.tgz#3373d657484b92a5cf07595df80799ec82541a9e"
   dependencies:
@@ -239,7 +239,7 @@ appcd-plugin-system-info@^1.0.0-30:
     gawk "^4.4.4"
     source-map-support "^0.5.0"
 
-appcd-plugin-windows@^1.0.0-30:
+appcd-plugin-windows@^1.0.0:
   version "1.0.0"
   resolved "https://registry.npmjs.org/appcd-plugin-windows/-/appcd-plugin-windows-1.0.0.tgz#6d8e9863ea60e799462defb4f502638d55b56242"
   dependencies:
