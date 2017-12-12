@@ -1,10 +1,21 @@
 /* eslint security/detect-non-literal-require: 0 */
 
+import appcdLogger from 'appcd-logger';
 import builtinModules from 'builtin-modules';
+import fs from 'fs';
 import Module from 'module';
 import path from 'path';
 import PluginError from './plugin-error';
 import vm from 'vm';
+
+const { log } = appcdLogger('appcd:plugin:module');
+const { highlight } = appcdLogger.styles;
+
+const appcdPackages = (function () {
+	const { dependencies } = JSON.parse(fs.readFileSync(path.resolve(__dirname, '..', 'package.json')));
+	const re = /^appcd-/;
+	return new Set(Object.keys(dependencies).filter(name => re.test(name)));
+}());
 
 /**
  * Extends the Node.js `Module` definition to override `require()` and inject the plugin globals.
@@ -65,6 +76,10 @@ export default class PluginModule extends Module {
 	 * @access public
 	 */
 	require(path) {
+		if (appcdPackages.has(path)) {
+			log('Loading built-in appcd package: %s', highlight(path));
+			return require(path);
+		}
 		const filename = Module._resolveFilename(path, this, false);
 		return PluginModule.load(this.plugin, filename);
 	}

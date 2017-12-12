@@ -162,6 +162,13 @@ export default class Plugin extends EventEmitter {
 				this.name = slug(appcdPlugin.name);
 			}
 
+			if (appcdPlugin.appcdVersion) {
+				if (!semver.validRange(appcdPlugin.appcdVersion)) {
+					throw new PluginError('Invalid "appcdVersion" property in the "appcd-plugin" section of %s', pkgJsonFile);
+				}
+				this.appcdVersion = appcdPlugin.appcdVersion;
+			}
+
 			if (appcdPlugin.type) {
 				if (typeof appcdPlugin.type !== 'string' || types.indexOf(appcdPlugin.type) === -1) {
 					throw new PluginError('Invalid type "%s" in "appcd-plugin" section of %s', appcdPlugin.type, pkgJsonFile);
@@ -217,6 +224,11 @@ export default class Plugin extends EventEmitter {
 
 		if (this.os && !this.os.includes(process.platform)) {
 			this.error = `Unsupported platform "${process.platform}"`;
+			this.supported = false;
+		}
+
+		if (!this.error && process.env.APPCD && this.appcdVersion && !semver.satisfies(process.env.APPCD, this.appcdVersion)) {
+			this.error = `Requires Appc Daemon ${this.appcdVersion}`;
 			this.supported = false;
 		}
 
