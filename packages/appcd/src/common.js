@@ -6,6 +6,7 @@ import appcdLogger from 'appcd-logger';
 import { expandPath } from 'appcd-path';
 import { generateV8MemoryArgument, spawnNode } from 'appcd-nodejs';
 import { isFile } from 'appcd-fs';
+import { sleep } from 'appcd-util';
 import { spawn } from 'child_process';
 
 import * as config from 'appcd-config';
@@ -234,19 +235,26 @@ export function startServer({ cfg, argv }) {
 export function stopServer({ cfg, force }) {
 	const pidFile = expandPath(cfg.get('server.pidFile'));
 
+	const isAlive = () => {
+		const pid = isFile(pidFile) && parseInt(fs.readFileSync(pidFile, 'utf8'));
+		if (pid) {
+			try {
+				process.kill(pid, 0);
+				// server is running
+				return pid;
+			} catch (e) {
+				// stale pid file
+				fs.unlinkSync(pidFile);
+				log('pid file was stale');
+			}
+		}
+	};
+
 	const isRunning = () => {
 		return new Promise(resolve => {
-			const pid = isFile(pidFile) && parseInt(fs.readFileSync(pidFile, 'utf8'));
+			const pid = isAlive();
 			if (pid) {
-				try {
-					process.kill(pid, 0);
-					// server is running
-					return resolve(pid);
-				} catch (e) {
-					// stale pid file
-					fs.unlinkSync(pidFile);
-					log('pid file was stale');
-				}
+				return resolve(pid);
 			}
 
 			// either we didn't have a pid file or the pid was stale
@@ -272,44 +280,39 @@ export function stopServer({ cfg, force }) {
 		});
 	};
 
-	let tries = 5;
-	let wasRunning = false;
-
-	function sendKill(pid) {
-		return new Promise((resolve, reject) => {
+	return isRunning()
+		.then(async (pid) => {
+			let wasRunning = !!pid;
 			if (!pid) {
-				return resolve(wasRunning);
+				return wasRunning;
 			}
+
 			if (!wasRunning) {
 				log('Daemon was running, attempting to stop');
-			}
-			wasRunning = true;
-			if (--tries < 0) {
-				return reject(new Error('Unable to stop the server'));
-			}
-			if (tries === 0) {
-				force = true;
+				wasRunning = true;
 			}
 
 			const signal = force ? 'SIGKILL' : 'SIGTERM';
-			log(`Server is running, sending ${signal}`);
+			log(`Daemon is running, sending ${signal}`);
 			process.kill(pid, signal);
 
-			setTimeout(() => {
-				try {
-					process.kill(pid, 0);
-					// daemon didn't die, force!
-					force = true;
-					sendKill(pid).then(resolve, reject);
-					return;
-				} catch (e) {
-					// squelch
+			await sleep(500);
+
+			// check is alive 10 times waiting 2 seconds between tries
+			for (let tries = 0; tries < 30; tries++) {
+				pid = isAlive();
+				if (!pid) {
+					log('Daemon has stopped');
+					return wasRunning;
 				}
 
-				resolve(wasRunning);
-			}, 1000);
-		});
-	}
+				log('Daemon is still running, waiting 1 seconds');
+				await sleep(1000);
+			}
 
-	return isRunning().then(pid => sendKill(pid));
+			log('Daemon is running, sending SIGKILL');
+			process.kill(pid, 'SIGKILL');
+
+			return wasRunning;
+		});
 }

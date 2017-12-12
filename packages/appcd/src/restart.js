@@ -10,7 +10,7 @@ const cmd = {
 
 		console.log(banner());
 
-		const wasRunning = await stopServer({ cfg, force: true });
+		const wasRunning = await stopServer({ cfg });
 
 		try {
 			await startServer({ cfg, argv });
