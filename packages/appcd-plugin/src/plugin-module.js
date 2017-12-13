@@ -2,6 +2,7 @@
 
 import appcdLogger from 'appcd-logger';
 import builtinModules from 'builtin-modules';
+import findup from 'findup-sync';
 import fs from 'fs';
 import Module from 'module';
 import path from 'path';
@@ -71,16 +72,36 @@ export default class PluginModule extends Module {
 	/**
 	 * Resolves, loads, and returns a plugin module.
 	 *
-	 * @param {String} path - The full path of the file to load.
+	 * @param {String} request - The full path of the file to load.
 	 * @returns {*}
 	 * @access public
 	 */
-	require(path) {
-		if (appcdPackages.has(path)) {
-			log('Loading built-in appcd package: %s', highlight(path));
-			return require(path);
+	require(request) {
+		let filename;
+
+		if (appcdPackages.has(request)) {
+			// check if this appcd package is in the plugin's package.json
+			let found = false;
+			try {
+				const file = findup('package.json', { cwd: path.dirname(this.filename) });
+				const pkgJson = JSON.parse(fs.readFileSync(file));
+				if ((pkgJson.dependencies && pkgJson.dependencies[request]) || (pkgJson.devDependencies && pkgJson.devDependencies[request])) {
+					found = true;
+					log('Loading plugin\'s appcd dependency: %s', highlight(request));
+				}
+			} catch (e) {
+				// squelch
+			}
+
+			if (!found) {
+				log('Loading built-in appcd dependency: %s', highlight(request));
+				filename = Module._resolveFilename(request, module, false);
+			}
 		}
-		const filename = Module._resolveFilename(path, this, false);
+
+		if (!filename) {
+			filename = Module._resolveFilename(request, this, false);
+		}
 		return PluginModule.load(this.plugin, filename);
 	}
 
