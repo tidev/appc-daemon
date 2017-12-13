@@ -7,15 +7,27 @@ import fs from 'fs';
 import Module from 'module';
 import path from 'path';
 import PluginError from './plugin-error';
+import semver from 'semver';
 import vm from 'vm';
 
 const { log } = appcdLogger('appcd:plugin:module');
 const { highlight } = appcdLogger.styles;
 
-const appcdPackages = (function () {
+const appcdRegExp = /^appcd-/;
+const appcdPackages = new Map();
+
+(function () {
 	const { dependencies } = JSON.parse(fs.readFileSync(path.resolve(__dirname, '..', 'package.json')));
-	const re = /^appcd-/;
-	return new Set(Object.keys(dependencies).filter(name => re.test(name)));
+	for (const name of Object.keys(dependencies)) {
+		if (appcdRegExp.test(name)) {
+			try {
+				const file = findup('package.json', { cwd: path.dirname(require.resolve(name)) });
+				appcdPackages.set(name, JSON.parse(fs.readFileSync(file)).version);
+			} catch (e) {
+				// squelch
+			}
+		}
+	}
 }());
 
 /**
@@ -67,6 +79,29 @@ export default class PluginModule extends Module {
 		super(path.basename(filename).replace(/\.js$/, ''));
 		this.plugin = plugin;
 		this.filename = filename;
+		this.appcdDeps = {};
+		this.injectAppcdDependencies = true;
+
+		// load this plugin's package.json to see if it has any appcd dependencies and whether we
+		// should inject the built-in appcd dependencies
+		try {
+			const file = findup('package.json', { cwd: path.dirname(filename) });
+			const pkgJson = JSON.parse(fs.readFileSync(file));
+
+			this.injectAppcdDependencies = !pkgJson.appcd || pkgJson.appcd.injectAppcdDependencies !== false;
+
+			for (const type of [ 'dependencies', 'devDependencies' ]) {
+				if (pkgJson[type] && typeof pkgJson[type] === 'object') {
+					for (const name of Object.keys(pkgJson[type])) {
+						if (appcdRegExp.test(name)) {
+							this.appcdDeps[name] = pkgJson[type][name];
+						}
+					}
+				}
+			}
+		} catch (e) {
+			// squelch
+		}
 	}
 
 	/**
@@ -80,28 +115,18 @@ export default class PluginModule extends Module {
 		let filename;
 
 		if (appcdPackages.has(request)) {
-			// check if this appcd package is in the plugin's package.json
-			let found = false;
-			try {
-				const file = findup('package.json', { cwd: path.dirname(this.filename) });
-				const pkgJson = JSON.parse(fs.readFileSync(file));
-				if ((pkgJson.dependencies && pkgJson.dependencies[request]) || (pkgJson.devDependencies && pkgJson.devDependencies[request])) {
-					found = true;
-					log('Loading plugin\'s appcd dependency: %s', highlight(request));
-				}
-			} catch (e) {
-				// squelch
-			}
-
-			if (!found) {
+			if (this.injectAppcdDependencies && (!this.appcdDeps[request] || semver.satisfies(appcdPackages.get(request), this.appcdDeps[request]))) {
 				log('Loading built-in appcd dependency: %s', highlight(request));
 				filename = Module._resolveFilename(request, module, false);
+			} else {
+				log('Loading plugin\'s appcd dependency: %s', highlight(request));
 			}
 		}
 
 		if (!filename) {
 			filename = Module._resolveFilename(request, this, false);
 		}
+
 		return PluginModule.load(this.plugin, filename);
 	}
 

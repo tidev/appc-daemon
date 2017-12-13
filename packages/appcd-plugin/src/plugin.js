@@ -146,38 +146,38 @@ export default class Plugin extends EventEmitter {
 
 		this.os = null;
 
-		const appcdPlugin = pkgJson['appcd-plugin'];
-		if (appcdPlugin) {
-			if (typeof appcdPlugin !== 'object') {
-				throw new PluginError('Expected "appcd-plugin" section to be an object in %s', pkgJsonFile);
+		const appcd = Object.assign({}, pkgJson.appcd, pkgJson['appcd-plugin']);
+		if (appcd) {
+			if (typeof appcd !== 'object') {
+				throw new PluginError('Expected "appcd" section to be an object in %s', pkgJsonFile);
 			}
 
-			if (appcdPlugin.name) {
-				if (typeof appcdPlugin.name !== 'string') {
-					throw new PluginError('Invalid "name" property in the "appcd-plugin" section of %s', pkgJsonFile);
+			if (appcd.name) {
+				if (typeof appcd.name !== 'string') {
+					throw new PluginError('Invalid "name" property in the "appcd" section of %s', pkgJsonFile);
 				}
 				if (!this.packageName) {
-					this.packageName = appcdPlugin.name;
+					this.packageName = appcd.name;
 				}
-				this.name = slug(appcdPlugin.name);
+				this.name = slug(appcd.name);
 			}
 
-			if (appcdPlugin.appcdVersion) {
-				if (!semver.validRange(appcdPlugin.appcdVersion)) {
-					throw new PluginError('Invalid "appcdVersion" property in the "appcd-plugin" section of %s', pkgJsonFile);
+			if (appcd.appcdVersion) {
+				if (!semver.validRange(appcd.appcdVersion)) {
+					throw new PluginError('Invalid "appcdVersion" property in the "appcd" section of %s', pkgJsonFile);
 				}
-				this.appcdVersion = appcdPlugin.appcdVersion;
+				this.appcdVersion = appcd.appcdVersion;
 			}
 
-			if (appcdPlugin.type) {
-				if (typeof appcdPlugin.type !== 'string' || types.indexOf(appcdPlugin.type) === -1) {
-					throw new PluginError('Invalid type "%s" in "appcd-plugin" section of %s', appcdPlugin.type, pkgJsonFile);
+			if (appcd.type) {
+				if (typeof appcd.type !== 'string' || types.indexOf(appcd.type) === -1) {
+					throw new PluginError('Invalid type "%s" in "appcd" section of %s', appcd.type, pkgJsonFile);
 				}
-				this.type = appcdPlugin.type;
+				this.type = appcd.type;
 			}
 
-			if (appcdPlugin.config) {
-				let configFile = appcdPlugin.config;
+			if (appcd.config) {
+				let configFile = appcd.config;
 				if (typeof configFile !== 'string') {
 					throw new PluginError('Expected config to be a string');
 				}
@@ -189,24 +189,24 @@ export default class Plugin extends EventEmitter {
 				this.configFile = expandPath(configFile);
 			}
 
-			if (appcdPlugin.os) {
-				this.os = arrayify(appcdPlugin.os, true);
+			if (appcd.os) {
+				this.os = arrayify(appcd.os, true);
 				if (this.os.length === 0) {
 					this.os = null;
 				}
 			}
 
-			if (appcdPlugin.inactivityTimeout) {
-				if (typeof appcdPlugin.inactivityTimeout !== 'number' || isNaN(appcdPlugin.inactivityTimeout) || appcdPlugin.inactivityTimeout < 0) {
+			if (appcd.inactivityTimeout) {
+				if (typeof appcd.inactivityTimeout !== 'number' || isNaN(appcd.inactivityTimeout) || appcd.inactivityTimeout < 0) {
 					throw new PluginError('Expected inactivity timeout to be a non-negative number');
 				}
-				this.inactivityTimeout = appcdPlugin.inactivityTimeout;
+				this.inactivityTimeout = appcd.inactivityTimeout;
 			}
 		}
 
 		// validate the name
 		if (!this.name) {
-			throw new PluginError('Invalid "name" property in the "appcd-plugin" section of %s', pkgJsonFile);
+			throw new PluginError('Invalid "name" property in the "appcd" section of %s', pkgJsonFile);
 		}
 		if (this.name === 'appcd') {
 			throw new PluginError('Plugin forbidden from using the name "%s"', 'appcd');
