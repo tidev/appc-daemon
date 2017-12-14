@@ -75,9 +75,10 @@ A plugin is defined as a directory containing a `package.json` file and a "main"
 		"src": "./src"
 	},
 	"appcd": {
+		"appcdVersion": "1.x",
 		"name": "my-sweet-plugin",
 		"type": "external",
-		"allowProcessExit": false,
+		"injectAppcdDependencies": true,
 		"inactivityTimeout": 120000
 	},
 	"engines": {
@@ -85,6 +86,95 @@ A plugin is defined as a directory containing a `package.json` file and a "main"
 	}
 }
 ```
+
+#### Appcd Dependencies
+
+##### Dependency Injection
+
+Nearly all appcd plugins will need to depend on at least one other `appcd-*` dependency. However an
+issue arises where critical parts of the Appc Daemon will fail if the `appcd-*` dependency used by
+both the Appc Daemon and the plugin aren't the exact same version from the same exact directory.
+
+The Node.js module loader resolves and caches packages by path. For example, if a plugin depends on
+`appcd-dispatcher` and Node.js resolves it in the plugin's `node_modules` directory, then it will
+load a second copy of `appcd-dispatcher`. Technically this works until the daemon performs an
+`instanceof` check. If the supplied instance is not derived from the same `appcd-dispatcher`
+package, then the `instanceof` check will fail and the plugin will not work properly.
+
+We solve this by injecting the Appc Daemon's version of certain `appcd-*` dependencies into the
+plugin system's module loader (i.e. `import` and `require()`).
+
+The following table describes which `appcd-*` dependencies are auto-injected:
+
+| Package               | Injectable        |
+| --------------------- | ----------------- |
+| appcd                 | No                |
+| appcd-agent           | Yes               |
+| appcd-client          | Yes and should be |
+| appcd-config          | Yes and should be |
+| appcd-config-service  | Yes and should be |
+| appcd-core            | No                |
+| appcd-default-plugins | No                |
+| appcd-detect          | Yes and should be |
+| appcd-dispatcher      | Yes and should be |
+| appcd-fs              | Yes               |
+| appcd-fswatcher       | Yes and should be |
+| appcd-gulp            | No                |
+| appcd-http            | Yes               |
+| appcd-logger          | Yes               |
+| appcd-machine-id      | Yes and should be |
+| appcd-nodejs          | Yes and should be |
+| appcd-path            | Yes               |
+| appcd-plugin          | No                |
+| appcd-request         | Yes               |
+| appcd-response        | Yes and should be |
+| appcd-subprocess      | Yes and should be |
+| appcd-telemetry       | Yes               |
+| appcd-util            | Yes               |
+| appcd-winreg          | Yes               |
+
+Injectable `appcd-*` packages do _not_ need to be added as a dependency in the plugin's
+`package.json`. This helps keep the disk space requirements down.
+
+##### Disabling Injection
+
+However, there may be instances where a plugin does _not_ want all or specific `appcd-*`
+dependencies to be injected.
+
+A plugin can prevent all `appcd-*` injections by setting `appcd.injectAppcdDepenedencies` to `false`
+in the plugin's `package.json`.
+
+> :warning: Setting `appcd.injectAppcdDepenedencies` to `false` not only requires the plugin to
+explicitly declare any `appcd-*` dependencies, but will also cause side effects, especially if the
+the plugin uses any of the `appcd-*` packages above where it says "Yes and should be".
+
+To disable injection for a specific `appcd-*` dependency, leave `appcd.injectAppcdDepenedencies`
+enabled, but add the `appcd-*` dependencies to the `dependencies` in the `package.json` file. If the
+injected version does not satisify the plugin's required version, the plugin system's module loader
+will defer the loading to Node.js's module loader.
+
+##### Pros of Injecting
+
+ * Plugins use less disk space
+ * No class duplication, so `instanceof` works as expected
+ * Plugins benefit from bug fixes in updated of `appcd-*` dependencies
+
+##### Cons of Injecting
+
+ * Plugins may be authored against an older `appcd-*` package's public API that changes with a major
+   revision
+
+##### Best Practices
+
+Plugins should set the `appcd.appcdVersion` in the plugin's `package.json` to the range (i.e. `1.x`)
+of Appc Daemon versions it is compatible with.
+
+Plugins should not declare injectable `appcd-*` dependencies in their `package.json`.
+
+These two things will reduce required disk space, guarantee the injected `appcd-*` dependency
+version is compatible with the plugin, and eliminate any `instanceof` issues.
+
+#### `package.json` Configuration
 
 ##### `name`
 
@@ -116,23 +206,46 @@ automatic reload the plugin when a file is changed.
 
 ##### `appcd`
 
-An object that defines Appc Daemon specific settings.
+An object that defines Appc Daemon specific settings as the following describes.
+
+##### `appcd.appcdVersion`
+
+An optional semver range that describes the Appc Daemon versions the plugin is compatible with. By
+default, the plugin is compatible with all versions of Appc Daemon.
+
+> :bulb: If `appcd.injectAppcdDependencies` is enabled (i.e. not `false`), the plugin system *could*
+> inject an `appcd-*` dependency with a public API that is _not_ compatible with the plugin.
+
+> :warning: If a plugin uses an `appcd-*` package version that differs from the ones used by the
+> Appc Daemon, multiple class definitions will exist and critical `instanceof` checks will fail.
+
+##### `appcd.config`
+
+An optional path to the plugin's config file that contains the default config settings and metadata
+for each config setting.
 
 ##### `appcd.name`
 
 The name to use to register the plugin namespace with the dispatcher. This overrides the `name`
 property.
 
+##### `appcd.os`
+
+An optional array of platform names that the plugin is compatible with. Value can contain `darwin`,
+`linux`, and `win32`. By default, no platform restrictions are enforced.
+
 ##### `appcd.type`
 
 The plugin type. Must be `internal` or `external`. Defaults to `external`.
 
-##### `appcd.allowProcessExit`
+##### `appcd.injectAppcdDependencies`
 
-Applies to `external` plugins only. When `true`, allows `process.exit()` to work as expected. By
-default, this is `false` and `process.exit()` is disabled.
+When `true` (default) and a plugin attempts to `import` or `require()` an `appcd-*` package, the
+module loader will return a reference to the version used internally by the Appc Daemon.
 
-`internal` plugins always disabled `process.exit()` so that it doesn't terminate the Appc Daemon.
+> :warning: If `appcd.injectAppcdDependencies` is disabled, then the plugin could load another
+> definition for the same `appcd-*` dependency which will cause `instanceof` checks to fail and
+> could cause the plugin to not work correctly.
 
 ##### `appcd.inactivityTimeout`
 
