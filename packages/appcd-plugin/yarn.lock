@@ -301,6 +301,21 @@ appcd-logger@^1.0.0:
     snooplogg "^1.9.1"
     source-map-support "^0.5.0"
 
+appcd-machine-id@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/appcd-machine-id/-/appcd-machine-id-1.0.0.tgz#1827f0366a77b2c7346d11f4baef25e7b900672e"
+  dependencies:
+    appcd-fs "^1.0.0"
+    appcd-logger "^1.0.0"
+    appcd-path "^1.0.0"
+    appcd-subprocess "^1.0.0"
+    appcd-util "^1.0.0"
+    appcd-winreg "^1.0.0"
+    fs-extra "^4.0.2"
+    macaddress "^0.2.8"
+    simple-plist "^0.2.1"
+    source-map-support "^0.5.0"
+
 appcd-nodejs@^1.0.0:
   version "1.0.0"
   resolved "https://registry.npmjs.org/appcd-nodejs/-/appcd-nodejs-1.0.0.tgz#26f2ca778711de7c25229f62551129b3ad1ecd44"
@@ -354,6 +369,23 @@ appcd-subprocess@^1.0.0:
     ps-tree "^1.1.0"
     source-map-support "^0.5.0"
     which "^1.3.0"
+
+appcd-telemetry@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.npmjs.org/appcd-telemetry/-/appcd-telemetry-1.0.0.tgz#6fa4b16ee97c4d62eb887a6cb61639d6ec5fcc34"
+  dependencies:
+    appcd-config "^1.0.0"
+    appcd-dispatcher "^1.0.0"
+    appcd-fs "^1.0.0"
+    appcd-logger "^1.0.0"
+    appcd-machine-id "^1.0.0"
+    appcd-path "^1.0.0"
+    appcd-request "^1.0.0"
+    appcd-response "^1.0.0"
+    appcd-util "^1.0.0"
+    fs-extra "^4.0.2"
+    source-map-support "^0.5.0"
+    uuid "^3.1.0"
 
 appcd-util@^1.0.0:
   version "1.0.0"
@@ -936,6 +968,10 @@ balanced-match@^1.0.0:
   version "1.0.0"
   resolved "https://registry.npmjs.org/balanced-match/-/balanced-match-1.0.0.tgz#89b4d199ab2bee49de164ea02b89ce462d71b767"
 
+base64-js@1.1.2:
+  version "1.1.2"
+  resolved "https://registry.npmjs.org/base64-js/-/base64-js-1.1.2.tgz#d6400cac1c4c660976d90d07a04351d89395f5e8"
+
 base64-js@^1.1.2:
   version "1.2.1"
   resolved "https://registry.npmjs.org/base64-js/-/base64-js-1.2.1.tgz#a91947da1f4a516ea38e5b4ec0ec3773675e0886"
@@ -962,6 +998,10 @@ beeper@^1.0.0:
   version "1.1.1"
   resolved "https://registry.npmjs.org/beeper/-/beeper-1.1.1.tgz#e6d5ea8c5dad001304a70b22638447f69cb2f809"
 
+big-integer@^1.6.7:
+  version "1.6.26"
+  resolved "https://registry.npmjs.org/big-integer/-/big-integer-1.6.26.tgz#3af1672fa62daf2d5ecafacf6e5aa0d25e02c1c8"
+
 bl@^1.0.0:
   version "1.2.1"
   resolved "https://registry.npmjs.org/bl/-/bl-1.2.1.tgz#cac328f7bee45730d404b692203fcb590e172d5e"
@@ -983,6 +1023,18 @@ boom@5.x.x:
   resolved "https://registry.npmjs.org/boom/-/boom-5.2.0.tgz#5dd9da6ee3a5f302077436290cb717d3f4a54e02"
   dependencies:
     hoek "4.x.x"
+
+bplist-creator@0.0.7:
+  version "0.0.7"
+  resolved "https://registry.npmjs.org/bplist-creator/-/bplist-creator-0.0.7.tgz#37df1536092824b87c42f957b01344117372ae45"
+  dependencies:
+    stream-buffers "~2.2.0"
+
+bplist-parser@0.1.1:
+  version "0.1.1"
+  resolved "https://registry.npmjs.org/bplist-parser/-/bplist-parser-0.1.1.tgz#d60d5dcc20cba6dc7e1f299b35d3e1f95dafbae6"
+  dependencies:
+    big-integer "^1.6.7"
 
 brace-expansion@^1.0.0, brace-expansion@^1.1.7:
   version "1.1.8"
@@ -3650,6 +3702,10 @@ lru-cache@^4.0.1:
     pseudomap "^1.0.2"
     yallist "^2.1.2"
 
+macaddress@^0.2.8:
+  version "0.2.8"
+  resolved "https://registry.npmjs.org/macaddress/-/macaddress-0.2.8.tgz#5904dc537c39ec6dbefeae902327135fa8511f12"
+
 map-cache@^0.2.0, map-cache@^0.2.2:
   version "0.2.2"
   resolved "https://registry.npmjs.org/map-cache/-/map-cache-0.2.2.tgz#c32abd0bd6525d9b051645bb4f26ac5dc98a0dbf"
@@ -4268,6 +4324,14 @@ platform@1.3.4:
   version "1.3.4"
   resolved "https://registry.npmjs.org/platform/-/platform-1.3.4.tgz#6f0fb17edaaa48f21442b3a975c063130f1c3ebd"
 
+plist@2.0.1:
+  version "2.0.1"
+  resolved "https://registry.npmjs.org/plist/-/plist-2.0.1.tgz#0a32ca9481b1c364e92e18dc55c876de9d01da8b"
+  dependencies:
+    base64-js "1.1.2"
+    xmlbuilder "8.2.2"
+    xmldom "0.1.x"
+
 plur@^2.0.0, plur@^2.1.2:
   version "2.1.2"
   resolved "https://registry.npmjs.org/plur/-/plur-2.1.2.tgz#7482452c1a0f508e3e344eaec312c91c29dc655a"
@@ -4682,6 +4746,14 @@ signal-exit@^3.0.0, signal-exit@^3.0.1, signal-exit@^3.0.2:
   version "3.0.2"
   resolved "https://registry.npmjs.org/signal-exit/-/signal-exit-3.0.2.tgz#b5fdc08f1287ea1178628e415e25132b73646c6d"
 
+simple-plist@^0.2.1:
+  version "0.2.1"
+  resolved "https://registry.npmjs.org/simple-plist/-/simple-plist-0.2.1.tgz#71766db352326928cf3a807242ba762322636723"
+  dependencies:
+    bplist-creator "0.0.7"
+    bplist-parser "0.1.1"
+    plist "2.0.1"
+
 sinon-chai@^2.14.0:
   version "2.14.0"
   resolved "https://registry.npmjs.org/sinon-chai/-/sinon-chai-2.14.0.tgz#da7dd4cc83cd6a260b67cca0f7a9fdae26a1205d"
@@ -4876,6 +4948,10 @@ static-extend@^0.1.1:
 "statuses@>= 1.3.1 < 2", statuses@^1.2.0:
   version "1.4.0"
   resolved "https://registry.npmjs.org/statuses/-/statuses-1.4.0.tgz#bb73d446da2796106efcc1b601a253d6c46bd087"
+
+stream-buffers@~2.2.0:
+  version "2.2.0"
+  resolved "https://registry.npmjs.org/stream-buffers/-/stream-buffers-2.2.0.tgz#91d5f5130d1cef96dcfa7f726945188741d09ee4"
 
 stream-combiner@~0.0.4:
   version "0.0.4"
@@ -5381,6 +5457,14 @@ x-xss-protection@1.0.0:
 xml@^1.0.1:
   version "1.0.1"
   resolved "https://registry.npmjs.org/xml/-/xml-1.0.1.tgz#78ba72020029c5bc87b8a81a3cfcd74b4a2fc1e5"
+
+xmlbuilder@8.2.2:
+  version "8.2.2"
+  resolved "https://registry.npmjs.org/xmlbuilder/-/xmlbuilder-8.2.2.tgz#69248673410b4ba42e1a6136551d2922335aa773"
+
+xmldom@0.1.x:
+  version "0.1.27"
+  resolved "https://registry.npmjs.org/xmldom/-/xmldom-0.1.27.tgz#d501f97b3bdb403af8ef9ecc20573187aadac0e9"
 
 "xtend@>=4.0.0 <4.1.0-0", xtend@^4.0.0, xtend@~4.0.1:
   version "4.0.1"
