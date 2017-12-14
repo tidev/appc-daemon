@@ -430,18 +430,24 @@ function checkCyclic() {
 	return cyclicCache = cyclic;
 }
 
+const runLimit = promiseLimit(3);
+
 function run(cmd, args, opts) {
-	return new Promise((resolve, reject) => {
+	return runLimit(() => new Promise((resolve, reject) => {
 		opts || (opts = {});
 		opts.cwd || (opts.cwd = process.cwd());
-		if (!opts.quiet) {
+		if (opts.quiet) {
+			opts.stdio = 'ignore';
+		} else {
 			gutil.log('Running: CWD=' + opts.cwd, cmd, args.join(' '));
 		}
 		const child = spawn(cmd, args, opts);
 		let out = '';
 		let err = '';
-		child.stdout.on('data', data => out += data.toString());
-		child.stderr.on('data', data => err += data.toString());
+		if (!opts.quiet) {
+			child.stdout.on('data', data => out += data.toString());
+			child.stderr.on('data', data => err += data.toString());
+		}
 		child.on('close', code => {
 			resolve({
 				status: code,
@@ -449,7 +455,7 @@ function run(cmd, args, opts) {
 				stderr: err
 			});
 		});
-	});
+	}));
 }
 
 function runYarn(cwd) {
@@ -538,9 +544,9 @@ async function checkPackages({ skipSecurity } = {}) {
 			securityIssues: []
 		};
 
-		if (!skipSecurity) {
-			tasks.push([ 'retire', packagePath ]);
-		}
+		// if (!skipSecurity) {
+		// 	tasks.push([ 'retire', packagePath ]);
+		// }
 
 		for (const type of [ 'dependencies', 'devDependencies', 'optionalDependencies' ]) {
 			if (pkgJson[type]) {
@@ -743,6 +749,9 @@ async function checkPackages({ skipSecurity } = {}) {
 						resolve();
 					});
 				});
+
+			default:
+				bar.tick();
 		}
 	})));
 
