@@ -151,97 +151,97 @@ any-promise@^1.0.0, any-promise@^1.1.0:
   version "1.3.0"
   resolved "https://registry.npmjs.org/any-promise/-/any-promise-1.3.0.tgz#abc6afeedcea52e809cdc0376aed3ce39635d17f"
 
-appcd-agent@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/appcd-agent/-/appcd-agent-1.0.0.tgz#1db6ec2e133876f20628f7f0468d3d1411c7ef97"
+appcd-agent@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/appcd-agent/-/appcd-agent-1.0.1.tgz#007af4bff59223a90dd782ee1c4e3441738ecb17"
   dependencies:
     nanobuffer "^1.0.0"
     source-map-support "^0.5.0"
 
-appcd-client@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/appcd-client/-/appcd-client-1.0.0.tgz#9e035824aadbf985ffe946bd8e4ebb0dfaf0de64"
+appcd-client@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/appcd-client/-/appcd-client-1.0.1.tgz#0598b804945670386f093493d538fccd903040ca"
   dependencies:
-    appcd-response "^1.0.0"
-    appcd-util "^1.0.0"
+    appcd-response "^1.0.1"
+    appcd-util "^1.0.1"
     msgpack-lite "^0.1.26"
     source-map-support "^0.5.0"
     uuid "^3.1.0"
     ws "^3.3.2"
 
-appcd-config-service@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/appcd-config-service/-/appcd-config-service-1.0.0.tgz#62cd12708e875635fa9fe3fb9219482a59960667"
+appcd-config-service@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/appcd-config-service/-/appcd-config-service-1.0.1.tgz#b0d413135093466ab14c718628b14aad187e0ccb"
   dependencies:
-    appcd-config "^1.0.0"
-    appcd-dispatcher "^1.0.0"
-    appcd-fs "^1.0.0"
-    appcd-logger "^1.0.0"
-    appcd-path "^1.0.0"
-    appcd-response "^1.0.0"
+    appcd-config "^1.0.1"
+    appcd-dispatcher "^1.0.1"
+    appcd-fs "^1.0.1"
+    appcd-logger "^1.0.1"
+    appcd-path "^1.0.1"
+    appcd-response "^1.0.1"
     source-map-support "^0.5.0"
 
-appcd-config@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/appcd-config/-/appcd-config-1.0.0.tgz#be203de1aa26fc09fef5f9f37af8c5c8e5f4a9dc"
+appcd-config@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/appcd-config/-/appcd-config-1.0.1.tgz#d19e375e734cc49f6a735b323868bb2ac53cc613"
   dependencies:
-    appcd-fs "^1.0.0"
-    appcd-logger "^1.0.0"
-    appcd-path "^1.0.0"
+    appcd-fs "^1.0.1"
+    appcd-logger "^1.0.1"
+    appcd-path "^1.0.1"
     babel-traverse "^6.26.0"
     babel-types "^6.26.0"
     babylon "^6.18.0"
     doctrine "^2.0.2"
-    fs-extra "^4.0.2"
+    fs-extra "^5.0.0"
     gawk "^4.4.4"
     source-map-support "^0.5.0"
 
-appcd-detect@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/appcd-detect/-/appcd-detect-1.0.0.tgz#d0e53b87f240040712137acdaaa0afa2c207d14c"
+appcd-detect@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/appcd-detect/-/appcd-detect-1.0.1.tgz#6fc0bb91dc01f48d3083a4dcd6dfb486595e39c9"
   dependencies:
-    appcd-dispatcher "^1.0.0"
-    appcd-fs "^1.0.0"
-    appcd-logger "^1.0.0"
-    appcd-path "^1.0.0"
-    appcd-subprocess "^1.0.0"
-    appcd-util "^1.0.0"
-    appcd-winreg "^1.0.0"
+    appcd-dispatcher "^1.0.1"
+    appcd-fs "^1.0.1"
+    appcd-logger "^1.0.1"
+    appcd-path "^1.0.1"
+    appcd-subprocess "^1.0.1"
+    appcd-util "^1.0.1"
+    appcd-winreg "^1.0.1"
     gawk "^4.4.4"
     source-map-support "^0.5.0"
 
-appcd-dispatcher@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/appcd-dispatcher/-/appcd-dispatcher-1.0.0.tgz#cff0065ffbdee8f922a472eb07e41268f27b0388"
+appcd-dispatcher@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/appcd-dispatcher/-/appcd-dispatcher-1.0.1.tgz#96d708ae1d2393b9880dc3225385fdb08e88e13b"
   dependencies:
-    appcd-logger "^1.0.0"
-    appcd-response "^1.0.0"
+    appcd-logger "^1.0.1"
+    appcd-response "^1.0.1"
     gawk "^4.4.4"
     path-to-regexp "^2.1.0"
     source-map-support "^0.5.0"
     uuid "^3.1.0"
 
-appcd-fs@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/appcd-fs/-/appcd-fs-1.0.0.tgz#b11f8841865a31b85682af5d214e053e22d3833d"
+appcd-fs@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/appcd-fs/-/appcd-fs-1.0.1.tgz#2b941d0d81054d43515e5daef7806fc8e32e28db"
   dependencies:
     source-map-support "^0.5.0"
 
-appcd-fswatcher@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/appcd-fswatcher/-/appcd-fswatcher-1.0.0.tgz#7452d849627a61998badebae8dac8ead6f8145a5"
+appcd-fswatcher@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/appcd-fswatcher/-/appcd-fswatcher-1.0.1.tgz#943faf728360819fc99ab68d1348cb413ffb0062"
   dependencies:
-    appcd-dispatcher "^1.0.0"
-    appcd-logger "^1.0.0"
-    appcd-path "^1.0.0"
-    appcd-response "^1.0.0"
-    appcd-util "^1.0.0"
+    appcd-dispatcher "^1.0.1"
+    appcd-logger "^1.0.1"
+    appcd-path "^1.0.1"
+    appcd-response "^1.0.1"
+    appcd-util "^1.0.1"
     gawk "^4.4.4"
     source-map-support "^0.5.0"
 
-appcd-gulp@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/appcd-gulp/-/appcd-gulp-1.0.0.tgz#326492adc3f972cc1efcaf6a2a9a939864670b69"
+appcd-gulp@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/appcd-gulp/-/appcd-gulp-1.0.1.tgz#b8f53b1c622de9e88169e381ec39ff701465c2fd"
   dependencies:
     babel-core "^6.26.0"
     babel-eslint "^8.0.3"
@@ -259,12 +259,12 @@ appcd-gulp@^1.0.0:
     babel-register "^6.26.0"
     chai "^4.1.2"
     chai-as-promised "^7.1.1"
-    core-js "^2.5.1"
+    core-js "^2.5.3"
     del "^3.0.0"
     esdoc "^1.0.4"
     esdoc-ecmascript-proposal-plugin "^1.0.0"
     esdoc-standard-plugin "^1.0.0"
-    eslint "^4.12.0"
+    eslint "^4.13.1"
     eslint-config-axway "^2.0.7"
     eslint-plugin-mocha "^4.11.0"
     gulp-babel "^7.0.0"
@@ -280,12 +280,12 @@ appcd-gulp@^1.0.0:
     sinon "^4.1.2"
     sinon-chai "^2.14.0"
 
-appcd-http@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/appcd-http/-/appcd-http-1.0.0.tgz#d6e762c27440d9cc3258d0f4a267b75386dddf9c"
+appcd-http@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/appcd-http/-/appcd-http-1.0.1.tgz#c95f476f4040d5c915efec8cadb596264bf35b86"
   dependencies:
-    appcd-fs "^1.0.0"
-    appcd-logger "^1.0.0"
+    appcd-fs "^1.0.1"
+    appcd-logger "^1.0.1"
     koa "^2.4.1"
     koa-bodyparser "^4.2.0"
     koa-helmet "^3.3.0"
@@ -294,111 +294,111 @@ appcd-http@^1.0.0:
     source-map-support "^0.5.0"
     ws "^3.3.2"
 
-appcd-logger@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/appcd-logger/-/appcd-logger-1.0.0.tgz#dfd6f686670b8cf091b956113e5c0ff8398a900e"
+appcd-logger@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/appcd-logger/-/appcd-logger-1.0.1.tgz#7d7e08e41e2cd36b6a7fd094727e3515860e42a3"
   dependencies:
     snooplogg "^1.9.1"
     source-map-support "^0.5.0"
 
-appcd-machine-id@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/appcd-machine-id/-/appcd-machine-id-1.0.0.tgz#1827f0366a77b2c7346d11f4baef25e7b900672e"
+appcd-machine-id@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/appcd-machine-id/-/appcd-machine-id-1.0.1.tgz#b6007aea8cb0c74bf4f67760c873c816632ffea3"
   dependencies:
-    appcd-fs "^1.0.0"
-    appcd-logger "^1.0.0"
-    appcd-path "^1.0.0"
-    appcd-subprocess "^1.0.0"
-    appcd-util "^1.0.0"
-    appcd-winreg "^1.0.0"
-    fs-extra "^4.0.2"
+    appcd-fs "^1.0.1"
+    appcd-logger "^1.0.1"
+    appcd-path "^1.0.1"
+    appcd-subprocess "^1.0.1"
+    appcd-util "^1.0.1"
+    appcd-winreg "^1.0.1"
+    fs-extra "^5.0.0"
     macaddress "^0.2.8"
     simple-plist "^0.2.1"
     source-map-support "^0.5.0"
 
-appcd-nodejs@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/appcd-nodejs/-/appcd-nodejs-1.0.0.tgz#26f2ca778711de7c25229f62551129b3ad1ecd44"
+appcd-nodejs@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/appcd-nodejs/-/appcd-nodejs-1.0.1.tgz#5d4e364d81f71db8405c4fe12c4dae6ce94ec2f8"
   dependencies:
-    appcd-fs "^1.0.0"
-    appcd-logger "^1.0.0"
-    appcd-request "^1.0.0"
-    appcd-util "^1.0.0"
-    fs-extra "^4.0.2"
+    appcd-fs "^1.0.1"
+    appcd-logger "^1.0.1"
+    appcd-request "^1.0.1"
+    appcd-util "^1.0.1"
+    fs-extra "^5.0.0"
     progress "^2.0.0"
     source-map-support "^0.5.0"
     tar-stream "^1.5.5"
     tmp "^0.0.33"
     yauzl "^2.9.1"
 
-appcd-path@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/appcd-path/-/appcd-path-1.0.0.tgz#2a45d77dd4b4f599e1a649c842cd5e41f98425c3"
+appcd-path@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/appcd-path/-/appcd-path-1.0.1.tgz#33f280b9a5ea69d8ca871485407cb73080d5f1d6"
   dependencies:
     source-map-support "^0.5.0"
 
-appcd-request@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/appcd-request/-/appcd-request-1.0.0.tgz#065f2ae52fea559faf6fcb453fec654f42d3c119"
+appcd-request@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/appcd-request/-/appcd-request-1.0.1.tgz#5d434e50fe54154937e266832acaf70d7e2a4b4c"
   dependencies:
-    appcd-dispatcher "^1.0.0"
-    appcd-fs "^1.0.0"
-    appcd-logger "^1.0.0"
+    appcd-dispatcher "^1.0.1"
+    appcd-fs "^1.0.1"
+    appcd-logger "^1.0.1"
     request "^2.83.0"
     source-map-support "^0.5.0"
 
-appcd-response@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/appcd-response/-/appcd-response-1.0.0.tgz#3edb5652e0127a73513478c3825e903ad71ecc87"
+appcd-response@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/appcd-response/-/appcd-response-1.0.1.tgz#4a885df93ef0f42cf9270e7cf2dac08e61a3e2e6"
   dependencies:
-    appcd-fs "^1.0.0"
-    appcd-winreg "^1.0.0"
+    appcd-fs "^1.0.1"
+    appcd-winreg "^1.0.1"
     source-map-support "^0.5.0"
     sprintf-js "^1.1.1"
 
-appcd-subprocess@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/appcd-subprocess/-/appcd-subprocess-1.0.0.tgz#bbb55fb6f85e87e542bd9a1a69154dd267e09506"
+appcd-subprocess@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/appcd-subprocess/-/appcd-subprocess-1.0.1.tgz#aca360a658575e92a5116db5b068a0c9733c1333"
   dependencies:
-    appcd-dispatcher "^1.0.0"
-    appcd-logger "^1.0.0"
-    appcd-nodejs "^1.0.0"
-    appcd-path "^1.0.0"
-    appcd-response "^1.0.0"
+    appcd-dispatcher "^1.0.1"
+    appcd-logger "^1.0.1"
+    appcd-nodejs "^1.0.1"
+    appcd-path "^1.0.1"
+    appcd-response "^1.0.1"
     gawk "^4.4.4"
     ps-tree "^1.1.0"
     source-map-support "^0.5.0"
     which "^1.3.0"
 
-appcd-telemetry@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/appcd-telemetry/-/appcd-telemetry-1.0.0.tgz#6fa4b16ee97c4d62eb887a6cb61639d6ec5fcc34"
+appcd-telemetry@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/appcd-telemetry/-/appcd-telemetry-1.0.1.tgz#984a7c638ce7d93348175ce199d3808a980003c0"
   dependencies:
-    appcd-config "^1.0.0"
-    appcd-dispatcher "^1.0.0"
-    appcd-fs "^1.0.0"
-    appcd-logger "^1.0.0"
-    appcd-machine-id "^1.0.0"
-    appcd-path "^1.0.0"
-    appcd-request "^1.0.0"
-    appcd-response "^1.0.0"
-    appcd-util "^1.0.0"
-    fs-extra "^4.0.2"
+    appcd-config "^1.0.1"
+    appcd-dispatcher "^1.0.1"
+    appcd-fs "^1.0.1"
+    appcd-logger "^1.0.1"
+    appcd-machine-id "^1.0.1"
+    appcd-path "^1.0.1"
+    appcd-request "^1.0.1"
+    appcd-response "^1.0.1"
+    appcd-util "^1.0.1"
+    fs-extra "^5.0.0"
     source-map-support "^0.5.0"
     uuid "^3.1.0"
 
-appcd-util@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/appcd-util/-/appcd-util-1.0.0.tgz#28e2de8822ea18259d512d1319904110825932a8"
+appcd-util@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/appcd-util/-/appcd-util-1.0.1.tgz#f2be2d5894ebb6cc82ae356f63df19edc5fa5f9e"
   dependencies:
-    appcd-fs "^1.0.0"
+    appcd-fs "^1.0.1"
     lodash.get "^4.4.2"
     semver "^5.4.1"
     source-map-support "^0.5.0"
 
-appcd-winreg@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/appcd-winreg/-/appcd-winreg-1.0.0.tgz#4f73b39ce57b959abff3afc8aeb03f84504aaab8"
+appcd-winreg@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/appcd-winreg/-/appcd-winreg-1.0.1.tgz#6f7a4e8d812e00fec8d03ad7def2e6608f9dcc07"
   dependencies:
     source-map-support "^0.5.0"
     winreg "^1.2.4"
@@ -1391,7 +1391,7 @@ core-js@^2.4.0:
   version "2.5.1"
   resolved "https://registry.npmjs.org/core-js/-/core-js-2.5.1.tgz#ae6874dc66937789b80754ff5428df66819ca50b"
 
-core-js@^2.5.0, core-js@^2.5.1:
+core-js@^2.5.0, core-js@^2.5.3:
   version "2.5.3"
   resolved "https://registry.npmjs.org/core-js/-/core-js-2.5.3.tgz#8acc38345824f16d8365b7c9b4259168e8ed603e"
 
@@ -1890,7 +1890,7 @@ eslint-scope@^3.7.1:
     esrecurse "^4.1.0"
     estraverse "^4.1.1"
 
-eslint@^4.0.0, eslint@^4.12.0:
+eslint@^4.0.0, eslint@^4.13.1:
   version "4.13.1"
   resolved "https://registry.npmjs.org/eslint/-/eslint-4.13.1.tgz#0055e0014464c7eb7878caf549ef2941992b444f"
   dependencies:
@@ -2295,14 +2295,6 @@ fs-extra@1.0.0:
     graceful-fs "^4.1.2"
     jsonfile "^2.1.0"
     klaw "^1.0.0"
-
-fs-extra@^4.0.2:
-  version "4.0.3"
-  resolved "https://registry.npmjs.org/fs-extra/-/fs-extra-4.0.3.tgz#0d852122e5bc5beb453fb028e9c0c9bf36340c94"
-  dependencies:
-    graceful-fs "^4.1.2"
-    jsonfile "^4.0.0"
-    universalify "^0.1.0"
 
 fs-extra@^5.0.0:
   version "5.0.0"

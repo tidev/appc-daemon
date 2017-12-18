@@ -140,15 +140,15 @@ ansi-wrap@0.1.0:
   version "0.1.0"
   resolved "https://registry.npmjs.org/ansi-wrap/-/ansi-wrap-0.1.0.tgz#a82250ddb0015e9a27ca82e82ea603bbfa45efaf"
 
-appcd-fs@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/appcd-fs/-/appcd-fs-1.0.0.tgz#b11f8841865a31b85682af5d214e053e22d3833d"
+appcd-fs@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/appcd-fs/-/appcd-fs-1.0.1.tgz#2b941d0d81054d43515e5daef7806fc8e32e28db"
   dependencies:
     source-map-support "^0.5.0"
 
-appcd-gulp@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/appcd-gulp/-/appcd-gulp-1.0.0.tgz#326492adc3f972cc1efcaf6a2a9a939864670b69"
+appcd-gulp@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/appcd-gulp/-/appcd-gulp-1.0.1.tgz#b8f53b1c622de9e88169e381ec39ff701465c2fd"
   dependencies:
     babel-core "^6.26.0"
     babel-eslint "^8.0.3"
@@ -166,12 +166,12 @@ appcd-gulp@^1.0.0:
     babel-register "^6.26.0"
     chai "^4.1.2"
     chai-as-promised "^7.1.1"
-    core-js "^2.5.1"
+    core-js "^2.5.3"
     del "^3.0.0"
     esdoc "^1.0.4"
     esdoc-ecmascript-proposal-plugin "^1.0.0"
     esdoc-standard-plugin "^1.0.0"
-    eslint "^4.12.0"
+    eslint "^4.13.1"
     eslint-config-axway "^2.0.7"
     eslint-plugin-mocha "^4.11.0"
     gulp-babel "^7.0.0"
@@ -187,25 +187,25 @@ appcd-gulp@^1.0.0:
     sinon "^4.1.2"
     sinon-chai "^2.14.0"
 
-appcd-logger@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/appcd-logger/-/appcd-logger-1.0.0.tgz#dfd6f686670b8cf091b956113e5c0ff8398a900e"
+appcd-logger@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/appcd-logger/-/appcd-logger-1.0.1.tgz#7d7e08e41e2cd36b6a7fd094727e3515860e42a3"
   dependencies:
     snooplogg "^1.9.1"
     source-map-support "^0.5.0"
 
-appcd-response@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/appcd-response/-/appcd-response-1.0.0.tgz#3edb5652e0127a73513478c3825e903ad71ecc87"
+appcd-response@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/appcd-response/-/appcd-response-1.0.1.tgz#4a885df93ef0f42cf9270e7cf2dac08e61a3e2e6"
   dependencies:
-    appcd-fs "^1.0.0"
-    appcd-winreg "^1.0.0"
+    appcd-fs "^1.0.1"
+    appcd-winreg "^1.0.1"
     source-map-support "^0.5.0"
     sprintf-js "^1.1.1"
 
-appcd-winreg@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/appcd-winreg/-/appcd-winreg-1.0.0.tgz#4f73b39ce57b959abff3afc8aeb03f84504aaab8"
+appcd-winreg@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/appcd-winreg/-/appcd-winreg-1.0.1.tgz#6f7a4e8d812e00fec8d03ad7def2e6608f9dcc07"
   dependencies:
     source-map-support "^0.5.0"
     winreg "^1.2.4"
@@ -1031,7 +1031,7 @@ convert-source-map@^1.3.0, convert-source-map@^1.5.0:
   version "1.5.1"
   resolved "https://registry.npmjs.org/convert-source-map/-/convert-source-map-1.5.1.tgz#b8278097b9bc229365de5c62cf5fcaed8b5599e5"
 
-core-js@^2.4.0, core-js@^2.5.0, core-js@^2.5.1:
+core-js@^2.4.0, core-js@^2.5.0, core-js@^2.5.3:
   version "2.5.3"
   resolved "https://registry.npmjs.org/core-js/-/core-js-2.5.3.tgz#8acc38345824f16d8365b7c9b4259168e8ed603e"
 
@@ -1460,7 +1460,7 @@ eslint-scope@^3.7.1:
     esrecurse "^4.1.0"
     estraverse "^4.1.1"
 
-eslint@^4.0.0, eslint@^4.12.0:
+eslint@^4.0.0, eslint@^4.13.1:
   version "4.13.1"
   resolved "https://registry.npmjs.org/eslint/-/eslint-4.13.1.tgz#0055e0014464c7eb7878caf549ef2941992b444f"
   dependencies:
