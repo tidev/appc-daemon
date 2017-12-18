@@ -25,21 +25,21 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-client": "^1.0.0",
-    "appcd-config": "^1.0.0",
-    "appcd-core": "^1.0.0",
+    "appcd-client": "^1.0.1",
+    "appcd-config": "^1.0.1",
+    "appcd-core": "^1.0.1",
     "appcd-dump-viewer": "^1.0.2",
-    "appcd-fs": "^1.0.0",
-    "appcd-logger": "^1.0.0",
-    "appcd-nodejs": "^1.0.0",
-    "appcd-path": "^1.0.0",
-    "appcd-util": "^1.0.0",
+    "appcd-fs": "^1.0.1",
+    "appcd-logger": "^1.0.1",
+    "appcd-nodejs": "^1.0.1",
+    "appcd-path": "^1.0.1",
+    "appcd-util": "^1.0.1",
     "cli-kit": "^0.0.9",
     "cli-table2": "^0.2.0",
     "source-map-support": "^0.5.0"
   },
   "devDependencies": {
-    "appcd-gulp": "^1.0.0",
+    "appcd-gulp": "^1.0.1",
     "gulp": "^3.9.1"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
