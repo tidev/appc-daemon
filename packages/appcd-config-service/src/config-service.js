@@ -155,7 +155,7 @@ export default class ConfigService extends ServiceDispatcher {
 
 		const filter = key && key.split(/\.|\//).join('.') || undefined;
 		const node = this.config.get(filter || undefined);
-		if (!node) {
+		if (node === undefined) {
 			throw new DispatcherError(codes.NOT_FOUND, filter && `Not Found: ${filter}`);
 		}
 		ctx.response = node;
