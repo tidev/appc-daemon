@@ -147,9 +147,14 @@ export default class Plugin extends EventEmitter {
 		this.os = null;
 
 		const appcd = Object.assign({}, pkgJson.appcd, pkgJson['appcd-plugin']);
+		console.log(appcd);
 		if (appcd) {
-			if (typeof appcd !== 'object') {
+			if (pkgJson.appcd && typeof pkgJson.appcd !== 'object') {
 				throw new PluginError('Expected "appcd" section to be an object in %s', pkgJsonFile);
+			}
+
+			if (pkgJson['appcd-plugin'] && typeof pkgJson['appcd-plugin'] !== 'object') {
+				throw new PluginError('Expected "appcd-plugin" section to be an object in %s', pkgJsonFile);
 			}
 
 			if (appcd.name) {

@@ -2,7 +2,7 @@ import path from 'path';
 import PluginError from '../dist/plugin-error';
 import Plugin from '../dist/plugin';
 
-describe('Plugin', () => {
+describe.only('Plugin', () => {
 	it('should error if plugin path is invalid', () => {
 		expect(() => {
 			new Plugin();
@@ -67,20 +67,26 @@ describe('Plugin', () => {
 
 	it('should error if package.json has an invalid "appcd-plugin" property', () => {
 		expect(() => {
-			new Plugin(path.join(__dirname, 'fixtures', 'bad-appcd'));
+			new Plugin(path.join(__dirname, 'fixtures', 'bad-appcd-plugin-object'));
 		}).to.throw(PluginError, /^Expected "appcd-plugin" section to be an object in /);
+	});
+
+	it('should error if package.json has an invalid "appcd" property', () => {
+		expect(() => {
+			new Plugin(path.join(__dirname, 'fixtures', 'bad-appcd-object'));
+		}).to.throw(PluginError, /^Expected "appcd" section to be an object in /);
 	});
 
 	it('should error if package.json has an invalid appcd "name" property', () => {
 		expect(() => {
 			new Plugin(path.join(__dirname, 'fixtures', 'bad-appcd-name'));
-		}).to.throw(PluginError, /^Invalid "name" property in the "appcd-plugin" section of /);
+		}).to.throw(PluginError, /^Invalid "name" property in the "appcd" section of /);
 	});
 
 	it('should error if package.json appcd "type" is invalid', () => {
 		expect(() => {
 			new Plugin(path.join(__dirname, 'fixtures', 'bad-appcd-type'));
-		}).to.throw(PluginError, /^Invalid type "foo" in "appcd-plugin" section of /);
+		}).to.throw(PluginError, /^Invalid type "foo" in "appcd" section of /);
 	});
 
 	it('should error if package.json appcd "inactivityTimeout" is invalid', () => {
@@ -92,7 +98,7 @@ describe('Plugin', () => {
 	it('should error if plugin has an invalid name', () => {
 		expect(() => {
 			new Plugin(path.join(__dirname, 'fixtures', 'no-name'));
-		}).to.throw(PluginError, /^Invalid "name" property in the "appcd-plugin" section of /);
+		}).to.throw(PluginError, /^Invalid "name" property in the "appcd" section of /);
 	});
 
 	it('should error if package.json has appcd "name" of "appcd"', () => {
