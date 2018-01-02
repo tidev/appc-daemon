@@ -767,6 +767,7 @@ async function checkPackages({ skipSecurity } = {}) {
 		securityIssues:           0,
 		deprecated:               0,
 		cyclic:                   checkCyclic(),
+		outOfDate:                [],
 		packagesToUpdate:         [],
 		stats:                    computeSloc(),
 		testStats:                computeSloc('test')
@@ -811,10 +812,10 @@ async function checkPackages({ skipSecurity } = {}) {
 							dep.status = (dep.status ? ', ' : '') + 'out-of-date';
 
 							const m = required.match(/^(\^|~|>|>=)/);
-							results.packagesToUpdate.push({
+							results.outOfDate.push({
 								path: key,
 								name,
-								current: required,
+								current: installed,
 								latest: (m ? m[1] : '') + latest,
 								latestTimestamp,
 								next: next ? `^${next}` : null,
@@ -1038,31 +1039,52 @@ function renderPackages(results) {
 	]);
 	console.log(table.toString() + '\n');
 
+	if (results.outOfDate.length) {
+		console.log(magenta('Out-of-date Packages') + '\n');
+		table = new Table({
+			chars: cliTableChars,
+			head: [ 'Component', 'Package', 'From', 'To' ],
+			style: {
+				head: [ 'bold', 'gray' ],
+				border: []
+			}
+		});
+		for (const pkg of results.outOfDate) {
+			const rel = path.relative(__dirname, pkg.path) || path.basename(pkg.path);
+			table.push([
+				rel,
+				magenta(pkg.name),
+				pkg.current,
+				'→',
+				hlVer(pkg.latest, pkg.current) + (pkg.latestTimestamp ? gray(` (published ${new Date(pkg.latestTimestamp).toDateString()})`) : '')
+			]);
+		}
+		console.log(table.toString() + '\n');
+	}
+
 	if (results.packagesToUpdate.length) {
 		console.log(magenta('Recommendations') + '\n');
 
-		if (results.packagesToUpdate.length) {
-			console.log(`Run ${cyan('gulp upgrade')} to update:`);
-			table = new Table({
-				chars: cliTableChars,
-				head: [ 'Component', 'Package', 'From', 'To' ],
-				style: {
-					head: [ 'bold', 'gray' ],
-					border: []
-				}
-			});
-			for (const pkg of results.packagesToUpdate) {
-				const rel = path.relative(__dirname, pkg.path) || path.basename(pkg.path);
-				table.push([
-					rel,
-					magenta(pkg.name),
-					pkg.current,
-					'→',
-					hlVer(pkg.latest, pkg.current) + (pkg.latestTimestamp ? gray(` (published ${new Date(pkg.latestTimestamp).toDateString()})`) : '')
-				]);
+		console.log(`Run ${cyan('gulp upgrade')} to update:`);
+		table = new Table({
+			chars: cliTableChars,
+			head: [ 'Component', 'Package', 'From', 'To' ],
+			style: {
+				head: [ 'bold', 'gray' ],
+				border: []
 			}
-			console.log(table.toString() + '\n');
+		});
+		for (const pkg of results.packagesToUpdate) {
+			const rel = path.relative(__dirname, pkg.path) || path.basename(pkg.path);
+			table.push([
+				rel,
+				magenta(pkg.name),
+				pkg.current,
+				'→',
+				hlVer(pkg.latest, pkg.current) + (pkg.latestTimestamp ? gray(` (published ${new Date(pkg.latestTimestamp).toDateString()})`) : '')
+			]);
 		}
+		console.log(table.toString() + '\n');
 	}
 }
 
