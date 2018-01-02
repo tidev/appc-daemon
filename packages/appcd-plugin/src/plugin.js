@@ -146,67 +146,71 @@ export default class Plugin extends EventEmitter {
 
 		this.os = null;
 
-		const appcd = Object.assign({}, pkgJson.appcd, pkgJson['appcd-plugin']);
-		console.log(appcd);
-		if (appcd) {
-			if (pkgJson.appcd && typeof pkgJson.appcd !== 'object') {
-				throw new PluginError('Expected "appcd" section to be an object in %s', pkgJsonFile);
-			}
+		const appcd = {};
 
-			if (pkgJson['appcd-plugin'] && typeof pkgJson['appcd-plugin'] !== 'object') {
+		if (pkgJson['appcd-plugin']) {
+			if (typeof pkgJson['appcd-plugin'] !== 'object') {
 				throw new PluginError('Expected "appcd-plugin" section to be an object in %s', pkgJsonFile);
 			}
+			Object.assign(appcd, pkgJson['appcd-plugin']);
+		}
 
-			if (appcd.name) {
-				if (typeof appcd.name !== 'string') {
-					throw new PluginError('Invalid "name" property in the "appcd" section of %s', pkgJsonFile);
-				}
-				if (!this.packageName) {
-					this.packageName = appcd.name;
-				}
-				this.name = slug(appcd.name);
+		if (pkgJson.appcd) {
+			if (typeof pkgJson.appcd !== 'object') {
+				throw new PluginError('Expected "appcd" section to be an object in %s', pkgJsonFile);
+			}
+			Object.assign(appcd, pkgJson.appcd);
+		}
+
+		if (appcd.name) {
+			if (typeof appcd.name !== 'string') {
+				throw new PluginError('Invalid "name" property in the "appcd" section of %s', pkgJsonFile);
+			}
+			if (!this.packageName) {
+				this.packageName = appcd.name;
+			}
+			this.name = slug(appcd.name);
+		}
+
+		if (appcd.appcdVersion) {
+			if (!semver.validRange(appcd.appcdVersion)) {
+				throw new PluginError('Invalid "appcdVersion" property in the "appcd" section of %s', pkgJsonFile);
+			}
+			this.appcdVersion = appcd.appcdVersion;
+		}
+
+		if (appcd.type) {
+			if (typeof appcd.type !== 'string' || types.indexOf(appcd.type) === -1) {
+				throw new PluginError('Invalid type "%s" in "appcd" section of %s', appcd.type, pkgJsonFile);
+			}
+			this.type = appcd.type;
+		}
+
+		if (appcd.config) {
+			let configFile = appcd.config;
+			if (typeof configFile !== 'string') {
+				throw new PluginError('Expected config to be a string');
 			}
 
-			if (appcd.appcdVersion) {
-				if (!semver.validRange(appcd.appcdVersion)) {
-					throw new PluginError('Invalid "appcdVersion" property in the "appcd" section of %s', pkgJsonFile);
-				}
-				this.appcdVersion = appcd.appcdVersion;
+			if (!path.isAbsolute(configFile)) {
+				configFile = path.resolve(pluginPath, configFile);
 			}
 
-			if (appcd.type) {
-				if (typeof appcd.type !== 'string' || types.indexOf(appcd.type) === -1) {
-					throw new PluginError('Invalid type "%s" in "appcd" section of %s', appcd.type, pkgJsonFile);
-				}
-				this.type = appcd.type;
+			this.configFile = expandPath(configFile);
+		}
+
+		if (appcd.os) {
+			this.os = arrayify(appcd.os, true);
+			if (this.os.length === 0) {
+				this.os = null;
 			}
+		}
 
-			if (appcd.config) {
-				let configFile = appcd.config;
-				if (typeof configFile !== 'string') {
-					throw new PluginError('Expected config to be a string');
-				}
-
-				if (!path.isAbsolute(configFile)) {
-					configFile = path.resolve(pluginPath, configFile);
-				}
-
-				this.configFile = expandPath(configFile);
+		if (appcd.inactivityTimeout) {
+			if (typeof appcd.inactivityTimeout !== 'number' || isNaN(appcd.inactivityTimeout) || appcd.inactivityTimeout < 0) {
+				throw new PluginError('Expected inactivity timeout to be a non-negative number');
 			}
-
-			if (appcd.os) {
-				this.os = arrayify(appcd.os, true);
-				if (this.os.length === 0) {
-					this.os = null;
-				}
-			}
-
-			if (appcd.inactivityTimeout) {
-				if (typeof appcd.inactivityTimeout !== 'number' || isNaN(appcd.inactivityTimeout) || appcd.inactivityTimeout < 0) {
-					throw new PluginError('Expected inactivity timeout to be a non-negative number');
-				}
-				this.inactivityTimeout = appcd.inactivityTimeout;
-			}
+			this.inactivityTimeout = appcd.inactivityTimeout;
 		}
 
 		// validate the name

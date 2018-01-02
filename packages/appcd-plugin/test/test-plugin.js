@@ -2,7 +2,7 @@ import path from 'path';
 import PluginError from '../dist/plugin-error';
 import Plugin from '../dist/plugin';
 
-describe.only('Plugin', () => {
+describe('Plugin', () => {
 	it('should error if plugin path is invalid', () => {
 		expect(() => {
 			new Plugin();
@@ -110,6 +110,11 @@ describe.only('Plugin', () => {
 	it('should capture error if node.js version is incorrect', () => {
 		const p = new Plugin(path.join(__dirname, 'fixtures', 'wrong-node-ver'));
 		expect(p.error).to.match(/Internal plugin requires Node.js 1\.2\.3, but currently running v\d+\.\d+\.\d+$/);
+	});
+
+	it('should prefer appcd data over appd-plugin', () => {
+		const p = new Plugin(path.join(__dirname, 'fixtures', 'both-package-json-entries'));
+		expect(p.info.name).to.equal('good');
 	});
 
 	it('should find main if no .js extension is specified', () => {

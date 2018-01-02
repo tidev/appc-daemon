@@ -1,0 +1,12 @@
+{
+	"name": "good plugin",
+	"version": "1.2.3",
+	"appcd-plugin": {
+		"name": "bad",
+		"inactivityTimeout": 30000
+	},
+	"appcd": {
+		"name": "good",
+		"inactivityTimeout": 30000
+	}
+}
