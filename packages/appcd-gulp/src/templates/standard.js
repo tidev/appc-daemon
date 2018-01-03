@@ -7,7 +7,7 @@ module.exports = (opts) => {
 	const babelConfs  = require('../babel.json');
 	const del         = require('del');
 	const fs          = require('fs');
-	const log 		  = require('pretty-log');
+	const log         = require('pretty-log');
 	const Module      = require('module');
 	const path        = require('path');
 	const spawnSync   = require('child_process').spawnSync;
