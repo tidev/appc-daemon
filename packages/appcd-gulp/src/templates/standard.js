@@ -7,6 +7,7 @@ module.exports = (opts) => {
 	const babelConfs  = require('../babel.json');
 	const del         = require('del');
 	const fs          = require('fs');
+	const log         = require('pretty-log');
 	const Module      = require('module');
 	const path        = require('path');
 	const spawnSync   = require('child_process').spawnSync;
@@ -61,16 +62,16 @@ module.exports = (opts) => {
 	 */
 	gulp.task('clean', [ 'clean-coverage', 'clean-dist', 'clean-docs' ]);
 
-	gulp.task('clean-coverage', done => { del(coverageDir, { force: true }).then(() => done()) });
+	gulp.task('clean-coverage', done => { del(coverageDir, { force: true }).then(() => done()); });
 
-	gulp.task('clean-dist', done => { del(distDir, { force: true }).then(() => done()) });
+	gulp.task('clean-dist', done => { del(distDir, { force: true }).then(() => done()); });
 
-	gulp.task('clean-docs', done => { del(docsDir, { force: true }).then(() => done()) });
+	gulp.task('clean-docs', done => { del(docsDir, { force: true }).then(() => done()); });
 
 	/*
 	 * lint tasks
 	 */
-	function lint(pattern, eslintFile='eslint.json') {
+	function lint(pattern, eslintFile = 'eslint.json') {
 		const baseConfig = require(path.resolve(__dirname, '..', eslintFile));
 
 		// check if the user has a custom .eslintrc in the root of the project
@@ -119,7 +120,7 @@ module.exports = (opts) => {
 				sourceRoot: 'src'
 			}))
 			.pipe(gulp.dest(distDir));
-	})
+	});
 
 	gulp.task('docs', [ 'lint-src', 'clean-docs' ], () => {
 		const esdoc = require('esdoc').default;
@@ -167,7 +168,7 @@ module.exports = (opts) => {
 			if (isWindows) {
 				execPath = path.join(appcdGulpNodeModulesPath, '.bin', 'nyc.cmd');
 			} else {
-				args.push(path.join(appcdGulpNodeModulesPath, '.bin', 'nyc'))
+				args.push(path.join(appcdGulpNodeModulesPath, '.bin', 'nyc'));
 			}
 
 			args.push(
@@ -193,7 +194,7 @@ module.exports = (opts) => {
 		// add mocha
 		const mocha = resolveModule('mocha');
 		if (!mocha) {
-			gutil.log('Unable to find mocha!');
+			log('Unable to find mocha!');
 			process.exit(1);
 		}
 		args.push(path.join(mocha, 'bin', 'mocha'));
@@ -244,13 +245,13 @@ module.exports = (opts) => {
 	}
 
 	gulp.task('watch', cb => {
-		gulp.watch(process.cwd() + '/src/*.js', [ 'build' ], function(event) {
+		gulp.watch(process.cwd() + '/src/*.js', [ 'build' ], function (event) {
 			console.log('File ' + event.path + ' was ' + event.type + ', running tasks...');
 		});
 	});
 
 	gulp.task('watch-test', cb => {
-		gulp.watch([ process.cwd() + '/src/*.js', process.cwd() + '/test/*.js' ], [ 'test' ], function(event) {
+		gulp.watch([ process.cwd() + '/src/*.js', process.cwd() + '/test/*.js' ], [ 'test' ], function (event) {
 			console.log('File ' + event.path + ' was ' + event.type + ', running tasks...');
 		});
 	});

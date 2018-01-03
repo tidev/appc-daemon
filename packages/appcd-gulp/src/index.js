@@ -11,7 +11,7 @@
  */
 module.exports = opts => {
 	const fs = require('fs');
-	const gutil = require('gulp-util');
+	const log = require('pretty-log');
 	const path = require('path');
 
 	let parent = module.parent;
@@ -26,12 +26,12 @@ module.exports = opts => {
 	}
 
 	if (!opts.projectDir) {
-		gutil.log(gutil.colors.red('You MUST call appcd-gulp from a gulpfile.js'));
+		log(colors.red('You MUST call appcd-gulp from a gulpfile.js'));
 		process.exit(1);
 	}
 
 	if (!opts.template) {
-		gutil.log(gutil.colors.red('You MUST specify a template'));
+		log(colors.red('You MUST specify a template'));
 		process.exit(1);
 	}
 
@@ -41,7 +41,7 @@ module.exports = opts => {
 			throw new Error();
 		}
 	} catch (e) {
-		gutil.log(gutil.colors.red(opts.template ? `Unknown template: ${opts.template}` : 'Invalid template'));
+		log(colors.red(opts.template ? `Unknown template: ${opts.template}` : 'Invalid template'));
 		process.exit(1);
 	}
 

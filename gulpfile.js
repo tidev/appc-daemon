@@ -1,12 +1,13 @@
 'use strict';
 
+const ansiColors   = require('ansi-colors');
 const chug         = require('gulp-chug');
 const debug        = require('gulp-debug');
 const del          = require('del');
 const fs           = require('fs-extra');
 const globule      = require('globule');
 const gulp         = require('gulp');
-const gutil        = require('gulp-util');
+let log            = require('fancy-log');
 const path         = require('path');
 const plumber      = require('gulp-plumber');
 const promiseLimit = require('promise-limit');
@@ -19,7 +20,7 @@ const util         = require('util');
 
 const isWindows = process.platform === 'win32';
 
-const { bold, red, yellow, green, cyan, magenta, gray } = gutil.colors;
+const { bold, red, yellow, green, cyan, magenta, gray } = ansiColors;
 
 const cliTableChars = {
 	bottom: '', 'bottom-left': '', 'bottom-mid': '', 'bottom-right': '',
@@ -38,12 +39,12 @@ process.env.FORCE_COLOR = 1;
 
 if (process.argv.indexOf('--silent') !== -1) {
 	// this is exactly what gulp does internally
-	gutil.log = function () {};
+	log = function () {};
 }
 
 gulp.task('node-info', () => {
-	gutil.log(`Node.js ${process.version} (${process.platform})`);
-	gutil.log(process.env);
+	log(`Node.js ${process.version} (${process.platform})`);
+	log(process.env);
 });
 
 /*
@@ -146,7 +147,7 @@ gulp.task('upgrade', cb => {
 			const { packagesToUpdate } = results;
 
 			if (!packagesToUpdate.length) {
-				gutil.log('Everything looks good to go, nothing to upgrade');
+				log('Everything looks good to go, nothing to upgrade');
 				return results;
 			}
 
@@ -207,7 +208,7 @@ function runTests(cover, cb) {
 					gulpfile = path.resolve(gulpfile);
 					const dir = path.dirname(gulpfile);
 
-					gutil.log(`Spawning: ${process.execPath} ${gulp} coverage # CWD=${dir}`);
+					log(`Spawning: ${process.execPath} ${gulp} coverage # CWD=${dir}`);
 					const child = spawn(process.execPath, [ gulp, task, '--colors' ], { cwd: dir, stdio: [ 'inherit', 'pipe', 'inherit' ] });
 
 					let out = '';
@@ -218,17 +219,17 @@ function runTests(cover, cb) {
 
 					child.on('close', code => {
 						if (!code) {
-							gutil.log(`Exit code: ${code}`);
+							log(`Exit code: ${code}`);
 							if (cover) {
 								for (let coverageFile of globule.find(dir + '/coverage/coverage*.json')) {
 									collector.add(JSON.parse(fs.readFileSync(path.resolve(coverageFile), 'utf8')));
 								}
 							}
 						} else if (out.indexOf(`Task '${task}' is not in your gulpfile`) === -1) {
-							gutil.log(`Exit code: ${code}`);
+							log(`Exit code: ${code}`);
 							failedProjects.push(path.basename(dir));
 						} else {
-							gutil.log(`Exit code: ${code}, no '${task}' task, continuing`);
+							log(`Exit code: ${code}, no '${task}' task, continuing`);
 						}
 
 						resolve();
@@ -253,11 +254,11 @@ function runTests(cover, cb) {
 			}
 
 			if (failedProjects.length === 1) {
-				gutil.log(red('1 failured project:'));
+				log(red('1 failured project:'));
 			} else {
-				gutil.log(red(`${failedProjects.length} failured projects:`));
+				log(red(`${failedProjects.length} failured projects:`));
 			}
-			failedProjects.forEach(p => gutil.log(red(p)));
+			failedProjects.forEach(p => log(red(p)));
 			process.exit(1);
 		})
 		.catch(cb);
@@ -275,7 +276,7 @@ function stopDaemon() {
 }
 
 gulp.task('start-daemon', () => {
-	gutil.log('Starting daemon in debug mode');
+	log('Starting daemon in debug mode');
 	console.log('-----------------------------------------------------------');
 	startDaemon();
 });
@@ -283,7 +284,7 @@ gulp.task('start-daemon', () => {
 gulp.task('watch-only', cb => {
 	const watchers = [
 		gulp.watch(__dirname + '/packages/appcd/bin/*', evt => {
-			gutil.log('Detected change: ' + cyan(evt.path));
+			log('Detected change: ' + cyan(evt.path));
 			stopDaemon();
 			startDaemon();
 		}),
@@ -293,13 +294,13 @@ gulp.task('watch-only', cb => {
 			evt.path = evt.path.replace(/\\/g, '/');
 			const m = evt.path.match(new RegExp('^(' +  __dirname.replace(/\\/g, '/') + '/(packages/([^\/]+)))'));
 			if (m) {
-				gutil.log('Detected change: ' + cyan(evt.path));
+				log('Detected change: ' + cyan(evt.path));
 				stopDaemon();
 				buildDepList(m[2])
 					.reduce((promise, dir) => {
 						return promise.then(() => new Promise((resolve, reject) => {
 							console.log();
-							gutil.log(cyan('Rebuilding ' + dir));
+							log(cyan('Rebuilding ' + dir));
 							gulp
 								.src(__dirname + '/' + dir + '/gulpfile.js')
 								.pipe(chug({ tasks: [ 'build' ] }))
@@ -439,7 +440,7 @@ function run(cmd, args, opts) {
 		if (opts.quiet) {
 			opts.stdio = 'ignore';
 		} else {
-			gutil.log('Running: CWD=' + opts.cwd, cmd, args.join(' '));
+			log('Running: CWD=' + opts.cwd, cmd, args.join(' '));
 		}
 		const child = spawn(cmd, args, opts);
 		let out = '';
@@ -508,7 +509,7 @@ function runLerna(args) {
 		args.unshift('./node_modules/.bin/lerna');
 		execPath = process.execPath;
 	}
-	gutil.log(`Running ${execPath} ${args.join(' ')}`);
+	log(`Running ${execPath} ${args.join(' ')}`);
 	spawnSync(execPath, args, { stdio: 'inherit' });
 }
 
@@ -526,7 +527,7 @@ async function checkPackages({ skipSecurity } = {}) {
 	const dependencies = {};
 	const tasks = [];
 
-	gutil.log('Checking packages...');
+	log('Checking packages...');
 
 	for (let file of globule.find([ './package.json', 'packages/*/package.json' ])) {
 		file = path.resolve(file);
@@ -612,9 +613,9 @@ async function checkPackages({ skipSecurity } = {}) {
 	let taskCounter = 1;
 	const totalTasks = tasks.length;
 
-	gutil.log(`Found ${cyan(Object.keys(packages).length)} packages`);
-	gutil.log(`Found ${cyan(Object.keys(dependencies).length)} dependencies`);
-	gutil.log(`Processing ${cyan(totalTasks)} tasks`);
+	log(`Found ${cyan(Object.keys(packages).length)} packages`);
+	log(`Found ${cyan(Object.keys(dependencies).length)} dependencies`);
+	log(`Processing ${cyan(totalTasks)} tasks`);
 
 	const progress = require('progress');
 	const bar = new progress('  [:bar] :percent :etas', {
@@ -654,7 +655,7 @@ async function checkPackages({ skipSecurity } = {}) {
 		const pkg = task[1];
 		const version = task[2];
 
-		// gutil.log(`Running task ${taskCounter++}/${totalTasks}: ${action} ${pkg}${version ? `@${version}` : ''}`);
+		// log(`Running task ${taskCounter++}/${totalTasks}: ${action} ${pkg}${version ? `@${version}` : ''}`);
 
 		switch (action) {
 			case 'nsp':
@@ -676,7 +677,7 @@ async function checkPackages({ skipSecurity } = {}) {
 						bar.tick();
 					})
 					.catch(err => {
-						gutil.log(yellow(`nsp failed for ${pkg}@${version}: ${err.message}`));
+						log(yellow(`nsp failed for ${pkg}@${version}: ${err.message}`));
 						bar.tick();
 					});
 
@@ -691,7 +692,7 @@ async function checkPackages({ skipSecurity } = {}) {
 				if (isWindows) {
 					execPath = path.join(__dirname, 'node_modules', '.bin', 'retire.cmd');
 				} else {
-					args.unshift(path.join(__dirname, 'node_modules', '.bin', 'retire'))
+					args.unshift(path.join(__dirname, 'node_modules', '.bin', 'retire'));
 				}
 
 				return run(execPath, args, { cwd: dir, quiet: true })
@@ -722,7 +723,7 @@ async function checkPackages({ skipSecurity } = {}) {
 								}
 							}
 						} else if (result.status !== 0) {
-							gutil.log(result.stderr);
+							log(result.stderr);
 						}
 
 						bar.tick();
@@ -734,7 +735,7 @@ async function checkPackages({ skipSecurity } = {}) {
 				return new Promise(resolve => {
 					npm.commands.view([ pkg ], true, (err, info) => {
 						if (err) {
-							gutil.log(yellow(`npm view failed for ${pkg}@${version}: ${err.message}`));
+							log(yellow(`npm view failed for ${pkg}@${version}: ${err.message}`));
 						} else {
 							const latest = Object.keys(info)[0];
 							const next = info[latest]['dist-tags'] && info[latest]['dist-tags'].next || null;
@@ -773,7 +774,7 @@ async function checkPackages({ skipSecurity } = {}) {
 		testStats:                computeSloc('test')
 	};
 
-	gutil.log('Processing packages...');
+	log('Processing packages...');
 
 	for (const [ packageName, dependency ] of Object.entries(dependencies)) {
 		if (dependency.deprecated) {
@@ -807,34 +808,32 @@ async function checkPackages({ skipSecurity } = {}) {
 					// is the dependency up-to-date?
 					if (dontUpdate.includes(name)) {
 						dep.status = (dep.status ? ', ' : '') + 'skipping latest';
-					} else {
-						if (installed && semver.lt(installed, latest)) {
-							dep.status = (dep.status ? ', ' : '') + 'out-of-date';
+					} else if (installed && semver.lt(installed, latest)) {
+						dep.status = (dep.status ? ', ' : '') + 'out-of-date';
 
-							const m = required.match(/^(\^|~|>|>=)/);
-							results.outOfDate.push({
-								path: key,
-								name,
-								current: installed,
-								latest: (m ? m[1] : '') + latest,
-								latestTimestamp,
-								next: next ? `^${next}` : null,
-								nextTimestamp
-							});
-						} else if (!installed && semver.lt(required.replace(cleanVersionRegExp, ''), latest)) {
-							dep.status = (dep.status ? ', ' : '') + 'update available';
+						const m = required.match(/^(\^|~|>|>=)/);
+						results.outOfDate.push({
+							path: key,
+							name,
+							current: installed,
+							latest: (m ? m[1] : '') + latest,
+							latestTimestamp,
+							next: next ? `^${next}` : null,
+							nextTimestamp
+						});
+					} else if (!installed && semver.lt(required.replace(cleanVersionRegExp, ''), latest)) {
+						dep.status = (dep.status ? ', ' : '') + 'update available';
 
-							const m = required.match(/^(\^|~|>|>=)/);
-							results.packagesToUpdate.push({
-								path: key,
-								name,
-								current: required,
-								latest: (m ? m[1] : '') + latest,
-								latestTimestamp,
-								next: next ? `^${next}` : null,
-								nextTimestamp
-							});
-						}
+						const m = required.match(/^(\^|~|>|>=)/);
+						results.packagesToUpdate.push({
+							path: key,
+							name,
+							current: required,
+							latest: (m ? m[1] : '') + latest,
+							latestTimestamp,
+							next: next ? `^${next}` : null,
+							nextTimestamp
+						});
 					}
 				}
 
@@ -889,7 +888,7 @@ function renderPackages(results) {
 
 				for (const name of Object.keys(pkg[type])) {
 					const dep = pkg[type][name];
-					const { latest, next } = dependencies[name]
+					const { latest, next } = dependencies[name];
 					const packageName = '  ' + name;
 
 					if (dep.status === 'ok') {
@@ -923,10 +922,10 @@ function renderPackages(results) {
 				// 	if (info.retire) {
 				// 		tools.push('retire');
 				// 	}
-                //
+				//
 				// 	console.log('   • ' + bold(name + '@' + ver) + ' ' + gray('(' + tools.join(', ') + ')'));
-                //
-                //
+				//
+				//
 				// 	table = new Table({
 				// 		chars: cliTableChars,
 				// 		head: [ gray('Vulnerability'), gray('Info'), gray('Vulnerable'), gray('Patched'), gray('Published'), gray('Updated') ],
@@ -935,10 +934,10 @@ function renderPackages(results) {
 				// 			border: []
 				// 		}
 				// 	});
-                //
+				//
 				// 	for (const advisory of Object.keys(info.vulnerabilities)) {
 				// 		const issue = info.vulnerabilities[advisory];
-                //
+				//
 				// 		table.push([
 				// 			red(issue.title),
 				// 			advisory,
@@ -947,10 +946,10 @@ function renderPackages(results) {
 				// 			issue.publish_date ? new Date(issue.publish_date).toLocaleDateString() : 'n/a',
 				// 			issue.updated_at ? new Date(issue.updated_at).toLocaleDateString() : 'n/a'
 				// 		]);
-                //
+				//
 				// 		console.log(table.toString().split('\n').map(s => '    ' + s).join('\n'));
 				// 	}
-                //
+				//
 				// 	const tree = [];
 				// 	for (const pp of Object.values(info.paths)) {
 				// 		let n = tree;
@@ -962,7 +961,7 @@ function renderPackages(results) {
 				// 					n = n[i].children;
 				// 				}
 				// 			}
-                //
+				//
 				// 			if (!found) {
 				// 				n.push({
 				// 					name: p,
@@ -971,7 +970,7 @@ function renderPackages(results) {
 				// 			}
 				// 		}
 				// 	}
-                //
+				//
 				// 	console.log(treePrinter(tree).split('\n').slice(1).map(l => '       ' + l).join('\n'));
 				// }
 			}
@@ -1140,7 +1139,7 @@ function hlVer(toVer, fromVer) {
 			}
 		}
 		return '';
-	}
+	};
 
 	while (to.length) {
 		if (to[0] > from[0]) {
@@ -1174,7 +1173,7 @@ function upgradeDeps(list) {
 				throw new Error();
 			}
 		} catch (e) {
-			gutil.log(red(`Unable to locate ${pkgJsonFile}`));
+			log(red(`Unable to locate ${pkgJsonFile}`));
 			continue;
 		}
 
@@ -1182,7 +1181,7 @@ function upgradeDeps(list) {
 		try {
 			pkgJson = JSON.parse(fs.readFileSync(pkgJsonFile));
 		} catch (e) {
-			gutil.log(red(`Unable to locate ${pkgJsonFile}`));
+			log(red(`Unable to locate ${pkgJsonFile}`));
 			continue;
 		}
 
