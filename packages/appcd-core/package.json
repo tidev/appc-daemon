@@ -34,7 +34,7 @@
     "appcd-util": "^1.0.1",
     "cli-kit": "^0.0.9",
     "fs-extra": "^5.0.0",
-    "gawk": "^4.4.4",
+    "gawk": "^4.4.5",
     "msgpack-lite": "^0.1.26"
   },
   "devDependencies": {

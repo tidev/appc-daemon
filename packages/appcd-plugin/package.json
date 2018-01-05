@@ -37,7 +37,7 @@
     "appcd-winreg": "^1.0.1",
     "builtin-modules": "^2.0.0",
     "findup-sync": "^2.0.0",
-    "gawk": "^4.4.4",
+    "gawk": "^4.4.5",
     "globule": "^1.2.0",
     "hook-emitter": "^2.1.0",
     "pretty-ms": "^3.1.0",

@@ -144,14 +144,14 @@ gulp.task('upgrade', cb => {
 	Promise.resolve()
 		.then(() => checkPackages({ skipSecurity: true }))
 		.then(results => {
-			const { packagesToUpdate } = results;
+			const { outOfDate } = results;
 
-			if (!packagesToUpdate.length) {
+			if (!outOfDate.length) {
 				log('Everything looks good to go, nothing to upgrade');
 				return results;
 			}
 
-			upgradeDeps(packagesToUpdate);
+			upgradeDeps(outOfDate);
 			return checkPackages({ skipSecurity: true });
 		})
 		.then(results => renderPackages(results))
