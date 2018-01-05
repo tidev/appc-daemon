@@ -243,9 +243,9 @@ fs-exists-sync@^0.1.0:
   version "0.1.0"
   resolved "https://registry.npmjs.org/fs-exists-sync/-/fs-exists-sync-0.1.0.tgz#982d6893af918e72d08dec9e8673ff2b5a8d6add"
 
-gawk@^4.4.4:
-  version "4.4.4"
-  resolved "https://registry.npmjs.org/gawk/-/gawk-4.4.4.tgz#aa98945d8d34bd3e2cb58308a685d536115ccff8"
+gawk@^4.4.5:
+  version "4.4.5"
+  resolved "https://registry.npmjs.org/gawk/-/gawk-4.4.5.tgz#f3f4b950fd52e9e238de72e70a82afe049cc0421"
   dependencies:
     fast-deep-equal "^1.0.0"
     source-map-support "^0.5.0"
