@@ -59,6 +59,12 @@ The external plugin controller will watch the plugin path, the path containing t
 script, and the `lib` and `src` directories in the `package.json` for changes. Any changes will
 automatically reload the plugin. This is useful when developing plugins.
 
+### Project Template
+
+To get started with creating an Appc Daemon plugin, clone the
+[appcd-plugin-template](https://github.com/appcelerator/appcd-plugin-template) repo and follow
+the instructions in the `README.md`.
+
 ### Plugin Definition
 
 A plugin is defined as a directory containing a `package.json` file and a "main" JavaScript file.
