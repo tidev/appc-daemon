@@ -4,10 +4,11 @@ module.exports = (opts) => {
 	const gulp = opts.gulp;
 
 	const $           = require('gulp-load-plugins')();
+	const ansiColors  = require('ansi-colors');
 	const babelConfs  = require('../babel.json');
 	const del         = require('del');
 	const fs          = require('fs');
-	const log         = require('pretty-log');
+	const log         = require('fancy-log');
 	const Module      = require('module');
 	const path        = require('path');
 	const spawnSync   = require('child_process').spawnSync;
@@ -234,7 +235,7 @@ module.exports = (opts) => {
 			args.push('test/**/test-*.js');
 		}
 
-		$.util.log('Running: ' + $.util.colors.cyan(execPath + ' ' + args.join(' ')));
+		log('Running: ' + ansiColors.cyan(execPath + ' ' + args.join(' ')));
 
 		// run!
 		if (spawnSync(execPath, args, { stdio: 'inherit' }).status) {
