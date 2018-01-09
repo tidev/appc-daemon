@@ -81,7 +81,7 @@ const cmd = {
 				if (status.plugins && status.plugins.registered.length) {
 					params.head = [ 'Plugin', 'Version', 'Type', 'Path', 'Node.js', 'Status', 'Active/Total Requests' ];
 					table = new Table(params);
-					for (const plugin of status.plugins.registered) {
+					for (const plugin of status.plugins.registered.sort((a, b) => a.name.localeCompare(b.name))) {
 						let status = '';
 						if (plugin.error) {
 							status = plugin.error;
