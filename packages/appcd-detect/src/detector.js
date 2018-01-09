@@ -52,7 +52,7 @@ export default class Detector extends EventEmitter {
 		const foundPaths = new Set();
 
 		const checkDir = async (dir, depth) => {
-			if (!isDir(this.dir)) {
+			if (!isDir(dir)) {
 				return;
 			}
 
