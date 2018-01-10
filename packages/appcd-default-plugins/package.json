@@ -23,7 +23,7 @@
     "appcd-plugin-ios": "^1.0.1",
     "appcd-plugin-jdk": "^1.0.0",
     "appcd-plugin-system-info": "^1.0.1",
-    "appcd-plugin-titanium-sdk": "^1.0.0",
+    "appcd-plugin-titanium-sdk": "^1.0.1",
     "appcd-plugin-windows": "^1.0.0",
     "appcd-request": "^1.0.1",
     "appcd-response": "^1.0.1",
