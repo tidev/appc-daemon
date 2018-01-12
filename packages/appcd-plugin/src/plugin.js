@@ -112,6 +112,10 @@ export default class Plugin extends EventEmitter {
 			throw new PluginError('Error parsing %s: %s', pkgJsonFile, e.message);
 		}
 
+		if (!pkgJson.appcd && !pkgJson['appcd-plugin']) {
+			throw new PluginError('Plugin does not contain an appcd object in package.json: %s', pluginPath);
+		}
+
 		// validate and set the package name
 		if (pkgJson.name) {
 			if (typeof pkgJson.name !== 'string') {
