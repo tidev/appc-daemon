@@ -1,4 +1,5 @@
 {
 	"name": "bad-version",
-	"version": "foo"
+	"version": "foo",
+	"appcd": {}
 }

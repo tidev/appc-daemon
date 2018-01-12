@@ -4,6 +4,7 @@ import defaultPluginPaths from 'appcd-default-plugins';
 import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs-extra';
 import FSWatchManager, { FSWatcher } from 'appcd-fswatcher';
+import globalModules from 'global-modules';
 import os from 'os';
 import path from 'path';
 import PluginManager from 'appcd-plugin';
@@ -180,7 +181,10 @@ export default class Server {
 				...defaultPluginPaths,
 
 				// globally installed plugins
-				path.join(homeDir, 'plugins')
+				path.join(homeDir, 'plugins'),
+
+				// global npm directory
+				globalModules
 			]
 		});
 
