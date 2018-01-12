@@ -1,6 +1,6 @@
 # ![Appc Daemon logo](docs/images/appc-daemon.png) Daemon Project
 
-The Appc Daemon a server that runs on a developer's computer and hosts services which power the
+The Appc Daemon is a server that runs on a developer's computer and hosts services which power the
 tooling for Axway products such as Axway Titanium SDK.
 
 This monorepo contains several packages which collectively define the Appc Daemon.
