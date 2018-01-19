@@ -25,8 +25,8 @@
     "appcd-response": "^1.0.1",
     "appcd-util": "^1.0.1",
     "msgpack-lite": "^0.1.26",
-    "source-map-support": "^0.5.0",
-    "uuid": "^3.1.0",
+    "source-map-support": "^0.5.2",
+    "uuid": "^3.2.1",
     "ws": "^4.0.0"
   },
   "devDependencies": {

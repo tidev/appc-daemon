@@ -23,7 +23,7 @@
     "koa-helmet": "^3.3.0",
     "koa-send": "^4.1.2",
     "path-to-regexp": "^2.1.0",
-    "source-map-support": "^0.5.0",
+    "source-map-support": "^0.5.2",
     "ws": "^4.0.0"
   },
   "devDependencies": {

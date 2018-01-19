@@ -1,4 +1,4 @@
-import appcdCoreLogger from './logger';
+import appcdCoreLogger, { LogcatFormatter } from './logger';
 import ConfigService from 'appcd-config-service';
 import defaultPluginPaths from 'appcd-default-plugins';
 import Dispatcher from 'appcd-dispatcher';
@@ -159,7 +159,9 @@ export default class Server {
 
 		// init logcat
 		Dispatcher.register('/appcd/logcat', ({ response }) => {
-			appcdCoreLogger.pipe(response, { flush: true });
+			const formatter = new LogcatFormatter();
+			formatter.pipe(response);
+			appcdCoreLogger.pipe(formatter, { flush: true });
 		});
 
 		// init the status monitor
