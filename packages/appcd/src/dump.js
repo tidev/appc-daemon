@@ -37,12 +37,10 @@ const cmd = {
 				request
 					.on('response', (message, response) => {
 						results.log.push({
-							args:      response.args,
-							typeStyle: response.typeStyle,
-							typeLabel: response.typeLabel,
-							ns:        response.ns,
-							nsStyle:   response.nsStyle,
-							ts:        response.ts
+							message: response.message,
+							ns:      response.ns,
+							ts:      response.ts,
+							type:    response.type
 						});
 						done();
 					})

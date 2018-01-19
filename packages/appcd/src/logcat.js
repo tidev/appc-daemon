@@ -51,9 +51,7 @@ const cmd = {
 			.request
 			.on('response', (message, response) => {
 				if (logger.isEnabled(response.ns)) {
-					response.enabled = true;
-					response.id = logger._id;
-					logger.dispatch(response);
+					process.stdout.write(message);
 				}
 			})
 			.once('error', err => {
