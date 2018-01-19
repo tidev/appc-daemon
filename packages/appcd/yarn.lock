@@ -30,9 +30,9 @@ ansi_up@^2.0.2:
   version "2.0.2"
   resolved "https://registry.npmjs.org/ansi_up/-/ansi_up-2.0.2.tgz#9b54de508c5c579f5b6968e65c1b863e0680ab92"
 
-appcd-dump-viewer@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.npmjs.org/appcd-dump-viewer/-/appcd-dump-viewer-1.1.0.tgz#a627b22ed8709b2a8a4800c57ba491df3bdfc8af"
+appcd-dump-viewer@^1.1.2:
+  version "1.1.2"
+  resolved "https://registry.npmjs.org/appcd-dump-viewer/-/appcd-dump-viewer-1.1.2.tgz#30f4d02fd83e0a76b0d27e6e9c38f6e5138396de"
   dependencies:
     ansi_up "^2.0.2"
     file-url "^2.0.2"
