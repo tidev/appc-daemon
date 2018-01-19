@@ -142,20 +142,28 @@ gulp.task('stats', () => {
 
 gulp.task('upgrade', cb => {
 	Promise.resolve()
-		.then(() => checkPackages({ skipSecurity: true }))
-		.then(results => {
+		.then(async () => {
+			let results = await checkPackages({ skipSecurity: true });
 			const { outOfDate } = results;
 
-			if (!outOfDate.length) {
-				log('Everything looks good to go, nothing to upgrade');
-				return results;
+			if (outOfDate.length) {
+				await upgradeDeps(outOfDate);
+				await run('yarn', [], { cwd: process.cwd(), shell: true });
+			} else {
+				log('Everything looks good to go, no direct dependencies to upgrade');
 			}
 
-			upgradeDeps(outOfDate);
-			return checkPackages({ skipSecurity: true });
+			await upgradeAllPackages();
+
+			if (outOfDate.length) {
+				results = await checkPackages({ skipSecurity: true });
+			}
+
+			renderPackages(results);
+
+			cb();
 		})
-		.then(results => renderPackages(results))
-		.then(() => cb(), cb);
+		.catch(cb);
 });
 
 /*
@@ -1155,7 +1163,7 @@ function hlVer(toVer, fromVer) {
 	return (toMatch && toMatch[1] || '') + version.join('.') + tag();
 }
 
-function upgradeDeps(list) {
+async function upgradeDeps(list) {
 	const components = {};
 	for (const pkg of list) {
 		const pkgJsonFile = path.join(pkg.path, 'package.json');
@@ -1209,8 +1217,59 @@ function upgradeDeps(list) {
 
 		fs.writeFileSync(pkgJsonFile, JSON.stringify(pkgJson, null, 2));
 	}
+}
 
-	runLerna([ 'bootstrap' ]);
+function upgradeAllPackages() {
+	const pkgs = {};
+
+	globule
+		.find([ './package.json', 'packages/*/package.json' ])
+		.forEach(file => {
+			const pkgJsonFile = path.resolve(process.cwd(), file);
+			const json = JSON.parse(fs.readFileSync(pkgJsonFile));
+			pkgs[json.name] = {
+				file,
+				json
+			};
+		});
+
+	return Object
+		.keys(pkgs)
+		.sort()
+		.reduce((promise, name) => {
+			const pkg = pkgs[name];
+			const newPkgJson = {
+				name: pkg.json.name
+			};
+			if (pkg.json.dependencies) {
+				newPkgJson.dependencies = {};
+				for (const [ name, ver ] of Object.entries(pkg.json.dependencies)) {
+					if (!pkgs[name]) {
+						newPkgJson.dependencies[name] = ver;
+					}
+				}
+			};
+			if (pkg.json.devDependencies) {
+				newPkgJson.devDependencies = {};
+				for (const [ name, ver ] of Object.entries(pkg.json.devDependencies)) {
+					if (!pkgs[name]) {
+						newPkgJson.devDependencies[name] = ver;
+					}
+				}
+			};
+
+			fs.writeFileSync(pkg.file, JSON.stringify(newPkgJson, null, '  '));
+
+			return promise
+				.then(() => run('yarn', [ 'upgrade' ], { cwd: path.dirname(pkg.file), shell: true }))
+				.catch(err => {
+					fs.writeFileSync(pkg.file, JSON.stringify(pkg.json, null, '  '));
+					throw err;
+				})
+				.then(() => {
+					fs.writeFileSync(pkg.file, JSON.stringify(pkg.json, null, '  '));
+				});
+		}, Promise.resolve());
 }
 
 function computeSloc(type) {
