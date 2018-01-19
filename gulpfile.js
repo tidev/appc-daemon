@@ -150,10 +150,11 @@ gulp.task('upgrade', cb => {
 				await upgradeDeps(outOfDate);
 				await run('yarn', [], { cwd: process.cwd(), shell: true });
 			} else {
-				log('Everything looks good to go, no direct dependencies to upgrade');
+				log('Direct dependencies up-to-date');
 			}
 
 			await upgradeAllPackages();
+			runLerna([ 'bootstrap' ]);
 
 			if (outOfDate.length) {
 				results = await checkPackages({ skipSecurity: true });
