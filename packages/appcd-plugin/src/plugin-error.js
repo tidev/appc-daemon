@@ -6,3 +6,10 @@ const PluginError = createErrorClass('PluginError', {
 });
 
 export default PluginError;
+
+/**
+ * A specific error that we use to reduce noise in the logs when a module directory isn't an Appc
+ * Daemon plugin.
+ */
+export class PluginMissingAppcdError extends PluginError {
+}

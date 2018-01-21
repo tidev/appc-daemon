@@ -8,6 +8,7 @@ import Plugin from './plugin';
 import { debounce } from 'appcd-util';
 import { FSWatcher } from 'appcd-fswatcher';
 import { isDir } from 'appcd-fs';
+import { PluginMissingAppcdError } from './plugin-error';
 import { real } from 'appcd-path';
 
 const { log, warn } = appcdLogger('appcd:plugin:scheme');
@@ -125,7 +126,9 @@ export class PluginScheme extends Scheme {
 				this.emit('plugin-added', this.plugin);
 				return;
 			} catch (e) {
-				warn(e);
+				if (!(e instanceof PluginMissingAppcdError)) {
+					warn(e);
+				}
 			}
 
 			// not a plugin or a bad plugin, emit change and allow redetect
@@ -160,7 +163,9 @@ export class PluginScheme extends Scheme {
 			this.plugin = new Plugin(this.path, true);
 			this.emit('plugin-added', this.plugin);
 		} catch (e) {
-			warn(e);
+			if (!(e instanceof PluginMissingAppcdError)) {
+				warn(e);
+			}
 		}
 
 		return this;

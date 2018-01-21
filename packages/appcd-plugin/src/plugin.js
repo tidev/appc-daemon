@@ -5,7 +5,7 @@ import fs from 'fs';
 import gawk from 'gawk';
 import InternalPlugin from './internal-plugin';
 import path from 'path';
-import PluginError from './plugin-error';
+import PluginError, { PluginMissingAppcdError } from './plugin-error';
 import prettyMs from 'pretty-ms';
 import semver from 'semver';
 import slug from 'slugg';
@@ -113,7 +113,7 @@ export default class Plugin extends EventEmitter {
 		}
 
 		if (!pkgJson.appcd && !pkgJson['appcd-plugin']) {
-			throw new PluginError('Plugin does not contain an appcd object in package.json: %s', pluginPath);
+			throw new PluginMissingAppcdError('Plugin does not contain an appcd object in package.json: %s', pluginPath);
 		}
 
 		// validate and set the package name
