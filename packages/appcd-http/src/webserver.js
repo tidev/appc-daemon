@@ -189,8 +189,16 @@ export default class WebServer extends EventEmitter {
 					logger.log('%s closed WebSocket', highlight(key));
 				});
 
+				conn.on('error', err => {
+					if (err.code !== 'ECONNRESET') {
+						logger.error(err);
+					}
+				});
+
 				this.emit('websocket', conn, req);
 			});
+
+			this.websocketServer.on('error', err => logger.error(err));
 		});
 	}
 
