@@ -126,7 +126,9 @@ export default class WebSocketSession {
 
 					// listen for the WebSocket to end, then end the response stream so that
 					// whatever is writing to the stream knows that the other end has closed
-					this.ws.once('end', () => response.end());
+					this.ws
+						.once('end', () => response.end())
+						.once('error', () => response.end());
 
 					// track if this stream is a pubsub stream so we know to send the `fin`
 					let pubsub = false;
