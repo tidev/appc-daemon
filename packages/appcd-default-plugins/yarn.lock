@@ -1436,8 +1436,8 @@ source-map-support@^0.4.11, source-map-support@^0.4.15:
     source-map "^0.5.6"
 
 source-map-support@^0.5.0:
-  version "0.5.2"
-  resolved "https://registry.npmjs.org/source-map-support/-/source-map-support-0.5.2.tgz#1a6297fd5b2e762b39688c7fc91233b60984f0a5"
+  version "0.5.3"
+  resolved "https://registry.npmjs.org/source-map-support/-/source-map-support-0.5.3.tgz#2b3d5fff298cfa4d1afd7d4352d569e9a0158e76"
   dependencies:
     source-map "^0.6.0"
 
@@ -1656,8 +1656,8 @@ window-size@0.1.0:
   resolved "https://registry.npmjs.org/window-size/-/window-size-0.1.0.tgz#5438cd2ea93b202efa3a19fe8887aee7c94f9c9d"
 
 windowslib@^0.6.3:
-  version "0.6.3"
-  resolved "https://registry.npmjs.org/windowslib/-/windowslib-0.6.3.tgz#146ad982904b7f3fe270859fec683b91e025d509"
+  version "0.6.4"
+  resolved "https://registry.npmjs.org/windowslib/-/windowslib-0.6.4.tgz#2840698484f85581455683bd3bda7b766e1bf433"
   dependencies:
     async "1.5.2"
     moment "2.11.2"
