@@ -222,7 +222,7 @@ export default class Plugin extends EventEmitter {
 			if (!Array.isArray(appcd.ignore)) {
 				throw new PluginError('Expected ignore to be an array');
 			}
-			this.ignore.concat(appcd.ignore);
+			this.ignore = this.ignore.concat(appcd.ignore);
 		}
 
 		// validate the name
