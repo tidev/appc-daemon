@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "snooplogg": "^1.9.2",
-    "source-map-support": "^0.5.2"
+    "source-map-support": "^0.5.3"
   },
   "devDependencies": {
     "appcd-gulp": "^1.0.1",
