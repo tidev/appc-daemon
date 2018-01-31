@@ -407,8 +407,23 @@ export default class ExternalPlugin extends PluginBase {
 							if (this.watchers[dir]) {
 								this.appcdLogger.log('Already watching plugin directory %s', highlight(dir));
 							} else {
+								let prevEvt;
 								this.watchers[dir] = new FSWatcher(dir)
-									.on('change', onFilesystemChange);
+									.on('change', (evt) => {
+										if (prevEvt) {
+											if (process.platform === 'win32'
+												&& evt.file === this.plugin.path
+												&& path.dirname(prevEvt.file) === this.plugin.path
+												&& prevEvt.action === 'add'
+											) {
+												prevEvt = evt;
+												return;
+											}
+										} else {
+											prevEvt = evt;
+										}
+										return onFilesystemChange(evt);
+									});
 							}
 						}
 					}

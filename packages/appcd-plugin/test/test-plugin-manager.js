@@ -470,11 +470,6 @@ describe('PluginManager', () => {
 
 			pm = new PluginManager();
 
-			pm
-				.on('reload', () => {
-					log('FFFFFFFFFFFFFFFFF');
-				});
-
 			setTimeout(() => {
 				pm
 					.call('/register', {
