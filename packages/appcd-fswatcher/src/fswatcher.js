@@ -387,6 +387,16 @@ export class Node {
 
 		try {
 			const stat = fs.lstatSync(evt.file);
+
+			if (process.platform === 'win32'
+				&& event === 'change'
+				&& evt.action === 'change'
+				&& stat.isDirectory()
+			) {
+				log('Dropping Windows event for change on a directory when there is a change to a file');
+				return;
+			}
+
 			isFile = stat.isFile();
 			this.files.set(filename, [ evt.action, now ]);
 		} catch (e) {
