@@ -212,7 +212,19 @@ export class PluginsDirScheme extends Scheme {
 			for (const name of fs.readdirSync(this.path)) {
 				const dir = _path.join(this.path, name);
 				if (isDir(dir)) {
-					this.pluginSchemes[dir] = this.createPluginScheme(dir);
+					// Load scoped npm modules correctly
+					if (/^@[a-z0-9][\w-.]+/.test(name)) {
+						for (const packageName of fs.readdirSync(dir)) {
+							const packageDir = _path.join(dir, packageName);
+							if (isDir(packageDir)) {
+								this.pluginSchemes[packageDir] = this.createPluginScheme(packageDir);
+							}
+						}
+						// Make sure we're watching the top level scope directory
+						this.pluginSchemes[dir] = this.createPluginScheme(dir);
+					} else {
+						this.pluginSchemes[dir] = this.createPluginScheme(dir);
+					}
 				}
 			}
 		}
@@ -248,6 +260,15 @@ export class PluginsDirScheme extends Scheme {
 				if (evt.file === this.path) {
 					this.onChange();
 					return;
+				}
+
+				if (/^@[a-z0-9][\w-.]+/.test(evt.filename) && evt.action !== 'delete') {
+					for (const packageName of fs.readdirSync(evt.file)) {
+						const packageDir = _path.join(evt.file, packageName);
+						if (isDir(packageDir)) {
+							this.pluginSchemes[packageDir] = this.createPluginScheme(packageDir).watch();
+						}
+					}
 				}
 
 				// some other file is being changed, so wire up the "add" and unwire the "delete"
