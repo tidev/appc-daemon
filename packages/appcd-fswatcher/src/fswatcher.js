@@ -393,6 +393,8 @@ export class Node {
 				&& evt.action === 'change'
 				&& stat.isDirectory()
 			) {
+				// This will drop also events where there is a permission change on the folder,
+				// tracked as https://jira.appcelerator.org/browse/DAEMON-232 - EH 02/08/18
 				log('Dropping Windows event for change on a directory when there is a change to a file');
 				return;
 			}
