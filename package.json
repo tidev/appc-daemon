@@ -20,7 +20,7 @@
     "pretty-log": "^0.1.0",
     "progress": "^2.0.0",
     "promise-limit": "^2.5.0",
-    "retire": "^1.4.0",
+    "retire": "^1.5.1",
     "run-sequence": "^2.2.1",
     "semver": "^5.5.0",
     "sloc": "^0.2.0",
