@@ -368,17 +368,19 @@ export default class ExternalPlugin extends PluginBase {
 			args.unshift(`--inspect-brk=${debugPort}`);
 		}
 
-		const onFilesystemChange = debounce(() => {
-			this.appcdLogger.log('Detected change in plugin source file, stopping external plugin: %s', highlight(this.plugin.toString()));
-			this.stop()
-				.then(() => {
-					// reset the plugin error state
-					this.appcdLogger.log('Reseting error state');
-					this.info.error = null;
-				})
-				.catch(err => {
-					this.appcdLogger.error('Failed to restart %s plugin: %s', highlight(this.plugin.toString()), err);
-				});
+		const onFilesystemChange = debounce((e) => {
+			if (!this.plugin.ignore.includes(e.filename)) {
+				this.appcdLogger.log('Detected change in plugin source file, stopping external plugin: %s', highlight(this.plugin.toString()));
+				this.stop()
+					.then(() => {
+						// reset the plugin error state
+						this.appcdLogger.log('Reseting error state');
+						this.info.error = null;
+					})
+					.catch(err => {
+						this.appcdLogger.error('Failed to restart %s plugin: %s', highlight(this.plugin.toString()), err);
+					});
+			}
 		}, 2000);
 
 		return Promise.resolve()

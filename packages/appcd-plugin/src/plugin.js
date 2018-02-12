@@ -217,6 +217,14 @@ export default class Plugin extends EventEmitter {
 			this.inactivityTimeout = appcd.inactivityTimeout;
 		}
 
+		this.ignore = [ '.git' ];
+		if (appcd.ignore) {
+			if (!Array.isArray(appcd.ignore)) {
+				throw new PluginError('Expected ignore to be an array');
+			}
+			this.ignore = this.ignore.concat(appcd.ignore);
+		}
+
 		// validate the name
 		if (!this.name) {
 			throw new PluginError('Invalid "name" property in the "appcd" section of %s', pkgJsonFile);

@@ -459,6 +459,75 @@ describe('PluginManager', () => {
 			}, 1000);
 		});
 
+		it('should not reload a plugin when file is ignored', function (done) {
+			this.timeout(20000);
+			this.slow(19000);
+
+			const sourceDir = path.join(__dirname, 'fixtures', 'good-with-ignore');
+			const pluginDir = makeTempDir();
+
+			fs.copySync(sourceDir, pluginDir);
+
+			pm = new PluginManager();
+
+			setTimeout(() => {
+				pm
+					.call('/register', {
+						data: {
+							path: pluginDir
+						}
+					})
+					.then(() => {
+						log('Calling counter...');
+						return Dispatcher
+							.call('/good-with-ignore/1.2.3/counter');
+					})
+					.then(ctx => {
+						log(ctx.response);
+						expect(ctx.response).to.equal(1);
+						log('Writing to ignored file "ignoredFile.txt"');
+						fs.writeFileSync(path.join(pluginDir, 'ignoredFile.txt'), 'hello');
+						return sleep(3000);
+					})
+					.then(() => {
+						log('Calling counter again...');
+						return Dispatcher
+							.call('/good-with-ignore/1.2.3/counter');
+					})
+					.then(ctx => {
+						log(ctx.response);
+						expect(ctx.response).to.equal(2);
+
+						log('Writing to non-ignored file "file.txt"');
+						fs.writeFileSync(path.join(pluginDir, 'file.txt'), 'hello');
+						return sleep(3000);
+					})
+					.then(() => {
+						log('Calling counter again...');
+						return Dispatcher
+							.call('/good-with-ignore/1.2.3/counter');
+					})
+					.then(ctx => {
+						log(ctx.response);
+						expect(ctx.response).to.equal(1);
+					})
+					.then(ctx => {
+						log('Unregistering plugin');
+						return pm
+							.call('/unregister', {
+								data: {
+									path: pluginDir
+								}
+							});
+					})
+					.then(() => {
+						log('Done');
+						done();
+					})
+					.catch(done);
+			}, 1000);
+		});
+
 		it('should handle bad plugins', function (done) {
 			this.timeout(10000);
 			this.slow(9000);
