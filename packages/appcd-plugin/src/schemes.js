@@ -14,6 +14,8 @@ import { real } from 'appcd-path';
 const { log, warn } = appcdLogger('appcd:plugin:scheme');
 const { highlight } = appcdLogger.styles;
 
+const scopeRegExp = /^@[a-z0-9][\w-.]+$/;
+
 /**
  * Base class for a plugin path scheme.
  */
@@ -211,7 +213,18 @@ export class PluginsDirScheme extends Scheme {
 		if (isDir(this.path)) {
 			for (const name of fs.readdirSync(this.path)) {
 				const dir = _path.join(this.path, name);
-				if (isDir(dir)) {
+				if (!isDir(dir)) {
+					continue;
+				}
+
+				if (scopeRegExp.test(name)) {
+					for (const packageName of fs.readdirSync(dir)) {
+						const packageDir = _path.join(dir, packageName);
+						if (isDir(packageDir)) {
+							this.pluginSchemes[packageDir] = this.createPluginScheme(packageDir);
+						}
+					}
+				} else {
 					this.pluginSchemes[dir] = this.createPluginScheme(dir);
 				}
 			}
@@ -254,12 +267,28 @@ export class PluginsDirScheme extends Scheme {
 				switch (evt.action) {
 					case 'add':
 						if (isDir(evt.file)) {
-							this.pluginSchemes[evt.file] = this.createPluginScheme(evt.file).watch();
+							if (scopeRegExp.test(evt.filename)) {
+								for (const packageName of fs.readdirSync(evt.file)) {
+									const packageDir = _path.join(evt.file, packageName);
+									if (isDir(packageDir)) {
+										this.pluginSchemes[packageDir] = this.createPluginScheme(packageDir).watch();
+									}
+								}
+							} else {
+								this.pluginSchemes[evt.file] = this.createPluginScheme(evt.file).watch();
+							}
 						}
 						break;
 
 					case 'delete':
-						if (this.pluginSchemes[evt.file]) {
+						if (scopeRegExp.test(evt.filename)) {
+							for (const file of Object.keys(this.pluginSchemes)) {
+								if (file.startsWith(`${evt.file}${_path.sep}`)) {
+									this.pluginSchemes[file].destroy();
+									delete this.pluginSchemes[file];
+								}
+							}
+						} else if (this.pluginSchemes[evt.file]) {
 							this.pluginSchemes[evt.file].destroy();
 							delete this.pluginSchemes[evt.file];
 						}
@@ -421,7 +450,7 @@ export function detectScheme(dir) {
 	}
 
 	try {
-		if (globule.find('./*/package.json', { srcBase: dir }).length) {
+		if (globule.find([ './*/package.json', './@*/*/package.json' ], { srcBase: dir }).length) {
 			return PluginsDirScheme;
 		}
 	} catch (e) {
