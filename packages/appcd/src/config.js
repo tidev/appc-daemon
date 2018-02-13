@@ -26,13 +26,12 @@ const cmd = {
 		'--json': { desc: 'outputs the config as JSON' }
 	},
 	args: [ 'action', 'key', 'value' ],
-	action({ argv, _ }) {
+	action({ argv }) {
 		const cfg = loadConfig(argv);
-		let [ incomingAction, key, value ] = _;
+		let { action, key, value } = argv;
 
-		let action = readActions[incomingAction] || writeActions[incomingAction];
-		if (!action) {
-			key = incomingAction;
+		if (!readActions[action] && !writeActions[action]) {
+			key = action;
 			action = 'get';
 		}
 

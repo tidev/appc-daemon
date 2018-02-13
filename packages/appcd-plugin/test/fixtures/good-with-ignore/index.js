@@ -1,8 +1,8 @@
 console.log('good external plugin required');
 let counter = 0;
+
 module.exports = {
 	activate() {
-
 		appcd.register('/counter', ctx => {
 			counter++;
 			ctx.response = counter;
