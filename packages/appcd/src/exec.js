@@ -9,9 +9,9 @@ const cmd = {
 	options: {
 		'--subscribe': { desc: 'request a subscription' }
 	},
-	action({ argv, _ }) {
+	action({ argv }) {
 		const cfg = loadConfig(argv);
-		const [ path, json ] = _;
+		const { path, json } = argv;
 
 		createRequest(cfg, path, json, argv.subscribe ? 'subscribe' : undefined)
 			.request
