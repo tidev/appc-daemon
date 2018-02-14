@@ -23,7 +23,7 @@ const cmd = {
 			log: []
 		};
 		const envRegExp = /^ANDROID.*|APPC.*|ComSpec|HOME|HOMEPATH|LANG|PATH|PWD|USERPROFILE$/;
-		let [ file ] = _;
+		let { file } = argv;
 
 		return Promise.resolve()
 			// get the logs first to avoid noise from getting the config, status, and health
