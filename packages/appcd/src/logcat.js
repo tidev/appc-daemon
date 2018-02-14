@@ -5,17 +5,19 @@ import {
 	StripColors
 } from 'appcd-logger';
 
+import { arrayify } from 'appcd-util';
+
 import { createRequest, loadConfig } from './common';
 
 const cmd = {
 	args: [
-		{ name: 'filter...', desc: 'a filter to apply to the log namespace' }
+		{ name: 'filters...', desc: 'one or more namespace patterns' }
 	],
 	desc: 'streams Appc Daemon debug log output',
 	options: {
 		'--no-colors': { desc: 'disables colors' }
 	},
-	action({ argv, _ }) {
+	action({ argv }) {
 		const cfg = loadConfig(argv);
 
 		let formatter;
@@ -27,14 +29,15 @@ const cmd = {
 		formatter.pipe(new StdioStream());
 
 		let filter = '*';
-		if (_.length) {
-			if (_.every(a => a[0] === '-')) {
+		const filters = arrayify(argv.filters);
+		if (filters.length) {
+			if (filters.every(a => a[0] === '-')) {
 				// if every filter arg is a negation, then that means there are no allowed
 				// namespace and want we really want is everything except said filters
-				filter = `* ${_.join(' ')}`;
+				filter = `* ${filters.join(' ')}`;
 			} else {
 				// we have both allowed and ignore namespaces
-				filter = _.join(' ');
+				filter = filters.join(' ');
 			}
 		}
 

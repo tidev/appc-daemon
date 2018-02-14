@@ -268,9 +268,9 @@ class-utils@^0.3.5:
     isobject "^3.0.0"
     static-extend "^0.1.1"
 
-cli-kit@^0.0.10:
-  version "0.0.10"
-  resolved "https://registry.npmjs.org/cli-kit/-/cli-kit-0.0.10.tgz#40b976528a59247f9cae2c340f46d5328c3223cc"
+cli-kit@^0.0.11:
+  version "0.0.11"
+  resolved "https://registry.npmjs.org/cli-kit/-/cli-kit-0.0.11.tgz#83c062b13e619fae732bbf551ef052ed56f1c3c0"
   dependencies:
     hook-emitter "^2.1.0"
     lodash.camelcase "^4.3.0"
