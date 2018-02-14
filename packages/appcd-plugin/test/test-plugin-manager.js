@@ -459,6 +459,43 @@ describe('PluginManager', () => {
 			}, 1000);
 		});
 
+		it('should spawn a plugin with a cwd of the plugin path', function (done) {
+			this.timeout(20000);
+			this.slow(19000);
+
+			const sourceDir = path.join(__dirname, 'fixtures', 'good-with-ignore');
+			const pluginDir = makeTempDir();
+
+			fs.copySync(sourceDir, pluginDir);
+
+			pm = new PluginManager();
+
+			setTimeout(() => {
+				pm
+					.call('/register', {
+						data: {
+							path: pluginDir
+						}
+					})
+					.then(() => {
+						log('Calling counter...');
+						return Dispatcher
+							.call('/good-with-ignore/1.2.3/counter');
+					})
+					.then(ctx => {
+						const counterFile = path.join(pluginDir, 'counter.txt');
+						expect(fs.existsSync(counterFile)).to.equal(true);
+						expect(fs.readFileSync(counterFile, { encoding: 'utf8' })).to.equal('1');
+						fs.removeSync(counterFile);
+					})
+					.then(() => {
+						log('Done');
+						done();
+					})
+					.catch(done);
+			}, 1000);
+		});
+
 		it('should not reload a plugin when file is ignored', function (done) {
 			this.timeout(20000);
 			this.slow(19000);

@@ -5,7 +5,8 @@
 		"name": "good-with-ignore",
 		"inactivityTimeout": 30000,
 		"ignore": [
-			"ignoredFile.txt"
+			"ignoredFile.txt",
+			"counter.txt"
 		]
 	}
 }

@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 console.log('good external plugin required');
 let counter = 0;
 
@@ -6,6 +8,7 @@ module.exports = {
 		appcd.register('/counter', ctx => {
 			counter++;
 			ctx.response = counter;
+			fs.writeFileSync('./counter.txt', counter);
 		});
 	},
 
