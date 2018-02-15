@@ -14,7 +14,7 @@ const cmd = {
 	options: {
 		'--view': { desc: 'open the dump in the web browser' }
 	},
-	action({ argv, _ }) {
+	action({ argv }) {
 		const cfg = loadConfig(argv);
 		const results = {
 			config: {},

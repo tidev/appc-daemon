@@ -14,7 +14,7 @@
     "gulp-plumber": "^1.2.0",
     "ignore": "^3.3.7",
     "istanbul": "^0.4.5",
-    "lerna": "^2.8.0",
+    "lerna": "^2.9.0",
     "npm": "^5.5.1",
     "nsp": "^3.1.0",
     "pretty-log": "^0.1.0",
