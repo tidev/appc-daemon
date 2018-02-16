@@ -85,7 +85,8 @@ A plugin is defined as a directory containing a `package.json` file and a "main"
 		"name": "my-sweet-plugin",
 		"type": "external",
 		"injectAppcdDependencies": true,
-		"inactivityTimeout": 120000
+		"inactivityTimeout": 120000,
+		"ignore": [ "somedir", "somefile.*" ]
 	},
 	"engines": {
 		"node": ">=7.6.0"
@@ -229,6 +230,11 @@ default, the plugin is compatible with all versions of Appc Daemon.
 
 An optional path to the plugin's config file that contains the default config settings and metadata
 for each config setting.
+
+##### `appcd.ignore`
+
+An optional array of file and directory patterns to ignore for the external plugin auto-reload
+mechanism.
 
 ##### `appcd.name`
 
