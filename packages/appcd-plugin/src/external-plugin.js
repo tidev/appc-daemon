@@ -368,21 +368,6 @@ export default class ExternalPlugin extends PluginBase {
 			args.unshift(`--inspect-brk=${debugPort}`);
 		}
 
-		const onFilesystemChange = debounce((e) => {
-			if (!this.plugin.ignore.includes(e.filename)) {
-				this.appcdLogger.log('Detected change in plugin source file, stopping external plugin: %s', highlight(this.plugin.toString()));
-				this.stop()
-					.then(() => {
-						// reset the plugin error state
-						this.appcdLogger.log('Reseting error state');
-						this.info.error = null;
-					})
-					.catch(err => {
-						this.appcdLogger.error('Failed to restart %s plugin: %s', highlight(this.plugin.toString()), err);
-					});
-			}
-		}, 2000);
-
 		return Promise.resolve()
 			.then(() => {
 				if (this.plugin.configFile) {
@@ -403,12 +388,30 @@ export default class ExternalPlugin extends PluginBase {
 					const { directories } = this.plugin;
 					if (directories.size) {
 						this.appcdLogger.log('Watching plugin source directories for changes...');
+
+						const onFilesystemChange = debounce(() => {
+							this.appcdLogger.log('Detected change in plugin source file, stopping external plugin: %s', highlight(this.plugin.toString()));
+							this.stop()
+								.then(() => {
+									// reset the plugin error state
+									this.appcdLogger.log('Reseting error state');
+									this.info.error = null;
+								})
+								.catch(err => {
+									this.appcdLogger.error('Failed to restart %s plugin: %s', highlight(this.plugin.toString()), err);
+								});
+						}, 2000);
+
 						for (const dir of directories) {
 							if (this.watchers[dir]) {
 								this.appcdLogger.log('Already watching plugin directory %s', highlight(dir));
 							} else {
 								this.watchers[dir] = new FSWatcher(dir)
-									.on('change', onFilesystemChange);
+									.on('change', evt => {
+										if (!this.plugin.ignore.ignores(path.relative(this.plugin.path, evt.file))) {
+											onFilesystemChange();
+										}
+									});
 							}
 						}
 					}

@@ -3,6 +3,8 @@ import Dispatcher, { DispatcherError } from 'appcd-dispatcher';
 import ExternalPlugin from './external-plugin';
 import fs from 'fs';
 import gawk from 'gawk';
+import ignore from 'ignore';
+import ignoreList from './ignore';
 import InternalPlugin from './internal-plugin';
 import path from 'path';
 import PluginError, { PluginMissingAppcdError } from './plugin-error';
@@ -217,13 +219,14 @@ export default class Plugin extends EventEmitter {
 			this.inactivityTimeout = appcd.inactivityTimeout;
 		}
 
-		this.ignore = [ '.git' ];
 		if (appcd.ignore) {
 			if (!Array.isArray(appcd.ignore)) {
 				throw new PluginError('Expected ignore to be an array');
 			}
-			this.ignore = this.ignore.concat(appcd.ignore);
+			ignoreList.push.apply(ignoreList, appcd.ignore);
 		}
+
+		this.ignore = ignore().add(Array.from(new Set([ ...ignoreList ])));
 
 		// validate the name
 		if (!this.name) {
