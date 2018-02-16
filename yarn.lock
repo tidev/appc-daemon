@@ -3147,9 +3147,9 @@ npm@^5.5.1:
     gauge "~2.7.3"
     set-blocking "~2.0.0"
 
-nsp@^3.1.0:
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/nsp/-/nsp-3.1.0.tgz#e3d168b01258728ef1cb03fea9ec4f0059c8e3f3"
+nsp@^3.2.1:
+  version "3.2.1"
+  resolved "https://registry.yarnpkg.com/nsp/-/nsp-3.2.1.tgz#0f540f8e85851e4ad370b14d5001098046dedfd1"
   dependencies:
     chalk "^2.1.0"
     cli-table2 "^0.2.0"
@@ -3282,8 +3282,8 @@ os-tmpdir@^1.0.0, os-tmpdir@~1.0.2:
   resolved "https://registry.yarnpkg.com/os-tmpdir/-/os-tmpdir-1.0.2.tgz#bbe67406c79aa85c5cfec766fe5734555dfa1274"
 
 osenv@0, osenv@^0.1.4, osenv@~0.1.4:
-  version "0.1.4"
-  resolved "https://registry.yarnpkg.com/osenv/-/osenv-0.1.4.tgz#42fe6d5953df06c8064be6f176c3d05aaaa34644"
+  version "0.1.5"
+  resolved "https://registry.yarnpkg.com/osenv/-/osenv-0.1.5.tgz#85cdfafaeb28e8677f416e287592b5f3f49ea410"
   dependencies:
     os-homedir "^1.0.0"
     os-tmpdir "^1.0.0"
@@ -3322,8 +3322,8 @@ package-json@^4.0.0, package-json@^4.0.1:
     semver "^5.1.0"
 
 pacote@^7.0.2:
-  version "7.3.2"
-  resolved "https://registry.yarnpkg.com/pacote/-/pacote-7.3.2.tgz#2888b99095649da89270de3393c6d313c8a0f8f8"
+  version "7.3.3"
+  resolved "https://registry.yarnpkg.com/pacote/-/pacote-7.3.3.tgz#ea412763d331435637caac64ba116b843a07485c"
   dependencies:
     bluebird "^3.5.1"
     cacache "^10.0.2"
