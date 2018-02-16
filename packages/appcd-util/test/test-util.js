@@ -371,6 +371,30 @@ describe('util', () => {
 				})
 				.catch(done);
 		});
+
+		it('should cancel a pending debounce', function (done) {
+			this.slow(5000);
+			this.timeout(5000);
+
+			let count = 0;
+			const fn = util.debounce(() => {
+				count++;
+			}, 1000);
+
+			fn();
+
+			setTimeout(() => {
+				fn.cancel();
+				setTimeout(() => {
+					try {
+						expect(count).to.equal(0);
+						done();
+					} catch (e) {
+						done(e);
+					}
+				}, 1000);
+			}, 500);
+		});
 	});
 
 	describe('decodeOctalUTF8()', () => {

@@ -181,7 +181,7 @@ export function debounce(fn, wait = 200) {
 		rejectFn = reject;
 	});
 
-	return function debouncer(...args) {
+	function debouncer(...args) {
 		const ctx = this;
 		clearTimeout(timer);
 
@@ -194,7 +194,14 @@ export function debounce(fn, wait = 200) {
 		}, wait);
 
 		return promise;
+	}
+
+	debouncer.cancel = function cancel() {
+		clearTimeout(timer);
+		timer = null;
 	};
+
+	return debouncer;
 }
 
 /**
