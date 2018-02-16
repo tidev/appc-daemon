@@ -54,12 +54,11 @@ export class Scheme extends HookEmitter {
 	 * @access public
 	 */
 	destroy() {
-		if (this.watchers) {
-			for (const dir of Object.keys(this.watchers)) {
-				this.watchers[dir].close();
-				delete this.watchers[dir];
-			}
-			this.watchers = {};
+		this.onChange.cancel();
+
+		for (const dir of Object.keys(this.watchers)) {
+			this.watchers[dir].close();
+			delete this.watchers[dir];
 		}
 	}
 }
