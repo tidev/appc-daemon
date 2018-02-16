@@ -4,6 +4,7 @@ import ExternalPlugin from './external-plugin';
 import fs from 'fs';
 import gawk from 'gawk';
 import ignore from 'ignore';
+import ignoreList from './ignore';
 import InternalPlugin from './internal-plugin';
 import path from 'path';
 import PluginError, { PluginMissingAppcdError } from './plugin-error';
@@ -217,30 +218,6 @@ export default class Plugin extends EventEmitter {
 			}
 			this.inactivityTimeout = appcd.inactivityTimeout;
 		}
-
-		const ignoreList = [
-			'*.[Cc][Vv][Ss]',
-			'._*',
-			'.bzr',
-			'.cvsignore',
-			'.DS_Store',
-			'.git*',
-			'.hg',
-			'LICENSE*',
-			'.npmignore',
-			'.project',
-			'README*',
-			'$RECYCLE.BIN',
-			'.sublime-project',
-			'.sublime-workspace',
-			'.svn',
-			'_svn',
-			'[Tt]humbs.db',
-			'.tmproj',
-			'.vscode',
-			'.vspscc',
-			'.vssscc'
-		];
 
 		if (appcd.ignore) {
 			if (!Array.isArray(appcd.ignore)) {
