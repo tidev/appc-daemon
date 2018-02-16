@@ -424,7 +424,8 @@ export default class ExternalPlugin extends PluginBase {
 						data: {
 							args,
 							options: {
-								env: Object.assign({ FORCE_COLOR: 1 }, process.env)
+								env: Object.assign({ FORCE_COLOR: 1 }, process.env),
+								cwd: this.plugin.path
 							},
 							ipc: true
 						}
