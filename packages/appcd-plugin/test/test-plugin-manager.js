@@ -565,9 +565,9 @@ describe('PluginManager', () => {
 			}, 1000);
 		});
 
-		it('should not reload a plugin when file is ignored using wildcards', function (done) {
-			this.timeout(20000);
-			this.slow(19000);
+		it.only('should not reload a plugin when file is ignored using wildcards', function (done) {
+			this.timeout(30000);
+			this.slow(29000);
 
 			const sourceDir = path.join(__dirname, 'fixtures', 'good-with-ignore-wildcard');
 			const pluginDir = makeTempDir();
