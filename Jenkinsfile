@@ -5,7 +5,7 @@ timestamps {
   def isMaster = false
   def packageVersion
 
-  node('osx || linux') {
+  node('linux') {
     stage('Checkout') {
       // checkout scm
       // Hack for JENKINS-37658 - see https://support.cloudbees.com/hc/en-us/articles/226122247-How-to-Customize-Checkout-for-Pipeline-Multibranch
