@@ -19,6 +19,7 @@ const { log } = appcdLogger('test:appcd:plugin-path');
 const { highlight, magenta } = appcdLogger.styles;
 
 const _tmpDir = tmp.dirSync({
+	mode: '755',
 	prefix: 'appcd-plugin-test-',
 	unsafeCleanup: true
 }).name;

@@ -10,6 +10,7 @@ const logger = appcdLogger('test:appcd:subprocess');
 tmp.setGracefulCleanup();
 function makeTempDir() {
 	return tmp.dirSync({
+		mode: '755',
 		prefix: 'appcd-subprocess-test-',
 		unsafeCleanup: true
 	}).name;

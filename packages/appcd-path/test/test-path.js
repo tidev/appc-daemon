@@ -57,6 +57,7 @@ describe('path', () => {
 
 		it('should figure out the real path for a symlinked existing file', done => {
 			const tmpObj = tmp.dirSync({
+				mode: '755',
 				prefix: 'appcd-path-test-'
 			});
 			const dir = _path.join(tmpObj.name, 'bar');
@@ -79,6 +80,7 @@ describe('path', () => {
 
 		it('should figure out the real path for a non-symlinked non-existent file', done => {
 			const tmpObj = tmp.dirSync({
+				mode: '755',
 				prefix: 'appcd-path-test-'
 			});
 			const filename = _path.join(tmpObj.name, 'foo.txt');

@@ -13,6 +13,7 @@ import { sleep } from 'appcd-util';
 const { log } = appcdLogger('test:appcd:telemetry');
 
 const tmpDir = tmp.dirSync({
+	mode: '755',
 	prefix: 'appcd-telemetry-test-',
 	unsafeCleanup: true
 }).name;

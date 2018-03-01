@@ -4,6 +4,7 @@ import path from 'path';
 import tmp from 'tmp';
 
 import { real } from 'appcd-path';
+import { sleep } from 'appcd-util';
 
 import {
 	FSWatcher,
@@ -20,6 +21,7 @@ const { log } = logger;
 const { green, highlight } = appcdLogger.styles;
 
 const _tmpDir = tmp.dirSync({
+	mode: '755',
 	prefix: 'appcd-fswatcher-test-',
 	unsafeCleanup: true
 }).name;
@@ -31,8 +33,31 @@ function makeTempName() {
 
 function makeTempDir() {
 	const dir = makeTempName();
-	fs.mkdirsSync(dir);
+	fs.mkdirsSync(dir, { mode: '755' });
 	return dir;
+}
+
+function logStats(stats) {
+	const { fswatchers, nodes, watchers } = stats;
+	log({ fswatchers, nodes, watchers });
+}
+
+const restrictedUser = process.env.TEST_USER || process.env.SUDO_USER;
+const RESTRICTED_TESTS_RUN      = 0;
+const RESTRICTED_TESTS_NOT_ROOT = 1;
+const RESTRICTED_TESTS_BAD_OS   = 2;
+const RESTRICTED_TESTS_NO_USER  = 3;
+const RESTRICTED_TESTS_BAD_USER = 4;
+let restrictedTests = RESTRICTED_TESTS_RUN;
+
+if (process.getuid() !== 0) {
+	restrictedTests = RESTRICTED_TESTS_NOT_ROOT;
+} else if (!process.seteuid) {
+	restrictedTests = RESTRICTED_TESTS_BAD_OS;
+} else if (!restrictedUser) {
+	restrictedTests = RESTRICTED_TESTS_NO_USER;
+} else if (restrictedUser === 'root') {
+	restrictedTests = RESTRICTED_TESTS_BAD_USER;
 }
 
 describe('FSWatcher', () => {
@@ -98,13 +123,16 @@ describe('FSWatcher', () => {
 				expect(stats.watchers).to.equal(0);
 				done();
 			} catch (e) {
-				console.log(stats);
+				logStats(stats);
 				done(e);
 			}
 		});
 
 		afterEach(function (done) {
 			this.timeout(10000);
+			if (restrictedTests === RESTRICTED_TESTS_RUN) {
+				process.setuid(0);
+			}
 			reset();
 			log(renderTree());
 			if (logger.enabled) {
@@ -835,80 +863,6 @@ describe('FSWatcher', () => {
 				}).to.throw(Error, 'Recursively watching root is not permitted');
 			});
 
-			// it('should only recursively watch 2 directories deep', function (done) {
-			// 	this.timeout(10000);
-			// 	this.slow(8000);
-			//
-			// 	const tmp = makeTempDir();
-			// 	log('Creating temp directory: %s', highlight(tmp));
-			//
-			// 	const wizDir = path.join(tmp, 'foo', 'bar', 'baz', 'wiz');
-			// 	log('Creating wiz directory: %s', highlight(wizDir));
-			// 	fs.mkdirsSync(wizDir);
-			//
-			// 	const files = [
-			// 		path.join(tmp, 'test.txt'),
-			// 		path.join(tmp, 'foo', 'foo-test.txt'),
-			// 		path.join(tmp, 'foo', 'bar', 'bar-test.txt'),
-			// 		path.join(tmp, 'foo', 'bar', 'baz', 'baz-test.txt'),
-			// 		path.join(tmp, 'foo', 'bar', 'baz', 'wiz', 'wiz-test.txt')
-			// 	];
-			// 	let index = 0;
-			// 	let lastEvt;
-			// 	let timer;
-			//
-			// 	setTimeout(() => {
-			// 		new FSWatcher(tmp, { recursive: true, depth: 2 })
-			// 			.on('change', evt => {
-			// 				if (evt.file.indexOf(tmpDir) === 0) {
-			// 					clearTimeout(timer);
-			// 					lastEvt = evt;
-			// 					checkEvent();
-			// 				}
-			// 			})
-			// 			.on('error', done);
-			//
-			// 		function writeFile() {
-			// 			log(renderTree());
-			// 			const file = files[index];
-			// 			log('Writing: %s', highlight(file));
-			// 			fs.writeFileSync(file, 'test');
-			//
-			// 			timer = setTimeout(() => {
-			// 				// timed out
-			// 				log('Timed out');
-			// 				checkEvent();
-			// 			}, 1000);
-			// 		}
-			//
-			// 		function checkEvent() {
-			// 			try {
-			// 				if (index < 2) {
-			// 					if (!lastEvt) {
-			// 						throw new Error('Didn\'t get the fs event!');
-			// 					}
-			// 					expect(lastEvt.action).to.equal('add');
-			// 					expect(lastEvt.file).to.equal(real(files[index]));
-			// 				} else if (lastEvt) {
-			// 					throw new Error(`Should not have got ${lastEvt.action} for ${lastEvt.file} (depth=${index})`);
-			// 				}
-			// 			} catch (e) {
-			// 				return done(e);
-			// 			}
-			//
-			// 			lastEvt = null;
-			//
-			// 			if (++index < files.length) {
-			// 				writeFile();
-			// 			} else {
-			// 				done();
-			// 			}
-			// 		}
-			//
-			// 		writeFile();
-			// 	}, 100);
-			// });
-
 			it('should only recursively watch 2 directories deep and then unwatch', function (done) {
 				this.timeout(10000);
 				this.slow(8000);
@@ -1089,6 +1043,104 @@ describe('FSWatcher', () => {
 					}
 
 					writeFile();
+				}, 100);
+			});
+
+			it('should recursively watch new subdirectories, then unwatch when deleted', function (done) {
+				this.timeout(10000);
+				this.slow(8000);
+
+				const tmp = makeTempDir();
+				log('Creating temp directory: %s', highlight(tmp));
+
+				setTimeout(() => {
+					log('Recursively watching %s', highlight(tmp));
+					new FSWatcher(tmp, { recursive: true })
+						.on('change', evt => {
+							log('CHANGE!', evt);
+						})
+						.on('error', done);
+
+					setTimeout(() => {
+						const { nodes } = status();
+
+						const fooDir = path.join(tmp, 'foo');
+						const wizDir = path.join(tmp, 'foo', 'bar', 'baz', 'wiz');
+						log('Creating wiz directory: %s', highlight(wizDir));
+						fs.mkdirsSync(wizDir);
+
+						setTimeout(() => {
+							const stats = status();
+							try {
+								expect(stats.nodes).to.equal(nodes + 4);
+
+								log(renderTree());
+								log(`Deleting ${fooDir}`);
+								fs.removeSync(fooDir);
+
+								setTimeout(() => {
+									log(renderTree());
+									const stats = status();
+									try {
+										expect(stats.nodes).to.equal(nodes);
+										done();
+									} catch (e) {
+										done(e);
+									}
+								}, 500);
+							} catch (e) {
+								done(e);
+							}
+						}, 500);
+					}, 500);
+				}, 100);
+			});
+
+			it('should recursively watch new subdirectories with depth of 2, then unwatch when deleted', function (done) {
+				this.timeout(10000);
+				this.slow(8000);
+
+				const tmp = makeTempDir();
+				log('Creating temp directory: %s', highlight(tmp));
+
+				setTimeout(() => {
+					log('Recursively watching %s', highlight(tmp));
+					new FSWatcher(tmp, { recursive: true, depth: 2 })
+						.on('change', evt => log('CHANGE!', evt))
+						.on('error', done);
+
+					setTimeout(() => {
+						const { nodes } = status();
+
+						const fooDir = path.join(tmp, 'foo');
+						const wizDir = path.join(tmp, 'foo', 'bar', 'baz', 'wiz');
+						log('Creating wiz directory: %s', highlight(wizDir));
+						fs.mkdirsSync(wizDir);
+
+						setTimeout(() => {
+							const stats = status();
+							try {
+								expect(stats.nodes).to.equal(nodes + 2);
+
+								log(renderTree());
+								log(`Deleting ${fooDir}`);
+								fs.removeSync(fooDir);
+
+								setTimeout(() => {
+									log(renderTree());
+									const stats = status();
+									try {
+										expect(stats.nodes).to.equal(nodes);
+										done();
+									} catch (e) {
+										done(e);
+									}
+								}, 500);
+							} catch (e) {
+								done(e);
+							}
+						}, 500);
+					}, 500);
 				}, 100);
 			});
 		});
@@ -1392,6 +1444,155 @@ describe('FSWatcher', () => {
 						fs.mkdirsSync(barDir);
 					}, 100);
 				}, 500);
+			});
+		});
+
+		describe('restricted', () => {
+			let _it = restrictedTests === RESTRICTED_TESTS_RUN ? it : it.skip;
+
+			let desc = 'should detect restricted directory';
+			switch (restrictedTests) {
+				case RESTRICTED_TESTS_NOT_ROOT:
+					desc += ' (test must be run as root)';
+					break;
+				case RESTRICTED_TESTS_BAD_OS:
+					desc += ' (test cannot be run on Windows)';
+					break;
+				case RESTRICTED_TESTS_NO_USER:
+					desc += ' (TEST_USER/SUDO_USER env var not set)';
+					break;
+				case RESTRICTED_TESTS_BAD_USER:
+					desc += ' (TEST_USER/SUDO_USER must not be root)';
+					break;
+			}
+
+			_it(desc, function (done) {
+				this.slow(10000);
+				this.timeout(9000);
+
+				const tmp = makeTempDir();
+				log('Created temp directory: %s', highlight(tmp));
+
+				const fooDir = path.join(tmp, 'foo');
+				log('Creating foo directory: %s', highlight(fooDir));
+				fs.mkdirSync(fooDir);
+
+				const barDir = path.join(fooDir, 'bar');
+				const bazFile = path.join(barDir, 'baz.txt');
+
+				log('Locking down foo to root user only');
+				fs.chmodSync(fooDir, '700');
+
+				log('Switching to effective user to %s', restrictedUser);
+				process.seteuid(restrictedUser);
+
+				let watcher = null;
+				let originalStatus = null;
+				let counter = 0;
+
+				Promise.resolve()
+					.then(() => sleep(100))
+					.then(() => {
+						watcher = new FSWatcher(tmp, { recursive: true })
+							.on('change', evt => {
+								log(evt);
+								if (evt.file.indexOf(tmpDir) === 0) {
+									log(renderTree());
+									counter++;
+								}
+							})
+							.on('error', err => {
+								log('ERROR!', err);
+								done(err);
+							});
+					})
+					.then(() => sleep(100))
+					.then(() => {
+						log(renderTree());
+						originalStatus = status();
+						logStats(originalStatus);
+
+						log('Switching back to root user');
+						process.setuid(0);
+					})
+					.then(() => sleep(100))
+					.then(() => {
+						log('Creating bar dir: %s', highlight(barDir));
+						fs.mkdirsSync(barDir);
+
+						log('Writing baz file: %s', highlight(bazFile));
+						fs.writeFileSync(bazFile, 'baz!');
+
+						expect(counter).to.equal(0);
+					})
+					.then(() => sleep(100))
+					.then(() => {
+						log(renderTree());
+
+						const stats = status();
+						logStats(stats);
+						expect(stats.nodes).to.equal(originalStatus.nodes);
+						expect(stats.fswatchers).to.equal(originalStatus.fswatchers);
+						expect(stats.watchers).to.equal(originalStatus.watchers);
+
+						log('Unrestricting %s', highlight(fooDir));
+						fs.chmodSync(fooDir, '755');
+					})
+					.then(() => sleep(100))
+					.then(() => {
+						const stats = status();
+						logStats(stats);
+						expect(stats.nodes).to.equal(originalStatus.nodes + 1);
+						expect(stats.fswatchers).to.equal(originalStatus.fswatchers + 2);
+						expect(stats.watchers).to.equal(originalStatus.watchers);
+
+						// we should have 3 new events:
+						// 1. adding baz.txt
+						// 2. adding bar
+						// 3. changing foo permissions
+						expect(counter).to.equal(3);
+
+						log('Writing baz file again: %s', highlight(bazFile));
+						fs.writeFileSync(bazFile, 'baz 2!');
+					})
+					.then(() => sleep(100))
+					.then(() => {
+						// now we have the event for baz.txt
+						expect(counter).to.equal(4);
+
+						const stats = status();
+						logStats(stats);
+
+						log('Locking down foo to root user only again');
+						fs.chmodSync(fooDir, '700');
+
+						log('Switching to effective user to %s', restrictedUser);
+						process.seteuid(restrictedUser);
+					})
+					.then(() => sleep(100))
+					.then(() => {
+						const stats = status();
+						logStats(stats);
+						expect(stats.nodes).to.equal(originalStatus.nodes);
+						expect(stats.fswatchers).to.equal(originalStatus.fswatchers);
+						expect(stats.watchers).to.equal(originalStatus.watchers);
+
+						// counter was incremented due to foo permissions changing
+						expect(counter).to.equal(5);
+
+						log('Switching back to root user');
+						process.setuid(0);
+
+						log('Writing baz file yet again: %s', highlight(bazFile));
+						fs.writeFileSync(bazFile, 'baz 2!');
+					})
+					.then(() => sleep(100))
+					.then(() => {
+						// we should not have seen the last update to baz.txt
+						expect(counter).to.equal(5);
+						done();
+					})
+					.catch(done);
 			});
 		});
 
