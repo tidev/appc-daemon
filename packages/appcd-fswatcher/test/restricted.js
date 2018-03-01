@@ -12,7 +12,8 @@ exports.getDescription = getDescription;
 exports.getUser        = getUser;
 exports.shouldRunTests = shouldRunTests;
 
-const user = process.env.TEST_USER || process.env.SUDO_USER;
+const { TEST_USER, SUDO_USER, SUDO_UID, SUDO_GID } = process.env;
+const user = TEST_USER || SUDO_USER;
 let state = exports.RESTRICTED_TESTS_RUN;
 
 if (process.getuid() !== 0) {
@@ -26,9 +27,10 @@ if (process.getuid() !== 0) {
 }
 
 function after() {
-	if (shouldRunTests() && process.env.SUDO_USER) {
+	const owner = (SUDO_UID || SUDO_USER) + (SUDO_GID ? `:${SUDO_GID}` : '');
+	if (shouldRunTests() && owner) {
 		const cwd = path.dirname(__dirname);
-		const args = [ '-R', process.env.SUDO_USER, '.nyc_output', 'coverage' ];
+		const args = [ '-R', owner, '.nyc_output', 'coverage' ];
 		console.log(`appcd-gulp after: CWD=${cwd} chown ${args.join(' ')}`);
 		spawnSync('chown', args, { cwd });
 	}
