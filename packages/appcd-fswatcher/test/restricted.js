@@ -16,10 +16,10 @@ const { TEST_USER, SUDO_USER, SUDO_UID, SUDO_GID } = process.env;
 const user = TEST_USER || SUDO_USER;
 let state = exports.RESTRICTED_TESTS_RUN;
 
-if (process.getuid() !== 0) {
-	state = exports.RESTRICTED_TESTS_NOT_ROOT;
-} else if (!process.seteuid) {
+if (!process.getuid || !process.seteuid) {
 	state = exports.RESTRICTED_TESTS_BAD_OS;
+} else if (process.getuid() !== 0) {
+	state = exports.RESTRICTED_TESTS_NOT_ROOT;
 } else if (!user) {
 	state = exports.RESTRICTED_TESTS_NO_USER;
 } else if (user === 'root') {
