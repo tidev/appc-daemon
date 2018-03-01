@@ -238,10 +238,17 @@ module.exports = (opts) => {
 		log('Running: ' + ansiColors.cyan(execPath + ' ' + args.join(' ')));
 
 		// run!
-		if (spawnSync(execPath, args, { stdio: 'inherit' }).status) {
-			const err = new Error('At least one test failed :(');
-			err.showStack = false;
-			throw err;
+		try {
+			if (spawnSync(execPath, args, { stdio: 'inherit' }).status) {
+				const err = new Error('At least one test failed :(');
+				err.showStack = false;
+				throw err;
+			}
+		} finally {
+			const after = path.join(projectDir, 'test', 'after.js');
+			if (fs.existsSync(after)) {
+				require(after);
+			}
 		}
 	}
 

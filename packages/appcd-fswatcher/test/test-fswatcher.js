@@ -3,6 +3,8 @@ import fs from 'fs-extra';
 import path from 'path';
 import tmp from 'tmp';
 
+import * as restricted from './restricted';
+
 import { real } from 'appcd-path';
 import { sleep } from 'appcd-util';
 
@@ -40,24 +42,6 @@ function makeTempDir() {
 function logStats(stats) {
 	const { fswatchers, nodes, watchers } = stats;
 	log({ fswatchers, nodes, watchers });
-}
-
-const restrictedUser = process.env.TEST_USER || process.env.SUDO_USER;
-const RESTRICTED_TESTS_RUN      = 0;
-const RESTRICTED_TESTS_NOT_ROOT = 1;
-const RESTRICTED_TESTS_BAD_OS   = 2;
-const RESTRICTED_TESTS_NO_USER  = 3;
-const RESTRICTED_TESTS_BAD_USER = 4;
-let restrictedTests = RESTRICTED_TESTS_RUN;
-
-if (process.getuid() !== 0) {
-	restrictedTests = RESTRICTED_TESTS_NOT_ROOT;
-} else if (!process.seteuid) {
-	restrictedTests = RESTRICTED_TESTS_BAD_OS;
-} else if (!restrictedUser) {
-	restrictedTests = RESTRICTED_TESTS_NO_USER;
-} else if (restrictedUser === 'root') {
-	restrictedTests = RESTRICTED_TESTS_BAD_USER;
 }
 
 describe('FSWatcher', () => {
@@ -130,7 +114,7 @@ describe('FSWatcher', () => {
 
 		afterEach(function (done) {
 			this.timeout(10000);
-			if (restrictedTests === RESTRICTED_TESTS_RUN) {
+			if (restricted.shouldRunTests()) {
 				process.setuid(0);
 			}
 			reset();
@@ -1448,25 +1432,9 @@ describe('FSWatcher', () => {
 		});
 
 		describe('restricted', () => {
-			let _it = restrictedTests === RESTRICTED_TESTS_RUN ? it : it.skip;
+			let _it = restricted.shouldRunTests() ? it : it.skip;
 
-			let desc = 'should detect restricted directory';
-			switch (restrictedTests) {
-				case RESTRICTED_TESTS_NOT_ROOT:
-					desc += ' (test must be run as root)';
-					break;
-				case RESTRICTED_TESTS_BAD_OS:
-					desc += ' (test cannot be run on Windows)';
-					break;
-				case RESTRICTED_TESTS_NO_USER:
-					desc += ' (TEST_USER/SUDO_USER env var not set)';
-					break;
-				case RESTRICTED_TESTS_BAD_USER:
-					desc += ' (TEST_USER/SUDO_USER must not be root)';
-					break;
-			}
-
-			_it(desc, function (done) {
+			_it(`should detect restricted directory${restricted.getDescription()}`, function (done) {
 				this.slow(10000);
 				this.timeout(9000);
 
@@ -1483,8 +1451,8 @@ describe('FSWatcher', () => {
 				log('Locking down foo to root user only');
 				fs.chmodSync(fooDir, '700');
 
-				log('Switching to effective user to %s', restrictedUser);
-				process.seteuid(restrictedUser);
+				log('Switching to effective user to %s', restricted.getUser());
+				process.seteuid(restricted.getUser());
 
 				let watcher = null;
 				let originalStatus = null;
@@ -1566,8 +1534,8 @@ describe('FSWatcher', () => {
 						log('Locking down foo to root user only again');
 						fs.chmodSync(fooDir, '700');
 
-						log('Switching to effective user to %s', restrictedUser);
-						process.seteuid(restrictedUser);
+						log('Switching to effective user to %s', restricted.getUser());
+						process.seteuid(restricted.getUser());
 					})
 					.then(() => sleep(100))
 					.then(() => {
