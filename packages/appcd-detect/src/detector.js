@@ -76,7 +76,6 @@ export default class Detector extends EventEmitter {
 			}
 
 			if (depth <= 0) {
-				foundPaths.add(dir);
 				this.logger.log('    No result, hit max depth, returning');
 				return;
 			}
