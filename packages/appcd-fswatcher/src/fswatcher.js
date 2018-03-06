@@ -695,9 +695,7 @@ export class Node {
 	stat() {
 		try {
 			const lstat = fs.lstatSync(this.path);
-			if (lstat.isDirectory()) {
-				this.type = DIRECTORY;
-			} else if (lstat.isSymbolicLink()) {
+			if (lstat.isSymbolicLink()) {
 				this.type = SYMLINK;
 				try {
 					const stat = fs.statSync(this.path);
@@ -709,9 +707,23 @@ export class Node {
 					}
 				} catch (e) {
 					// broken symlink, need to read link
-					const link = fs.readlinkSync(this.path);
+					const link = _path.resolve(fs.readlinkSync(this.path));
 					this.realPath = _path.isAbsolute(link) ? link : _path.join(_path.dirname(this.path), link);
+
+					// try to re-stat using the real path
+					try {
+						const stat = fs.statSync(this.realPath);
+						if (stat.isDirectory()) {
+							this.type |= DIRECTORY;
+						} else if (stat.isFile()) {
+							this.type |= FILE;
+						}
+					} catch (e2) {
+						// oh well
+					}
 				}
+			} else if (lstat.isDirectory()) {
+				this.type = DIRECTORY;
 			} else {
 				this.type = FILE;
 			}
