@@ -8,7 +8,7 @@ import _path from 'path';
 import { debounce } from 'appcd-util';
 import { EventEmitter } from 'events';
 
-const { log } = appcdLogger('appcd:fswatcher');
+const { error, log } = appcdLogger('appcd:fswatcher');
 const { highlight, green } = appcdLogger.styles;
 const { pluralize } = appcdLogger;
 
@@ -269,6 +269,18 @@ export class Node {
 
 				if (!this.fswatcher) {
 					this.fswatcher = fs.watch(this.path, { persistent: true }, this.onFSEvent.bind(this));
+					this.fswatcher.on('error', err => {
+						if (err.code === 'EPERM') {
+							this.closeFSWatcher();
+						} else if (this.watchers.size) {
+							for (const w of this.watchers) {
+								w.emit('error', err);
+							}
+						} else {
+							error('Error occurred in fs watcher for %s', highlight(this.path));
+							error(err);
+						}
+					});
 					stats.fswatchers++;
 					log('Initialized fs watcher: %s (%s)', highlight(this.path), stats.fswatchers);
 				}
@@ -573,6 +585,8 @@ export class Node {
 			const stat = fs.lstatSync(evt.file);
 			isDir = stat.isDirectory();
 
+			this.files.set(filename, [ evt.action, now ]);
+
 			if (process.platform === 'win32'
 				&& event === 'change'
 				&& evt.action === 'change'
@@ -583,9 +597,11 @@ export class Node {
 				log('Dropping Windows event for change on a directory when there is a change to a file');
 				return;
 			}
-
-			this.files.set(filename, [ evt.action, now ]);
 		} catch (e) {
+			if (!prev) {
+				return;
+			}
+
 			// file was deleted
 			evt.action = 'delete';
 			if (this.files) {
@@ -593,7 +609,7 @@ export class Node {
 			}
 		}
 
-		if (prev && evt.action !== 'delete' && (prev[1] > 0 && (now - prev[1]) < 16)) {
+		if (prev && evt.action !== 'delete' && (prev[1] > 0 && (now - prev[1]) < 100)) {
 			log('Dropping redundant event: %s %s → %s', green(`[${evt.action}]`), highlight(this.path), highlight(filename));
 			return;
 		}

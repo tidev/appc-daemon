@@ -129,12 +129,13 @@ describe('FSWatcher', () => {
 			it('should watch an existing directory for a new file', done => {
 				const tmp = makeTempDir();
 				const filename = path.join(tmp, 'foo.txt');
+				let counter = 0;
 
 				setTimeout(() => {
 					new FSWatcher(tmp, null)
 						.on('change', evt => {
 							expect(evt).to.be.an('object');
-							if (evt.file.indexOf(tmpDir) === 0) {
+							if (evt.file.indexOf(tmpDir) === 0 && ++counter === 1) {
 								expect(evt.action).to.equal('add');
 								expect(evt.file).to.equal(real(filename));
 
@@ -146,7 +147,7 @@ describe('FSWatcher', () => {
 								done();
 							}
 						})
-						.on('error', done);
+						.once('error', done);
 
 					log(renderTree());
 					log('Writing %s', highlight(filename));
@@ -347,35 +348,56 @@ describe('FSWatcher', () => {
 					new FSWatcher(fooDir)
 						.on('change', evt => {
 							if (evt.file.indexOf(tmpDir) === 0) {
+								counter++;
 								log('Change Event: %s %s (counter=%s)', green(`[${evt.action}]`), highlight(evt.file), counter);
 
-								if (evt.action === 'add') {
-									counter++;
-									if (counter === 1) {
+								switch (counter) {
+									case 1:
+										expect(evt.action).to.equal('add');
 										expect(evt.file).to.equal(real(barFile));
 										log(renderTree());
 										log('Deleting temp directory: %s', highlight(tmp));
-										fs.removeSync(tmp);
-									} else if (counter === 2) {
+										fs.remove(tmp);
+										break;
+
+									case 2:
+										expect(evt.file).to.equal(real(barFile));
+										if (evt.action === 'change') {
+											counter--;
+										} else {
+											expect(evt.action).to.equal('delete');
+										}
+										break;
+
+									case 3:
+										expect(evt.action).to.equal('delete');
+										expect(evt.file).to.equal(real(fooDir));
+										log(renderTree());
+
+										setTimeout(() => {
+											log(renderTree());
+											log('Creating temp foo directory: %s', highlight(fooDir));
+											fs.mkdirsSync(fooDir);
+
+											log('Writing %s', highlight(barFile));
+											fs.writeFileSync(barFile, 'bar again!');
+										}, 100);
+										break;
+
+									case 4:
+										expect(evt.action).to.equal('add');
 										expect(evt.file).to.equal(real(barFile));
 										log(renderTree());
 										done();
-									}
-								} else if (evt.action === 'delete') {
-									expect(evt.file).to.equal(real(barFile));
-
-									setTimeout(() => {
-										log(renderTree());
-										log('Creating temp foo directory: %s', highlight(fooDir));
-										fs.mkdirsSync(fooDir);
-
-										log('Writing %s', highlight(barFile));
-										fs.writeFileSync(barFile, 'bar again!');
-									}, 1000);
+										break;
 								}
 							}
 						})
-						.on('error', done);
+						.on('error', err => {
+							console.log('CALLING DONE FROM ERROR HANDLER!');
+							console.log(err);
+							done(err);
+						});
 
 					fs.writeFileSync(barFile, 'bar!');
 				}, 100);
@@ -391,26 +413,33 @@ describe('FSWatcher', () => {
 				const filename = path.join(tmp, 'foo.txt');
 				let counter = 0;
 
+				let finalized = false;
+				const finalize = err => {
+					if (!finalized) {
+						finalized = true;
+						done(err);
+					}
+				};
+
 				const watcher1 = new FSWatcher(tmp)
 					.on('change', evt => {
 						if (evt.file === real(filename)) {
-							expect(evt.action).to.equal('add');
-							unwatch();
+							unwatch(evt);
 						}
 					})
-					.on('error', done);
+					.on('error', finalize);
 
 				const watcher2 = new FSWatcher(tmp)
 					.on('change', evt => {
 						if (evt.file === real(filename)) {
-							expect(evt.action).to.equal('add');
-							unwatch();
+							unwatch(evt);
 						}
 					})
-					.on('error', done);
+					.on('error', finalize);
 
-				function unwatch() {
+				function unwatch(evt) {
 					if (++counter === 2) {
+						expect(evt.action).to.equal('add');
 						log(renderTree());
 						expect(roots).to.not.deep.equal({});
 						log('Closing watcher 1');
@@ -881,6 +910,7 @@ describe('FSWatcher', () => {
 						.on('error', done);
 
 					function writeFile() {
+						log(`index=${index}`);
 						log(renderTree());
 						const file = files[index];
 						log('Writing: %s', highlight(file));
@@ -965,7 +995,7 @@ describe('FSWatcher', () => {
 								}
 							}
 						})
-						.on('error', done);
+						.once('error', done);
 
 					new FSWatcher(tmp, { recursive: true, depth: 2 })
 						.on('change', evt => {
@@ -975,7 +1005,7 @@ describe('FSWatcher', () => {
 								checkEvent();
 							}
 						})
-						.on('error', done);
+						.once('error', done);
 
 					function writeFile() {
 						log(renderTree());
@@ -1060,9 +1090,11 @@ describe('FSWatcher', () => {
 
 								log(renderTree());
 								log(`Deleting ${fooDir}`);
-								fs.removeSync(fooDir);
+								fs.remove(fooDir, err => {
+									if (err) {
+										return done(err);
+									}
 
-								setTimeout(() => {
 									log(renderTree());
 									const stats = status();
 									try {
@@ -1071,7 +1103,7 @@ describe('FSWatcher', () => {
 									} catch (e) {
 										done(e);
 									}
-								}, 500);
+								});
 							} catch (e) {
 								done(e);
 							}
@@ -1108,9 +1140,11 @@ describe('FSWatcher', () => {
 
 								log(renderTree());
 								log(`Deleting ${fooDir}`);
-								fs.removeSync(fooDir);
+								fs.remove(fooDir, err => {
+									if (err) {
+										return done(err);
+									}
 
-								setTimeout(() => {
 									log(renderTree());
 									const stats = status();
 									try {
@@ -1119,7 +1153,7 @@ describe('FSWatcher', () => {
 									} catch (e) {
 										done(e);
 									}
-								}, 500);
+								});
 							} catch (e) {
 								done(e);
 							}
@@ -1175,8 +1209,12 @@ describe('FSWatcher', () => {
 						})
 						.on('error', done);
 
-					log('Creating symlink: %s', highlight(wizDir));
-					fs.symlinkSync(barDir, wizDir);
+					try {
+						log('Creating symlink: %s', highlight(wizDir));
+						fs.symlinkSync(barDir, wizDir, process.platform === 'win32' ? 'junction' : 'file');
+					} catch (e) {
+						done(e);
+					}
 				}, 100);
 			});
 
@@ -1225,8 +1263,12 @@ describe('FSWatcher', () => {
 						})
 						.on('error', done);
 
-					log('Creating symlink: %s', highlight(wizDir));
-					fs.symlinkSync(barDir, wizDir);
+					try {
+						log('Creating symlink: %s', highlight(wizDir));
+						fs.symlinkSync(barDir, wizDir, process.platform === 'win32' ? 'junction' : 'file');
+					} catch (e) {
+						done(e);
+					}
 				}, 100);
 			});
 
@@ -1278,8 +1320,12 @@ describe('FSWatcher', () => {
 						})
 						.on('error', done);
 
-					log('Creating symlink: %s', highlight(wizFile));
-					fs.symlinkSync(barFile, wizFile);
+					try {
+						log('Creating symlink: %s', highlight(wizFile));
+						fs.symlinkSync(barFile, wizFile, process.platform === 'win32' ? 'junction' : 'file');
+					} catch (e) {
+						done(e);
+					}
 				}, 100);
 			});
 
@@ -1331,8 +1377,12 @@ describe('FSWatcher', () => {
 						})
 						.on('error', done);
 
-					log('Creating symlink: %s', highlight(wizFile));
-					fs.symlinkSync(barFile, wizFile);
+					try {
+						log('Creating symlink: %s', highlight(wizFile));
+						fs.symlinkSync(barFile, wizFile, process.platform === 'win32' ? 'junction' : 'file');
+					} catch (e) {
+						done(e);
+					}
 				}, 100);
 			});
 
@@ -1356,7 +1406,7 @@ describe('FSWatcher', () => {
 				const wizDir = path.join(bazDir, 'wiz');
 
 				log('Creating symlink: %s', highlight(wizDir));
-				fs.symlinkSync(barDir, wizDir);
+				fs.symlinkSync(barDir, wizDir, process.platform === 'win32' ? 'junction' : 'file');
 
 				log('Deleting %s', highlight(barDir));
 				fs.removeSync(barDir);
@@ -1404,7 +1454,7 @@ describe('FSWatcher', () => {
 				const barRelDir = '../foo/bar';
 
 				log('Creating symlink: %s → %s', highlight(barRelDir), highlight(wizDir));
-				fs.symlinkSync(barRelDir, wizDir);
+				fs.symlinkSync(barRelDir, wizDir, process.platform === 'win32' ? 'junction' : 'file');
 
 				log('Deleting %s', highlight(barDir));
 				fs.rmdirSync(barDir);
