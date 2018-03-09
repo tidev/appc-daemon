@@ -277,7 +277,7 @@ function runTests(cover, cb) {
  * watch/debug tasks
  */
 function startDaemon() {
-	spawn(process.execPath, [ 'packages/appcd/bin/appcd', 'start', '--debug' ], { stdio: 'inherit' });
+	spawn(process.execPath, [ 'packages/appcd/bin/appcd', 'start', '--debug', '--config', '{ \"telemetry\": { \"environment\": \"development\" } }' ], { stdio: 'inherit' });
 }
 
 function stopDaemon() {

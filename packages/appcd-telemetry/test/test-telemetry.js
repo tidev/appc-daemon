@@ -56,7 +56,7 @@ describe('telemetry', () => {
 
 			expect(() => {
 				new Telemetry(cfg);
-			}).to.throw(Error, 'Config is missing a required, valid "appcd.guid"');
+			}).to.throw(Error, 'Config is missing a required, valid "telemetry.guid"');
 		});
 	});
 
@@ -221,12 +221,10 @@ describe('telemetry', () => {
 
 			const cfg = new Config({
 				config: {
-					appcd: {
-						guid: '<GUID>'
-					},
 					telemetry: {
 						enabled: true,
-						eventsDir
+						eventsDir,
+						guid: '<GUID>'
 					}
 				}
 			});
@@ -733,11 +731,11 @@ function createTelemetry(json) {
 	if (!json) {
 		json = {};
 	}
-	if (!json.appcd) {
-		json.appcd = {};
+	if (!json.telemetry) {
+		json.telemetry = {};
 	}
-	if (!json.appcd.guid) {
-		json.appcd.guid = '<GUID>';
+	if (!json.telemetry.guid) {
+		json.telemetry.guid = '<GUID>';
 	}
 	const cfg = new Config({ config: json });
 	return new Telemetry(cfg);
@@ -752,6 +750,10 @@ function createInitializedTelemetry(json) {
 	}
 	if (json.telemetry.enabled === undefined) {
 		json.telemetry.enabled = true;
+	}
+
+	if (!json.telemetry.guid) {
+		json.telemetry.guid = '<GUID>';
 	}
 	return createTelemetry(json).init(makeTempDir());
 }

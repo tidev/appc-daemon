@@ -38,9 +38,9 @@ export default class Telemetry extends Dispatcher {
 			throw new TypeError('Expected config to be a valid config object');
 		}
 
-		const aguid = cfg.get('appcd.guid');
+		const aguid = cfg.get('telemetry.guid');
 		if (!aguid || typeof aguid !== 'string') {
-			throw new Error('Config is missing a required, valid "appcd.guid"');
+			throw new Error('Config is missing a required, valid "telemetry.guid"');
 		}
 
 		super();
@@ -63,6 +63,12 @@ export default class Telemetry extends Dispatcher {
 			sendTimeout:   60000, // 1 minute
 			url:           null
 		};
+
+		/**
+		 * The deploy type for the events.
+		 * @type {String}
+		 */
+		this.deployType = cfg.get('telemetry.environment') || 'production';
 
 		/**
 		 * The time, in milliseconds, that the last send was fired.
@@ -149,7 +155,8 @@ export default class Telemetry extends Dispatcher {
 				seq:   this.seqId++,
 				sid:   this.sessionId,
 				ts:    new Date().toISOString(),
-				ver:   '3'
+				ver:   '3',
+				deployType: this.deployType
 			};
 
 			const filename = path.join(this.eventsDir, id + '.json');

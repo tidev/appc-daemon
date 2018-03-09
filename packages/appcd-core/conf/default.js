@@ -21,6 +21,20 @@ module.exports = {
 			memory: 'auto'
 		}
 	},
+	
+	environment: {
+		/**
+		 * Shorthand name for the environment.
+		 * @type {String}
+		 */
+		name: 'prod',
+
+		/**
+		 * Title for the environment
+		 * @type {String}
+		 */
+		title: 'Production'
+	},
 
 	/**
 	 * The path to the appcd home directory
@@ -146,6 +160,12 @@ module.exports = {
 
 	telemetry: {
 		/**
+		 * Deploy type for the analytics events.
+		 * @type {String}
+		 */
+		environment: 'production',
+
+		/**
 		 * Turns on telemetry recording and submitting.
 		 * @type {Boolean}
 		 */
@@ -156,6 +176,12 @@ module.exports = {
 		 * @type {String}
 		 */
 		eventsDir: '~/.appcelerator/appcd/telemetry',
+
+		/**
+		 * GUID to use for telemetry.
+		 * @type {String}
+		 */
+		guid: 'ea327577-858f-4d31-905e-fa670f50ef48',
 
 		/**
 		 * The maximum number of events to send at a time.
