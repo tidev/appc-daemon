@@ -1,9 +1,0 @@
-{
-	"appcd": {
-		"guid": "14c84daf-b01e-486c-96d3-b8f66da44481"
-	},
-	"environment": {
-		"name": "preprod",
-		"title": "Pre-production"
-	}
-}

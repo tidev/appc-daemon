@@ -1,4 +1,8 @@
 module.exports = {
+	environment: {
+		name: 'prod',
+		title: 'Production'
+	},
 	core: {
 		/**
 		 * When `true`, enforces the Node.js version required by the core. If the required Node.js
@@ -146,6 +150,12 @@ module.exports = {
 
 	telemetry: {
 		/**
+		 * Deploy type for the analytics events.
+		 * @type {String}
+		 */
+		deployType: 'production',
+
+		/**
 		 * Turns on telemetry recording and submitting.
 		 * @type {Boolean}
 		 */
@@ -156,6 +166,12 @@ module.exports = {
 		 * @type {String}
 		 */
 		eventsDir: '~/.appcelerator/appcd/telemetry',
+
+		/**
+		 * GUID to use for telemetry.
+		 * @type {String}
+		 */
+		guid: 'ea327577-858f-4d31-905e-fa670f50ef48',
 
 		/**
 		 * The maximum number of events to send at a time.
