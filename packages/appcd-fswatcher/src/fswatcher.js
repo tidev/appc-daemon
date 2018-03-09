@@ -457,7 +457,7 @@ export class Node {
 		if ((isCurrentNode && this.watchers.size) || (!isCurrentNode && this.isRecursive)) {
 			log('Notifying %s %s: %s → %s', green(this.watchers.size), pluralize('watcher', this.watchers.size), highlight(this.path), highlight(evt.filename));
 			for (const watcher of this.watchers) {
-				if (watcher.recursive === 0 || watcher.recursive === Infinity || watcher.recursive > depth) {
+				if (watcher.recursive === 0 || watcher.recursive === Infinity || watcher.recursive >= depth) {
 					try {
 						watcher.emit('change', evt);
 					} catch (err) {
