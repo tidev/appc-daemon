@@ -27,9 +27,12 @@
     "tree-printer": "^1.1.1"
   },
   "scripts": {
-    "postinstall": "lerna bootstrap"
+    "xpostinstall": "lerna bootstrap"
   },
-  "xworkspaces": [
-    "packages/*"
-  ]
+  "workspaces": {
+    "packages": [ "packages/*" ],
+    "nohoist": [
+      "**/appcd-default-plugins/", "**/appcd-default-plugins/**"
+    ]
+  }
 }
