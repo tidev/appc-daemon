@@ -280,7 +280,10 @@ describe('SubprocessManager', () => {
 	});
 
 	describe('ipc', () => {
-		it('should spawn a command with ipc', done => {
+		it('should spawn a command with ipc', function (done) {
+			this.timeout(10000);
+			this.slow(9000);
+
 			const subprocessMgr = new SubprocessManager();
 			subprocessMgr
 				.call('/spawn', {
