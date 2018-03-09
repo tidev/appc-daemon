@@ -7,6 +7,7 @@ import getMachineId from '../dist/machine-id';
 tmp.setGracefulCleanup();
 function makeTempDir() {
 	return tmp.dirSync({
+		mode: '755',
 		prefix: 'appcd-machine-id-test-',
 		unsafeCleanup: true
 	}).name;

@@ -1,3 +1,5 @@
+/* eslint no-confusing-arrow: "off", import/no-mutable-exports: "off" */
+
 import appcdLogger from 'appcd-logger';
 import fs from 'fs';
 import gawk from 'gawk';
@@ -6,7 +8,7 @@ import _path from 'path';
 import { debounce } from 'appcd-util';
 import { EventEmitter } from 'events';
 
-const { log } = appcdLogger('appcd:fswatcher');
+const { error, log } = appcdLogger('appcd:fswatcher');
 const { highlight, green } = appcdLogger.styles;
 const { pluralize } = appcdLogger;
 
@@ -15,6 +17,12 @@ const { pluralize } = appcdLogger;
  * @type {RegExp}
  */
 const rootRegExp = /^(\/|[A-Za-z]+:\\)(.+)?$/;
+
+/**
+ * A counter used to assign a unique number to each `FSWatcher` instance.
+ * @type {Number}
+ */
+let watcherCounter = 0;
 
 /**
  * An emitter that is used to broadcast all FS events for all nodes.
@@ -55,9 +63,10 @@ export const stats = gawk.watch(gawk({
  * @default
  */
 export const DOES_NOT_EXIST = 0;
-export const DIRECTORY = 1;
-export const FILE = 2;
-export const SYMLINK = 4;
+export const DIRECTORY      = 1;
+export const FILE           = 2;
+export const SYMLINK        = 4;
+export const RESTRICTED     = 8;
 
 /**
  * Tracks the state for a directory, file, symlink, or non-existent file and notifies watchers of
@@ -73,125 +82,92 @@ export class Node {
 	 * @access public
 	 */
 	constructor(path, parent) {
-		stats.nodes++;
-		log('Incrementing stats.nodes to ' + stats.nodes);
-
+		/**
+		 * A map of filenames to nodes. Child nodes are paths of interest, but may or may not
+		 * actually exist.
+		 * @type {Object}
+		 */
 		this.children = {};
+
+		/**
+		 * A map of watcher ids to recursive depths relative to this node.
+		 * @type {Object}
+		 */
+		this.depths = {};
+
+		/**
+		 * A list of nodes that symbolically link to this node.
+		 * @type {Set}
+		 */
 		this.links = new Set();
+
+		/**
+		 * The filename of this node.
+		 * @type {String}
+		 */
 		this.name = _path.basename(path) || path;
+
+		/**
+		 * A reference to the parent node.
+		 * @type {?Node}
+		 */
 		this.parent = parent || null;
+
+		/**
+		 * The full path to this node.
+		 * @type {String}
+		 */
 		this.path = this.realPath = path;
-		this.recursive = 0;
+
+		/**
+		 * A list of `FSWatcher` instances that watch this node.
+		 * @type {Set}
+		 */
 		this.watchers = new Set();
+
+		stats.nodes++;
+		// log('Incrementing stats.nodes to %s %s', stats.nodes, highlight(this.path));
+
 		this.stat();
 	}
 
 	/**
-	 * Stats the path and determines if the path is a directory, file, symlink, or non-existent.
+	 * Creates a node for the specified file and adds it as a child to this node.
 	 *
-	 * @access private
+	 * @param {String} filename - The name of the file or directory.
+	 * @param {Boolean} [action] - When value is `add', stats the new node and adds it as a child.
+	 * @param {Boolean} [dirOnly] - When `true`, only adds the child node if it's a directory.
+	 * @returns {?Node} The child node.
+	 * @access public
 	 */
-	stat() {
-		try {
-			const lstat = fs.lstatSync(this.path);
-			if (lstat.isDirectory()) {
-				this.type = DIRECTORY;
-			} else if (lstat.isSymbolicLink()) {
-				this.type = SYMLINK;
-				try {
-					const stat = fs.statSync(this.path);
-					this.realPath = fs.realpathSync(this.path);
-					if (stat.isDirectory()) {
-						this.type |= DIRECTORY;
-					} else if (stat.isFile()) {
-						this.type |= FILE;
-					}
-				} catch (e) {
-					// broken symlink, need to read link
-					const link = fs.readlinkSync(this.path);
-					this.realPath = _path.isAbsolute(link) ? link : _path.join(_path.dirname(this.path), link);
-				}
-			} else {
-				this.type = FILE;
-			}
-		} catch (e) {
-			this.type = DOES_NOT_EXIST;
+	addChild(filename, action, dirOnly) {
+		// create a node so that we can stat it
+		const node = new Node(_path.join(this.path, filename), this);
+
+		if (!dirOnly || node.type & DIRECTORY || node.type & SYMLINK) {
+			log('Creating node for %s', highlight(node.path));
+			node.init(action);
+			this.children[node.name] = node;
+			return node;
 		}
+
+		// we are not interested in the node, so destroy it
+		node.destroy();
+		return null;
 	}
 
 	/**
-	 * Initializes the node by starting the actual fs watch and listing of files when the node is a
-	 * directory, or registers the real path if this node is a symlink.
+	 * Closes this node's native fs watcher.
 	 *
-	 * @param {Boolean} isAdd - When `true` and this node is a directory, it will stat and
-	 * initialize any existing watched child nodes.
-	 * @returns {Node}
 	 * @access private
 	 */
-	init(isAdd) {
-		if (this.type !== DIRECTORY) {
-			/* istanbul ignore if */
-			if (this.fswatcher) {
-				// NOTE: This should never happen and is very difficult to reproduce in a unit test
-				// because there should never be a time where the `type` changes from a directory to
-				// a file or symlink without it first being deleted. If there was a glitch and the
-				// delete fs event was dropped or there was a race condition with another process,
-				// then it's possible that the fswatcher is still active and then this code will
-				// save the day.
-				this.fswatcher.close();
-				delete this.fswatcher;
-				stats.fswatchers--;
-			}
-
-			if (this.type & SYMLINK) {
-				this.link = register(this.realPath);
-				this.link.links.add(this);
-			}
-
-		} else if (!this.fswatcher) {
-			log('Initializing fs watcher: %s', highlight(this.path));
-			this.fswatcher = fs.watch(this.path, { persistent: true }, this.onFSEvent.bind(this));
-			stats.fswatchers++;
-
-			const now = Date.now();
-			this.files = new Map();
-
-			for (const filename of fs.readdirSync(this.path)) {
-				const file = _path.join(this.path, filename);
-				this.files.set(filename, now);
-
-				if (isAdd) {
-					const child = this.children[filename];
-					if (child) {
-						child.stat();
-						child.init(true);
-					}
-
-					this.notify({
-						action: 'add',
-						filename,
-						file
-					}, true);
-				}
-			}
-
-			if (isAdd) {
-				for (const node of this.links) {
-					node.notify({
-						action: 'change',
-						filename: node.name,
-						file: node.path
-					});
-				}
-			}
+	closeFSWatcher() {
+		if (this.fswatcher) {
+			this.fswatcher.close();
+			delete this.fswatcher;
+			stats.fswatchers--;
+			log('Closed fs watcher: %s (%s)', highlight(this.path), stats.fswatchers);
 		}
-
-		let type = this.type & SYMLINK ? 'l' : '';
-		type += this.type & DIRECTORY ? 'd' : this.type & FILE ? 'f' : '?';
-		const files = this.files ? `(${pluralize('file', this.files.size, true)})` : '';
-		log('Initialized node: %s %s %s', highlight(this.path), green(`[${type}]`), files);
-
-		return this;
 	}
 
 	/**
@@ -213,14 +189,9 @@ export class Node {
 			}
 
 			stats.nodes--;
-			log('Decrementing stats.nodes to ' + stats.nodes);
+			// log('Decrementing stats.nodes to %s %s', stats.nodes, highlight(this.path));
 
-			if (this.fswatcher) {
-				// log('destroy() Closing fs watcher: %s', highlight(this.path));
-				this.fswatcher.close();
-				delete this.fswatcher;
-				stats.fswatchers--;
-			}
+			this.closeFSWatcher();
 
 			if (this.files) {
 				this.files.clear();
@@ -249,18 +220,6 @@ export class Node {
 	/**
 	 * Adds a node as a child and automatically sets this node as its parent.
 	 *
-	 * @param {Node} node - The child node.
-	 * @returns {Node} The child node.
-	 * @access public
-	 */
-	addChild(node) {
-		node.parent = this;
-		return this.children[node.name] = node;
-	}
-
-	/**
-	 * Adds a node as a child and automatically sets this node as its parent.
-	 *
 	 * @param {String} name - The child file or directory name to get.
 	 * @returns {Node} The child node or `null` if not found.
 	 * @access public
@@ -270,162 +229,218 @@ export class Node {
 	}
 
 	/**
-	 * Adds the specified watcher to this node.
+	 * Initializes the node by starting the actual fs watch and listing of files when the node is a
+	 * directory, or registers the real path if this node is a symlink.
 	 *
-	 * @param {FSWatcher} watcher - The FSWatcher instance.
-	 * @returns {Node}
-	 * @access public
-	 */
-	watch(watcher) {
-		if (!this.watchers.has(watcher)) {
-			stats.watchers++;
-			this.watchers.add(watcher);
-
-			if (watcher.recursive) {
-				this.recursive++;
-				this.recursiveWatch(watcher.recursive === Infinity ? Infinity : watcher.recursive);
-			}
-		}
-		return this;
-	}
-
-	/**
-	 * Recursively descends all child nodes and increments the recursive counter.
-	 *
-	 * @param {Number} depth - The depth to stop recursively watching.
+	 * @param {String} action - When `add` and this node is a directory, it will stat and initialize
+	 * any existing watched child nodes. If `change`, then it will only notify watched child nodes.
+	 * @returns {Node|null} Returns `null` if the node is restricted, otherwise a reference to
+	 * itself.
 	 * @access private
 	 */
-	recursiveWatch(depth) {
-		if (this.type & DIRECTORY && this.files && depth > 0) {
-			if (depth !== Infinity) {
-				depth--;
-			}
+	init(action) {
+		const isDir      = this.type & DIRECTORY;
+		const isFile     = this.type & FILE;
+		const isSymlink  = this.type & SYMLINK;
 
-			for (const [ filename ] of this.files) {
-				let child = this.children[filename];
-				if (!child) {
-					child = new Node(_path.join(this.path, filename), this);
-					if (child.type !== DIRECTORY && child.type !== SYMLINK) {
-						stats.nodes--;
-						log('Decrementing stats.nodes to ' + stats.nodes);
-						continue;
+		if (!isDir) {
+			this.closeFSWatcher();
+		}
+
+		// if we have a symlink, register the real path and add it's real node to this node's links
+		if (isSymlink) {
+			this.link = register(this.realPath);
+			this.link.links.add(this);
+
+		// if we have a directory, then initialize the listing and recurse if necessary
+		} else if (isDir) {
+			// init the recursion depths
+			this.depths = {};
+			if (this.parent) {
+				for (const [ id, depth ] of Object.entries(this.parent.depths)) {
+					if (depth > 0) {
+						this.depths[id] = depth === Infinity ? Infinity : depth - 1;
 					}
-					this.children[filename] = child.init();
 				}
-				child.recursiveWatch(depth);
+			}
+
+			// get the directory listing and init the fs watcher
+			let listing = [];
+			try {
+				listing = fs.readdirSync(this.path);
+
+				if (!this.fswatcher) {
+					this.fswatcher = fs.watch(this.path, { persistent: true }, this.onFSEvent.bind(this));
+					this.fswatcher.on('error', err => {
+						if (err.code === 'EPERM') {
+							this.closeFSWatcher();
+						} else if (this.watchers.size) {
+							for (const w of this.watchers) {
+								w.emit('error', err);
+							}
+						} else {
+							error('Error occurred in fs watcher for %s', highlight(this.path));
+							error(err);
+						}
+					});
+					stats.fswatchers++;
+					log('Initialized fs watcher: %s (%s)', highlight(this.path), stats.fswatchers);
+				}
+
+				this.type &= ~RESTRICTED;
+			} catch (e) {
+				if (e.code === 'EACCES') {
+					this.type |= RESTRICTED;
+				} else {
+					throw e;
+				}
+			}
+
+			// all directory nodes must have a clean files map
+			if (this.files instanceof Map) {
+				this.files.clear();
+			} else {
+				this.files = new Map();
+			}
+
+			// if this node is now restricted, we need to clean up
+			if (this.type & RESTRICTED) {
+				log('%s is restricted, removing children as we can no longer see them', highlight(this.path));
+
+				const restrictAndCheckIfEmpty = node => {
+					let empty = !node.watchers.size;
+
+					node.type |= RESTRICTED;
+
+					for (const [ name, child ] of Object.entries(node.children)) {
+						// need to determine if the child can be destroyed
+						if (restrictAndCheckIfEmpty(child)) {
+							child.destroy();
+							delete node.children[name];
+						} else {
+							empty = false;
+						}
+					}
+
+					return empty;
+				};
+
+				// mark all children as restricted
+				// if the child has no watchers, it can be removed
+				restrictAndCheckIfEmpty(this);
+
+				// make sure we're cleaned up
+				this.closeFSWatcher();
+
+			// node is not restricted
+			} else {
+				log('%s is not restricted, listing and creating child nodes', highlight(this.path));
+
+				if (action === 'add') {
+					this.notify({
+						action,
+						filename: this.name,
+						file: this.path
+					}, true);
+				}
+
+				const now = Date.now();
+
+				// loop over the listing and populate files
+				// if this is an 'add', then initialize the child node
+				for (const filename of listing) {
+					const file = _path.join(this.path, filename);
+
+					this.files.set(filename, now);
+
+					if (action === 'add' || action === 'change') {
+						let child = this.children[filename];
+						if (child) {
+							child.stat();
+							child.init(action);
+						} else if (Object.values(this.depths).some(depth => depth > 0)) {
+							this.addChild(filename, action, true);
+						}
+
+						this.notify({
+							action,
+							filename,
+							file
+						}, true);
+					}
+				}
+
+				// if this is an add, then notify all links that this node changed
+				if (action === 'add') {
+					for (const node of this.links) {
+						node.notify({
+							action: 'change',
+							filename: node.name,
+							file: node.path
+						});
+					}
+				}
 			}
 		}
-	}
 
-	/**
-	 * Removes the specified watcher from this node.
-	 *
-	 * @param {FSWatcher} watcher - The FSWatcher instance.
-	 * @returns {Node}
-	 * @access public
-	 */
-	unwatch(watcher) {
-		if (this.watchers.has(watcher)) {
-			stats.watchers--;
-			this.watchers.delete(watcher);
-
-			if (watcher.recursive) {
-				this.recursive--;
-				this.recursiveUnwatch(watcher.recursive === Infinity ? Infinity : watcher.recursive - 1);
-			}
+		if ((isSymlink || !isDir) && (action === 'add' || action === 'change')) {
+			this.notify({
+				action,
+				filename: this.name,
+				file: this.path
+			}, true);
 		}
+
+		let type = isSymlink ? 'l' : '';
+		type += isDir ? 'd' : isFile ? 'f' : '?';
+		const files = this.files ? `(${pluralize('file', this.files.size, true)})` : '';
+		log('Initialized node: %s %s %s', highlight(this.path), green(`[${type}]`), files);
+
 		return this;
 	}
 
 	/**
-	 * Recursively descends all child nodes and decrements the recursive counter.
+	 * Detects if the node is active by checking if there are any watchers, if any parent node is
+	 * watching recursively, or if any child node has active watchers.
 	 *
-	 * @param {Number} depth - The depth to stop recursively watching.
-	 * @access private
+	 * @param {Boolean} recursive - When `true`, checks if any parent node is recursively watching
+	 * the current node.
+	 * @returns {Boolean}
+	 * @access public
 	 */
-	recursiveUnwatch(depth) {
-		if (this.type & DIRECTORY && this.files) {
-			for (const [ filename ] of this.files) {
-				let child = this.children[filename];
-				if (child) {
-					child.recursiveUnwatch(depth === Infinity ? Infinity : depth - 1);
-				}
-			}
+	isActive(recursive) {
+		if (this.watchers.size) {
+			log('%s is active with %s', highlight(this.realPath), pluralize('watcher', this.watchers.size, true));
+			return true;
 		}
+		if (recursive && this.isParentRecursive()) {
+			log('%s is active because of a recursive parent', highlight(this.realPath));
+			return true;
+		}
+		if (this.type & DIRECTORY && (this.link && this.link.isActive() || Object.values(this.children).some(child => child.isActive()))) {
+			log('%s is active because child has a watcher', highlight(this.realPath));
+			return true;
+		}
+		return false;
 	}
 
 	/**
-	 * Callback for Node's `fs.watch()` that processes the incoming fs event.
+	 * Checks if any parents are recursively watching this node.
 	 *
-	 * @param {String} event - The event name. This value is either `rename` or `change` and is
-	 * mostly useless.
-	 * @param {String} filename - The name of the file that triggered the event.
-	 * @access private
+	 * @returns {Boolean}
+	 * @access public
 	 */
-	onFSEvent(event, filename) {
-		// check that the changed file hasn't been deleted during notification
-		if (filename === null) {
-			return;
-		}
+	isParentRecursive() {
+		return this.parent && (this.parent.isRecursive || this.parent.isParentRecursive());
+	}
 
-		try {
-			// sanity check that this path still exists because apparently Linux
-			// will let the watcher know that itself was deleted
-			fs.lstatSync(this.path);
-		} catch (e) {
-			return;
-		}
-
-		const prev = this.files && this.files.get(filename) || null;
-		const evt = {
-			action: prev ? 'change' : 'add',
-			filename,
-			file: _path.join(this.path, filename)
-		};
-		const now = Date.now();
-		let isFile = false;
-
-		try {
-			const stat = fs.lstatSync(evt.file);
-
-			if (process.platform === 'win32'
-				&& event === 'change'
-				&& evt.action === 'change'
-				&& stat.isDirectory()
-			) {
-				// This will drop also events where there is a permission change on the folder,
-				// tracked as https://jira.appcelerator.org/browse/DAEMON-232 - EH 02/08/18
-				log('Dropping Windows event for change on a directory when there is a change to a file');
-				return;
-			}
-
-			isFile = stat.isFile();
-			this.files.set(filename, [ evt.action, now ]);
-		} catch (e) {
-			// file was deleted
-			evt.action = 'delete';
-			if (this.files) {
-				this.files.delete(filename);
-			}
-		}
-
-		if (prev && evt.action !== 'delete' && (prev[1] > 0 && (now - prev[1]) < 16)) {
-			log('Dropping redundant event: %s %s → %s', green(`[${evt.action}]`), highlight(this.path), highlight(filename));
-			return;
-		}
-
-		log('FS Event: %s %s → %s', green(`[${evt.action}]`), highlight(this.path), highlight(filename));
-
-		let child = this.children[filename];
-		if (child) {
-			log('Notifying child node: %s', highlight(filename));
-			child.notifyChild(evt);
-		} else if (evt.action === 'add' && !isFile && (this.recursive > 0 || this.isParentRecursive())) {
-			log('Creating node for %s', highlight(evt.file));
-			this.children[filename] = new Node(evt.file, this).init();
-		}
-
-		this.notify(evt, true);
+	/**
+	 * Determines if this node is subject to recursion.
+	 *
+	 * @type {Boolean}
+	 */
+	get isRecursive() {
+		return Object.keys(this.depths).length > 0;
 	}
 
 	/**
@@ -439,10 +454,10 @@ export class Node {
 	 * @access private
 	 */
 	notify(evt, isCurrentNode, depth = 0) {
-		if ((isCurrentNode && this.watchers.size) || (!isCurrentNode && this.recursive > 0)) {
+		if ((isCurrentNode && this.watchers.size) || (!isCurrentNode && this.isRecursive)) {
 			log('Notifying %s %s: %s → %s', green(this.watchers.size), pluralize('watcher', this.watchers.size), highlight(this.path), highlight(evt.filename));
 			for (const watcher of this.watchers) {
-				if (watcher.recursive === 0 || watcher.recursive === Infinity || watcher.recursive > depth) {
+				if (watcher.recursive === 0 || watcher.recursive === Infinity || watcher.recursive >= depth) {
 					try {
 						watcher.emit('change', evt);
 					} catch (err) {
@@ -458,25 +473,6 @@ export class Node {
 			this.parent.notify(evt, false, depth + 1);
 		} else {
 			rootEmitter.emit('change', evt);
-		}
-	}
-
-	/**
-	 * Called when the parent is receives an event related to this node. When the event was an
-	 * `add`, it will stat and init this node. When the event is a `delete`, it stops watching the
-	 * now non-existent directory/file.
-	 *
-	 * @param {Object} evt - The fs event object.
-	 * @access private
-	 */
-	notifyChild(evt) {
-		if (evt.action === 'delete') {
-			this.onDeleted(evt);
-			this.notifyChildWatchers(evt);
-		} else {
-			this.notifyChildWatchers(evt);
-			this.stat();
-			this.init(evt.action === 'add');
 		}
 	}
 
@@ -509,27 +505,36 @@ export class Node {
 	 * Recursively stops file system watching on this node and all its descendents.
 	 *
 	 * @param {Object} evt - The fs event.
+	 * @returns {Boolean}
 	 * @access private
 	 */
 	onDeleted(evt) {
-		if (this.fswatcher) {
-			// log('onDeleted() Closing fs watcher: %s', highlight(this.path));
-			this.fswatcher.close();
-			delete this.fswatcher;
-			stats.fswatchers--;
+		if (this.type === DOES_NOT_EXIST) {
+			return false;
 		}
 
 		this.type = DOES_NOT_EXIST;
 
-		const children = Object.values(this.children);
-		if (children) {
-			log('Notifying %s %s they were deleted: %s',
-				green(children.length),
-				pluralize('child', children.length),
-				highlight(this.path));
+		this.closeFSWatcher();
 
-			for (const child of children) {
-				child.onDeleted(evt);
+		const children = Object.values(this.children);
+		log('Notifying %s %s they were deleted: %s',
+			green(children.length),
+			pluralize('child', children.length),
+			highlight(this.path));
+		for (const child of children) {
+			if (child.onDeleted(evt)) {
+				child.notifyChildWatchers({
+					action: 'delete',
+					filename: child.name,
+					file: child.path
+				});
+			} else {
+				log('%s was already deleted', highlight(child.path));
+			}
+			if (!child.watchers.size && !Object.keys(child.children).length) {
+				child.destroy();
+				delete this.children[child.name];
 			}
 		}
 
@@ -570,41 +575,236 @@ export class Node {
 				}
 			}
 		}
+
+		return true;
 	}
 
 	/**
-	 * Checks if any parents are recursively watching this node.
+	 * Callback for Node's `fs.watch()` that processes the incoming fs event.
 	 *
-	 * @returns {Boolean}
-	 * @access public
+	 * @param {String} event - The event name. This value is either `rename` or `change` and is
+	 * mostly useless.
+	 * @param {String} filename - The name of the file that triggered the event.
+	 * @access private
 	 */
-	isParentRecursive() {
-		return this.parent && (this.parent.recursive > 0 || this.parent.isParentRecursive());
+	onFSEvent(event, filename) {
+		// check that the changed file hasn't been deleted during notification
+		/* istanbul ignore if */
+		if (filename === null) {
+			return;
+		}
+
+		try {
+			// sanity check that this path still exists because apparently Linux
+			// will let the watcher know that itself was deleted
+			fs.lstatSync(this.path);
+		} catch (e) {
+			return;
+		}
+
+		const prev = this.files && this.files.get(filename) || null;
+		const evt = {
+			action: prev ? 'change' : 'add',
+			filename,
+			file: _path.join(this.path, filename)
+		};
+		const now = Date.now();
+		let isDir = false;
+		let child = this.children[filename];
+
+		try {
+			const stat = fs.lstatSync(evt.file);
+			isDir = stat.isDirectory();
+
+			this.files.set(filename, [ evt.action, now ]);
+
+			if (process.platform === 'win32'
+				&& event === 'change'
+				&& evt.action === 'change'
+				&& isDir
+			) {
+				// This will drop also events where there is a permission change on the folder,
+				// tracked as https://jira.appcelerator.org/browse/DAEMON-232 - EH 02/08/18
+				log('Dropping Windows event for change to contents of a directory');
+				return;
+			}
+		} catch (e) {
+			if (!prev) {
+				return;
+			}
+
+			// file was deleted
+			evt.action = 'delete';
+			if (this.files) {
+				this.files.delete(filename);
+			}
+		}
+
+		if (prev && evt.action !== 'delete' && (prev[1] > 0 && (now - prev[1]) < 100)) {
+			log('Dropping redundant event: %s %s → %s', green(`[${evt.action}]`), highlight(this.path), highlight(filename));
+			return;
+		}
+
+		log('FS Event: %s %s → %s', green(`[${evt.action}]`), highlight(this.path), highlight(filename));
+
+		let notify = true;
+
+		if (child) {
+			log('Notifying child node: %s', highlight(filename));
+			if (evt.action === 'delete') {
+				if (child.onDeleted(evt)) {
+					child.notifyChildWatchers(evt);
+				} else {
+					log('%s was already deleted', highlight(child.path));
+				}
+				if (!child.watchers.size && !Object.keys(child.children).length) {
+					delete this.children[child.name];
+					child.destroy();
+				}
+			} else {
+				child.stat();
+				child.init(evt.action);
+			}
+		} else if (evt.action === 'add' && (this.isRecursive || this.isParentRecursive())) {
+			notify = !this.addChild(filename, 'add', true);
+		}
+
+		if (notify) {
+			this.notify(evt, true);
+		}
 	}
 
 	/**
-	 * Detects if the node is active by checking if there are any watchers, if any parent node is
-	 * watching recursively, or if any child node has active watchers.
+	 * Recursively descends all child nodes and decrements the recursive counter.
 	 *
-	 * @param {Boolean} recursive - When `true`, checks if any parent node is recursively watching
-	 * the current node.
-	 * @returns {Boolean}
+	 * @param {FSWatcher} watcher - The FSWatcher instance.
+	 * @param {Number} depth - The depth to stop recursively watching.
+	 * @access private
+	 */
+	recursiveUnwatch(watcher, depth) {
+		delete this.depths[watcher.id];
+
+		if (this.type & DIRECTORY && this.files) {
+			for (const [ filename ] of this.files) {
+				let child = this.children[filename];
+				if (child) {
+					child.recursiveUnwatch(watcher, depth === Infinity ? Infinity : depth - 1);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Recursively descends all child nodes and increments the recursive counter.
+	 *
+	 * @param {Number} depth - The depth to stop recursively watching.
+	 * @access private
+	 */
+	recursiveWatch(depth) {
+		if (this.type & DIRECTORY && this.files && depth > 0) {
+			if (depth !== Infinity) {
+				depth--;
+			}
+
+			for (const [ filename ] of this.files) {
+				let child = this.children[filename];
+				if (!child) {
+					child = new Node(_path.join(this.path, filename), this);
+					if (!(child.type & DIRECTORY) && !(child.type & SYMLINK)) {
+						stats.nodes--;
+						// log('Decrementing stats.nodes to %s %s', stats.nodes, highlight(this.path));
+						continue;
+					}
+					this.children[filename] = child;
+					child.init();
+				}
+				child.recursiveWatch(depth);
+			}
+		}
+	}
+
+	/**
+	 * Stats the path and determines if the path is a directory, file, symlink, or non-existent.
+	 * Also checks if the file can be accessed or if its restricted.
+	 *
+	 * @access private
+	 */
+	stat() {
+		try {
+			const lstat = fs.lstatSync(this.path);
+			if (lstat.isSymbolicLink()) {
+				this.type = SYMLINK;
+				try {
+					const stat = fs.statSync(this.path);
+					this.realPath = fs.realpathSync(this.path);
+					if (stat.isDirectory()) {
+						this.type |= DIRECTORY;
+					} else if (stat.isFile()) {
+						this.type |= FILE;
+					}
+				} catch (e) {
+					// broken symlink, need to read link
+					const link = fs.readlinkSync(this.path);
+					this.realPath = link.charAt(0) === '.' ? _path.resolve(_path.dirname(this.path), link) : _path.resolve(link);
+
+					// try to re-stat using the real path
+					try {
+						const stat = fs.statSync(this.realPath);
+						if (stat.isDirectory()) {
+							this.type |= DIRECTORY;
+						} else if (stat.isFile()) {
+							this.type |= FILE;
+						}
+					} catch (e2) {
+						// oh well
+					}
+				}
+			} else if (lstat.isDirectory()) {
+				this.type = DIRECTORY;
+			} else {
+				this.type = FILE;
+			}
+		} catch (e) {
+			this.type = DOES_NOT_EXIST;
+		}
+	}
+
+	/**
+	 * Removes the specified watcher from this node.
+	 *
+	 * @param {FSWatcher} watcher - The FSWatcher instance.
+	 * @returns {Node}
 	 * @access public
 	 */
-	isActive(recursive) {
-		if (this.watchers.size) {
-			log('%s is active with %s', highlight(this.realPath), pluralize('watcher', this.watchers.size, true));
-			return true;
+	unwatch(watcher) {
+		if (this.watchers.has(watcher)) {
+			stats.watchers--;
+			this.watchers.delete(watcher);
+			if (watcher.recursive) {
+				this.recursiveUnwatch(watcher, watcher.recursive === Infinity ? Infinity : watcher.recursive - 1);
+			}
 		}
-		if (recursive && this.isParentRecursive()) {
-			log('%s is active because of a recursive parent', highlight(this.realPath));
-			return true;
+		return this;
+	}
+
+	/**
+	 * Adds the specified watcher to this node.
+	 *
+	 * @param {FSWatcher} watcher - The FSWatcher instance.
+	 * @returns {Node}
+	 * @access public
+	 */
+	watch(watcher) {
+		if (!this.watchers.has(watcher)) {
+			stats.watchers++;
+			this.watchers.add(watcher);
+
+			if (watcher.recursive) {
+				this.depths[watcher.id] = watcher.recursive;
+				this.recursiveWatch(watcher.recursive === Infinity ? Infinity : watcher.recursive);
+			}
 		}
-		if (this.type & DIRECTORY && (this.link && this.link.isActive() || Object.values(this.children).some(child => child.isActive()))) {
-			log('%s is active because child has a watcher', highlight(this.realPath));
-			return true;
-		}
-		return false;
+		return this;
 	}
 }
 
@@ -645,6 +845,12 @@ export class FSWatcher extends EventEmitter {
 		this.path = path;
 
 		/**
+		 * The unique id for this watcher instance.
+		 * @type {Number}
+		 */
+		this.id = watcherCounter++;
+
+		/**
 		 * The path to watch.
 		 * @type {Number}
 		 */
@@ -663,19 +869,12 @@ export class FSWatcher extends EventEmitter {
 			}
 		}
 
+		/**
+		 * The node associated with the last segment of the specified path. This property is used to
+		 * determine if the this `FSWatcher` instance is initialized and watching for fs events.
+		 * @type {Node}
+		 */
 		this.opened = !!register(path, this);
-	}
-
-	/**
-	 * Re-opens the watcher.
-	 *
-	 * @access public
-	 */
-	open() {
-		if (this.opened) {
-			throw new Error('Already open');
-		}
-		this.opened = !!register(this.path, this);
 	}
 
 	/**
@@ -688,6 +887,18 @@ export class FSWatcher extends EventEmitter {
 		const result = this.opened && unregister(this.path, this);
 		this.opened = false;
 		return result;
+	}
+
+	/**
+	 * Re-opens the watcher.
+	 *
+	 * @access public
+	 */
+	open() {
+		if (this.opened) {
+			throw new Error('Already open');
+		}
+		this.opened = !!register(this.path, this);
 	}
 }
 
@@ -719,10 +930,11 @@ function parsePath(path) {
 }
 
 /**
- * Registers a watcher to the specified path.
+ * Initializes all nodes in the specified `path`, then if applicable it will register the specified
+ * `FSWatcher` instance with the last node in the `path`.
  *
  * @param {String} path - The path to watch.
- * @param {FSWatcher} watcher - The FSWatcher instance.
+ * @param {FSWatcher} [watcher] - The `FSWatcher` instance.
  * @returns {Node}
  */
 export function register(path, watcher) {
@@ -752,7 +964,7 @@ export function register(path, watcher) {
 		if (child) {
 			node = child;
 		} else {
-			node = node.addChild(new Node(_path.join(node.path, segment)).init());
+			node = node.addChild(segment);
 		}
 		if (node.link) {
 			node = node.link;
@@ -882,7 +1094,11 @@ export function renderTree(node, depth = 0, parent = []) {
 		}
 		details.push(pluralize('watcher', node.watchers.size, true));
 		details.push(pluralize('link', node.links.size, true));
-		details.push(`${node.recursive} recursion`);
+		const recursive = Object.keys(node.depths).length;
+		details.push(`${recursive} recursion${recursive ? ` [depths: ${Object.values(node.depths).map(v => v === Infinity ? '∞' : v).join(' ')}]` : ''}`);
+		if (node.type & RESTRICTED) {
+			details.push('restricted');
+		}
 		meta.push(` (${details.join(', ')})`);
 
 		str += ` ${indent}${symbol}${!hasChildren ? '─' : !depth && !i ? '┌' : '┬'} ${green(`[${type}]`)} ${highlight(name)}${meta.join(' ')}\n`;

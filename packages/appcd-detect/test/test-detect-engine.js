@@ -16,6 +16,7 @@ const { log } = appcdLogger('test:appcd:detect');
 const { highlight } = appcdLogger.styles;
 
 const _tmpDir = tmp.dirSync({
+	mode: '755',
 	prefix: 'appcd-detect-test-',
 	unsafeCleanup: true
 }).name;

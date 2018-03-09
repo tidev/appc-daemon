@@ -12,6 +12,7 @@ import {
 tmp.setGracefulCleanup();
 function makeTempDir() {
 	return tmp.dirSync({
+		mode: '755',
 		prefix: 'appcd-nodejs-test-',
 		unsafeCleanup: true
 	}).name;

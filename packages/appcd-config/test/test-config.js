@@ -5,6 +5,7 @@ import tmp from 'tmp';
 import { real } from 'appcd-path';
 
 const _tmpDir = tmp.dirSync({
+	mode: '755',
 	prefix: 'appcd-config-test-',
 	unsafeCleanup: true
 }).name;

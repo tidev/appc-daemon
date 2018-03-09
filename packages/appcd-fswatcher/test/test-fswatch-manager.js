@@ -11,6 +11,7 @@ const log = appcdLogger('test:appcd:fswatcher:manager').log;
 const { highlight } = appcdLogger.styles;
 
 const _tmpDir = tmp.dirSync({
+	mode: '755',
 	prefix: 'appcd-fswatcher-test-',
 	unsafeCleanup: true
 }).name;

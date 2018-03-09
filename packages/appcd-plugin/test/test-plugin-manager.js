@@ -17,6 +17,7 @@ const { log } = appcdLogger('test:appcd:plugin:manager');
 const { highlight } = appcdLogger.styles;
 
 const tmpDir = tmp.dirSync({
+	mode: '755',
 	prefix: 'appcd-plugin-test-',
 	unsafeCleanup: true
 }).name;
@@ -693,8 +694,8 @@ describe('PluginManager', () => {
 		});
 
 		it('should call a service that calls a service in another plugin', function (done) {
-			this.timeout(10000);
-			this.slow(9000);
+			this.timeout(20000);
+			this.slow(19000);
 
 			const pluginDir = path.join(__dirname, 'fixtures', 'xdep');
 

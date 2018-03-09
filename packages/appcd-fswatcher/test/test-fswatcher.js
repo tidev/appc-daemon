@@ -3,7 +3,10 @@ import fs from 'fs-extra';
 import path from 'path';
 import tmp from 'tmp';
 
+import * as restricted from './restricted';
+
 import { real } from 'appcd-path';
+import { sleep } from 'appcd-util';
 
 import {
 	FSWatcher,
@@ -20,6 +23,7 @@ const { log } = logger;
 const { green, highlight } = appcdLogger.styles;
 
 const _tmpDir = tmp.dirSync({
+	mode: '755',
 	prefix: 'appcd-fswatcher-test-',
 	unsafeCleanup: true
 }).name;
@@ -31,8 +35,13 @@ function makeTempName() {
 
 function makeTempDir() {
 	const dir = makeTempName();
-	fs.mkdirsSync(dir);
+	fs.mkdirsSync(dir, { mode: '755' });
 	return dir;
+}
+
+function logStats(stats) {
+	const { fswatchers, nodes, watchers } = stats;
+	log({ fswatchers, nodes, watchers });
 }
 
 describe('FSWatcher', () => {
@@ -98,13 +107,16 @@ describe('FSWatcher', () => {
 				expect(stats.watchers).to.equal(0);
 				done();
 			} catch (e) {
-				console.log(stats);
+				logStats(stats);
 				done(e);
 			}
 		});
 
 		afterEach(function (done) {
 			this.timeout(10000);
+			if (restricted.shouldRunTests()) {
+				process.setuid(0);
+			}
 			reset();
 			log(renderTree());
 			if (logger.enabled) {
@@ -117,12 +129,13 @@ describe('FSWatcher', () => {
 			it('should watch an existing directory for a new file', done => {
 				const tmp = makeTempDir();
 				const filename = path.join(tmp, 'foo.txt');
+				let counter = 0;
 
 				setTimeout(() => {
 					new FSWatcher(tmp, null)
 						.on('change', evt => {
 							expect(evt).to.be.an('object');
-							if (evt.file.indexOf(tmpDir) === 0) {
+							if (evt.file.indexOf(tmpDir) === 0 && ++counter === 1) {
 								expect(evt.action).to.equal('add');
 								expect(evt.file).to.equal(real(filename));
 
@@ -134,12 +147,12 @@ describe('FSWatcher', () => {
 								done();
 							}
 						})
-						.on('error', done);
+						.once('error', done);
 
 					log(renderTree());
 					log('Writing %s', highlight(filename));
 					fs.writeFileSync(filename, 'foo!');
-				}, 100);
+				}, 150);
 			});
 
 			it('should close and re-open watcher', function (done) {
@@ -196,11 +209,11 @@ describe('FSWatcher', () => {
 								}
 							}
 						})
-						.on('error', done);
+						.once('error', done);
 
 					log('Writing %s', highlight(filename));
 					fs.writeFileSync(filename, 'foo!');
-				}, 100);
+				}, 150);
 			});
 
 			it('should watch an existing directing for a new file that is changed', done => {
@@ -226,14 +239,14 @@ describe('FSWatcher', () => {
 								}
 							}
 						})
-						.on('error', done);
+						.once('error', done);
 
 					fs.writeFileSync(filename, 'foo!');
 
 					setTimeout(() => {
 						fs.appendFileSync(filename, '\nbar!');
-					}, 100);
-				}, 100);
+					}, 150);
+				}, 150);
 			});
 
 			it('should watch a directory that does not exist', function (done) {
@@ -250,6 +263,7 @@ describe('FSWatcher', () => {
 					.on('change', evt => {
 						if (evt.file.indexOf(tmpDir) === 0) {
 							log('Change Event: %s %s (counter=%s)', green(`[${evt.action}]`), highlight(evt.file), counter);
+							log(renderTree());
 
 							expect(evt.action).to.equal('add');
 							if (counter++ === 0) {
@@ -260,9 +274,10 @@ describe('FSWatcher', () => {
 							}
 						}
 					})
-					.on('error', done);
+					.once('error', done);
 
 				setTimeout(() => {
+					log(renderTree());
 					log('Creating %s', highlight(tmp));
 					fs.mkdirsSync(tmp);
 
@@ -270,8 +285,8 @@ describe('FSWatcher', () => {
 						log(renderTree());
 						log('Writing %s', highlight(filename));
 						fs.writeFileSync(filename, 'foo!');
-					}, 100);
-				}, 100);
+					}, 150);
+				}, 150);
 			});
 
 			it('should unwatch a directory', function (done) {
@@ -303,20 +318,20 @@ describe('FSWatcher', () => {
 										expect(roots).to.deep.equal({});
 										done();
 									}, 1000);
-								}, 100);
+								}, 150);
 								counter++;
 							} else if (counter === 2) {
 								done(new Error('Expected onChange to only fire once'));
 							}
 						}
 					})
-					.on('error', done);
+					.once('error', done);
 
 				setTimeout(() => {
 					counter++;
 					log('Writing %s', highlight(filename));
 					fs.writeFileSync(filename, 'foo!');
-				}, 100);
+				}, 150);
 			});
 
 			it('should watch a directory that is deleted and recreated', function (done) {
@@ -327,6 +342,7 @@ describe('FSWatcher', () => {
 				const fooDir = path.join(tmp, 'foo');
 				const barFile = path.join(fooDir, 'bar.txt');
 				let counter = 0;
+				const deleted = {};
 
 				log('Creating temp foo directory: %s', highlight(fooDir));
 				fs.mkdirsSync(fooDir);
@@ -335,38 +351,62 @@ describe('FSWatcher', () => {
 					new FSWatcher(fooDir)
 						.on('change', evt => {
 							if (evt.file.indexOf(tmpDir) === 0) {
+								counter++;
 								log('Change Event: %s %s (counter=%s)', green(`[${evt.action}]`), highlight(evt.file), counter);
 
-								if (evt.action === 'add') {
-									counter++;
-									if (counter === 1) {
+								switch (counter) {
+									case 1:
+										expect(evt.action).to.equal('add');
 										expect(evt.file).to.equal(real(barFile));
 										log(renderTree());
 										log('Deleting temp directory: %s', highlight(tmp));
-										fs.removeSync(tmp);
-									} else if (counter === 2) {
+										fs.remove(tmp);
+										break;
+
+									case 2: // bar.txt
+										expect(evt.action).to.equal('delete');
+										deleted[evt.file] = 1;
+										break;
+
+									case 3: // foo
+										expect(evt.action).to.equal('delete');
+										deleted[evt.file] = 1;
+
+										const expected = {};
+										expected[real(barFile)] = 1;
+										expected[real(fooDir)] = 1;
+										expect(deleted).to.deep.equal(expected);
+
+										setTimeout(() => {
+											log(renderTree());
+
+											log('Creating temp foo directory: %s', highlight(fooDir));
+											fs.mkdirsSync(fooDir);
+
+											log('Writing %s', highlight(barFile));
+											fs.writeFileSync(barFile, 'bar again!');
+										}, 150);
+										break;
+
+									case 4:
+										log(renderTree());
+										expect(evt.action).to.equal('add');
+										expect(evt.file).to.equal(real(fooDir));
+										break;
+
+									case 5:
+										log(renderTree());
+										expect(evt.action).to.equal('add');
 										expect(evt.file).to.equal(real(barFile));
-										log(renderTree());
 										done();
-									}
-								} else if (evt.action === 'delete') {
-									expect(evt.file).to.equal(real(barFile));
-
-									setTimeout(() => {
-										log(renderTree());
-										log('Creating temp foo directory: %s', highlight(fooDir));
-										fs.mkdirsSync(fooDir);
-
-										log('Writing %s', highlight(barFile));
-										fs.writeFileSync(barFile, 'bar again!');
-									}, 1000);
+										break;
 								}
 							}
 						})
-						.on('error', done);
+						.once('error', done);
 
 					fs.writeFileSync(barFile, 'bar!');
-				}, 100);
+				}, 150);
 			});
 
 			it('should have two watchers watching the same directory and unwatch them', function (done) {
@@ -379,26 +419,33 @@ describe('FSWatcher', () => {
 				const filename = path.join(tmp, 'foo.txt');
 				let counter = 0;
 
+				let finalized = false;
+				const finalize = err => {
+					if (!finalized) {
+						finalized = true;
+						done(err);
+					}
+				};
+
 				const watcher1 = new FSWatcher(tmp)
 					.on('change', evt => {
 						if (evt.file === real(filename)) {
-							expect(evt.action).to.equal('add');
-							unwatch();
+							unwatch(evt);
 						}
 					})
-					.on('error', done);
+					.on('error', finalize);
 
 				const watcher2 = new FSWatcher(tmp)
 					.on('change', evt => {
 						if (evt.file === real(filename)) {
-							expect(evt.action).to.equal('add');
-							unwatch();
+							unwatch(evt);
 						}
 					})
-					.on('error', done);
+					.on('error', finalize);
 
-				function unwatch() {
+				function unwatch(evt) {
 					if (++counter === 2) {
+						expect(evt.action).to.equal('add');
 						log(renderTree());
 						expect(roots).to.not.deep.equal({});
 						log('Closing watcher 1');
@@ -430,7 +477,7 @@ describe('FSWatcher', () => {
 				setTimeout(() => {
 					log('Writing %s', highlight(filename));
 					fs.writeFileSync(filename, 'foo!');
-				}, 100);
+				}, 150);
 			});
 
 			it('should close and re-watch a directory', function (done) {
@@ -471,7 +518,7 @@ describe('FSWatcher', () => {
 					} catch (e) {
 						done(e);
 					}
-				}, 100);
+				}, 150);
 			});
 		});
 
@@ -487,16 +534,17 @@ describe('FSWatcher', () => {
 							expect(evt.action).to.equal('change');
 							expect(evt.file).to.equal(real(filename));
 							done();
+							done = () => {};
 						}
 					})
-					.on('error', done);
+					.once('error', done);
 
 				log(renderTree());
 
 				setTimeout(() => {
 					log(`Appending to ${filename}`);
 					fs.appendFileSync(filename, '\nbar!');
-				}, 100);
+				}, 150);
 			});
 
 			it('should watch a file that does not exist', done => {
@@ -521,7 +569,7 @@ describe('FSWatcher', () => {
 				setTimeout(() => {
 					counter++;
 					fs.writeFileSync(filename, 'foo!');
-				}, 100);
+				}, 150);
 			});
 
 			it('should unwatch a file', function (done) {
@@ -543,7 +591,7 @@ describe('FSWatcher', () => {
 								expect(evt.file).to.equal(real(filename));
 								setTimeout(() => {
 									fs.appendFileSync(filename, '\nbar!');
-								}, 100);
+								}, 150);
 							} else if (counter === 2) {
 								expect(evt.action).to.equal('change');
 								expect(evt.file).to.equal(real(filename));
@@ -562,7 +610,7 @@ describe('FSWatcher', () => {
 											done(e);
 										}
 									}, 1000);
-								}, 100);
+								}, 150);
 							} else {
 								done(new Error('Expected onChange to only fire once'));
 							}
@@ -575,7 +623,7 @@ describe('FSWatcher', () => {
 					counter++;
 					log('Writing %s', highlight(filename));
 					fs.writeFileSync(filename, 'foo!');
-				}, 100);
+				}, 150);
 			});
 
 			it('should watch a file that is deleted and recreated', function (done) {
@@ -609,7 +657,7 @@ describe('FSWatcher', () => {
 
 									setTimeout(() => {
 										fs.writeFileSync(filename, 'bar again!');
-									}, 100);
+									}, 150);
 
 								} else if (counter === 3) {
 									expect(evt.action).to.equal('add');
@@ -622,7 +670,7 @@ describe('FSWatcher', () => {
 
 					log('Appending to %s', highlight(filename));
 					fs.appendFileSync(filename, '\nbar!');
-				}, 100);
+				}, 150);
 			});
 		});
 
@@ -646,7 +694,10 @@ describe('FSWatcher', () => {
 					new FSWatcher(tmp, { recursive: true })
 						.on('change', evt => {
 							if (evt.file.indexOf(tmpDir) === 0) {
-								switch (++counter) {
+								counter++;
+								log('Change Event: %s %s (counter=%s)', green(`[${evt.action}]`), highlight(evt.file), counter);
+
+								switch (counter) {
 									case 1:
 										expect(evt.action).to.equal('add');
 										expect(evt.file).to.equal(real(barDir));
@@ -676,12 +727,12 @@ describe('FSWatcher', () => {
 								}
 							}
 						})
-						.on('error', done);
+						.once('error', done);
 
 					log(renderTree());
 					log('Creating bar directory: %s', highlight(barDir));
 					fs.mkdirsSync(barDir);
-				}, 100);
+				}, 150);
 			});
 
 			it('should recursively watch for changes in new nested directories', function (done) {
@@ -743,7 +794,7 @@ describe('FSWatcher', () => {
 					log(renderTree());
 					log('Creating foo directory: %s', highlight(fooDir));
 					fs.mkdirsSync(fooDir);
-				}, 100);
+				}, 150);
 			});
 
 			it('should fire an event for two watcher down same path', function (done) {
@@ -792,7 +843,7 @@ describe('FSWatcher', () => {
 					log(renderTree());
 					log('Writing %s', highlight(bazFile));
 					fs.writeFileSync(bazFile, 'baz!');
-				}, 100);
+				}, 150);
 			});
 
 			it('should unwatch recursive directory watcher', function (done) {
@@ -826,7 +877,7 @@ describe('FSWatcher', () => {
 					log(renderTree());
 					log('Appending to %s', highlight(filename));
 					fs.appendFileSync(filename, 'more baz!');
-				}, 100);
+				}, 150);
 			});
 
 			it('should throw error if trying to recursively watch root', () => {
@@ -834,80 +885,6 @@ describe('FSWatcher', () => {
 					new FSWatcher('/', { recursive: true });
 				}).to.throw(Error, 'Recursively watching root is not permitted');
 			});
-
-			// it('should only recursively watch 2 directories deep', function (done) {
-			// 	this.timeout(10000);
-			// 	this.slow(8000);
-			//
-			// 	const tmp = makeTempDir();
-			// 	log('Creating temp directory: %s', highlight(tmp));
-			//
-			// 	const wizDir = path.join(tmp, 'foo', 'bar', 'baz', 'wiz');
-			// 	log('Creating wiz directory: %s', highlight(wizDir));
-			// 	fs.mkdirsSync(wizDir);
-			//
-			// 	const files = [
-			// 		path.join(tmp, 'test.txt'),
-			// 		path.join(tmp, 'foo', 'foo-test.txt'),
-			// 		path.join(tmp, 'foo', 'bar', 'bar-test.txt'),
-			// 		path.join(tmp, 'foo', 'bar', 'baz', 'baz-test.txt'),
-			// 		path.join(tmp, 'foo', 'bar', 'baz', 'wiz', 'wiz-test.txt')
-			// 	];
-			// 	let index = 0;
-			// 	let lastEvt;
-			// 	let timer;
-			//
-			// 	setTimeout(() => {
-			// 		new FSWatcher(tmp, { recursive: true, depth: 2 })
-			// 			.on('change', evt => {
-			// 				if (evt.file.indexOf(tmpDir) === 0) {
-			// 					clearTimeout(timer);
-			// 					lastEvt = evt;
-			// 					checkEvent();
-			// 				}
-			// 			})
-			// 			.on('error', done);
-			//
-			// 		function writeFile() {
-			// 			log(renderTree());
-			// 			const file = files[index];
-			// 			log('Writing: %s', highlight(file));
-			// 			fs.writeFileSync(file, 'test');
-			//
-			// 			timer = setTimeout(() => {
-			// 				// timed out
-			// 				log('Timed out');
-			// 				checkEvent();
-			// 			}, 1000);
-			// 		}
-			//
-			// 		function checkEvent() {
-			// 			try {
-			// 				if (index < 2) {
-			// 					if (!lastEvt) {
-			// 						throw new Error('Didn\'t get the fs event!');
-			// 					}
-			// 					expect(lastEvt.action).to.equal('add');
-			// 					expect(lastEvt.file).to.equal(real(files[index]));
-			// 				} else if (lastEvt) {
-			// 					throw new Error(`Should not have got ${lastEvt.action} for ${lastEvt.file} (depth=${index})`);
-			// 				}
-			// 			} catch (e) {
-			// 				return done(e);
-			// 			}
-			//
-			// 			lastEvt = null;
-			//
-			// 			if (++index < files.length) {
-			// 				writeFile();
-			// 			} else {
-			// 				done();
-			// 			}
-			// 		}
-			//
-			// 		writeFile();
-			// 	}, 100);
-			// });
 
 			it('should only recursively watch 2 directories deep and then unwatch', function (done) {
 				this.timeout(10000);
@@ -943,6 +920,7 @@ describe('FSWatcher', () => {
 						.on('error', done);
 
 					function writeFile() {
+						log(`index=${index}`);
 						log(renderTree());
 						const file = files[index];
 						log('Writing: %s', highlight(file));
@@ -957,7 +935,7 @@ describe('FSWatcher', () => {
 
 					function checkEvent() {
 						try {
-							if (index < 2) {
+							if (index <= 2) {
 								if (!lastEvt) {
 									throw new Error('Didn\'t get the fs event!');
 								}
@@ -989,7 +967,7 @@ describe('FSWatcher', () => {
 					}
 
 					writeFile();
-				}, 100);
+				}, 150);
 			});
 
 			it('should recursively watch with two watchers; one with depth of 2', function (done) {
@@ -1027,7 +1005,7 @@ describe('FSWatcher', () => {
 								}
 							}
 						})
-						.on('error', done);
+						.once('error', done);
 
 					new FSWatcher(tmp, { recursive: true, depth: 2 })
 						.on('change', evt => {
@@ -1037,7 +1015,7 @@ describe('FSWatcher', () => {
 								checkEvent();
 							}
 						})
-						.on('error', done);
+						.once('error', done);
 
 					function writeFile() {
 						log(renderTree());
@@ -1054,7 +1032,7 @@ describe('FSWatcher', () => {
 
 					function checkEvent() {
 						try {
-							if (index < 2) {
+							if (index <= 2) {
 								if (!lastEvt) {
 									throw new Error('Didn\'t get the fs event!');
 								}
@@ -1089,7 +1067,113 @@ describe('FSWatcher', () => {
 					}
 
 					writeFile();
-				}, 100);
+				}, 150);
+			});
+
+			it('should recursively watch new subdirectories, then unwatch when deleted', function (done) {
+				this.timeout(10000);
+				this.slow(8000);
+
+				const tmp = makeTempDir();
+				log('Creating temp directory: %s', highlight(tmp));
+
+				setTimeout(() => {
+					log('Recursively watching %s', highlight(tmp));
+					new FSWatcher(tmp, { recursive: true })
+						.on('change', evt => {
+							log('CHANGE!', evt);
+						})
+						.on('error', done);
+
+					setTimeout(() => {
+						const { nodes } = status();
+
+						const fooDir = path.join(tmp, 'foo');
+						const wizDir = path.join(tmp, 'foo', 'bar', 'baz', 'wiz');
+						log('Creating wiz directory: %s', highlight(wizDir));
+						fs.mkdirsSync(wizDir);
+
+						setTimeout(() => {
+							const stats = status();
+							try {
+								expect(stats.nodes).to.equal(nodes + 4);
+
+								log(renderTree());
+								log(`Deleting ${fooDir}`);
+								fs.remove(fooDir, err => {
+									if (err) {
+										return done(err);
+									}
+
+									setTimeout(() => {
+										log(renderTree());
+										const stats = status();
+										try {
+											expect(stats.nodes).to.equal(nodes);
+											done();
+										} catch (e) {
+											done(e);
+										}
+									}, 150);
+								});
+							} catch (e) {
+								done(e);
+							}
+						}, 500);
+					}, 500);
+				}, 150);
+			});
+
+			it('should recursively watch new subdirectories with depth of 2, then unwatch when deleted', function (done) {
+				this.timeout(10000);
+				this.slow(8000);
+
+				const tmp = makeTempDir();
+				log('Creating temp directory: %s', highlight(tmp));
+
+				setTimeout(() => {
+					log('Recursively watching %s', highlight(tmp));
+					new FSWatcher(tmp, { recursive: true, depth: 2 })
+						.on('change', evt => log('CHANGE!', evt))
+						.on('error', done);
+
+					setTimeout(() => {
+						const { nodes } = status();
+
+						const fooDir = path.join(tmp, 'foo');
+						const wizDir = path.join(tmp, 'foo', 'bar', 'baz', 'wiz');
+						log('Creating wiz directory: %s', highlight(wizDir));
+						fs.mkdirsSync(wizDir);
+
+						setTimeout(() => {
+							const stats = status();
+							try {
+								expect(stats.nodes).to.equal(nodes + 2);
+
+								log(renderTree());
+								log(`Deleting ${highlight(fooDir)}`);
+								fs.remove(fooDir, err => {
+									if (err) {
+										return done(err);
+									}
+
+									setTimeout(() => {
+										log(renderTree());
+										const stats = status();
+										try {
+											expect(stats.nodes).to.equal(nodes);
+											done();
+										} catch (e) {
+											done(e);
+										}
+									}, 150);
+								});
+							} catch (e) {
+								done(e);
+							}
+						}, 500);
+					}, 500);
+				}, 150);
 			});
 		});
 
@@ -1139,9 +1223,13 @@ describe('FSWatcher', () => {
 						})
 						.on('error', done);
 
-					log('Creating symlink: %s', highlight(wizDir));
-					fs.symlinkSync(barDir, wizDir);
-				}, 100);
+					try {
+						log('Creating symlink: %s', highlight(wizDir));
+						fs.symlinkSync(barDir, wizDir, process.platform === 'win32' ? 'junction' : 'file');
+					} catch (e) {
+						done(e);
+					}
+				}, 150);
 			});
 
 			it('should handle symlink to directory being deleted', function (done) {
@@ -1189,9 +1277,13 @@ describe('FSWatcher', () => {
 						})
 						.on('error', done);
 
-					log('Creating symlink: %s', highlight(wizDir));
-					fs.symlinkSync(barDir, wizDir);
-				}, 100);
+					try {
+						log('Creating symlink: %s', highlight(wizDir));
+						fs.symlinkSync(barDir, wizDir, process.platform === 'win32' ? 'junction' : 'file');
+					} catch (e) {
+						done(e);
+					}
+				}, 150);
 			});
 
 			it('should handle if symlink to file is broken', function (done) {
@@ -1242,9 +1334,13 @@ describe('FSWatcher', () => {
 						})
 						.on('error', done);
 
-					log('Creating symlink: %s', highlight(wizFile));
-					fs.symlinkSync(barFile, wizFile);
-				}, 100);
+					try {
+						log('Creating symlink: %s', highlight(wizFile));
+						fs.symlinkSync(barFile, wizFile, process.platform === 'win32' ? 'junction' : 'file');
+					} catch (e) {
+						done(e);
+					}
+				}, 150);
 			});
 
 			it('should handle symlink to file being deleted', function (done) {
@@ -1295,9 +1391,13 @@ describe('FSWatcher', () => {
 						})
 						.on('error', done);
 
-					log('Creating symlink: %s', highlight(wizFile));
-					fs.symlinkSync(barFile, wizFile);
-				}, 100);
+					try {
+						log('Creating symlink: %s', highlight(wizFile));
+						fs.symlinkSync(barFile, wizFile, process.platform === 'win32' ? 'junction' : 'file');
+					} catch (e) {
+						done(e);
+					}
+				}, 150);
 			});
 
 			it('should handle if already broken absolute directory symlink', function (done) {
@@ -1320,7 +1420,7 @@ describe('FSWatcher', () => {
 				const wizDir = path.join(bazDir, 'wiz');
 
 				log('Creating symlink: %s', highlight(wizDir));
-				fs.symlinkSync(barDir, wizDir);
+				fs.symlinkSync(barDir, wizDir, process.platform === 'win32' ? 'junction' : 'file');
 
 				log('Deleting %s', highlight(barDir));
 				fs.removeSync(barDir);
@@ -1342,7 +1442,7 @@ describe('FSWatcher', () => {
 						log(renderTree());
 						log('Recreating foo/bar directory: %s', highlight(barDir));
 						fs.mkdirsSync(barDir);
-					}, 100);
+					}, 150);
 				}, 500);
 			});
 
@@ -1368,7 +1468,7 @@ describe('FSWatcher', () => {
 				const barRelDir = '../foo/bar';
 
 				log('Creating symlink: %s → %s', highlight(barRelDir), highlight(wizDir));
-				fs.symlinkSync(barRelDir, wizDir);
+				fs.symlinkSync(barRelDir, wizDir, process.platform === 'win32' ? 'junction' : 'file');
 
 				log('Deleting %s', highlight(barDir));
 				fs.rmdirSync(barDir);
@@ -1390,8 +1490,141 @@ describe('FSWatcher', () => {
 						log(renderTree());
 						log('Recreating foo/bar directory: %s', highlight(barDir));
 						fs.mkdirsSync(barDir);
-					}, 100);
+					}, 150);
 				}, 500);
+			});
+		});
+
+		describe('restricted', () => {
+			let _it = restricted.shouldRunTests() ? it : it.skip;
+
+			_it(`should detect restricted directory${restricted.getDescription()}`, function (done) {
+				this.slow(10000);
+				this.timeout(9000);
+
+				const tmp = makeTempDir();
+				log('Created temp directory: %s', highlight(tmp));
+
+				const fooDir = path.join(tmp, 'foo');
+				log('Creating foo directory: %s', highlight(fooDir));
+				fs.mkdirSync(fooDir);
+
+				const barDir = path.join(fooDir, 'bar');
+				const bazFile = path.join(barDir, 'baz.txt');
+
+				log('Locking down foo to root user only');
+				fs.chmodSync(fooDir, '700');
+
+				log('Switching to effective user to %s', restricted.getUser());
+				process.seteuid(restricted.getUser());
+
+				let watcher = null;
+				let originalStatus = null;
+				let counter = 0;
+
+				Promise.resolve()
+					.then(() => sleep(150))
+					.then(() => {
+						watcher = new FSWatcher(tmp, { recursive: true })
+							.on('change', evt => {
+								log(evt);
+								if (evt.file.indexOf(tmpDir) === 0) {
+									log(renderTree());
+									counter++;
+								}
+							})
+							.on('error', err => {
+								log('ERROR!', err);
+								done(err);
+							});
+					})
+					.then(() => sleep(150))
+					.then(() => {
+						log(renderTree());
+						originalStatus = status();
+						logStats(originalStatus);
+
+						log('Switching back to root user');
+						process.setuid(0);
+					})
+					.then(() => sleep(150))
+					.then(() => {
+						log('Creating bar dir: %s', highlight(barDir));
+						fs.mkdirsSync(barDir);
+
+						log('Writing baz file: %s', highlight(bazFile));
+						fs.writeFileSync(bazFile, 'baz!');
+
+						expect(counter).to.equal(0);
+					})
+					.then(() => sleep(150))
+					.then(() => {
+						log(renderTree());
+
+						const stats = status();
+						logStats(stats);
+						expect(stats.nodes).to.equal(originalStatus.nodes);
+						expect(stats.fswatchers).to.equal(originalStatus.fswatchers);
+						expect(stats.watchers).to.equal(originalStatus.watchers);
+
+						log('Unrestricting %s', highlight(fooDir));
+						fs.chmodSync(fooDir, '755');
+					})
+					.then(() => sleep(150))
+					.then(() => {
+						const stats = status();
+						logStats(stats);
+						expect(stats.nodes).to.equal(originalStatus.nodes + 1);
+						expect(stats.fswatchers).to.equal(originalStatus.fswatchers + 2);
+						expect(stats.watchers).to.equal(originalStatus.watchers);
+
+						// we should have 3 new events:
+						// 1. adding baz.txt
+						// 2. adding bar
+						// 3. changing foo permissions
+						expect(counter).to.equal(3);
+
+						log('Writing baz file again: %s', highlight(bazFile));
+						fs.writeFileSync(bazFile, 'baz 2!');
+					})
+					.then(() => sleep(150))
+					.then(() => {
+						// now we have the event for baz.txt
+						expect(counter).to.equal(4);
+
+						const stats = status();
+						logStats(stats);
+
+						log('Locking down foo to root user only again');
+						fs.chmodSync(fooDir, '700');
+
+						log('Switching to effective user to %s', restricted.getUser());
+						process.seteuid(restricted.getUser());
+					})
+					.then(() => sleep(150))
+					.then(() => {
+						const stats = status();
+						logStats(stats);
+						expect(stats.nodes).to.equal(originalStatus.nodes);
+						expect(stats.fswatchers).to.equal(originalStatus.fswatchers);
+						expect(stats.watchers).to.equal(originalStatus.watchers);
+
+						// counter was incremented due to foo permissions changing
+						expect(counter).to.equal(5);
+
+						log('Switching back to root user');
+						process.setuid(0);
+
+						log('Writing baz file yet again: %s', highlight(bazFile));
+						fs.writeFileSync(bazFile, 'baz 2!');
+					})
+					.then(() => sleep(150))
+					.then(() => {
+						// we should not have seen the last update to baz.txt
+						expect(counter).to.equal(5);
+						done();
+					})
+					.catch(done);
 			});
 		});
 
@@ -1416,7 +1649,7 @@ describe('FSWatcher', () => {
 						});
 
 					fs.writeFileSync(filename, 'foo!');
-				}, 100);
+				}, 150);
 			});
 
 			it('should emit error if file watch handler throws exception', done => {
@@ -1440,7 +1673,7 @@ describe('FSWatcher', () => {
 						});
 
 					fs.appendFileSync(filename, 'more foo!');
-				}, 100);
+				}, 150);
 			});
 		});
 	});
