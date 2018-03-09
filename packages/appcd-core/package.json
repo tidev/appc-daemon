@@ -16,7 +16,7 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "accepts": "^1.3.4",
+    "accepts": "^1.3.5",
     "appcd-agent": "^1.0.1",
     "appcd-config": "^1.0.1",
     "appcd-config-service": "^1.0.1",
