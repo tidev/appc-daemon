@@ -135,21 +135,23 @@ export class Node {
 	 * Creates a node for the specified file and adds it as a child to this node.
 	 *
 	 * @param {String} filename - The name of the file or directory.
-	 * @param {Boolean} [isAdd] - When `true`, stats the new node and adds it as a child.
+	 * @param {Boolean} [action] - When value is `add', stats the new node and adds it as a child.
 	 * @param {Boolean} [dirOnly] - When `true`, only adds the child node if it's a directory.
 	 * @returns {?Node} The child node.
 	 * @access public
 	 */
-	addChild(filename, isAdd, dirOnly) {
+	addChild(filename, action, dirOnly) {
+		// create a node so that we can stat it
 		const node = new Node(_path.join(this.path, filename), this);
 
 		if (!dirOnly || node.type & DIRECTORY || node.type & SYMLINK) {
 			log('Creating node for %s', highlight(node.path));
-			node.init(isAdd);
+			node.init(action);
 			this.children[node.name] = node;
 			return node;
 		}
 
+		// we are not interested in the node, so destroy it
 		node.destroy();
 		return null;
 	}
@@ -230,13 +232,13 @@ export class Node {
 	 * Initializes the node by starting the actual fs watch and listing of files when the node is a
 	 * directory, or registers the real path if this node is a symlink.
 	 *
-	 * @param {Boolean} isAdd - When `true` and this node is a directory, it will stat and
-	 * initialize any existing watched child nodes.
+	 * @param {String} action - When `add` and this node is a directory, it will stat and initialize
+	 * any existing watched child nodes. If `change`, then it will only notify watched child nodes.
 	 * @returns {Node|null} Returns `null` if the node is restricted, otherwise a reference to
 	 * itself.
 	 * @access private
 	 */
-	init(isAdd) {
+	init(action) {
 		const isDir      = this.type & DIRECTORY;
 		const isFile     = this.type & FILE;
 		const isSymlink  = this.type & SYMLINK;
@@ -333,6 +335,15 @@ export class Node {
 			// node is not restricted
 			} else {
 				log('%s is not restricted, listing and creating child nodes', highlight(this.path));
+
+				if (action === 'add') {
+					this.notify({
+						action,
+						filename: this.name,
+						file: this.path
+					}, true);
+				}
+
 				const now = Date.now();
 
 				// loop over the listing and populate files
@@ -342,17 +353,17 @@ export class Node {
 
 					this.files.set(filename, now);
 
-					if (isAdd) {
+					if (action === 'add' || action === 'change') {
 						let child = this.children[filename];
 						if (child) {
 							child.stat();
-							child.init(true);
-						} else if (Object.values(this.depths).some(depth => depth)) {
-							this.addChild(filename, true, true);
+							child.init(action);
+						} else if (Object.values(this.depths).some(depth => depth > 0)) {
+							this.addChild(filename, action, true);
 						}
 
 						this.notify({
-							action: 'add',
+							action,
 							filename,
 							file
 						}, true);
@@ -360,7 +371,7 @@ export class Node {
 				}
 
 				// if this is an add, then notify all links that this node changed
-				if (isAdd) {
+				if (action === 'add') {
 					for (const node of this.links) {
 						node.notify({
 							action: 'change',
@@ -370,6 +381,14 @@ export class Node {
 					}
 				}
 			}
+		}
+
+		if ((isSymlink || !isDir) && (action === 'add' || action === 'change')) {
+			this.notify({
+				action,
+				filename: this.name,
+				file: this.path
+			}, true);
 		}
 
 		let type = isSymlink ? 'l' : '';
@@ -486,26 +505,36 @@ export class Node {
 	 * Recursively stops file system watching on this node and all its descendents.
 	 *
 	 * @param {Object} evt - The fs event.
+	 * @returns {Boolean}
 	 * @access private
 	 */
 	onDeleted(evt) {
+		if (this.type === DOES_NOT_EXIST) {
+			return false;
+		}
+
 		this.type = DOES_NOT_EXIST;
 
 		this.closeFSWatcher();
 
 		const children = Object.values(this.children);
-		if (children.length) {
-			log('Notifying %s %s they were deleted: %s',
-				green(children.length),
-				pluralize('child', children.length),
-				highlight(this.path));
-
-			for (const child of children) {
-				child.onDeleted(evt);
-				if (!child.watchers.size && !Object.keys(child.children).length) {
-					child.destroy();
-					delete this.children[child.name];
-				}
+		log('Notifying %s %s they were deleted: %s',
+			green(children.length),
+			pluralize('child', children.length),
+			highlight(this.path));
+		for (const child of children) {
+			if (child.onDeleted(evt)) {
+				child.notifyChildWatchers({
+					action: 'delete',
+					filename: child.name,
+					file: child.path
+				});
+			} else {
+				log('%s was already deleted', highlight(child.path));
+			}
+			if (!child.watchers.size && !Object.keys(child.children).length) {
+				child.destroy();
+				delete this.children[child.name];
 			}
 		}
 
@@ -546,6 +575,8 @@ export class Node {
 				}
 			}
 		}
+
+		return true;
 	}
 
 	/**
@@ -594,7 +625,7 @@ export class Node {
 			) {
 				// This will drop also events where there is a permission change on the folder,
 				// tracked as https://jira.appcelerator.org/browse/DAEMON-232 - EH 02/08/18
-				log('Dropping Windows event for change on a directory when there is a change to a file');
+				log('Dropping Windows event for change to contents of a directory');
 				return;
 			}
 		} catch (e) {
@@ -616,25 +647,31 @@ export class Node {
 
 		log('FS Event: %s %s → %s', green(`[${evt.action}]`), highlight(this.path), highlight(filename));
 
+		let notify = true;
+
 		if (child) {
 			log('Notifying child node: %s', highlight(filename));
 			if (evt.action === 'delete') {
-				child.onDeleted(evt);
-				child.notifyChildWatchers(evt);
+				if (child.onDeleted(evt)) {
+					child.notifyChildWatchers(evt);
+				} else {
+					log('%s was already deleted', highlight(child.path));
+				}
 				if (!child.watchers.size && !Object.keys(child.children).length) {
 					delete this.children[child.name];
 					child.destroy();
 				}
 			} else {
 				child.stat();
-				child.notifyChildWatchers(evt);
-				child.init(true);
+				child.init(evt.action);
 			}
 		} else if (evt.action === 'add' && (this.isRecursive || this.isParentRecursive())) {
-			this.addChild(filename, true, true);
+			notify = !this.addChild(filename, 'add', true);
 		}
 
-		this.notify(evt, true);
+		if (notify) {
+			this.notify(evt, true);
+		}
 	}
 
 	/**
@@ -707,8 +744,8 @@ export class Node {
 					}
 				} catch (e) {
 					// broken symlink, need to read link
-					const link = _path.resolve(fs.readlinkSync(this.path));
-					this.realPath = _path.isAbsolute(link) ? link : _path.join(_path.dirname(this.path), link);
+					const link = fs.readlinkSync(this.path);
+					this.realPath = link.charAt(0) === '.' ? _path.resolve(_path.dirname(this.path), link) : _path.resolve(link);
 
 					// try to re-stat using the real path
 					try {

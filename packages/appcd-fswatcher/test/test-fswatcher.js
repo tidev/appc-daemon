@@ -209,7 +209,7 @@ describe('FSWatcher', () => {
 								}
 							}
 						})
-						.on('error', done);
+						.once('error', done);
 
 					log('Writing %s', highlight(filename));
 					fs.writeFileSync(filename, 'foo!');
@@ -239,7 +239,7 @@ describe('FSWatcher', () => {
 								}
 							}
 						})
-						.on('error', done);
+						.once('error', done);
 
 					fs.writeFileSync(filename, 'foo!');
 
@@ -263,6 +263,7 @@ describe('FSWatcher', () => {
 					.on('change', evt => {
 						if (evt.file.indexOf(tmpDir) === 0) {
 							log('Change Event: %s %s (counter=%s)', green(`[${evt.action}]`), highlight(evt.file), counter);
+							log(renderTree());
 
 							expect(evt.action).to.equal('add');
 							if (counter++ === 0) {
@@ -273,9 +274,10 @@ describe('FSWatcher', () => {
 							}
 						}
 					})
-					.on('error', done);
+					.once('error', done);
 
 				setTimeout(() => {
+					log(renderTree());
 					log('Creating %s', highlight(tmp));
 					fs.mkdirsSync(tmp);
 
@@ -323,7 +325,7 @@ describe('FSWatcher', () => {
 							}
 						}
 					})
-					.on('error', done);
+					.once('error', done);
 
 				setTimeout(() => {
 					counter++;
@@ -340,6 +342,7 @@ describe('FSWatcher', () => {
 				const fooDir = path.join(tmp, 'foo');
 				const barFile = path.join(fooDir, 'bar.txt');
 				let counter = 0;
+				const deleted = {};
 
 				log('Creating temp foo directory: %s', highlight(fooDir));
 				fs.mkdirsSync(fooDir);
@@ -360,22 +363,23 @@ describe('FSWatcher', () => {
 										fs.remove(tmp);
 										break;
 
-									case 2:
-										expect(evt.file).to.equal(real(barFile));
-										if (evt.action === 'change') {
-											counter--;
-										} else {
-											expect(evt.action).to.equal('delete');
-										}
+									case 2: // bar.txt
+										expect(evt.action).to.equal('delete');
+										deleted[evt.file] = 1;
 										break;
 
-									case 3:
+									case 3: // foo
 										expect(evt.action).to.equal('delete');
-										expect(evt.file).to.equal(real(fooDir));
-										log(renderTree());
+										deleted[evt.file] = 1;
+
+										const expected = {};
+										expected[real(barFile)] = 1;
+										expected[real(fooDir)] = 1;
+										expect(deleted).to.deep.equal(expected);
 
 										setTimeout(() => {
 											log(renderTree());
+
 											log('Creating temp foo directory: %s', highlight(fooDir));
 											fs.mkdirsSync(fooDir);
 
@@ -385,19 +389,21 @@ describe('FSWatcher', () => {
 										break;
 
 									case 4:
+										log(renderTree());
+										expect(evt.action).to.equal('add');
+										expect(evt.file).to.equal(real(fooDir));
+										break;
+
+									case 5:
+										log(renderTree());
 										expect(evt.action).to.equal('add');
 										expect(evt.file).to.equal(real(barFile));
-										log(renderTree());
 										done();
 										break;
 								}
 							}
 						})
-						.on('error', err => {
-							console.log('CALLING DONE FROM ERROR HANDLER!');
-							console.log(err);
-							done(err);
-						});
+						.once('error', done);
 
 					fs.writeFileSync(barFile, 'bar!');
 				}, 100);
@@ -528,9 +534,10 @@ describe('FSWatcher', () => {
 							expect(evt.action).to.equal('change');
 							expect(evt.file).to.equal(real(filename));
 							done();
+							done = () => {};
 						}
 					})
-					.on('error', done);
+					.once('error', done);
 
 				log(renderTree());
 
@@ -687,7 +694,10 @@ describe('FSWatcher', () => {
 					new FSWatcher(tmp, { recursive: true })
 						.on('change', evt => {
 							if (evt.file.indexOf(tmpDir) === 0) {
-								switch (++counter) {
+								counter++;
+								log('Change Event: %s %s (counter=%s)', green(`[${evt.action}]`), highlight(evt.file), counter);
+
+								switch (counter) {
 									case 1:
 										expect(evt.action).to.equal('add');
 										expect(evt.file).to.equal(real(barDir));
@@ -717,7 +727,7 @@ describe('FSWatcher', () => {
 								}
 							}
 						})
-						.on('error', done);
+						.once('error', done);
 
 					log(renderTree());
 					log('Creating bar directory: %s', highlight(barDir));
@@ -1095,14 +1105,16 @@ describe('FSWatcher', () => {
 										return done(err);
 									}
 
-									log(renderTree());
-									const stats = status();
-									try {
-										expect(stats.nodes).to.equal(nodes);
-										done();
-									} catch (e) {
-										done(e);
-									}
+									setTimeout(() => {
+										log(renderTree());
+										const stats = status();
+										try {
+											expect(stats.nodes).to.equal(nodes);
+											done();
+										} catch (e) {
+											done(e);
+										}
+									}, 100);
 								});
 							} catch (e) {
 								done(e);
@@ -1139,20 +1151,22 @@ describe('FSWatcher', () => {
 								expect(stats.nodes).to.equal(nodes + 2);
 
 								log(renderTree());
-								log(`Deleting ${fooDir}`);
+								log(`Deleting ${highlight(fooDir)}`);
 								fs.remove(fooDir, err => {
 									if (err) {
 										return done(err);
 									}
 
-									log(renderTree());
-									const stats = status();
-									try {
-										expect(stats.nodes).to.equal(nodes);
-										done();
-									} catch (e) {
-										done(e);
-									}
+									setTimeout(() => {
+										log(renderTree());
+										const stats = status();
+										try {
+											expect(stats.nodes).to.equal(nodes);
+											done();
+										} catch (e) {
+											done(e);
+										}
+									}, 100);
 								});
 							} catch (e) {
 								done(e);
