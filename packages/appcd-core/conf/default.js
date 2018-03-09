@@ -1,8 +1,4 @@
 module.exports = {
-	environment: {
-		name: 'prod',
-		title: 'Production'
-	},
 	core: {
 		/**
 		 * When `true`, enforces the Node.js version required by the core. If the required Node.js
@@ -24,6 +20,20 @@ module.exports = {
 			 */
 			memory: 'auto'
 		}
+	},
+	
+	environment: {
+		/**
+		 * Shorthand name for the environment.
+		 * @type {String}
+		 */
+		name: 'prod',
+
+		/**
+		 * Title for the environment
+		 * @type {String}
+		 */
+		title: 'Production'
 	},
 
 	/**
@@ -153,7 +163,7 @@ module.exports = {
 		 * Deploy type for the analytics events.
 		 * @type {String}
 		 */
-		deployType: 'production',
+		environment: 'production',
 
 		/**
 		 * Turns on telemetry recording and submitting.

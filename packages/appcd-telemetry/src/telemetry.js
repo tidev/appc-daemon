@@ -68,7 +68,7 @@ export default class Telemetry extends Dispatcher {
 		 * The deploy type for the events.
 		 * @type {String}
 		 */
-		this.deployType = cfg.get('telemetry.deployType') || 'production';
+		this.deployType = cfg.get('telemetry.environment') || 'production';
 
 		/**
 		 * The time, in milliseconds, that the last send was fired.
