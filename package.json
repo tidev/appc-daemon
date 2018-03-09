@@ -15,12 +15,12 @@
     "ignore": "^3.3.7",
     "istanbul": "^0.4.5",
     "lerna": "^2.9.0",
-    "npm": "^5.5.1",
+    "npm": "^5.7.1",
     "nsp": "^3.2.1",
     "pretty-log": "^0.1.0",
     "progress": "^2.0.0",
-    "promise-limit": "^2.5.0",
-    "retire": "^1.5.1",
+    "promise-limit": "^2.6.0",
+    "retire": "^1.6.0",
     "run-sequence": "^2.2.1",
     "semver": "^5.5.0",
     "sloc": "^0.2.0",
@@ -30,9 +30,12 @@
     "xpostinstall": "lerna bootstrap"
   },
   "workspaces": {
-    "packages": [ "packages/*" ],
+    "packages": [
+      "packages/*"
+    ],
     "nohoist": [
-      "**/appcd-default-plugins/", "**/appcd-default-plugins/**"
+      "**/appcd-default-plugins/",
+      "**/appcd-default-plugins/**"
     ]
   }
 }
