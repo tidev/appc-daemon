@@ -159,6 +159,8 @@ will rebuild that package and all parent packages, then restart the Appc Daemon.
 > malformed JavaScript code, it's likely going to cause `gulp` to exit, but the last spawned Appc
 > Daemon process will remain running. You may need to run `appcd stop` or `killall appcd`.
 
+When running the Appc Daemon with the `gulp watch` task telemetry will be sent using the `development` deployType.
+
 ### Debugging the Appc Daemon
 
 To debug the Appc Daemon, you can:
