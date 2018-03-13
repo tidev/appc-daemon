@@ -360,7 +360,9 @@ describe('SubprocessManager', () => {
 				.catch(done);
 		});
 
-		it('should spawn a command with ipc and ignore stdout/stderr', done => {
+		it('should spawn a command with ipc and ignore stdout/stderr', function (done) {
+			this.timeout(5000);
+			this.slow(3000);
 			const subprocessMgr = new SubprocessManager();
 			subprocessMgr
 				.call('/spawn', {
