@@ -43,8 +43,8 @@
     "gulp-plumber": "^1.2.0",
     "mocha": "^5.0.4",
     "mocha-jenkins-reporter": "^0.3.10",
-    "nyc": "^11.4.1",
-    "sinon": "^4.4.2",
+    "nyc": "^11.6.0",
+    "sinon": "^4.4.3",
     "sinon-chai": "^3.0.0"
   },
   "peerDependencies": {
