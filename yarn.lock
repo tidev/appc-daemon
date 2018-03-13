@@ -77,10 +77,6 @@
   dependencies:
     samsam "1.3.0"
 
-"@std/esm@^0.23.3":
-  version "0.23.4"
-  resolved "https://registry.yarnpkg.com/@std/esm/-/esm-0.23.4.tgz#e047aeb8a79bbea1d2f62f862de5d88c8faafd37"
-
 JSONStream@^1.0.4, JSONStream@^1.3.2:
   version "1.3.2"
   resolved "https://registry.yarnpkg.com/JSONStream/-/JSONStream-1.3.2.tgz#c102371b6ec3a7cf3b847ca00c20bb0fce4c6dea"
@@ -6930,11 +6926,10 @@ sinon-chai@^3.0.0:
   resolved "https://registry.yarnpkg.com/sinon-chai/-/sinon-chai-3.0.0.tgz#d5cbd70fa71031edd96b528e0eed4038fcc99f29"
 
 sinon@^4.4.3:
-  version "4.4.3"
-  resolved "https://registry.yarnpkg.com/sinon/-/sinon-4.4.3.tgz#f21f08a2fa8cc013c5720751b02c4484a9af31fc"
+  version "4.4.4"
+  resolved "https://registry.yarnpkg.com/sinon/-/sinon-4.4.4.tgz#113199a29ece8a394ea71bac77c5db0a4733c9b5"
   dependencies:
     "@sinonjs/formatio" "^2.0.0"
-    "@std/esm" "^0.23.3"
     diff "^3.1.0"
     lodash.get "^4.4.2"
     lolex "^2.2.0"
@@ -7864,8 +7859,8 @@ vue@^2.5.13:
   resolved "https://registry.yarnpkg.com/vue/-/vue-2.5.15.tgz#fdb67861dde967cd8d1b53116380f2f269b45202"
 
 vuetify@^1.0.0:
-  version "1.0.6"
-  resolved "https://registry.yarnpkg.com/vuetify/-/vuetify-1.0.6.tgz#da1b7d32d391294688116529af981fef776bc38a"
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/vuetify/-/vuetify-1.0.7.tgz#35e89b864e4d34154ad2d99af9a13315a120738f"
 
 walkdir@0.0.7:
   version "0.0.7"

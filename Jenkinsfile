@@ -30,11 +30,7 @@ timestamps {
             if (sh(returnStatus: true, script: 'where yarn') != 0) {
               sh 'npm install -g yarn'
             }
-            try {
-              sh 'yarn'
-            } catch (e) {
-              sh 'yarn'
-            }
+            sh 'yarn'
             fingerprint 'package.json'
           } // timeout
         } // stage
