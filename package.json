@@ -32,10 +32,6 @@
   "workspaces": {
     "packages": [
       "packages/*"
-    ],
-    "nohoist": [
-      "**/appcd-default-plugins/",
-      "**/appcd-default-plugins/**"
     ]
   }
 }

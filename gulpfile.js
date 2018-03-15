@@ -102,6 +102,11 @@ gulp.task('clean', () => {
 					case 'yarn-error.log':
 						nuke.push(file);
 						break;
+					case 'yarn.lock':
+						if (dir.includes('packages/appcd')) {
+							nuke.push(file);
+						}
+						break;
 					default:
 						if (name.startsWith('gulpfile.tmp.') || name.startsWith('._')) {
 							nuke.push(file);
