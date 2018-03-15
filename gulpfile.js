@@ -30,7 +30,7 @@ const cliTableChars = {
 	top: '', 'top-left': '', 'top-mid': '', 'top-right': ''
 };
 
-const dontUpdate = [];
+const dontUpdate = [ 'gulp-babel' ];
 
 const appcdRE = /^appcd-/;
 const appcdPackages = new Set(fs.readdirSync(path.join(__dirname, 'packages')).filter(name => appcdRE.test(name)));
