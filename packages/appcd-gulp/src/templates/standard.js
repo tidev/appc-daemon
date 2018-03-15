@@ -117,7 +117,7 @@ module.exports = (opts) => {
 			.pipe($.babel({
 				plugins: babelConf.plugins,
 				presets: babelConf.presets,
-				sourceMaps: 'inline',
+				sourceMap: 'inline',
 				sourceRoot: 'src'
 			}))
 			.pipe(gulp.dest(distDir));
