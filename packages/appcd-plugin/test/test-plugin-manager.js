@@ -791,8 +791,8 @@ describe('PluginManager', () => {
 		});
 
 		it('should subscribe to a service that subscribes a service in another plugin', function (done) {
-			this.timeout(16000);
-			this.slow(15000);
+			this.timeout(20000);
+			this.slow(19000);
 
 			const pluginDir = path.join(__dirname, 'fixtures', 'xdep');
 
