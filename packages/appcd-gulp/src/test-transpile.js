@@ -25,7 +25,7 @@ Object.keys(conf).forEach(function (key) {
 			if (minifyRE.test(name)) {
 				conf[key].splice(i--, 1);
 			} else {
-				name = originalResolveFilename(babelRE.test(name) ? name : 'babel-' + key.slice(0, -1) + '-' + name, module);
+				name = originalResolveFilename(babelRE.test(name) ? name : `babel-${key.slice(0, -1)}-${name}`, module);
 				if (isArr) {
 					conf[key][i][0] = name;
 				} else {
@@ -38,8 +38,21 @@ Object.keys(conf).forEach(function (key) {
 	}
 });
 
-// only transpile src and tests
-conf.only = [ 'src/', 'test/' ];
+/**
+ * Only transpile src and tests.
+ *
+ * Note that plugins are spawned with cwd of the plugin's directory, not the cwd that the tests are
+ * being executed, so we need to apply the APPCD_COVERAGE_CWD path to explicitly specify which
+ * directories should be transpiled.
+ */
+if (process.env.APPCD_COVERAGE) {
+	conf.only = [
+		path.join(process.env.APPCD_COVERAGE, 'src'),
+		path.join(process.env.APPCD_COVERAGE, 'test')
+	];
+} else {
+	conf.only = [ 'src', 'test' ];
+}
 
 conf.ignore = [ 'test/fixtures' ];
 

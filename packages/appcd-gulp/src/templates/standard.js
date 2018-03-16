@@ -189,7 +189,7 @@ module.exports = (opts) => {
 			);
 
 			process.env.FORCE_COLOR = 1;
-			process.env.APPCD_COVERAGE = 1;
+			process.env.APPCD_COVERAGE = projectDir;
 		}
 
 		// add mocha

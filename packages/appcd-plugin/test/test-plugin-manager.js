@@ -566,7 +566,7 @@ describe('PluginManager', () => {
 			}, 1000);
 		});
 
-		it.only('should not reload a plugin when file is ignored using wildcards', function (done) {
+		it('should not reload a plugin when file is ignored using wildcards', function (done) {
 			this.timeout(30000);
 			this.slow(29000);
 
