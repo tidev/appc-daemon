@@ -2,7 +2,7 @@ const fs = require('fs');
 const Module = require('module');
 const path = require('path');
 
-const babelRE = /^(babel-\w+-)/;
+const babelRE = /^(babel-|@babel\/)\w+/;
 const babel = require('./babel.json');
 const conf = babel[process.env.APPCD_BABEL_CONF || 'node8'] || {};
 const originalResolveFilename = Module._resolveFilename;
@@ -46,8 +46,8 @@ conf.cache = true;
 
 // console.log(conf);
 
-require('babel-register')(conf);
-require('babel-polyfill');
+require('@babel/register')(conf);
+require('@babel/polyfill');
 
 /**
  * The unit tests reference the source files in the `dist` directory and for coverage tests, they
