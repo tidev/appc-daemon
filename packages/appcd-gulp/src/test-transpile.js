@@ -3,6 +3,7 @@ const Module = require('module');
 const path = require('path');
 
 const babelRE = /^(babel-|@babel\/)\w+/;
+const minifyRE = /^minify|babili$/;
 const babel = require('./babel.json');
 const conf = babel[process.env.APPCD_BABEL_CONF || 'node8'] || {};
 const originalResolveFilename = Module._resolveFilename;
@@ -21,7 +22,7 @@ Object.keys(conf).forEach(function (key) {
 		for (var i = 0; i < conf[key].length; i++) {
 			const isArr = Array.isArray(conf[key][i]);
 	 		let name = isArr ? conf[key][i][0] : conf[key][i];
-			if (name.indexOf('babili') !== -1) {
+			if (minifyRE.test(name)) {
 				conf[key].splice(i--, 1);
 			} else {
 				name = originalResolveFilename(babelRE.test(name) ? name : 'babel-' + key.slice(0, -1) + '-' + name, module);
