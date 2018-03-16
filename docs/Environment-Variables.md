@@ -9,5 +9,15 @@
 | APPCD_INSPECT_PORT        | The port that the inspector should listen on when starting the daemon. Defaults to `9230`. Value must be greater than or equal to `1024`. |
 | APPCD_LOCALE              | The preferred locale to use such as `en_US`. Defaults to the system's value. |
 | APPCD_NETWORK_CA_FILE     | The path to a certificate authority file to use for all outbound HTTP requests. |
-| APPCD_NETWORK_PROXY       | A URL of the proxy server to use for all outbound HTTP requests.     |
+| APPCD_NETWORK_PROXY       | A URL of the proxy server to use for all outbound HTTP requests. |
 | APPCD_NETWORK_STRICT_SSL  | When `true`, enforces that remote SSL connections have valid certificates. Defaults to `true`. |
+
+
+## Private Environment Variables
+
+> :warning: The following environment variables are for Appc Daemon tooling and should never by the
+> user or programatically.
+
+| Variable                  | Description                                                          |
+| :------------------------ | :------------------------------------------------------------------- |
+| APPCD_COVERAGE            | Signifies that coverage tests are currently being run.               |

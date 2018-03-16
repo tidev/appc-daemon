@@ -51,6 +51,7 @@
      [(DAEMON-234)](https://jira.appcelerator.org/browse/DAEMON-234)
    - Suppressed noisy warnings for packages that are not valid appcd plugins.
      [(DAEMON-223)](https://jira.appcelerator.org/browse/DAEMON-223)
+   - Improved `appcd-plugin-host` process title to include plugin name, version, and path.
  * appcd-telemetry
    - Fixed environemnt and deploy type for telemetry events.
      [(DAEMON-241)](https://jira.appcelerator.org/browse/DAEMON-241)

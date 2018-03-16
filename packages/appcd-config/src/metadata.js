@@ -1,8 +1,8 @@
-import * as t from 'babel-types';
+import * as t from '@babel/types';
 
 import doctrine from 'doctrine';
 import fs from 'fs';
-import traverse from 'babel-traverse';
+import traverse from '@babel/traverse';
 
 import { isFile } from 'appcd-fs';
 

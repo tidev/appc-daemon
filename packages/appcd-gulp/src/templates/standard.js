@@ -117,7 +117,7 @@ module.exports = (opts) => {
 			.pipe($.babel({
 				plugins: babelConf.plugins,
 				presets: babelConf.presets,
-				sourceMaps: 'inline',
+				sourceMap: 'inline',
 				sourceRoot: 'src'
 			}))
 			.pipe(gulp.dest(distDir));
@@ -189,7 +189,7 @@ module.exports = (opts) => {
 			);
 
 			process.env.FORCE_COLOR = 1;
-			process.env.APPCD_COVERAGE = 1;
+			process.env.APPCD_COVERAGE = projectDir;
 		}
 
 		// add mocha

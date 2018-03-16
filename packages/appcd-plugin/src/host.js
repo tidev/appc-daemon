@@ -41,6 +41,7 @@ Promise.resolve()
 	.then(async () => {
 		// load the plugin
 		const plugin = new Plugin(process.argv[2]);
+		process.title = `appcd-plugin-host ${plugin} ${plugin.path}`;
 
 		if (plugin.type !== 'external') {
 			error(`Invalid plugin type "${plugin.type}". Only "external" plugins can be run from the plugin host process.`);

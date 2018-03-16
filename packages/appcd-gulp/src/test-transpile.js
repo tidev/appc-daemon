@@ -2,7 +2,8 @@ const fs = require('fs');
 const Module = require('module');
 const path = require('path');
 
-const babelRE = /^(babel-\w+-)/;
+const babelRE = /^(babel-|@babel\/)\w+/;
+const minifyRE = /^minify|babili$/;
 const babel = require('./babel.json');
 const conf = babel[process.env.APPCD_BABEL_CONF || 'node8'] || {};
 const originalResolveFilename = Module._resolveFilename;
@@ -21,10 +22,10 @@ Object.keys(conf).forEach(function (key) {
 		for (var i = 0; i < conf[key].length; i++) {
 			const isArr = Array.isArray(conf[key][i]);
 	 		let name = isArr ? conf[key][i][0] : conf[key][i];
-			if (name.indexOf('babili') !== -1) {
+			if (minifyRE.test(name)) {
 				conf[key].splice(i--, 1);
 			} else {
-				name = originalResolveFilename(babelRE.test(name) ? name : 'babel-' + key.slice(0, -1) + '-' + name, module);
+				name = originalResolveFilename(babelRE.test(name) ? name : `babel-${key.slice(0, -1)}-${name}`, module);
 				if (isArr) {
 					conf[key][i][0] = name;
 				} else {
@@ -37,8 +38,21 @@ Object.keys(conf).forEach(function (key) {
 	}
 });
 
-// only transpile src and tests
-conf.only = [ 'src/', 'test/' ];
+/**
+ * Only transpile src and tests.
+ *
+ * Note that plugins are spawned with cwd of the plugin's directory, not the cwd that the tests are
+ * being executed, so we need to apply the APPCD_COVERAGE_CWD path to explicitly specify which
+ * directories should be transpiled.
+ */
+if (process.env.APPCD_COVERAGE) {
+	conf.only = [
+		path.join(process.env.APPCD_COVERAGE, 'src'),
+		path.join(process.env.APPCD_COVERAGE, 'test')
+	];
+} else {
+	conf.only = [ 'src', 'test' ];
+}
 
 conf.ignore = [ 'test/fixtures' ];
 
@@ -46,8 +60,8 @@ conf.cache = true;
 
 // console.log(conf);
 
-require('babel-register')(conf);
-require('babel-polyfill');
+require('@babel/register')(conf);
+require('@babel/polyfill');
 
 /**
  * The unit tests reference the source files in the `dist` directory and for coverage tests, they

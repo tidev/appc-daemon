@@ -30,7 +30,7 @@ const cliTableChars = {
 	top: '', 'top-left': '', 'top-mid': '', 'top-right': ''
 };
 
-const dontUpdate = [ 'gulp-babel' ];
+const dontUpdate = [];
 
 const appcdRE = /^appcd-/;
 const appcdPackages = new Set(fs.readdirSync(path.join(__dirname, 'packages')).filter(name => appcdRE.test(name)));
@@ -571,17 +571,17 @@ async function checkPackages({ skipSecurity } = {}) {
 					// figure out if the depenency is installed and what version
 					let installed = false;
 					try {
-						let depModulePath = path.join(packagePath, 'node_modules', dep);
-						if (!fs.existsSync(path.join(depModulePath, 'package.json'))) {
-							let last = null;
-							depModulePath = require.resolve(dep, { paths: [ path.join(packagePath, 'node_modules') ] });
-							while (depModulePath !== last && !fs.existsSync(path.join(depModulePath, 'package.json'))) {
-								last = depModulePath;
-								depModulePath = path.dirname(depModulePath);
+						let dir = packagePath;
+						let last = null;
+						while (dir !== last) {
+							let depPkgJsonFile = path.join(dir, 'node_modules', dep, 'package.json');
+							if (fs.existsSync(depPkgJsonFile)) {
+								installed = JSON.parse(fs.readFileSync(depPkgJsonFile)).version;
+								break;
 							}
+							last = dir;
+							dir = path.dirname(dir);
 						}
-						const depPkgJson = JSON.parse(fs.readFileSync(path.join(depModulePath, 'package.json')));
-						installed = depPkgJson.version;
 					} catch (e) {}
 
 					if (!dependencies[dep]) {
