@@ -374,9 +374,9 @@ export function generateV8MemoryArgument(value, arch) {
  * @param {String} params.version - The Node.js version to use.
  * @returns {Promise<ChildProcess>}
  */
-export function spawnNode({ arch, args, detached, nodeHome, nodeArgs, stdio, v8mem = 'auto', version }) {
+export async function spawnNode({ arch, args, detached, nodeHome, nodeArgs, stdio, v8mem = 'auto', version }) {
 	if (v8mem && (typeof v8mem !== 'number' && v8mem !== 'auto')) {
-		return Promise.reject(new TypeError('Expected v8mem to be a number or "auto"'));
+		throw new TypeError('Expected v8mem to be a number or "auto"');
 	}
 
 	if (!arch) {
@@ -386,66 +386,66 @@ export function spawnNode({ arch, args, detached, nodeHome, nodeArgs, stdio, v8m
 		throw new Error('Expected arch to be "x86" or "x64"');
 	}
 
-	return Promise.resolve()
-		.then(() => prepareNode({ arch, nodeHome, version }))
-		.then(node => {
-			if (!Array.isArray(nodeArgs)) {
-				nodeArgs = [];
-			}
+	const node = await prepareNode({ arch, nodeHome, version });
+	if (!Array.isArray(nodeArgs)) {
+		nodeArgs = [];
+	}
 
-			if (v8mem && !nodeArgs.some(arg => arg.indexOf('--max_old_space_size=') === 0)) {
-				const arg = generateV8MemoryArgument(v8mem, arch);
-				if (arg) {
-					nodeArgs.push(arg);
+	if (v8mem && !nodeArgs.some(arg => arg.indexOf('--max_old_space_size=') === 0)) {
+		const arg = generateV8MemoryArgument(v8mem, arch);
+		if (arg) {
+			nodeArgs.push(arg);
+		}
+	}
+
+	args.unshift.apply(args, nodeArgs);
+
+	const opts = {
+		stdio: 'inherit'
+	};
+
+	if (detached) {
+		opts.detached    = true;
+		opts.stdio       = 'ignore';
+		opts.windowsHide = true;
+	}
+
+	if (stdio) {
+		// if stdio is set, then override the default
+		opts.stdio = stdio;
+	}
+
+	const prettyArgs = args
+		.map(s => {
+			return s.indexOf(' ') === -1 ? s : `"${s}"`;
+		})
+		.join(' ');
+
+	logger.log('Spawning: %s', highlight(`${node} ${prettyArgs} # ${JSON.stringify(opts)}`));
+
+	// write the last run file
+	fs.writeFileSync(path.join(path.dirname(node), '.lastrun'), Date.now());
+
+	let tries = 3;
+
+	return (function trySpawn() {
+		return Promise.resolve()
+			.then(() => {
+				tries--;
+				const child = spawn(node, args, opts);
+				if (detached) {
+					child.unref();
 				}
-			}
-
-			args.unshift.apply(args, nodeArgs);
-
-			const opts = {
-				stdio: 'inherit'
-			};
-
-			if (detached) {
-				opts.detached    = true;
-				opts.stdio       = 'ignore';
-				opts.windowsHide = true;
-			}
-
-			if (stdio) {
-				// if stdio is set, then override the default
-				opts.stdio = stdio;
-			}
-
-			let prettyArgs = args
-				.map(s => {
-					return s.indexOf(' ') === -1 ? s : `"${s}"`;
-				})
-				.join(' ');
-
-			logger.log('Spawning: %s', highlight(`${node} ${prettyArgs} # ${JSON.stringify(opts)}`));
-
-			let tries = 3;
-
-			return (function trySpawn() {
-				return Promise.resolve()
-					.then(() => {
-						tries--;
-						const child = spawn(node, args, opts);
-						if (detached) {
-							child.unref();
-						}
-						return child;
-					})
-					.catch(err => {
-						if ((err.code === 'ETXTBSY' || err.code === 'EBUSY') && tries) {
-							logger.log(`Spawn threw ${err.code}, retrying...`);
-							return new Promise((resolve, reject) => {
-								setTimeout(() => trySpawn().then(resolve, reject), 50);
-							});
-						}
-						throw err;
+				return child;
+			})
+			.catch(err => {
+				if ((err.code === 'ETXTBSY' || err.code === 'EBUSY') && tries) {
+					logger.log(`Spawn threw ${err.code}, retrying...`);
+					return new Promise((resolve, reject) => {
+						setTimeout(() => trySpawn().then(resolve, reject), 50);
 					});
-			}());
-		});
+				}
+				throw err;
+			});
+	}());
 }

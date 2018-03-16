@@ -21,9 +21,10 @@ The appcd CLI is responsible for:
 
 #### Node.js Versions
 
-The Bootstrap is designed to be compatible with Node.js 4 and newer. However the Appc Daemon Core
-uses ES6 Proxies and async/await which requires Node.js 7.6.0. At the time of this writing, the Core
-requires Node.js 7.10.0.
+The Appc Daemon requires Node.js 8 or newer installed on your machine.
+
+The bootstrap will spawn the appcd core using with the exact Node.js version that the core has
+specified in its `package.json`.
 
 The Bootstrap will check to see if `~/.appcelerator/appcd/node/<version>/<platform>/<arch>/node`
 exists. If it doesn't, the Bootstrap will download it from Node.js' website, then extract and
@@ -33,6 +34,11 @@ No compiler or root privileges are required.
 
 > Note that npm (or Yarn) are only required for installing the Appc Daemon and development. The Appc
 > Daemon does not use npm beyond reporting what version is installed.
+
+As the Appc Daemon is upgraded, the `appcd-core` may depend on a new version of Node.js. In order to
+avoid having unused Node.js versions in the `~/.appcelerator/appcd/node` directory, the daemon will
+delete Node.js versions that haven't been used for some period of time. If an old version is needed,
+it will re-download and install it.
 
 #### Daemon Mode
 
