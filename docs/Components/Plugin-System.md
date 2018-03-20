@@ -82,14 +82,12 @@ A plugin is defined as a directory containing a `package.json` file and a "main"
 	},
 	"appcd": {
 		"appcdVersion": "1.x",
-		"name": "my-sweet-plugin",
-		"type": "external",
-		"injectAppcdDependencies": true,
+		"ignore": [ "somedir", "somefile.*" ],
 		"inactivityTimeout": 120000,
-		"ignore": [ "somedir", "somefile.*" ]
-	},
-	"engines": {
-		"node": ">=7.6.0"
+		"injectAppcdDependencies": true,
+		"name": "my-sweet-plugin",
+		"node": "8.10.0",
+		"type": "external"
 	}
 }
 ```
@@ -264,7 +262,7 @@ module loader will return a reference to the version used internally by the Appc
 The number of milliseconds to wait since the last request to the plugin before it's automatically
 deactivated. This only applies to `external` plugins.
 
-##### `engines.node`
+##### `appcd.node`
 
 The Node.js version required to run the plugin.
 
@@ -273,6 +271,8 @@ checks that it satisfies the required Node.js version.
 
 For `external` plugins, it will spawn the required Node.js version. If the version isn't installed,
 it will automatically download it.
+
+If `appcd.node` is not set, the plugin system will use `engines.node` if set.
 
 ### Plugin Host
 

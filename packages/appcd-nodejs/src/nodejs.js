@@ -1,3 +1,5 @@
+/* eslint max-depth: ['warn', 7] */
+
 /* istanbul ignore if */
 if (!Error.prepareStackTrace) {
 	require('source-map-support/register');
@@ -21,8 +23,23 @@ import { STATUS_CODES } from 'http';
 
 const logger = appcdLogger('appcd:nodejs');
 const { highlight } = appcdLogger.styles;
+const { pluralize } = appcdLogger;
 
+/**
+ * A regular expression to match archive filenames.
+ * @type {RegExp}
+ */
 const archiveRegExp = /\.(zip|pkg|tar\.gz)$/;
+
+/**
+ * Determines the platform specific Node.js executable.
+ *
+ * @returns {String}
+ */
+export function getNodeFilename() {
+	const platform = process.env.APPCD_TEST_PLATFORM || process.platform;
+	return platform === 'win32' ? 'node.exe' : 'node';
+}
 
 /**
  * Ensures the correct Node.js version is installed and ready to go. If the
@@ -57,7 +74,7 @@ export function prepareNode({ arch, nodeHome, version } = {}) {
 
 	const platform = process.env.APPCD_TEST_PLATFORM || process.platform;
 	const binaryPath = path.join(nodeHome, version, platform, arch);
-	const binary = path.join(binaryPath, platform === 'win32' ? 'node.exe' : 'node');
+	const binary = path.join(binaryPath, getNodeFilename());
 
 	logger.log('Checking %s', highlight(binary));
 
@@ -190,8 +207,7 @@ export function extractNode({ archive, dest }) {
 		}
 
 		let target = null;
-		const platform = process.env.APPCD_TEST_PLATFORM || process.platform;
-		const binary = platform === 'win32' ? 'node.exe' : 'node';
+		const binary = getNodeFilename();
 		let binaryPath = path.join(dest, binary);
 
 		if (/\.zip$/.test(archive)) {
@@ -205,7 +221,7 @@ export function extractNode({ archive, dest }) {
 					.once('error', reject)
 					.on('entry', entry => {
 						if (!target) {
-							target = `${entry.fileName.split('/')[0]}/${binary}`;
+							target = `${entry.fileName.split('/')[0]}/${getNodeFilename()}`;
 						}
 
 						if (entry.fileName === target) {
@@ -374,9 +390,9 @@ export function generateV8MemoryArgument(value, arch) {
  * @param {String} params.version - The Node.js version to use.
  * @returns {Promise<ChildProcess>}
  */
-export function spawnNode({ arch, args, detached, nodeHome, nodeArgs, stdio, v8mem = 'auto', version }) {
+export async function spawnNode({ arch, args, detached, nodeHome, nodeArgs, stdio, v8mem = 'auto', version }) {
 	if (v8mem && (typeof v8mem !== 'number' && v8mem !== 'auto')) {
-		return Promise.reject(new TypeError('Expected v8mem to be a number or "auto"'));
+		throw new TypeError('Expected v8mem to be a number or "auto"');
 	}
 
 	if (!arch) {
@@ -386,66 +402,153 @@ export function spawnNode({ arch, args, detached, nodeHome, nodeArgs, stdio, v8m
 		throw new Error('Expected arch to be "x86" or "x64"');
 	}
 
-	return Promise.resolve()
-		.then(() => prepareNode({ arch, nodeHome, version }))
-		.then(node => {
-			if (!Array.isArray(nodeArgs)) {
-				nodeArgs = [];
-			}
+	const node = await prepareNode({ arch, nodeHome, version });
+	if (!Array.isArray(nodeArgs)) {
+		nodeArgs = [];
+	}
 
-			if (v8mem && !nodeArgs.some(arg => arg.indexOf('--max_old_space_size=') === 0)) {
-				const arg = generateV8MemoryArgument(v8mem, arch);
-				if (arg) {
-					nodeArgs.push(arg);
+	if (v8mem && !nodeArgs.some(arg => arg.indexOf('--max_old_space_size=') === 0)) {
+		const arg = generateV8MemoryArgument(v8mem, arch);
+		if (arg) {
+			nodeArgs.push(arg);
+		}
+	}
+
+	args.unshift.apply(args, nodeArgs);
+
+	const opts = {
+		stdio: 'inherit'
+	};
+
+	if (detached) {
+		opts.detached    = true;
+		opts.stdio       = 'ignore';
+		opts.windowsHide = true;
+	}
+
+	if (stdio) {
+		// if stdio is set, then override the default
+		opts.stdio = stdio;
+	}
+
+	const prettyArgs = args
+		.map(s => {
+			return s.indexOf(' ') === -1 ? s : `"${s}"`;
+		})
+		.join(' ');
+
+	logger.log('Spawning: %s', highlight(`${node} ${prettyArgs} # ${JSON.stringify(opts)}`));
+
+	// write the last run file
+	fs.writeFileSync(path.join(path.dirname(node), '.lastrun'), Date.now());
+
+	let tries = 3;
+
+	return (function trySpawn() {
+		return Promise.resolve()
+			.then(() => {
+				tries--;
+				const child = spawn(node, args, opts);
+				if (detached) {
+					child.unref();
 				}
-			}
-
-			args.unshift.apply(args, nodeArgs);
-
-			const opts = {
-				stdio: 'inherit'
-			};
-
-			if (detached) {
-				opts.detached    = true;
-				opts.stdio       = 'ignore';
-				opts.windowsHide = true;
-			}
-
-			if (stdio) {
-				// if stdio is set, then override the default
-				opts.stdio = stdio;
-			}
-
-			let prettyArgs = args
-				.map(s => {
-					return s.indexOf(' ') === -1 ? s : `"${s}"`;
-				})
-				.join(' ');
-
-			logger.log('Spawning: %s', highlight(`${node} ${prettyArgs} # ${JSON.stringify(opts)}`));
-
-			let tries = 3;
-
-			return (function trySpawn() {
-				return Promise.resolve()
-					.then(() => {
-						tries--;
-						const child = spawn(node, args, opts);
-						if (detached) {
-							child.unref();
-						}
-						return child;
-					})
-					.catch(err => {
-						if ((err.code === 'ETXTBSY' || err.code === 'EBUSY') && tries) {
-							logger.log(`Spawn threw ${err.code}, retrying...`);
-							return new Promise((resolve, reject) => {
-								setTimeout(() => trySpawn().then(resolve, reject), 50);
-							});
-						}
-						throw err;
+				return child;
+			})
+			.catch(err => {
+				if ((err.code === 'ETXTBSY' || err.code === 'EBUSY') && tries) {
+					logger.log(`Spawn threw ${err.code}, retrying...`);
+					return new Promise((resolve, reject) => {
+						setTimeout(() => trySpawn().then(resolve, reject), 50);
 					});
-			}());
-		});
+				}
+				throw err;
+			});
+	}());
+}
+
+/**
+ * Finds all unused Node.js executables that are older than the specified max age and deletes them.
+ *
+ * @param {Number} maxAge - The maximum age for unused Node.js executables.
+ * @returns {Array.<String>} A list of unused Node.js executables that were removed.
+ */
+export function purgeUnusedNodejsExecutables({ maxAge, nodeHome }) {
+	const purged = [];
+
+	if (!isDir(nodeHome)) {
+		return purged;
+	}
+
+	const nodeExecutable = getNodeFilename();
+	const now = Date.now();
+
+	const isEmpty = dir => {
+		return fs.readdirSync(dir).filter(name => name !== '.DS_Store').length === 0;
+	};
+
+	for (const version of fs.readdirSync(nodeHome)) {
+		const verDir = path.join(nodeHome, version);
+		if (!isDir(verDir)) {
+			continue;
+		}
+
+		for (const platform of fs.readdirSync(verDir)) {
+			const platformDir = path.join(verDir, platform);
+			if (!isDir(platformDir)) {
+				continue;
+			}
+
+			for (const arch of fs.readdirSync(platformDir)) {
+				const archDir = path.join(platformDir, arch);
+
+				if (!isDir(archDir)) {
+					continue;
+				}
+
+				const nodePath = path.join(archDir, nodeExecutable);
+				if (!isFile(nodePath)) {
+					continue;
+				}
+
+				const lastRunFile = path.join(archDir, '.lastrun');
+
+				if (isFile(lastRunFile)) {
+					const lastRun = parseInt(fs.readFileSync(lastRunFile, 'utf8').trim());
+					if (!isNaN(lastRun)) {
+						if ((lastRun + maxAge) < now) {
+							purged.push({
+								version,
+								platform,
+								arch
+							});
+
+							fs.removeSync(archDir);
+						}
+						continue;
+					}
+				}
+
+				// no last run or parsed value was not a number, so create one now
+				logger.log('Creating .lastrun file: %s', highlight(lastRunFile));
+				fs.writeFileSync(lastRunFile, now);
+			}
+
+			if (isEmpty(platformDir)) {
+				fs.removeSync(platformDir);
+			}
+		}
+
+		if (isEmpty(verDir)) {
+			fs.removeSync(verDir);
+		}
+	}
+
+	if (purged.length) {
+		logger.log(pluralize(`Purged ${highlight(purged.length)} unused Node.js executable`, purged.length) + ':');
+		for (const { version, platform, arch } of purged) {
+			logger.log(highlight(`  ${version} ${platform} ${arch}`));
+		}
+	}
+
+	return purged;
 }

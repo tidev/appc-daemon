@@ -21,7 +21,7 @@ module.exports = {
 			memory: 'auto'
 		}
 	},
-	
+
 	environment: {
 		/**
 		 * Shorthand name for the environment.
@@ -102,7 +102,7 @@ module.exports = {
 
 		/**
 		 * The default number of milliseconds of inactivity before an `external` plugin is
-		 * deactivated.
+		 * deactivated. Defaults to an hour.
 		 * @type {Number}
 		 */
 		defaultInactivityTimeout: 60 * 60 * 1000
@@ -135,6 +135,13 @@ module.exports = {
 		 * @readonly
 		 */
 		hostname: '127.0.0.1',
+
+		/**
+		 * The max age in milliseconds an unused Node.js executable should be kept before it's
+		 * purged. Defaults to 90 days.
+		 * @type {Number}
+		 */
+		nodejsMaxUnusedAge: 90 * 24 * 60 * 60 * 1000,
 
 		/**
 		 * Path to the daemon's pid file.

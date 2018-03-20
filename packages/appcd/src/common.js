@@ -127,7 +127,7 @@ export function startServer({ cfg, argv }) {
 	const v8mem = cfg.get('core.v8.memory');
 	const corePkgJson = JSON.parse(fs.readFileSync(require.resolve('appcd-core/package.json'), 'utf8'));
 
-	let nodeVer = corePkgJson.engines && corePkgJson.engines.node;
+	let nodeVer = corePkgJson.appcd && corePkgJson.appcd.node;
 	const m = nodeVer && nodeVer.match(/(\d+\.\d+\.\d+)/);
 	nodeVer = m ? `v${m[1]}` : null;
 
