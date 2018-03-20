@@ -374,7 +374,7 @@ describe('nodejs', () => {
 			expect(results).to.deep.equal([
 				{
 					arch: 'x64',
-					platform: 'darwin',
+					platform,
 					version: 'v8.9.2'
 				}
 			]);

@@ -483,7 +483,7 @@ export function purgeUnusedNodejsExecutables({ maxAge, nodeHome }) {
 	const now = Date.now();
 
 	const isEmpty = dir => {
-		return fs.readdirSync(dir).filter(name => name === '.DS_Store').length > 0;
+		return fs.readdirSync(dir).filter(name => name !== '.DS_Store').length === 0;
 	};
 
 	for (const version of fs.readdirSync(nodeHome)) {
@@ -531,10 +531,6 @@ export function purgeUnusedNodejsExecutables({ maxAge, nodeHome }) {
 				// no last run or parsed value was not a number, so create one now
 				logger.log('Creating .lastrun file: %s', highlight(lastRunFile));
 				fs.writeFileSync(lastRunFile, now);
-
-				if (isEmpty(archDir)) {
-					fs.removeSync(archDir);
-				}
 			}
 
 			if (isEmpty(platformDir)) {
