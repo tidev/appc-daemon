@@ -315,6 +315,7 @@ describe('nodejs', () => {
 					version: 'v6.9.5',
 					nodeArgs: [ '--max_old_space_size=500' ]
 				}))
+				.then(child => new Promise(resolve => child.on('close', resolve)))
 				.then(() => {
 					fs.removeSync(tmpDir);
 					done();
@@ -322,7 +323,8 @@ describe('nodejs', () => {
 				.catch(err => {
 					fs.removeSync(tmpDir);
 					done(err);
-				});
+				})
+				.catch(done);
 		});
 
 		it('should error if v8mem is invalid', done => {
