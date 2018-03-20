@@ -3,9 +3,11 @@ import path from 'path';
 import tmp from 'tmp';
 
 import {
-	prepareNode,
 	downloadNode,
 	extractNode,
+	getNodeFilename,
+	prepareNode,
+	purgeUnusedNodejsExecutables,
 	spawnNode
 } from '../dist/nodejs';
 
@@ -313,6 +315,7 @@ describe('nodejs', () => {
 					version: 'v6.9.5',
 					nodeArgs: [ '--max_old_space_size=500' ]
 				}))
+				.then(child => new Promise(resolve => child.on('close', resolve)))
 				.then(() => {
 					fs.removeSync(tmpDir);
 					done();
@@ -320,7 +323,8 @@ describe('nodejs', () => {
 				.catch(err => {
 					fs.removeSync(tmpDir);
 					done(err);
-				});
+				})
+				.catch(done);
 		});
 
 		it('should error if v8mem is invalid', done => {
@@ -333,10 +337,67 @@ describe('nodejs', () => {
 				});
 		});
 
-		it('should error if arch is invalid', () => {
+		it('should error if arch is invalid', done => {
+			spawnNode({ arch: 'foo' })
+				.then(() => {
+					throw new Error('Expected exception to be thrown');
+				}, err => {
+					expect(err.message).to.equal('Expected arch to be "x86" or "x64"');
+					done();
+				})
+				.catch(done);
+		});
+	});
+
+	describe('purgeUnusedNodejsExecutables()', () => {
+		it('should find all unused Node.js executables', () => {
+			const nodeExecutable = getNodeFilename();
+			const now = Date.now();
+			const { platform } = process;
+			const tmpDir = makeTempDir();
+
+			const createNodeExecutable = (dir, lastrun) => {
+				fs.mkdirsSync(dir);
+				fs.writeFileSync(path.join(dir, nodeExecutable), '# mock node executable');
+				if (lastrun) {
+					fs.writeFileSync(path.join(dir, '.lastrun'), lastrun);
+				}
+			};
+
+			createNodeExecutable(path.join(tmpDir, 'v8.9.1', platform, 'x64'));
+			createNodeExecutable(path.join(tmpDir, 'v8.9.2', platform, 'x64'), now - (24 * 60 * 60 * 1000)); // 1 day
+			createNodeExecutable(path.join(tmpDir, 'v8.9.3', platform, 'x64'), now);
+
+			const results = purgeUnusedNodejsExecutables({
+				maxAge: 60 * 1000, // 1 minute
+				nodeHome: tmpDir
+			});
+
+			expect(results).to.deep.equal([
+				{
+					arch: 'x64',
+					platform,
+					version: 'v8.9.2'
+				}
+			]);
+
 			expect(() => {
-				spawnNode({ arch: 'foo' });
-			}).to.throw(Error, 'Expected arch to be "x86" or "x64"');
+				fs.statSync(path.join(tmpDir, 'v8.9.1', platform, 'x64', nodeExecutable));
+				fs.statSync(path.join(tmpDir, 'v8.9.1', platform, 'x64', '.lastrun'));
+			}).to.not.throw();
+
+			expect(() => {
+				fs.statSync(path.join(tmpDir, 'v8.9.2', platform, 'x64', nodeExecutable));
+			}).to.throw();
+
+			expect(() => {
+				fs.statSync(path.join(tmpDir, 'v8.9.2', platform, 'x64', '.lastrun'));
+			}).to.throw();
+
+			expect(() => {
+				fs.statSync(path.join(tmpDir, 'v8.9.3', platform, 'x64', nodeExecutable));
+				fs.statSync(path.join(tmpDir, 'v8.9.3', platform, 'x64', '.lastrun'));
+			}).to.not.throw();
 		});
 	});
 });

@@ -236,7 +236,7 @@ export default class Plugin extends EventEmitter {
 			throw new PluginError('Plugin forbidden from using the name "%s"', 'appcd');
 		}
 
-		this.nodeVersion = pkgJson.engines && pkgJson.engines.node || process.version.replace(/^v/, '');
+		this.nodeVersion = appcd.node || (pkgJson.engines && pkgJson.engines.node) || process.version.replace(/^v/, '');
 
 		// reset the error
 		this.error = null;

@@ -14,11 +14,12 @@ import Telemetry from 'appcd-telemetry';
 import WebServer from 'appcd-http';
 import WebSocketSession from './websocket-session';
 
-import { expandPath } from 'appcd-path';
 import { arch as getArch, arrayify, get, getActiveHandles } from 'appcd-util';
+import { expandPath } from 'appcd-path';
 import { i18n } from 'appcd-response';
 import { isDir, isFile } from 'appcd-fs';
 import { load as loadConfig } from 'appcd-config';
+import { purgeUnusedNodejsExecutables } from 'appcd-nodejs';
 
 const { __n } = i18n();
 
@@ -254,6 +255,29 @@ export default class Server {
 			startupTime,
 			version:     this.version
 		});
+
+		// cleanup unused Node.js executables every hour
+		this.unsuedNodeCleanupTimer = setInterval(() => this.purgeUnusedNodejs(), 60 * 60 * 1000);
+		this.purgeUnusedNodejs();
+	}
+
+	/**
+	 * Checks if there are any unused Node.js executables that should be purged.
+	 *
+	 * @access private
+	 */
+	purgeUnusedNodejs() {
+		const purged = purgeUnusedNodejsExecutables({
+			maxAge: this.config.get('server.nodejsMaxUnusedAge', 90 * 24 * 60 * 60 * 1000),
+			nodeHome: expandPath(this.config.get('home'), 'node')
+		});
+
+		if (purged.length) {
+			Dispatcher.call('/appcd/telemetry', {
+				event: 'server.nodePurge',
+				purged
+			});
+		}
 	}
 
 	/**
@@ -262,46 +286,46 @@ export default class Server {
 	 * @returns {Promise}
 	 * @access public
 	 */
-	shutdown() {
+	async shutdown() {
 		logger.log('Shutting down server gracefully');
 
-		return Promise.resolve()
-			.then(() => Dispatcher.call('/appcd/telemetry', {
-				event:  'server.shutdown',
-				uptime: process.uptime()
-			}))
-			.then(async () => {
-				for (const system of Object.values(this.systems)) {
-					if (typeof system.shutdown === 'function') {
-						await system.shutdown();
-					}
-				}
-			})
-			.then(() => {
-				if (this.pidWatcher) {
-					logger.log('Stopping pid watcher');
-					this.pidWatcher.close();
-				}
+		if (this.unsuedNodeCleanupTimer) {
+			clearInterval(this.unsuedNodeCleanupTimer);
+			this.unsuedNodeCleanupTimer = null;
+		}
 
-				if (isFile(this.pidFile)) {
-					logger.log('Removing %s', highlight(this.pidFile));
-					fs.unlinkSync(this.pidFile);
-				}
-			})
-			.then(() => {
-				const handles = getActiveHandles();
-				const timers = handles.timers.filter(timer => timer.__stack__);
-				if (timers.length) {
-					logger.warn(__n(timers.length, 'Stopping %%s active timer', 'Stopping %%s active timers', notice(timers.length)));
-					for (const timer of handles.timers) {
-						clearTimeout(timer);
-					}
-				}
-			})
-			.then(() => {
-				logger.log('appcd shutdown successfully');
-				return this;
-			});
+		await Dispatcher.call('/appcd/telemetry', {
+			event:  'server.shutdown',
+			uptime: process.uptime()
+		});
+
+		for (const system of Object.values(this.systems)) {
+			if (typeof system.shutdown === 'function') {
+				await system.shutdown();
+			}
+		}
+
+		if (this.pidWatcher) {
+			logger.log('Stopping pid watcher');
+			this.pidWatcher.close();
+		}
+
+		if (isFile(this.pidFile)) {
+			logger.log('Removing %s', highlight(this.pidFile));
+			fs.unlinkSync(this.pidFile);
+		}
+
+		const handles = getActiveHandles();
+		const timers = handles.timers.filter(timer => timer.__stack__);
+		if (timers.length) {
+			logger.warn(__n(timers.length, 'Stopping %%s active timer', 'Stopping %%s active timers', notice(timers.length)));
+			for (const timer of handles.timers) {
+				clearTimeout(timer);
+			}
+		}
+
+		logger.log('appcd shutdown successfully');
+		return this;
 	}
 
 	/**
