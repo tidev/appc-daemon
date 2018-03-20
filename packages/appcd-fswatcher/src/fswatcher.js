@@ -289,7 +289,7 @@ export class Node {
 
 				this.type &= ~RESTRICTED;
 			} catch (e) {
-				if (e.code === 'EACCES') {
+				if (e.code === 'EACCES' || e.code === 'EPERM') {
 					this.type |= RESTRICTED;
 				} else {
 					throw e;
