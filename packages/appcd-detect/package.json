@@ -24,7 +24,7 @@
     "appcd-util": "^1.0.1",
     "appcd-winreg": "^1.0.1",
     "gawk": "^4.4.5",
-    "source-map-support": "^0.5.3"
+    "source-map-support": "^0.5.4"
   },
   "devDependencies": {
     "appcd-fswatcher": "^1.0.1",
