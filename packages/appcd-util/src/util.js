@@ -90,7 +90,7 @@ export function assertNodeEngineVersion(pkgJson) {
 	}
 
 	const current = process.env.APPCD_TEST_NODE_VERSION || process.version;
-	const required = pkgJson && pkgJson.engines && pkgJson.engines.node;
+	const required = pkgJson && ((pkgJson.appcd && pkgJson.appcd.node) || (pkgJson.engines && pkgJson.engines.node));
 
 	try {
 		if (!required || semver.eq(current, required)) {

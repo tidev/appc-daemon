@@ -72,7 +72,7 @@ The Core is technically not a CLI app, however it does look for `--config <json>
 `--config-file <path>` in the command line arguments.
 
 The Core MUST be spawned using the exact Node.js version specified in the `appcd-core`
-[`package.json`](../../packages/appcd-core/package.json) under the `engines` section.
+[`package.json`](../../packages/appcd-core/package.json) under the `appcd` section.
 
 The Core has no concern for if it is running in daemon mode or debug mode. The Core process is
 either running or it isn't.
