@@ -17,6 +17,7 @@
 	 [(DAEMON-219)](https://jira.appcelerator.org/browse/DAEMON-219)
    - Fixed bug with subscription streams not being closed when a socket error occurs from a client
      connection. [(DAEMON-224)](https://jira.appcelerator.org/browse/DAEMON-224)
+   - Bumped required version to Node.js 8.10.0 LTS.
  * appcd-default-plugins
    - Added `appcd-plugin-titanium-sdk` plugin.
      [(DAEMON-217)](https://jira.appcelerator.org/browse/DAEMON-217)
@@ -25,6 +26,7 @@
  * appcd-fswatcher
    - Added support for handling restricted directories and files.
      [(DAEMON-233)](https://jira.appcelerator.org/browse/DAEMON-233)
+	 [(DAEMON-232)](https://jira.appcelerator.org/browse/DAEMON-232)
    - Fixed recursively watching created or unwatch deleted directories/files.
      [(DAEMON-235)](https://jira.appcelerator.org/browse/DAEMON-235)
  * appcd-gulp
@@ -32,6 +34,9 @@
  * appcd-http
    - Added logging for socket related errors.
     [(DAEMON-224)](https://jira.appcelerator.org/browse/DAEMON-224)
+ * appcd-nodejs
+   - Added support for purging Node.js executables that haven't been used for more than 90 days.
+   [(DAEMON-244)](https://jira.appcelerator.org/browse/DAEMON-244)
  * appcd-plugin
    - Enforce appcd version compatible check when loading a plugin.
      [(DAEMON-208)](https://jira.appcelerator.org/browse/DAEMON-208)
