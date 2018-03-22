@@ -289,7 +289,7 @@ export class Node {
 
 				this.type &= ~RESTRICTED;
 			} catch (e) {
-				if (e.code === 'EACCES') {
+				if (e.code === 'EACCES' || e.code === 'EPERM') {
 					this.type |= RESTRICTED;
 				} else {
 					throw e;
@@ -354,19 +354,23 @@ export class Node {
 					this.files.set(filename, now);
 
 					if (action === 'add' || action === 'change') {
+						let notify = true;
 						let child = this.children[filename];
+
 						if (child) {
 							child.stat();
 							child.init(action);
 						} else if (Object.values(this.depths).some(depth => depth > 0)) {
-							this.addChild(filename, action, true);
+							notify = !this.addChild(filename, action, true);
 						}
 
-						this.notify({
-							action,
-							filename,
-							file
-						}, true);
+						if (notify) {
+							this.notify({
+								action,
+								filename,
+								file
+							}, true);
+						}
 					}
 				}
 
@@ -454,7 +458,7 @@ export class Node {
 	 * @access private
 	 */
 	notify(evt, isCurrentNode, depth = 0) {
-		if ((isCurrentNode && this.watchers.size) || (!isCurrentNode && this.isRecursive)) {
+		if (this.watchers.size && isCurrentNode || this.isRecursive) {
 			log('Notifying %s %s: %s → %s', green(this.watchers.size), pluralize('watcher', this.watchers.size), highlight(this.path), highlight(evt.filename));
 			for (const watcher of this.watchers) {
 				if (watcher.recursive === 0 || watcher.recursive === Infinity || watcher.recursive >= depth) {
@@ -623,8 +627,6 @@ export class Node {
 				&& evt.action === 'change'
 				&& isDir
 			) {
-				// This will drop also events where there is a permission change on the folder,
-				// tracked as https://jira.appcelerator.org/browse/DAEMON-232 - EH 02/08/18
 				log('Dropping Windows event for change to contents of a directory');
 				return;
 			}
