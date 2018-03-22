@@ -18,6 +18,8 @@
    - Fixed bug with subscription streams not being closed when a socket error occurs from a client
      connection. [(DAEMON-224)](https://jira.appcelerator.org/browse/DAEMON-224)
    - Bumped required version to Node.js 8.10.0 LTS.
+   - Fixed core process' health agent to use the poll interval from the config instead of the
+     default.
  * appcd-default-plugins
    - Added `appcd-plugin-titanium-sdk` plugin.
      [(DAEMON-217)](https://jira.appcelerator.org/browse/DAEMON-217)
@@ -33,10 +35,12 @@
    - Added support for running `test/after.js` after tests have run regardless of success.
  * appcd-http
    - Added logging for socket related errors.
-    [(DAEMON-224)](https://jira.appcelerator.org/browse/DAEMON-224)
+     [(DAEMON-224)](https://jira.appcelerator.org/browse/DAEMON-224)
  * appcd-nodejs
    - Added support for purging Node.js executables that haven't been used for more than 90 days.
-   [(DAEMON-244)](https://jira.appcelerator.org/browse/DAEMON-244)
+     [(DAEMON-244)](https://jira.appcelerator.org/browse/DAEMON-244)
+   - Moved `APPCD_NETWORK_CA_FILE`, `APPCD_NETWORK_PROXY`, and `APPCD_NETWORK_STRICT_SSL`
+     environment variables to `appcd-request`.
  * appcd-plugin
    - Enforce appcd version compatible check when loading a plugin.
      [(DAEMON-208)](https://jira.appcelerator.org/browse/DAEMON-208)
