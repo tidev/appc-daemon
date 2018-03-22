@@ -30,7 +30,7 @@ export default class Telemetry extends Dispatcher {
 	/**
 	 * Constructs an analytics instance.
 	 *
-	 * @param {Config} cfg - The initial config object.
+	 * @param {Config} cfg - The Appc Daemon config object.
 	 * @access public
 	 */
 	constructor(cfg) {
