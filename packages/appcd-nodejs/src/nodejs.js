@@ -122,20 +122,9 @@ export function downloadNode({ arch, nodeHome, version } = {}) {
 
 	logger.log('Downloading %s => %s', highlight(url), highlight(outFile));
 
-	const {
-		APPCD_NETWORK_CA_FILE,
-		APPCD_NETWORK_PROXY,
-		APPCD_NETWORK_STRICT_SSL
-	} = process.env;
-
 	// download node
 	return Promise.resolve()
-		.then(() => request({
-			url,
-			ca: APPCD_NETWORK_CA_FILE && isFile(APPCD_NETWORK_CA_FILE) ? fs.readFileSync(APPCD_NETWORK_CA_FILE).toString() : null,
-			proxy: APPCD_NETWORK_PROXY,
-			strictSSL: APPCD_NETWORK_STRICT_SSL !== 'false'
-		}))
+		.then(() => request({ url }))
 		.then(request => new Promise((resolve, reject) => {
 			request
 				.on('response', response => {

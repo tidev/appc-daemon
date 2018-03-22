@@ -166,7 +166,7 @@ export default class Server {
 		});
 
 		// init the status monitor
-		this.systems.statusMonitor = new StatusMonitor();
+		this.systems.statusMonitor = new StatusMonitor(this.config);
 		Dispatcher.register('/appcd/status', this.systems.statusMonitor);
 
 		// init the fs watch manager

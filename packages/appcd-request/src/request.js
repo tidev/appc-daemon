@@ -62,7 +62,25 @@ export default function request(params, callback) {
 			return Promise.resolve();
 		})
 		.then(conf => new Promise(resolve => {
+			const {
+				APPCD_NETWORK_CA_FILE,
+				APPCD_NETWORK_PROXY,
+				APPCD_NETWORK_STRICT_SSL
+			} = process.env;
+
 			conf = Object.assign({ method: 'GET' }, conf, params);
+
+			if (APPCD_NETWORK_CA_FILE && isFile(APPCD_NETWORK_CA_FILE)) {
+				conf.ca = fs.readFileSync(APPCD_NETWORK_CA_FILE).toString();
+			}
+
+			if (APPCD_NETWORK_PROXY) {
+				conf.proxy = APPCD_NETWORK_PROXY;
+			}
+
+			if (APPCD_NETWORK_STRICT_SSL !== undefined && APPCD_NETWORK_STRICT_SSL !== 'false') {
+				conf.strictSSL = true;
+			}
 
 			// ca file
 			const caFile = conf.caFile && typeof conf.caFile === 'string' && path.resolve(conf.caFile);

@@ -18,8 +18,11 @@ export default class StatusMonitor extends DataServiceDispatcher {
 	/**
 	 * Initalizes the status and kicks off the timers to refresh the dynamic
 	 * status information.
+	 *
+	 * @param {Config} cfg - The Appc Daemon config object.
+	 * @access public
 	 */
-	constructor() {
+	constructor(cfg) {
 		super();
 
 		/**
@@ -75,7 +78,9 @@ export default class StatusMonitor extends DataServiceDispatcher {
 		 * The Node.js process agent.
 		 * @type {Agent}
 		 */
-		this.agent = new Agent()
+		this.agent = new Agent({
+			pollInterval: cfg.get('server.agentPollInterval')
+		})
 			.on('stats', stats => {
 				this.stats = stats;
 
