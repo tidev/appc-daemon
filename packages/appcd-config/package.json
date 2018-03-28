@@ -21,7 +21,7 @@
     "appcd-path": "^1.0.1",
     "@babel/traverse": "latest",
     "@babel/types": "latest",
-    "babylon": "^6.18.0",
+    "babylon": "next",
     "doctrine": "^2.1.0",
     "fs-extra": "^5.0.0",
     "gawk": "^4.4.5",
