@@ -253,13 +253,13 @@ module.exports = (opts) => {
 	}
 
 	gulp.task('watch', cb => {
-		gulp.watch(process.cwd() + '/src/*.js', [ 'build' ], function (event) {
+		gulp.watch(`${process.cwd()}/src/**/*.js`, [ 'build' ], function (event) {
 			console.log('File ' + event.path + ' was ' + event.type + ', running tasks...');
 		});
 	});
 
 	gulp.task('watch-test', cb => {
-		gulp.watch([ process.cwd() + '/src/*.js', process.cwd() + '/test/*.js' ], [ 'test' ], function (event) {
+		gulp.watch([ `${process.cwd()}/src/**/*.js`, `${process.cwd()}/test/*.js` ], [ 'test' ], function (event) {
 			console.log('File ' + event.path + ' was ' + event.type + ', running tasks...');
 		});
 	});

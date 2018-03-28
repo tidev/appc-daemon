@@ -23,6 +23,9 @@
  * appcd-default-plugins
    - Added `appcd-plugin-titanium-sdk` plugin.
      [(DAEMON-217)](https://jira.appcelerator.org/browse/DAEMON-217)
+ * appcd-dispatcher
+   - Fixed incorrect path reference in dispatcher preventing the request from being rerouted
+     correctly.
  * appcd-detect
    - Fixed typo that caused a problem when the detect engine started scanning subdirectories.
  * appcd-fswatcher
