@@ -157,7 +157,7 @@ export default class Dispatcher {
 			if (route.handler instanceof Dispatcher) {
 				// call the nested dispatcher
 				logger.log('Calling dispatcher handler %s', highlight(route.prefix));
-				return route.handler.call(path.replace(route.prefix, '') || '/', ctx);
+				return route.handler.call(ctx.path.replace(route.prefix, '') || '/', ctx);
 			}
 
 			return new Promise((resolve, reject) => {
