@@ -47,14 +47,13 @@ export default class Tunnel {
 				let message = res;
 
 				if (res instanceof Error) {
-					message = {
+					message = Object.assign({}, res, {
+						message:    res.message || res.toString(),
 						instanceof: res.constructor.name,
-						message:    res.message,
-						stack:      res.stack,
 						status:     res.status || 500,
 						statusCode: res.statusCode || '500',
 						type:       'error'
-					};
+					});
 				} else if (res instanceof DispatcherContext) {
 					message = {
 						message: res.response,
@@ -163,9 +162,11 @@ export default class Tunnel {
 								ctx.response = new AppcdError(status, message.message);
 						}
 
-						if (message.stack) {
-							ctx.response.stack = message.stack;
-						}
+						// `message` is a special setter and we don't want to override the
+						delete message.message;
+
+						// mix all public properties from the incoming message into the error object
+						Object.assign(ctx.response, message);
 
 						reject(ctx.response);
 						break;
@@ -176,6 +177,7 @@ export default class Tunnel {
 
 					case 'event':
 						ctx.request.sid = message.sid;
+						// fallthrough
 
 					case 'unsubscribe':
 						ctx.response.write(message);
