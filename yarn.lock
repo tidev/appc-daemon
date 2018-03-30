@@ -2530,8 +2530,8 @@ esdoc@^1.0.4:
     taffydb "2.7.2"
 
 eslint-config-axway@^2.0.10:
-  version "2.0.12"
-  resolved "https://registry.yarnpkg.com/eslint-config-axway/-/eslint-config-axway-2.0.12.tgz#67e284580e52ac0640c97cdc841083d2b814ce14"
+  version "2.0.13"
+  resolved "https://registry.yarnpkg.com/eslint-config-axway/-/eslint-config-axway-2.0.13.tgz#e1f29f57a59eb7e7efedafc3c4ced48027ab3e10"
   dependencies:
     eslint-plugin-import "^2.9.0"
     eslint-plugin-security "^1.4.0"

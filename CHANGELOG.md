@@ -24,7 +24,7 @@
 	 [(DAEMON-219)](https://jira.appcelerator.org/browse/DAEMON-219)
    - Fixed bug with subscription streams not being closed when a socket error occurs from a client
      connection. [(DAEMON-224)](https://jira.appcelerator.org/browse/DAEMON-224)
-   - Bumped required version to Node.js 8.11.0 LTS.
+   - Bumped required version to Node.js 8.11.1 LTS.
    - Fixed core process' health agent to use the poll interval from the config instead of the
      default.
  * appcd-default-plugins
