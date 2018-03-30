@@ -163,7 +163,7 @@ export default class Client {
 			return this.connect()
 				.on('connected', client => {
 					this.requests[id] = response => {
-						const status = ~~response.status || 500;
+						const status = response.status = ~~response.status || 500;
 						const statusClass = Math.floor(status / 100);
 						const style = status < 400 ? ok : alert;
 
@@ -180,6 +180,9 @@ export default class Client {
 							case 4:
 							case 5:
 								const err = new Error(response.message || 'Server Error');
+								if (!response.statusCode) {
+									response.statusCode = String(status);
+								}
 								for (const prop of Object.keys(response)) {
 									// we need to use defineProperty() to force properties to be created
 									Object.defineProperty(err, prop, {
