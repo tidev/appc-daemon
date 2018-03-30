@@ -189,7 +189,7 @@ describe('Client', () => {
 						expect(data).to.deep.equal({ baz: 'wiz' });
 
 						expect(response).to.be.an('object');
-						expect(response).to.have.keys('id', 'status', 'message');
+						expect(response).to.have.keys('status', 'message');
 						expect(response.status).to.equal(200);
 						expect(response.message).to.deep.equal({ baz: 'wiz' });
 					} catch (e) {
@@ -235,8 +235,8 @@ describe('Client', () => {
 				.on('error', err => {
 					try {
 						expect(err.message).to.equal('Not found');
-						expect(err.errorCode).to.equal(404);
-						expect(err.code).to.equal('404');
+						expect(err.status).to.equal(404);
+						expect(err.statusCode).to.equal('404');
 						server.close(() => done());
 					} catch (e) {
 						server.close(() => done(e));
@@ -271,8 +271,8 @@ describe('Client', () => {
 				.on('error', err => {
 					try {
 						expect(err.message).to.equal('Server error');
-						expect(err.errorCode).to.equal(500);
-						expect(err.code).to.equal('500.1');
+						expect(err.status).to.equal(500);
+						expect(err.statusCode).to.equal('500.1');
 						server.close(() => done());
 					} catch (e) {
 						server.close(() => done(e));
@@ -305,8 +305,8 @@ describe('Client', () => {
 				.on('error', err => {
 					try {
 						expect(err.message).to.equal('Server Error');
-						expect(err.errorCode).to.equal(500);
-						expect(err.code).to.equal('500');
+						expect(err.status).to.equal(500);
+						expect(err.statusCode).to.equal('500');
 						server.close(() => done());
 					} catch (e) {
 						server.close(() => done(e));
@@ -338,8 +338,8 @@ describe('Client', () => {
 				.on('error', err => {
 					try {
 						expect(err.message).to.equal('Server Error');
-						expect(err.errorCode).to.equal(500);
-						expect(err.code).to.equal('500');
+						expect(err.status).to.equal(500);
+						expect(err.statusCode).to.equal('500');
 						server.close(() => done());
 					} catch (e) {
 						server.close(() => done(e));
@@ -370,7 +370,7 @@ describe('Client', () => {
 							expect(data).to.deep.equal({ baz: 'wiz' });
 
 							expect(response).to.be.an('object');
-							expect(response).to.have.keys('id', 'status', 'message');
+							expect(response).to.have.keys('status', 'message');
 							expect(response.status).to.equal(200);
 							expect(response.message).to.deep.equal({ baz: 'wiz' });
 							done();

@@ -1,4 +1,5 @@
 import Agent from 'appcd-agent';
+import Config from 'appcd-config';
 import gawk from 'gawk';
 import os from 'os';
 import Response, { codes } from 'appcd-response';
@@ -23,6 +24,10 @@ export default class StatusMonitor extends DataServiceDispatcher {
 	 * @access public
 	 */
 	constructor(cfg) {
+		if (!(cfg instanceof Config)) {
+			throw new TypeError('Expected config to be a Config object');
+		}
+
 		super();
 
 		/**
