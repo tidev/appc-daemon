@@ -7,6 +7,13 @@
    - Removed potentially sensitive information (hostname, environment variables) from dump file.
    - Fixed order of plugins in `appcd status` output.
      [(DAEMON-216)](https://jira.appcelerator.org/browse/DAEMON-216)
+   - Changed `appcd exec` to return errors as stringified objects.
+     [(DAEMON-248)](https://jira.appcelerator.org/browse/DAEMON-248)
+ * appcd-client
+   - Added debug logging that can be viewed by setting `SNOOPLOGG=appcd:client`.
+   - Added support for arbitrary properties on error objects to be returned to clients from the
+     daemon.
+     [(DAEMON-248)](https://jira.appcelerator.org/browse/DAEMON-248)
  * appcd-config-service
    - Fixed bug in the config service when returning defined, but falsey values.
  * appcd-core
@@ -17,7 +24,7 @@
 	 [(DAEMON-219)](https://jira.appcelerator.org/browse/DAEMON-219)
    - Fixed bug with subscription streams not being closed when a socket error occurs from a client
      connection. [(DAEMON-224)](https://jira.appcelerator.org/browse/DAEMON-224)
-   - Bumped required version to Node.js 8.10.0 LTS.
+   - Bumped required version to Node.js 8.11.1 LTS.
    - Fixed core process' health agent to use the poll interval from the config instead of the
      default.
  * appcd-default-plugins

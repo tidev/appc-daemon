@@ -3,6 +3,7 @@ if (!Error.prepareStackTrace) {
 	require('source-map-support/register');
 }
 
+import appcdLogger from 'appcd-logger';
 import fs from 'fs';
 import msgpack from 'msgpack-lite';
 import path from 'path';
@@ -12,6 +13,9 @@ import WebSocket from 'ws';
 import { arch } from 'appcd-util';
 import { EventEmitter } from 'events';
 import { locale } from 'appcd-response';
+
+const { log } = appcdLogger('appcd:client');
+const { alert, highlight, note, ok } = appcdLogger.styles;
 
 /**
  * The client for connecting to the appcd server.
@@ -96,32 +100,31 @@ export default class Client {
 					headers['Accept-Language'] = localeValue;
 				}
 
-				const socket = this.socket = new WebSocket(`ws://${this.host}:${this.port}`, {
-					headers
-				});
-
-				socket.on('message', data => {
-					let json = null;
-					if (typeof data === 'string') {
-						try {
-							json = JSON.parse(data);
-						} catch (e) {
-							// bad response, shouldn't ever happen
-							emitter.emit('warning', `Server returned invalid JSON: ${e.message}`);
-							return;
-						}
-					} else {
-						json = msgpack.decode(data);
-					}
-
-					if (json && typeof json === 'object' && this.requests[json.id]) {
-						this.requests[json.id](json);
-					} else {
-						emitter.emit('warning', 'Server response is not an object or has an invalid id');
-					}
-				});
+				const url = `ws://${this.host}:${this.port}`;
+				log(`Connecting to ${highlight(url)}`);
+				const socket = this.socket = new WebSocket(url, { headers });
 
 				socket
+					.on('message', data => {
+						let json = null;
+						if (typeof data === 'string') {
+							try {
+								json = JSON.parse(data);
+							} catch (e) {
+								// bad response, shouldn't ever happen
+								emitter.emit('warning', `Server returned invalid JSON: ${e.message}`);
+								return;
+							}
+						} else {
+							json = msgpack.decode(data);
+						}
+
+						if (json && typeof json === 'object' && this.requests[json.id]) {
+							this.requests[json.id](json);
+						} else {
+							emitter.emit('warning', 'Server response is not an object or has an invalid id');
+						}
+					})
 					.on('open', () => emitter.emit('connected', this))
 					.once('close', () => emitter.emit('close'))
 					.once('error', err => {
@@ -150,6 +153,8 @@ export default class Client {
 	request({ path, data, type } = {}) {
 		const emitter = new EventEmitter();
 
+		const startTime = new Date();
+
 		// need to delay request so event emitter can be returned and events can
 		// be wired up
 		setImmediate(() => {
@@ -160,6 +165,12 @@ export default class Client {
 					this.requests[id] = response => {
 						const status = ~~response.status || 500;
 						const statusClass = Math.floor(status / 100);
+						const style = status < 400 ? ok : alert;
+
+						// no need for the id anymore
+						delete response.id;
+
+						log(`${style(status)} ${highlight(path)} ${note(`${new Date() - startTime}ms`)}`);
 
 						switch (statusClass) {
 							case 2:
@@ -169,19 +180,30 @@ export default class Client {
 							case 4:
 							case 5:
 								const err = new Error(response.message || 'Server Error');
-								err.errorCode = status;
-								err.code = String(response.statusCode ? response.statusCode : status);
+								for (const prop of Object.keys(response)) {
+									// we need to use defineProperty() to force properties to be created
+									Object.defineProperty(err, prop, {
+										configurable: true,
+										enumerable:   true,
+										value:        response[prop],
+										writable:     true
+									});
+								}
 								emitter.emit('error', err, response);
 						}
 					};
 
-					client.socket.send(JSON.stringify({
+					const req = {
 						version: '1.0',
-						path:    path,
-						id:      id,
+						path,
+						id,
 						data,
 						type
-					}));
+					};
+
+					log('Sending request:', req);
+
+					client.socket.send(JSON.stringify(req));
 				})
 				.on('warning', (...args) => emitter.emit('warning', ...args))
 				.once('close', () => {

@@ -33,7 +33,7 @@ const cmd = {
 					console.log('Server not running');
 					process.exit(3);
 				} else {
-					console.error(err.message);
+					console.log(JSON.stringify(err, null, '  '));
 					process.exit(err.exitCode || 1);
 				}
 			});

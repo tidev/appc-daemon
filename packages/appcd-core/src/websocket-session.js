@@ -234,13 +234,14 @@ export default class WebSocketSession {
 		let data;
 
 		if (res instanceof Error) {
-			data = JSON.stringify({
-				type:    'error',
-				status:  res.status || 500,
-				code:    res.code || '500',
-				message: res.message,
-				id:      res.id
-			});
+			data = JSON.stringify(Object.assign({}, res, {
+				id:         res.id,
+				message:    res.message,
+				stack:      res.stack,
+				status:     res.status || 500,
+				statusCode: res.statusCode || '500',
+				type:       'error'
+			}));
 		} else {
 			if (!res.status) {
 				res.status = 200;
