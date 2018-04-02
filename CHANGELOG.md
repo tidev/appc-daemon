@@ -1,4 +1,4 @@
-# v1.1.0 (unreleased)
+# v1.1.0 (April 2, 2018))
 
  * appcd
    - Added `--view` option to `appcd dump` command which launches the dump in the
