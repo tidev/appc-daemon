@@ -16,11 +16,11 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-fs": "^1.0.1",
-    "appcd-logger": "^1.0.1",
-    "appcd-path": "^1.0.1",
     "@babel/traverse": "latest",
     "@babel/types": "latest",
+    "appcd-fs": "^1.1.0",
+    "appcd-logger": "^1.1.0",
+    "appcd-path": "^1.1.0",
     "babylon": "next",
     "doctrine": "^2.1.0",
     "fs-extra": "^5.0.0",
@@ -28,7 +28,7 @@
     "source-map-support": "^0.5.4"
   },
   "devDependencies": {
-    "appcd-gulp": "^1.0.1",
+    "appcd-gulp": "^1.1.0",
     "gulp": "^3.9.1",
     "tmp": "^0.0.33"
   },

@@ -16,19 +16,19 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-dispatcher": "^1.0.1",
-    "appcd-fs": "^1.0.1",
-    "appcd-logger": "^1.0.1",
-    "appcd-path": "^1.0.1",
-    "appcd-subprocess": "^1.0.1",
-    "appcd-util": "^1.0.1",
-    "appcd-winreg": "^1.0.1",
+    "appcd-dispatcher": "^1.1.0",
+    "appcd-fs": "^1.1.0",
+    "appcd-logger": "^1.1.0",
+    "appcd-path": "^1.1.0",
+    "appcd-subprocess": "^1.1.0",
+    "appcd-util": "^1.1.0",
+    "appcd-winreg": "^1.1.0",
     "gawk": "^4.4.5",
     "source-map-support": "^0.5.4"
   },
   "devDependencies": {
-    "appcd-fswatcher": "^1.0.1",
-    "appcd-gulp": "^1.0.1",
+    "appcd-fswatcher": "^1.1.0",
+    "appcd-gulp": "^1.1.0",
     "fs-extra": "^5.0.0",
     "gulp": "^3.9.1"
   },
