@@ -8,9 +8,6 @@
     "Chris Barber <cbarber@axway.com>"
   ],
   "license": "Apache-2.0",
-  "coming soon": {
-    "appcd-plugin-titanium": "*"
-  },
   "dependencies": {
     "appcd-plugin-android": "^1.1.0",
     "appcd-plugin-genymotion": "^1.1.0",
