@@ -25,7 +25,7 @@ dispatcher.register('/foo/:id?', ctx => {
 	}
 
 	return {
-		message: 'hello guest!';
+		message: 'hello guest!'
 	};
 });
 
