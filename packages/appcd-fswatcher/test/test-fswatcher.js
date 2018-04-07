@@ -16,7 +16,7 @@ import {
 	reset,
 	renderTree,
 	status
-} from '../dist/index';
+} from '../dist/fswatcher';
 
 const logger = appcdLogger('test:appcd:fswatcher');
 const { log } = logger;

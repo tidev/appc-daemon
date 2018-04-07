@@ -1,18 +1,19 @@
 import appcdLogger from 'appcd-logger';
 import fs from 'fs-extra';
-import FSWatchManager, { renderTree, reset, roots } from '../dist/index';
+import FSWatchManager from '../dist/fswatch-manager';
 import path from 'path';
 import tmp from 'tmp';
 
 import { DispatcherError } from 'appcd-dispatcher';
 import { real } from 'appcd-path';
+import { renderTree, reset, roots } from 'appcd-fswatcher';
 
-const log = appcdLogger('test:appcd:fswatcher:manager').log;
+const log = appcdLogger('test:appcd:fswatch:manager').log;
 const { highlight } = appcdLogger.styles;
 
 const _tmpDir = tmp.dirSync({
 	mode: '755',
-	prefix: 'appcd-fswatcher-test-',
+	prefix: 'appcd-fswatch-manager-test-',
 	unsafeCleanup: true
 }).name;
 const tmpDir = real(_tmpDir);

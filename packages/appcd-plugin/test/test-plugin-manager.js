@@ -3,7 +3,7 @@ import Config from 'appcd-config';
 import ConfigService from 'appcd-config-service';
 import Dispatcher, { DispatcherError } from 'appcd-dispatcher';
 import fs from 'fs-extra';
-import FSWatchManager, { renderTree } from 'appcd-fswatcher';
+import FSWatchManager from 'appcd-fswatch-manager';
 import path from 'path';
 import PluginError from '../dist/plugin-error';
 import PluginManager from '../dist/index';
@@ -11,6 +11,7 @@ import SubprocessManager from 'appcd-subprocess';
 import tmp from 'tmp';
 
 import { expandPath } from 'appcd-path';
+import { renderTree } from 'appcd-fswatcher';
 import { sleep } from 'appcd-util';
 
 const { log } = appcdLogger('test:appcd:plugin:manager');

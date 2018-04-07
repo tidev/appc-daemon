@@ -1,0 +1,41 @@
+{
+  "name": "appcd-fswatch-manager",
+  "version": "1.0.0",
+  "description": "Filesystem watcher service for the Appc Daemon.",
+  "main": "./dist/fswatch-manager",
+  "author": "Axway, Inc. <npmjs@appcelerator.com>",
+  "maintainers": [
+    "Chris Barber <cbarber@axway.com>"
+  ],
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "gulp build",
+    "coverage": "gulp coverage",
+    "docs": "gulp docs",
+    "prepare": "gulp build",
+    "test": "gulp test"
+  },
+  "dependencies": {
+    "appcd-dispatcher": "^1.1.0",
+    "appcd-fswatcher": "^1.1.0",
+    "appcd-logger": "^1.1.0",
+    "appcd-response": "^1.1.0",
+    "source-map-support": "^0.5.4"
+  },
+  "devDependencies": {
+    "appcd-gulp": "^1.1.1",
+    "appcd-path": "^1.1.0",
+    "fs-extra": "^5.0.0",
+    "gulp": "^3.9.1",
+    "tmp": "^0.0.33"
+  },
+  "homepage": "https://github.com/appcelerator/appc-daemon#readme",
+  "bugs": "https://github.com/appcelerator/appc-daemon/issues",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/appcelerator/appc-daemon.git"
+  },
+  "engines": {
+    "node": ">=8.0.0"
+  }
+}

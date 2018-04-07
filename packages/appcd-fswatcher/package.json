@@ -2,7 +2,7 @@
   "name": "appcd-fswatcher",
   "version": "1.1.0",
   "description": "A filesystem watcher that actually works.",
-  "main": "./dist/index",
+  "main": "./dist/fswatcher",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
     "Chris Barber <cbarber@axway.com>"
@@ -18,13 +18,12 @@
   "dependencies": {
     "appcd-dispatcher": "^1.1.0",
     "appcd-logger": "^1.1.0",
-    "appcd-response": "^1.1.0",
     "appcd-util": "^1.1.0",
     "gawk": "^4.4.5",
     "source-map-support": "^0.5.4"
   },
   "devDependencies": {
-    "appcd-gulp": "^1.1.0",
+    "appcd-gulp": "^1.1.1",
     "appcd-path": "^1.1.0",
     "fs-extra": "^5.0.0",
     "gulp": "^3.9.1",

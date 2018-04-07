@@ -1,7 +1,7 @@
 {
   "name": "appcd-request",
   "version": "1.1.0",
-  "description": "Appc Daemon HTTP request service.",
+  "description": "HTTP client for the Appc Daemon.",
   "main": "./dist/request",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
@@ -17,13 +17,13 @@
   },
   "dependencies": {
     "appcd-dispatcher": "^1.1.0",
-    "appcd-fs": "^1.1.0",
+    "appcd-fs": "^1.1.1",
     "appcd-logger": "^1.1.0",
     "request": "^2.85.0",
     "source-map-support": "^0.5.4"
   },
   "devDependencies": {
-    "appcd-gulp": "^1.1.0",
+    "appcd-gulp": "^1.1.1",
     "gulp": "^3.9.1"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",

@@ -822,7 +822,7 @@ async function checkPackages({ skipSecurity } = {}) {
 					// is the dependency up-to-date?
 					if (dontUpdate.includes(name)) {
 						dep.status = (dep.status ? ', ' : '') + 'skipping latest';
-					} else if (installed && semver.lt(installed, latest)) {
+					} else if (installed && latest && semver.lt(installed, latest)) {
 						dep.status = (dep.status ? ', ' : '') + 'out-of-date';
 
 						const m = required.match(/^(\^|~|>|>=)/);
@@ -835,7 +835,7 @@ async function checkPackages({ skipSecurity } = {}) {
 							next: next ? `^${next}` : null,
 							nextTimestamp
 						});
-					} else if (!installed && semver.lt(required.replace(cleanVersionRegExp, ''), latest)) {
+					} else if (!installed && required && latest && semver.lt(required.replace(cleanVersionRegExp, ''), latest)) {
 						dep.status = (dep.status ? ', ' : '') + 'update available';
 
 						const m = required.match(/^(\^|~|>|>=)/);

@@ -1,7 +1,7 @@
 {
   "name": "appcd-detect",
   "version": "1.1.0",
-  "description": "A engine for detecting and watching filesystem directories for things of interest",
+  "description": "A engine for detecting and watching filesystem directories for things of interest.",
   "main": "./dist/index",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "appcd-dispatcher": "^1.1.0",
-    "appcd-fs": "^1.1.0",
+    "appcd-fs": "^1.1.1",
     "appcd-logger": "^1.1.0",
     "appcd-path": "^1.1.0",
     "appcd-subprocess": "^1.1.0",
@@ -27,8 +27,9 @@
     "source-map-support": "^0.5.4"
   },
   "devDependencies": {
+    "appcd-fswatch-manager": "^1.0.0",
     "appcd-fswatcher": "^1.1.0",
-    "appcd-gulp": "^1.1.0",
+    "appcd-gulp": "^1.1.1",
     "fs-extra": "^5.0.0",
     "gulp": "^3.9.1"
   },

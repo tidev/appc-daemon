@@ -39,7 +39,7 @@ export function banner() {
 	}
 
 	return `${highlight('Appcelerator Daemon')}, version ${getAppcdVersion()}\n`
-		+ 'Copyright (c) 2016-2017, Axway, Inc. All Rights Reserved.\n';
+		+ 'Copyright (c) 2015-2018, Axway, Inc. All Rights Reserved.\n';
 }
 
 /**

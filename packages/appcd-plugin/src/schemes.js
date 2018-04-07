@@ -1,12 +1,12 @@
 import appcdLogger from 'appcd-logger';
 import fs from 'fs';
+import FSWatcher from 'appcd-fswatcher';
 import globule from 'globule';
 import HookEmitter from 'hook-emitter';
 import _path from 'path';
 import Plugin from './plugin';
 
 import { debounce } from 'appcd-util';
-import { FSWatcher } from 'appcd-fswatcher';
 import { isDir } from 'appcd-fs';
 import { PluginMissingAppcdError } from './plugin-error';
 import { real } from 'appcd-path';

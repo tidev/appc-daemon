@@ -1,5 +1,10 @@
 /* eslint no-confusing-arrow: "off", import/no-mutable-exports: "off" */
 
+/* istanbul ignore if */
+if (!Error.prepareStackTrace) {
+	require('source-map-support/register');
+}
+
 import appcdLogger from 'appcd-logger';
 import fs from 'fs';
 import gawk from 'gawk';
@@ -903,6 +908,8 @@ export class FSWatcher extends EventEmitter {
 		this.opened = !!register(this.path, this);
 	}
 }
+
+export default FSWatcher;
 
 /**
  * Helper function that parses the root and path segments from the specified path.

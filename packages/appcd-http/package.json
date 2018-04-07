@@ -16,7 +16,7 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-fs": "^1.1.0",
+    "appcd-fs": "^1.1.1",
     "appcd-logger": "^1.1.0",
     "koa": "^2.5.0",
     "koa-bodyparser": "^4.2.0",
@@ -27,7 +27,7 @@
     "ws": "^5.1.0"
   },
   "devDependencies": {
-    "appcd-gulp": "^1.1.0",
+    "appcd-gulp": "^1.1.1",
     "gulp": "^3.9.1",
     "supertest": "^3.0.0"
   },

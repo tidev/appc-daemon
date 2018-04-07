@@ -1,10 +1,15 @@
+/* istanbul ignore if */
+if (!Error.prepareStackTrace) {
+	require('source-map-support/register');
+}
+
 import appcdLogger from 'appcd-logger';
 import Dispatcher, { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
 
 import { codes } from 'appcd-response';
 import { EventEmitter } from 'events';
 import { expandPath } from 'appcd-path';
-import { FSWatcher, renderTree, rootEmitter, status as fsStatus, tree as fsTree } from './fswatcher';
+import { FSWatcher, renderTree, rootEmitter, status as fsStatus, tree as fsTree } from 'appcd-fswatcher';
 
 const logger = appcdLogger('appcd:fswatcher:manager');
 const { highlight } = appcdLogger.styles;

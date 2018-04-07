@@ -7,5 +7,6 @@ junit.xml
 lerna-debug.log
 node_modules
 npm-debug.log
+retire_output.json
 yarn-error.log
 /packages/**/yarn.lock

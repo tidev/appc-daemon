@@ -189,7 +189,12 @@ export default class Dispatcher {
 				if (result instanceof Promise) {
 					result.then(result => resolve(result || ctx)).catch(reject);
 				} else {
-					resolve(result || ctx);
+					if (result instanceof DispatcherContext) {
+						ctx = result;
+					} else if (result !== undefined) {
+						ctx.response = result;
+					}
+					resolve(ctx);
 				}
 			});
 		};

@@ -2,7 +2,7 @@ import appcdLogger from 'appcd-logger';
 import DetectEngine from '../dist/index';
 import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs-extra';
-import FSWatchManager, { status } from 'appcd-fswatcher';
+import FSWatchManager from 'appcd-fswatch-manager';
 import gawk from 'gawk';
 import path from 'path';
 import tmp from 'tmp';
@@ -11,6 +11,7 @@ import { exe } from 'appcd-subprocess';
 import { isFile } from 'appcd-fs';
 import { real } from 'appcd-path';
 import { sleep } from 'appcd-util';
+import { status } from 'appcd-fswatcher';
 
 const { log } = appcdLogger('test:appcd:detect');
 const { highlight } = appcdLogger.styles;
