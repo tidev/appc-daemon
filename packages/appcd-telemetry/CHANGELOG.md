@@ -1,4 +1,4 @@
-# v1.1.0 (April 7, 2018)
+# v1.1.0 (April 8, 2018)
 
  * Fixed environemnt and deploy type for telemetry events.
    [(DAEMON-241)](https://jira.appcelerator.org/browse/DAEMON-241)

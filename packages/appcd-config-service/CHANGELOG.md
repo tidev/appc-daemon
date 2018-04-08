@@ -1,4 +1,4 @@
-# v1.1.0 (April 7, 2018)
+# v1.1.0 (April 8, 2018)
 
  * Fixed bug in the config service when returning defined, but falsey values.
  * Improved readme.

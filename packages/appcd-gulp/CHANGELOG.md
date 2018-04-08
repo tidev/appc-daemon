@@ -1,10 +1,11 @@
-# v1.1.1 (April 7, 2018)
+# v1.1.1 (April 8, 2018)
 
  * Added support for running `test/after.js` after tests have run regardless of success.
  * Improved readme.
  * Updated dependencies:
    - babel-core 6.26.0 -> @babel/core latest
    - babel-eslint 8.0.3 -> 8.2.2
+   - babel-plugin-istanbul 4.1.5 -> 4.1.6
    - babel-plugin-transform-async-to-generator 6.24.1 -> @babel/plugin-transform-async-to-generator latest
    - babel-plugin-transform-class-properties 6.24.1 -> next
    - babel-plugin-transform-es2015-destructuring 6.23.0 -> next

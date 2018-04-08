@@ -1,4 +1,4 @@
-# v1.1.0 (April 7, 2018)
+# v1.1.0 (April 8, 2018)
 
  * Added debug logging that can be viewed by setting `SNOOPLOGG=appcd:client`.
  * Added support for arbitrary properties on error objects to be returned to clients from the

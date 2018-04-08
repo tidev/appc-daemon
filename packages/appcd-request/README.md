@@ -35,6 +35,21 @@ req.on('data', chunk => {
 });
 ```
 
+### Environment Variables
+
+#### `APPCD_NETWORK_CA_FILE`
+
+Path to a certificate authority file to use to validate the web server's certificate.
+
+#### `APPCD_NETWORK_PROXY`
+
+The proxy server URL to use for the request.
+
+#### `APPCD_NETWORK_STRICT_SSL`
+
+By default, SSL validation is not strict. Setting this environment variable to anything other than
+`"false"` will enable strict SSL validation.
+
 ## Legal
 
 This project is open source under the [Apache Public License v2][1] and is developed by

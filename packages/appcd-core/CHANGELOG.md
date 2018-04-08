@@ -1,4 +1,4 @@
-# v1.1.0 (April 7, 2018)
+# v1.1.0 (April 8, 2018)
 
  * Added support for appcd plugins installed in the global `node_modules` directory.
    [(DAEMON-215)](https://jira.appcelerator.org/browse/DAEMON-215)

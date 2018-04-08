@@ -1,4 +1,4 @@
-# v1.1.1 (April 7, 2018)
+# v1.1.1 (April 8, 2018)
 
  * Added `appcd-plugin-titanium-sdk` plugin.
    [(DAEMON-217)](https://jira.appcelerator.org/browse/DAEMON-217)

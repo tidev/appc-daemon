@@ -1,11 +1,6 @@
-# v1.1.0 (April 7, 2018)
+# v1.1.0 (April 8, 2018)
 
- * Added debug logging that can be viewed by setting `SNOOPLOGG=appcd:client`.
- * Added support for arbitrary properties on error objects to be returned to clients from the
-   daemon.
-   [(DAEMON-248)](https://jira.appcelerator.org/browse/DAEMON-248)
  * Improved readme.
- * Minor code clean up.
  * Updated dependencies:
    - appcd-fs 1.0.1 -> 1.1.1
    - appcd-gulp 1.0.1 -> 1.1.1
