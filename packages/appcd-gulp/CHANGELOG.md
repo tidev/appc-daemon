@@ -13,7 +13,7 @@
    - babel-plugin-transform-es2015-parameters 6.24.1 -> next
    - babel-plugin-transform-object-rest-spread 6.26.0 -> next
    - babel-polyfill 6.26.0 -> @babel/polyfill latest
-   - babel-preset-minify 0.2.0 -> 0.3.0
+   - babel-preset-minify 0.2.0 -> 0.4.0
    - babel-register 6.26.0 -> @babel/register latest
    - core-js 2.5.3 -> 2.5.4
    - eslint 4.13.1 -> 4.19.1

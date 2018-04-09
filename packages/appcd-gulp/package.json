@@ -23,7 +23,7 @@
     "babel-plugin-transform-es2015-modules-commonjs": "next",
     "babel-plugin-transform-es2015-parameters": "next",
     "babel-plugin-transform-object-rest-spread": "next",
-    "babel-preset-minify": "^0.3.0",
+    "babel-preset-minify": "^0.4.0",
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "core-js": "^2.5.4",
