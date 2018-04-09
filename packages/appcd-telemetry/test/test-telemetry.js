@@ -319,8 +319,8 @@ describe('telemetry', () => {
 		});
 
 		it('should send events to the server', async function () {
-			this.timeout(10000);
-			this.slow(10000);
+			this.timeout(20000);
+			this.slow(19000);
 
 			let counter = 0;
 
@@ -337,7 +337,7 @@ describe('telemetry', () => {
 				telemetry: {
 					eventsDir,
 					sendBatchSize: 5,
-					sendInterval: 3000, // 3 seconds
+					sendInterval: 5000, // 5 seconds
 					url: 'http://127.0.0.1:1337'
 				}
 			});
@@ -362,7 +362,7 @@ describe('telemetry', () => {
 				.then(() => {
 					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(3);
 					expect(counter).to.equal(0);
-					return sleep(3500);
+					return sleep(5100);
 				})
 				.then(() => {
 					return Promise
@@ -374,7 +374,7 @@ describe('telemetry', () => {
 				.then(() => {
 					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(2);
 					expect(counter).to.equal(1);
-					return sleep(3500);
+					return sleep(5100);
 				})
 				.then(() => {
 					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(0);

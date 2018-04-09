@@ -187,7 +187,16 @@ export default class Dispatcher {
 
 				// if we got back a promise, we have to wait
 				if (result instanceof Promise) {
-					result.then(result => resolve(result || ctx)).catch(reject);
+					result
+						.then(result => {
+							if (result instanceof DispatcherContext) {
+								ctx = result;
+							} else if (result !== undefined) {
+								ctx.response = result;
+							}
+							resolve(ctx);
+						})
+						.catch(reject);
 				} else {
 					if (result instanceof DispatcherContext) {
 						ctx = result;
