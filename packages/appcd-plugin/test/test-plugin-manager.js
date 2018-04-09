@@ -306,8 +306,8 @@ describe('PluginManager', () => {
 		});
 
 		it('should register, start, and stop an external plugin using partial version match', function (done) {
-			this.timeout(10000);
-			this.slow(9000);
+			this.timeout(40000);
+			this.slow(39000);
 
 			const pluginDir = path.join(__dirname, 'fixtures', 'good');
 
@@ -327,8 +327,8 @@ describe('PluginManager', () => {
 		});
 
 		it('should call current time service plugin', function (done) {
-			this.timeout(10000);
-			this.slow(9000);
+			this.timeout(40000);
+			this.slow(39000);
 
 			const pluginDir = path.join(__dirname, 'fixtures', 'time-service');
 
@@ -350,8 +350,8 @@ describe('PluginManager', () => {
 		});
 
 		it('should subscribe to current time service plugin', function (done) {
-			this.timeout(20000);
-			this.slow(19000);
+			this.timeout(40000);
+			this.slow(39000);
 
 			const pluginDir = path.join(__dirname, 'fixtures', 'time-service');
 
@@ -642,8 +642,8 @@ describe('PluginManager', () => {
 		});
 
 		it('should handle bad plugins', function (done) {
-			this.timeout(10000);
-			this.slow(9000);
+			this.timeout(40000);
+			this.slow(39000);
 
 			const pluginDir = path.join(__dirname, 'fixtures', 'bad');
 
@@ -695,8 +695,8 @@ describe('PluginManager', () => {
 		});
 
 		it('should call a service that calls a service in another plugin', function (done) {
-			this.timeout(20000);
-			this.slow(19000);
+			this.timeout(40000);
+			this.slow(39000);
 
 			const pluginDir = path.join(__dirname, 'fixtures', 'xdep');
 
