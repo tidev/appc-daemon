@@ -405,8 +405,8 @@ describe('PluginManager', () => {
 		});
 
 		it('should reload a modified external plugin', function (done) {
-			this.timeout(20000);
-			this.slow(19000);
+			this.timeout(40000);
+			this.slow(39000);
 
 			const sourceDir = path.join(__dirname, 'fixtures', 'good');
 			const pluginDir = makeTempDir();
@@ -737,8 +737,8 @@ describe('PluginManager', () => {
 		});
 
 		it('should 404 after a plugin is unregistered', function (done) {
-			this.timeout(10000);
-			this.slow(9000);
+			this.timeout(40000);
+			this.slow(39000);
 
 			const pluginDir = path.join(__dirname, 'fixtures', 'good');
 
