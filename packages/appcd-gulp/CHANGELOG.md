@@ -15,7 +15,7 @@
    - babel-polyfill 6.26.0 -> @babel/polyfill latest
    - babel-preset-minify 0.2.0 -> 0.4.0
    - babel-register 6.26.0 -> @babel/register latest
-   - core-js 2.5.3 -> 2.5.4
+   - core-js 2.5.3 -> 2.5.5
    - eslint 4.13.1 -> 4.19.1
    - eslint-config-axway 2.0.7 -> 2.0.10
    - eslint-plugin-mocha 4.11.0 -> 5.0.0

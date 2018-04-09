@@ -1937,9 +1937,9 @@ copy-to@^2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/copy-to/-/copy-to-2.0.1.tgz#2680fbb8068a48d08656b6098092bdafc906f4a5"
 
-core-js@^2.4.0, core-js@^2.5.3, core-js@^2.5.4:
-  version "2.5.4"
-  resolved "https://registry.yarnpkg.com/core-js/-/core-js-2.5.4.tgz#f2c8bf181f2a80b92f360121429ce63a2f0aeae0"
+core-js@^2.4.0, core-js@^2.5.3, core-js@^2.5.5:
+  version "2.5.5"
+  resolved "https://registry.yarnpkg.com/core-js/-/core-js-2.5.5.tgz#b14dde936c640c0579a6b50cabcc132dd6127e3b"
 
 core-util-is@1.0.2, core-util-is@~1.0.0:
   version "1.0.2"
@@ -4633,9 +4633,9 @@ lcid@^1.0.0:
   dependencies:
     invert-kv "^1.0.0"
 
-lerna@^2.10.0:
-  version "2.10.0"
-  resolved "https://registry.yarnpkg.com/lerna/-/lerna-2.10.0.tgz#60155d1ddddde218473ac705ff62eea62e29aeef"
+lerna@^2.10.1:
+  version "2.10.1"
+  resolved "https://registry.yarnpkg.com/lerna/-/lerna-2.10.1.tgz#3b0ffe6b80d3312e8efdc7003a50d47d90ebdf03"
   dependencies:
     async "^1.5.0"
     chalk "^2.1.0"
@@ -4665,7 +4665,6 @@ lerna@^2.10.0:
     path-exists "^3.0.0"
     read-cmd-shim "^1.0.1"
     read-pkg "^3.0.0"
-    resolve-from "^4.0.0"
     rimraf "^2.6.1"
     safe-buffer "^5.1.1"
     semver "^5.4.1"
