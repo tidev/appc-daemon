@@ -1,4 +1,4 @@
-# v1.1.1 (April 8, 2018)
+# v1.1.1 (April 9, 2018)
 
  * Added support for running `test/after.js` after tests have run regardless of success.
  * Improved readme.

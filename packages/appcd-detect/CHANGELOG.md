@@ -1,4 +1,4 @@
-# v1.1.0 (April 8, 2018)
+# v1.1.0 (April 9, 2018)
 
  * Fixed typo that caused a problem when the detect engine started scanning subdirectories.
  * Improved readme.

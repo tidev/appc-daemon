@@ -1,4 +1,4 @@
-# v1.1.1 (April 8, 2018)
+# v1.1.1 (April 9, 2018)
 
  * Minor code clean up.
  * Improved readme.

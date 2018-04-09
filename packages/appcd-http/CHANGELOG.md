@@ -1,4 +1,4 @@
-# v1.1.0 (April 8, 2018)
+# v1.1.0 (April 9, 2018)
 
  * Added logging for socket related errors.
    [(DAEMON-224)](https://jira.appcelerator.org/browse/DAEMON-224)

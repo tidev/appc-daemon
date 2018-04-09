@@ -1,4 +1,4 @@
-# v1.1.0 (April 8, 2018)
+# v1.1.0 (April 9, 2018)
 
  * Added support for purging Node.js executables that haven't been used for more than 90 days.
    [(DAEMON-244)](https://jira.appcelerator.org/browse/DAEMON-244)
