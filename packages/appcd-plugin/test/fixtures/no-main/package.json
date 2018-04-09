@@ -2,7 +2,7 @@
 	"name": "no-main-index",
 	"version": "1.2.3",
 	"main": "main.js",
-	"appcd-plugin": {
+	"appcd": {
 		"name": "no-main-index"
 	}
 }

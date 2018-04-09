@@ -408,6 +408,8 @@ export default class ExternalPlugin extends PluginBase {
 							} else {
 								this.watchers[dir] = new FSWatcher(dir)
 									.on('change', evt => {
+										this.appcdLogger.log('FS Event:', evt);
+										this.appcdLogger.log('%s %s => %s', this.plugin.path, evt.file, path.relative(this.plugin.path, evt.file));
 										if (!this.plugin.ignore.ignores(path.relative(this.plugin.path, evt.file))) {
 											onFilesystemChange();
 										}

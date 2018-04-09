@@ -1,7 +1,7 @@
 {
 	"name": "good plugin",
 	"version": "1.1.0",
-	"appcd-plugin": {
+	"appcd": {
 		"name": "good"
 	}
 }
