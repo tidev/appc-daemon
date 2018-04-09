@@ -1,3 +1,7 @@
+# v1.1.2 (April 9, 2018)
+
+ * Fixed bug where the main entry point was still referencing `pretty-log` instead of `fancy-log`.
+
 # v1.1.1 (April 9, 2018)
 
  * Added support for running `test/after.js` after tests have run regardless of success.
