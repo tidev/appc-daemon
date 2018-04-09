@@ -1,4 +1,4 @@
-# v1.1.0 (April 9, 2018)
+# v1.1.0 (Apr 9, 2018)
 
  * Added `--view` option to `appcd dump` command which launches the dump in the
    [appcd-dump-viewer](https://github.com/appcelerator/appcd-dump-viewer).

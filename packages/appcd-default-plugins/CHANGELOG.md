@@ -1,11 +1,11 @@
-# v1.1.1 (April 9, 2018)
+# v1.1.1 (Apr 9, 2018)
 
  * Added `appcd-plugin-titanium-sdk` plugin.
    [(DAEMON-217)](https://jira.appcelerator.org/browse/DAEMON-217)
  * Removed all appcd-* packages which were used as a workaround for a yarn workspaces limitation.
  * Improved readme.
 
-# v1.1.0 (April 2, 2018)
+# v1.1.0 (Apr 2, 2018)
 
  * This was a botched release and has been unpublished.
 

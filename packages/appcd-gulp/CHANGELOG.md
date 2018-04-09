@@ -1,8 +1,8 @@
-# v1.1.2 (April 9, 2018)
+# v1.1.2 (Apr 9, 2018)
 
  * Fixed bug where the main entry point was still referencing `pretty-log` instead of `fancy-log`.
 
-# v1.1.1 (April 9, 2018)
+# v1.1.1 (Apr 9, 2018)
 
  * Added support for running `test/after.js` after tests have run regardless of success.
  * Improved readme.
@@ -33,7 +33,7 @@
    - sinon 4.1.2 -> 4.5.0
    - sinon-chai 2.14.0 -> 3.0.0
 
-# v1.1.0 (April 2, 2018)
+# v1.1.0 (Apr 2, 2018)
 
  * This was a botched release and has been unpublished.
 

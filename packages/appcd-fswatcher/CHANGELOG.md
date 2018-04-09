@@ -1,4 +1,4 @@
-# v1.1.0 (April 9, 2018)
+# v1.1.0 (Apr 9, 2018)
 
  * Added support for handling restricted directories and files.
    [(DAEMON-233)](https://jira.appcelerator.org/browse/DAEMON-233)
