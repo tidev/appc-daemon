@@ -46,4 +46,4 @@ This project is open source under the [Apache Public License v2][1] and is devel
 [Axway, Inc](http://www.axway.com/) and the community. Please read the [`LICENSE`][1] file included
 in this distribution for more information.
 
-[1]: https://github.com/appcelerator/appc-daemon/packages/appcd-response/LICENSE
+[1]: https://github.com/appcelerator/appc-daemon/blob/master/packages/appcd-response/LICENSE
