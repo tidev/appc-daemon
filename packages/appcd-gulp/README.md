@@ -1,3 +1,75 @@
 # appcd-gulp
 
 Common gulp tasks and utilities.
+
+Visit https://github.com/appcelerator/appc-daemon for more information.
+
+## Installation
+
+> Note: You must install [gulp](https://npmjs.org/package/gulp) 3.x globally.
+
+	npm i appcd-gulp gulp --save-dev
+
+## Usage
+
+Create a file in the root of your project called `gulpfile.js`:
+
+```js
+'use strict';
+
+require('appcd-gulp')({
+	gulp:     require('gulp'),
+	pkgJson:  require('./package.json'),
+	template: 'standard',
+	babel:    'node8'
+});
+```
+
+There is currently only one template: `standard`.
+
+You can specify the Node.js version you wish to transpile down to. Possibly values are `node4`,
+`node6`, `node7`, and `node8`.
+
+## Gulp Tasks
+
+Completely deletes all generated folders or a specific type:
+
+	$ gulp clean
+	$ gulp clean-coverage
+	$ gulp clean-dist
+	$ gulp clean-docs
+
+Run [eslint](https://eslint.org/) against your source code and tests.
+
+	$ gulp lint
+	$ gulp lint-src
+	$ gulp lint-test
+
+Invoke [Babel](https://babeljs.io/) and transpile your code into the `dist` directory.
+
+	$ gulp build
+
+Build and run unit tests using [Mocha](https://mochajs.org/).
+
+	$ gulp test
+
+Build and run unit tests with coverage reports using [Mocha](https://mochajs.org/),
+[Istanbul](https://istanbul.js.org/), and [nyc](https://www.npmjs.com/package/nyc).
+
+	$ gulp coverage
+
+Watch source files for changes to trigger a re-build.
+
+	$ gulp watch
+
+Watch source and test files for changes to trigger a re-build and run tests.
+
+	$ gulp watch-test
+
+## Legal
+
+This project is open source under the [Apache Public License v2][1] and is developed by
+[Axway, Inc](http://www.axway.com/) and the community. Please read the [`LICENSE`][1] file included
+in this distribution for more information.
+
+[1]: https://github.com/appcelerator/appc-daemon/packages/appcd-gulp/LICENSE

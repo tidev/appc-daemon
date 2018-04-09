@@ -16,7 +16,7 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-fs": "^1.1.0",
+    "appcd-fs": "^1.1.1",
     "appcd-logger": "^1.1.0",
     "appcd-path": "^1.1.0",
     "appcd-subprocess": "^1.1.0",
@@ -28,7 +28,7 @@
     "source-map-support": "^0.5.4"
   },
   "devDependencies": {
-    "appcd-gulp": "^1.1.0",
+    "appcd-gulp": "^1.1.1",
     "gulp": "^3.9.1",
     "tmp": "^0.0.33"
   },

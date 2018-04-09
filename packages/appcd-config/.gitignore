@@ -8,4 +8,5 @@ gulpfile.tmp.*
 junit.xml
 node_modules
 npm-debug.log
+retire_output.json
 yarn-error.log

@@ -1,7 +1,7 @@
 {
 	"name": "no-main-index",
 	"version": "1.2.3",
-	"appcd-plugin": {
+	"appcd": {
 		"name": "no-main-index"
 	}
 }

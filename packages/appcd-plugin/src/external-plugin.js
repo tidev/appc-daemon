@@ -1,6 +1,7 @@
 import Agent from 'appcd-agent';
 import appcdLogger from 'appcd-logger';
 import Dispatcher, { DispatcherError } from 'appcd-dispatcher';
+import FSWatcher from 'appcd-fswatcher';
 import gawk from 'gawk';
 import path from 'path';
 import PluginBase, { states } from './plugin-base';
@@ -9,7 +10,6 @@ import Response, { AppcdError, codes } from 'appcd-response';
 import Tunnel from './tunnel';
 
 import { debounce } from 'appcd-util';
-import { FSWatcher } from 'appcd-fswatcher';
 import { Readable } from 'stream';
 
 const { alert, highlight, notice, ok } = appcdLogger.styles;

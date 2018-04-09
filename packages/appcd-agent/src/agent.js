@@ -132,14 +132,12 @@ export default class Agent extends EventEmitter {
 		};
 
 		Promise
-			.all(this.collectors.map(fn => Promise.resolve()
-				.then(() => fn())
-				.then(result => {
-					if (result && typeof result === 'object') {
-						Object.assign(stats, result);
-					}
-				})
-			))
+			.all(this.collectors.map(async fn => {
+				const result = await fn();
+				if (result && typeof result === 'object') {
+					Object.assign(stats, result);
+				}
+			}))
 			.then(() => {
 				// figure out how long it's been since we started the last poll
 				const now = Date.now();

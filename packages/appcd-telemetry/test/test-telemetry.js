@@ -318,9 +318,9 @@ describe('telemetry', () => {
 				.catch(done);
 		});
 
-		it('should send events to the server', async function () {
-			this.timeout(10000);
-			this.slow(10000);
+		it('should send events to the server', function (done) {
+			this.timeout(20000);
+			this.slow(19000);
 
 			let counter = 0;
 
@@ -333,53 +333,77 @@ describe('telemetry', () => {
 
 			let i = 0;
 			const eventsDir = makeTempDir();
-			const telemetry = this.telemetry = await createInitializedTelemetry({
+
+			createInitializedTelemetry({
 				telemetry: {
 					eventsDir,
 					sendBatchSize: 5,
-					sendInterval: 3000, // 3 seconds
+					sendInterval: 5000, // 5 seconds
 					url: 'http://127.0.0.1:1337'
 				}
-			});
+			}).then(telemetry => {
+				this.telemetry = telemetry;
 
-			const dispatcher = new Dispatcher()
-				.register('/appcd/telemetry', telemetry);
+				const timers = [
+					// verify 3 events queued
+					setTimeout(() => {
+						try {
+							expect(fs.readdirSync(eventsDir)).to.have.lengthOf(3);
+							expect(counter).to.equal(0);
+						} catch (e) {
+							timers.forEach(timer => clearTimeout(timer));
+							done(e);
+						}
+					}, 3000),
 
-			const addEvent = () => {
-				return dispatcher
-					.call('/appcd/telemetry', {
-						event: 'test',
-						foo: `bar${++i}`
-					});
-			};
+					// sending 3 events at 5000
 
-			return Promise
-				.all([
-					addEvent(),
-					addEvent(),
-					addEvent()
-				])
-				.then(() => {
-					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(3);
-					expect(counter).to.equal(0);
-					return sleep(3500);
-				})
-				.then(() => {
-					return Promise
-						.all([
-							addEvent(),
-							addEvent()
-						]);
-				})
-				.then(() => {
-					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(2);
-					expect(counter).to.equal(1);
-					return sleep(3500);
-				})
-				.then(() => {
-					expect(fs.readdirSync(eventsDir)).to.have.lengthOf(0);
-					expect(counter).to.equal(2);
-				});
+					// add events 4 and 5
+					setTimeout(() => {
+						addEvent();
+						addEvent();
+					}, 6500),
+
+					// verify 2 events queued
+					setTimeout(() => {
+						try {
+							expect(fs.readdirSync(eventsDir)).to.have.lengthOf(2);
+							expect(counter).to.equal(1);
+						} catch (e) {
+							timers.forEach(timer => clearTimeout(timer));
+							done(e);
+						}
+					}, 8500),
+
+					// sending 2 events at 10000
+
+					setTimeout(() => {
+						try {
+							expect(fs.readdirSync(eventsDir)).to.have.lengthOf(0);
+							expect(counter).to.equal(2);
+							done();
+						} catch (e) {
+							done(e);
+						}
+					}, 12500)
+				];
+
+				const dispatcher = new Dispatcher()
+					.register('/appcd/telemetry', telemetry);
+
+				const addEvent = () => {
+					return dispatcher
+						.call('/appcd/telemetry', {
+							event: 'test',
+							foo: `bar${++i}`
+						});
+				};
+
+				// add events 1, 2, and 3
+				addEvent();
+				addEvent();
+				addEvent();
+			}).catch(err => done(err));
 		});
 
 		it('should not delete events if the server fails', async function () {

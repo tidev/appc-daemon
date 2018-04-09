@@ -1,7 +1,7 @@
 {
 	"name": "good plugin with ignore",
 	"version": "1.2.3",
-	"appcd-plugin": {
+	"appcd": {
 		"name": "good-with-ignore",
 		"inactivityTimeout": 30000,
 		"ignore": [

@@ -3,7 +3,7 @@ import Config from 'appcd-config';
 import ConfigService from 'appcd-config-service';
 import Dispatcher, { DispatcherError } from 'appcd-dispatcher';
 import fs from 'fs-extra';
-import FSWatchManager, { renderTree } from 'appcd-fswatcher';
+import FSWatchManager from 'appcd-fswatch-manager';
 import path from 'path';
 import PluginError from '../dist/plugin-error';
 import PluginManager from '../dist/index';
@@ -11,6 +11,7 @@ import SubprocessManager from 'appcd-subprocess';
 import tmp from 'tmp';
 
 import { expandPath } from 'appcd-path';
+import { renderTree } from 'appcd-fswatcher';
 import { sleep } from 'appcd-util';
 
 const { log } = appcdLogger('test:appcd:plugin:manager');
@@ -305,8 +306,8 @@ describe('PluginManager', () => {
 		});
 
 		it('should register, start, and stop an external plugin using partial version match', function (done) {
-			this.timeout(10000);
-			this.slow(9000);
+			this.timeout(40000);
+			this.slow(39000);
 
 			const pluginDir = path.join(__dirname, 'fixtures', 'good');
 
@@ -326,8 +327,8 @@ describe('PluginManager', () => {
 		});
 
 		it('should call current time service plugin', function (done) {
-			this.timeout(10000);
-			this.slow(9000);
+			this.timeout(40000);
+			this.slow(39000);
 
 			const pluginDir = path.join(__dirname, 'fixtures', 'time-service');
 
@@ -349,8 +350,8 @@ describe('PluginManager', () => {
 		});
 
 		it('should subscribe to current time service plugin', function (done) {
-			this.timeout(20000);
-			this.slow(19000);
+			this.timeout(40000);
+			this.slow(39000);
 
 			const pluginDir = path.join(__dirname, 'fixtures', 'time-service');
 
@@ -404,8 +405,8 @@ describe('PluginManager', () => {
 		});
 
 		it('should reload a modified external plugin', function (done) {
-			this.timeout(20000);
-			this.slow(19000);
+			this.timeout(40000);
+			this.slow(39000);
 
 			const sourceDir = path.join(__dirname, 'fixtures', 'good');
 			const pluginDir = makeTempDir();
@@ -498,8 +499,8 @@ describe('PluginManager', () => {
 		});
 
 		it('should not reload a plugin when file is ignored', function (done) {
-			this.timeout(20000);
-			this.slow(19000);
+			this.timeout(40000);
+			this.slow(39000);
 
 			const sourceDir = path.join(__dirname, 'fixtures', 'good-with-ignore');
 			const pluginDir = makeTempDir();
@@ -567,8 +568,8 @@ describe('PluginManager', () => {
 		});
 
 		it('should not reload a plugin when file is ignored using wildcards', function (done) {
-			this.timeout(30000);
-			this.slow(29000);
+			this.timeout(40000);
+			this.slow(39000);
 
 			const sourceDir = path.join(__dirname, 'fixtures', 'good-with-ignore-wildcard');
 			const pluginDir = makeTempDir();
@@ -641,8 +642,8 @@ describe('PluginManager', () => {
 		});
 
 		it('should handle bad plugins', function (done) {
-			this.timeout(10000);
-			this.slow(9000);
+			this.timeout(40000);
+			this.slow(39000);
 
 			const pluginDir = path.join(__dirname, 'fixtures', 'bad');
 
@@ -694,8 +695,8 @@ describe('PluginManager', () => {
 		});
 
 		it('should call a service that calls a service in another plugin', function (done) {
-			this.timeout(20000);
-			this.slow(19000);
+			this.timeout(40000);
+			this.slow(39000);
 
 			const pluginDir = path.join(__dirname, 'fixtures', 'xdep');
 
@@ -736,8 +737,8 @@ describe('PluginManager', () => {
 		});
 
 		it('should 404 after a plugin is unregistered', function (done) {
-			this.timeout(10000);
-			this.slow(9000);
+			this.timeout(40000);
+			this.slow(39000);
 
 			const pluginDir = path.join(__dirname, 'fixtures', 'good');
 

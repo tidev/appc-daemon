@@ -1,7 +1,7 @@
 {
 	"name": "bad plugin",
 	"version": "1.2.3",
-	"appcd-plugin": {
+	"appcd": {
 		"name": "bad",
 		"inactivityTimeout": 5000
 	}

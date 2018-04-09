@@ -129,7 +129,133 @@ describe('Client', () => {
 	});
 
 	describe('request()', () => {
-		it('should make a request to the mock server', done => {
+		it('should error if params is not a string or object', () => {
+			expect(() => {
+				new Client().request();
+			}).to.throw(TypeError, 'Expected non-empty path or parameters object');
+
+			expect(() => {
+				new Client().request(123);
+			}).to.throw(TypeError, 'Expected non-empty path or parameters object');
+
+			expect(() => {
+				new Client().request('');
+			}).to.throw(TypeError, 'Expected non-empty path or parameters object');
+		});
+
+		it('should error if path is not a string or empty', () => {
+			expect(() => {
+				new Client().request({});
+			}).to.throw(TypeError, 'Expected path to be a non-empty string');
+
+			expect(() => {
+				new Client().request({ path: null });
+			}).to.throw(TypeError, 'Expected path to be a non-empty string');
+
+			expect(() => {
+				new Client().request({ path: '' });
+			}).to.throw(TypeError, 'Expected path to be a non-empty string');
+		});
+
+		it('should error if data is not an object', () => {
+			expect(() => {
+				new Client().request({ path: '/foo', data: 'bar' });
+			}).to.throw(TypeError, 'Expected data to be an object');
+
+			expect(() => {
+				new Client().request({ path: '/foo', data: [] });
+			}).to.throw(TypeError, 'Expected data to be an object');
+		});
+
+		it('should error if type is not a string', () => {
+			expect(() => {
+				new Client().request({ path: '/foo', type: 123 });
+			}).to.throw(TypeError, 'Expected type to be a string');
+
+			expect(() => {
+				new Client().request({ path: '/foo', type: [] });
+			}).to.throw(TypeError, 'Expected type to be a string');
+		});
+
+		it('should make a request without data to the mock server', done => {
+			let result = null;
+			let count = 0;
+			const server = new WebSocketServer({ port: 12345 });
+
+			function finish() {
+				if (++count === 1) {
+					server.close(() => {
+						done(result);
+					});
+				}
+			}
+
+			server.on('connection', (conn, req) => {
+				conn.on('message', msg => {
+					let json;
+					try {
+						json = JSON.parse(msg);
+					} catch (e) {
+						result = result || e;
+						return;
+					}
+
+					try {
+						expect(req.headers).to.have.property('user-agent');
+						expect(req.headers['user-agent']).to.match(/ appcd-client\//);
+						if (req.headers['accept-language']) {
+							expect(req.headers['accept-language']).to.match(/^([a-z]{2})(?:[-_](?:\w+[-_])?([A-Z]{2}))?$/i);
+						}
+						expect(json).to.be.an('object');
+						expect(json).to.have.keys('version', 'path', 'id');
+						expect(json.version).to.be.a('string');
+						expect(json.version).to.equal('1.0');
+						expect(json.path).to.be.a('string');
+						expect(json.path).to.equal('/foo');
+						expect(json.id).to.be.a('string');
+						expect(json.id).to.not.equal('');
+						expect(json.data).to.be.undefined;
+					} catch (e) {
+						result = result || e;
+					}
+
+					conn.send(JSON.stringify({
+						status: 200,
+						id: json.id,
+						message: { baz: 'wiz' }
+					}));
+				});
+			});
+
+			const client = new Client({ port: 12345 });
+
+			client.request('/foo')
+				.on('response', (data, response) => {
+					try {
+						expect(data).to.be.an('object');
+						expect(data).to.deep.equal({ baz: 'wiz' });
+
+						expect(response).to.be.an('object');
+						expect(response).to.have.keys('status', 'message');
+						expect(response.status).to.equal(200);
+						expect(response.message).to.deep.equal({ baz: 'wiz' });
+					} catch (e) {
+						result = result || e;
+					}
+					client.disconnect();
+					finish();
+				})
+				.on('close', () => {
+					result = result || new Error('Expected response, not close');
+					finish();
+				})
+				.on('error', err => {
+					result = result || err;
+					finish();
+				});
+		});
+
+		it('should make a request with data to the mock server', done => {
 			let result = null;
 			let count = 0;
 			const server = new WebSocketServer({ port: 12345 });

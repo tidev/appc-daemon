@@ -1,7 +1,7 @@
 {
 	"name": "time-service",
 	"version": "1.0.0",
-	"appcd-plugin": {
+	"appcd": {
 		"name": "time-service"
 	}
 }

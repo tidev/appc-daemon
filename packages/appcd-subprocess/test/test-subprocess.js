@@ -201,7 +201,10 @@ describe('subprocess', () => {
 			}).to.throw(SubprocessError, 'Spawn "options" must be an object');
 		});
 
-		it('should spawn a command', done => {
+		it('should spawn a command', function (done) {
+			this.timeout(20000);
+			this.slow(19000);
+
 			const desc = subprocess.spawn({
 				command: process.execPath,
 				args: [

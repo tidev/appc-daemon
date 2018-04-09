@@ -2,9 +2,15 @@
 
 Library for config files with metadata.
 
+Visit https://github.com/appcelerator/appc-daemon for more information.
+
+## Installation
+
+	npm i appcd-config
+
 ## Usage
 
-```javascript
+```js
 import Config from 'appcd-config';
 
 const conf = new Config({
@@ -24,3 +30,11 @@ conf.on('change', () => {
 
 conf.set('some.setting', 'another value');
 ```
+
+## Legal
+
+This project is open source under the [Apache Public License v2][1] and is developed by
+[Axway, Inc](http://www.axway.com/) and the community. Please read the [`LICENSE`][1] file included
+in this distribution for more information.
+
+[1]: https://github.com/appcelerator/appc-daemon/packages/appcd-config/LICENSE

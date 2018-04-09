@@ -1,7 +1,7 @@
 {
 	"name": "wrong-node-ver-external",
 	"version": "1.2.3",
-	"appcd-plugin": {
+	"appcd": {
 		"name": "wrong-node-ver-external"
 	},
 	"engines": {

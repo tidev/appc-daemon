@@ -143,23 +143,48 @@ export default class Client {
 	/**
 	 * Issues a request to the server over a websocket.
 	 *
-	 * @param {String} path - The path to send.
-	 * @param {Object} [data] - An object to send.
-	 * @param {String} [type] - The request type. Valid types include `call`, `subscribe`, and
-	 * `unsubscribe`.
+	 * @param {String|Object} pathOrParams - The path to request or an object containing the path,
+	 * data, and type.
+	 * @param {String} [pathOrParams.path] - The path to request.
+	 * @param {Object} [pathOrParams.data] - An object to send.
+	 * @param {String} [pathOrParams.type] - The request type. Valid types include `call`,
+	 * `subscribe`, and `unsubscribe`.
 	 * @returns {EventEmitter} Emits events `response` and `error`.
 	 * @access public
 	 */
-	request({ path, data, type } = {}) {
-		const emitter = new EventEmitter();
+	request(pathOrParams) {
+		if (!pathOrParams || (typeof pathOrParams !== 'string' && typeof pathOrParams !== 'object')) {
+			throw new TypeError('Expected non-empty path or parameters object');
+		}
 
+		const emitter = new EventEmitter();
+		const id = uuid.v4();
 		const startTime = new Date();
+		const req = {
+			version: '1.0',
+			path: pathOrParams,
+			id
+		};
+
+		if (typeof pathOrParams === 'object') {
+			Object.assign(req, pathOrParams);
+		}
+
+		if (!req.path || typeof req.path !== 'string') {
+			throw new TypeError('Expected path to be a non-empty string');
+		}
+
+		if (req.data && (typeof req.data !== 'object' || Array.isArray(req.data))) {
+			throw new TypeError('Expected data to be an object');
+		}
+
+		if (req.type && typeof req.type !== 'string') {
+			throw new TypeError('Expected type to be a string');
+		}
 
 		// need to delay request so event emitter can be returned and events can
 		// be wired up
 		setImmediate(() => {
-			const id = uuid.v4();
-
 			return this.connect()
 				.on('connected', client => {
 					this.requests[id] = response => {
@@ -170,7 +195,7 @@ export default class Client {
 						// no need for the id anymore
 						delete response.id;
 
-						log(`${style(status)} ${highlight(path)} ${note(`${new Date() - startTime}ms`)}`);
+						log(`${style(status)} ${highlight(req.path)} ${note(`${new Date() - startTime}ms`)}`);
 
 						switch (statusClass) {
 							case 2:
@@ -194,14 +219,6 @@ export default class Client {
 								}
 								emitter.emit('error', err, response);
 						}
-					};
-
-					const req = {
-						version: '1.0',
-						path,
-						id,
-						data,
-						type
 					};
 
 					log('Sending request:', req);

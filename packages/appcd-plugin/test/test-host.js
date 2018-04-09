@@ -4,8 +4,8 @@ import { spawn } from 'child_process';
 
 describe('Plugin Host', () => {
 	it('should error when trying to run the plugin host without IPC', function (done) {
-		this.timeout(10000);
-		this.slow(9000);
+		this.timeout(40000);
+		this.slow(39000);
 
 		const child = spawn(process.execPath, [
 			path.resolve(__dirname, '..', 'bin', 'appcd-plugin-host')
