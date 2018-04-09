@@ -1,4 +1,4 @@
-# v1.1.1 (April 9, 2018)
+# v1.1.1 (Apr 9, 2018)
 
  * Minor code clean up.
  * Improved readme.
@@ -6,7 +6,7 @@
    - appcd-gulp 1.0.1 -> 1.1.1
    - source-map-support 0.5.0 -> 0.5.4
 
-# v1.1.0 (April 2, 2018)
+# v1.1.0 (Apr 2, 2018)
 
  * This was a botched release and has been unpublished.
 

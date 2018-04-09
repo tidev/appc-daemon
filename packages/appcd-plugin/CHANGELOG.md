@@ -1,4 +1,4 @@
-# v1.1.0 (April 9, 2018)
+# v1.1.0 (Apr 9, 2018)
 
  * Enforce appcd version compatible check when loading a plugin.
    [(DAEMON-208)](https://jira.appcelerator.org/browse/DAEMON-208)
