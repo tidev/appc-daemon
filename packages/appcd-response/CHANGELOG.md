@@ -1,3 +1,7 @@
+# v1.1.1 (Apr 10, 2018)
+
+ * Added response code 501 Not Implemented.
+
 # v1.1.0 (Apr 9, 2018)
 
  * Improved readme.
