@@ -17,7 +17,7 @@ const cmd = {
 			.request
 			.on('response', (message, response) => {
 				if (!argv.subscribe) {
-					console.log(JSON.stringify(message, null, 2));
+					console.log(JSON.stringify(response, null, 2));
 					process.exit(0);
 				}
 
@@ -25,7 +25,7 @@ const cmd = {
 					if (response.fin) {
 						process.exit(0);
 					}
-					console.log(JSON.stringify(message, null, 2));
+					console.log(JSON.stringify(response, null, 2));
 				}
 			})
 			.on('error', err => {
@@ -33,7 +33,7 @@ const cmd = {
 					console.log('Server not running');
 					process.exit(3);
 				} else {
-					console.log(JSON.stringify(err, null, '  '));
+					console.log(JSON.stringify(err, null, 2));
 					process.exit(err.exitCode || 1);
 				}
 			});

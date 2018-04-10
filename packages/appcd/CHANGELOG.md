@@ -1,3 +1,7 @@
+# v1.1.1 (Apr 10, 2018)
+
+ * Changed `exec` command to return full JSON response instead of just the message.
+
 # v1.1.0 (Apr 9, 2018)
 
  * Added `--view` option to `appcd dump` command which launches the dump in the
