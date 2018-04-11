@@ -1,3 +1,14 @@
+# v1.1.2 (Apr 11, 2018)
+
+ * Updated dependencies:
+   - appcd-plugin-android 1.0.0 -> 1.1.0
+   - appcd-plugin-genymotion 1.0.0 -> 1.1.0
+   - appcd-plugin-ios 1.0.0 -> 1.1.0
+   - appcd-plugin-jdk 1.0.0 -> 1.1.0
+   - appcd-plugin-system-info 1.0.0 -> 1.1.0
+   - appcd-plugin-titanium-sdk 1.0.0 -> 1.2.0
+   - appcd-plugin-windows 1.0.0 -> 1.1.0
+
 # v1.1.1 (Apr 9, 2018)
 
  * Added `appcd-plugin-titanium-sdk` plugin.

@@ -1,4 +1,4 @@
-# v1.1.1 (Apr 11, 2018)
+# v1.2.0 (Apr 11, 2018)
 
  * Reset the plugin's `stack` message when the plugin is stopped.
  * Fixed error handling when a plugin fails to activate or deactivate.
