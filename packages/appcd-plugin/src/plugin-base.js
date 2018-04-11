@@ -238,8 +238,14 @@ export default class PluginBase extends EventEmitter {
 			this.setState(states.STOPPING);
 		}
 
-		await this.onStop();
-		this.deactivate();
+		try {
+			await this.onStop();
+		} catch (e) {
+			this.info.error = e.message;
+			this.info.stack = e.stack;
+		} finally {
+			this.deactivate();
+		}
 	}
 
 	/**
