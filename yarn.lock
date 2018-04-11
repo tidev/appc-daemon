@@ -277,20 +277,20 @@ amdefine@>=0.0.4:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/amdefine/-/amdefine-1.0.1.tgz#4a5282ac164729e93619bcfd3ad151f817ce91f5"
 
-androidlib@^2.1.0:
-  version "2.3.3"
-  resolved "https://registry.yarnpkg.com/androidlib/-/androidlib-2.3.3.tgz#5167af2b89815ecb1d5d60aee0ab5ffee0b37cb5"
+androidlib@^2.3.4:
+  version "2.3.4"
+  resolved "https://registry.yarnpkg.com/androidlib/-/androidlib-2.3.4.tgz#25f6fbb9709551e219237140a33c9ccc79e0dbbc"
   dependencies:
-    appcd-fs "^1.0.1"
-    appcd-logger "^1.0.1"
-    appcd-path "^1.0.1"
-    appcd-subprocess "^1.0.1"
-    appcd-util "^1.0.1"
-    cli-kit "^0.0.9"
+    appcd-fs "^1.1.1"
+    appcd-logger "^1.1.0"
+    appcd-path "^1.1.0"
+    appcd-subprocess "^1.1.0"
+    appcd-util "^1.1.0"
+    cli-kit "^0.0.12"
     fs-extra "^5.0.0"
     gawk "^4.4.5"
-    simple-plist "^0.2.1"
-    source-map-support "^0.5.0"
+    simple-plist "^0.3.0"
+    source-map-support "^0.5.4"
     xmldom "^0.1.27"
 
 ansi-align@^2.0.0:
@@ -379,69 +379,47 @@ appcd-dump-viewer@^1.1.4:
     vuetify "^1.0.0"
 
 appcd-plugin-android@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/appcd-plugin-android/-/appcd-plugin-android-1.0.0.tgz#eac5cf7371cecf4435aa150bd356792d65708687"
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/appcd-plugin-android/-/appcd-plugin-android-1.1.0.tgz#478c81714f7771e4c50d5d9ce5c2bcc3fd6b7d64"
   dependencies:
-    androidlib "^2.1.0"
-    appcd-detect "^1.0.0"
-    appcd-dispatcher "^1.0.0"
-    appcd-subprocess "^1.0.0"
-    gawk "^4.4.4"
-    semver "^5.4.1"
-    source-map-support "^0.5.0"
+    androidlib "^2.3.4"
+    gawk "^4.4.5"
+    semver "^5.5.0"
+    source-map-support "^0.5.4"
 
 appcd-plugin-genymotion@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/appcd-plugin-genymotion/-/appcd-plugin-genymotion-1.0.0.tgz#e2dfdc80d75c3736000fb8dbc7aecb043302c4e2"
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/appcd-plugin-genymotion/-/appcd-plugin-genymotion-1.1.0.tgz#7d13e20f48ace66fdb784e6d1a33be90685ad31b"
   dependencies:
-    androidlib "^2.1.0"
-    appcd-detect "^1.0.0"
-    appcd-dispatcher "^1.0.0"
-    appcd-fs "^1.0.0"
-    appcd-path "^1.0.0"
-    appcd-subprocess "^1.0.0"
-    appcd-util "^1.0.0"
-    gawk "^4.4.4"
-    source-map-support "^0.5.0"
+    androidlib "^2.3.4"
+    gawk "^4.4.5"
+    source-map-support "^0.5.4"
     xmldom "^0.1.27"
 
 appcd-plugin-ios@^1.0.0:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/appcd-plugin-ios/-/appcd-plugin-ios-1.0.1.tgz#38a4928bf73314f60700d9a7e7bc9027276ae9c4"
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/appcd-plugin-ios/-/appcd-plugin-ios-1.1.0.tgz#34a6460ec4272af1c7b9c0cecfe88d37903711a6"
   dependencies:
-    appcd-detect "^1.0.0"
-    appcd-dispatcher "^1.0.0"
-    appcd-util "^1.0.0"
-    gawk "^4.4.4"
+    gawk "^4.4.5"
     ioslib "^2.0.6"
-    semver "^5.4.1"
-    source-map-support "^0.5.0"
+    semver "^5.5.0"
+    source-map-support "^0.5.4"
 
 appcd-plugin-jdk@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/appcd-plugin-jdk/-/appcd-plugin-jdk-1.0.0.tgz#238e3deb26d4a88d33fc712234755bf8655be42e"
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/appcd-plugin-jdk/-/appcd-plugin-jdk-1.1.0.tgz#8e024070c76bcc145f7d0928b8adbf9847a6f1a7"
   dependencies:
-    appcd-detect "^1.0.0"
-    appcd-dispatcher "^1.0.0"
-    appcd-subprocess "^1.0.0"
-    appcd-util "^1.0.0"
-    appcd-winreg "^1.0.0"
-    gawk "^4.4.4"
-    jdklib "^2.1.0"
-    semver "^5.4.1"
-    source-map-support "^0.5.0"
+    gawk "^4.4.5"
+    jdklib "^2.2.1"
+    semver "^5.5.0"
+    source-map-support "^0.5.4"
 
 appcd-plugin-system-info@^1.0.0:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/appcd-plugin-system-info/-/appcd-plugin-system-info-1.0.1.tgz#ca0ada07747bb7e51c981fb0475f2c965c589c94"
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/appcd-plugin-system-info/-/appcd-plugin-system-info-1.1.0.tgz#d56cba94212cfc9308d98ba0f328a21f5578d11a"
   dependencies:
-    appcd-dispatcher "^1.0.0"
-    appcd-fs "^1.0.0"
-    appcd-path "^1.0.0"
-    appcd-subprocess "^1.0.0"
-    appcd-util "^1.0.0"
-    gawk "^4.4.4"
-    source-map-support "^0.5.0"
+    gawk "^4.4.5"
+    source-map-support "^0.5.4"
 
 appcd-plugin-titanium-sdk@^1.0.0:
   version "1.0.1"
@@ -451,15 +429,13 @@ appcd-plugin-titanium-sdk@^1.0.0:
     sort-object-keys "^1.1.2"
     source-map-support "^0.5.0"
 
-appcd-plugin-windows@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/appcd-plugin-windows/-/appcd-plugin-windows-1.0.0.tgz#6d8e9863ea60e799462defb4f502638d55b56242"
+appcd-plugin-windows@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/appcd-plugin-windows/-/appcd-plugin-windows-1.1.0.tgz#c14cd948549ae4965d405b51c258e49898502379"
   dependencies:
-    appcd-dispatcher "^1.0.0"
-    appcd-util "^1.0.0"
-    gawk "^4.4.4"
-    source-map-support "^0.5.0"
-    windowslib "^0.6.3"
+    gawk "^4.4.5"
+    source-map-support "^0.5.4"
+    windowslib "^0.6.5"
 
 append-transform@^0.4.0:
   version "0.4.0"
@@ -1125,10 +1101,6 @@ balanced-match@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/balanced-match/-/balanced-match-1.0.0.tgz#89b4d199ab2bee49de164ea02b89ce462d71b767"
 
-base64-js@1.1.2:
-  version "1.1.2"
-  resolved "https://registry.yarnpkg.com/base64-js/-/base64-js-1.1.2.tgz#d6400cac1c4c660976d90d07a04351d89395f5e8"
-
 base64-js@1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/base64-js/-/base64-js-1.2.0.tgz#a39992d723584811982be5e290bb6a53d86700f1"
@@ -1160,8 +1132,8 @@ beeper@^1.0.0:
   resolved "https://registry.yarnpkg.com/beeper/-/beeper-1.1.1.tgz#e6d5ea8c5dad001304a70b22638447f69cb2f809"
 
 big-integer@^1.6.7:
-  version "1.6.27"
-  resolved "https://registry.yarnpkg.com/big-integer/-/big-integer-1.6.27.tgz#8e56c6f8b2dd6c4fe8d32102b83d4f25868e4b3a"
+  version "1.6.28"
+  resolved "https://registry.yarnpkg.com/big-integer/-/big-integer-1.6.28.tgz#8cef0fda3ccde8759c2c66efcfacc35aea658283"
 
 bin-links@^1.1.0:
   version "1.1.2"
@@ -1527,14 +1499,6 @@ cli-kit@^0.0.12:
     lodash.camelcase "^4.3.0"
     snooplogg "^1.9.2"
     source-map-support "^0.5.3"
-
-cli-kit@^0.0.9:
-  version "0.0.9"
-  resolved "https://registry.yarnpkg.com/cli-kit/-/cli-kit-0.0.9.tgz#6ed96cb502906577766729f5e6127e6c9d905517"
-  dependencies:
-    hook-emitter "^2.1.0"
-    snooplogg "^1.9.1"
-    source-map-support "^0.5.0"
 
 cli-table2@^0.2.0, cli-table2@~0.2.0:
   version "0.2.0"
@@ -3159,7 +3123,7 @@ gauge@~2.7.3:
     strip-ansi "^3.0.1"
     wide-align "^1.1.0"
 
-gawk@^4.4.4, gawk@^4.4.5:
+gawk@^4.4.5:
   version "4.4.5"
   resolved "https://registry.yarnpkg.com/gawk/-/gawk-4.4.5.tgz#f3f4b950fd52e9e238de72e70a82afe049cc0421"
   dependencies:
@@ -4002,20 +3966,20 @@ invert-kv@^1.0.0:
   resolved "https://registry.yarnpkg.com/invert-kv/-/invert-kv-1.0.0.tgz#104a8e4aaca6d3d8cd157a8ef8bfab2d7a3ffdb6"
 
 ioslib@^2.0.6:
-  version "2.0.6"
-  resolved "https://registry.yarnpkg.com/ioslib/-/ioslib-2.0.6.tgz#612effdc14ea4ddbf343ab976f427f9ce83b9353"
+  version "2.0.7"
+  resolved "https://registry.yarnpkg.com/ioslib/-/ioslib-2.0.7.tgz#a32a2a2fc679203af94e05c17c9bb5356398d2ba"
   dependencies:
-    appcd-fs "^1.0.0"
-    appcd-path "^1.0.0"
-    appcd-subprocess "^1.0.0"
-    appcd-util "^1.0.0"
-    cli-kit "^0.0.9"
-    node-forge "^0.7.1"
+    appcd-fs "^1.1.1"
+    appcd-path "^1.1.0"
+    appcd-subprocess "^1.1.0"
+    appcd-util "^1.1.0"
+    cli-kit "^0.0.12"
+    node-forge "^0.7.5"
     node-ios-device "1.5.0"
-    promise-limit "^2.5.0"
-    semver "^5.4.1"
-    simple-plist "^0.2.1"
-    source-map-support "^0.5.0"
+    promise-limit "^2.6.0"
+    semver "^5.5.0"
+    simple-plist "^0.3.0"
+    source-map-support "^0.5.4"
 
 ip@^1.1.4:
   version "1.1.5"
@@ -4387,15 +4351,15 @@ istanbul@^0.4.5:
     which "^1.1.1"
     wordwrap "^1.0.0"
 
-jdklib@^2.1.0:
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/jdklib/-/jdklib-2.2.0.tgz#e631a8d9302716f80ef3f60d9f6105b0c19c9300"
+jdklib@^2.2.1:
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/jdklib/-/jdklib-2.2.1.tgz#fd31c300242bf2a9547211dbe6be7e6eb65b742b"
   dependencies:
-    appcd-fs "^1.0.0"
-    appcd-logger "^1.0.0"
-    appcd-path "^1.0.0"
-    appcd-subprocess "^1.0.0"
-    source-map-support "^0.5.0"
+    appcd-fs "^1.1.1"
+    appcd-logger "^1.1.0"
+    appcd-path "^1.1.0"
+    appcd-subprocess "^1.1.0"
+    source-map-support "^0.5.4"
 
 js-tokens@^3.0.0, js-tokens@^3.0.2:
   version "3.0.2"
@@ -5560,7 +5524,7 @@ node-fetch-npm@^2.0.2:
     json-parse-better-errors "^1.0.0"
     safe-buffer "^5.1.1"
 
-node-forge@^0.7.1:
+node-forge@^0.7.5:
   version "0.7.5"
   resolved "https://registry.yarnpkg.com/node-forge/-/node-forge-0.7.5.tgz#6c152c345ce11c52f465c2abd957e8639cd674df"
 
@@ -5680,13 +5644,13 @@ npm-logical-tree@^1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/npm-logical-tree/-/npm-logical-tree-1.2.1.tgz#44610141ca24664cad35d1e607176193fd8f5b88"
 
-"npm-package-arg@^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0", "npm-package-arg@^4.0.0 || ^5.0.0 || ^6.0.0", npm-package-arg@^6.0.0, npm-package-arg@~6.0.0:
-  version "6.0.0"
-  resolved "https://registry.yarnpkg.com/npm-package-arg/-/npm-package-arg-6.0.0.tgz#8cce04b49d3f9faec3f56b0fe5f4391aeb9d2fac"
+"npm-package-arg@^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0", "npm-package-arg@^4.0.0 || ^5.0.0 || ^6.0.0", npm-package-arg@^6.0.0:
+  version "6.1.0"
+  resolved "https://registry.yarnpkg.com/npm-package-arg/-/npm-package-arg-6.1.0.tgz#15ae1e2758a5027efb4c250554b85a737db7fcc1"
   dependencies:
-    hosted-git-info "^2.5.0"
-    osenv "^0.1.4"
-    semver "^5.4.1"
+    hosted-git-info "^2.6.0"
+    osenv "^0.1.5"
+    semver "^5.5.0"
     validate-npm-package-name "^3.0.0"
 
 npm-package-arg@^5.1.2:
@@ -5696,6 +5660,15 @@ npm-package-arg@^5.1.2:
     hosted-git-info "^2.4.2"
     osenv "^0.1.4"
     semver "^5.1.0"
+    validate-npm-package-name "^3.0.0"
+
+npm-package-arg@~6.0.0:
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/npm-package-arg/-/npm-package-arg-6.0.0.tgz#8cce04b49d3f9faec3f56b0fe5f4391aeb9d2fac"
+  dependencies:
+    hosted-git-info "^2.5.0"
+    osenv "^0.1.4"
+    semver "^5.4.1"
     validate-npm-package-name "^3.0.0"
 
 npm-packlist@^1.1.10, npm-packlist@~1.1.10:
@@ -6322,14 +6295,6 @@ platform@1.3.5:
   version "1.3.5"
   resolved "https://registry.yarnpkg.com/platform/-/platform-1.3.5.tgz#fb6958c696e07e2918d2eeda0f0bc9448d733444"
 
-plist@2.0.1:
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/plist/-/plist-2.0.1.tgz#0a32ca9481b1c364e92e18dc55c876de9d01da8b"
-  dependencies:
-    base64-js "1.1.2"
-    xmlbuilder "8.2.2"
-    xmldom "0.1.x"
-
 plist@2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/plist/-/plist-2.1.0.tgz#57ccdb7a0821df21831217a3cad54e3e146a1025"
@@ -6412,7 +6377,7 @@ promise-inflight@^1.0.1, promise-inflight@~1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/promise-inflight/-/promise-inflight-1.0.1.tgz#98472870bf228132fcbdd868129bad12c3c029e3"
 
-promise-limit@^2.5.0, promise-limit@^2.6.0:
+promise-limit@^2.6.0:
   version "2.6.0"
   resolved "https://registry.yarnpkg.com/promise-limit/-/promise-limit-2.6.0.tgz#cb6959fcfdd0ee6ec694ec58b2b3b856ca52ffed"
 
@@ -7101,14 +7066,6 @@ signal-exit@^3.0.0, signal-exit@^3.0.1, signal-exit@^3.0.2:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/signal-exit/-/signal-exit-3.0.2.tgz#b5fdc08f1287ea1178628e415e25132b73646c6d"
 
-simple-plist@^0.2.1:
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/simple-plist/-/simple-plist-0.2.1.tgz#71766db352326928cf3a807242ba762322636723"
-  dependencies:
-    bplist-creator "0.0.7"
-    bplist-parser "0.1.1"
-    plist "2.0.1"
-
 simple-plist@^0.3.0:
   version "0.3.0"
   resolved "https://registry.yarnpkg.com/simple-plist/-/simple-plist-0.3.0.tgz#929b0e81e826b47929f7561c324a3d348e700a09"
@@ -7191,7 +7148,7 @@ snapdragon@^0.8.1:
     source-map-resolve "^0.5.0"
     use "^3.1.0"
 
-snooplogg@^1.9.1, snooplogg@^1.9.2:
+snooplogg@^1.9.2:
   version "1.9.2"
   resolved "https://registry.yarnpkg.com/snooplogg/-/snooplogg-1.9.2.tgz#8205b8742042eccf5dfef8712af66a99e887daf3"
   dependencies:
@@ -8071,8 +8028,8 @@ vue@^2.5.13:
   resolved "https://registry.yarnpkg.com/vue/-/vue-2.5.16.tgz#07edb75e8412aaeed871ebafa99f4672584a0085"
 
 vuetify@^1.0.0:
-  version "1.0.13"
-  resolved "https://registry.yarnpkg.com/vuetify/-/vuetify-1.0.13.tgz#54a802932e1fda1f9d8d1d8586c477a09c179ef3"
+  version "1.0.14"
+  resolved "https://registry.yarnpkg.com/vuetify/-/vuetify-1.0.14.tgz#ab1f0e702383f66f9d320fd8e1cd2d63e7871e0b"
 
 walkdir@0.0.7:
   version "0.0.7"
@@ -8120,7 +8077,7 @@ window-size@0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/window-size/-/window-size-0.1.0.tgz#5438cd2ea93b202efa3a19fe8887aee7c94f9c9d"
 
-windowslib@^0.6.3:
+windowslib@^0.6.5:
   version "0.6.5"
   resolved "https://registry.yarnpkg.com/windowslib/-/windowslib-0.6.5.tgz#9f1ac57af9943963d3aef6ef0580c78be233a6c1"
   dependencies:
