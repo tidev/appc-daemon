@@ -239,12 +239,15 @@ export default class WebSocketSession {
 				message:    res.message,
 				stack:      res.stack,
 				status:     res.status || 500,
-				statusCode: res.statusCode || '500',
+				statusCode: String(res.statusCode || '500'),
 				type:       'error'
 			}));
 		} else {
 			if (!res.status) {
 				res.status = 200;
+			}
+			if (!res.statusCode) {
+				res.statusCode = String(res.status);
 			}
 			data = msgpack.encode(res);
 		}

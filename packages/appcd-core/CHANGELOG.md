@@ -1,3 +1,7 @@
+# v1.1.1 (Apr 11, 2018)
+
+ * Ensure that all WebSocket responses have a status and a (string) statusCode.
+
 # v1.1.0 (Apr 9, 2018)
 
  * Added support for appcd plugins installed in the global `node_modules` directory.
