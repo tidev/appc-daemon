@@ -129,9 +129,9 @@ export default class ExternalPlugin extends PluginBase {
 	 * @returns {Promise}
 	 * @access private
 	 */
-	async onStop() {
+	onStop() {
 		// send deactivate message which will trigger the child to exit gracefully
-		await this.tunnel.send({ type: 'deactivate' });
+		return this.tunnel.send({ type: 'deactivate' });
 	}
 
 	/**
@@ -208,6 +208,10 @@ export default class ExternalPlugin extends PluginBase {
 					})
 					.then(() => {
 						send(new Response(codes.OK));
+						process.exit(0);
+					})
+					.catch(err => {
+						send(err);
 						process.exit(0);
 					});
 			}
@@ -396,6 +400,7 @@ export default class ExternalPlugin extends PluginBase {
 									// reset the plugin error state
 									this.appcdLogger.log('Reseting error state');
 									this.info.error = null;
+									this.info.stack = null;
 								})
 								.catch(err => {
 									this.appcdLogger.error('Failed to restart %s plugin: %s', highlight(this.plugin.toString()), err);

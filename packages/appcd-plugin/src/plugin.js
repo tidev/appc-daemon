@@ -320,6 +320,7 @@ export default class Plugin extends EventEmitter {
 		}
 
 		this.error = null;
+		this.stack = null;
 
 		return this.impl.start();
 	}

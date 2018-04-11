@@ -1,3 +1,10 @@
+# v1.1.1 (Apr 11, 2018)
+
+ * Reset the plugin's `stack` message when the plugin is stopped.
+ * Fixed error handling when a plugin fails to activate or deactivate.
+ * Added `/appcd/plugin/status/:name?/:version?` service to get a plugin's status without invoking
+   the plugin.
+
 # v1.1.0 (Apr 9, 2018)
 
  * Enforce appcd version compatible check when loading a plugin.

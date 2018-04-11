@@ -4,7 +4,8 @@
 
 Exposes the Plugin Manager.
 
-Accessing the service returns the Plugin Manager status.
+Accessing the service returns the Plugin Manager status including the plugin paths and all plugins
+found and registered in those paths.
 
 ```javascript
 Dispatcher
@@ -58,13 +59,13 @@ Dispatcher
 $ appcd exec /appcd/plugin/unregister '{"path":"/path/to/directory"}'
 ```
 
-### `/appcd/stop`
+### `/appcd/plugin/stop`
 
 Stops all versions of all plugins associated with the specified plugin path.
 
 ```javascript
 Dispatcher
-    .call('/appcd/stop', {
+    .call('/appcd/plugin/stop', {
         path: '/path/to/directory'
     })
     .then(result => {
@@ -77,13 +78,13 @@ Dispatcher
 $ appcd exec /appcd/plugin/stop '{"path":"/path/to/directory"}'
 ```
 
-### `/appcd/stop/<PLUGIN_NAME>`
+### `/appcd/plugin/stop/<PLUGIN_NAME>`
 
 Stops all versions of the specified plugin name.
 
 ```javascript
 Dispatcher
-    .call('/appcd/stop/foo')
+    .call('/appcd/plugin/stop/foo')
     .then(result => {
 		// 200 OK
         console.log(result);
@@ -94,13 +95,13 @@ Dispatcher
 $ appcd exec /appcd/plugin/stop/foo
 ```
 
-### `/appcd/stop/<PLUGIN_NAME>/<VERSION>`
+### `/appcd/plugin/stop/<PLUGIN_NAME>/<VERSION>`
 
 Stops a specific version or version range for the specified plugin name.
 
 ```javascript
 Dispatcher
-    .call('/appcd/stop/foo/1.0.0')
+    .call('/appcd/plugin/stop/foo/1.0.0')
     .then(result => {
 		// 200 OK
         console.log(result);
@@ -113,7 +114,7 @@ $ appcd exec /appcd/plugin/stop/foo/1.0.0
 
 ```javascript
 Dispatcher
-    .call('/appcd/stop/foo/2.x')
+    .call('/appcd/plugin/stop/foo/2.x')
     .then(result => {
 		// 200 OK
         console.log(result);
@@ -122,4 +123,61 @@ Dispatcher
 
 ```bash
 $ appcd exec /appcd/plugin/stop/foo/2.x
+```
+
+### `/appcd/plugin/status`
+
+Returns the status of all registered plugins.
+
+```javascript
+Dispatcher
+    .call('/appcd/plugin/status')
+    .then(result => {
+		// 200 OK
+        console.log(result);
+    });
+```
+
+```bash
+$ appcd exec /appcd/plugin/status
+```
+
+To get a single plugin's status by path:
+
+```bash
+$ appcd exec /appcd/plugin/status '{"path":"/path/to/directory"}'
+```
+
+### `/appcd/plugin/status/<PLUGIN_NAME>`
+
+Gets the status for all plugins matching the specified name.
+
+```javascript
+Dispatcher
+    .call('/appcd/plugin/status/appcd-plugin-titanium-sdk')
+    .then(result => {
+		// 200 OK
+        console.log(result);
+    });
+```
+
+```bash
+$ appcd exec /appcd/plugin/status/appcd-plugin-titanium-sdk
+```
+
+### `/appcd/status/<PLUGIN_NAME>/<VERSION>`
+
+Gets the status for all plugins matching the specified name and version range.
+
+```javascript
+Dispatcher
+    .call('/appcd/plugin/status/appcd-plugin-titanium-sdk/1.x')
+    .then(result => {
+		// 200 OK
+        console.log(result);
+    });
+```
+
+```bash
+$ appcd exec /appcd/plugin/status/appcd-plugin-titanium-sdk/1.x
 ```

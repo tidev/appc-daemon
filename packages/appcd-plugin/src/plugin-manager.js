@@ -37,10 +37,7 @@ export default class PluginManager extends Dispatcher {
 
 		this.register('/register', ctx => {
 			return this.registerPluginPath(ctx.request.data.path)
-				.then(() => {
-					ctx.response = new Response(codes.PLUGIN_REGISTERED);
-					return ctx;
-				})
+				.then(() => new Response(codes.PLUGIN_REGISTERED))
 				.catch(err => {
 					logger.warn(err);
 					throw err;
@@ -49,18 +46,16 @@ export default class PluginManager extends Dispatcher {
 
 		this.register('/unregister', ctx => {
 			return this.unregisterPluginPath(ctx.request.data.path)
-				.then(() => {
-					ctx.response = new Response(codes.PLUGIN_UNREGISTERED);
-					return ctx;
-				})
+				.then(() => new Response(codes.PLUGIN_UNREGISTERED))
 				.catch(err => {
 					logger.warn(err);
 					throw err;
 				});
 		});
 
-		this.register('/stop/:pluginName?/:version?', async (ctx) => {
-			const { pluginName, version } = ctx.request.params;
+		this.register('/stop/:pluginName?/:version?', async ({ request }) => {
+			const { path } = request.data;
+			const { pluginName, version } = request.params;
 			const paths = [];
 			let code = codes.NOT_FOUND;
 
@@ -70,10 +65,10 @@ export default class PluginManager extends Dispatcher {
 						paths.push(pluginPath);
 					}
 				}
-			} else if (!ctx.request.data.path) {
+			} else if (!path) {
 				throw new PluginError('Missing name or path of plugin to stop');
-			} else if (this.registry[ctx.request.data.path]) {
-				paths.push(ctx.request.data.path);
+			} else if (this.registry[path]) {
+				paths.push(path);
 			}
 
 			for (const pluginPath of paths) {
@@ -90,11 +85,23 @@ export default class PluginManager extends Dispatcher {
 				}
 			}
 
-			ctx.response = new Response(code);
+			return new Response(code);
 		});
 
-		this.register('/', ctx => {
-			ctx.response = this.status();
+		this.register('/', () => this.status());
+
+		this.register('/status/:pluginName?/:version?', ({ request }) => {
+			const { path } = request.data;
+			const { pluginName, version } = request.params;
+			let results = [];
+
+			for (const [ pluginPath, plugin ] of Object.entries(this.registry)) {
+				if ((!pluginName && !path) || (path && plugin.path === path) || (pluginName && plugin.packageName === pluginName && (!version || semver.satisfies(plugin.version, version)))) {
+					results.push(plugin.info);
+				}
+			}
+
+			return results;
 		});
 
 		/**
@@ -256,7 +263,15 @@ export default class PluginManager extends Dispatcher {
 									ctx.path = '/' + (ctx.request.params.path || '');
 
 									logger.log('Starting plugin %s', highlight(plugin.toString()));
-									await plugin.start();
+									try {
+										await plugin.start();
+									} catch (e) {
+										if (ctx.path === '/') {
+											// the plugin failed to load... possibly due to syntax error
+											return plugin.info;
+										}
+										throw e;
+									}
 
 									if (plugin.error) {
 										logger.log('Plugin %s errored during start', highlight(plugin.toString()));
