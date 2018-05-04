@@ -77,7 +77,7 @@ if (process.env.APPCD_COVERAGE) {
 	const distGRegExp = /([/\\])dist([/\\])/g;
 
 	Module._resolveFilename = function (request, parent, isMain) {
-		if (distRegExp.test(request) && parent && (parent.id.startsWith(cwd) || parent.id.startsWith(realcwd))) {
+		if (distRegExp.test(request) && parent && (parent.id.startsWith(cwd) || parent.id.startsWith(realcwd)) && !parent.id.includes('node_modules')) {
 			request = request.replace(distGRegExp, (m, q1, q2) => `${q1}src${q2}`);
 		}
 		return originalResolveFilename(request, parent, isMain);

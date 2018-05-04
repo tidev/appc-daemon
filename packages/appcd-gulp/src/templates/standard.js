@@ -166,10 +166,11 @@ module.exports = (opts) => {
 
 		// add nyc
 		if (cover) {
+			const nycModuleBinDir = resolveModuleBin('nyc');
 			if (isWindows) {
-				execPath = path.join(appcdGulpNodeModulesPath, '.bin', 'nyc.cmd');
+				execPath = path.join(nycModuleBinDir, 'nyc.cmd');
 			} else {
-				args.push(path.join(appcdGulpNodeModulesPath, '.bin', 'nyc'));
+				args.push(path.join(nycModuleBinDir, 'nyc'));
 			}
 
 			args.push(
@@ -193,12 +194,12 @@ module.exports = (opts) => {
 		}
 
 		// add mocha
-		const mocha = resolveModule('mocha');
+		const mocha = resolveModuleBin('mocha');
 		if (!mocha) {
 			log('Unable to find mocha!');
 			process.exit(1);
 		}
-		args.push(path.join(mocha, 'bin', 'mocha'));
+		args.push(path.join(mocha, 'mocha'));
 
 		// add --inspect
 		if (process.argv.indexOf('--inspect') !== -1 || process.argv.indexOf('--inspect-brk') !== -1) {
@@ -263,6 +264,10 @@ module.exports = (opts) => {
 			console.log('File ' + event.path + ' was ' + event.type + ', running tasks...');
 		});
 	});
+
+	function resolveModuleBin(name) {
+		return path.resolve(resolveModule(name), '..', '.bin');
+	}
 
 	function resolveModule(name) {
 		let dir = path.join(appcdGulpNodeModulesPath, name);
