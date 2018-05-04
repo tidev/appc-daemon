@@ -1,3 +1,8 @@
+# v1.1.3 (May 4, 2018)
+
+ * Fixed bug resolving nyc binary when it existed in `node_modules/.bin` rather than `node_modules/appcd-gulp/.bin`.
+ * Fixed bug where when running `gulp coverage` dist folders under node_modules would attempt to be transpiled incorrectly.
+
 # v1.1.2 (Apr 9, 2018)
 
  * Fixed bug where the main entry point was still referencing `pretty-log` instead of `fancy-log`.
