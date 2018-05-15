@@ -35,12 +35,12 @@
     "appcd-nodejs": "^1.1.0",
     "appcd-path": "^1.1.0",
     "appcd-util": "^1.1.0",
-    "cli-kit": "^0.0.12",
+    "cli-kit": "^0.1.0",
     "cli-table2": "^0.2.0",
-    "source-map-support": "^0.5.4"
+    "source-map-support": "^0.5.6"
   },
   "devDependencies": {
-    "appcd-gulp": "^1.1.1",
+    "appcd-gulp": "^1.1.3",
     "gulp": "^3.9.1"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
