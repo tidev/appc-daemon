@@ -1679,9 +1679,9 @@ cli-kit@^0.0.12:
     snooplogg "^1.9.2"
     source-map-support "^0.5.3"
 
-cli-kit@^0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/cli-kit/-/cli-kit-0.1.0.tgz#f046c4ee4f11d94ade0a9acd44d48c43d069d6d1"
+cli-kit@^0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/cli-kit/-/cli-kit-0.1.1.tgz#8f42dd7a47d9f33a447cca7fa766990632683621"
   dependencies:
     hook-emitter "^2.1.0"
     isexe "^2.0.0"
@@ -6130,9 +6130,9 @@ number-is-nan@^1.0.0:
   version "1.4.4"
   resolved "https://registry.yarnpkg.com/nwmatcher/-/nwmatcher-1.4.4.tgz#2285631f34a95f0d0395cd900c96ed39b58f346e"
 
-nyc@^11.6.0, nyc@^11.7.3:
-  version "11.7.3"
-  resolved "https://registry.yarnpkg.com/nyc/-/nyc-11.7.3.tgz#164f4cfad84dee6d8f353824231d9dd683aa14ea"
+nyc@^11.6.0, nyc@^11.8.0:
+  version "11.8.0"
+  resolved "https://registry.yarnpkg.com/nyc/-/nyc-11.8.0.tgz#1e8453b0644f8fea4d829b1a6636663157cd3b00"
   dependencies:
     archy "^1.0.0"
     arrify "^1.0.1"

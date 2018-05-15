@@ -35,7 +35,7 @@
     "appcd-nodejs": "^1.1.0",
     "appcd-path": "^1.1.0",
     "appcd-util": "^1.1.0",
-    "cli-kit": "^0.1.0",
+    "cli-kit": "^0.1.1",
     "cli-table2": "^0.2.0",
     "source-map-support": "^0.5.6"
   },
