@@ -1,8 +1,3 @@
-/* istanbul ignore if */
-if (!Error.prepareStackTrace) {
-	require('source-map-support/register');
-}
-
 import CLI from 'cli-kit';
 import config from './config';
 import dump from './dump';
@@ -15,7 +10,7 @@ import stop from './stop';
 
 import { getAppcdVersion } from './common';
 
-new CLI({
+export default new CLI({
 	commands: {
 		config,
 		dump,
@@ -35,8 +30,4 @@ new CLI({
 		'--no-colors':          { type: 'bool', desc: 'disables colors' }
 	},
 	version: getAppcdVersion()
-}).exec()
-	.catch(err => {
-		console.error(err.message);
-		process.exit(err.exitCode || 1);
-	});
+});

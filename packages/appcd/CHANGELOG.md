@@ -1,3 +1,8 @@
+# Unreleased
+
+ * Exported the CLI definition so that `appcd` can extend `cli-kit` enabled CLI's.
+   [(DAEMON-256)](https://jira.appcelerator.org/browse/DAEMON-256)
+
 # v1.1.1 (Apr 10, 2018)
 
  * Changed `exec` command to return full JSON response instead of just the message.
