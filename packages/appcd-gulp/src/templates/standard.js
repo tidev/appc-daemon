@@ -194,12 +194,12 @@ module.exports = (opts) => {
 		}
 
 		// add mocha
-		const mocha = resolveModuleBin('mocha');
+		const mocha = resolveModule('mocha');
 		if (!mocha) {
 			log('Unable to find mocha!');
 			process.exit(1);
 		}
-		args.push(path.join(mocha, 'mocha'));
+		args.push(path.join(mocha, 'bin', 'mocha'));
 
 		// add --inspect
 		if (process.argv.indexOf('--inspect') !== -1 || process.argv.indexOf('--inspect-brk') !== -1) {
