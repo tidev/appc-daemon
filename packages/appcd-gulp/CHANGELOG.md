@@ -1,7 +1,26 @@
+# v1.1.4 (May 17, 2018)
+
+ * Fixed regression with resolving mocha on Windows.
+ * Module filename resolver now resolves parent id before testing if file is a dist file. This is a
+   precautionary measure.
+ * Updated sinon sandbox creation to avoid deprecated API.
+ * Updated dependencies:
+   - ansi-colors 1.1.0 -> 2.0.1
+   - babel-eslint 8.2.2 -> 8.2.3
+   - babel-preset-minify 0.4.0 -> 0.4.3
+   - core-js 2.5.5 -> 2.5.6
+   - esdoc 1.0.4 -> 1.1.0
+   - esling-config-axway 2.0.10 -> 2.0.14
+   - mocha 5.0.5 -> 5.1.1
+   - nyc 11.6.0 -> 11.8.0
+   - sinon 4.5.0 -> 5.0.7
+
 # v1.1.3 (May 4, 2018)
 
- * Fixed bug resolving nyc binary when it existed in `node_modules/.bin` rather than `node_modules/appcd-gulp/.bin`.
- * Fixed bug where when running `gulp coverage` dist folders under node_modules would attempt to be transpiled incorrectly.
+ * Fixed bug resolving nyc binary when it existed in `node_modules/.bin` rather than
+   `node_modules/appcd-gulp/.bin`.
+ * Fixed bug where when running `gulp coverage` dist folders under node_modules would attempt to be
+   transpiled incorrectly.
 
 # v1.1.2 (Apr 9, 2018)
 

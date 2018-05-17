@@ -5,7 +5,7 @@ global.expect = global.chai.expect;
 global.sinon = require('sinon');
 
 beforeEach(function () {
-	this.sandbox = global.sinon.sandbox.create();
+	this.sandbox = global.sinon.createSandbox();
 	global.spy = this.sandbox.spy.bind(this.sandbox);
 	global.stub = this.sandbox.stub.bind(this.sandbox);
 });
