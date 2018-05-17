@@ -3,6 +3,7 @@
  * Exported the CLI definition so that `appcd` can extend `cli-kit` enabled CLI's.
    [(DAEMON-256)](https://jira.appcelerator.org/browse/DAEMON-256)
  * Updated dependencies:
+   - appcd-core 1.1.0 -> 1.1.2
    - appcd-gulp 1.1.1 -> 1.1.4
    - cli-kit 0.0.12 -> 0.1.2
    - source-map-support 0.5.4 -> 0.5.6
