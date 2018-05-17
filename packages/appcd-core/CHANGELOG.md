@@ -1,3 +1,10 @@
+# v1.1.2 (May 17, 2018)
+
+ * Updated dependencies:
+   - appcd-gulp 1.1.1 -> 1.1.4
+   - cli-kit 0.0.12 -> 0.1.2
+   - fs-extra 5.0.0 -> 6.0.1
+
 # v1.1.1 (Apr 11, 2018)
 
  * Ensure that all WebSocket responses have a status and a (string) statusCode.
