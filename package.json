@@ -24,10 +24,8 @@
     "run-sequence": "^2.2.1",
     "semver": "^5.5.0",
     "sloc": "^0.2.0",
+    "toposort": "^2.0.2",
     "tree-printer": "^1.1.1"
-  },
-  "scripts": {
-    "xpostinstall": "lerna bootstrap"
   },
   "workspaces": {
     "packages": [

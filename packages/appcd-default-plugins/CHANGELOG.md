@@ -1,3 +1,8 @@
+# v1.1.3 (May 24, 2018)
+
+ * Updated dependencies:
+   - appcd-plugin-genymotion 1.1.0 -> 1.1.1
+
 # v1.1.2 (Apr 11, 2018)
 
  * Updated dependencies:

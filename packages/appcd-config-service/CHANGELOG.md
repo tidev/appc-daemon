@@ -1,3 +1,15 @@
+# v1.1.1 (May 24, 2018)
+
+ * Updated dependencies:
+   - appcd-config 1.1.0 -> 1.1.1
+   - appcd-dispatcher 1.1.0 -> 1.1.1
+   - appcd-fs 1.1.1 -> 1.1.2
+   - appcd-gulp 1.1.1 -> 1.1.5
+   - appcd-logger 1.1.0 -> 1.1.1
+   - appcd-path 1.1.0 -> 1.1.1
+   - appcd-response 1.1.0 -> 1.1.2
+   - source-map-support 0.5.4 -> 0.5.6
+
 # v1.1.0 (Apr 9, 2018)
 
  * Fixed bug in the config service when returning defined, but falsey values.

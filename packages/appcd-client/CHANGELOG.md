@@ -1,3 +1,13 @@
+# v1.1.1 (May 24, 2018)
+
+ * Updated dependencies:
+   - appcd-gulp 1.1.1 -> 1.1.5
+   - appcd-logger 1.1.0 -> 1.1.1
+   - appcd-response 1.1.0 -> 1.1.2
+   - appcd-util 1.1.0 -> 1.1.1
+   - source-map-support 0.5.4 -> 0.5.6
+   - ws 5.1.0 -> 5.2.0
+
 # v1.1.0 (Apr 9, 2018)
 
  * Added debug logging that can be viewed by setting `SNOOPLOGG=appcd:client`.

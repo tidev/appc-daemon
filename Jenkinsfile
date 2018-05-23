@@ -4,6 +4,7 @@ library 'pipeline-library'
 timestamps {
   def isMaster = false
   def packageVersion
+  def nodeVersion = '8.11.1'
 
   node('osx || linux') {
     stage('Checkout') {
@@ -22,7 +23,7 @@ timestamps {
       currentBuild.displayName = "#${packageVersion}-${currentBuild.number}"
     }
 
-    nodejs(nodeJSInstallationName: 'node 8.11.1') {
+    nodejs(nodeJSInstallationName: "node ${nodeVersion}") {
       ansiColor('xterm') {
         stage('Install') {
           timeout(15) {

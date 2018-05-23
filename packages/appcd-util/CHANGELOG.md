@@ -1,3 +1,10 @@
+# v1.1.1 (May 24, 2018)
+
+ * Updated dependencies:
+   - appcd-fs 1.1.1 -> 1.1.2
+   - appcd-gulp 1.1.1 -> 1.1.5
+   - source-map-support 0.5.4 -> 0.5.6
+
 # v1.1.0 (Apr 9, 2018)
 
  * Added ability to cancel a pending `debounce()`.

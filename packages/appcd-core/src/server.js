@@ -240,7 +240,6 @@ export default class Server {
 		// send the server start event
 		await Dispatcher.call('/appcd/telemetry', {
 			arch:        getArch(),
-			argv:        process.argv.slice(),
 			cpus:        os.cpus().length,
 			event:       'server.start',
 			env:         this.config.get('environment.name'),
@@ -249,6 +248,7 @@ export default class Server {
 			platform:    process.platform,
 			plugins:     this.systems.pluginManager.registered.map(p => ({
 				name:        p.name,
+				packageName: p.packageName,
 				nodeVersion: p.nodeVersion,
 				version:     p.version,
 				type:        p.type

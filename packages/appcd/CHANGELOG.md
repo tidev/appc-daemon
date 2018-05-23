@@ -1,3 +1,16 @@
+# v1.1.3 (May 24, 2018)
+
+ * Updated dependencies:
+   - appcd-client 1.1.0 -> 1.1.1
+   - appcd-config 1.1.0 -> 1.1.1
+   - appcd-core 1.1.2 -> 1.1.3
+   - appcd-fs 1.1.1 -> 1.1.2
+   - appcd-gulp 1.1.4 -> 1.1.5
+   - appcd-logger 1.1.0 -> 1.1.1
+   - appcd-nodejs 1.1.0 -> 1.1.1
+   - appcd-path 1.1.0 -> 1.1.1
+   - appcd-util 1.1.0 -> 1.1.1
+
 # v1.1.2 (May 17, 2018)
 
  * Exported the CLI definition so that `appcd` can extend `cli-kit` enabled CLI's.

@@ -1,3 +1,16 @@
+# v1.1.1 (May 24, 2018)
+
+ * Updated dependencies:
+   - appcd-fs 1.1.1 -> 1.1.2
+   - appcd-gulp 1.1.1 -> 1.1.5
+   - appcd-logger 1.1.0 -> 1.1.1
+   - koa 2.5.0 -> 2.5.1
+   - koa-bodyparser 4.2.0 -> 4.2.1
+   - path-to-regexp 2.2.0 -> 2.2.1
+   - source-map-support 0.5.4 -> 0.5.6
+   - supertest 3.0.0 -> 3.1.0
+   - ws 5.1.0 -> 5.2.0
+
 # v1.1.0 (Apr 9, 2018)
 
  * Added logging for socket related errors.
