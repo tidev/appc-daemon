@@ -1,3 +1,11 @@
+# v1.1.2 (May 24, 2018)
+
+ * Updated dependencies:
+   - appcd-fs 1.1.1 -> 1.1.2
+   - appcd-gulp 1.1.1 -> 1.1.5
+   - appcd-winreg 1.1.0 -> 1.1.1
+   - source-map-support 0.5.4 -> 0.5.6
+
 # v1.1.1 (Apr 10, 2018)
 
  * Added response code 501 Not Implemented.

@@ -1,3 +1,8 @@
+# v1.1.5 (May 24, 2018)
+
+ * Updated dependencies:
+   - mocha 5.1.1 -> 5.2.0
+
 # v1.1.4 (May 17, 2018)
 
  * Fixed regression with resolving mocha on Windows.

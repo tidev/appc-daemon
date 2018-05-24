@@ -1,4 +1,32 @@
-# v1.2.0 (Apr 11, 2018)
+# v1.1.2 (May 24, 2018)
+
+ * Updated dependencies:
+   - appcd-agent 1.1.1 -> 1.1.2
+   - appcd-client 1.1.0 -> 1.1.1
+   - appcd-config 1.1.0 -> 1.1.1
+   - appcd-config-service 1.1.0 -> 1.1.1
+   - appcd-detect 1.1.0 -> 1.1.1
+   - appcd-dispatcher 1.1.0 -> 1.1.1
+   - appcd-fs 1.1.1 -> 1.1.2
+   - appcd-fswatch-manager 1.0.0 -> 1.0.1
+   - appcd-fswatcher 1.1.0 -> 1.1.1
+   - appcd-gulp 1.1.1 -> 1.1.5
+   - appcd-http 1.1.0 -> 1.1.1
+   - appcd-logger 1.1.0 -> 1.1.1
+   - appcd-machine-id 1.1.0 -> 1.1.1
+   - appcd-nodejs 1.1.0 -> 1.1.1
+   - appcd-path 1.1.0 -> 1.1.1
+   - appcd-request 1.1.0 -> 1.1.1
+   - appcd-response 1.1.0 -> 1.1.2
+   - appcd-subprocess 1.1.0 -> 1.1.1
+   - appcd-telemetry 1.1.0 -> 1.1.1
+   - appcd-util 1.1.0 -> 1.1.1
+   - appcd-winreg 1.1.0 -> 1.1.1
+   - fs-extra 5.0.0 -> 6.0.1
+   - ignore 3.3.7 -> 3.3.8
+   - source-map-support 0.5.4 -> 0.5.6
+
+# v1.1.1 (Apr 11, 2018)
 
  * Reset the plugin's `stack` message when the plugin is stopped.
  * Fixed error handling when a plugin fails to activate or deactivate.

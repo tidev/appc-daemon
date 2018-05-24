@@ -16,6 +16,7 @@ const semver       = require('semver');
 const spawn        = require('child_process').spawn;
 const spawnSync    = require('child_process').spawnSync;
 const Table        = require('cli-table2');
+const toposort     = require('toposort');
 const util         = require('util');
 
 const isWindows = process.platform === 'win32';
@@ -374,7 +375,7 @@ function buildDepList(pkg) {
 
 	(function scan(pkg) {
 		for (const dir of Object.keys(depmap)) {
-			if (depmap[dir].indexOf(pkg) !== -1) {
+			if (depmap[dir].deps[pkg]) {
 				if (paths[dir]) {
 					list.splice(list.indexOf(dir), 1);
 				} else {
@@ -431,7 +432,7 @@ function checkCyclic() {
 			trail.push(name);
 		}
 
-		for (const dep of packages[name]) {
+		for (const dep of Object.keys(packages[name].deps)) {
 			test(dep, trail);
 		}
 
@@ -1341,36 +1342,53 @@ function exists(file) {
 
 let depmapCache = null;
 
-function getDepMap() {
+function getDepMap(allPackages) {
 	if (depmapCache) {
 		return depmapCache;
 	}
 
-	depmapCache = {};
+	const depmap = {};
+	const graph = [];
 
 	globule
 		.find([ 'packages/*/package.json' ])
 		.forEach(pkgJsonFile => {
 			const pkgJson = JSON.parse(fs.readFileSync(pkgJsonFile));
 			const name = pkgJson.name;
-			depmapCache[name] = [];
+			depmap[name] = {
+				version: pkgJson.version,
+				deps: {}
+			};
 
 			if (pkgJson.dependencies) {
-				for (const dep of Object.keys(pkgJson.dependencies)) {
+				for (const [ dep, ver ] of Object.entries(pkgJson.dependencies)) {
+					if (allPackages || appcdPackages.has(dep)) {
+						depmap[name].deps[dep] = ver;
+					}
 					if (appcdPackages.has(dep)) {
-						depmapCache[name].push(dep);
+						graph.push([ name, dep ]);
 					}
 				}
 			}
 
 			if (pkgJson.devDependencies) {
-				for (const dep of Object.keys(pkgJson.devDependencies)) {
+				for (const [ dep, ver ] of Object.entries(pkgJson.devDependencies)) {
+					if (allPackages || appcdPackages.has(dep)) {
+						depmap[name].deps[dep] = ver;
+					}
 					if (appcdPackages.has(dep)) {
-						depmapCache[name].push(dep);
+						graph.push([ name, dep ]);
 					}
 				}
 			}
 		});
+
+	// sort the depmap
+	depmapCache = {};
+
+	for (const name of toposort(graph).reverse()) {
+		depmapCache[name] = depmap[name];
+	}
 
 	return depmapCache;
 }
@@ -1380,3 +1398,80 @@ function dump() {
 		console.error(util.inspect(arguments[i], false, null, true));
 	}
 }
+
+gulp.task('deps-changelog', cb => {
+	const depmap = getDepMap(true);
+	const npm = require('npm');
+
+	Promise.resolve()
+		.then(() => new Promise((resolve, reject) => {
+			npm.load({
+				silent: true
+			}, err => {
+				if (err) {
+					reject(err);
+				} else {
+					resolve();
+				}
+			});
+		}))
+		.then(() => {
+			return Object.keys(depmap)
+				.reduce((promise, name) => {
+					return promise.then(() => new Promise((resolve, reject) => {
+						npm.commands.view([ name ], true, (err, info) => {
+							if (err) {
+								log(yellow(`npm view failed for ${name}: ${err.message}`));
+							} else {
+								const latestVer = Object.keys(info)[0];
+								const deps = Object.assign({}, info[latestVer].dependencies, info[latestVer].devDependencies);
+								const delta = {};
+
+								for (const [ dep, localDepVer ] of Object.entries(depmap[name].deps)) {
+									if ((deps[dep] && deps[dep] !== localDepVer) || (depmap[dep] && depmap[dep].version !== localDepVer)) {
+										delta[dep] = { from: deps[dep].replace(/[^\d.]/g, ''), to: localDepVer.replace(/[^\d.]/g, '') };
+									}
+								}
+
+								if (Object.keys(delta).length) {
+									console.log(name);
+									console.log(`  Latest Version; ${latestVer}`);
+									console.log(`  Local Version:  ${depmap[name].version}\n`);
+
+									if (depmap[name].version === latestVer) {
+										console.log('NEEDS VERSION BUMP IN PACKAGE.JSON');
+									}
+									for (const dep of Object.keys(delta).sort()) {
+										if (depmap[dep] && depmap[dep].version.replace(/[^\d.]/g, '') !== delta[dep].to) {
+											console.log(`DEPENDENCY NEEDS VERSION BUMP IN PACKAGE.JSON: ${dep} ${delta[dep].to} -> ${depmap[dep].version}`);
+										}
+									}
+									console.log();
+
+									let change = ' * Updated dependencies:\n';
+									for (const dep of Object.keys(delta).sort()) {
+										const from = delta[dep].from.replace(/[^\d.]/g, '');
+										if (depmap[dep]) {
+											change += `   - ${dep} ${from} -> ${depmap[dep].version}\n`;
+										} else {
+											change += `   - ${dep} ${from} -> ${delta[dep].to}\n`;
+										}
+									}
+
+									const changelog = path.join(__dirname, 'packages', name, 'CHANGELOG.md');
+									if (!fs.existsSync(changelog) || fs.readFileSync(changelog).toString().indexOf(change) === -1) {
+										console.log(`${change}\n\n`);
+									}
+								}
+							}
+
+							resolve();
+						});
+					}));
+				}, Promise.resolve())
+		})
+		.then(() => {
+			cb();
+		})
+		.catch(cb);
+});

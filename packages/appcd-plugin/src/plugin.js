@@ -52,6 +52,7 @@ export default class Plugin extends EventEmitter {
 		this.info = gawk({
 			path:           undefined,
 			name:           undefined,
+			packageName:    undefined,
 			version:        undefined,
 			main:           undefined,
 			type:           'external',

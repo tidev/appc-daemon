@@ -137,6 +137,7 @@ describe('Plugin', () => {
 			main:           path.join(pluginPath, 'foo.js'),
 			name:           'good-main-nojs',
 			nodeVersion,
+			packageName:    'good-main-nojs',
 			path:           pluginPath,
 			supported:      true,
 			totalRequests:  0,

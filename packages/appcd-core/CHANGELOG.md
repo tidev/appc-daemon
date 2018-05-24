@@ -1,3 +1,27 @@
+# v1.1.3 (May 24, 2018)
+
+ * Removed `process.argv` from telemetry payload for GDPR.
+   [(DAEMON-257)](https://jira.appcelerator.org/browse/DAEMON-257)
+ * Updated dependencies:
+   - appcd-agent 1.1.1 -> 1.1.2
+   - appcd-config 1.1.0 -> 1.1.1
+   - appcd-config-service 1.1.0 -> 1.1.1
+   - appcd-default-plugins 1.1.1 -> 1.1.2
+   - appcd-dispatcher 1.1.0 -> 1.1.1
+   - appcd-fs 1.1.1 -> 1.1.2
+   - appcd-fswatch-manager 1.0.0 -> 1.0.1
+   - appcd-fswatcher 1.1.0 -> 1.1.1
+   - appcd-gulp 1.1.4 -> 1.1.5
+   - appcd-http 1.1.0 -> 1.1.1
+   - appcd-logger 1.1.0 -> 1.1.1
+   - appcd-nodejs 1.1.0 -> 1.1.1
+   - appcd-path 1.1.0 -> 1.1.1
+   - appcd-plugin 1.1.0 -> 1.1.2
+   - appcd-response 1.1.0 -> 1.1.2
+   - appcd-subprocess 1.1.0 -> 1.1.1
+   - appcd-telemetry 1.1.0 -> 1.1.1
+   - appcd-util 1.1.0 -> 1.1.1
+
 # v1.1.2 (May 17, 2018)
 
  * Updated dependencies:

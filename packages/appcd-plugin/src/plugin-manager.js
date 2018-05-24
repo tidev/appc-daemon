@@ -95,7 +95,7 @@ export default class PluginManager extends Dispatcher {
 			const { pluginName, version } = request.params;
 			let results = [];
 
-			for (const [ pluginPath, plugin ] of Object.entries(this.registry)) {
+			for (const plugin of Object.values(this.registry)) {
 				if ((!pluginName && !path) || (path && plugin.path === path) || (pluginName && plugin.packageName === pluginName && (!version || semver.satisfies(plugin.version, version)))) {
 					results.push(plugin.info);
 				}
@@ -347,15 +347,15 @@ export default class PluginManager extends Dispatcher {
 			.call('/appcd/telemetry', {
 				event,
 				plugin: {
-					name:    plugin.name,
-					path:    plugin.path,
-					version: plugin.version
+					name:        plugin.name,
+					packageName: plugin.packageName,
+					version:     plugin.version
 				},
 				plugins:     this.registered.map(p => {
 					const info = {
 						name:        p.name,
+						packageName: p.packageName,
 						nodeVersion: p.nodeVersion,
-						path:        p.path,
 						version:     p.version,
 						type:        p.type
 					};

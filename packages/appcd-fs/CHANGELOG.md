@@ -1,3 +1,9 @@
+# v1.1.2 (May 24, 2018)
+
+ * Updated dependencies:
+   - appcd-gulp 1.1.1 -> 1.1.5
+   - source-map-support 0.5.4 -> 0.5.6
+
 # v1.1.1 (Apr 9, 2018)
 
  * Minor code clean up.

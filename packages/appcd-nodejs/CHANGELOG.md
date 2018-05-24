@@ -1,3 +1,15 @@
+# v1.1.1 (May 24, 2018)
+
+ * Updated dependencies:
+   - appcd-fs 1.1.1 -> 1.1.2
+   - appcd-gulp 1.1.1 -> 1.1.5
+   - appcd-logger 1.1.0 -> 1.1.1
+   - appcd-request 1.1.0 -> 1.1.1
+   - appcd-util 1.1.0 -> 1.1.1
+   - fs-extra 5.0.0 -> 6.0.1
+   - source-map-support 0.5.4 -> 0.5.6
+   - tar-stream 1.5.5 -> 1.6.1
+
 # v1.1.0 (Apr 9, 2018)
 
  * Added support for purging Node.js executables that haven't been used for more than 90 days.
