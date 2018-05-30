@@ -31,10 +31,7 @@
   },
   "homepage": "https://github.com/appcelerator/appc-daemon#readme",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/appcelerator/appc-daemon.git"
-  },
+  "repository": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-fswatch-manager",
   "engines": {
     "node": ">=8.0.0"
   }
