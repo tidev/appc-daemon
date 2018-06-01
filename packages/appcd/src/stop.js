@@ -1,4 +1,4 @@
-import { banner, loadConfig, stopServer } from './common';
+import { loadConfig, stopServer } from './common';
 
 const cmd = {
 	desc: 'stops the Appc Daemon if running',
@@ -6,8 +6,6 @@ const cmd = {
 		'--force': { desc: 'force the daemon to stop' }
 	},
 	async action({ argv }) {
-		console.log(banner());
-
 		const wasRunning = await stopServer({
 			cfg: loadConfig(argv),
 			force: argv.force

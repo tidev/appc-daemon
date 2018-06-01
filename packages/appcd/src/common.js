@@ -29,20 +29,6 @@ export function getAppcdVersion() {
 }
 
 /**
- * Creates the banner that is displayed at the beginning of the command.
- *
- * @returns {String}
- */
-export function banner() {
-	if (process.env.hasOwnProperty('APPC_NPM_VERSION')) {
-		return '';
-	}
-
-	return `${highlight('Appcelerator Daemon')}, version ${getAppcdVersion()}\n`
-		+ 'Copyright (c) 2015-2018, Axway, Inc. All Rights Reserved.\n';
-}
-
-/**
  * Makes a request to the Appc Daemon.
  *
  * @param {Config} cfg - A config instance.
@@ -144,7 +130,7 @@ export function startServer({ cfg, argv }) {
 	}
 
 	process.env.APPCD = appcdVersion;
-	if (debug && !argv.colors) {
+	if (debug && !argv.color) {
 		process.env.APPCD_NO_COLORS = 1;
 	}
 	process.env.FORCE_COLOR = 1;

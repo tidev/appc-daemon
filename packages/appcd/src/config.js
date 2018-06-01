@@ -26,7 +26,7 @@ const cmd = {
 		'--json': { desc: 'outputs the config as JSON' }
 	},
 	args: [ 'action', 'key', 'value' ],
-	action({ argv }) {
+	async action({ argv }) {
 		const cfg = loadConfig(argv);
 		let { action, key, value } = argv;
 
@@ -41,125 +41,149 @@ const cmd = {
 			value
 		};
 
-		if (writeActions[action]) {
-			if (!key) {
-				printAndExit(null, `Error: Missing the configuration key to ${action}`, argv.json, 1);
+		try {
+			if (writeActions[action]) {
+				if (!key) {
+					throw new Error(`Missing the configuration key to ${action}`);
+				}
+
+				try {
+					data.value = JSON.parse(data.value);
+				} catch (e) {
+					// squelch
+				}
+
+				if ((action === 'set' || action === 'push' || action === 'unshift') && data.value === undefined) {
+					throw new Error(`Missing the configuration value to ${action}`);
+				}
 			}
 
-			try {
-				data.value = JSON.parse(data.value);
-			} catch (e) {
-				// squelch
-			}
+			const { client, request } = createRequest(cfg, '/appcd/config', data);
 
-			if ((action === 'set' || action === 'push' || action === 'unshift') && data.value === undefined) {
-				printAndExit(null, `Error: Missing the configuration value to ${action}`, argv.json, 1);
-			}
-		}
+			await new Promise((resolve, reject) => {
+				request
+					.once('error', async (err) => {
+						if (err.code === 'ECONNREFUSED') {
+							// the daemon is not running, need to do things the easy way
 
-		const { client, request } = createRequest(cfg, '/appcd/config', data);
+							if (action === 'get') {
+								const filter = key && key.split(/\.|\//).join('.') || undefined;
+								const value = cfg.get(filter);
+								if (value === undefined) {
+									const e = new Error(`Not Found: ${key}`);
+									e.exitCode = 6;
+									return reject(e);
+								}
 
-		request
-			.once('error', async (err) => {
-				if (err.code === 'ECONNREFUSED') {
-					// the daemon is not running, need to do things the easy way
+								print(key, value, argv.json);
+								resolve();
+								return;
+							}
 
-					if (action === 'get') {
-						const filter = key && key.split(/\.|\//).join('.') || undefined;
-						const value = cfg.get(filter);
-						if (value === undefined) {
-							printAndExit(key, `Not Found: ${key}`, argv.json, 6);
-						} else {
-							printAndExit(key, value, argv.json);
+							// it's a write operation
+
+							try {
+								let result = 'Saved';
+								let value;
+
+								switch (action) {
+									case 'set':
+										cfg.set(key, data.value);
+										break;
+
+									case 'delete':
+										if (!cfg.has(key)) {
+											const e = new Error(`Not Found: ${key}`);
+											e.exitCode = 6;
+											return reject(e);
+										}
+
+										if (!cfg.delete(key)) {
+											return reject(new Error(`Unable to delete key "${key}"`));
+										}
+										break;
+
+									case 'push':
+										cfg.push(key, data.value);
+										result = cfg.get(key);
+										if (!argv.json) {
+											result = JSON.stringify(result);
+										}
+										break;
+
+									case 'pop':
+										if (!cfg.has(key)) {
+											const e = new Error(`Not Found: ${key}`);
+											e.exitCode = 6;
+											return reject(e);
+										}
+
+										value = cfg.pop(key);
+										result = value || (argv.json ? null : '<empty>');
+										break;
+
+									case 'shift':
+										if (!cfg.has(key)) {
+											const e = new Error(`Not Found: ${key}`);
+											e.exitCode = 6;
+											return reject(e);
+										}
+
+										value = cfg.shift(key);
+										result = value || (argv.json ? null : '<empty>');
+										break;
+
+									case 'unshift':
+										cfg.unshift(key, data.value);
+										result = cfg.get(key);
+										if (!argv.json) {
+											result = JSON.stringify(result);
+										}
+										break;
+								}
+
+								const home = cfg.get('home');
+								if (!home) {
+									return reject(new Error('The "home" directory is not configured and the change was not saved'));
+								}
+
+								await cfg.save(expandPath(home, 'config.json'));
+
+								print(null, result, argv.json);
+								return resolve();
+
+							} catch (ex) {
+								err = ex;
+							}
 						}
-					}
 
-					// it's a write operation
+						reject(err);
+					})
+					.on('response', message => {
+						client.disconnect();
 
-					try {
 						let result = 'Saved';
-						let value;
-
-						switch (action) {
-							case 'set':
-								cfg.set(key, data.value);
-								break;
-
-							case 'delete':
-								if (!cfg.has(key)) {
-									printAndExit(null, `Not Found: ${key}`, argv.json, 6);
-								} else if (!cfg.delete(key)) {
-									printAndExit(null, `Error: Unable to delete key "${key}"`, argv.json, 1);
-								}
-								break;
-
-							case 'push':
-								cfg.push(key, data.value);
-								result = cfg.get(key);
-								if (!argv.json) {
-									result = JSON.stringify(result);
-								}
-								break;
-
-							case 'pop':
-								if (!cfg.has(key)) {
-									printAndExit(null, `Not Found: ${key}`, argv.json, 6, '404');
-								} else {
-									value = cfg.pop(key);
-									result = value || (argv.json ? null : '<empty>');
-								}
-								break;
-
-							case 'shift':
-								if (!cfg.has(key)) {
-									printAndExit(null, `Not Found: ${key}`, argv.json, 6, '404');
-								} else {
-									value = cfg.shift(key);
-									result = value || (argv.json ? null : '<empty>');
-								}
-								break;
-
-							case 'unshift':
-								cfg.unshift(key, data.value);
-								result = cfg.get(key);
-								if (!argv.json) {
-									result = JSON.stringify(result);
-								}
-								break;
+						if (message !== 'OK') {
+							result = message;
+						} else if (argv.json) {
+							// if a pop() or shift() returns OK, then that means there's no more items and
+							// thus we have to force undefined
+							if (/^pop|shift$/.test(action)) {
+								result = '';
+							}
 						}
 
-						const home = cfg.get('home');
-						if (!home) {
-							printAndExit(null, 'The "home" directory is not configured and the change was not saved', argv.json, '1');
-						}
-
-						await cfg.save(expandPath(home, 'config.json'));
-
-						printAndExit(null, result, argv.json);
-
-					} catch (ex) {
-						err = ex;
-					}
-				}
-
-				printAndExit(null, argv.json ? err.message : err.toString(), argv.json, 1);
-			})
-			.on('response', message => {
-				client.disconnect();
-
-				let result = 'Saved';
-				if (message !== 'OK') {
-					result = message;
-				} else if (argv.json) {
-					// if a pop() or shift() returns OK, then that means there's no more items and
-					// thus we have to force undefined
-					if (/^pop|shift$/.test(action)) {
-						result = '';
-					}
-				}
-
-				printAndExit(key, result, argv.json);
+						print(key, result, argv.json);
+						resolve();
+					});
 			});
+		} catch (e) {
+			if (argv.json) {
+				this.showHelpOnError = false;
+				e.json = argv.json;
+			}
+			throw e;
+		}
 	}
 };
 
@@ -172,13 +196,11 @@ export default cmd;
  * settings.
  * @param {*} value - The resulting value.
  * @param {Boolean} [json=false] - When `true`, displays the output as json.
- * @param {Number} [exitCode=0] - The exit code to return after printing the value.
- * @param {Number} [code=0] - The code to return in a json response
  */
-function printAndExit(key, value, json, exitCode = 0) {
+function print(key, value, json) {
 	if (json) {
 		console.log(JSON.stringify({
-			code: exitCode,
+			code: 0,
 			result: value
 		}, null, 2));
 	} else if (value && typeof value === 'object') {
@@ -205,6 +227,4 @@ function printAndExit(key, value, json, exitCode = 0) {
 	} else {
 		console.log(value);
 	}
-
-	process.exit(exitCode);
 }

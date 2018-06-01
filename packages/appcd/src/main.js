@@ -7,6 +7,16 @@ import cli from './cli';
 
 cli.exec()
 	.catch(err => {
-		console.error(err.message);
-		process.exit(err.exitCode || 1);
+		const exitCode = err.exitCode || 1;
+
+		if (err.json) {
+			console.log(JSON.stringify({
+				code: exitCode,
+				result: err.toString()
+			}, null, 2));
+		} else {
+			console.error(err.message);
+		}
+
+		process.exit(exitCode);
 	});

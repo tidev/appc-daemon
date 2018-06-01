@@ -1,6 +1,6 @@
 import Table from 'cli-table2';
 
-import { banner, createRequest, loadConfig } from './common';
+import { createRequest, loadConfig } from './common';
 import { createInstanceWithDefaults, StdioStream } from 'appcd-logger';
 
 const logger = createInstanceWithDefaults().config({ theme: 'compact' }).enable('*').pipe(new StdioStream());
@@ -23,7 +23,6 @@ const cmd = {
 					if (argv.json) {
 						log('{}');
 					} else {
-						log(banner());
 						log('Server not running');
 					}
 					process.exit(3);
@@ -38,8 +37,6 @@ const cmd = {
 					log(JSON.stringify(status, null, 2));
 					return;
 				}
-
-				log(banner());
 
 				const params = {
 					chars: {
