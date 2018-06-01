@@ -1,4 +1,4 @@
-import { loadConfig, stopServer } from './common';
+import { loadConfig, stopServer } from '../common';
 
 const cmd = {
 	desc: 'stops the Appc Daemon if running',

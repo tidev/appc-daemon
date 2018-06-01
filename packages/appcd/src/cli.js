@@ -1,13 +1,13 @@
 import appcdLogger from 'appcd-logger';
 import CLI from 'cli-kit';
-import config from './config';
-import dump from './dump';
-import exec from './exec';
-import logcat from './logcat';
-import restart from './restart';
-import start from './start';
-import status from './status';
-import stop from './stop';
+import config from './commands/config';
+import dump from './commands/dump';
+import exec from './commands/exec';
+import logcat from './commands/logcat';
+import restart from './commands/restart';
+import start from './commands/start';
+import status from './commands/status';
+import stop from './commands/stop';
 
 import { getAppcdVersion } from './common';
 

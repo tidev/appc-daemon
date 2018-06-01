@@ -1,6 +1,6 @@
 import Table from 'cli-table2';
 
-import { createRequest, loadConfig } from './common';
+import { createRequest, loadConfig } from '../common';
 import { createInstanceWithDefaults, StdioStream } from 'appcd-logger';
 
 const logger = createInstanceWithDefaults().config({ theme: 'compact' }).enable('*').pipe(new StdioStream());

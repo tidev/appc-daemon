@@ -7,7 +7,7 @@ import {
 
 import { arrayify } from 'appcd-util';
 
-import { createRequest, loadConfig } from './common';
+import { createRequest, loadConfig } from '../common';
 
 const cmd = {
 	args: [

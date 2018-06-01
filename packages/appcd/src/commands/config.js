@@ -1,4 +1,4 @@
-import { createRequest, loadConfig } from './common';
+import { createRequest, loadConfig } from '../common';
 import { expandPath } from 'appcd-path';
 
 const readActions = {

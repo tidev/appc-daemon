@@ -3,7 +3,7 @@ import launch from 'appcd-dump-viewer';
 import os from 'os';
 import path from 'path';
 
-import { createRequest, loadConfig } from './common';
+import { createRequest, loadConfig } from '../common';
 import { debounce } from 'appcd-util';
 
 const cmd = {

@@ -1,4 +1,4 @@
-import { loadConfig, startServer } from './common';
+import { loadConfig, startServer } from '../common';
 
 const cmd = {
 	desc: 'starts the Appc Daemon if it\'s not already running',
