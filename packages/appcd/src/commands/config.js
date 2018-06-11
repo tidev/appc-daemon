@@ -25,7 +25,22 @@ const cmd = {
 	options: {
 		'--json': { desc: 'outputs the config as JSON' }
 	},
-	args: [ 'action', 'key', 'value' ],
+	args: [
+		{
+			name: 'action',
+			desc: 'the action to run',
+			values: {
+				'ls, list': 'display all settings',
+				get: 'display a specific setting',
+				set: 'change a setting',
+				'rm, delete': 'remove a setting',
+				push: 'add a value to the end of a list',
+				pop: 'remove the last value in a list'
+			}
+		},
+		{ name: 'key', desc: '' },
+		{ name: 'value', desc: '' }
+	],
 	async action({ argv }) {
 		const cfg = loadConfig(argv);
 		let { action, key, value } = argv;
@@ -63,6 +78,10 @@ const cmd = {
 			await new Promise((resolve, reject) => {
 				request
 					.once('error', async (err) => {
+						// in general, we do not want to show the help screen for the errors below
+						// since they are valid messages and we're just using errors for flow control
+						this.showHelpOnError = false;
+
 						if (err.code === 'ECONNREFUSED') {
 							// the daemon is not running, need to do things the easy way
 
@@ -177,12 +196,12 @@ const cmd = {
 						resolve();
 					});
 			});
-		} catch (e) {
+		} catch (err) {
 			if (argv.json) {
 				this.showHelpOnError = false;
-				e.json = argv.json;
+				err.json = argv.json;
 			}
-			throw e;
+			throw err;
 		}
 	}
 };
