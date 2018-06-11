@@ -36,7 +36,7 @@
     "appcd-path": "^1.1.1",
     "appcd-util": "^1.1.1",
     "cli-kit": "^0.1.2",
-    "cli-table2": "^0.2.0",
+    "cli-table3": "^0.5.0",
     "source-map-support": "^0.5.6"
   },
   "devDependencies": {

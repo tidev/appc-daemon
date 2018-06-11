@@ -1,4 +1,4 @@
-import Table from 'cli-table2';
+import Table from 'cli-table3';
 
 import { banner, createRequest, loadConfig } from './common';
 import { createInstanceWithDefaults, StdioStream } from 'appcd-logger';
