@@ -15,7 +15,7 @@ const runSequence  = require('run-sequence');
 const semver       = require('semver');
 const spawn        = require('child_process').spawn;
 const spawnSync    = require('child_process').spawnSync;
-const Table        = require('cli-table2');
+const Table        = require('cli-table3');
 const toposort     = require('toposort');
 const util         = require('util');
 
