@@ -31,6 +31,7 @@ export default new CLI({
 		status,
 		stop
 	},
+	desc: 'The Appc Daemon is a local server that runs in the background and hosts services which power the tooling for Axway products such as Axway Titanium SDK.',
 	help: true,
 	helpExitCode: 2,
 	name: 'appcd',

@@ -21,6 +21,7 @@ const writeActions = {
 };
 
 const cmd = {
+	aliases: 'conf',
 	desc: 'get and set config options',
 	options: {
 		'--json': { desc: 'outputs the config as JSON' }
