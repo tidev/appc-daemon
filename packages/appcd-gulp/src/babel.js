@@ -1,4 +1,8 @@
-{
+const fs     = require('fs');
+const Module = require('module');
+const path   = require('path');
+
+const profiles = {
 	"node4": {
 		"plugins": [
 			"dynamic-import-node",
@@ -55,4 +59,38 @@
 			"minify"
 		]
 	}
-}
+};
+
+module.exports = function getBabelConf(opts) {
+	const name = profiles[opts.babel] ? opts.babel : 'node8';
+	process.env.APPCD_BABEL_CONF = name;
+
+	const babelConf = profiles[name];
+
+	for (let plugin of babelConf.plugins) {
+		plugin = `babel-plugin-${plugin}`;
+		(function inject(dir) {
+			for (const name of fs.readdirSync(dir)) {
+				const subdir = path.join(dir, name);
+				try {
+					if (fs.statSync(subdir).isDirectory()) {
+						const resolvedModule = Module._resolveLookupPaths(plugin, {
+							filename: plugin,
+							paths: Module._nodeModulePaths(subdir)
+						});
+						const cacheKey = JSON.stringify({
+							request: plugin,
+							paths: resolvedModule[1]
+						});
+						Module._pathCache[cacheKey] = require.resolve(plugin);
+						// inject(subdir);
+					}
+				} catch (e) {}
+			}
+		}(opts.projectDir));
+	}
+
+	delete babelConf.xpresets;
+
+	return babelConf;
+};

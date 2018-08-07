@@ -17,7 +17,6 @@ const spawnSync    = require('child_process').spawnSync;
 const Table        = require('cli-table2');
 const toposort     = require('toposort');
 const util         = require('util');
-const webpack      = require('webpack');
 
 const isWindows = process.platform === 'win32';
 
@@ -193,39 +192,8 @@ gulp.task('build', [ 'cyclic' ], () => {
 	runLerna([ 'run', '--parallel', 'build' ]);
 });
 
-gulp.task('pack', [ 'cyclic' ], cb => {
-	const compiler = webpack({
-		entry: {
-			main: './packages/appcd/src/main.js'
-		},
-		module: {
-			loaders: [
-				{
-					test: /\.js$/,
-					exclude: /node_modules/,
-					loader: 'babel-loader'
-				}
-			]
-		},
-		output: {
-			filename: 'appcd.js',
-			path: __dirname
-		},
-		target: 'node'
-	});
-
-	compiler.run((err, stats) => {
-		if (err) {
-			console.error(err);
-			return cb(err);
-		}
-
-		for (const file of stats.compilation.fileDependencies) {
-			console.log(file.replace(__dirname, ''));
-		}
-
-		cb();
-	});
+gulp.task('package', [ 'cyclic' ], () => {
+	runLerna([ 'run', '--parallel', 'package' ]);
 });
 
 /*

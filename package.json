@@ -24,8 +24,7 @@
     "semver": "^5.5.0",
     "sloc": "^0.2.0",
     "toposort": "^2.0.2",
-    "tree-printer": "^1.1.1",
-    "webpack": "^4.16.5"
+    "tree-printer": "^1.1.1"
   },
   "workspaces": {
     "packages": [

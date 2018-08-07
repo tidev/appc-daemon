@@ -15,6 +15,7 @@
     "@babel/register": "latest",
     "ansi-colors": "^2.0.5",
     "babel-eslint": "^8.2.6",
+    "babel-loader": "next",
     "babel-plugin-dynamic-import-node": "^2.0.0",
     "babel-plugin-istanbul": "^4.1.6",
     "babel-plugin-transform-class-properties": "next",
@@ -45,7 +46,8 @@
     "mocha-jenkins-reporter": "^0.3.12",
     "nyc": "^12.0.2",
     "sinon": "^6.1.4",
-    "sinon-chai": "^3.2.0"
+    "sinon-chai": "^3.2.0",
+    "webpack": "^4.16.5"
   },
   "peerDependencies": {
     "gulp": "3.x"
