@@ -1,10 +1,8 @@
 import fs from 'fs';
-import launch from 'appcd-dump-viewer';
 import os from 'os';
 import path from 'path';
 
 import { createRequest, loadConfig } from '../common';
-import { debounce } from 'appcd-util';
 
 const cmd = {
 	desc: 'dumps the config, status, health, and debug logs to a file',
@@ -26,8 +24,9 @@ const cmd = {
 		let { file } = argv;
 
 		return Promise.resolve()
+			.then(() => import('appcd-util'))
 			// get the logs first to avoid noise from getting the config, status, and health
-			.then(() => new Promise(resolve => {
+			.then(({ debounce }) => new Promise(resolve => {
 				const { client, request } = createRequest(cfg, '/appcd/logcat', { colors: false });
 				const done = debounce(() => {
 					client.disconnect();
@@ -104,7 +103,7 @@ const cmd = {
 			]))
 			.then(() => results)
 			.catch(err => err)
-			.then(results => {
+			.then(async results => {
 				if (argv.view && !file) {
 					file = path.join(os.tmpdir(), 'appcd-dump.json');
 				}
@@ -115,6 +114,7 @@ const cmd = {
 					console.log(`Wrote dump to ${file}`);
 
 					if (argv.view) {
+						const launch = require('appcd-dump-viewer');
 						launch(file);
 					}
 				} else {

@@ -3,7 +3,6 @@
 const ansiColors   = require('ansi-colors');
 const chug         = require('gulp-chug');
 const debug        = require('gulp-debug');
-const del          = require('del');
 const fs           = require('fs-extra');
 const globule      = require('globule');
 const gulp         = require('gulp');
@@ -18,6 +17,7 @@ const spawnSync    = require('child_process').spawnSync;
 const Table        = require('cli-table2');
 const toposort     = require('toposort');
 const util         = require('util');
+const webpack      = require('webpack');
 
 const isWindows = process.platform === 'win32';
 
@@ -193,6 +193,41 @@ gulp.task('build', [ 'cyclic' ], () => {
 	runLerna([ 'run', '--parallel', 'build' ]);
 });
 
+gulp.task('pack', [ 'cyclic' ], cb => {
+	const compiler = webpack({
+		entry: {
+			main: './packages/appcd/src/main.js'
+		},
+		module: {
+			loaders: [
+				{
+					test: /\.js$/,
+					exclude: /node_modules/,
+					loader: 'babel-loader'
+				}
+			]
+		},
+		output: {
+			filename: 'appcd.js',
+			path: __dirname
+		},
+		target: 'node'
+	});
+
+	compiler.run((err, stats) => {
+		if (err) {
+			console.error(err);
+			return cb(err);
+		}
+
+		for (const file of stats.compilation.fileDependencies) {
+			console.log(file.replace(__dirname, ''));
+		}
+
+		cb();
+	});
+});
+
 /*
  * test tasks
  */
@@ -253,7 +288,7 @@ function runTests(cover, cb) {
 		}, Promise.resolve())
 		.then(() => {
 			if (cover) {
-				del.sync([ coverageDir ]);
+				fs.removeSync(coverageDir);
 				fs.mkdirsSync(coverageDir);
 				console.log();
 

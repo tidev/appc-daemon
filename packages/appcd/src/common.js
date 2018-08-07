@@ -4,9 +4,7 @@ import path from 'path';
 import appcdLogger from 'appcd-logger';
 
 import { expandPath } from 'appcd-path';
-import { generateV8MemoryArgument, spawnNode } from 'appcd-nodejs';
 import { isFile } from 'appcd-fs';
-import { sleep } from 'appcd-util';
 import { spawn } from 'child_process';
 
 import * as config from 'appcd-config';
@@ -136,7 +134,8 @@ export function startServer({ cfg, argv }) {
 	process.env.FORCE_COLOR = 1;
 
 	return Promise.resolve()
-		.then(() => {
+		.then(() => import('appcd-nodejs'))
+		.then(({ generateV8MemoryArgument, spawnNode }) => {
 			// check if we should use the core's required Node.js version
 			if (cfg.get('core.enforceNodeVersion') !== false) {
 				if (!nodeVer) {
@@ -281,6 +280,8 @@ export function stopServer({ cfg, force }) {
 			const signal = force ? 'SIGKILL' : 'SIGTERM';
 			log(`Daemon is running, sending ${signal}`);
 			process.kill(pid, signal);
+
+			const { sleep } = await import('appcd-util');
 
 			await sleep(500);
 

@@ -14,15 +14,12 @@ const cmd = {
 		{ name: 'filters...', desc: 'one or more namespace patterns' }
 	],
 	desc: 'streams Appc Daemon debug log output',
-	options: {
-		'--no-colors': { desc: 'disables colors' }
-	},
 	action({ argv }) {
 		return new Promise((resolve, reject) => {
 			const cfg = loadConfig(argv);
 
 			let formatter;
-			if (argv.colors) {
+			if (argv.color) {
 				formatter = new Format();
 			} else {
 				formatter = new StripColors();

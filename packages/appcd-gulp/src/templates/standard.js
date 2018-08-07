@@ -6,8 +6,7 @@ module.exports = (opts) => {
 	const $           = require('gulp-load-plugins')();
 	const ansiColors  = require('ansi-colors');
 	const babelConfs  = require('../babel.json');
-	const del         = require('del');
-	const fs          = require('fs');
+	const fs          = require('fs-extra');
 	const log         = require('fancy-log');
 	const Module      = require('module');
 	const path        = require('path');
@@ -63,11 +62,11 @@ module.exports = (opts) => {
 	 */
 	gulp.task('clean', [ 'clean-coverage', 'clean-dist', 'clean-docs' ]);
 
-	gulp.task('clean-coverage', done => { del(coverageDir, { force: true }).then(() => done()); });
+	gulp.task('clean-coverage', done => fs.remove(coverageDir, done));
 
-	gulp.task('clean-dist', done => { del(distDir, { force: true }).then(() => done()); });
+	gulp.task('clean-dist', done => fs.remove(distDir, done));
 
-	gulp.task('clean-docs', done => { del(docsDir, { force: true }).then(() => done()); });
+	gulp.task('clean-docs', done => fs.remove(docsDir, done));
 
 	/*
 	 * lint tasks

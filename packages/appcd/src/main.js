@@ -15,7 +15,7 @@ cli.exec()
 				result: err.toString()
 			}, null, 2));
 		} else {
-			console.error(err.message);
+			console.error(err.message || err);
 		}
 
 		process.exit(exitCode);
