@@ -559,11 +559,11 @@ export default class ExternalPlugin extends PluginBase {
 								this.info.stats = null;
 								break;
 
-							// case 'stdout':
-							// 	data.output.trim().split('\n').forEach(line => {
-							// 		this.appcdLogger.log('STDOUT', line);
-							// 	});
-							// 	break;
+								// case 'stdout':
+								// 	data.output.trim().split('\n').forEach(line => {
+								// 		this.appcdLogger.log('STDOUT', line);
+								// 	});
+								// 	break;
 
 							case 'stderr':
 								if (debugEnabled) {
