@@ -3,23 +3,22 @@
 module.exports = (opts) => {
 	require('./standard')(opts);
 
-	const gulp       = opts.gulp;
+	const gulp              = opts.gulp;
 
-	const babelConf  = require('../babel')(opts);
-	const fs         = require('fs-extra');
-	const path       = require('path');
-	const webpack    = require('webpack');
+	const babelConf         = require('../babel')(opts);
+	const fs                = require('fs-extra');
+	const path              = require('path');
+	const webpack           = require('webpack');
 
-	const projectDir  = opts.projectDir;
-	const packageName = opts.pkgJson.name;
-	const packageFile = path.join(projectDir, `${packageName}.js`);
+	const projectDir        = opts.projectDir;
+	const packageName       = opts.pkgJson.name;
+	const outDir            = path.join(projectDir, 'out');
 
-	gulp.task('clean-package', cb => fs.remove(packageFile, cb));
+	gulp.task('clean-package', cb => fs.remove(outDir, cb));
 
-	gulp.task('package', [ 'clean-package', 'lint-src' ], cb => {
+	gulp.task('package', [ 'clean-package', 'build' ], cb => {
 		const compiler = webpack({
 			entry: path.resolve(projectDir, opts.pkgJson.main || 'index.js'),
-			mode: 'development',
 			module: {
 				rules: [
 					{
@@ -32,10 +31,27 @@ module.exports = (opts) => {
 					}
 				]
 			},
-			output: {
-				filename: `${packageName}.js`,
-				path: projectDir
+			node: {
+				__dirname: true,
+				__filename: true
 			},
+			optimization: {
+				// minimize: false
+			},
+			output: {
+				filename: packageName,
+				path: outDir
+			},
+			plugins: [
+				new webpack.BannerPlugin({
+					banner: 'hash: [hash]\nchunkhash: [chunkhash]\nname: [name]\nfilebase: [filebase]\nquery: [query]\nfile: [file]'
+				}),
+				new webpack.BannerPlugin({
+					banner: '#!/usr/bin/env node',
+					include: new RegExp(opts.pkgJson.name),
+					raw: true
+				})
+			],
 			target: 'node'
 		});
 

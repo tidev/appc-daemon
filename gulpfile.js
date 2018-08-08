@@ -192,7 +192,7 @@ gulp.task('build', [ 'cyclic' ], () => {
 	runLerna([ 'run', '--parallel', 'build' ]);
 });
 
-gulp.task('package', [ 'cyclic' ], () => {
+gulp.task('package', [ 'build' ], () => {
 	runLerna([ 'run', '--parallel', 'package' ]);
 });
 

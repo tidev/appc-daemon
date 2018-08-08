@@ -15,7 +15,7 @@
   "bin": {
     "appcd": "./bin/appcd"
   },
-  "main": "./dist/cli",
+  "main": "./dist/main",
   "preferGlobal": true,
   "scripts": {
     "build": "gulp build",
@@ -51,6 +51,7 @@
     "node": ">=8.0.0"
   },
   "cli-kit": {
-    "description": "The Appc Daemon for powering client-side tooling."
+    "description": "The Appc Daemon for powering client-side tooling.",
+    "main": "./dist/cli"
   }
 }

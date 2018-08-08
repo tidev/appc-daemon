@@ -338,8 +338,8 @@
   resolved "https://registry.yarnpkg.com/@sinonjs/samsam/-/samsam-2.0.0.tgz#9163742ac35c12d3602dece74317643b35db6a80"
 
 "@types/node@*":
-  version "10.5.6"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-10.5.6.tgz#1640f021dd0eaf12e731e54198c12ad2e020dc8e"
+  version "10.5.7"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-10.5.7.tgz#960d9feb3ade2233bcc9843c918d740b4f78a7cf"
 
 "@webassemblyjs/ast@1.5.13":
   version "1.5.13"
@@ -721,13 +721,13 @@ appcd-plugin-genymotion@^1.1.1:
     xmldom "^0.1.27"
 
 appcd-plugin-ios@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/appcd-plugin-ios/-/appcd-plugin-ios-1.1.0.tgz#34a6460ec4272af1c7b9c0cecfe88d37903711a6"
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/appcd-plugin-ios/-/appcd-plugin-ios-1.1.1.tgz#ffee28755d35929184852e6243568e0d692bfb25"
   dependencies:
-    gawk "^4.4.5"
-    ioslib "^2.0.6"
+    gawk "^4.5.0"
+    ioslib "^2.2.3"
     semver "^5.5.0"
-    source-map-support "^0.5.4"
+    source-map-support "^0.5.6"
 
 appcd-plugin-jdk@^1.1.0:
   version "1.1.0"
@@ -1088,7 +1088,7 @@ babel-helper-to-multiple-sequence-expressions@^0.4.3:
   version "0.4.3"
   resolved "https://registry.yarnpkg.com/babel-helper-to-multiple-sequence-expressions/-/babel-helper-to-multiple-sequence-expressions-0.4.3.tgz#5b518b1127f47b3038773386a1561a2b48e632b6"
 
-babel-loader@^8.0.0-beta.4:
+babel-loader@next:
   version "8.0.0-beta.4"
   resolved "https://registry.yarnpkg.com/babel-loader/-/babel-loader-8.0.0-beta.4.tgz#c3fab00696c385c70c04dbe486391f0eb996f345"
   dependencies:
@@ -1711,8 +1711,8 @@ cacache@^10.0.4:
     y18n "^4.0.0"
 
 cacache@^11.0.1, cacache@^11.0.2, cacache@^11.1.0:
-  version "11.1.0"
-  resolved "https://registry.yarnpkg.com/cacache/-/cacache-11.1.0.tgz#3d76dbc2e9da413acaad2557051960a4dad3e1a4"
+  version "11.2.0"
+  resolved "https://registry.yarnpkg.com/cacache/-/cacache-11.2.0.tgz#617bdc0b02844af56310e411c0878941d5739965"
   dependencies:
     bluebird "^3.5.1"
     chownr "^1.0.1"
@@ -3123,10 +3123,10 @@ esdoc@^1.1.0:
     taffydb "2.7.3"
 
 eslint-config-axway@^2.0.14:
-  version "2.0.14"
-  resolved "https://registry.yarnpkg.com/eslint-config-axway/-/eslint-config-axway-2.0.14.tgz#31c0b17765c7c5558ad848cdd506c7dd42c348c1"
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/eslint-config-axway/-/eslint-config-axway-2.1.0.tgz#25b9c0496741364d80cd258db04c9b4b58083e05"
   dependencies:
-    eslint-plugin-import "^2.11.0"
+    eslint-plugin-import "^2.13.0"
     eslint-plugin-security "^1.4.0"
     find-root "^1.1.0"
     semver "^5.5.0"
@@ -3145,7 +3145,7 @@ eslint-module-utils@^2.2.0:
     debug "^2.6.8"
     pkg-dir "^1.0.0"
 
-eslint-plugin-import@^2.11.0:
+eslint-plugin-import@^2.13.0:
   version "2.13.0"
   resolved "https://registry.yarnpkg.com/eslint-plugin-import/-/eslint-plugin-import-2.13.0.tgz#df24f241175e312d91662dc91ca84064caec14ed"
   dependencies:
@@ -4685,9 +4685,9 @@ invert-kv@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/invert-kv/-/invert-kv-1.0.0.tgz#104a8e4aaca6d3d8cd157a8ef8bfab2d7a3ffdb6"
 
-ioslib@^2.0.6:
-  version "2.2.1"
-  resolved "https://registry.yarnpkg.com/ioslib/-/ioslib-2.2.1.tgz#1f89a303a7675c56ce8263fd17aeb851d74042f4"
+ioslib@^2.2.3:
+  version "2.2.3"
+  resolved "https://registry.yarnpkg.com/ioslib/-/ioslib-2.2.3.tgz#d8d3ab68cea95bc408b709a6a5436c34f85d14f0"
   dependencies:
     appcd-fs "^1.1.2"
     appcd-path "^1.1.1"
@@ -4696,7 +4696,7 @@ ioslib@^2.0.6:
     cli-kit "^0.3.0"
     node-forge "^0.7.5"
     node-ios-device "^1.6.2"
-    promise-limit "^2.6.0"
+    promise-limit "^2.7.0"
     semver "^5.5.0"
     simple-plist "^0.3.0"
     source-map-support "^0.5.6"
@@ -7340,7 +7340,7 @@ promise-inflight@^1.0.1, promise-inflight@~1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/promise-inflight/-/promise-inflight-1.0.1.tgz#98472870bf228132fcbdd868129bad12c3c029e3"
 
-promise-limit@^2.6.0, promise-limit@^2.7.0:
+promise-limit@^2.7.0:
   version "2.7.0"
   resolved "https://registry.yarnpkg.com/promise-limit/-/promise-limit-2.7.0.tgz#eb5737c33342a030eaeaecea9b3d3a93cb592b26"
 
