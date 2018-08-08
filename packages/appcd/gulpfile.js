@@ -3,6 +3,6 @@
 require('appcd-gulp')({
 	gulp:     require('gulp'),
 	pkgJson:  require('./package.json'),
-	template: 'package',
+	template: 'standard',
 	babel:    'node8'
 });

@@ -18,6 +18,7 @@ module.exports = (opts) => {
 
 	gulp.task('package', [ 'clean-package', 'build' ], cb => {
 		const compiler = webpack({
+			context: projectDir,
 			entry: path.resolve(projectDir, opts.pkgJson.main || 'index.js'),
 			module: {
 				rules: [
@@ -36,7 +37,7 @@ module.exports = (opts) => {
 				__filename: true
 			},
 			optimization: {
-				// minimize: false
+				minimize: false
 			},
 			output: {
 				filename: `${packageName}.js`,
@@ -69,7 +70,7 @@ module.exports = (opts) => {
 			}
 
 			for (const file of stats.compilation.fileDependencies) {
-				console.log(file.replace(__dirname, ''));
+				console.log(file);
 			}
 
 			cb();
