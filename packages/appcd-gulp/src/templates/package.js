@@ -3,16 +3,16 @@
 module.exports = (opts) => {
 	require('./standard')(opts);
 
-	const gulp              = opts.gulp;
+	const gulp        = opts.gulp;
 
-	const babelConf         = require('../babel')(opts);
-	const fs                = require('fs-extra');
-	const path              = require('path');
-	const webpack           = require('webpack');
+	const babelConf   = require('../babel')(opts);
+	const fs          = require('fs-extra');
+	const path        = require('path');
+	const webpack     = require('webpack');
 
-	const projectDir        = opts.projectDir;
-	const packageName       = opts.pkgJson.name;
-	const outDir            = path.join(projectDir, 'out');
+	const projectDir  = opts.projectDir;
+	const packageName = opts.pkgJson.name;
+	const outDir      = path.join(projectDir, 'out');
 
 	gulp.task('clean-package', cb => fs.remove(outDir, cb));
 
@@ -39,18 +39,16 @@ module.exports = (opts) => {
 				// minimize: false
 			},
 			output: {
-				filename: packageName,
+				filename: `${packageName}.js`,
+				// filename: packageName,
 				path: outDir
 			},
 			plugins: [
-				new webpack.BannerPlugin({
-					banner: 'hash: [hash]\nchunkhash: [chunkhash]\nname: [name]\nfilebase: [filebase]\nquery: [query]\nfile: [file]'
-				}),
-				new webpack.BannerPlugin({
-					banner: '#!/usr/bin/env node',
-					include: new RegExp(opts.pkgJson.name),
-					raw: true
-				})
+				// new webpack.BannerPlugin({
+				// 	banner: '#!/usr/bin/env node',
+				// 	include: new RegExp(opts.pkgJson.name),
+				// 	raw: true
+				// })
 			],
 			target: 'node'
 		});
