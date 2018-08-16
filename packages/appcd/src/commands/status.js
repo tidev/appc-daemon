@@ -9,9 +9,9 @@ export default {
 			{ createRequest, loadConfig },
 			{ createInstanceWithDefaults, StdioStream }
 		] = await Promise.all([
-			'cli-table2',
-			'../common',
-			'appcd-logger'
+			import('cli-table2'),
+			import('../common'),
+			import('appcd-logger')
 		]);
 
 		const logger = createInstanceWithDefaults().config({ theme: 'compact' }).enable('*').pipe(new StdioStream());
