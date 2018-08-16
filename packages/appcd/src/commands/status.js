@@ -1,19 +1,23 @@
-import Table from 'cli-table2';
-
-import { createRequest, loadConfig } from '../common';
-import { createInstanceWithDefaults, StdioStream } from 'appcd-logger';
-
-const logger = createInstanceWithDefaults().config({ theme: 'compact' }).enable('*').pipe(new StdioStream());
-const { log } = logger;
-const { alert, highlight, note } = logger.styles;
-const { filesize, numberFormat, relativeTime } = logger.humanize;
-
-const cmd = {
+export default {
 	desc: 'displays the Appc Daemon status',
 	options: {
 		'--json': { desc: 'outputs the status as JSON' }
 	},
-	action({ argv }) {
+	async action({ argv }) {
+		const [
+			Table,
+			{ createRequest, loadConfig },
+			{ createInstanceWithDefaults, StdioStream }
+		] = await Promise.all([
+			'cli-table2',
+			'../common',
+			'appcd-logger'
+		]);
+
+		const logger = createInstanceWithDefaults().config({ theme: 'compact' }).enable('*').pipe(new StdioStream());
+		const { log } = logger;
+		const { alert, highlight, note } = logger.styles;
+		const { filesize, numberFormat, relativeTime } = logger.humanize;
 		const cfg = loadConfig(argv);
 		const { client, request } = createRequest(cfg, '/appcd/status');
 
@@ -153,5 +157,3 @@ const cmd = {
 			});
 	}
 };
-
-export default cmd;

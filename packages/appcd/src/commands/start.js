@@ -1,11 +1,11 @@
-import { loadConfig, startServer } from '../common';
-
-const cmd = {
+export default {
 	desc: 'starts the Appc Daemon if it\'s not already running',
 	options: {
 		'--debug': { desc: 'don\'t run as a background daemon' }
 	},
 	async action({ argv }) {
+		const { loadConfig, startServer } = await import('../common');
+
 		const cfg = loadConfig(argv);
 
 		try {
@@ -18,5 +18,3 @@ const cmd = {
 		}
 	}
 };
-
-export default cmd;

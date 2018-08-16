@@ -1,10 +1,4 @@
-import fs from 'fs';
-import os from 'os';
-import path from 'path';
-
-import { createRequest, loadConfig } from '../common';
-
-const cmd = {
+export default {
 	desc: 'dumps the config, status, health, and debug logs to a file',
 	args: [
 		{ name: 'file', desc: 'the file to dump the info to, otherwise stdout' },
@@ -12,7 +6,21 @@ const cmd = {
 	options: {
 		'--view': { desc: 'open the dump in the web browser' }
 	},
-	action({ argv }) {
+	async action({ argv }) {
+		const [
+			fs,
+			os,
+			path,
+			{ debounce },
+			{ createRequest, loadConfig }
+		] = await Promise.all([
+			import('fs'),
+			import('os'),
+			import('path'),
+			import('appcd-util'),
+			import('../common')
+		]);
+
 		const cfg = loadConfig(argv);
 		const results = {
 			config: {},
@@ -24,9 +32,8 @@ const cmd = {
 		let { file } = argv;
 
 		return Promise.resolve()
-			.then(() => import('appcd-util'))
 			// get the logs first to avoid noise from getting the config, status, and health
-			.then(({ debounce }) => new Promise(resolve => {
+			.then(() => new Promise(resolve => {
 				const { client, request } = createRequest(cfg, '/appcd/logcat', { colors: false });
 				const done = debounce(() => {
 					client.disconnect();
@@ -123,5 +130,3 @@ const cmd = {
 			});
 	}
 };
-
-export default cmd;

@@ -20,7 +20,7 @@
     "appcd-response": "^1.1.2",
     "gawk": "^4.5.0",
     "path-to-regexp": "^2.2.1",
-    "source-map-support": "^0.5.6",
+    "source-map-support": "^0.5.8",
     "uuid": "^3.3.2"
   },
   "devDependencies": {

@@ -1,6 +1,3 @@
-import { createRequest, loadConfig } from '../common';
-import { expandPath } from 'appcd-path';
-
 const readActions = {
 	get:     'get',
 	ls:      'get',
@@ -20,7 +17,7 @@ const writeActions = {
 	unshift: 'unshift'
 };
 
-const cmd = {
+export default {
 	aliases: 'conf',
 	desc: 'get and set config options',
 	options: {
@@ -43,6 +40,14 @@ const cmd = {
 		{ name: 'value', desc: '' }
 	],
 	async action({ argv }) {
+		const [
+			{ expandPath },
+			{ createRequest, loadConfig }
+		] = await Promise.all([
+			import('appcd-path'),
+			import('../common')
+		]);
+
 		const cfg = loadConfig(argv);
 		let { action, key, value } = argv;
 
@@ -206,8 +211,6 @@ const cmd = {
 		}
 	}
 };
-
-export default cmd;
 
 /**
  * Prints the result.

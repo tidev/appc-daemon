@@ -1,11 +1,11 @@
-import { loadConfig, stopServer } from '../common';
-
-const cmd = {
+export default {
 	desc: 'stops the Appc Daemon if running',
 	options: {
 		'--force': { desc: 'force the daemon to stop' }
 	},
 	async action({ argv }) {
+		const { loadConfig, stopServer } = await import('../common');
+
 		const wasRunning = await stopServer({
 			cfg: loadConfig(argv),
 			force: argv.force
@@ -19,5 +19,3 @@ const cmd = {
 		}
 	}
 };
-
-export default cmd;

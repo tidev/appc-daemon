@@ -19,8 +19,8 @@
     "appcd-dispatcher": "^1.1.1",
     "appcd-fs": "^1.1.2",
     "appcd-logger": "^1.1.1",
-    "request": "^2.87.0",
-    "source-map-support": "^0.5.6"
+    "request": "^2.88.0",
+    "source-map-support": "^0.5.8"
   },
   "devDependencies": {
     "appcd-gulp": "^1.1.5",

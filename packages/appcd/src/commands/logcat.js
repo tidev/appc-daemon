@@ -1,53 +1,52 @@
-import {
-	createInstanceWithDefaults,
-	Format,
-	StdioStream,
-	StripColors
-} from 'appcd-logger';
-
-import { arrayify } from 'appcd-util';
-
-import { createRequest, loadConfig } from '../common';
-
-const cmd = {
+export default {
 	args: [
 		{ name: 'filters...', desc: 'one or more namespace patterns' }
 	],
 	desc: 'streams Appc Daemon debug log output',
-	action({ argv }) {
-		return new Promise((resolve, reject) => {
-			const cfg = loadConfig(argv);
+	async action({ argv }) {
+		const [
+			{ createInstanceWithDefaults, Format, StdioStream, StripColors },
+			{ arrayify },
+			{ createRequest, loadConfig }
+		] = await Promise.all([
+			import('appcd-logger'),
+			import('appcd-util'),
+			import('../common')
+		]);
 
-			let formatter;
-			if (argv.color) {
-				formatter = new Format();
+		const cfg = loadConfig(argv);
+
+		let formatter;
+		if (argv.color) {
+			formatter = new Format();
+		} else {
+			formatter = new StripColors();
+		}
+		formatter.pipe(new StdioStream());
+
+		let filter = '*';
+		const filters = arrayify(argv.filters);
+		if (filters.length) {
+			if (filters.every(a => a[0] === '-')) {
+				// if every filter arg is a negation, then that means there are no allowed
+				// namespace and want we really want is everything except said filters
+				filter = `* ${filters.join(' ')}`;
 			} else {
-				formatter = new StripColors();
+				// we have both allowed and ignore namespaces
+				filter = filters.join(' ');
 			}
-			formatter.pipe(new StdioStream());
+		}
 
-			let filter = '*';
-			const filters = arrayify(argv.filters);
-			if (filters.length) {
-				if (filters.every(a => a[0] === '-')) {
-					// if every filter arg is a negation, then that means there are no allowed
-					// namespace and want we really want is everything except said filters
-					filter = `* ${filters.join(' ')}`;
-				} else {
-					// we have both allowed and ignore namespaces
-					filter = filters.join(' ');
-				}
-			}
+		const logger = createInstanceWithDefaults()
+			.config({
+				minBrightness: 80,
+				maxBrightness: 200,
+				theme: 'detailed'
+			})
+			.enable(filter)
+			.pipe(formatter);
 
-			const logger = createInstanceWithDefaults()
-				.config({
-					minBrightness: 80,
-					maxBrightness: 200,
-					theme: 'detailed'
-				})
-				.enable(filter)
-				.pipe(formatter);
-
+		return new Promise((resolve, reject) => {
 			createRequest(cfg, '/appcd/logcat')
 				.request
 				.on('response', (message, response) => {
@@ -66,5 +65,3 @@ const cmd = {
 		});
 	}
 };
-
-export default cmd;
