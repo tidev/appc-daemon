@@ -84,12 +84,13 @@ module.exports = (opts) => {
 		return gulp.src('src/**/*.js')
 			.pipe($.plumber())
 			.pipe($.debug({ title: 'build' }))
+			.pipe($.sourcemaps.init())
 			.pipe($.babel({
 				plugins: babelConf.plugins,
 				presets: babelConf.presets,
-				sourceMap: 'inline',
 				sourceRoot: 'src'
 			}))
+			.pipe($.sourcemaps.write())
 			.pipe(gulp.dest(distDir));
 	});
 
