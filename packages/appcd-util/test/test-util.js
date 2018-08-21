@@ -217,7 +217,7 @@ describe('util', () => {
 
 		it('should catch errors', async () => {
 			try {
-				const results = await util.cache('foo', true, () => {
+				await util.cache('foo', true, () => {
 					throw new Error('oh snap');
 				});
 			} catch (e) {
@@ -275,7 +275,7 @@ describe('util', () => {
 
 		it('should passthrough errors', () => {
 			expect(() => {
-				const results = util.cacheSync('foo3', true, () => {
+				util.cacheSync('foo3', true, () => {
 					throw new Error('oh snap');
 				});
 			}).to.throw(Error, 'oh snap');

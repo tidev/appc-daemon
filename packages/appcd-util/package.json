@@ -18,8 +18,8 @@
   "dependencies": {
     "appcd-fs": "^1.1.2",
     "lodash.get": "^4.4.2",
-    "semver": "^5.5.0",
-    "source-map-support": "^0.5.8"
+    "semver": "^5.5.1",
+    "source-map-support": "^0.5.9"
   },
   "devDependencies": {
     "appcd-gulp": "^1.1.5",

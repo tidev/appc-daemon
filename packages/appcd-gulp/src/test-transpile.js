@@ -4,8 +4,7 @@ const path = require('path');
 
 const babelRE = /^(babel-|@babel\/)\w+/;
 const minifyRE = /^minify|babili$/;
-const babel = require('./babel.json');
-const conf = babel[process.env.APPCD_BABEL_CONF || 'node8'] || {};
+const conf = require('./babel.js')();
 const originalResolveFilename = Module._resolveFilename;
 
 if (process.env.APPCD_COVERAGE && conf.plugins.indexOf('istanbul') === -1) {

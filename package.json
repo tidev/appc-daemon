@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "dependencies": {
-    "ansi-colors": "^3.0.0",
+    "ansi-colors": "^3.0.3",
     "cli-table2": "^0.2.0",
     "fs-extra": "^7.0.0",
     "globule": "^1.2.1",
@@ -11,7 +11,7 @@
     "gulp-chug": "^0.5.1",
     "gulp-debug": "^4.0.0",
     "gulp-plumber": "^1.2.0",
-    "ignore": "^5.0.1",
+    "ignore": "^5.0.2",
     "istanbul": "^0.4.5",
     "lerna": "^2.11.0",
     "npm": "^6.4.0",
@@ -21,7 +21,7 @@
     "promise-limit": "^2.7.0",
     "retire": "^1.6.2",
     "run-sequence": "^2.2.1",
-    "semver": "^5.5.0",
+    "semver": "^5.5.1",
     "sloc": "^0.2.0",
     "toposort": "^2.0.2",
     "tree-printer": "^1.1.1"

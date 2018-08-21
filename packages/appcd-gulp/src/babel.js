@@ -62,8 +62,11 @@ const profiles = {
 };
 
 module.exports = function getBabelConf(opts) {
-	const name = profiles[opts.babel] ? opts.babel : 'node8';
-	process.env.APPCD_BABEL_CONF = name;
+	const name = process.env.APPCD_BABEL_CONF = [
+		opts && opts.babel,
+		process.env.APPCD_BABEL_CONF,
+		'node8'
+	].reduce((p, n) => !p && n && profiles[n] ? n : p);
 
 	const babelConf = profiles[name];
 
@@ -87,7 +90,7 @@ module.exports = function getBabelConf(opts) {
 					}
 				} catch (e) {}
 			}
-		}(opts.projectDir));
+		}(opts && opts.projectDir || process.cwd()));
 	}
 
 	delete babelConf.xpresets;
