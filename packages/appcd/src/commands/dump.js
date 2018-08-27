@@ -110,7 +110,7 @@ export default {
 			]))
 			.then(() => results)
 			.catch(err => err)
-			.then(async results => {
+			.then(results => {
 				if (argv.view && !file) {
 					file = path.join(os.tmpdir(), 'appcd-dump.json');
 				}

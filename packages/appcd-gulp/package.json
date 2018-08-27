@@ -13,7 +13,7 @@
     "@babel/plugin-transform-async-to-generator": "latest",
     "@babel/polyfill": "latest",
     "@babel/register": "latest",
-    "ansi-colors": "^3.0.3",
+    "ansi-colors": "^3.0.5",
     "babel-eslint": "^8.2.6",
     "babel-loader": "next",
     "babel-plugin-dynamic-import-node": "^2.0.0",
@@ -48,7 +48,7 @@
     "nyc": "^12.0.2",
     "sinon": "^6.1.5",
     "sinon-chai": "^3.2.0",
-    "webpack": "^4.17.0"
+    "webpack": "^4.17.1"
   },
   "peerDependencies": {
     "gulp": "3.x"

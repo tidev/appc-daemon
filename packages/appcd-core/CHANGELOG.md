@@ -1,3 +1,7 @@
+# v1.1.4
+
+ * Updated dependencies.
+
 # v1.1.3 (May 24, 2018)
 
  * Removed `process.argv` from telemetry payload for GDPR.

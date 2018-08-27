@@ -1,3 +1,8 @@
+# v1.1.3
+
+ * Fixed lint issue with code indention.
+ * Updated dependencies.
+
 # v1.1.2 (May 24, 2018)
 
  * Updated dependencies:

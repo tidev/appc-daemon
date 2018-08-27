@@ -19,7 +19,7 @@
     "appcd-logger": "^1.1.1",
     "appcd-response": "^1.1.2",
     "gawk": "^4.5.0",
-    "path-to-regexp": "^2.3.0",
+    "path-to-regexp": "^2.4.0",
     "source-map-support": "^0.5.9",
     "uuid": "^3.3.2"
   },
