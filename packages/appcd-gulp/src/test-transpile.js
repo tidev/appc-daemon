@@ -72,8 +72,8 @@ if (process.env.APPCD_COVERAGE) {
 	const realcwd = fs.realpathSync(cwd);
 	const distDir = path.join(cwd, 'dist');
 	const srcDir = path.join(cwd, 'src');
-	const distRegExp = /[\//]dist[\//]/;
-	const distGRegExp = /([/\\])dist([/\\])/g;
+	const distRegExp = /[\//]dist([\//]|$)/;
+	const distGRegExp = /([/\\])dist([/\\]|$)/g;
 
 	Module._resolveFilename = function (request, parent, isMain) {
 		const parentId = parent && path.resolve(parent.id);
