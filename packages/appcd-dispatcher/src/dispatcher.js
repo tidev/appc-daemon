@@ -4,7 +4,7 @@ import appcdLogger from 'appcd-logger';
 import DispatcherContext from './dispatcher-context';
 import DispatcherError from './dispatcher-error';
 import pathToRegExp from 'path-to-regexp';
-import Response, { AppcdError, codes } from 'appcd-response';
+import Response, { AppcdError, codes, errorToJSON, lookup } from 'appcd-response';
 import ServiceDispatcher from './service-dispatcher';
 
 import { PassThrough } from 'stream';
@@ -109,8 +109,7 @@ export default class Dispatcher {
 		} else {
 			ctx = new DispatcherContext({
 				request: typeof payload === 'object' && payload || {},
-				response: new PassThrough({ objectMode: true }),
-				status: 200
+				response: new PassThrough({ objectMode: true })
 			});
 		}
 		ctx.path = path;
@@ -223,60 +222,79 @@ export default class Dispatcher {
 	 * Returns a Koa.js middleware callback that dispatches the request through the dispatcher's
 	 * routes.
 	 *
+	 * @param {Function} [onRequest] - An optional function to call when the request completes
+	 * regardless of error.
 	 * @returns {Function} Koa middleware
 	 * @access public
 	 */
-	callback() {
+	callback(onRequest) {
 		/**
 		 * A Koa.js middleware function.
 		 *
-		 * @param {Object} ctx - The Koa context.
-		 * @param {Accepts} ctx.accept - Content type negotiation.
-		 * @param {koa.Application} ctx.app - The Koa app instance.
-		 * @param {Cookies} ctx.cookies - An object containing the parsed cookies.
-		 * @param {String} ctx.originalUrl - The original URL from `req.url`.
-		 * @param {http.IncomingMessage} ctx.req - The Node.js HTTP server request object.
-		 * @param {http.ServerResponse} ctx.res - The Node.js HTTP server response object.
-		 * @param {Object} ctx.state - Metadata to pass along to other middlewares.
+		 * @param {Object} koactx - The Koa context.
+		 * @param {Accepts} koactx.accept - Content type negotiation.
+		 * @param {koa.Application} koactx.app - The Koa app instance.
+		 * @param {Cookies} koactx.cookies - An object containing the parsed cookies.
+		 * @param {String} koactx.originalUrl - The original URL from `req.url`.
+		 * @param {http.IncomingMessage} koactx.req - The Node.js HTTP server request object.
+		 * @param {http.ServerResponse} koactx.res - The Node.js HTTP server response object.
+		 * @param {Object} koactx.state - Metadata to pass along to other middlewares.
 		 * @param {Function} next - A function to continue to the next middleware.
 		 * @returns {Promise}
 		 */
-		return (ctx, next) => {
-			if (ctx.method === 'HEAD') {
+		return async (koactx, next) => {
+			if (koactx.method === 'HEAD') {
 				return next();
 			}
 
-			const dispatcherCtx = new DispatcherContext({
-				headers: ctx.req && ctx.req.headers || {},
-				request: (ctx.method === 'POST' || ctx.method === 'PUT') && ctx.request && ctx.request.body || {},
+			const headers = koactx.req && koactx.req.headers || {};
+			const path    = koactx.originalUrl;
+			const source  = 'http';
+
+			let ctx = new DispatcherContext({
+				headers,
+				request:  (koactx.method === 'POST' || koactx.method === 'PUT') && koactx.request && koactx.request.body || {},
 				response: new PassThrough({ objectMode: true }),
-				status: 200,
-				source: 'http'
+				source
 			});
 
-			return this.call(ctx.originalUrl, dispatcherCtx)
-				.then(result => {
-					if (result.response instanceof Response) {
-						ctx.status = result.response.status || codes.OK;
-						ctx.body = result.response.toString(ctx.request && ctx.request.acceptsLanguages()).replace(stripRegExp, '');
-					} else {
-						ctx.status = result.status;
-						ctx.body = result.response;
-					}
-				})
-				.catch(err => {
-					if (err instanceof AppcdError) {
-						if (err.status === codes.NOT_FOUND) {
-							return next();
-						}
-						ctx.status = err.status || codes.SERVER_ERROR;
-					} else {
-						ctx.status = codes.SERVER_ERROR;
-					}
+			const info = {
+				path,
+				source,
+				userAgent: headers['user-agent'] || null
+			};
 
-					logger.error(err);
-					ctx.body = err.toString(ctx.request && ctx.request.acceptsLanguages());
-				});
+			try {
+				ctx = (await this.call(path, ctx)) || ctx;
+
+				if (ctx.response instanceof Response) {
+					koactx.status = ctx.status = ctx.response.status || ctx.status;
+					koactx.body = ctx.response.toString(koactx.request && koactx.request.acceptsLanguages()).replace(stripRegExp, '');
+				} else {
+					koactx.status = ctx.status;
+					koactx.body = ctx.response;
+				}
+			} catch (err) {
+				if (err instanceof AppcdError && err.status === codes.NOT_FOUND) {
+					return next();
+				}
+
+				koactx.status = ctx.status = err.status && lookup[err.status] ? err.status : codes.SERVER_ERROR;
+
+				info.error = errorToJSON(err);
+
+				logger.error(err);
+				koactx.body = err.toString(koactx.request && koactx.request.acceptsLanguages());
+			}
+
+			if (typeof onRequest === 'function') {
+				info.size   = koactx.response.length;
+				info.status = ctx.status;
+				info.time   = ctx.time;
+				await onRequest(info);
+			}
+
+			return ctx;
 		};
 	}
 

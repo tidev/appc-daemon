@@ -15,6 +15,7 @@ import uuid from 'uuid';
 
 import { expandPath } from 'appcd-path';
 import { isDir, isFile } from 'appcd-fs';
+import { osInfo } from 'appcd-util';
 
 const { __n } = i18n();
 
@@ -31,9 +32,10 @@ export default class Telemetry extends Dispatcher {
 	 * Constructs an analytics instance.
 	 *
 	 * @param {Config} cfg - The Appc Daemon config object.
+	 * @param {String} version - The app version.
 	 * @access public
 	 */
-	constructor(cfg) {
+	constructor(cfg, version) {
 		if (!cfg || !(cfg instanceof Config)) {
 			throw new TypeError('Expected config to be a valid config object');
 		}
@@ -107,12 +109,27 @@ export default class Telemetry extends Dispatcher {
 		 */
 		this.sessionId = uuid.v4();
 
+		/**
+		 * The app version.
+		 * @type {String}
+		 */
+		this.version = version;
+
 		// set the config and wire up the watcher
 		this.updateConfig(cfg.get('telemetry') || {});
 		cfg.watch('telemetry', obj => this.updateConfig(obj));
 
 		// wire up the telemetry route
 		this.register('/', this.addEvent.bind(this));
+
+		{
+			const { name, version } = osInfo();
+			this.osInfo = {
+				os:       name || 'unknown',
+				osver:    version || 'unknown',
+				platform: process.platform
+			};
+		}
 	}
 
 	/**
@@ -137,29 +154,31 @@ export default class Telemetry extends Dispatcher {
 				throw new AppcdError(codes.BAD_REQUEST, 'Invalid telemetry event');
 			}
 
-			if (!/^appcd[.-]/.test(event)) {
+			if (!/^appcd[.-]/.test(event) && !/^ti\.(start|end)$/.test(event)) {
 				event = `appcd.${event}`;
 			}
 
 			const data = Object.assign({}, ctx.request);
 			delete data.event;
+			delete data.params;
 
 			const id = uuid.v4();
 
-			const payload = {
-				aguid: this.aguid,
+			const payload = Object.assign({
+				aguid:       this.aguid,
+				app_version: this.version,
 				data,
+				deploytype:  this.deployType,
 				event,
 				id,
-				mid:   this.mid,
-				seq:   this.seqId++,
-				sid:   this.sessionId,
-				ts:    new Date().toISOString(),
-				ver:   '3',
-				deployType: this.deployType
-			};
+				mid:         this.mid,
+				seq:         this.seqId++,
+				sid:         this.sessionId,
+				ts:          Date.now(),
+				ver:         3
+			}, this.osInfo);
 
-			const filename = path.join(this.eventsDir, id + '.json');
+			const filename = path.join(this.eventsDir, `${id}.json`);
 
 			// make sure the events directory exists
 			fs.mkdirsSync(this.eventsDir);
@@ -201,105 +220,122 @@ export default class Telemetry extends Dispatcher {
 
 		this.mid = await getMachineId(path.join(homeDir, '.mid'));
 
-		// record now as the last send and start the send timer
-		this.lastSend = Date.now();
-		this.sendEvents();
+		// send any unsent events
+		this.scheduleSendEvents();
 
 		return this;
 	}
 
 	/**
-	 * Sends telemetry events if telemetry is enabled, and if it's time to send events.
+	 * Sends batches of all events and resolves when done.
 	 *
-	 * @access private
+	 * @param {Boolean} [flush] - When `true`, it bypasses the send interval and flushes all unsent
+	 * events.
+	 * @returns {Promise}
 	 */
-	sendEvents() {
-		this.sendTimer = setTimeout(() => {
-			const { sendBatchSize, enabled, sendInterval, sendTimeout, url } = this.config;
-			const { eventsDir } = this;
+	sendEvents(flush) {
+		const { sendBatchSize, enabled, sendInterval, sendTimeout, url } = this.config;
 
-			if (!enabled || !url || (this.lastSend + sendInterval) > Date.now() || !eventsDir || !isDir(eventsDir)) {
-				// not enabled or not time to send
-				return this.sendEvents();
-			}
+		const send = batch => new Promise(resolve => {
+			log(__n(batch.length, 'Sending %%s event', 'Sending %%s events', highlight(batch.length)));
 
-			let sends = 0;
+			request({
+				json:    batch.map(b => b.evt),
+				method:  'POST',
+				timeout: sendTimeout,
+				url
+			}, (err, resp) => {
+				if (err || resp.statusCode >= 300) {
+					error(__n(
+						batch.length,
+						'Failed to send %%s event: %%s',
+						'Failed to send %%s events: %%s',
+						highlight(batch.length),
+						err ? err.message : `${resp.statusCode} - ${resp.statusMessage}`
+					));
+				} else {
+					log(__n(batch.length, 'Successfully sent %%s event', 'Successfully sent %%s events', highlight(batch.length)));
 
-			// sendBatch() is recursive and will continue to scoop up `sendBatchSize` of events
-			// until they're all gone
-			const sendBatch = () => {
-				const batch = [];
-				for (const name of fs.readdirSync(eventsDir)) {
-					if (jsonRegExp.test(name)) {
-						batch.push(path.join(eventsDir, name));
-						if (batch.length >= sendBatchSize) {
-							break;
+					for (const { file } of batch) {
+						if (isFile(file)) {
+							fs.unlinkSync(file);
 						}
 					}
+				}
+
+				resolve();
+			});
+		});
+
+		return this.pending = Promise.resolve()
+			.then(async () => {
+				const { eventsDir } = this;
+
+				if (!enabled || !url || !eventsDir || !isDir(eventsDir)) {
+					// not enabled
+					if (flush) {
+						// when flushing, don't schedule a send
+						return;
+					}
+					return this.scheduleSendEvents();
+				}
+
+				if (!flush && this.lastSend && (this.lastSend + sendInterval) > Date.now()) {
+					// not time to send
+					return this.scheduleSendEvents();
+				}
+
+				let counter = 0;
+				let batch = [];
+
+				for (const name of fs.readdirSync(eventsDir)) {
+					if (jsonRegExp.test(name)) {
+						const file = path.join(eventsDir, name);
+
+						try {
+							batch.push({
+								evt: fs.readJsonSync(file),
+								file
+							});
+							counter++;
+						} catch (e) {
+							// Rather then squelch the error we'll remove here
+							log(`Failed to read ${highlight(file)}, removing`);
+							fs.unlinkSync(file);
+						}
+
+						// send batch if full
+						if (batch.length >= sendBatchSize) {
+							await send(batch);
+							batch = [];
+						}
+					}
+				}
+
+				// send remaining events
+				if (batch.length) {
+					await send(batch);
 				}
 
 				// check if we found any events to send
-				if (!batch.length) {
-					if (sends) {
-						log('No more events to send');
-					} else {
-						log('No events to send');
-					}
-					this.lastSend = Date.now();
-					return this.sendEvents();
+				if (!counter) {
+					log('No events to send');
 				}
 
-				log(__n(batch.length, 'Sending %%s event', 'Sending %%s events', highlight(batch.length)));
+				this.lastSend = Date.now();
+				this.scheduleSendEvents();
+			})
+			.catch(() => {});
+	}
 
-				const json = [];
-
-				for (const file of batch) {
-					try {
-						json.push(JSON.parse(fs.readFileSync(file)));
-					} catch (e) {
-						// Rather then squelch the error we'll remove here
-						log(`Failed to read ${highlight(file)}, removing`);
-						fs.unlinkSync(file);
-					}
-				}
-
-				this.pending = new Promise(resolve => {
-					request({
-						json,
-						method:  'POST',
-						timeout: sendTimeout,
-						url
-					}, (err, resp) => {
-						resolve();
-
-						if (err || resp.statusCode >= 300) {
-							error(__n(
-								batch.length,
-								'Failed to send %%s event: %%s',
-								'Failed to send %%s events: %%s',
-								highlight(batch.length),
-								err ? err.message : `${resp.statusCode} - ${resp.statusMessage}`
-							));
-							this.lastSend = Date.now();
-							return this.sendEvents();
-						}
-
-						log(__n(batch.length, 'Successfully sent %%s event', 'Successfully sent %%s events', highlight(batch.length)));
-
-						for (const file of batch) {
-							if (isFile(file)) {
-								fs.unlinkSync(file);
-							}
-						}
-
-						sends++;
-						sendBatch();
-					});
-				});
-			};
-
-			sendBatch();
-		}, 1000);
+	/**
+	 * Schedules telemetry events to be sent if telemetry is enabled, and if it's time to send
+	 * events.
+	 *
+	 * @access private
+	 */
+	scheduleSendEvents() {
+		this.sendTimer = setTimeout(() => this.sendEvents(), 1000);
 	}
 
 	/**
@@ -313,6 +349,9 @@ export default class Telemetry extends Dispatcher {
 
 		// wait for the pending post to finish
 		await this.pending;
+
+		// wait for any remaining events to be sent
+		await this.sendEvents(true);
 	}
 
 	/**

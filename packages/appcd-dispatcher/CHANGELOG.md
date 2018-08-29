@@ -1,6 +1,8 @@
 # v1.1.2
 
  * Removed support for period delimited filters in `DataServiceDispatcher`.
+ * Added `startTime`, `status`, and `time` to `DispatcherContext`.
+ * Cleaned up Koa middleware callback and added a `onRequest` callback for telemetry.
  * Updated dependencies.
 
 # v1.1.1 (May 24, 2018)

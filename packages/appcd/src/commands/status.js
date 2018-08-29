@@ -5,7 +5,7 @@ export default {
 	},
 	async action({ argv }) {
 		const [
-			Table,
+			{ default: Table },
 			{ createRequest, loadConfig },
 			{ createInstanceWithDefaults, StdioStream }
 		] = await Promise.all([

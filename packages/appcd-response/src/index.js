@@ -4,7 +4,8 @@ if (!Error.prepareStackTrace) {
 }
 
 export { default as AppcdError, createErrorClass } from './appcd-error';
-export * from './codes';
 export { default, default as Response } from './response';
-export * from './message';
+export * from './codes';
+export * from './error';
 export * from './locale';
+export * from './message';

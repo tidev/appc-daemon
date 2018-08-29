@@ -1,5 +1,16 @@
-# v1.1.4
+# v2.0.0
 
+ * Bumped minimum Node.js version from 8.0.0 to 8.10.0.
+ * Bumped preferred Node.js version from 8.11.1 to 8.11.4.
+ * Wired up telemetry for dispatched HTTP and WebSocket requests.
+ * Updated telemetry event names:
+   - `appcd.server.start` -> `ti.start`
+   - `appcd.server.shutdown` -> ti.end`
+   - `appcd.server.nodePurge` -> `appcd.server.node_purge`
+ * `WebSocketSession` now extends `EventEmitter` and emits a `request` event when a request
+   completes.
+ * Improved `WebSocketSession` request handling to be more consistent.
+ * Transpile against appcd-gulp's Node.js 8.10 Babel plugins.
  * Updated dependencies.
 
 # v1.1.3 (May 24, 2018)

@@ -1,11 +1,12 @@
 import accepts from 'accepts';
-import Dispatcher from 'appcd-dispatcher';
-import msgpack from 'msgpack-lite';
-import Response, { codes, createErrorClass } from 'appcd-response';
 import appcdLogger from './logger';
+import Dispatcher, { DispatcherContext } from 'appcd-dispatcher';
+import EventEmitter from 'events';
+import msgpack from 'msgpack-lite';
+import Response, { codes, createErrorClass, errorToJSON } from 'appcd-response';
 
 import { IncomingMessage } from 'http';
-import { Readable } from 'stream';
+import { PassThrough, Readable } from 'stream';
 import { WebSocket } from 'appcd-http';
 
 const logger = appcdLogger('appcd:core:websocket-session');
@@ -28,14 +29,14 @@ const WebSocketError = createErrorClass('WebSocketError', {
 /**
  * Tracks the state of a WebSocket session and handles the WebSocket subprotocol.
  */
-export default class WebSocketSession {
+export default class WebSocketSession extends EventEmitter {
 	/**
 	 * Creates a appcd WebSocket session and wires up the message handler.
 	 *
 	 * @param {WebSocket} ws - The WebSocket instance.
 	 * @param {Request} msg - The Request object from the incoming connection.
-	 * @param {Dispatcher} [dispatcher] - The dispatcher instance. If not specified, uses the root
-	 * Dispatcher instance.
+	 * @param {Dispatcher} [dispatcher] - The dispatcher instance for testing. If not specified,
+	 * uses the root Dispatcher instance.
 	 * @access public
 	 */
 	constructor(ws, msg, dispatcher) {
@@ -51,6 +52,8 @@ export default class WebSocketSession {
 			throw new TypeError('Expected a Dispatcher instance');
 		}
 
+		super();
+
 		this.sessionId = sessionCounter++;
 		this.ws = ws;
 		this.msg = msg;
@@ -61,9 +64,8 @@ export default class WebSocketSession {
 		let req = null;
 
 		ws.on('message', message => {
-			const startTime = new Date();
-
 			try {
+				const startTime = new Date();
 				req = typeof message === 'string' ? message : msgpack.decode(message);
 
 				if (typeof req !== 'string') {
@@ -107,101 +109,133 @@ export default class WebSocketSession {
 	 * @returns {Promise}
 	 * @access private
 	 */
-	handle_1_0(req) {
+	async handle_1_0(req) {
 		if (req.id === undefined) {
 			throw new WebSocketError('Request "id" required');
 		}
 
-		return this.dispatcher
-			.call(req.path, {
-				id:        req.id,
-				data:      req.data || {},
-				type:      req.type,
-				headers:   this.msg.headers,
-				source:    'websocket'
-			})
-			.then(({ status, response }) => {
-				if (response instanceof Readable) {
-					// we have a stream
+		const { path } = req;
+		let ctx = new DispatcherContext({
+			headers:  this.msg.headers,
+			request: {
+				data: req.data || {},
+				id:   req.id,
+				type: req.type
+			},
+			response: new PassThrough({ objectMode: true }),
+			source: 'websocket'
+		});
 
-					// listen for the WebSocket to end, then end the response stream so that
-					// whatever is writing to the stream knows that the other end has closed
-					this.ws
-						.once('close', () => response.end())
-						.once('error', () => response.end());
+		try {
+			ctx = (await this.dispatcher.call(path, ctx)) || ctx;
 
-					// track if this stream is a pubsub stream so we know to send the `fin`
-					let pubsub = false;
-					let first = true;
+			const { status, response } = ctx;
 
-					response
-						.on('data', message => {
-							// data was written to the stream
+			if (response instanceof Readable) {
+				// we have a stream
 
-							if (message.type === 'subscribe') {
-								pubsub = true;
-							}
+				// listen for the WebSocket to end, then end the response stream so that
+				// whatever is writing to the stream knows that the other end has closed
+				this.ws
+					.once('close', () => response.end())
+					.once('error', () => response.end());
 
-							let res;
-							const type = message.type || (pubsub ? 'event' : undefined);
+				// track if this stream is a pubsub stream so we know to send the `fin`
+				let pubsub = false;
+				let first = ctx;
 
-							if (typeof message === 'object') {
-								res = {
-									...message,
-									type
-								};
-							} else {
-								res = {
-									message,
-									type
-								};
-							}
+				response
+					.on('data', message => {
+						// data was written to the stream
 
-							this.respond(req, res, !pubsub && !first);
-							first = false;
-						})
-						.once('end', () => {
-							// the stream has ended, if pubsub, send `fin`
-							if (pubsub) {
-								this.respond(req, {
+						if (message.type === 'subscribe') {
+							pubsub = true;
+						}
+
+						let res;
+						const type = message.type || (pubsub ? 'event' : undefined);
+
+						if (typeof message === 'object') {
+							res = {
+								...message,
+								type
+							};
+						} else {
+							res = {
+								message,
+								type
+							};
+						}
+
+						this.respond({
+							ctx: first,
+							req,
+							res,
+							skipLog: !pubsub && !first
+						});
+
+						first = null;
+					})
+					.once('end', () => {
+						// the stream has ended, if pubsub, send `fin`
+						if (pubsub) {
+							this.respond({
+								ctx: first,
+								req,
+								res: {
 									path: req.path,
 									type: 'event',
 									fin: true
-								});
+								}
+							});
+						}
+					})
+					.once('error', err => {
+						logger.error('%s Response stream error:', note(`[${this.sessionId}]`));
+						logger.error(err);
+						this.respond({
+							ctx: first,
+							req,
+							res: {
+								type: 'error',
+								message: err.message || err,
+								status: err.status || 500,
+								fin: true
 							}
-						})
-						.once('error', err => {
-							logger.error('%s Response stream error:', note(`[${this.sessionId}]`));
-							logger.error(err);
-							this.send({ type: 'error', message: err.message || err, status: err.status || 500, fin: true });
 						});
+					});
 
-				} else if (response instanceof Error) {
-					this.respond(req, response);
+			} else if (response instanceof Error) {
+				this.respond({ ctx, req, res: response });
 
-				} else {
-					this.respond(req, {
+			} else {
+				this.respond({
+					ctx,
+					req,
+					res: {
 						status,
 						message: response
-					});
-				}
-			})
-			.catch(err => {
-				this.respond(req, err);
-				logger.error(err);
-			});
+					}
+				});
+			}
+		} catch (err) {
+			this.respond({ ctx, req, res: err });
+			logger.error(err);
+		}
 	}
 
 	/**
 	 * Ensures the response has an 'id' and a 'type', then sends the response and logs the request.
 	 *
-	 * @param {Object} req - The WebSocket subprotocol request state.
-	 * @param {*} res - The dispatcher response.
-	 * @param {Boolean} [skipLog=false] - When true, does not log the request. This `true` when
+	 * @param {Object} params - Required parameters.
+	 * @param {DispatcherContext} [params.ctx] - A dispatcher context containing the request info.
+	 * @param {Object} params.req - The WebSocket subprotocol request state.
+	 * @param {*} params.res - The dispatcher response.
+	 * @param {Boolean} [params.skipLog=false] - When true, does not log the request. This `true` when
 	 * sending new, non-pubsub data from a stream.
 	 * @access private
 	 */
-	respond(req, res, skipLog) {
+	respond({ ctx, req, res, skipLog }) {
 		if (req && req.id) {
 			res.id = req.id;
 		}
@@ -214,7 +248,7 @@ export default class WebSocketSession {
 			res.message = res.message.toString(accepts(this.msg).languages());
 		}
 
-		this.send(res);
+		this.send(res, ctx);
 		if (!skipLog) {
 			this.log(req, res);
 		}
@@ -224,39 +258,59 @@ export default class WebSocketSession {
 	 * Sends a response back over the WebSocket.
 	 *
 	 * @param {*} res - The dispatcher response.
+	 * @param {DispatcherContext} [ctx] - A dispatcher context containing the request info.
 	 * @access private
 	 */
-	send(res) {
+	send(res, ctx) {
 		if (this.ws.readyState !== WebSocket.OPEN) {
 			return;
 		}
 
 		let data;
+		const info = ctx ? {
+			path:      ctx.realPath,
+			size:      null,
+			source:    ctx.source,
+			status:    ctx.status,
+			time:      ctx.time,
+			userAgent: ctx.headers['user-agent'] || null
+		} : {};
 
 		if (res instanceof Error) {
+			info.status = res.status || 500;
+			info.error = errorToJSON(res);
+
 			data = JSON.stringify(Object.assign({}, res, {
 				id:         res.id,
 				message:    res.message,
 				stack:      res.stack,
-				status:     res.status || 500,
+				status:     info.status,
 				statusCode: String(res.statusCode || '500'),
 				type:       'error'
 			}));
 		} else {
 			if (!res.status) {
-				res.status = 200;
+				res.status = ctx && ctx.status || codes.OK;
 			}
+
 			if (!res.statusCode) {
 				res.statusCode = String(res.status);
 			}
+
 			data = msgpack.encode(res);
 		}
+
+		info.size = data.length;
 
 		try {
 			this.ws.send(data);
 		} catch (e) {
 			logger.error('%s Failed to send:', note(`[${this.sessionId}]`));
 			logger.error(e);
+		}
+
+		if (ctx) {
+			this.emit('request', info);
 		}
 	}
 

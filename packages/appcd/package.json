@@ -49,7 +49,7 @@
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
   "repository": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd",
   "engines": {
-    "node": ">=8.0.0"
+    "node": ">=8.10.0"
   },
   "cli-kit": {
     "description": "The Appc Daemon for powering client-side tooling.",

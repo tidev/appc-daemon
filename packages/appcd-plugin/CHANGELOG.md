@@ -1,5 +1,6 @@
 # v1.1.3
 
+ * Fixed plugin telemetry so that it doesn't send events during the initial scan or shutdown.
  * Fixed lint issue with code indention.
  * Updated dependencies.
 

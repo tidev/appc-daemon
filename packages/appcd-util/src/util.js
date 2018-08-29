@@ -8,7 +8,7 @@ import fs from 'fs';
 import get from 'lodash.get';
 import semver from 'semver';
 
-import { ChildProcess, execSync } from 'child_process';
+import { ChildProcess, execSync, spawnSync } from 'child_process';
 import { EventEmitter } from 'events';
 import { isFile } from 'appcd-fs';
 import { Server, Socket } from 'net';
@@ -425,6 +425,74 @@ export function mutex(name, callback) {
 				}
 			}());
 		}));
+}
+
+/**
+ * Tries to resolve the operating system name and version.
+ *
+ * @returns {Object}
+ */
+export function osInfo() {
+	let name = null;
+	let version = null;
+
+	switch (process.platform) {
+		case 'darwin':
+			{
+				const stdout = spawnSync('sw_vers').stdout.toString();
+				let m = stdout.match(/ProductName:\s+(.+)/i);
+				if (m) {
+					name = m[1];
+				}
+				m = stdout.match(/ProductVersion:\s+(.+)/i);
+				if (m) {
+					version = m[1];
+				}
+			}
+			break;
+
+		case 'linux':
+			name = 'GNU/Linux';
+
+			if (isFile('/etc/lsb-release')) {
+				const contents = fs.readFileSync('/etc/lsb-release', 'utf8');
+				let m = contents.match(/DISTRIB_DESCRIPTION=(.+)/i);
+				if (m) {
+					name = m[1].replace(/"/g, '');
+				}
+				m = contents.match(/DISTRIB_RELEASE=(.+)/i);
+				if (m) {
+					version = m[1].replace(/"/g, '');
+				}
+			} else if (isFile('/etc/system-release')) {
+				const parts = fs.readFileSync('/etc/system-release', 'utf8').split(' ');
+				if (parts[0]) {
+					name = parts[0];
+				}
+				if (parts[2]) {
+					version = parts[2];
+				}
+			}
+			break;
+
+		case 'win32':
+			{
+				const stdout = spawnSync('wmic', [ 'os', 'get', 'Caption,Version' ]).stdout.toString();
+				const s = stdout.split('\n')[1].split(/ {2,}/);
+				if (s.length > 0) {
+					name = s[0].trim() || 'Windows';
+				}
+				if (s.length > 1) {
+					version = s[1].trim() || '';
+				}
+			}
+			break;
+	}
+
+	return {
+		name,
+		version
+	};
 }
 
 /**

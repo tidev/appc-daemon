@@ -631,6 +631,13 @@ describe('util', () => {
 		});
 	});
 
+	describe('osInfo()', () => {
+		it('should get the os info', () => {
+			const info = util.osInfo();
+			expect(info).to.have.keys('name', 'version');
+		});
+	});
+
 	describe('randomBytes()', () => {
 		it('should return 0 random bytes', () => {
 			const r = util.randomBytes(0);

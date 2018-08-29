@@ -39,7 +39,7 @@ export function createRequest(cfg, path, data, type) {
 	const client = new Client({
 		host: cfg.get('server.host'),
 		port: cfg.get('server.post'),
-		userAgent: `appcd/${appcdVersion}}`
+		userAgent: `appcd/${appcdVersion}`
 	});
 
 	log('Creating request: %s', highlight(`${type || 'call'}://${client.host}:${client.port}${path}`));

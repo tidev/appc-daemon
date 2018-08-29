@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "appcd-fs": "^1.1.2",
+    "appcd-path": "^1.1.1",
     "appcd-winreg": "^1.1.1",
     "source-map-support": "^0.5.9",
     "sprintf-js": "^1.1.1"

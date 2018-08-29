@@ -8,14 +8,10 @@ const profiles = {
 			"dynamic-import-node",
 			"@babel/plugin-transform-async-to-generator",
 			"transform-class-properties",
-			"transform-decorators-legacy",
 			"transform-es2015-destructuring",
 			"transform-es2015-modules-commonjs",
 			"transform-es2015-parameters",
 			"transform-object-rest-spread"
-		],
-		"xpresets": [
-			"minify"
 		]
 	},
 
@@ -24,13 +20,9 @@ const profiles = {
 			"dynamic-import-node",
 			"@babel/plugin-transform-async-to-generator",
 			"transform-class-properties",
-			"transform-decorators-legacy",
 			"transform-es2015-destructuring",
 			"transform-es2015-modules-commonjs",
 			"transform-object-rest-spread"
-		],
-		"xpresets": [
-			"minify"
 		]
 	},
 
@@ -38,12 +30,8 @@ const profiles = {
 		"plugins": [
 			"dynamic-import-node",
 			"transform-class-properties",
-			"transform-decorators-legacy",
 			"transform-es2015-modules-commonjs",
 			"transform-object-rest-spread"
-		],
-		"xpresets": [
-			"minify"
 		]
 	},
 
@@ -51,12 +39,24 @@ const profiles = {
 		"plugins": [
 			"dynamic-import-node",
 			"transform-class-properties",
-			"transform-decorators-legacy",
 			"transform-es2015-modules-commonjs",
 			"transform-object-rest-spread"
-		],
-		"xpresets": [
-			"minify"
+		]
+	},
+
+	"node8.10": {
+		"plugins": [
+			"dynamic-import-node",
+			"transform-class-properties",
+			"transform-es2015-modules-commonjs"
+		]
+	},
+
+	"node10": {
+		"plugins": [
+			"dynamic-import-node",
+			"transform-class-properties",
+			"transform-es2015-modules-commonjs"
 		]
 	}
 };
@@ -92,8 +92,6 @@ module.exports = function getBabelConf(opts) {
 			}
 		}(opts && opts.projectDir || process.cwd()));
 	}
-
-	delete babelConf.xpresets;
 
 	return babelConf;
 };
