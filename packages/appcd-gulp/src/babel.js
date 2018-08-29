@@ -44,14 +44,6 @@ const profiles = {
 		]
 	},
 
-	"node8.10": {
-		"plugins": [
-			"dynamic-import-node",
-			"transform-class-properties",
-			"transform-es2015-modules-commonjs"
-		]
-	},
-
 	"node10": {
 		"plugins": [
 			"dynamic-import-node",

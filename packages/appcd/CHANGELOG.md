@@ -8,7 +8,6 @@
  * Updated all commands to import dependencies in their action handlers instead of the top of the
    file yielding in an approximately 30% speed bump.
  * Moved all commands into a `commands` subdirectory.
- * Transpile against appcd-gulp's Node.js 8.10 Babel plugins.
  * Fixed extra `}` in user agent.
  * Updated dependencies.
 

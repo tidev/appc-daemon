@@ -10,7 +10,6 @@
  * `WebSocketSession` now extends `EventEmitter` and emits a `request` event when a request
    completes.
  * Improved `WebSocketSession` request handling to be more consistent.
- * Transpile against appcd-gulp's Node.js 8.10 Babel plugins.
  * Updated dependencies.
 
 # v1.1.3 (May 24, 2018)
