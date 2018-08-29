@@ -4,7 +4,7 @@ library 'pipeline-library'
 timestamps {
   def isMaster = false
   def packageVersion
-  def nodeVersion = '8.11.1'
+  def nodeVersion = '8.11.4'
 
   node('osx || linux') {
     stage('Checkout') {

@@ -59,7 +59,6 @@ export default function request(params, callback) {
 			if (err.status !== 404) {
 				logger.warn('Failed to load default network configuration:', err);
 			}
-			return Promise.resolve();
 		})
 		.then(conf => new Promise(resolve => {
 			const {
