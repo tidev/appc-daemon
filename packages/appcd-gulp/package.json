@@ -30,7 +30,7 @@
     "esdoc-ecmascript-proposal-plugin": "^1.0.0",
     "esdoc-standard-plugin": "^1.0.0",
     "eslint": "^5.4.0",
-    "eslint-config-axway": "^3.0.0",
+    "eslint-config-axway": "^4.0.0",
     "eslint-plugin-mocha": "^5.2.0",
     "fancy-log": "^1.3.2",
     "fs-extra": "^7.0.0",
