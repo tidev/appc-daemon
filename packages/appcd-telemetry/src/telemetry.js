@@ -221,9 +221,41 @@ export default class Telemetry extends Dispatcher {
 		this.mid = await getMachineId(path.join(homeDir, '.mid'));
 
 		// send any unsent events
-		this.scheduleSendEvents();
+		this.sendEvents();
 
 		return this;
+	}
+
+	/**
+	 * Sends a batch of events to the server.
+	 *
+	 * @param {Array.<Object>} batch - An array of telemetry events to send.
+	 * @returns {Promise}
+	 */
+	async sendBatch(batch) {
+		log(__n(batch.length, 'Sending %%s event', 'Sending %%s events', highlight(batch.length)));
+
+		const [ err, resp ] = await new Promise(resolve => {
+			request({
+				json:    batch.map(b => b.evt),
+				method:  'POST',
+				timeout: this.config.sendTimeout,
+				url:     this.config.url
+			}, (...args) => resolve(args));
+		});
+
+		if (err || resp.statusCode >= 300) {
+			error(__n(
+				batch.length,
+				'Failed to send %%s event: %%s',
+				'Failed to send %%s events: %%s',
+				highlight(batch.length),
+				err ? err.message : `${resp.statusCode} - ${resp.statusMessage}`
+			));
+		} else {
+			log(__n(batch.length, 'Successfully sent %%s event', 'Successfully sent %%s events', highlight(batch.length)));
+			await Promise.all(batch.map(({ file }) => fs.remove(file)));
+		}
 	}
 
 	/**
@@ -234,59 +266,25 @@ export default class Telemetry extends Dispatcher {
 	 * @returns {Promise}
 	 */
 	sendEvents(flush) {
-		const { sendBatchSize, enabled, sendInterval, sendTimeout, url } = this.config;
-
-		const send = batch => new Promise(resolve => {
-			log(__n(batch.length, 'Sending %%s event', 'Sending %%s events', highlight(batch.length)));
-
-			request({
-				json:    batch.map(b => b.evt),
-				method:  'POST',
-				timeout: sendTimeout,
-				url
-			}, (err, resp) => {
-				if (err || resp.statusCode >= 300) {
-					error(__n(
-						batch.length,
-						'Failed to send %%s event: %%s',
-						'Failed to send %%s events: %%s',
-						highlight(batch.length),
-						err ? err.message : `${resp.statusCode} - ${resp.statusMessage}`
-					));
-				} else {
-					log(__n(batch.length, 'Successfully sent %%s event', 'Successfully sent %%s events', highlight(batch.length)));
-
-					for (const { file } of batch) {
-						if (isFile(file)) {
-							fs.unlinkSync(file);
-						}
-					}
-				}
-
-				resolve();
-			});
-		});
-
 		return this.pending = Promise.resolve()
 			.then(async () => {
-				const { eventsDir } = this;
+				const { eventsDir, lastSend } = this;
+				const { enabled, sendBatchSize, sendInterval, url } = this.config;
 
-				if (!enabled || !url || !eventsDir || !isDir(eventsDir)) {
-					// not enabled
-					if (flush) {
-						// when flushing, don't schedule a send
-						return;
+				const scheduleSendEvents = () => {
+					// when flushing, we don't schedule a send
+					if (!flush) {
+						this.sendTimer = setTimeout(() => this.sendEvents(), 1000);
 					}
-					return this.scheduleSendEvents();
+				};
+
+				if (!enabled || !url || !eventsDir || !isDir(eventsDir) || (!flush && lastSend && (lastSend + sendInterval) > Date.now())) {
+					// not enabled or not time to send
+					return scheduleSendEvents();
 				}
 
-				if (!flush && this.lastSend && (this.lastSend + sendInterval) > Date.now()) {
-					// not time to send
-					return this.scheduleSendEvents();
-				}
-
-				let counter = 0;
 				let batch = [];
+				let counter = 0;
 
 				for (const name of fs.readdirSync(eventsDir)) {
 					if (jsonRegExp.test(name)) {
@@ -294,19 +292,19 @@ export default class Telemetry extends Dispatcher {
 
 						try {
 							batch.push({
-								evt: fs.readJsonSync(file),
+								evt: await fs.readJson(file),
 								file
 							});
 							counter++;
 						} catch (e) {
 							// Rather then squelch the error we'll remove here
 							log(`Failed to read ${highlight(file)}, removing`);
-							fs.unlinkSync(file);
+							await fs.remove(file);
 						}
 
 						// send batch if full
 						if (batch.length >= sendBatchSize) {
-							await send(batch);
+							await this.sendBatch(batch);
 							batch = [];
 						}
 					}
@@ -314,7 +312,7 @@ export default class Telemetry extends Dispatcher {
 
 				// send remaining events
 				if (batch.length) {
-					await send(batch);
+					await this.sendBatch(batch);
 				}
 
 				// check if we found any events to send
@@ -323,19 +321,9 @@ export default class Telemetry extends Dispatcher {
 				}
 
 				this.lastSend = Date.now();
-				this.scheduleSendEvents();
+				scheduleSendEvents();
 			})
 			.catch(() => {});
-	}
-
-	/**
-	 * Schedules telemetry events to be sent if telemetry is enabled, and if it's time to send
-	 * events.
-	 *
-	 * @access private
-	 */
-	scheduleSendEvents() {
-		this.sendTimer = setTimeout(() => this.sendEvents(), 1000);
 	}
 
 	/**
