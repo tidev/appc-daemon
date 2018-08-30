@@ -98,7 +98,7 @@ export default class Dispatcher {
 	 * @returns {Promise}
 	 * @access public
 	 */
-	call(path, payload) {
+	async call(path, payload) {
 		if (typeof path !== 'string') {
 			throw new TypeError('Expected path to be a string');
 		}
@@ -208,14 +208,13 @@ export default class Dispatcher {
 		};
 
 		// start the chain and return its promise
-		return Promise.resolve()
-			.then(() => dispatch(0))
-			.then(ctx => {
-				if (ctx.response instanceof Response) {
-					ctx.status = ctx.response.status;
-				}
-				return ctx;
-			});
+		ctx = (await dispatch(0)) || ctx;
+
+		if (ctx.response instanceof Response) {
+			ctx.status = ctx.response.status;
+		}
+
+		return ctx;
 	}
 
 	/**
@@ -268,7 +267,7 @@ export default class Dispatcher {
 				ctx = (await this.call(path, ctx)) || ctx;
 
 				if (ctx.response instanceof Response) {
-					koactx.status = ctx.status = ctx.response.status || ctx.status;
+					koactx.status = ctx.status = ctx.response.status || (ctx.response.statusCode && parseInt(ctx.response.statusCode)) || ctx.status || codes.OK;
 					koactx.body = ctx.response.toString(koactx.request && koactx.request.acceptsLanguages()).replace(stripRegExp, '');
 				} else {
 					koactx.status = ctx.status;
