@@ -9,6 +9,7 @@
  * Removed Babel decorators transform plugin.
  * Removed Babel minify preset.
  * Added Node 8.10 and 10.0 Babel configs.
+ * Upgraded to latest Babel version.
  * Updated dependencies.
 
 # v1.1.5 (May 24, 2018)

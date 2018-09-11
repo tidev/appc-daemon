@@ -6,49 +6,49 @@ const profiles = {
 	"node4": {
 		"plugins": [
 			"dynamic-import-node",
+			"@babel/plugin-proposal-class-properties",
+			"@babel/plugin-proposal-object-rest-spread",
 			"@babel/plugin-transform-async-to-generator",
-			"transform-class-properties",
-			"transform-es2015-destructuring",
-			"transform-es2015-modules-commonjs",
-			"transform-es2015-parameters",
-			"transform-object-rest-spread"
+			"@babel/plugin-transform-destructuring",
+			"@babel/plugin-transform-modules-commonjs",
+			"@babel/plugin-transform-parameters"
 		]
 	},
 
 	"node6": {
 		"plugins": [
 			"dynamic-import-node",
+			"@babel/plugin-proposal-class-properties",
+			"@babel/plugin-proposal-object-rest-spread",
 			"@babel/plugin-transform-async-to-generator",
-			"transform-class-properties",
-			"transform-es2015-destructuring",
-			"transform-es2015-modules-commonjs",
-			"transform-object-rest-spread"
+			"@babel/plugin-transform-destructuring",
+			"@babel/plugin-transform-modules-commonjs"
 		]
 	},
 
 	"node7": {
 		"plugins": [
 			"dynamic-import-node",
-			"transform-class-properties",
-			"transform-es2015-modules-commonjs",
-			"transform-object-rest-spread"
+			"@babel/plugin-proposal-class-properties",
+			"@babel/plugin-proposal-object-rest-spread",
+			"@babel/plugin-transform-modules-commonjs"
 		]
 	},
 
 	"node8": {
 		"plugins": [
 			"dynamic-import-node",
-			"transform-class-properties",
-			"transform-es2015-modules-commonjs",
-			"transform-object-rest-spread"
+			"@babel/plugin-proposal-class-properties",
+			"@babel/plugin-proposal-object-rest-spread",
+			"@babel/plugin-transform-modules-commonjs"
 		]
 	},
 
 	"node10": {
 		"plugins": [
 			"dynamic-import-node",
-			"transform-class-properties",
-			"transform-es2015-modules-commonjs"
+			"@babel/plugin-proposal-class-properties",
+			"@babel/plugin-transform-modules-commonjs"
 		]
 	}
 };
