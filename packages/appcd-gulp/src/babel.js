@@ -3,52 +3,52 @@ const Module = require('module');
 const path   = require('path');
 
 const profiles = {
-	"node4": {
-		"plugins": [
-			"dynamic-import-node",
-			"@babel/plugin-proposal-class-properties",
-			"@babel/plugin-proposal-object-rest-spread",
-			"@babel/plugin-transform-async-to-generator",
-			"@babel/plugin-transform-destructuring",
-			"@babel/plugin-transform-modules-commonjs",
-			"@babel/plugin-transform-parameters"
+	node4: {
+		plugins: [
+			'@babel/plugin-proposal-class-properties',
+			'@babel/plugin-proposal-object-rest-spread',
+			'@babel/plugin-transform-async-to-generator',
+			'@babel/plugin-transform-destructuring',
+			'@babel/plugin-transform-modules-commonjs',
+			'@babel/plugin-transform-parameters',
+			'dynamic-import-node'
 		]
 	},
 
-	"node6": {
-		"plugins": [
-			"dynamic-import-node",
-			"@babel/plugin-proposal-class-properties",
-			"@babel/plugin-proposal-object-rest-spread",
-			"@babel/plugin-transform-async-to-generator",
-			"@babel/plugin-transform-destructuring",
-			"@babel/plugin-transform-modules-commonjs"
+	node6: {
+		plugins: [
+			'@babel/plugin-proposal-class-properties',
+			'@babel/plugin-proposal-object-rest-spread',
+			'@babel/plugin-transform-async-to-generator',
+			'@babel/plugin-transform-destructuring',
+			'@babel/plugin-transform-modules-commonjs',
+			'dynamic-import-node'
 		]
 	},
 
-	"node7": {
-		"plugins": [
-			"dynamic-import-node",
-			"@babel/plugin-proposal-class-properties",
-			"@babel/plugin-proposal-object-rest-spread",
-			"@babel/plugin-transform-modules-commonjs"
+	node7: {
+		plugins: [
+			'@babel/plugin-proposal-class-properties',
+			'@babel/plugin-proposal-object-rest-spread',
+			'@babel/plugin-transform-modules-commonjs',
+			'dynamic-import-node'
 		]
 	},
 
-	"node8": {
-		"plugins": [
-			"dynamic-import-node",
-			"@babel/plugin-proposal-class-properties",
-			"@babel/plugin-proposal-object-rest-spread",
-			"@babel/plugin-transform-modules-commonjs"
+	node8: {
+		plugins: [
+			'@babel/plugin-proposal-class-properties',
+			'@babel/plugin-proposal-object-rest-spread',
+			'@babel/plugin-transform-modules-commonjs',
+			'dynamic-import-node'
 		]
 	},
 
-	"node10": {
-		"plugins": [
-			"dynamic-import-node",
-			"@babel/plugin-proposal-class-properties",
-			"@babel/plugin-transform-modules-commonjs"
+	node10: {
+		plugins: [
+			'@babel/plugin-proposal-class-properties',
+			'@babel/plugin-transform-modules-commonjs',
+			'dynamic-import-node'
 		]
 	}
 };
