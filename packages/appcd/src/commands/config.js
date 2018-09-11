@@ -39,7 +39,7 @@ export default {
 		{ name: 'key', desc: '' },
 		{ name: 'value', desc: '' }
 	],
-	async action({ argv }) {
+	async action({ argv, help }) {
 		const [
 			{ expandPath },
 			{ createRequest, loadConfig }
@@ -91,7 +91,7 @@ export default {
 						if (err.code === 'ECONNREFUSED') {
 							// the daemon is not running, need to do things the easy way
 
-							if (action === 'get') {
+							if (readActions[action]) {
 								const filter = key && key.split(/\.|\//).join('.') || undefined;
 								const value = cfg.get(filter);
 								if (value === undefined) {
@@ -100,7 +100,7 @@ export default {
 									return reject(e);
 								}
 
-								print(key, value, argv.json);
+								await print({ help, key, value, json: argv.json });
 								resolve();
 								return;
 							}
@@ -174,7 +174,7 @@ export default {
 
 								await cfg.save(expandPath(home, 'config.json'));
 
-								print(null, result, argv.json);
+								await print({ value: result, json: argv.json });
 								return resolve();
 
 							} catch (ex) {
@@ -184,7 +184,7 @@ export default {
 
 						reject(err);
 					})
-					.on('response', message => {
+					.on('response', async message => {
 						client.disconnect();
 
 						let result = 'Saved';
@@ -198,7 +198,7 @@ export default {
 							}
 						}
 
-						print(key, result, argv.json);
+						await print({ key, value: result, json: argv.json });
 						resolve();
 					});
 			});
@@ -215,12 +215,15 @@ export default {
 /**
  * Prints the result.
  *
- * @param {String?} key - The prefix used for the filter to prepend the keys when listing the config
- * settings.
- * @param {*} value - The resulting value.
- * @param {Boolean} [json=false] - When `true`, displays the output as json.
+ * @param {Object} opts - Various options.
+ * @param {Function} [opts.help] - A function to call to render the help to a string when there are
+ * no config settings found.
+ * @param {Boolean} [opts.json=false] - When `true`, displays the output as json.
+ * @param {String} [opts.key=null] - The prefix used for the filter to prepend the keys when
+ * listing the config settings.
+ * @param {*} opts.value - The resulting value.
  */
-function print(key, value, json) {
+async function print({ help, key = null, value, json }) {
 	if (json) {
 		console.log(JSON.stringify({
 			code: 0,
@@ -243,9 +246,12 @@ function print(key, value, json) {
 				segments.pop();
 			}
 		}(value, key ? key.split('.') : []));
-
-		for (const row of rows) {
-			console.log(row[0].padEnd(width) + ' = ' + row[1]);
+		if (rows.length) {
+			for (const row of rows) {
+				console.log(row[0].padEnd(width) + ' = ' + row[1]);
+			}
+		} else if (help) {
+			console.log(await help());
 		}
 	} else {
 		console.log(value);

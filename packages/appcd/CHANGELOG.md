@@ -9,6 +9,7 @@
    file yielding in an approximately 30% speed bump.
  * Moved all commands into a `commands` subdirectory.
  * Fixed extra `}` in user agent.
+ * Fixed `appcd config ls` (and `list`) actions.
  * Updated dependencies.
 
 # v1.1.3 (May 24, 2018)
