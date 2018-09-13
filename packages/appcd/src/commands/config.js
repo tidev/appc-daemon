@@ -25,7 +25,7 @@ export default {
 	},
 	args: [
 		{
-			name: 'action',
+			name: '<action>',
 			desc: 'the action to run',
 			values: {
 				'ls, list': 'display all settings',
@@ -49,10 +49,6 @@ export default {
 		]);
 
 		let { action, key, value } = argv;
-
-		if (!action) {
-			throw new Error('Action required.');
-		}
 
 		if (!readActions[action] && !writeActions[action]) {
 			throw new Error(`Unknown action: ${action}`);
