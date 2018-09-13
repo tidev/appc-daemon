@@ -14,7 +14,7 @@ import Response, { AppcdError, codes, i18n } from 'appcd-response';
 import uuid from 'uuid';
 
 import { expandPath } from 'appcd-path';
-import { isDir, isFile } from 'appcd-fs';
+import { isDir } from 'appcd-fs';
 import { osInfo } from 'appcd-util';
 
 const { __n } = i18n();

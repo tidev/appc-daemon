@@ -39,7 +39,7 @@ export default {
 		{ name: 'key', desc: '' },
 		{ name: 'value', desc: '' }
 	],
-	async action({ argv, help }) {
+	async action({ argv }) {
 		const [
 			{ expandPath },
 			{ createRequest, loadConfig }
@@ -48,14 +48,17 @@ export default {
 			import('../common')
 		]);
 
-		const cfg = loadConfig(argv);
 		let { action, key, value } = argv;
 
-		if (!readActions[action] && !writeActions[action]) {
-			key = action;
-			action = 'get';
+		if (!action) {
+			throw new Error('Action required.');
 		}
 
+		if (!readActions[action] && !writeActions[action]) {
+			throw new Error(`Unknown action: ${action}`);
+		}
+
+		const cfg = loadConfig(argv);
 		const data = {
 			action,
 			key,
@@ -100,7 +103,7 @@ export default {
 									return reject(e);
 								}
 
-								await print({ help, key, value, json: argv.json });
+								await print({ key, value, json: argv.json });
 								resolve();
 								return;
 							}
@@ -216,14 +219,12 @@ export default {
  * Prints the result.
  *
  * @param {Object} opts - Various options.
- * @param {Function} [opts.help] - A function to call to render the help to a string when there are
- * no config settings found.
  * @param {Boolean} [opts.json=false] - When `true`, displays the output as json.
  * @param {String} [opts.key=null] - The prefix used for the filter to prepend the keys when
  * listing the config settings.
  * @param {*} opts.value - The resulting value.
  */
-async function print({ help, key = null, value, json }) {
+async function print({ key = null, value, json }) {
 	if (json) {
 		console.log(JSON.stringify({
 			code: 0,
@@ -250,8 +251,8 @@ async function print({ help, key = null, value, json }) {
 			for (const row of rows) {
 				console.log(row[0].padEnd(width) + ' = ' + row[1]);
 			}
-		} else if (help) {
-			console.log(await help());
+		} else {
+			console.log('No config settings found');
 		}
 	} else {
 		console.log(value);
