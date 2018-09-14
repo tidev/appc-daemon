@@ -17,7 +17,7 @@
     "appcd-plugin-titanium-sdk": "^1.2.0",
     "appcd-plugin-windows": "^1.1.0"
   },
-  "homepage": "https://github.com/appcelerator/appc-daemon#readme",
+  "homepage": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-default-plugins",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
-  "repository": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-default-plugins"
+  "repository": "https://github.com/appcelerator/appc-daemon"
 }

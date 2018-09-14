@@ -32,9 +32,9 @@
     "gulp": "^3.9.1",
     "tmp": "^0.0.33"
   },
-  "homepage": "https://github.com/appcelerator/appc-daemon#readme",
+  "homepage": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-machine-id",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
-  "repository": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-machine-id",
+  "repository": "https://github.com/appcelerator/appc-daemon",
   "engines": {
     "node": ">=8.0.0"
   }

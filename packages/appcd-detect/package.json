@@ -33,9 +33,9 @@
     "fs-extra": "^7.0.0",
     "gulp": "^3.9.1"
   },
-  "homepage": "https://github.com/appcelerator/appc-daemon#readme",
+  "homepage": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-detect",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
-  "repository": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-detect",
+  "repository": "https://github.com/appcelerator/appc-daemon",
   "engines": {
     "node": ">=8.0.0"
   }
