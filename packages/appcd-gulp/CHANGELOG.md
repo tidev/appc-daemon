@@ -1,4 +1,4 @@
-# v1.2.0
+# v1.2.0 (Sep 17, 2018)
 
  * Added a `package` template which adds `package` and `clean-package` tasks that bundle a package
    using Webpack.
