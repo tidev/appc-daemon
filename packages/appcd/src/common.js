@@ -4,9 +4,7 @@ import path from 'path';
 import appcdLogger from 'appcd-logger';
 
 import { expandPath } from 'appcd-path';
-import { generateV8MemoryArgument, spawnNode } from 'appcd-nodejs';
 import { isFile } from 'appcd-fs';
-import { sleep } from 'appcd-util';
 import { spawn } from 'child_process';
 
 import * as config from 'appcd-config';
@@ -29,20 +27,6 @@ export function getAppcdVersion() {
 }
 
 /**
- * Creates the banner that is displayed at the beginning of the command.
- *
- * @returns {String}
- */
-export function banner() {
-	if (process.env.hasOwnProperty('APPC_NPM_VERSION')) {
-		return '';
-	}
-
-	return `${highlight('Appcelerator Daemon')}, version ${getAppcdVersion()}\n`
-		+ 'Copyright (c) 2015-2018, Axway, Inc. All Rights Reserved.\n';
-}
-
-/**
  * Makes a request to the Appc Daemon.
  *
  * @param {Config} cfg - A config instance.
@@ -55,7 +39,7 @@ export function createRequest(cfg, path, data, type) {
 	const client = new Client({
 		host: cfg.get('server.host'),
 		port: cfg.get('server.post'),
-		userAgent: `appcd/${appcdVersion}}`
+		userAgent: `appcd/${appcdVersion}`
 	});
 
 	log('Creating request: %s', highlight(`${type || 'call'}://${client.host}:${client.port}${path}`));
@@ -144,13 +128,14 @@ export function startServer({ cfg, argv }) {
 	}
 
 	process.env.APPCD = appcdVersion;
-	if (debug && !argv.colors) {
+	if (debug && !argv.color) {
 		process.env.APPCD_NO_COLORS = 1;
 	}
 	process.env.FORCE_COLOR = 1;
 
 	return Promise.resolve()
-		.then(() => {
+		.then(() => import('appcd-nodejs'))
+		.then(({ generateV8MemoryArgument, spawnNode }) => {
 			// check if we should use the core's required Node.js version
 			if (cfg.get('core.enforceNodeVersion') !== false) {
 				if (!nodeVer) {
@@ -295,6 +280,8 @@ export function stopServer({ cfg, force }) {
 			const signal = force ? 'SIGKILL' : 'SIGTERM';
 			log(`Daemon is running, sending ${signal}`);
 			process.kill(pid, signal);
+
+			const { sleep } = await import('appcd-util');
 
 			await sleep(500);
 

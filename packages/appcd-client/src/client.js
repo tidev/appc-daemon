@@ -4,7 +4,7 @@ if (!Error.prepareStackTrace) {
 }
 
 import appcdLogger from 'appcd-logger';
-import fs from 'fs';
+import fs from 'fs-extra';
 import msgpack from 'msgpack-lite';
 import path from 'path';
 import uuid from 'uuid';
@@ -280,10 +280,8 @@ function constructUserAgent(userAgent) {
 			const pkgJsonFile = path.join(dir, 'package.json');
 
 			try {
-				if (fs.statSync(pkgJsonFile)) {
-					parts.push(`${name}/${JSON.parse(fs.readFileSync(pkgJsonFile)).version || ''}`);
-					break;
-				}
+				parts.push(`${name}/${fs.readJsonSync(pkgJsonFile).version || ''}`);
+				break;
 			} catch (e) {
 				// either the package.json doesn't exist or the JSON was malformed
 				if (e.code !== 'ENOENT') {

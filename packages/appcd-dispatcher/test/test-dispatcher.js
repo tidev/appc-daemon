@@ -450,20 +450,29 @@ describe('dispatcher', () => {
 				.catch(done);
 		});
 
-		it('should error if path is invalid', () => {
+		it('should error if path is invalid', async () => {
 			const d = new Dispatcher();
 
-			expect(() => {
-				d.call();
-			}).to.throw(TypeError, 'Expected path to be a string');
+			try {
+				await d.call();
+			} catch (e) {
+				expect(e).to.be.instanceof(TypeError);
+				expect(e.message).to.equal('Expected path to be a string');
+			}
 
-			expect(() => {
-				d.call(123);
-			}).to.throw(TypeError, 'Expected path to be a string');
+			try {
+				await d.call(123);
+			} catch (e) {
+				expect(e).to.be.instanceof(TypeError);
+				expect(e.message).to.equal('Expected path to be a string');
+			}
 
-			expect(() => {
-				d.call(null);
-			}).to.throw(TypeError, 'Expected path to be a string');
+			try {
+				await d.call(null);
+			} catch (e) {
+				expect(e).to.be.instanceof(TypeError);
+				expect(e.message).to.equal('Expected path to be a string');
+			}
 		});
 
 		it('should return 404 status if not found', done => {

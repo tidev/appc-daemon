@@ -4,8 +4,7 @@ const path = require('path');
 
 const babelRE = /^(babel-|@babel\/)\w+/;
 const minifyRE = /^minify|babili$/;
-const babel = require('./babel.json');
-const conf = babel[process.env.APPCD_BABEL_CONF || 'node8'] || {};
+const conf = require('./babel.js')();
 const originalResolveFilename = Module._resolveFilename;
 
 if (process.env.APPCD_COVERAGE && conf.plugins.indexOf('istanbul') === -1) {
@@ -73,8 +72,8 @@ if (process.env.APPCD_COVERAGE) {
 	const realcwd = fs.realpathSync(cwd);
 	const distDir = path.join(cwd, 'dist');
 	const srcDir = path.join(cwd, 'src');
-	const distRegExp = /[\//]dist[\//]/;
-	const distGRegExp = /([/\\])dist([/\\])/g;
+	const distRegExp = /[\//]dist([\//]|$)/;
+	const distGRegExp = /([/\\])dist([/\\]|$)/g;
 
 	Module._resolveFilename = function (request, parent, isMain) {
 		const parentId = parent && path.resolve(parent.id);

@@ -1,3 +1,9 @@
+# v1.1.2
+
+ * Added `osInfo()` function to get operating system name and version.
+ * Removed unused variables in tests.
+ * Updated dependencies.
+
 # v1.1.1 (May 24, 2018)
 
  * Updated dependencies:

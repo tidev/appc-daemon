@@ -17,17 +17,18 @@
   },
   "dependencies": {
     "appcd-fs": "^1.1.2",
+    "appcd-path": "^1.1.1",
     "appcd-winreg": "^1.1.1",
-    "source-map-support": "^0.5.6",
+    "source-map-support": "^0.5.9",
     "sprintf-js": "^1.1.1"
   },
   "devDependencies": {
     "appcd-gulp": "^1.1.5",
     "gulp": "^3.9.1"
   },
-  "homepage": "https://github.com/appcelerator/appc-daemon#readme",
+  "homepage": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-response",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
-  "repository": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-response",
+  "repository": "https://github.com/appcelerator/appc-daemon",
   "engines": {
     "node": ">=8.0.0"
   }

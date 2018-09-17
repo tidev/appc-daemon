@@ -1,13 +1,12 @@
 'use strict';
 
 module.exports = (opts) => {
-	const gulp = opts.gulp;
+	const gulp        = opts.gulp;
 
 	const $           = require('gulp-load-plugins')();
 	const ansiColors  = require('ansi-colors');
-	const babelConfs  = require('../babel.json');
-	const del         = require('del');
-	const fs          = require('fs');
+	const babelConf   = require('../babel')(opts);
+	const fs          = require('fs-extra');
 	const log         = require('fancy-log');
 	const Module      = require('module');
 	const path        = require('path');
@@ -18,7 +17,7 @@ module.exports = (opts) => {
 	const distDir     = path.join(projectDir, 'dist');
 	const docsDir     = path.join(projectDir, 'docs');
 
-	const isWindows = process.platform === 'win32';
+	const isWindows   = process.platform === 'win32';
 
 	/*
 	 * Inject appcd-gulp into require() search path
@@ -30,44 +29,15 @@ module.exports = (opts) => {
 	};
 
 	/*
-	 * Wire up Babel
-	 */
-	process.env.APPCD_BABEL_CONF = babelConfs[opts.babel] ? opts.babel : 'node4';
-
-	const babelConf = babelConfs[opts.babel] || babelConfs.node4;
-	for (let plugin of babelConf.plugins) {
-		plugin = `babel-plugin-${plugin}`;
-		(function inject(dir) {
-			for (const name of fs.readdirSync(dir)) {
-				const subdir = path.join(dir, name);
-				try {
-					if (fs.statSync(subdir).isDirectory()) {
-						const resolvedModule = Module._resolveLookupPaths(plugin, {
-							filename: plugin,
-							paths: Module._nodeModulePaths(subdir)
-						});
-						const cacheKey = JSON.stringify({
-							request: plugin,
-							paths: resolvedModule[1]
-						});
-						Module._pathCache[cacheKey] = require.resolve(plugin);
-						// inject(subdir);
-					}
-				} catch (e) {}
-			}
-		}(opts.projectDir));
-	}
-
-	/*
 	 * Clean tasks
 	 */
 	gulp.task('clean', [ 'clean-coverage', 'clean-dist', 'clean-docs' ]);
 
-	gulp.task('clean-coverage', done => { del(coverageDir, { force: true }).then(() => done()); });
+	gulp.task('clean-coverage', done => fs.remove(coverageDir, done));
 
-	gulp.task('clean-dist', done => { del(distDir, { force: true }).then(() => done()); });
+	gulp.task('clean-dist', done => fs.remove(distDir, done));
 
-	gulp.task('clean-docs', done => { del(docsDir, { force: true }).then(() => done()); });
+	gulp.task('clean-docs', done => fs.remove(docsDir, done));
 
 	/*
 	 * lint tasks
@@ -114,12 +84,13 @@ module.exports = (opts) => {
 		return gulp.src('src/**/*.js')
 			.pipe($.plumber())
 			.pipe($.debug({ title: 'build' }))
+			.pipe($.sourcemaps.init())
 			.pipe($.babel({
 				plugins: babelConf.plugins,
 				presets: babelConf.presets,
-				sourceMap: 'inline',
 				sourceRoot: 'src'
 			}))
+			.pipe($.sourcemaps.write())
 			.pipe(gulp.dest(distDir));
 	});
 

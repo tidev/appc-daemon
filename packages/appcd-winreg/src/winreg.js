@@ -80,7 +80,7 @@ async function createRegistry(hive, key) {
 	}
 
 	if (Registry === null) {
-		Registry = await import('winreg');
+		Registry = require('winreg');
 	}
 
 	if (Registry.HIVES.indexOf(hive) === -1) {

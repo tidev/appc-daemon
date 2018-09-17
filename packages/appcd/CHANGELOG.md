@@ -1,3 +1,17 @@
+# v2.0.0
+
+ * Added `v8-compile-cache` to noticeably speed up execute.
+ * Updated to latest `cli-kit`:
+   - Enable `appcd` to be a proper `cli-kit` extension.
+   - Added banner
+   - Removed `--no-colors` since `cli-kit` now handles this for us.
+ * Updated all commands to import dependencies in their action handlers instead of the top of the
+   file yielding in an approximately 30% speed bump.
+ * Moved all commands into a `commands` subdirectory.
+ * Fixed extra `}` in user agent.
+ * Fixed `appcd config ls` (and `list`) actions.
+ * Updated dependencies.
+
 # v1.1.3 (May 24, 2018)
 
  * Updated dependencies:

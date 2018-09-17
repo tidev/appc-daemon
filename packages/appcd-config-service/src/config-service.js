@@ -185,7 +185,7 @@ export default class ConfigService extends ServiceDispatcher {
 	 */
 	onSubscribe({ ctx, publish }) {
 		const { filter } = ctx.request.params;
-		log('Sending initial config state to subscriber: %s', highlight(filter));
+		log('Sending initial config state to subscriber: %s', highlight(filter || 'no filter'));
 		const node = this.config.get(filter);
 		publish(node);
 	}

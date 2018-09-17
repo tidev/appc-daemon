@@ -108,7 +108,7 @@ export default class DataServiceDispatcher extends ServiceDispatcher {
 	getFilter(ctx) {
 		const { filter } = ctx.request.params;
 		if (filter) {
-			return filter.replace(/^\//, '').split(/[./]/);
+			return filter.replace(/^\//, '').split(/\//);
 		}
 		return null;
 	}

@@ -19,16 +19,16 @@
     "appcd-dispatcher": "^1.1.1",
     "appcd-fs": "^1.1.2",
     "appcd-logger": "^1.1.1",
-    "request": "^2.87.0",
-    "source-map-support": "^0.5.6"
+    "request": "^2.88.0",
+    "source-map-support": "^0.5.9"
   },
   "devDependencies": {
     "appcd-gulp": "^1.1.5",
     "gulp": "^3.9.1"
   },
-  "homepage": "https://github.com/appcelerator/appc-daemon#readme",
+  "homepage": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-request",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
-  "repository": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-request",
+  "repository": "https://github.com/appcelerator/appc-daemon",
   "engines": {
     "node": ">=8.0.0"
   }

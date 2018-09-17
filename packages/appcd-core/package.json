@@ -34,9 +34,9 @@
     "appcd-subprocess": "^1.1.1",
     "appcd-telemetry": "^1.1.1",
     "appcd-util": "^1.1.1",
-    "cli-kit": "^0.1.2",
-    "fs-extra": "^6.0.1",
-    "gawk": "^4.4.5",
+    "cli-kit": "next",
+    "fs-extra": "^7.0.0",
+    "gawk": "^4.5.0",
     "global-modules": "^1.0.0",
     "msgpack-lite": "^0.1.26"
   },
@@ -44,10 +44,13 @@
     "appcd-gulp": "^1.1.5",
     "gulp": "^3.9.1"
   },
-  "homepage": "https://github.com/appcelerator/appc-daemon#readme",
+  "homepage": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-core",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
-  "repository": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-core",
+  "repository": "https://github.com/appcelerator/appc-daemon",
+  "engines": {
+    "node": ">=8.10.0"
+  },
   "appcd": {
-    "node": "8.11.1"
+    "node": "8.11.4"
   }
 }

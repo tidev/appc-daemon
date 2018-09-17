@@ -1,6 +1,4 @@
-import { createRequest, loadConfig } from './common';
-
-const cmd = {
+export default {
 	args: [
 		{ name: 'path', required: true, regex: /^\//, desc: 'the path to request' },
 		{ name: 'json', type: 'json', desc: 'an option JSON payload to send' }
@@ -9,7 +7,9 @@ const cmd = {
 	options: {
 		'--subscribe': { desc: 'request a subscription' }
 	},
-	action({ argv }) {
+	async action({ argv }) {
+		const { createRequest, loadConfig } = await import('../common');
+
 		const cfg = loadConfig(argv);
 		const { path, json } = argv;
 
@@ -39,5 +39,3 @@ const cmd = {
 			});
 	}
 };
-
-export default cmd;

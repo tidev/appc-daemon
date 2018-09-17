@@ -1,12 +1,4 @@
-import fs from 'fs';
-import launch from 'appcd-dump-viewer';
-import os from 'os';
-import path from 'path';
-
-import { createRequest, loadConfig } from './common';
-import { debounce } from 'appcd-util';
-
-const cmd = {
+export default {
 	desc: 'dumps the config, status, health, and debug logs to a file',
 	args: [
 		{ name: 'file', desc: 'the file to dump the info to, otherwise stdout' },
@@ -14,7 +6,21 @@ const cmd = {
 	options: {
 		'--view': { desc: 'open the dump in the web browser' }
 	},
-	action({ argv }) {
+	async action({ argv }) {
+		const [
+			fs,
+			os,
+			path,
+			{ debounce },
+			{ createRequest, loadConfig }
+		] = await Promise.all([
+			import('fs'),
+			import('os'),
+			import('path'),
+			import('appcd-util'),
+			import('../common')
+		]);
+
 		const cfg = loadConfig(argv);
 		const results = {
 			config: {},
@@ -115,6 +121,7 @@ const cmd = {
 					console.log(`Wrote dump to ${file}`);
 
 					if (argv.view) {
+						const launch = require('appcd-dump-viewer');
 						launch(file);
 					}
 				} else {
@@ -123,5 +130,3 @@ const cmd = {
 			});
 	}
 };
-
-export default cmd;

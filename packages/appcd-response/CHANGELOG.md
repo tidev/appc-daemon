@@ -1,3 +1,13 @@
+# v1.1.3
+
+ * Telemetry payload changed:
+   - Added `app_version`, `os`, `osver`, `platform`
+   - Fixed `deploytype`, `ts`, `ver`
+   - Removed `params`
+ * Added support for `ti.start` and `ti.end`.
+ * Refactored sending events to support flushing all events.
+ * Updated dependencies.
+
 # v1.1.2 (May 24, 2018)
 
  * Updated dependencies:

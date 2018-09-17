@@ -141,6 +141,13 @@ export default class PluginManager extends Dispatcher {
 		 */
 		this.registry = {};
 
+		// register all plugins the initial list of paths
+		for (const dir of this.paths) {
+			if (dir) {
+				this.registerPluginPath(dir);
+			}
+		}
+
 		/**
 		 * Indicates that telemetry data should be captured.
 		 *
@@ -150,13 +157,21 @@ export default class PluginManager extends Dispatcher {
 		 * @type {Boolean}
 		 */
 		this.telemetryEnabled = true;
+	}
 
-		// register all plugins the initial list of paths
-		for (const dir of this.paths) {
-			if (dir) {
-				this.registerPluginPath(dir);
-			}
-		}
+	/**
+	 * Generates a snapshot of the collected data across all active plugins.
+	 *
+	 * @returns {Promise<Array<Object>>}
+	 * @access public
+	 */
+	health() {
+		return Promise
+			.all(Object.values(this.registry).map(plugin => plugin.health()))
+			.then(results => {
+				results = [].concat.apply([], results);
+				return results.filter(n => n);
+			});
 	}
 
 	/**
@@ -339,6 +354,7 @@ export default class PluginManager extends Dispatcher {
 	 * @access private
 	 */
 	sendTelemetry(event, plugin) {
+		// we only want to send telemetry when we're not doing the initial scan or shutting down
 		if (!this.telemetryEnabled) {
 			return;
 		}
@@ -351,7 +367,7 @@ export default class PluginManager extends Dispatcher {
 					packageName: plugin.packageName,
 					version:     plugin.version
 				},
-				plugins:     this.registered.map(p => {
+				plugins: this.registered.map(p => {
 					const info = {
 						name:        p.name,
 						packageName: p.packageName,
@@ -368,6 +384,34 @@ export default class PluginManager extends Dispatcher {
 			.catch(() => {
 				// squelch
 			});
+	}
+
+	/**
+	 * Stops all external plugins and unregisters all plugin paths.
+	 *
+	 * @returns {Promise}
+	 * @access public
+	 */
+	shutdown() {
+		const paths = Object.keys(this.pluginPaths);
+		logger.log(appcdLogger.pluralize(`Shutting down plugin manager and ${highlight(paths.length)} plugin path`, paths.length));
+
+		// disable telemetry since we're shutting down
+		this.telemetryEnabled = false;
+
+		return Promise.all(paths.map(this.unregisterPluginPath.bind(this)));
+	}
+
+	/**
+	 * Returns an object with the plugin status.
+	 *
+	 * @returns {Object}
+	 */
+	status() {
+		return {
+			paths:      this.paths,
+			registered: this.registered
+		};
 	}
 
 	/**
@@ -392,44 +436,5 @@ export default class PluginManager extends Dispatcher {
 
 		await this.pluginPaths[pluginPath].destroy();
 		delete this.pluginPaths[pluginPath];
-	}
-
-	/**
-	 * Stops all external plugins and unregisters all plugin paths.
-	 *
-	 * @returns {Promise}
-	 * @access public
-	 */
-	shutdown() {
-		const paths = Object.keys(this.pluginPaths);
-		logger.log(appcdLogger.pluralize(`Shutting down plugin manager and ${highlight(paths.length)} plugin path`, paths.length));
-		return Promise.all(paths.map(this.unregisterPluginPath.bind(this)));
-	}
-
-	/**
-	 * Returns an object with the plugin status.
-	 *
-	 * @returns {Object}
-	 */
-	status() {
-		return {
-			paths:      this.paths,
-			registered: this.registered
-		};
-	}
-
-	/**
-	 * Generates a snapshot of the collected data across all active plugins.
-	 *
-	 * @returns {Promise<Array<Object>>}
-	 * @access public
-	 */
-	health() {
-		return Promise
-			.all(Object.values(this.registry).map(plugin => plugin.health()))
-			.then(results => {
-				results = [].concat.apply([], results);
-				return results.filter(n => n);
-			});
 	}
 }

@@ -3,7 +3,6 @@
 const ansiColors   = require('ansi-colors');
 const chug         = require('gulp-chug');
 const debug        = require('gulp-debug');
-const del          = require('del');
 const fs           = require('fs-extra');
 const globule      = require('globule');
 const gulp         = require('gulp');
@@ -31,7 +30,7 @@ const cliTableChars = {
 	top: '', 'top-left': '', 'top-mid': '', 'top-right': ''
 };
 
-const dontUpdate = [ 'gulp-debug' ];
+const dontUpdate = ['lerna'];
 
 const appcdRE = /^appcd-/;
 const appcdPackages = new Set(fs.readdirSync(path.join(__dirname, 'packages')).filter(name => appcdRE.test(name)));
@@ -193,6 +192,10 @@ gulp.task('build', [ 'cyclic' ], () => {
 	runLerna([ 'run', '--parallel', 'build' ]);
 });
 
+gulp.task('package', [ 'build' ], () => {
+	runLerna([ 'run', '--parallel', 'package' ]);
+});
+
 /*
  * test tasks
  */
@@ -253,7 +256,7 @@ function runTests(cover, cb) {
 		}, Promise.resolve())
 		.then(() => {
 			if (cover) {
-				del.sync([ coverageDir ]);
+				fs.removeSync(coverageDir);
 				fs.mkdirsSync(coverageDir);
 				console.log();
 

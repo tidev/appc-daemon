@@ -1,19 +1,23 @@
-import Table from 'cli-table2';
-
-import { banner, createRequest, loadConfig } from './common';
-import { createInstanceWithDefaults, StdioStream } from 'appcd-logger';
-
-const logger = createInstanceWithDefaults().config({ theme: 'compact' }).enable('*').pipe(new StdioStream());
-const { log } = logger;
-const { alert, highlight, note } = logger.styles;
-const { filesize, numberFormat, relativeTime } = logger.humanize;
-
-const cmd = {
+export default {
 	desc: 'displays the Appc Daemon status',
 	options: {
 		'--json': { desc: 'outputs the status as JSON' }
 	},
-	action({ argv }) {
+	async action({ argv }) {
+		const [
+			{ default: Table },
+			{ createRequest, loadConfig },
+			{ createInstanceWithDefaults, StdioStream }
+		] = await Promise.all([
+			import('cli-table2'),
+			import('../common'),
+			import('appcd-logger')
+		]);
+
+		const logger = createInstanceWithDefaults().config({ theme: 'compact' }).enable('*').pipe(new StdioStream());
+		const { log } = logger;
+		const { alert, highlight, note } = logger.styles;
+		const { filesize, numberFormat, relativeTime } = logger.humanize;
 		const cfg = loadConfig(argv);
 		const { client, request } = createRequest(cfg, '/appcd/status');
 
@@ -23,7 +27,6 @@ const cmd = {
 					if (argv.json) {
 						log('{}');
 					} else {
-						log(banner());
 						log('Server not running');
 					}
 					process.exit(3);
@@ -34,12 +37,11 @@ const cmd = {
 			})
 			.on('response', status => {
 				client.disconnect();
+
 				if (argv.json) {
 					log(JSON.stringify(status, null, 2));
 					return;
 				}
-
-				log(banner());
 
 				const params = {
 					chars: {
@@ -156,5 +158,3 @@ const cmd = {
 			});
 	}
 };
-
-export default cmd;

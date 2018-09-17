@@ -152,7 +152,7 @@ export default class Server {
 		await this.importTiConfig();
 
 		// init the telemetry system
-		this.systems.telemetry = new Telemetry(this.config);
+		this.systems.telemetry = new Telemetry(this.config, this.version);
 		await this.systems.telemetry.init(homeDir);
 		Dispatcher.register('/appcd/telemetry', this.systems.telemetry);
 
@@ -227,9 +227,18 @@ export default class Server {
 			webroot:  path.resolve(__dirname, '..', 'public')
 		});
 
+		const telemetryRequest = req => {
+			Dispatcher.call('/appcd/telemetry', {
+				event: 'dispatch',
+				...req
+			}).catch(err => {
+				logger.warn(`Failed to log HTTP dispatcher request: ${err.message}`);
+			});
+		};
+
 		this.systems.webserver
-			.use(Dispatcher.callback())
-			.on('websocket', (ws, req) => new WebSocketSession(ws, req));
+			.use(Dispatcher.callback(telemetryRequest))
+			.on('websocket', (ws, req) => new WebSocketSession(ws, req).on('request', telemetryRequest));
 
 		// start the web server
 		await this.systems.webserver.listen();
@@ -241,7 +250,7 @@ export default class Server {
 		await Dispatcher.call('/appcd/telemetry', {
 			arch:        getArch(),
 			cpus:        os.cpus().length,
-			event:       'server.start',
+			event:       'ti.start',
 			env:         this.config.get('environment.name'),
 			memory:      os.totalmem(),
 			nodeVersion: process.version,
@@ -253,8 +262,7 @@ export default class Server {
 				version:     p.version,
 				type:        p.type
 			})),
-			startupTime,
-			version:     this.version
+			startupTime
 		});
 
 		// cleanup unused Node.js executables every hour
@@ -275,7 +283,7 @@ export default class Server {
 
 		if (purged.length) {
 			Dispatcher.call('/appcd/telemetry', {
-				event: 'server.nodePurge',
+				event: 'server.node_purge',
 				purged
 			});
 		}
@@ -296,12 +304,13 @@ export default class Server {
 		}
 
 		await Dispatcher.call('/appcd/telemetry', {
-			event:  'server.shutdown',
+			event:  'ti.end',
 			uptime: process.uptime()
 		});
 
-		for (const system of Object.values(this.systems)) {
+		for (const [ name, system ] of Object.entries(this.systems)) {
 			if (typeof system.shutdown === 'function') {
+				logger.log(`Shutting down ${name}...`);
 				await system.shutdown();
 			}
 		}

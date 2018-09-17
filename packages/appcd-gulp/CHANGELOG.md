@@ -1,3 +1,17 @@
+# v1.2.0
+
+ * Added a `package` template which adds `package` and `clean-package` tasks that bundle a package
+   using Webpack.
+ * Replaced `del.sync()` with fs-extra's `removeSync()`.
+   [(DAEMON-258)](https://jira.appcelerator.org/browse/DAEMON-258)
+ * Fixed bug in `test-transpile` with instrumenting coverage reporting in files that implicitly
+   import the `index` file when referencing the `dist` directory.
+ * Removed Babel decorators transform plugin.
+ * Removed Babel minify preset.
+ * Added Node 8.10 and 10.0 Babel configs.
+ * Upgraded to latest Babel version.
+ * Updated dependencies.
+
 # v1.1.5 (May 24, 2018)
 
  * Updated dependencies:

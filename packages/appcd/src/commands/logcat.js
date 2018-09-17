@@ -1,27 +1,23 @@
-import {
-	createInstanceWithDefaults,
-	Format,
-	StdioStream,
-	StripColors
-} from 'appcd-logger';
-
-import { arrayify } from 'appcd-util';
-
-import { createRequest, loadConfig } from './common';
-
-const cmd = {
+export default {
 	args: [
 		{ name: 'filters...', desc: 'one or more namespace patterns' }
 	],
 	desc: 'streams Appc Daemon debug log output',
-	options: {
-		'--no-colors': { desc: 'disables colors' }
-	},
-	action({ argv }) {
+	async action({ argv }) {
+		const [
+			{ createInstanceWithDefaults, Format, StdioStream, StripColors },
+			{ arrayify },
+			{ createRequest, loadConfig }
+		] = await Promise.all([
+			import('appcd-logger'),
+			import('appcd-util'),
+			import('../common')
+		]);
+
 		const cfg = loadConfig(argv);
 
 		let formatter;
-		if (argv.colors) {
+		if (argv.color) {
 			formatter = new Format();
 		} else {
 			formatter = new StripColors();
@@ -50,23 +46,22 @@ const cmd = {
 			.enable(filter)
 			.pipe(formatter);
 
-		createRequest(cfg, '/appcd/logcat')
-			.request
-			.on('response', (message, response) => {
-				if (logger.isEnabled(response.ns)) {
-					process.stdout.write(message);
-				}
-			})
-			.once('error', err => {
-				if (err.code === 'ECONNREFUSED') {
-					console.log('Server not running');
-					process.exit(3);
-				} else {
-					console.error(err);
-					process.exit(1);
-				}
-			});
+		return new Promise((resolve, reject) => {
+			createRequest(cfg, '/appcd/logcat')
+				.request
+				.on('response', (message, response) => {
+					if (logger.isEnabled(response.ns)) {
+						process.stdout.write(message);
+					}
+				})
+				.once('error', err => {
+					if (err.code === 'ECONNREFUSED') {
+						err = new Error('Server not running');
+						err.exitCode = 3;
+						this.showHelpOnError = false;
+					}
+					reject(err);
+				});
+		});
 	}
 };
-
-export default cmd;
