@@ -1,4 +1,4 @@
-# v1.1.2
+# v1.2.0 (Sep 17, 2018)
 
  * Removed support for period delimited filters in `DataServiceDispatcher`.
  * Added `startTime`, `status`, and `time` to `DispatcherContext`.
