@@ -11,6 +11,7 @@ import SubprocessManager from 'appcd-subprocess';
 import tmp from 'tmp';
 
 import { expandPath } from 'appcd-path';
+import { PassThrough } from 'stream';
 import { renderTree } from 'appcd-fswatcher';
 import { sleep } from 'appcd-util';
 
@@ -805,8 +806,8 @@ describe('PluginManager', () => {
 
 			setTimeout(() => {
 				Dispatcher.call('/foo/1.0.0/time', { type: 'subscribe' })
-					.then(ctx => {
-						ctx.response
+					.then(({ response }) => {
+						response
 							.on('data', res => {
 								counter++;
 								log(counter, res);
@@ -831,15 +832,13 @@ describe('PluginManager', () => {
 											.catch(done);
 								}
 							})
-							.on('end', () => {
+							.once('end', () => {
 								log('foo response ended');
 								done();
 							})
-							.on('error', done);
+							.once('error', done);
 					})
-					.catch(err => {
-						done(err);
-					});
+					.catch(done);
 			}, 1000);
 		});
 
@@ -916,6 +915,62 @@ describe('PluginManager', () => {
 						expect(resp.type).to.equal('external');
 						expect(resp.path).to.equal(pluginDir);
 						expect(resp.version).to.equal('1.2.3');
+					})
+					.then(done)
+					.catch(done);
+			}, 1000);
+		});
+
+		it('should spawn a process and receive all output events', function (done) {
+			this.timeout(10000);
+			this.slow(9000);
+
+			const pluginDir = path.join(__dirname, 'fixtures', 'spawn-test');
+
+			pm = new PluginManager({
+				paths: [ pluginDir ]
+			});
+
+			setTimeout(() => {
+				log('Calling spawn-test...');
+				Dispatcher.call('/spawn-test/1.2.3/spawn')
+					.then(ctx => {
+						expect(ctx.response).to.be.instanceof(PassThrough);
+
+						return new Promise((resolve, reject) => {
+							let counter = 0;
+
+							ctx.response
+								.on('data', message => {
+									try {
+										switch (++counter) {
+											case 1:
+												expect(message.type).to.equal('spawn');
+												break;
+											case 2:
+												expect(message.type).to.equal('stdout');
+												expect(message.output).to.equal('Hello\n');
+												break;
+											case 3:
+												expect(message.type).to.equal('stderr');
+												expect(message.output).to.equal('Oh no!\n');
+												break;
+											case 4:
+												expect(message.type).to.equal('stdout');
+												expect(message.output).to.equal('Just kidding\n');
+												break;
+											case 5:
+												expect(message.type).to.equal('exit');
+												expect(message.code).to.equal(0);
+												break;
+										}
+									} catch (e) {
+										reject(e);
+									}
+								})
+								.on('end', resolve)
+								.on('error', reject);
+						});
 					})
 					.then(done)
 					.catch(done);

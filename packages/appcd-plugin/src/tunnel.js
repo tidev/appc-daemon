@@ -1,6 +1,6 @@
 import appcdLogger from 'appcd-logger';
 import PluginError from './plugin-error';
-import Response, { AppcdError } from 'appcd-response';
+import Response, { AppcdError, codes } from 'appcd-response';
 import uuid from 'uuid';
 
 import { DispatcherContext, DispatcherError } from 'appcd-dispatcher';
@@ -43,7 +43,11 @@ export default class Tunnel {
 				return this.requests[req.id](req);
 			}
 
-			handler(req, /* send */ res => {
+			const send = res => {
+				if (!res || typeof res !== 'object') {
+					return;
+				}
+
 				let message = res;
 
 				if (res instanceof Error) {
@@ -57,18 +61,18 @@ export default class Tunnel {
 				} else if (res instanceof DispatcherContext) {
 					message = {
 						message: res.response,
-						status:  res.status || 200
+						status:  res.status || codes.OK
 					};
 				} else if (res.message instanceof Response) {
 					message = {
 						...res,
-						status:  res.message.status || 200,
+						status:  res.message.status || codes.OK,
 						message: res.message.toString()
 					};
 				}
 
 				if (!message.status) {
-					message.status = 200;
+					message.status = codes.OK;
 				}
 
 				if (!message.type && req.type) {
@@ -82,7 +86,9 @@ export default class Tunnel {
 
 				// this.logger.log('Sending tunnel response to %s:', highlight(this.remoteName), response);
 				this.proc.send(response);
-			});
+			};
+
+			handler(req, send);
 		};
 
 		/**
@@ -171,24 +177,30 @@ export default class Tunnel {
 						reject(ctx.response);
 						break;
 
-					case 'subscribe':
+					case 'stream':
 						resolve(ctx);
-						// fallthrough
 
-					case 'event':
-						ctx.request.sid = message.sid;
-						// fallthrough
+						switch (message.data.type) {
+							case 'fin':
+								if (this.requests[id]) {
+									this.logger.log('Deleting request handler: %s', highlight(id), magenta(ctx.request.path));
+									delete this.requests[id];
+								}
+								ctx.response.end();
+								break;
 
-					case 'unsubscribe':
-						ctx.response.write(message);
-						break;
+							case 'subscribe':
+								ctx.request.sid = message.data.sid;
 
-					case 'fin':
-						if (this.requests[id]) {
-							this.logger.log('Deleting request handler: %s', highlight(id), magenta(ctx.request.path));
-							delete this.requests[id];
+							default:
+								if (message.data.message instanceof Response) {
+									// we can't send Response objects, so we need to render it now
+									message.data.message = message.data.message.toString();
+								}
+
+								ctx.response.write(message.data);
 						}
-						ctx.response.end();
+
 						break;
 
 					default:

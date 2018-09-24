@@ -2,6 +2,8 @@
 
  * Fixed plugin telemetry so that it doesn't send events during the initial scan or shutdown.
  * Fixed lint issue with code indention.
+ * Added support for streamed responses through the IPC tunnel.
+   [(DAEMON-262)](https://jira.appcelerator.org/browse/DAEMON-262)
  * Updated dependencies.
 
 # v1.1.2 (May 24, 2018)

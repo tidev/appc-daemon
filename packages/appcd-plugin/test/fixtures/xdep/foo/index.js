@@ -1,4 +1,5 @@
 const uuid = require('uuid');
+const Response = require('appcd-response').default;
 
 function sleep() {
 	return new Promise(resolve => setTimeout(resolve, 1000));

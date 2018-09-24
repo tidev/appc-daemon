@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "dependencies": {
-    "ansi-colors": "^3.0.5",
+    "ansi-colors": "^3.0.6",
     "cli-table2": "^0.2.0",
     "fs-extra": "^7.0.0",
     "globule": "^1.2.1",

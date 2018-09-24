@@ -34,7 +34,7 @@ export default class SubprocessManager extends Dispatcher {
 
 		const subprocesses = this.subprocesses = gawk([]);
 
-		this.register('/spawn/node/:version?', ctx => {
+		this.register('/spawn/node/:version?', async ctx => {
 			const { data, params, source } = ctx.request;
 
 			// if the source is http, then block the spawn
@@ -42,11 +42,12 @@ export default class SubprocessManager extends Dispatcher {
 				throw new SubprocessError(codes.FORBIDDEN, 'Spawn not permitted');
 			}
 
-			return Promise.resolve()
-				.then(() => Dispatcher.call('/appcd/config/home'))
-				.then(({ response }) => expandPath(response, 'node'))
-				.then(nodeHome => prepareNode({ nodeHome, version: params.version || process.version }))
-				.then(node => this.call('/spawn', { data: { ...data, command: node } }));
+			const { response } = await Dispatcher.call('/appcd/config/home');
+			const node = await prepareNode({
+				nodeHome: expandPath(response, 'node'),
+				version: params.version || process.version
+			});
+			return await this.call('/spawn', { data: { ...data, command: node } });
 		});
 
 		this.register('/spawn', ctx => new Promise((resolve, reject) => {
