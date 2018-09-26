@@ -1,0 +1,8 @@
+{
+	"name": "spawn test plugin",
+	"version": "1.2.3",
+	"appcd": {
+		"name": "spawn-test",
+		"inactivityTimeout": 30000
+	}
+}

@@ -76,7 +76,6 @@ export default class ExternalPlugin extends PluginBase {
 
 		const startTime = new Date();
 		const { path } = ctx;
-		const { type } = ctx.request;
 		const logRequest = status => {
 			const style = status < 400 ? ok : alert;
 			let msg = `Plugin dispatcher: ${highlight(`/${this.plugin.name}/${this.plugin.version}${path}`)} ${style(status)}`;
@@ -94,7 +93,7 @@ export default class ExternalPlugin extends PluginBase {
 				logRequest(ctx.status);
 
 				const { sid } = ctx.request;
-				if (type === 'subscribe' && sid) {
+				if (ctx.response instanceof Readable) {
 					this.streams[sid] = ctx.response;
 					ctx.response.on('end', () => {
 						delete this.streams[sid];
@@ -253,41 +252,52 @@ export default class ExternalPlugin extends PluginBase {
 									sid = message.sid;
 								}
 
-								let res;
+								let data;
 								const type = message.type || (sid ? 'event' : undefined);
 
 								if (typeof message === 'object') {
-									res = {
+									data = {
 										...message,
 										type
 									};
 								} else {
-									res = {
+									data = {
 										message,
 										type
 									};
 								}
 
-								send(res);
-							})
-							.once('end', () => {
-								// the stream has ended, if sid, send `fin`
-								if (sid) {
-									send({
-										sid,
-										type: 'fin',
-									});
-
+								if (data.message instanceof Response) {
+									data = {
+										...data,
+										status: data.message.status || codes.OK,
+										message: data.message.toString()
+									};
 								}
+
+								send({
+									type: 'stream',
+									data
+								});
 							})
+							.once('end', () => send({
+								type: 'stream',
+								data: {
+									sid,
+									type: 'fin'
+								}
+							}))
 							.once('error', err => {
 								this.appcdLogger.error('Response stream error:');
 								this.appcdLogger.error(err);
 								this.send({
-									message: err.message || err,
-									stack: err.stack,
-									status: err.status || 500,
-									type: 'error'
+									type: 'stream',
+									data: {
+										message: err.message || err,
+										stack: err.stack,
+										status: err.status || 500,
+										type: 'error'
+									}
 								});
 							});
 
@@ -440,7 +450,7 @@ export default class ExternalPlugin extends PluginBase {
 					});
 			})
 			.then(ctx => new Promise((resolve, reject) => {
-				this.tunnel = new Tunnel(ctx.proc, true, (req, send) => {
+				this.tunnel = new Tunnel(ctx.proc, true, async (req, send) => {
 					switch (req.type) {
 						case 'activated':
 							this.appcdLogger.log('External plugin is activated');
@@ -471,81 +481,88 @@ export default class ExternalPlugin extends PluginBase {
 
 						case 'request':
 						default:
-							if (req.id) {
-								// dispatcher request
+							if (!req.id) {
+								break;
+							}
+
+							// dispatcher request
+							try {
 								const startTime = new Date();
+								const { status, response } = await Dispatcher.call(req.message.path, req.message.data);
+								const style = status < 400 ? ok : alert;
 
-								Dispatcher
-									.call(req.message.path, req.message.data)
-									.then(({ status, response }) => {
-										const style = status < 400 ? ok : alert;
+								let msg = `Plugin dispatcher: ${highlight(req.message.path || '/')} ${style(status)}`;
+								if (ctx.type !== 'event') {
+									msg += ` ${highlight(`${new Date() - startTime}ms`)}`;
+								}
+								this.appcdLogger.log(msg);
 
-										let msg = `Plugin dispatcher: ${highlight(req.message.path || '/')} ${style(status)}`;
-										if (ctx.type !== 'event') {
-											msg += ` ${highlight(`${new Date() - startTime}ms`)}`;
-										}
-										this.appcdLogger.log(msg);
+								if (response instanceof Readable) {
+									// we have a stream
 
-										if (response instanceof Readable) {
-											// we have a stream
+									// track if this stream is a pubsub stream so we know to send the `fin`
+									let sid;
 
-											// track if this stream is a pubsub stream so we know to send the `fin`
-											let sid;
+									response
+										.on('data', message => {
+											// data was written to the stream
 
-											response
-												.on('data', message => {
-													// data was written to the stream
+											if (message.type === 'subscribe') {
+												sid = message.sid;
+												this.appcdLogger.log('Detected new subscription: %s', highlight(sid));
+												this.streams[sid] = response;
+											}
 
-													if (message.type === 'subscribe') {
-														sid = message.sid;
-														this.appcdLogger.log('Detected new subscription: %s', highlight(sid));
-														this.streams[sid] = response;
-													}
-
-													send(message);
-												})
-												.once('end', () => {
-													delete this.streams[sid];
-
-													// the stream has ended, if sid, send `fin`
-													if (sid) {
-														send({
-															sid,
-															type: 'fin'
-														});
-													}
-												})
-												.once('error', err => {
-													delete this.streams[sid];
-
-													this.appcdLogger.error('Response stream error:');
-													this.appcdLogger.error(err);
-													send({
-														message: err.message || err,
-														stack: err.stack,
-														status: err.status || 500,
-														type: 'error'
-													});
-												});
-
-										} else if (response instanceof Error) {
-											send(response);
-
-										} else {
 											send({
-												status,
-												message: response
+												type: 'stream',
+												data: message
 											});
-										}
-									})
-									.catch(err => {
-										send({
-											message: err.message || err,
-											stack: err.stack,
-											status: err.status || 500,
-											type: 'error'
+										})
+										.once('end', () => {
+											delete this.streams[sid];
+
+											// the stream has ended, send `fin`
+											send({
+												type: 'stream',
+												data: {
+													sid,
+													type: 'fin'
+												}
+											});
+										})
+										.once('error', err => {
+											delete this.streams[sid];
+
+											this.appcdLogger.error('Response stream error:');
+											this.appcdLogger.error(err);
+
+											send({
+												type: 'stream',
+												data: {
+													message: err.message || err,
+													stack: err.stack,
+													status: err.status || 500,
+													type: 'error'
+												}
+											});
 										});
+
+								} else if (response instanceof Error) {
+									send(response);
+
+								} else {
+									send({
+										status,
+										message: response
 									});
+								}
+							} catch (err) {
+								send({
+									message: err.message || err,
+									stack: err.stack,
+									status: err.status || 500,
+									type: 'error'
+								});
 							}
 					}
 				});

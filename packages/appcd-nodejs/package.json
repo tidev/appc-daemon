@@ -23,7 +23,7 @@
     "fs-extra": "^7.0.0",
     "progress": "^2.0.0",
     "source-map-support": "^0.5.9",
-    "tar-stream": "^1.6.1",
+    "tar-stream": "^1.6.2",
     "tmp": "^0.0.33",
     "yauzl": "^2.10.0"
   },

@@ -18,7 +18,7 @@
     "@babel/plugin-transform-parameters": "^7.1.0",
     "@babel/polyfill": "^7.0.0",
     "@babel/register": "^7.0.0",
-    "ansi-colors": "^3.0.5",
+    "ansi-colors": "^3.0.6",
     "babel-eslint": "^9.0.0",
     "babel-loader": "^8.0.2",
     "babel-plugin-dynamic-import-node": "^2.1.0",
