@@ -28,7 +28,7 @@ export default {
 			health: [],
 			log: []
 		};
-		const envRegExp = /^ANDROID.*|APPC.*|ComSpec|HOME|HOMEPATH|LANG|PATH|PWD|USERPROFILE$/;
+		const envRegExp = /^AMPLIFY_CLI.*|ANDROID.*|APPC.*|ComSpec|HOME|HOMEPATH|LANG|PATH|PWD|USERPROFILE$/;
 		let { file } = argv;
 
 		return Promise.resolve()
