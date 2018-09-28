@@ -10,6 +10,8 @@
  * `WebSocketSession` now extends `EventEmitter` and emits a `request` event when a request
    completes.
  * Improved `WebSocketSession` request handling to be more consistent.
+ * Added `AMPLIFY_CLI` version to telemetry payload.
+   [(DAEMON-263)](https://jira.appcelerator.org/browse/DAEMON-263)
  * Updated dependencies.
 
 # v1.1.3 (May 24, 2018)
