@@ -9,7 +9,7 @@ Refer to the [docs](docs/) for getting started and technical information.
 
 Report issues in [JIRA](https://jira.appcelerator.org/projects/DAEMON/issues).
 
-Plugins are located in the [appc-daemon-plugins](https://github.com/appcelerator/appc-daemon-plugins) repo.
+Plugins are located in the [Appc Daemon Plugins](https://github.com/appcelerator/appc-daemon-plugins) repo.
 
 ## Legal
 
