@@ -4,7 +4,8 @@ import {
 	existsSync,
 	isDir,
 	isFile,
-	locate
+	locate,
+	readdirScoped
 } from '../dist/fs';
 
 describe('fs', () => {
@@ -85,6 +86,19 @@ describe('fs', () => {
 		it('should not find a file with depth', () => {
 			const result = locate(baseDir, 'bar.txt', 1);
 			expect(result).to.be.null;
+		});
+	});
+
+	describe('readdirScoped', () => {
+		const baseDir = path.resolve(__dirname, './fixtures/readdirScopes');
+		it('should read dir and have scoped packages as a single entry', () => {
+			const dirs = readdirScoped(baseDir);
+			expect(dirs).to.deep.equal([ '@test/bar', '@test/foo', 'bar', 'foo' ]);
+		});
+
+		it('should work normally when no scopes exists', () => {
+			const dirs = readdirScoped(__dirname);
+			expect(dirs).to.deep.equal([ 'fixtures', 'test-fs.js' ]);
 		});
 	});
 });
