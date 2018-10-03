@@ -86,3 +86,32 @@ export function locate(dir, filename, depth) {
 	}
 	return null;
 }
+
+/**
+ * Read a directory including scoped packages as a single entry in the Array
+ * and filtering out all files.
+ *
+ * @param {String} dir - Directory to read.
+ * @returns {Array}
+ */
+export function readdirScopedSync(dir) {
+	const children = [];
+
+	for (const name of fs.readdirSync(dir)) {
+		const childPath = path.join(dir, name);
+		if (!isDir(childPath)) {
+			continue;
+		}
+		if (name.charAt(0) === '@') {
+			for (const scopedPackage of fs.readdirSync(childPath)) {
+				if (isDir(path.join(childPath, scopedPackage))) {
+					children.push(`${name}/${scopedPackage}`);
+				}
+			}
+		} else {
+			children.push(name);
+		}
+	}
+
+	return children;
+}
