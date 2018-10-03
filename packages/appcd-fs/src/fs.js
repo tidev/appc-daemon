@@ -88,26 +88,30 @@ export function locate(dir, filename, depth) {
 }
 
 /**
- * Read a directory including scoped packages as a single entry in the Array.
+ * Read a directory including scoped packages as a single entry in the Array
+ * and filtering out all files.
  *
  * @param {String} dir - Directory to read.
  * @returns {Array}
  */
-export function readdirScoped(dir) {
-	let children = fs.readdirSync(dir);
-	const scopes = children.filter(dirName => dirName.charAt(0) === '@');
-	// Remove all scoped directories from the child array
-	children = children.filter(dirName => dirName.charAt(0) !== '@');
-	if (scopes.length === 0) {
-		return children;
-	}
-	for (const scope of scopes) {
-		const scopedDir = path.join(dir, scope);
-		const scopedChildren = fs.readdirSync(scopedDir)
-			.filter(child => isDir(child))
-			.map(child => `${scope}/${child}`);
+export function readdirScopedSync(dir) {
+	const children = [];
 
-		children.push(...scopedChildren);
+	for (const name of fs.readdirSync(dir)) {
+		const childPath = path.join(dir, name);
+		if (!isDir(childPath)) {
+			continue;
+		}
+		if (name.charAt(0) === '@') {
+			for (const scopedPackage of fs.readdirSync(childPath)) {
+				if (isDir(path.join(childPath, scopedPackage))) {
+					children.push(`${name}/${scopedPackage}`);
+				}
+			}
+		} else {
+			children.push(name);
+		}
 	}
-	return children.sort((a, b) => a > b);
+
+	return children;
 }
