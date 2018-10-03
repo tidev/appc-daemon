@@ -90,7 +90,7 @@ describe('fs', () => {
 	});
 
 	describe('readdirScoped', () => {
-		const baseDir = path.resolve(__dirname, './fixtures/readdirScopes');
+		const baseDir = path.resolve(__dirname, './fixtures/readdirScopedSync');
 		it('should read dir and have scoped packages as a single entry', () => {
 			const dirs = readdirScopedSync(baseDir);
 			expect(dirs).to.deep.equal([ '@test/bar', '@test/foo', 'bar', 'foo' ]);
