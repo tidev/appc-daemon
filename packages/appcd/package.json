@@ -10,7 +10,8 @@
   "keywords": [
     "appcelerator",
     "appc",
-    "daemon"
+    "daemon",
+    "amplify-package"
   ],
   "bin": {
     "appcd": "./bin/appcd"
@@ -54,5 +55,8 @@
   "cli-kit": {
     "description": "The Appc Daemon for powering client-side tooling.",
     "main": "./dist/cli"
+  },
+  "amplify": {
+    "type": "amplify-cli-plugin"
   }
 }
