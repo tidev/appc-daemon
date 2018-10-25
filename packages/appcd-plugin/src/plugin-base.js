@@ -84,6 +84,12 @@ export default class PluginBase extends EventEmitter {
 			pid: null,
 
 			/**
+			 * A list of all known registered services after the plugin has been activated.
+			 * @type {Array}
+			 */
+			services: [],
+
+			/**
 			 * The full stack dump if an error occurred.
 			 * @type {String}
 			 */
@@ -144,6 +150,19 @@ export default class PluginBase extends EventEmitter {
 		if (this.module && typeof this.module.activate === 'function') {
 			await this.module.activate(this.config);
 		}
+
+		// detect the plugin services
+		(function scan(services, dispatcher, parent = '') {
+			for (const { path, handler } of dispatcher.routes) {
+				if (path !== '/') {
+					services.push(parent + path);
+				}
+				if (handler instanceof Dispatcher) {
+					scan(services, handler, parent + path);
+				}
+			}
+			return services;
+		}(this.info.services = [], this.dispatcher));
 	}
 
 	/**

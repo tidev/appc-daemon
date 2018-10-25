@@ -4,6 +4,8 @@
  * Fixed lint issue with code indention.
  * Added support for streamed responses through the IPC tunnel.
    [(DAEMON-262)](https://jira.appcelerator.org/browse/DAEMON-262)
+ * Added list of plugin's services to the default plugin info route.
+   [(DAEMON-265)](https://jira.appcelerator.org/browse/DAEMON-265)
  * Updated dependencies.
 
 # v1.1.2 (May 24, 2018)

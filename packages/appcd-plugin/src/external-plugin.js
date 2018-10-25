@@ -347,7 +347,10 @@ export default class ExternalPlugin extends PluginBase {
 				this.appcdLogger.warn(err);
 			})
 			.then(() => this.activate())
-			.then(() => this.tunnel.emit({ type: 'activated' }))
+			.then(() => this.tunnel.emit({
+				type: 'activated',
+				services: this.info.services
+			}))
 			.catch(async (err) => {
 				this.appcdLogger.error(err);
 
@@ -454,6 +457,8 @@ export default class ExternalPlugin extends PluginBase {
 					switch (req.type) {
 						case 'activated':
 							this.appcdLogger.log('External plugin is activated');
+							this.appcdLogger.log(req.services);
+							this.info.services = req.services;
 							resolve();
 							break;
 
