@@ -1,3 +1,7 @@
+# v1.1.4
+
+ * Migrated to new `@appcd/` scoped package names.
+
 # v1.1.3 (May 24, 2018)
 
  * Updated dependencies:

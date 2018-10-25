@@ -13,8 +13,9 @@ import vm from 'vm';
 const { log } = appcdLogger('appcd:plugin:module');
 const { highlight } = appcdLogger.styles;
 
-const appcdRegExp = /^appcd-/;
+const appcdRegExp = /^(appcd-|@appcd\/)/;
 const appcdPackages = new Map();
+appcdPackages.set('appcd-plugin', JSON.parse(fs.readFileSync(path.resolve(__dirname, '..', 'package.json'))).version);
 
 (function () {
 	const { dependencies } = JSON.parse(fs.readFileSync(path.resolve(__dirname, '..', 'package.json')));

@@ -160,7 +160,7 @@ export default class SubprocessManager extends Dispatcher {
 						send: {
 							value: value => {
 								if (!ipc) {
-									throw new Error('IPC not enabled for this process');
+									throw new SubprocessError('IPC not enabled for this process');
 								}
 								try {
 									child.send(value);
@@ -237,8 +237,8 @@ export default class SubprocessManager extends Dispatcher {
 				.catch(err => reject(new SubprocessError(err)));
 		}));
 
-		this.register('/kill/:pid?', ctx => {
-			const { params } = ctx.request;
+		this.register('/send/:pid?', ctx => {
+			const { data, params } = ctx.request;
 
 			if (!params.pid) {
 				throw new SubprocessError(codes.MISSING_PARAMETER, 'Missing required parameter "%s"', 'pid');
@@ -249,7 +249,29 @@ export default class SubprocessManager extends Dispatcher {
 				throw new SubprocessError(codes.INVALID_PARAMETER, 'The "%s" parameter must be a positive integer', 'pid');
 			}
 
-			const { data } = ctx.request;
+			for (const proc of subprocesses) {
+				if (proc.pid === pid) {
+					proc.send(data);
+					ctx.response = { success: true };
+					return;
+				}
+			}
+
+			throw new SubprocessError(codes.NOT_FOUND, 'Process "%s" not running', 'pid');
+		});
+
+		this.register('/kill/:pid?', ctx => {
+			const { data, params } = ctx.request;
+
+			if (!params.pid) {
+				throw new SubprocessError(codes.MISSING_PARAMETER, 'Missing required parameter "%s"', 'pid');
+			}
+
+			const pid = parseInt(params.pid);
+			if (isNaN(pid) || pid < 0) {
+				throw new SubprocessError(codes.INVALID_PARAMETER, 'The "%s" parameter must be a positive integer', 'pid');
+			}
+
 			let signal = data && data.signal !== undefined ? data.signal : 'SIGTERM';
 			if (signal === '0') {
 				signal = 0;

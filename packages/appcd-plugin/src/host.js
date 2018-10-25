@@ -3,12 +3,6 @@ if (!Error.prepareStackTrace) {
 	require('source-map-support/register');
 }
 
-import Plugin from './plugin';
-import semver from 'semver';
-import TunnelStream from './tunnel-stream';
-
-import { createInstanceWithDefaults, StdioStream } from 'appcd-logger';
-
 if (!process.connected) {
 	console.error('The Appc Daemon plugin host cannot be directly executed.');
 	process.exit(2);
@@ -18,6 +12,12 @@ if (process.argv.length < 3) {
 	console.error('Missing plugin path argument.');
 	process.exit(3);
 }
+
+import Plugin from './plugin';
+import semver from 'semver';
+import TunnelStream from './tunnel-stream';
+
+import { createInstanceWithDefaults, StdioStream } from 'appcd-logger';
 
 process.title = 'appcd-plugin-host';
 
