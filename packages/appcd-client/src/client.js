@@ -205,7 +205,7 @@ export default class Client {
 								// `fin` exists on the last message from the request which can be
 								// any message type, not just `finish`
 								if (response.fin) {
-									emitter.emit('close');
+									emitter.emit('finish');
 								}
 								break;
 
