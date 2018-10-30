@@ -301,7 +301,6 @@ describe('request', () => {
 						done(new Error('Expected request to fail'));
 					}
 				} catch (e) {
-					console.log('!!!!', e);
 					done(e);
 				}
 			});
