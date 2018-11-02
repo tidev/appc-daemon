@@ -178,17 +178,15 @@ export default class WebSocketSession extends EventEmitter {
 					})
 					.once('end', () => {
 						// the stream has ended, if pubsub, send `fin`
-						if (pubsub) {
-							this.respond({
-								ctx: first,
-								req,
-								res: {
-									path: req.path,
-									type: 'event',
-									fin: true
-								}
-							});
-						}
+						this.respond({
+							ctx: first,
+							req,
+							res: {
+								path: req.path,
+								type: 'finish',
+								fin: true
+							}
+						});
 					})
 					.once('error', err => {
 						logger.error('%s Response stream error:', note(`[${this.sessionId}]`));
@@ -214,7 +212,8 @@ export default class WebSocketSession extends EventEmitter {
 					req,
 					res: {
 						status,
-						message: response
+						message: response,
+						fin: true
 					}
 				});
 			}

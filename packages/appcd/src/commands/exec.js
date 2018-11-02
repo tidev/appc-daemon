@@ -16,17 +16,7 @@ export default {
 		createRequest(cfg, path, json, argv.subscribe ? 'subscribe' : undefined)
 			.request
 			.on('response', (message, response) => {
-				if (!argv.subscribe) {
-					console.log(JSON.stringify(response, null, 2));
-					process.exit(0);
-				}
-
-				if (response.type === 'event') {
-					if (response.fin) {
-						process.exit(0);
-					}
-					console.log(JSON.stringify(response, null, 2));
-				}
+				console.log(JSON.stringify(response, null, 2));
 			})
 			.on('error', err => {
 				if (err.code === 'ECONNREFUSED') {

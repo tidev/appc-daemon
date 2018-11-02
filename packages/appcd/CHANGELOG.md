@@ -10,6 +10,8 @@
  * Moved all commands into a `commands` subdirectory.
  * Fixed extra `}` in user agent.
  * Fixed `appcd config ls` (and `list`) actions.
+ * Removed unnecessary subscribe logic when rendering `exec` command responses.
+   [(DAEMON-266)](https://jira.appcelerator.org/browse/DAEMON-266)
  * Updated dependencies.
 
 # v1.1.3 (May 24, 2018)

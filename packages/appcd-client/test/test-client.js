@@ -350,15 +350,19 @@ describe('Client', () => {
 			});
 
 			const client = new Client({ port: 12345 });
+			let finished = false;
 
 			client.request('/foo', { foo: 'bar' })
 				.on('response', () => {
 					server.close(() => done(new Error('Expected error to be caught')));
 				})
 				.on('close', () => {
-					server.close(() => done(new Error('Expected response, not close')));
+					if (!finished) {
+						server.close(() => done(new Error('Expected response, not close')));
+					}
 				})
 				.on('error', err => {
+					finished = true;
 					try {
 						expect(err.message).to.equal('Not found');
 						expect(err.status).to.equal(404);
@@ -386,15 +390,19 @@ describe('Client', () => {
 			});
 
 			const client = new Client({ port: 12345 });
+			let finished = false;
 
 			client.request('/foo', { foo: 'bar' })
 				.on('response', () => {
 					server.close(() => done(new Error('Expected error to be caught')));
 				})
 				.on('close', () => {
-					server.close(() => done(new Error('Expected response, not close')));
+					if (!finished) {
+						server.close(() => done(new Error('Expected response, not close')));
+					}
 				})
 				.on('error', err => {
+					finished = true;
 					try {
 						expect(err.message).to.equal('Server error');
 						expect(err.status).to.equal(500);
@@ -420,15 +428,19 @@ describe('Client', () => {
 			});
 
 			const client = new Client({ port: 12345 });
+			let finished = false;
 
 			client.request('/foo', { foo: 'bar' })
 				.on('response', () => {
 					server.close(() => done(new Error('Expected error to be caught')));
 				})
 				.on('close', () => {
-					server.close(() => done(new Error('Expected response, not close')));
+					if (!finished) {
+						server.close(() => done(new Error('Expected response, not close')));
+					}
 				})
 				.on('error', err => {
+					finished = true;
 					try {
 						expect(err.message).to.equal('Server Error');
 						expect(err.status).to.equal(500);
@@ -453,15 +465,19 @@ describe('Client', () => {
 			});
 
 			const client = new Client({ port: 12345 });
+			let finished = false;
 
 			client.request('/foo', { foo: 'bar' })
 				.on('response', () => {
 					server.close(() => done(new Error('Expected error to be caught')));
 				})
 				.on('close', () => {
-					server.close(() => done(new Error('Expected response, not close')));
+					if (!finished) {
+						server.close(() => done(new Error('Expected response, not close')));
+					}
 				})
 				.on('error', err => {
+					finished = true;
 					try {
 						expect(err.message).to.equal('Server Error');
 						expect(err.status).to.equal(500);
@@ -487,9 +503,11 @@ describe('Client', () => {
 			});
 
 			const client = new Client({ port: 12345 });
+			let finished = false;
 
 			client.request('/foo')
 				.on('response', (data, response) => {
+					finished = true;
 					server.close(() => {
 						try {
 							expect(data).to.be.an('object');
@@ -506,7 +524,9 @@ describe('Client', () => {
 					});
 				})
 				.on('close', () => {
-					server.close(() => done(new Error('Expected response, not close')));
+					if (!finished) {
+						server.close(() => done(new Error('Expected response, not close')));
+					}
 				})
 				.on('warning', () => {
 					server.close(() => done(new Error('Expected response, not warning')));
@@ -526,9 +546,11 @@ describe('Client', () => {
 			});
 
 			const client = new Client({ port: 12345 });
+			let finished = false;
 
 			client.request('/foo')
 				.on('warning', msg => {
+					finished = true;
 					server.close(() => {
 						try {
 							expect(msg).to.match(/^Server returned invalid JSON:/);
@@ -542,7 +564,9 @@ describe('Client', () => {
 					server.close(() => done(new Error('Expected warning, not response')));
 				})
 				.on('close', () => {
-					server.close(() => done(new Error('Expected warning, not close')));
+					if (!finished) {
+						server.close(() => done(new Error('Expected warning, not close')));
+					}
 				})
 				.on('error', err => {
 					server.close(() => done(err));
@@ -559,9 +583,11 @@ describe('Client', () => {
 			});
 
 			const client = new Client({ port: 12345 });
+			let finished = false;
 
 			client.request('/foo')
 				.on('warning', msg => {
+					finished = true;
 					server.close(() => {
 						try {
 							expect(msg).to.equal('Server response is not an object or has an invalid id');
@@ -575,7 +601,9 @@ describe('Client', () => {
 					server.close(() => done(new Error('Expected warning, not response')));
 				})
 				.on('close', () => {
-					server.close(() => done(new Error('Expected warning, not close')));
+					if (!finished) {
+						server.close(() => done(new Error('Expected warning, not close')));
+					}
 				})
 				.on('error', err => {
 					server.close(() => done(err));
@@ -584,6 +612,7 @@ describe('Client', () => {
 
 		it('should error if server is not running', done => {
 			const client = new Client({ port: 12345 });
+			let finished = false;
 
 			client.request('/foo')
 				.on('warning', () => {
@@ -593,9 +622,12 @@ describe('Client', () => {
 					done(new Error('Expected error, not response'));
 				})
 				.on('close', () => {
-					done(new Error('Expected error, not close'));
+					if (!finished) {
+						done(new Error('Expected error, not close'));
+					}
 				})
 				.on('error', () => {
+					finished = true;
 					done();
 				});
 		});

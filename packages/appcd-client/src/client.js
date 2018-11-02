@@ -199,7 +199,14 @@ export default class Client {
 
 						switch (statusClass) {
 							case 2:
-								emitter.emit('response', response.message, response);
+								if (response.type !== 'finish') {
+									emitter.emit('response', response.message, response);
+								}
+								// `fin` exists on the last message from the request which can be
+								// any message type, not just `finish`
+								if (response.fin) {
+									emitter.emit('finish');
+								}
 								break;
 
 							case 4:
@@ -228,6 +235,7 @@ export default class Client {
 				.on('warning', (...args) => emitter.emit('warning', ...args))
 				.once('close', () => {
 					delete this.requests[id];
+					emitter.emit('close');
 				})
 				.once('error', err => {
 					delete this.requests[id];
