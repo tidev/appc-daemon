@@ -41,7 +41,7 @@ export default class PluginBase extends EventEmitter {
 		 * The plugin's namespaced logger.
 		 * @type {SnoopLogg}
 		 */
-		this.logger = appcdLogger(plugin.toString());
+		this.logger = appcdLogger(`appcd:plugin:base:${plugin.isParent ? 'parent' : 'child'}`);
 
 		/**
 		 * The Appc Daemon config.

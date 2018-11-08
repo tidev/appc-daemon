@@ -21,8 +21,9 @@ import { createInstanceWithDefaults, StdioStream } from 'appcd-logger';
 
 process.title = 'appcd-plugin-host';
 
-const { error } = createInstanceWithDefaults()
-	.snoop(`appcd:plugin:host:${process.pid} > `)
+const ns = `appcd:plugin:host:${process.pid}`;
+const logger = createInstanceWithDefaults()
+	.snoop(`${ns} > `)
 	.config({
 		maxBrightness: 220,
 		minBrightness: 100,
@@ -30,17 +31,24 @@ const { error } = createInstanceWithDefaults()
 	})
 	.enable('*')
 	.pipe(new StdioStream(), { flush: true, theme: 'minimal' })
-	.pipe(new TunnelStream(), { flush: true })
-	.ns(`appcd:plugin:host:${process.pid}`);
+	.pipe(new TunnelStream(), { flush: true });
+
+let { error } = logger.ns(ns);
 
 process
 	.on('uncaughtException', err => error('Caught exception:', err.stack || err.toString()))
-	.on('unhandledRejection', (reason, p) => error('Unhandled Rejection at: Promise ', p, reason));
+	.on('unhandledRejection', (reason, p) => error('Unhandled Rejection at:', p, reason));
 
 Promise.resolve()
 	.then(async () => {
 		// load the plugin
 		const plugin = new Plugin(process.argv[2]);
+
+		error = logger
+			.snoop(`${ns}:${plugin} > `)
+			.ns(`${ns}:${plugin}`)
+			.error;
+
 		process.title = `appcd-plugin-host ${plugin} ${plugin.path}`;
 
 		if (plugin.type !== 'external') {

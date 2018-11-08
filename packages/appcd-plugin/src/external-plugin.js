@@ -12,7 +12,7 @@ import Tunnel from './tunnel';
 import { debounce } from 'appcd-util';
 import { Readable } from 'stream';
 
-const { alert, highlight, notice, ok } = appcdLogger.styles;
+const { alert, highlight, note, notice, ok } = appcdLogger.styles;
 
 /**
  * External plugin implementation logic.
@@ -45,7 +45,7 @@ export default class ExternalPlugin extends PluginBase {
 		 */
 		this.watchers = {};
 
-		this.appcdLogger = appcdLogger(this.plugin.isParent ? 'appcd:plugin:external:parent' : 'appcd:plugin:external:child');
+		this.appcdLogger = appcdLogger(`appcd:plugin:external:${this.plugin.isParent ? 'parent' : 'child'}`);
 
 		this.globals.appcd.call = (path, data) => {
 			if (!this.tunnel) {
@@ -453,6 +453,7 @@ export default class ExternalPlugin extends PluginBase {
 					});
 			})
 			.then(ctx => new Promise((resolve, reject) => {
+				// create the tunnel to the child process (e.g. the plugin host)
 				this.tunnel = new Tunnel(ctx.proc, true, async (req, send) => {
 					switch (req.type) {
 						case 'activated':
@@ -505,6 +506,9 @@ export default class ExternalPlugin extends PluginBase {
 								if (response instanceof Readable) {
 									// we have a stream
 
+									const { data } = req.message.data;
+									this.appcdLogger.log(`${highlight(req.message.path)} ${data && Array.isArray(data.args) && note(data.args.join(' ')) || ''} returned a streamed response`);
+
 									// track if this stream is a pubsub stream so we know to send the `fin`
 									let sid;
 
@@ -517,6 +521,8 @@ export default class ExternalPlugin extends PluginBase {
 												this.appcdLogger.log('Detected new subscription: %s', highlight(sid));
 												this.streams[sid] = response;
 											}
+
+											this.appcdLogger.log(`Streamed data chunk: ${highlight(message.type || 'unknown type')}`);
 
 											send({
 												type: 'stream',
