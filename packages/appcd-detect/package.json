@@ -23,14 +23,14 @@
     "appcd-subprocess": "^1.1.1",
     "appcd-util": "^1.1.1",
     "appcd-winreg": "^1.1.1",
-    "gawk": "^4.5.0",
+    "gawk": "^4.6.0",
     "source-map-support": "^0.5.9"
   },
   "devDependencies": {
     "appcd-fswatch-manager": "^1.0.1",
     "appcd-fswatcher": "^1.1.1",
     "appcd-gulp": "^1.1.5",
-    "fs-extra": "^7.0.0",
+    "fs-extra": "^7.0.1",
     "gulp": "^3.9.1"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-detect",

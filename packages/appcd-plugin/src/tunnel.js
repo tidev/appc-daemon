@@ -146,7 +146,7 @@ export default class Tunnel {
 					ctx.status = message.status;
 				}
 
-				this.logger.log('Received response from %s:', highlight(this.remoteName), message);
+				// this.logger.log('Received response from %s:', highlight(this.remoteName), message);
 
 				switch (message.type) {
 					case 'error':
