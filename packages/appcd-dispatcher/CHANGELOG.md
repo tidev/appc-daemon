@@ -1,3 +1,7 @@
+# v1.2.1
+
+ * Updated dependencies.
+
 # v1.2.0 (Sep 17, 2018)
 
  * Removed support for period delimited filters in `DataServiceDispatcher`.

@@ -1,3 +1,7 @@
+# v1.1.3
+
+ * Updated dependencies.
+
 # v1.1.2 (Sep 17, 2018)
 
  * Updated dependencies.

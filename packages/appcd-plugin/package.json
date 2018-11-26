@@ -37,12 +37,12 @@
     "appcd-winreg": "^1.1.1",
     "builtin-modules": "^3.0.0",
     "findup-sync": "^2.0.0",
-    "gawk": "^4.5.0",
+    "gawk": "^4.6.0",
     "globule": "^1.2.1",
-    "hook-emitter": "^3.1.0",
-    "ignore": "^5.0.2",
+    "hook-emitter": "^3.1.1",
+    "ignore": "^5.0.4",
     "pretty-ms": "^4.0.0",
-    "semver": "^5.5.1",
+    "semver": "^5.6.0",
     "slugg": "^1.2.1",
     "source-map-support": "^0.5.9",
     "uuid": "^3.3.2"
@@ -50,7 +50,7 @@
   "devDependencies": {
     "appcd-fswatch-manager": "^1.0.1",
     "appcd-gulp": "^1.1.5",
-    "fs-extra": "^7.0.0",
+    "fs-extra": "^7.0.1",
     "gulp": "^3.9.1",
     "tmp": "^0.0.33"
   },

@@ -19,13 +19,13 @@
     "appcd-dispatcher": "^1.1.1",
     "appcd-logger": "^1.1.1",
     "appcd-util": "^1.1.1",
-    "gawk": "^4.5.0",
+    "gawk": "^4.6.0",
     "source-map-support": "^0.5.9"
   },
   "devDependencies": {
     "appcd-gulp": "^1.1.5",
     "appcd-path": "^1.1.1",
-    "fs-extra": "^7.0.0",
+    "fs-extra": "^7.0.1",
     "gulp": "^3.9.1",
     "tmp": "^0.0.33"
   },
