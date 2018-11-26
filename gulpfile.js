@@ -172,6 +172,18 @@ gulp.task('upgrade', cb => {
 		.catch(cb);
 });
 
+gulp.task('ls', listPackages);
+gulp.task('list', listPackages);
+
+function listPackages() {
+	for (const [ name, pkg ] of Object.entries(getDepMap())) {
+		console.log(`${cyan(name)}@${pkg.version}`);
+		for (const dep of Object.keys(pkg.deps)) {
+			console.log(`    ${gray(dep)}`);
+		}
+	}
+}
+
 /*
  * lint tasks
  */
