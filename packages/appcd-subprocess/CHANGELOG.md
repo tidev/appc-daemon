@@ -1,6 +1,7 @@
-# v1.1.3
+# v1.1.3 (Nov 27, 2018)
 
  * Added `/send/:pid?` service endpoint for sending an IPC message to a subprocess.
+ * Updated dependencies.
 
 # v1.1.2 (Sep 17, 2018)
 
