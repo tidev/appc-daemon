@@ -509,7 +509,7 @@ function runYarn(cwd) {
 	// we we back up the file and write a `package.json` without them
 	if (changed) {
 		fs.renameSync(packageJsonFile, packageJsonFile + '.bak');
-		fs.writeFileSync(packageJsonFile, JSON.stringify(pkgJson));
+		fs.writeFileSync(packageJsonFile, JSON.stringify(pkgJson) + '\n');
 	}
 
 	const args = Array.prototype.slice.call(arguments, 1);
@@ -1237,7 +1237,7 @@ async function upgradeDeps(list) {
 
 		console.log(table.toString() + '\n');
 
-		fs.writeFileSync(pkgJsonFile, JSON.stringify(pkgJson, null, 2));
+		fs.writeFileSync(pkgJsonFile, JSON.stringify(pkgJson, null, 2) + '\n');
 	}
 }
 
@@ -1280,16 +1280,16 @@ function upgradeAllPackages() {
 				}
 			};
 
-			fs.writeFileSync(pkg.file, JSON.stringify(newPkgJson, null, '  '));
+			fs.writeFileSync(pkg.file, JSON.stringify(newPkgJson, null, '  ') + '\n');
 
 			return promise
 				.then(() => run('yarn', [ 'upgrade' ], { cwd: path.dirname(pkg.file), shell: true }))
 				.catch(err => {
-					fs.writeFileSync(pkg.file, JSON.stringify(pkg.json, null, '  '));
+					fs.writeFileSync(pkg.file, JSON.stringify(pkg.json, null, '  ') + '\n');
 					throw err;
 				})
 				.then(() => {
-					fs.writeFileSync(pkg.file, JSON.stringify(pkg.json, null, '  '));
+					fs.writeFileSync(pkg.file, JSON.stringify(pkg.json, null, '  ') + '\n');
 				});
 		}, Promise.resolve());
 }
