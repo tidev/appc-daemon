@@ -1,6 +1,7 @@
-# v1.1.3
+# v1.1.3 (Nov 27, 2018)
 
  * Updated dependencies.
+ * Moved from babylon to @babel/parser
 
 # v1.1.2 (Sep 17, 2018)
 

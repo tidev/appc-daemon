@@ -6,7 +6,7 @@ import path from 'path';
 import vm from 'vm';
 
 import { isFile } from 'appcd-fs';
-import { parse } from 'babylon';
+import { parse } from '@babel/parser';
 import { wrap } from 'module';
 
 const { log } = appcdLogger('appcd:config');
@@ -155,7 +155,7 @@ export default class Config {
 			code = code.slice(p === -1 ? q : p);
 		}
 
-		// parse the JavaScript AST using Babylon
+		// parse the JavaScript AST using Babel's parser
 		log('Parsing AST...');
 		const ast = parse(code, {
 			plugins: [
