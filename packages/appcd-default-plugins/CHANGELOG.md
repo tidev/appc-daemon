@@ -1,4 +1,4 @@
-# v1.1.4
+# v1.1.4 (Nov 27, 2018)
 
  * Migrated to new `@appcd/` scoped package names.
 
