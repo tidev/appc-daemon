@@ -1,4 +1,4 @@
-# v2.0.0
+# v2.0.0 (Nov 27, 2018)
 
  * Added `v8-compile-cache` to noticeably speed up execute.
  * Updated to latest `cli-kit`:

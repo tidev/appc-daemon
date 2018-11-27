@@ -1,4 +1,8 @@
-# v1.1.3
+# v1.1.4 (Nov 27, 2018)
+
+ * Updated dependencies.
+
+# v1.1.3 (Sep 17, 2018)
 
  * Telemetry payload changed:
    - Added `app_version`, `os`, `osver`, `platform`

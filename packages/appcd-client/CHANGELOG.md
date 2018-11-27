@@ -1,4 +1,4 @@
-# v1.1.2
+# v1.1.2 (Nov 27, 2018)
 
  * Fixed handling streamed responses, specifically knowing when the last message has been sent.
    [(DAEMON-266)](https://jira.appcelerator.org/browse/DAEMON-266)

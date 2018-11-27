@@ -1,6 +1,6 @@
 {
   "name": "appcd-core",
-  "version": "1.1.3",
+  "version": "2.0.0",
   "description": "Appc Daemon server implementation.",
   "main": "./dist/main",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
@@ -17,31 +17,31 @@
   },
   "dependencies": {
     "accepts": "^1.3.5",
-    "appcd-agent": "^1.1.2",
-    "appcd-config": "^1.1.1",
-    "appcd-config-service": "^1.1.1",
-    "appcd-default-plugins": "^1.1.3",
-    "appcd-dispatcher": "^1.1.1",
-    "appcd-fs": "^1.1.2",
-    "appcd-fswatch-manager": "^1.0.1",
-    "appcd-fswatcher": "^1.1.1",
-    "appcd-http": "^1.1.1",
-    "appcd-logger": "^1.1.1",
-    "appcd-nodejs": "^1.1.1",
-    "appcd-path": "^1.1.1",
-    "appcd-plugin": "^1.1.2",
-    "appcd-response": "^1.1.2",
-    "appcd-subprocess": "^1.1.1",
-    "appcd-telemetry": "^1.1.1",
-    "appcd-util": "^1.1.1",
-    "cli-kit": "next",
+    "appcd-agent": "^1.1.3",
+    "appcd-config": "^1.1.3",
+    "appcd-config-service": "^1.1.2",
+    "appcd-default-plugins": "^1.1.4",
+    "appcd-dispatcher": "^1.2.1",
+    "appcd-fs": "^1.1.4",
+    "appcd-fswatch-manager": "^1.0.2",
+    "appcd-fswatcher": "^1.1.2",
+    "appcd-http": "^1.1.2",
+    "appcd-logger": "^1.1.3",
+    "appcd-nodejs": "^1.1.3",
+    "appcd-path": "^1.1.3",
+    "appcd-plugin": "^1.1.3",
+    "appcd-response": "^1.1.4",
+    "appcd-subprocess": "^1.1.3",
+    "appcd-telemetry": "^1.1.2",
+    "appcd-util": "^1.1.4",
+    "cli-kit": "^0.4.0",
     "fs-extra": "^7.0.1",
     "gawk": "^4.6.0",
     "global-modules": "^1.0.0",
     "msgpack-lite": "^0.1.26"
   },
   "devDependencies": {
-    "appcd-gulp": "^1.1.5",
+    "appcd-gulp": "^1.2.1",
     "gulp": "^3.9.1"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-core",
@@ -51,6 +51,6 @@
     "node": ">=8.10.0"
   },
   "appcd": {
-    "node": "8.11.4"
+    "node": "10.13.0"
   }
 }

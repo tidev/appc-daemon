@@ -1,4 +1,4 @@
-# v1.1.2
+# v1.1.2 (Nov 27, 2018)
 
  * Fixed debug logging of undefined filter.
  * Updated dependencies.

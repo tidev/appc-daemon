@@ -1,7 +1,7 @@
-# v2.0.0
+# v2.0.0 (Nov 27, 2018)
 
  * Bumped minimum Node.js version from 8.0.0 to 8.10.0.
- * Bumped preferred Node.js version from 8.11.1 to 8.11.4.
+ * Bumped preferred Node.js version from 8.11.1 to 10.13.0.
  * Wired up telemetry for dispatched HTTP and WebSocket requests.
  * Updated telemetry event names:
    - `appcd.server.start` -> `ti.start`

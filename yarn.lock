@@ -2,7 +2,7 @@
 # yarn lockfile v1
 
 
-"@appcd/plugin-android@^1.1.0":
+"@appcd/plugin-android@^1.2.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@appcd/plugin-android/-/plugin-android-1.2.0.tgz#a963fd953c6d94a20f7927124319059976f32e1b"
   integrity sha512-rQaTR8hAEs8hEph9Lh7aAEdwCnFuLPYUCAz90oREt5fZ7HwUjdRWl0XAiTr3MuibhKO0LdNZ/tDT1OtzZyzLDA==
@@ -12,7 +12,7 @@
     semver "^5.5.1"
     source-map-support "^0.5.9"
 
-"@appcd/plugin-genymotion@^1.1.1":
+"@appcd/plugin-genymotion@^1.2.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@appcd/plugin-genymotion/-/plugin-genymotion-1.2.0.tgz#a2cf9a8446a02f1a3250eb08b67dd5e70a16131c"
   integrity sha512-165RQ0WcGPeiloLkWGekdkp2Km/TjnvA/kWheelYnU1g1iGPH9Wb5dHSt183xBIjyqJxawlvZuPUdQrNDmw3lw==
@@ -22,7 +22,7 @@
     source-map-support "^0.5.9"
     xmldom "^0.1.27"
 
-"@appcd/plugin-ios@^1.1.0":
+"@appcd/plugin-ios@^1.2.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@appcd/plugin-ios/-/plugin-ios-1.2.0.tgz#306272d693af563d89b32329967fd34afa3f43dc"
   integrity sha512-rsHbgQzJOUtnItajePxR1rwihb753H54g8Iwetf2vsX8AnTzohtrTv9sdolCd5VDKB94w/RzPjvdROnWc+yFCw==
@@ -32,7 +32,7 @@
     semver "^5.5.1"
     source-map-support "^0.5.9"
 
-"@appcd/plugin-jdk@^1.1.0":
+"@appcd/plugin-jdk@^1.2.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@appcd/plugin-jdk/-/plugin-jdk-1.2.0.tgz#1cd875e851e30c4749caae667b2e79ffbc785f41"
   integrity sha512-j4AGscvYR/fxZbjKl1NNEYSsQPDvSrc0z64blv4i8OdOkywfxME7qIsZe/UgxdDWPUC7Fvio8T1+0h5PR2dpKw==
@@ -42,7 +42,7 @@
     semver "^5.5.1"
     source-map-support "^0.5.9"
 
-"@appcd/plugin-system-info@^1.1.0":
+"@appcd/plugin-system-info@^1.2.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@appcd/plugin-system-info/-/plugin-system-info-1.2.0.tgz#811f197cc2b7bb2554f537925f98ff6f79b70ec9"
   integrity sha512-OKjtAGretmv7y6uLA6xF3kq8hsi62xMdk1/Jhi9EnbtJG3p2JNRknsM2d8V34Jtmhk+R3kcCVAMNTJibtfDyHQ==
@@ -50,7 +50,7 @@
     gawk "^4.5.0"
     source-map-support "^0.5.9"
 
-"@appcd/plugin-titanium-sdk@^1.2.0":
+"@appcd/plugin-titanium-sdk@^1.3.0":
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/@appcd/plugin-titanium-sdk/-/plugin-titanium-sdk-1.3.0.tgz#2b9093e6e50d8be302674e390974e08478351614"
   integrity sha512-b9qRZ1wceNmeLkAPlWkAHTrFNFMShuMCKwyWiUyDz2c8i6b9P82Hidm/LgJ/m2f5S7vqNhLWKkZMnNn/Uju87Q==
@@ -63,7 +63,7 @@
     tmp "^0.0.33"
     yauzl "^2.10.0"
 
-"@appcd/plugin-windows@^1.1.0":
+"@appcd/plugin-windows@^1.2.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@appcd/plugin-windows/-/plugin-windows-1.2.0.tgz#b1268e797a9674876178aa5a29d6cd611e364759"
   integrity sha512-iduUoliPpRzNBWAY+CAeYWzuqBqBxT8raN27yd0AO7a0D7tP8lLrX81+qTuMAvwJ1QzyMjZXeCtnVyW2uNS3LA==
@@ -1737,11 +1737,6 @@ babylon@6.18.0, babylon@^6.18.0:
   resolved "https://registry.yarnpkg.com/babylon/-/babylon-6.18.0.tgz#af2f3b88fa6f5c1e4c634d1a0f8eac4f55b395e3"
   integrity sha512-q/UEjfGJ2Cm3oKV71DJz9d25TPnq5rhBVL2Q4fA5wcC3jcrdn7+SssEybFIxwAvvP+YCsCYNKughoF33GxgycQ==
 
-babylon@next:
-  version "7.0.0-beta.47"
-  resolved "https://registry.yarnpkg.com/babylon/-/babylon-7.0.0-beta.47.tgz#6d1fa44f0abec41ab7c780481e62fd9aafbdea80"
-  integrity sha512-+rq2cr4GDhtToEzKFD6KZZMDBXhjFAr9JjPw9pAppZACeEWqNM294j+NdBzkSHYXwzzBmVjZ3nEVJlOhbR2gOQ==
-
 balanced-match@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/balanced-match/-/balanced-match-1.0.0.tgz#89b4d199ab2bee49de164ea02b89ce462d71b767"
@@ -2431,7 +2426,7 @@ cli-kit@^0.3.0:
     source-map-support "^0.5.6"
     which "^1.3.1"
 
-cli-kit@next:
+cli-kit@^0.4.0:
   version "0.4.0"
   resolved "https://registry.yarnpkg.com/cli-kit/-/cli-kit-0.4.0.tgz#6aff7ae7fe0415ce8123c0a3e0994572d6e5fde2"
   integrity sha512-Eq2FG/VmH78K+Q3sFh4PRexMXGsZgC/LIjjswbB93NA8WPY5rR9w8cijYtMr/+ZhJXI63yRS6FOL/lrru0Q71g==
@@ -8757,7 +8752,7 @@ pseudomap@^1.0.2:
   resolved "https://registry.yarnpkg.com/pseudomap/-/pseudomap-1.0.2.tgz#f052a28da70e618917ef0a8ac34c1ae5a68286b3"
   integrity sha1-8FKijacOYYkX7wqKw0wa5aaChrM=
 
-psl@^1.1.24:
+psl@^1.1.24, psl@^1.1.28:
   version "1.1.29"
   resolved "https://registry.yarnpkg.com/psl/-/psl-1.1.29.tgz#60f580d360170bb722a797cc704411e6da850c67"
   integrity sha512-AeUmQ0oLN02flVHXWh9sSJF7mcdFq0ppid/JkErufc3hGIV/AMa8Fo9VgDo/cT2jFdOWoFvHp90qqBH54W+gjQ==
@@ -8809,7 +8804,7 @@ punycode@^1.2.4, punycode@^1.4.1:
   resolved "https://registry.yarnpkg.com/punycode/-/punycode-1.4.1.tgz#c0d5a63b2718800ad8e1eb0fa5269c84dd41845e"
   integrity sha1-wNWmOycYgArY4esPpSachN1BhF4=
 
-punycode@^2.1.0:
+punycode@^2.1.0, punycode@^2.1.1:
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/punycode/-/punycode-2.1.1.tgz#b58b010ac40c22c5657616c8d2c2c02c7bf479ec"
   integrity sha512-XRsRjdf+j5ml+y/6GKHPZbrF/8p2Yga0JPtdqTIY2Xe5ohJPD9saDJJLPvp9+NSBprVvevdXZybnj2cv8OEd0A==
@@ -10420,7 +10415,15 @@ toposort@^2.0.2:
   resolved "https://registry.yarnpkg.com/toposort/-/toposort-2.0.2.tgz#ae21768175d1559d48bef35420b2f4962f09c330"
   integrity sha1-riF2gXXRVZ1IvvNUILL0li8JwzA=
 
-tough-cookie@^2.2.0, tough-cookie@~2.4.3:
+tough-cookie@^2.2.0:
+  version "2.5.0"
+  resolved "https://registry.yarnpkg.com/tough-cookie/-/tough-cookie-2.5.0.tgz#cd9fb2a0aa1d5a12b473bd9fb96fa3dcff65ade2"
+  integrity sha512-nlLsUzgm1kfLXSXfRZMc1KLAugd4hqJHDTvc2hDIwS3mZAfMEuMbc03SujMF+GEcpaX/qboeycw6iO8JwVv2+g==
+  dependencies:
+    psl "^1.1.28"
+    punycode "^2.1.1"
+
+tough-cookie@~2.4.3:
   version "2.4.3"
   resolved "https://registry.yarnpkg.com/tough-cookie/-/tough-cookie-2.4.3.tgz#53f36da3f47783b0925afa06ff9f3b165280f781"
   integrity sha512-Q5srk/4vDM54WJsJio3XNn6K2sCG+CQ8G5Wz6bZhRZoAe/+TxjWB/GlFAnYEbkYVlON9FMk/fE3h2RLpPXo4lQ==

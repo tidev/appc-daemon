@@ -1,4 +1,4 @@
-# v1.1.3
+# v1.1.3 (Nov 27, 2018)
 
  * Fixed plugin telemetry so that it doesn't send events during the initial scan or shutdown.
  * Fixed lint issue with code indention.
