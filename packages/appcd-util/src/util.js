@@ -13,8 +13,16 @@ import { EventEmitter } from 'events';
 import { isFile } from 'appcd-fs';
 import { Server, Socket } from 'net';
 
-const Timer = process.binding('timer_wrap').Timer;
-const FSEvent = process.binding('fs_event_wrap').FSEvent;
+function getBinding(name) {
+	try {
+		return process.binding(name);
+	} catch (e) {
+		// squelch
+	}
+	return {};
+}
+const { FSEvent } = getBinding('fs_event_wrap');
+const { Timer } = getBinding('timer_wrap');
 
 let archCache = null;
 
@@ -267,24 +275,26 @@ export { get };
 export function getActiveHandles() {
 	const handles = { sockets: [], servers: [], timers: [], childProcesses: [], fsWatchers: [], other: [] };
 
-	for (let handle of process._getActiveHandles()) {
-		if (handle instanceof Timer) {
-			const timerList = handle._list || handle;
-			let t = timerList._idleNext;
-			while (t !== timerList) {
-				handles.timers.push(t);
-				t = t._idleNext;
+	if (typeof process._getActiveHandles === 'function') {
+		for (let handle of process._getActiveHandles()) {
+			if (Timer && handle instanceof Timer) {
+				const timerList = handle._list || handle;
+				let t = timerList._idleNext;
+				while (t !== timerList) {
+					handles.timers.push(t);
+					t = t._idleNext;
+				}
+			} else if (handle instanceof Socket) {
+				handles.sockets.push(handle);
+			} else if (handle instanceof Server) {
+				handles.servers.push(handle);
+			} else if (handle instanceof ChildProcess) {
+				handles.childProcesses.push(handle);
+			} else if (handle instanceof EventEmitter && typeof handle.start === 'function' && typeof handle.close === 'function' && FSEvent && handle._handle instanceof FSEvent) {
+				handles.fsWatchers.push(handle);
+			} else {
+				handles.other.push(handle);
 			}
-		} else if (handle instanceof Socket) {
-			handles.sockets.push(handle);
-		} else if (handle instanceof Server) {
-			handles.servers.push(handle);
-		} else if (handle instanceof ChildProcess) {
-			handles.childProcesses.push(handle);
-		} else if (handle instanceof EventEmitter && typeof handle.start === 'function' && typeof handle.close === 'function' && handle._handle instanceof FSEvent) {
-			handles.fsWatchers.push(handle);
-		} else {
-			handles.other.push(handle);
 		}
 	}
 
@@ -553,50 +563,109 @@ export const pendingTailgaters = {};
  */
 export function tailgate(name, callback) {
 	// ensure this function is async
-	return new Promise(setImmediate)
-		.then(() => new Promise((resolve, reject) => {
-			// we want this promise to resolve as soon as `callback()` finishes
-			if (typeof name !== 'string' || !name) {
-				return reject(new TypeError('Expected name to be a non-empty string'));
+	return new Promise((resolve, reject) => {
+		// we want this promise to resolve as soon as `callback()` finishes
+		if (typeof name !== 'string' || !name) {
+			return reject(new TypeError('Expected name to be a non-empty string'));
+		}
+
+		if (typeof callback !== 'function') {
+			return reject(new TypeError('Expected callback to be a function'));
+		}
+
+		// if another function is current running, add this function to the queue and wait
+		if (pendingTailgaters[name]) {
+			pendingTailgaters[name].push({ resolve, reject });
+			return;
+		}
+
+		// init the queue
+		pendingTailgaters[name] = [ { resolve, reject } ];
+
+		const dispatch = (type, result) => {
+			const pending = pendingTailgaters[name];
+			delete pendingTailgaters[name];
+			for (const p of pending) {
+				p[type](result);
 			}
+		};
 
-			if (typeof callback !== 'function') {
-				return reject(new TypeError('Expected callback to be a function'));
-			}
+		// call the function
+		let result;
+		try {
+			result = callback();
+		} catch (err) {
+			return dispatch('reject', err);
+		}
 
-			// if another function is current running, add this function to the queue and wait
-			if (pendingTailgaters[name]) {
-				pendingTailgaters[name].push({ resolve, reject });
-				return;
-			}
+		if (result instanceof Promise) {
+			result
+				.then(result => dispatch('resolve', result))
+				.catch(err => dispatch('reject', err));
+		} else {
+			dispatch('resolve', result);
+		}
+	});
+}
 
-			// init the queue
-			pendingTailgaters[name] = [ { resolve, reject } ];
+let activeTimers = {};
+let trackTimerAsyncHook;
+let trackTimerWatchers = 0;
 
-			const dispatch = (type, result) => {
-				const pending = pendingTailgaters[name];
-				delete pendingTailgaters[name];
-				for (const p of pending) {
-					p[type](result);
+/**
+ * Starts tracking all active timers. Calling the returned callback will stop watching and return
+ * a list of all active timers.
+ *
+ * @returns {Function}
+ */
+export function trackTimers() {
+	if (!trackTimerAsyncHook) {
+		try {
+			// try to initialize the async hook
+			trackTimerAsyncHook = require('async_hooks')
+				.createHook({
+					init(asyncId, type, triggerAsyncId, resource) {
+						if (type === 'Timeout') {
+							activeTimers[asyncId] = resource;
+						}
+					},
+					destroy(asyncId) {
+						delete activeTimers[asyncId];
+					}
+				});
+		} catch (e) {
+			// squelch
+		}
+	}
+
+	if (trackTimerAsyncHook && trackTimerWatchers === 0) {
+		trackTimerAsyncHook.enable();
+	}
+
+	trackTimerWatchers++;
+
+	// result cache just in case stop is called multiple times
+	let result;
+
+	// return the stop tracking callback
+	return () => {
+		if (!result) {
+			trackTimerWatchers--;
+
+			if (trackTimerAsyncHook) {
+				result = Object.values(activeTimers);
+				if (trackTimerWatchers === 0) {
+					trackTimerAsyncHook.disable();
+					// reset the active timers now that we disabled the async hook
+					activeTimers = {};
 				}
-			};
-
-			// call the function
-			let result;
-			try {
-				result = callback();
-			} catch (err) {
-				return dispatch('reject', err);
-			}
-
-			if (result instanceof Promise) {
-				result
-					.then(result => dispatch('resolve', result))
-					.catch(err => dispatch('reject', err));
 			} else {
-				dispatch('resolve', result);
+				result = getActiveHandles().timers;
 			}
-		}));
+		}
+
+		return result;
+	};
 }
 
 /**

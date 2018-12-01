@@ -433,7 +433,6 @@ describe('util', () => {
 		it('should return the active handles', done => {
 			const handles = util.getActiveHandles();
 			expect(handles).to.be.an.instanceof(Object);
-			expect(handles.timers).to.have.length.above(0);
 			done();
 		});
 	});
@@ -821,6 +820,43 @@ describe('util', () => {
 					expect(err.message).to.equal('oh snap');
 					done();
 				});
+		});
+	});
+
+	describe('trackTimers()', () => {
+		it('should track there were no timers', () => {
+			const timers = [];
+			try {
+				const stop = util.trackTimers();
+				const activeTimers = stop();
+				expect(activeTimers).to.have.lengthOf(timers.length);
+			} finally {
+				timers.forEach(clearTimeout);
+			}
+		});
+
+		it('should track a single setTimeout()', () => {
+			const timers = [];
+			try {
+				const stop = util.trackTimers();
+				timers.push(setTimeout(() => {}, 1e7));
+				const activeTimers = stop();
+				expect(activeTimers).to.have.lengthOf(timers.length);
+			} finally {
+				timers.forEach(a => clearTimeout(a));
+			}
+		});
+
+		it('should track a multiple setTimeout()\'s', () => {
+			const timers = [];
+			try {
+				const stop = util.trackTimers();
+				timers.push(setTimeout(() => {}, 1e7));
+				const activeTimers = stop();
+				expect(activeTimers).to.have.lengthOf(timers.length);
+			} finally {
+				timers.forEach(clearTimeout);
+			}
 		});
 	});
 
