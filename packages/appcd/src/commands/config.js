@@ -56,7 +56,7 @@ export default {
 
 		const cfg = loadConfig(argv);
 		const data = {
-			action,
+			action: readActions[action] || writeActions[action] || action,
 			key,
 			value
 		};
