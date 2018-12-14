@@ -1,3 +1,9 @@
+# v2.0.1
+
+ * fix(config): Actions were not being translated correctly when dispatching request to daemon
+   config service.
+   [(DAEMON-269)](https://jira.appcelerator.org/browse/DAEMON-269)
+
 # v2.0.0 (Nov 27, 2018)
 
  * Added `v8-compile-cache` to noticeably speed up execute.
