@@ -1,3 +1,15 @@
+# 1.1.5
+
+ * Updated `getActiveHandles()` to gracefully work in the event Node.js deprecates
+   `process._getActiveHandles()`.
+ * Gracefully handle calls to `process.binding()` should Node.js deprecate it or any of the
+   requested bindings.
+ * Added `trackTimers()` function in lieu of `getActiveHandles()` no longer being reliable for
+   determining active timers in Node.js 11. `trackTimers()` uses async hooks which where added in
+   Node.js 8.1.0.
+   [(DAEMON-268)](https://jira.appcelerator.org/browse/DAEMON-268)
+ * `tailgate()` no longer forces asynchronous execution of the callback using `setImmediate()`.
+
 # v1.1.4 (Nov 26, 2018)
 
  * Updated dependencies.

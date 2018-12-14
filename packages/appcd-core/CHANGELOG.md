@@ -1,3 +1,9 @@
+# v2.0.1
+
+ * Removed `getActiveHandles()` call which no longer works in Node.js 11 and switched to
+   `trackTimers()` which uses async hooks and works with Node.js 8.1.0 or newer.
+   [(DAEMON-268)](https://jira.appcelerator.org/browse/DAEMON-268)
+
 # v2.0.0 (Nov 27, 2018)
 
  * Bumped minimum Node.js version from 8.0.0 to 8.10.0.

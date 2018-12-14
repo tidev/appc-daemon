@@ -15,7 +15,7 @@ import Telemetry from 'appcd-telemetry';
 import WebServer from 'appcd-http';
 import WebSocketSession from './websocket-session';
 
-import { arch as getArch, arrayify, get, getActiveHandles } from 'appcd-util';
+import { arch as getArch, arrayify, get, sleep, trackTimers } from 'appcd-util';
 import { expandPath } from 'appcd-path';
 import { i18n } from 'appcd-response';
 import { isDir, isFile } from 'appcd-fs';
@@ -66,12 +66,18 @@ export default class Server {
 		/**
 		 * The appcd version.
 		 * @type {String}
-		 * @access private
 		 */
 		this.version = JSON.parse(fs.readFileSync(path.resolve(__dirname, '..', 'package.json'), 'utf8')).version;
 
 		/**
+		 * A function to call that stops tracking timers and returns an array of active timers.
+		 * @type {Function}
+		 */
+		this.stopTrackingTimers = trackTimers();
+
+		/**
 		 * A list of systems.
+		 * @type {Object}
 		 */
 		this.systems = {};
 	}
@@ -326,11 +332,10 @@ export default class Server {
 			fs.unlinkSync(this.pidFile);
 		}
 
-		const handles = getActiveHandles();
-		const timers = handles.timers.filter(timer => timer.__stack__);
+		const timers = this.stopTrackingTimers();
 		if (timers.length) {
 			logger.warn(__n(timers.length, 'Stopping %%s active timer', 'Stopping %%s active timers', notice(timers.length)));
-			for (const timer of handles.timers) {
+			for (const timer of timers) {
 				clearTimeout(timer);
 			}
 		}
