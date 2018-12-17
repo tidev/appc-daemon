@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "appcd-gulp": "^1.2.1",
-    "gulp": "^3.9.1"
+    "gulp": "^4.0.0"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-util",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",

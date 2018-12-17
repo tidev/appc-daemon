@@ -20,6 +20,7 @@ const util         = require('util');
 
 const isWindows = process.platform === 'win32';
 
+const { parallel, series } = gulp;
 const { bold, red, yellow, green, cyan, magenta, gray } = ansiColors;
 
 const cliTableChars = {
@@ -42,33 +43,30 @@ if (process.argv.indexOf('--silent') !== -1) {
 	log = function () {};
 }
 
-gulp.task('node-info', () => {
+async function nodeInfo() {
 	log(`Node.js ${process.version} (${process.platform})`);
 	log(process.env);
-});
+}
+exports['node-info'] = nodeInfo;
 
 /*
  * misc tasks
  */
-gulp.task('check', cb => {
+exports.check = async function check() {
 	if (process.argv.indexOf('--json') !== -1 && process.argv.indexOf('--silent') === -1) {
 		console.error(red('Please rerun using the --silent option'));
 		process.exit(1);
 	}
 
-	checkPackages()
-		.then(results => {
-			if (process.argv.indexOf('--json') !== -1) {
-				console.log(JSON.stringify(results, null, 2));
-			} else {
-				renderPackages(results);
-			}
-			cb();
-		})
-		.catch(cb);
-});
+	const results = await checkPackages();
+	if (process.argv.indexOf('--json') !== -1) {
+		console.log(JSON.stringify(results, null, 2));
+	} else {
+		renderPackages(results);
+	}
+};
 
-gulp.task('clean', () => {
+exports.clean = async function clean() {
 	const nuke = [];
 
 	(function walk(dir) {
@@ -136,58 +134,50 @@ gulp.task('clean', () => {
 	}
 
 	console.log(`\nNuked ${nuke.length} file${s}/director${ies}\n`);
-});
+};
 
-gulp.task('stats', () => {
+exports.stats = async function stats() {
 	displayStats({
 		stats: computeSloc(),
 		testStats: computeSloc('test')
 	});
-});
+};
 
-gulp.task('upgrade', cb => {
-	Promise.resolve()
-		.then(async () => {
-			let results = await checkPackages({ skipSecurity: true });
-			const { outOfDate } = results;
+exports.upgrade = async function upgrade() {
+	let results = await checkPackages({ skipSecurity: true });
+	const { outOfDate } = results;
 
-			if (outOfDate.length) {
-				await upgradeDeps(outOfDate);
-				await run('yarn', [], { cwd: process.cwd(), shell: true });
-			} else {
-				log('Direct dependencies up-to-date');
-			}
+	if (outOfDate.length) {
+		await upgradeDeps(outOfDate);
+		await run('yarn', [], { cwd: process.cwd(), shell: true });
+	} else {
+		log('Direct dependencies up-to-date');
+	}
 
-			await upgradeAllPackages();
-			runLerna([ 'bootstrap' ]);
+	await upgradeAllPackages();
+	runLerna([ 'bootstrap' ]);
 
-			if (outOfDate.length) {
-				results = await checkPackages({ skipSecurity: true });
-			}
+	if (outOfDate.length) {
+		results = await checkPackages({ skipSecurity: true });
+	}
 
-			renderPackages(results);
+	renderPackages(results);
+};
 
-			cb();
-		})
-		.catch(cb);
-});
 
-gulp.task('ls', listPackages);
-gulp.task('list', listPackages);
-
-function listPackages() {
+exports.ls = exports.list = async function listPackages() {
 	for (const [ name, pkg ] of Object.entries(getDepMap())) {
 		console.log(`${cyan(name)}@${pkg.version}`);
 		for (const dep of Object.keys(pkg.deps)) {
 			console.log(`    ${gray(dep)}`);
 		}
 	}
-}
+};
 
 /*
  * lint tasks
  */
-gulp.task('lint', [ 'cyclic' ], () => {
+exports.lint = series(cyclic, function lint() {
 	return gulp
 		.src([
 			path.join(__dirname, 'packages/*/gulpfile.js')
@@ -200,21 +190,25 @@ gulp.task('lint', [ 'cyclic' ], () => {
 /*
  * build tasks
  */
-gulp.task('build', [ 'cyclic' ], () => {
-	runLerna([ 'run', '--parallel', 'build' ]);
+const build = exports.build = series(cyclic, function build() {
+	return runLerna([ 'run', '--parallel', 'build' ]);
 });
 
-gulp.task('package', [ 'build' ], () => {
-	runLerna([ 'run', '--parallel', 'package' ]);
+exports.package = series(build, function pkg() {
+	return runLerna([ 'run', '--parallel', 'package' ]);
 });
 
 /*
  * test tasks
  */
-gulp.task('test', [ 'node-info', 'build' ], cb => runTests(false, cb));
-gulp.task('coverage', [ 'node-info', 'build' ], cb => runTests(true, cb));
+exports.test = series(parallel(nodeInfo, build), function test() {
+	return runTests();
+});
+exports.coverage = series(parallel(nodeInfo, build), function test() {
+	return runTests(true);
+});
 
-function runTests(cover, cb) {
+async function runTests(cover) {
 	const istanbul = require('istanbul');
 	let task = cover ? 'coverage-only' : 'test-only';
 	let coverageDir;
@@ -231,7 +225,7 @@ function runTests(cover, cb) {
 	const gulpfiles = globule.find([ 'packages/*/gulpfile.js' ]);
 	const failedProjects = [];
 
-	gulpfiles
+	await gulpfiles
 		.reduce((promise, gulpfile) => {
 			return promise
 				.then(() => new Promise((resolve, reject) => {
@@ -265,33 +259,29 @@ function runTests(cover, cb) {
 						resolve();
 					});
 				}));
-		}, Promise.resolve())
-		.then(() => {
-			if (cover) {
-				fs.removeSync(coverageDir);
-				fs.mkdirsSync(coverageDir);
-				console.log();
+		}, Promise.resolve());
 
-				for (const type of [ 'lcov', 'json', 'text', 'text-summary', 'cobertura' ]) {
-					istanbul.Report
-						.create(type, { dir: coverageDir })
-						.writeReport(collector, true);
-				}
-			}
+	if (cover) {
+		fs.removeSync(coverageDir);
+		fs.mkdirsSync(coverageDir);
+		console.log();
 
-			if (!failedProjects.length) {
-				return cb();
-			}
+		for (const type of [ 'lcov', 'json', 'text', 'text-summary', 'cobertura' ]) {
+			istanbul.Report
+				.create(type, { dir: coverageDir })
+				.writeReport(collector, true);
+		}
+	}
 
-			if (failedProjects.length === 1) {
-				log(red('1 failured project:'));
-			} else {
-				log(red(`${failedProjects.length} failured projects:`));
-			}
-			failedProjects.forEach(p => log(red(p)));
-			process.exit(1);
-		})
-		.catch(cb);
+	if (failedProjects.length) {
+		if (failedProjects.length === 1) {
+			log(red('1 failured project:'));
+		} else {
+			log(red(`${failedProjects.length} failured projects:`));
+		}
+		failedProjects.forEach(p => log(red(p)));
+		process.exit(1);
+	}
 }
 
 /*
@@ -305,26 +295,26 @@ function stopDaemon() {
 	spawnSync(process.execPath, [ 'packages/appcd/bin/appcd', 'stop' ], { stdio: 'inherit' });
 }
 
-gulp.task('start-daemon', () => {
+exports['start-daemon'] = async () => {
 	log('Starting daemon in debug mode');
 	console.log('-----------------------------------------------------------');
 	startDaemon();
-});
+};
 
-gulp.task('watch-only', cb => {
+async function watchOnly() {
 	const watchers = [
-		gulp.watch(__dirname + '/packages/appcd/bin/*', evt => {
+		gulp.watch(`${__dirname}/packages/appcd/bin/*`, evt => {
 			log('Detected change: ' + cyan(evt.path));
 			stopDaemon();
 			startDaemon();
 		}),
 
-		gulp.watch(__dirname + '/packages/*/src/**/*.js', evt => {
+		gulp.watch(`${__dirname}/packages/*/src/**/*.js`, evt => {
 			// FIXME: There's almost certainly a better way of doing this than replacing \\ with /
 			evt.path = evt.path.replace(/\\/g, '/');
-			const m = evt.path.match(new RegExp('^(' +  __dirname.replace(/\\/g, '/') + '/(packages/([^\/]+)))'));
+			const m = evt.path.match(new RegExp(`^(${__dirname.replace(/\\/g, '/')}/(packages/([^\/]+)))`));
 			if (m) {
-				log('Detected change: ' + cyan(evt.path));
+				log(`Detected change: ${cyan(evt.path)}`);
 				stopDaemon();
 				buildDepList(m[2])
 					.reduce((promise, dir) => {
@@ -344,20 +334,23 @@ gulp.task('watch-only', cb => {
 
 	let stopping = false;
 
-	process.on('SIGINT', () => {
-		if (!stopping) {
-			stopping = true;
-			for (const w of watchers) {
-				w._watcher.close();
+	return new Promise(resolve => {
+		process.on('SIGINT', () => {
+			if (!stopping) {
+				stopping = true;
+				for (const w of watchers) {
+					w._watcher.close();
+				}
+				resolve();
 			}
-			cb();
-		}
+		});
 	});
-});
+}
+exports['watch-only'] = watchOnly;
 
-gulp.task('watch', cb => runSequence('build', 'start-daemon', 'watch-only', cb));
+exports.watch = series(build, startDaemon, watchOnly);
 
-gulp.task('default', () => {
+exports.default = async () => {
 	console.log('\nAvailable tasks:');
 	const table = new Table({
 		chars: cliTableChars,
@@ -377,7 +370,7 @@ gulp.task('default', () => {
 	table.push([ cyan('upgrade'),          'detects latest npm deps, updates package.json, and runs upgrade' ]);
 
 	console.log(table.toString() + '\n');
-});
+};
 
 /*
  * helper functions
@@ -405,7 +398,7 @@ function buildDepList(pkg) {
 	return list;
 }
 
-gulp.task('cyclic', () => {
+async function cyclic() {
 	const results = checkCyclic();
 	const pkgs = Object.keys(results);
 	if (pkgs.length) {
@@ -422,7 +415,8 @@ gulp.task('cyclic', () => {
 	} else {
 		console.log('No cyclic dependencies found');
 	}
-});
+};
+exports.cyclic = cyclic;
 
 let cyclicCache = null;
 
@@ -1414,79 +1408,73 @@ function dump() {
 	}
 }
 
-gulp.task('deps-changelog', cb => {
+exports['deps-changelog'] = async function depChangelog() {
 	const depmap = getDepMap(true);
 	const npm = require('npm');
 
-	Promise.resolve()
-		.then(() => new Promise((resolve, reject) => {
-			npm.load({
-				silent: true
-			}, err => {
-				if (err) {
-					reject(err);
-				} else {
-					resolve();
-				}
-			});
-		}))
-		.then(() => {
-			return Object.keys(depmap)
-				.reduce((promise, name) => {
-					return promise.then(() => new Promise((resolve, reject) => {
-						npm.commands.view([ name ], true, (err, info) => {
-							if (err) {
-								log(yellow(`npm view failed for ${name}: ${err.message}`));
-							} else {
-								const latestVer = Object.keys(info)[0];
-								const deps = Object.assign({}, info[latestVer].dependencies, info[latestVer].devDependencies);
-								const delta = {};
+	await new Promise((resolve, reject) => {
+		npm.load({
+			silent: true
+		}, err => {
+			if (err) {
+				reject(err);
+			} else {
+				resolve();
+			}
+		});
+	});
 
-								for (const [ dep, localDepVer ] of Object.entries(depmap[name].deps)) {
-									if ((deps[dep] && deps[dep] !== localDepVer) || (depmap[dep] && depmap[dep].version !== localDepVer)) {
-										delta[dep] = { from: deps[dep].replace(/[^\d.]/g, ''), to: localDepVer.replace(/[^\d.]/g, '') };
-									}
+	return Object.keys(depmap)
+		.reduce((promise, name) => {
+			return promise.then(() => new Promise((resolve, reject) => {
+				npm.commands.view([ name ], true, (err, info) => {
+					if (err) {
+						log(yellow(`npm view failed for ${name}: ${err.message}`));
+					} else {
+						const latestVer = Object.keys(info)[0];
+						const deps = Object.assign({}, info[latestVer].dependencies, info[latestVer].devDependencies);
+						const delta = {};
+
+						for (const [ dep, localDepVer ] of Object.entries(depmap[name].deps)) {
+							if ((deps[dep] && deps[dep] !== localDepVer) || (depmap[dep] && depmap[dep].version !== localDepVer)) {
+								delta[dep] = { from: deps[dep].replace(/[^\d.]/g, ''), to: localDepVer.replace(/[^\d.]/g, '') };
+							}
+						}
+
+						if (Object.keys(delta).length) {
+							console.log(name);
+							console.log(`  Latest Version; ${latestVer}`);
+							console.log(`  Local Version:  ${depmap[name].version}\n`);
+
+							if (depmap[name].version === latestVer) {
+								console.log('NEEDS VERSION BUMP IN PACKAGE.JSON');
+							}
+							for (const dep of Object.keys(delta).sort()) {
+								if (depmap[dep] && depmap[dep].version.replace(/[^\d.]/g, '') !== delta[dep].to) {
+									console.log(`DEPENDENCY NEEDS VERSION BUMP IN PACKAGE.JSON: ${dep} ${delta[dep].to} -> ${depmap[dep].version}`);
 								}
+							}
+							console.log();
 
-								if (Object.keys(delta).length) {
-									console.log(name);
-									console.log(`  Latest Version; ${latestVer}`);
-									console.log(`  Local Version:  ${depmap[name].version}\n`);
-
-									if (depmap[name].version === latestVer) {
-										console.log('NEEDS VERSION BUMP IN PACKAGE.JSON');
-									}
-									for (const dep of Object.keys(delta).sort()) {
-										if (depmap[dep] && depmap[dep].version.replace(/[^\d.]/g, '') !== delta[dep].to) {
-											console.log(`DEPENDENCY NEEDS VERSION BUMP IN PACKAGE.JSON: ${dep} ${delta[dep].to} -> ${depmap[dep].version}`);
-										}
-									}
-									console.log();
-
-									let change = ' * Updated dependencies:\n';
-									for (const dep of Object.keys(delta).sort()) {
-										const from = delta[dep].from.replace(/[^\d.]/g, '');
-										if (depmap[dep]) {
-											change += `   - ${dep} ${from} -> ${depmap[dep].version}\n`;
-										} else {
-											change += `   - ${dep} ${from} -> ${delta[dep].to}\n`;
-										}
-									}
-
-									const changelog = path.join(__dirname, 'packages', name, 'CHANGELOG.md');
-									if (!fs.existsSync(changelog) || fs.readFileSync(changelog).toString().indexOf(change) === -1) {
-										console.log(`${change}\n\n`);
-									}
+							let change = ' * Updated dependencies:\n';
+							for (const dep of Object.keys(delta).sort()) {
+								const from = delta[dep].from.replace(/[^\d.]/g, '');
+								if (depmap[dep]) {
+									change += `   - ${dep} ${from} -> ${depmap[dep].version}\n`;
+								} else {
+									change += `   - ${dep} ${from} -> ${delta[dep].to}\n`;
 								}
 							}
 
-							resolve();
-						});
-					}));
-				}, Promise.resolve())
-		})
-		.then(() => {
-			cb();
-		})
-		.catch(cb);
-});
+							const changelog = path.join(__dirname, 'packages', name, 'CHANGELOG.md');
+							if (!fs.existsSync(changelog) || fs.readFileSync(changelog).toString().indexOf(change) === -1) {
+								console.log(`${change}\n\n`);
+							}
+						}
+					}
+
+					resolve();
+				});
+			}));
+		}, Promise.resolve());
+};
