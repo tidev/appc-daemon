@@ -241,6 +241,10 @@ describe('Plugin Path', () => {
 		let src;
 		let dest;
 
+		const destroyLookup = new Map();
+		destroyLookup.set('good', new Set([ '1.0.0', '1.1.0' ]));
+		destroyLookup.set('good2', new Set([ '1.0.0', '1.1.0' ]));
+
 		this.pp = new PluginPath(tmp);
 
 		const promise = new Promise((resolve, reject) => {
@@ -249,10 +253,11 @@ describe('Plugin Path', () => {
 				log('%s Plugin added: %s', magenta(`[${counter}]`), highlight(`${plugin.name}@${plugin.version}`));
 				try {
 					switch (counter) {
+						case 29:
+							expect(destroyLookup.size).to.equal(0);
 						case 1:
 						case 3:
 						case 7:
-						case 29:
 							expect(plugin.name).to.equal('good');
 							expect(plugin.version).to.equal('1.2.3');
 							break;
@@ -319,12 +324,10 @@ describe('Plugin Path', () => {
 							expect(plugin.version).to.equal('1.1.0');
 							break;
 						case 18:
-						case 27:
 							expect(plugin.name).to.equal('good2');
 							expect(plugin.version).to.equal('1.0.0');
 							break;
 						case 19:
-						case 28:
 							expect(plugin.name).to.equal('good2');
 							expect(plugin.version).to.equal('1.1.0');
 							break;
@@ -334,8 +337,24 @@ describe('Plugin Path', () => {
 							break;
 						case 25:
 						case 26:
-							expect(plugin.name).to.equal('good');
-							expect(plugin.version).to.match(/^1\.[01]\.0$/);
+						case 27:
+						case 28:
+							// when our test deletes the parent plugin directory, the order in which
+							// the directories are deleted as well as the async completion of the
+							// notifications throws off order, so instead we remove each plugin/ver
+							// from a lookup since we don't really care about the order... just that
+							// they are all destroyed
+							const vers = destroyLookup.get(plugin.name);
+							if (!vers) {
+								throw new Error(`${plugin.name} already destroyed!`);
+							}
+							if (!vers.has(plugin.version)) {
+								throw new Error(`${plugin.name}@${plugin.version} already destroyed!`);
+							}
+							vers.delete(plugin.version);
+							if (!vers.size) {
+								destroyLookup.delete(plugin.name);
+							}
 							break;
 						case 32:
 							expect(plugin.name).to.equal('good2');
