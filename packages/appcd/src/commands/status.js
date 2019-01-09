@@ -7,17 +7,18 @@ export default {
 		const [
 			{ default: Table },
 			{ createRequest, loadConfig },
-			{ createInstanceWithDefaults, StdioStream }
+			{ createInstanceWithDefaults, StdioStream },
+			{ filesize, numberFormat, relativeTime }
 		] = await Promise.all([
 			import('cli-table2'),
 			import('../common'),
-			import('appcd-logger')
+			import('appcd-logger'),
+			import('humanize')
 		]);
 
 		const logger = createInstanceWithDefaults().config({ theme: 'compact' }).enable('*').pipe(new StdioStream());
 		const { log } = logger;
 		const { alert, highlight, note } = logger.styles;
-		const { filesize, numberFormat, relativeTime } = logger.humanize;
 		const cfg = loadConfig(argv);
 		const { client, request } = createRequest(cfg, '/appcd/status');
 

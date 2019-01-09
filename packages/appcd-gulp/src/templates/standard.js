@@ -249,14 +249,18 @@ module.exports = (opts) => {
 	 * watch tasks
 	 */
 	exports.watch = async function watch() {
-		// gulp.watch(`${process.cwd()}/src/**/*.js`, [ 'build' ], function (event) {
-		// 	console.log('File ' + event.path + ' was ' + event.type + ', running tasks...');
-		// });
+		gulp.watch(`${process.cwd()}/src/**/*.js`)
+			.on('all', async (type, path) => {
+				await build();
+				console.log(`File ${path} was ${type}, running tasks...`);
+			});
 	};
 
 	exports['watch-test'] = async function watchTest() {
-		// gulp.watch([ `${process.cwd()}/src/**/*.js`, `${process.cwd()}/test/*.js` ], [ 'test' ], function (event) {
-		// 	console.log('File ' + event.path + ' was ' + event.type + ', running tasks...');
-		// });
+		gulp.watch([ `${process.cwd()}/src/**/*.js`, `${process.cwd()}/test/*.js` ])
+			.on('all', async (type, path) => {
+				await test();
+				console.log(`File ${path} was ${type}, running tasks...`);
+			});
 	};
 };

@@ -39,6 +39,7 @@
     "appcd-util": "^1.1.4",
     "cli-kit": "^0.5.2",
     "cli-table2": "^0.2.0",
+    "humanize": "^0.0.9",
     "source-map-support": "^0.5.9",
     "v8-compile-cache": "^2.0.2"
   },

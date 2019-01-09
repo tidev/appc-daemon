@@ -287,7 +287,7 @@ async function runTests(cover) {
 /*
  * watch/debug tasks
  */
-function startDaemon() {
+async function startDaemon() {
 	spawn(process.execPath, [ 'packages/appcd/bin/appcd', 'start', '--debug', '--config', '{ \"telemetry\": { \"environment\": \"development\" } }' ], { stdio: 'inherit' });
 }
 
@@ -302,19 +302,22 @@ exports['start-daemon'] = async () => {
 };
 
 async function watchOnly() {
-	const watchers = [
-		gulp.watch(`${__dirname}/packages/appcd/bin/*`, evt => {
-			log('Detected change: ' + cyan(evt.path));
+	const binWatcher = gulp
+		.watch(`${__dirname}/packages/appcd/bin/*`)
+		.on('all', (type, path) => {
+			log('Detected change: ' + cyan(path));
 			stopDaemon();
 			startDaemon();
-		}),
+		});
 
-		gulp.watch(`${__dirname}/packages/*/src/**/*.js`, evt => {
+	const srcWatcher = gulp
+		.watch(`${__dirname}/packages/*/src/**/*.js`)
+		.on('all', (type, path) => {
 			// FIXME: There's almost certainly a better way of doing this than replacing \\ with /
-			evt.path = evt.path.replace(/\\/g, '/');
-			const m = evt.path.match(new RegExp(`^(${__dirname.replace(/\\/g, '/')}/(packages/([^\/]+)))`));
+			path = path.replace(/\\/g, '/');
+			const m = path.match(new RegExp(`^(${__dirname.replace(/\\/g, '/')}/(packages/([^\/]+)))`));
 			if (m) {
-				log(`Detected change: ${cyan(evt.path)}`);
+				log(`Detected change: ${cyan(path)}`);
 				stopDaemon();
 				buildDepList(m[2])
 					.reduce((promise, dir) => {
@@ -329,8 +332,7 @@ async function watchOnly() {
 					}, Promise.resolve())
 					.then(startDaemon);
 			}
-		})
-	];
+		});
 
 	let stopping = false;
 
@@ -338,9 +340,8 @@ async function watchOnly() {
 		process.on('SIGINT', () => {
 			if (!stopping) {
 				stopping = true;
-				for (const w of watchers) {
-					w._watcher.close();
-				}
+				binWatcher._watcher.close();
+				srcWatcher._watcher.close();
 				resolve();
 			}
 		});
