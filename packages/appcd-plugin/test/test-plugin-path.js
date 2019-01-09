@@ -316,7 +316,6 @@ describe('Plugin Path', () => {
 							expect(plugin.version).to.equal('1.0.0');
 							break;
 						case 17:
-						case 26:
 							expect(plugin.name).to.equal('good');
 							expect(plugin.version).to.equal('1.1.0');
 							break;
@@ -333,6 +332,10 @@ describe('Plugin Path', () => {
 						case 20:
 							expect(plugin.name).to.equal('good3');
 							expect(plugin.version).to.equal('3.4.5');
+							break;
+						case 26:
+							expect(plugin.name).to.equal('good');
+							expect(plugin.version).to.match(/^1\.[01]\.0$/);
 							break;
 						case 32:
 							expect(plugin.name).to.equal('good2');
