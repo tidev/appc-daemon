@@ -126,7 +126,7 @@ describe('DataServiceDispatcher', () => {
 					once() {
 						// noop
 					},
-					write(data) {
+					write() {
 						// noop
 					}
 				}
@@ -221,7 +221,7 @@ describe('DataServiceDispatcher', () => {
 				once() {
 					// noop
 				},
-				write(data) {
+				write() {
 					// noop
 				}
 			}

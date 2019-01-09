@@ -82,7 +82,7 @@ describe('nodejs', () => {
 			delete process.env.APPCD_TEST_PLATFORM;
 		});
 
-		it('should download Node.js 6.9.5 for Linux', function (done) {
+		it('should download Node.js 10.15.0 for Linux', async function () {
 			this.timeout(120000);
 			this.slow(100000);
 
@@ -90,20 +90,16 @@ describe('nodejs', () => {
 
 			process.env.APPCD_TEST_PLATFORM = 'linux';
 
-			Promise.resolve()
-				.then(() => downloadNode({
-					arch: 'x64',
-					nodeHome: tmpDir,
-					version: '6.9.5' // test without the 'v'
-				}))
-				.then(binary => {
-					expect(binary).to.equal(path.join(tmpDir, 'v6.9.5', 'linux', 'x64', 'node'));
-					done();
-				})
-				.catch(done);
+			const binary = await downloadNode({
+				arch: 'x64',
+				nodeHome: tmpDir,
+				version: '10.15.0' // test without the 'v'
+			});
+
+			expect(binary).to.equal(path.join(tmpDir, 'v10.15.0', 'linux', 'x64', 'node'));
 		});
 
-		it('should download Node.js 6.9.5 for Windows', function (done) {
+		it('should download Node.js 10.15.0 for Windows', async function () {
 			this.timeout(120000);
 			this.slow(100000);
 
@@ -111,20 +107,16 @@ describe('nodejs', () => {
 
 			process.env.APPCD_TEST_PLATFORM = 'win32';
 
-			Promise.resolve()
-				.then(() => downloadNode({
-					arch: 'x64',
-					nodeHome: tmpDir,
-					version: 'v6.9.5'
-				}))
-				.then(binary => {
-					expect(binary).to.equal(path.join(tmpDir, 'v6.9.5', 'win32', 'x64', 'node.exe'));
-					done();
-				})
-				.catch(done);
+			const binary = await downloadNode({
+				arch: 'x64',
+				nodeHome: tmpDir,
+				version: 'v10.15.0'
+			});
+
+			expect(binary).to.equal(path.join(tmpDir, 'v10.15.0', 'win32', 'x64', 'node.exe'));
 		});
 
-		(process.platform === 'darwin' ? it : it.skip)('should download Node.js 6.9.5 for macOS', function (done) {
+		(process.platform === 'darwin' ? it : it.skip)('should download Node.js 10.15.0 for macOS', async function () {
 			this.timeout(120000);
 			this.slow(100000);
 
@@ -132,20 +124,16 @@ describe('nodejs', () => {
 
 			process.env.APPCD_TEST_PLATFORM = 'darwin';
 
-			Promise.resolve()
-				.then(() => downloadNode({
-					arch: 'x64',
-					nodeHome: tmpDir,
-					version: 'v6.9.5'
-				}))
-				.then(binary => {
-					expect(binary).to.equal(path.join(tmpDir, 'v6.9.5', 'darwin', 'x64', 'node'));
-					done();
-				})
-				.catch(done);
+			const binary = await downloadNode({
+				arch: 'x64',
+				nodeHome: tmpDir,
+				version: 'v10.15.0'
+			});
+
+			expect(binary).to.equal(path.join(tmpDir, 'v10.15.0', 'darwin', 'x64', 'node'));
 		});
 
-		it('should error if version does not exist', function (done) {
+		it('should error if version does not exist', async function () {
 			this.timeout(120000);
 			this.slow(100000);
 
@@ -153,199 +141,217 @@ describe('nodejs', () => {
 
 			process.env.APPCD_TEST_PLATFORM = 'linux';
 
-			downloadNode({
-				arch: 'x64',
-				nodeHome: tmpDir,
-				version: 'v123'
-			}).then(() => {
-				done(new Error('Expected 404'));
-			}).catch(err => {
+			try {
+				await downloadNode({
+					arch: 'x64',
+					nodeHome: tmpDir,
+					version: 'v123'
+				});
+			} catch (err) {
 				expect(err).to.be.an.instanceof(Error);
 				expect(err.message).to.match(/^Failed to download Node\.js: 404/);
-				done();
-			});
+				return;
+			}
+
+			throw new Error('Expected 404');
 		});
 	});
 
 	describe('extractNode()', () => {
-		it('should fail if invalid archive type', done => {
-			extractNode({
-				archive: path.join(__dirname, 'fixtures', 'bad.txt')
-			}).then(() => {
-				done(new Error('Expected unsupported archive error'));
-			}).catch(err => {
+		it('should fail if invalid archive type', async () => {
+			try {
+				await extractNode({
+					archive: path.join(__dirname, 'fixtures', 'bad.txt')
+				});
+			} catch (err) {
 				expect(err.message).to.match(/^Unsupported archive/);
-				done();
-			});
+				return;
+			}
+
+			throw new Error('Expected unsupported archive error');
 		});
 
-		it('should error if dest is missing', done => {
-			extractNode({
-				archive: path.join(__dirname, 'fixtures', 'bad.zip')
-			}).then(() => {
-				done(new Error('Expected bad dest error'));
-			}).catch(err => {
+		it('should error if dest is missing', async () => {
+			try {
+				await extractNode({
+					archive: path.join(__dirname, 'fixtures', 'bad.zip')
+				});
+			} catch (err) {
 				expect(err).to.be.an.instanceof(Error);
-				done();
-			});
+				return;
+			}
+
+			throw new Error('Expected bad dest error');
 		});
 
-		it('should error if dest is an empty string', done => {
-			extractNode({
-				archive: path.join(__dirname, 'fixtures', 'bad.zip'),
-				dest: ''
-			}).then(() => {
-				done(new Error('Expected bad dest error'));
-			}).catch(err => {
+		it('should error if dest is an empty string', async () => {
+			try {
+				await extractNode({
+					archive: path.join(__dirname, 'fixtures', 'bad.zip'),
+					dest: ''
+				});
+			} catch (err) {
 				expect(err).to.be.an.instanceof(Error);
-				done();
-			});
+				return;
+			}
+
+			throw new Error('Expected bad dest error');
 		});
 
-		it('should error if dest is not a string', done => {
-			extractNode({
-				archive: path.join(__dirname, 'fixtures', 'bad.zip'),
-				dest: function () {}
-			}).then(() => {
-				done(new Error('Expected bad dest error'));
-			}).catch(err => {
+		it('should error if dest is not a string', async () => {
+			try {
+				await extractNode({
+					archive: path.join(__dirname, 'fixtures', 'bad.zip'),
+					dest: function () {}
+				});
+			} catch (err) {
 				expect(err).to.be.an.instanceof(Error);
-				done();
-			});
+				return;
+			}
+
+			throw new Error('Expected bad dest error');
 		});
 
-		it('should fail to extract bad zip file', done => {
+		it('should fail to extract bad zip file', async () => {
 			const tmpDir = makeTempDir();
 
-			extractNode({
-				archive: path.join(__dirname, 'fixtures', 'bad.zip'),
-				dest: tmpDir
-			}).then(() => {
-				fs.removeSync(tmpDir);
-				done(new Error('Expected bad zip to not be extracted'));
-			}).catch(err => {
-				fs.removeSync(tmpDir);
+			try {
+				await extractNode({
+					archive: path.join(__dirname, 'fixtures', 'bad.zip'),
+					dest: tmpDir
+				});
+			} catch (err) {
 				expect(err).to.be.an.instanceof(Error);
-				done();
-			});
+				return;
+			} finally {
+				await fs.remove(tmpDir);
+			}
+
+			throw new Error('Expected bad zip to not be extracted');
 		});
 
-		it('should fail to extract bad tarball file', done => {
+		it('should fail to extract bad tarball file', async () => {
 			const tmpDir = makeTempDir();
 
-			extractNode({
-				archive: path.join(__dirname, 'fixtures', 'bad.tar.gz'),
-				dest: tmpDir
-			}).then(() => {
-				fs.removeSync(tmpDir);
-				done(new Error('Expected bad tarball to not be extracted'));
-			}).catch(err => {
-				fs.removeSync(tmpDir);
+			try {
+				await extractNode({
+					archive: path.join(__dirname, 'fixtures', 'bad.tar.gz'),
+					dest: tmpDir
+				});
+			} catch (err) {
 				expect(err).to.be.an.instanceof(Error);
-				done();
-			});
+				return;
+			} finally {
+				await fs.remove(tmpDir);
+			}
+
+			throw new Error('Expected bad tarball to not be extracted');
 		});
 
-		it('should fail to extract bad pkg file', done => {
+		it('should fail to extract bad pkg file', async () => {
 			const tmpDir = makeTempDir();
 
-			extractNode({
-				archive: path.join(__dirname, 'fixtures', 'bad.pkg'),
-				dest: tmpDir
-			}).then(() => {
-				fs.removeSync(tmpDir);
-				done(new Error('Expected bad pkg to not be extracted'));
-			}).catch(err => {
-				fs.removeSync(tmpDir);
+			try {
+				await extractNode({
+					archive: path.join(__dirname, 'fixtures', 'bad.pkg'),
+					dest: tmpDir
+				});
+			} catch (err) {
 				expect(err).to.be.an.instanceof(Error);
-				done();
-			});
+				return;
+			} finally {
+				await fs.remove(tmpDir);
+			}
+
+			throw new Error('Expected bad pkg to not be extracted');
 		});
 
-		it('should fail to extract invalid node zip file', done => {
+		it('should fail to extract invalid node zip file', async () => {
 			const tmpDir = makeTempDir();
 
-			extractNode({
-				archive: path.join(__dirname, 'fixtures', 'invalid.zip'),
-				dest: tmpDir
-			}).then(() => {
-				fs.removeSync(tmpDir);
-				done(new Error('Expected invalid node zip to not be extracted'));
-			}).catch(err => {
-				fs.removeSync(tmpDir);
+			try {
+				await extractNode({
+					archive: path.join(__dirname, 'fixtures', 'invalid.zip'),
+					dest: tmpDir
+				});
+			} catch (err) {
 				expect(err).to.be.an.instanceof(Error);
-				done();
-			});
+				return;
+			} finally {
+				await fs.remove(tmpDir);
+			}
+
+			throw new Error('Expected invalid node zip to not be extracted');
 		});
 
-		it('should fail to extract invalid node tarball file', done => {
+		it('should fail to extract invalid node tarball file', async () => {
 			const tmpDir = makeTempDir();
 
-			extractNode({
-				archive: path.join(__dirname, 'fixtures', 'invalid.tar.gz'),
-				dest: tmpDir
-			}).then(() => {
-				fs.removeSync(tmpDir);
-				done(new Error('Expected invalid node tarball to not be extracted'));
-			}).catch(err => {
-				fs.removeSync(tmpDir);
+			try {
+				await extractNode({
+					archive: path.join(__dirname, 'fixtures', 'invalid.tar.gz'),
+					dest: tmpDir
+				});
+			} catch (err) {
 				expect(err).to.be.an.instanceof(Error);
-				done();
-			});
+				return;
+			} finally {
+				await fs.remove(tmpDir);
+			}
+
+			throw new Error('Expected invalid node tarball to not be extracted');
 		});
 	});
 
 	describe('spawnNode()', () => {
-		it('should prepare and spawn Node 6.9.5', function (done) {
+		it('should prepare and spawn Node 10.15.0', async function () {
 			this.timeout(120000);
 			this.slow(100000);
 
 			const tmpDir = makeTempDir();
 
-			Promise.resolve()
-				.then(() => spawnNode({
+			try {
+				await spawnNode({
 					args: [ path.join(__dirname, 'fixtures', 'test.js') ],
 					nodeHome: tmpDir,
-					version: '6.9.5' // test without the 'v'
-				}))
-				.then(() => spawnNode({
+					version: '10.15.0' // test without the 'v'
+				});
+
+				const child = await spawnNode({
 					args: [ path.join(__dirname, 'fixtures', 'test.js'), 'foo bar' ],
 					nodeHome: tmpDir,
 					detached: true,
-					version: 'v6.9.5',
+					version: 'v10.15.0',
 					nodeArgs: [ '--max_old_space_size=500' ]
-				}))
-				.then(child => new Promise(resolve => child.on('close', resolve)))
-				.then(() => {
-					fs.removeSync(tmpDir);
-					done();
-				})
-				.catch(err => {
-					fs.removeSync(tmpDir);
-					done(err);
-				})
-				.catch(done);
-		});
-
-		it('should error if v8mem is invalid', done => {
-			spawnNode({ v8mem: 'foo' })
-				.then(() => done(new Error('Expected v8mem error')))
-				.catch(err => {
-					expect(err).to.be.an.instanceof(TypeError);
-					expect(err.message).to.equal('Expected v8mem to be a number or "auto"');
-					done();
 				});
+
+				await new Promise(resolve => child.on('close', resolve));
+			} finally {
+				await fs.remove(tmpDir);
+			}
 		});
 
-		it('should error if arch is invalid', done => {
-			spawnNode({ arch: 'foo' })
-				.then(() => {
-					throw new Error('Expected exception to be thrown');
-				}, err => {
-					expect(err.message).to.equal('Expected arch to be "x86" or "x64"');
-					done();
-				})
-				.catch(done);
+		it('should error if v8mem is invalid', async () => {
+			try {
+				await spawnNode({ v8mem: 'foo' });
+			} catch (err) {
+				expect(err).to.be.an.instanceof(TypeError);
+				expect(err.message).to.equal('Expected v8mem to be a number or "auto"');
+				return;
+			}
+
+			throw new Error('Expected v8mem error');
+		});
+
+		it('should error if arch is invalid', async () => {
+			try {
+				await spawnNode({ arch: 'foo' });
+			} catch (err) {
+				expect(err.message).to.equal('Expected arch to be "x86" or "x64"');
+				return;
+			}
+
+			throw new Error('Expected exception to be thrown');
 		});
 	});
 

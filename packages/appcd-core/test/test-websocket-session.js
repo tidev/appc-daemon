@@ -9,18 +9,10 @@ import { IncomingMessage } from 'http';
 const { log } = appcdLogger('test:appcd:core:websocket-session');
 
 describe('WebSocketSession', () => {
-	afterEach(function (done) {
+	afterEach(async function () {
 		if (this.server) {
-			this.server.shutdown()
-				.then(() => {
-					this.server = null;
-					done();
-				})
-				.catch(err => {
-					done(err);
-				});
-		} else {
-			done();
+			await this.server.shutdown();
+			this.server = null;
 		}
 	});
 
@@ -60,7 +52,7 @@ describe('WebSocketSession', () => {
 		}).to.throw(TypeError, 'Expected a Dispatcher instance');
 	});
 
-	it('should dispatch WebSocket request', function (done) {
+	it('should dispatch WebSocket request', async function () {
 		this.server = new WebServer({
 			hostname: '127.0.0.1',
 			port:     1337
@@ -74,51 +66,47 @@ describe('WebSocketSession', () => {
 			ctx.response = 'bar!';
 		});
 
-		this.server
-			.on('websocket', (ws, msg) => new WebSocketSession(ws, msg, dispatcher))
-			.listen()
-			.then(() => {
-				log('Web server listening');
+		this.server.on('websocket', (ws, msg) => new WebSocketSession(ws, msg, dispatcher));
 
-				// call the websocket
-				const socket = new WebSocket('ws://127.0.0.1:1337')
-					.on('error', () => {})
-					.on('message', msg => {
-						if (typeof msg === 'string') {
-							try {
-								msg = JSON.parse(msg);
-							} catch (e) {
-								// squeltch
-							}
-						} else {
-							msg = msgpack.decode(msg);
-						}
+		await this.server.listen();
+		log('Web server listening');
 
-						log('Got message from server:', msg);
-
+		await new Promise((resolve, reject) => {
+			// call the websocket
+			const socket = new WebSocket('ws://127.0.0.1:1337')
+				.on('error', () => {})
+				.on('message', msg => {
+					if (typeof msg === 'string') {
 						try {
-							expect(msg).to.be.an('object');
-							expect(msg.status).to.equal(200);
-							expect(msg.message).to.equal('bar!');
-							done();
+							msg = JSON.parse(msg);
 						} catch (e) {
-							done(e);
+							// squeltch
 						}
-					})
-					.on('open', () => {
-						log('Socket open, sending request');
+					} else {
+						msg = msgpack.decode(msg);
+					}
 
-						socket.send(JSON.stringify({
-							data: 'foo',
-							id: uuid++,
-							path: '/foo',
-							version: '1.0'
-						}));
-					});
-			})
-			.catch(err => {
-				console.log(err);
-				done(err);
-			});
+					log('Got message from server:', msg);
+
+					try {
+						expect(msg).to.be.an('object');
+						expect(msg.status).to.equal(200);
+						expect(msg.message).to.equal('bar!');
+						resolve();
+					} catch (e) {
+						reject(e);
+					}
+				})
+				.on('open', () => {
+					log('Socket open, sending request');
+
+					socket.send(JSON.stringify({
+						data: 'foo',
+						id: uuid++,
+						path: '/foo',
+						version: '1.0'
+					}));
+				});
+		});
 	});
 });

@@ -21,14 +21,14 @@
     "appcd-nodejs": "^1.1.3",
     "appcd-path": "^1.1.3",
     "appcd-response": "^1.1.4",
+    "appcd-util": "^1.1.4",
     "gawk": "^4.6.2",
     "ps-tree": "^1.2.0",
     "source-map-support": "^0.5.9",
     "which": "^1.3.1"
   },
   "devDependencies": {
-    "appcd-gulp": "^1.2.1",
-    "gulp": "^4.0.0",
+    "appcd-gulp": "^2.0.0",
     "tmp": "^0.0.33"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-subprocess",

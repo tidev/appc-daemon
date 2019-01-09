@@ -39,8 +39,8 @@ process
 	.on('uncaughtException', err => error('Caught exception:', err.stack || err.toString()))
 	.on('unhandledRejection', (reason, p) => error('Unhandled Rejection at:', p, reason));
 
-Promise.resolve()
-	.then(async () => {
+(async () => {
+	try {
 		// load the plugin
 		const plugin = new Plugin(process.argv[2]);
 
@@ -63,8 +63,8 @@ Promise.resolve()
 
 		// start the plugin
 		await plugin.start();
-	})
-	.catch(err => {
+	} catch (err) {
 		error(err);
 		process.exit(1);
-	});
+	}
+})();

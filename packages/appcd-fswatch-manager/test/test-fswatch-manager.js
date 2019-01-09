@@ -7,6 +7,7 @@ import tmp from 'tmp';
 import { DispatcherError } from 'appcd-dispatcher';
 import { real } from 'appcd-path';
 import { renderTree, reset, roots } from 'appcd-fswatcher';
+import { sleep } from 'appcd-util';
 
 const log = appcdLogger('test:appcd:fswatch:manager').log;
 const { highlight } = appcdLogger.styles;
@@ -30,39 +31,36 @@ function makeTempDir() {
 
 describe('FSWatchManager', () => {
 	describe('error handling', () => {
-		it('should continue to next route if type is a call', done => {
+		it('should continue to next route if type is a call', async () => {
 			const manager = new FSWatchManager();
 
-			Promise.resolve()
-				.then(() => new Promise(resolve => {
-					manager.handler({
-						path: '/',
-						request: {},
-						response: {
-							end() {
-								// noop
-							},
-							once() {
-								// noop
-							},
-							write() {
-								// noop
-							}
+			await new Promise(resolve => {
+				manager.handler({
+					path: '/',
+					request: {},
+					response: {
+						end() {
+							// noop
+						},
+						once() {
+							// noop
+						},
+						write() {
+							// noop
 						}
-					}, () => {
-						resolve();
-						return Promise.resolve();
-					});
-				}))
-				.then(() => done())
-				.catch(done);
+					}
+				}, () => {
+					resolve();
+					return Promise.resolve();
+				});
+			});
 		});
 
-		it('should fail if watch path not specified', done => {
+		it('should fail if watch path not specified', async () => {
 			const manager = new FSWatchManager();
 
-			Promise.resolve()
-				.then(() => new Promise(() => {
+			try {
+				await new Promise(() => {
 					manager.handler({
 						path: '/',
 						request: {
@@ -81,17 +79,16 @@ describe('FSWatchManager', () => {
 							}
 						}
 					}, () => Promise.resolve());
-				}))
-				.then(() => {
-					done(new Error('Expected error because watch path was not specified'));
-				}, err => {
-					expect(err).to.be.instanceof(DispatcherError);
-					expect(err.status).to.equal(400);
-					expect(err.statusCode).to.equal('400.5');
-					expect(err.message).to.equal('Missing required parameter "path"');
-					done();
-				})
-				.catch(done);
+				});
+			} catch (err) {
+				expect(err).to.be.instanceof(DispatcherError);
+				expect(err.status).to.equal(400);
+				expect(err.statusCode).to.equal('400.5');
+				expect(err.message).to.equal('Missing required parameter "path"');
+				return;
+			}
+
+			throw new Error('Expected error because watch path was not specified');
 		});
 	});
 
@@ -100,14 +97,14 @@ describe('FSWatchManager', () => {
 			fs.removeSync(tmpDir);
 		});
 
-		afterEach(function (done) {
+		afterEach(async function () {
 			this.timeout(10000);
 			reset();
 			log(renderTree());
-			setTimeout(() => done(), 1000);
+			await sleep(1000);
 		});
 
-		it('should subscribe to fs watcher', function (done) {
+		it('should subscribe to fs watcher', async function () {
 			this.timeout(10000);
 			this.slow(8000);
 
@@ -125,106 +122,106 @@ describe('FSWatchManager', () => {
 
 			expect(manager.tree).to.equal('<empty tree>');
 
-			setTimeout(() => {
-				Promise.resolve()
-					.then(() => new Promise((resolve, reject) => {
-						log('Subscribing');
-						manager.handler({
-							request: {
-								data: { path: tmp },
-								type: 'subscribe'
+			await sleep(100);
+
+			await Promise.race([
+				new Promise((resolve, reject) => {
+					log('Subscribing');
+					manager.handler({
+						request: {
+							data: { path: tmp },
+							type: 'subscribe'
+						},
+						response: {
+							end() {
+								// noop
 							},
-							response: {
-								end() {
-									// noop
-								},
-								once() {
-									// noop
-								},
-								write(response) {
-									try {
-										switch (++counter) {
-											case 1:
-												expect(response.message.toString()).to.equal('Subscribed');
-												expect(response.message.status).to.equal(201);
-												expect(response.topic).to.equal(tmp);
-												expect(response.type).to.equal('subscribe');
-												break;
+							once() {
+								// noop
+							},
+							write(response) {
+								try {
+									switch (++counter) {
+										case 1:
+											expect(response.message.toString()).to.equal('Subscribed');
+											expect(response.message.status).to.equal(201);
+											expect(response.topic).to.equal(tmp);
+											expect(response.type).to.equal('subscribe');
+											break;
 
-											case 2:
-												expect(response).to.deep.equal({
-													message: {
-														action: 'add',
-														filename: 'foo.txt',
-														file: real(filename)
-													},
-													sid: response.sid,
-													topic: tmp,
-													type: 'event'
-												});
+										case 2:
+											expect(response).to.deep.equal({
+												message: {
+													action: 'add',
+													filename: 'foo.txt',
+													file: real(filename)
+												},
+												sid: response.sid,
+												topic: tmp,
+												type: 'event'
+											});
 
-												const stats = manager.status();
-												expect(stats.nodes).to.be.above(0);
-												expect(stats.fswatchers).to.be.above(0);
-												expect(stats.watchers).to.equal(1);
+											const stats = manager.status();
+											expect(stats.nodes).to.be.above(0);
+											expect(stats.fswatchers).to.be.above(0);
+											expect(stats.watchers).to.equal(1);
 
-												setTimeout(() => {
-													try {
-														// `tree` takes a few milliseconds to update
-														expect(manager.tree).to.not.equal('<empty tree>');
+											setTimeout(() => {
+												try {
+													// `tree` takes a few milliseconds to update
+													expect(manager.tree).to.not.equal('<empty tree>');
 
-														log('Unsubscribing');
-														const ctx = {
-															request: {
-																sid: response.sid,
-																topic: tmp,
-																type: 'unsubscribe'
+													log('Unsubscribing');
+													const ctx = {
+														request: {
+															sid: response.sid,
+															topic: tmp,
+															type: 'unsubscribe'
+														},
+														response: {
+															end() {
+																// noop
 															},
-															response: {
-																end() {
-																	// noop
-																},
-																once() {
-																	// noop
-																},
-																write() {
-																	// noop
-																}
+															once() {
+																// noop
+															},
+															write() {
+																// noop
 															}
-														};
-														manager.handler(ctx, () => Promise.resolve());
+														}
+													};
+													manager.handler(ctx, () => Promise.resolve());
 
-														expect(ctx.response.toString()).to.equal('Unsubscribed');
-														expect(ctx.response.status).to.equal(200);
-														expect(ctx.response.statusCode).to.equal('200.1');
-														expect(Object.keys(manager.subscriptions)).to.have.lengthOf(0);
+													expect(ctx.response.toString()).to.equal('Unsubscribed');
+													expect(ctx.response.status).to.equal(200);
+													expect(ctx.response.statusCode).to.equal('200.1');
+													expect(Object.keys(manager.subscriptions)).to.have.lengthOf(0);
 
-														expect(roots).to.deep.equal({});
+													expect(roots).to.deep.equal({});
 
-														resolve();
-													} catch (e) {
-														reject(e);
-													}
-												}, 1000);
-										}
-									} catch (e) {
-										reject(e);
+													resolve();
+												} catch (e) {
+													reject(e);
+												}
+											}, 1000);
 									}
+								} catch (e) {
+									reject(e);
 								}
 							}
-						}, () => Promise.resolve());
-					}))
-					.then(() => done())
-					.catch(done);
+						}
+					}, () => Promise.resolve());
+				}),
 
-				setTimeout(() => {
+				(async () => {
+					await sleep(100);
 					log('Writing %s', highlight(filename));
 					fs.writeFileSync(filename, 'foo!');
-				}, 100);
-			}, 100);
+				})()
+			]);
 		});
 
-		it('should shutdown all watchers', function (done) {
+		it('should shutdown all watchers', async function () {
 			this.timeout(10000);
 			this.slow(8000);
 
@@ -233,11 +230,11 @@ describe('FSWatchManager', () => {
 
 			const fooDir = path.join(tmp, 'foo');
 			log('Creating foo directory: %s', highlight(fooDir));
-			fs.mkdirsSync(fooDir);
+			await fs.mkdirs(fooDir);
 
 			const barDir = path.join(tmp, 'bar');
 			log('Creating bar directory: %s', highlight(barDir));
-			fs.mkdirsSync(barDir);
+			await fs.mkdirs(barDir);
 
 			const manager = new FSWatchManager();
 
@@ -279,30 +276,21 @@ describe('FSWatchManager', () => {
 				}
 			}, () => Promise.resolve());
 
-			setTimeout(() => {
-				try {
-					const stats = manager.status();
-					expect(stats.nodes).to.be.above(0);
-					expect(stats.fswatchers).to.be.above(0);
-					expect(stats.watchers).to.equal(2);
+			await sleep(1000);
 
-					manager.shutdown();
+			let stats = manager.status();
+			expect(stats.nodes).to.be.above(0);
+			expect(stats.fswatchers).to.be.above(0);
+			expect(stats.watchers).to.equal(2);
 
-					setTimeout(() => {
-						try {
-							const stats = manager.status();
-							expect(stats.nodes).to.equal(0);
-							expect(stats.fswatchers).to.equal(0);
-							expect(stats.watchers).to.equal(0);
-							done();
-						} catch (e) {
-							done(e);
-						}
-					}, 1000);
-				} catch (e) {
-					done(e);
-				}
-			}, 1000);
+			manager.shutdown();
+
+			await sleep(1000);
+
+			stats = manager.status();
+			expect(stats.nodes).to.equal(0);
+			expect(stats.fswatchers).to.equal(0);
+			expect(stats.watchers).to.equal(0);
 		});
 	});
 });

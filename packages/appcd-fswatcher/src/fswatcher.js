@@ -9,13 +9,13 @@ import appcdLogger from 'appcd-logger';
 import fs from 'fs';
 import gawk from 'gawk';
 import _path from 'path';
+import pluralize from 'pluralize';
 
 import { debounce } from 'appcd-util';
 import { EventEmitter } from 'events';
 
 const { error, log } = appcdLogger('appcd:fswatcher');
 const { highlight, green } = appcdLogger.styles;
-const { pluralize } = appcdLogger;
 
 /**
  * A regex that matches a path's root.
@@ -244,9 +244,10 @@ export class Node {
 	 * @access private
 	 */
 	init(action) {
-		const isDir      = this.type & DIRECTORY;
-		const isFile     = this.type & FILE;
-		const isSymlink  = this.type & SYMLINK;
+		const isDir         = this.type & DIRECTORY;
+		const isFile        = this.type & FILE;
+		const isSymlink     = this.type & SYMLINK;
+		const wasRestricted = this.type & RESTRICTED;
 
 		if (!isDir) {
 			this.closeFSWatcher();
@@ -339,7 +340,7 @@ export class Node {
 
 			// node is not restricted
 			} else {
-				log('%s is not restricted, listing and creating child nodes', highlight(this.path));
+				log('%s is not restricted, listing and creating child nodes (was restricted? %s)', highlight(this.path), !!wasRestricted);
 
 				if (action === 'add') {
 					this.notify({
@@ -366,7 +367,9 @@ export class Node {
 							child.stat();
 							child.init(action);
 						} else if (Object.values(this.depths).some(depth => depth > 0)) {
-							notify = !this.addChild(filename, action, true);
+							// if this node was previously restricted, then we are adding the
+							// children for the first time
+							notify = !this.addChild(filename, wasRestricted ? 'add' : action, true);
 						}
 
 						if (notify) {
@@ -531,6 +534,7 @@ export class Node {
 			green(children.length),
 			pluralize('child', children.length),
 			highlight(this.path));
+
 		for (const child of children) {
 			if (child.onDeleted(evt)) {
 				child.notifyChildWatchers({
@@ -732,13 +736,14 @@ export class Node {
 
 	/**
 	 * Stats the path and determines if the path is a directory, file, symlink, or non-existent.
-	 * Also checks if the file can be accessed or if its restricted.
 	 *
 	 * @access private
 	 */
 	stat() {
 		try {
+			const restricted = this.type & RESTRICTED;
 			const lstat = fs.lstatSync(this.path);
+
 			if (lstat.isSymbolicLink()) {
 				this.type = SYMLINK;
 				try {
@@ -770,6 +775,10 @@ export class Node {
 				this.type = DIRECTORY;
 			} else {
 				this.type = FILE;
+			}
+
+			if (restricted) {
+				this.type |= RESTRICTED;
 			}
 		} catch (e) {
 			this.type = DOES_NOT_EXIST;

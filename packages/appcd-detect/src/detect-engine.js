@@ -2,6 +2,7 @@ import appcdLogger from 'appcd-logger';
 import Detector from './detector';
 import gawk from 'gawk';
 import path from 'path';
+import pluralize from 'pluralize';
 
 import * as winreg from 'appcd-winreg';
 
@@ -11,7 +12,6 @@ import { real } from 'appcd-path';
 import { which } from 'appcd-subprocess';
 
 const { highlight } = appcdLogger.styles;
-const { pluralize } = appcdLogger;
 
 /**
  * A engine for detecting various things. It walks the search paths and calls a `checkDir()`
@@ -327,9 +327,9 @@ export default class DetectEngine extends EventEmitter {
 				} else {
 					this.logger.log(`  Adding new detector: ${highlight(dir)}`);
 					const detector = new Detector(dir, this);
-					detector.on('rescan', debounce(() => {
+					detector.on('rescan', debounce(async () => {
 						this.logger.log(`  Detector ${highlight(dir)} requested a rescan`);
-						this.getPaths().then(paths => this.scan(paths));
+						this.scan(await this.getPaths());
 					}));
 					this.detectors.set(dir, detector);
 				}

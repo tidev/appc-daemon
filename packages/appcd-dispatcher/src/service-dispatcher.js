@@ -1,10 +1,10 @@
 import appcdLogger from 'appcd-logger';
+import pluralize from 'pluralize';
 import Response, { codes } from 'appcd-response';
 import uuid from 'uuid';
 
 const logger = appcdLogger('appcd:service-dispatcher');
 const { highlight, note } = appcdLogger.styles;
-const { pluralize } = appcdLogger;
 
 /**
  * List of all valid handler types.

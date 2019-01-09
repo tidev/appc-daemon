@@ -121,7 +121,7 @@ export default class Dispatcher {
 
 		logger.log('Searching for route handler: %s', highlight(path));
 
-		const dispatch = i => {
+		const dispatch = async i => {
 			if (i <= index) {
 				// next() was called multiple times, but there's nothing we can do about
 				// it except break the chain... no error will ever be propagated
@@ -159,52 +159,41 @@ export default class Dispatcher {
 				return route.handler.call(ctx.path.replace(route.prefix, '') || '/', ctx);
 			}
 
-			return new Promise((resolve, reject) => {
-				let fired = false;
+			let fired = false;
 
-				logger.log('Invoking route %s handler...', highlight(route.path));
+			logger.log('Invoking route %s handler...', highlight(route.path));
 
-				let result = route.handler(ctx, async function next() {
-					// go to next route
+			let result = route.handler(ctx, async function next() {
+				// go to next route
 
-					if (fired) {
-						logger.log('next() already fired!');
-						return;
-					}
-
-					fired = true;
-
-					logger.log('Route %s handler passed to next route', highlight(route.path));
-
-					try {
-						const result = await dispatch(i + 1);
-						return result || ctx;
-					} catch (ex) {
-						reject(ex);
-					}
-				});
-
-				// if we got back a promise, we have to wait
-				if (result instanceof Promise) {
-					result
-						.then(result => {
-							if (result instanceof DispatcherContext) {
-								ctx = result;
-							} else if (result !== undefined) {
-								ctx.response = result;
-							}
-							resolve(ctx);
-						})
-						.catch(reject);
-				} else {
-					if (result instanceof DispatcherContext) {
-						ctx = result;
-					} else if (result !== undefined) {
-						ctx.response = result;
-					}
-					resolve(ctx);
+				if (fired) {
+					logger.log('next() already fired!');
+					return;
 				}
+
+				fired = true;
+
+				logger.log('Route %s handler passed to next route', highlight(route.path));
+
+				const result = await dispatch(i + 1);
+				return result || ctx;
 			});
+
+			// if we got back a promise, we have to wait
+			if (result instanceof Promise) {
+				result = await result;
+				if (result instanceof DispatcherContext) {
+					ctx = result;
+				} else if (result !== undefined) {
+					ctx.response = result;
+				}
+			} else if (result instanceof DispatcherContext) {
+				ctx = result;
+			} else if (result !== undefined) {
+				ctx.response = result;
+			}
+
+			return ctx;
 		};
 
 		// start the chain and return its promise

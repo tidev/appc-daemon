@@ -16,7 +16,7 @@ const version = getAppcdVersion();
 let banner;
 if (!process.env.hasOwnProperty('APPC_NPM_VERSION')) {
 	banner = `${appcdLogger.styles.highlight('Appcelerator Daemon')}, version ${version}\n`
-		+ 'Copyright (c) 2015-2018, Axway, Inc. All Rights Reserved.';
+		+ 'Copyright (c) 2015-2019, Axway, Inc. All Rights Reserved.';
 }
 
 export default new CLI({

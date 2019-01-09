@@ -20,12 +20,12 @@
     "appcd-response": "^1.1.4",
     "gawk": "^4.6.2",
     "path-to-regexp": "^2.4.0",
+    "pluralize": "^7.0.0",
     "source-map-support": "^0.5.9",
     "uuid": "^3.3.2"
   },
   "devDependencies": {
-    "appcd-gulp": "^1.2.1",
-    "gulp": "^4.0.0"
+    "appcd-gulp": "^2.0.0"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-dispatcher",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",

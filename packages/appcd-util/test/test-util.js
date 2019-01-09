@@ -347,7 +347,7 @@ describe('util', () => {
 			}, 0);
 		});
 
-		it('should resolve a promise when bouncing has stopped', function (done) {
+		it('should resolve a promise when bouncing has stopped', async function () {
 			this.slow(2000);
 
 			let count = 0;
@@ -355,7 +355,7 @@ describe('util', () => {
 				count++;
 			});
 
-			Promise
+			return Promise
 				.all([
 					fn(),
 					fn(),
@@ -367,9 +367,7 @@ describe('util', () => {
 				])
 				.then(() => {
 					expect(count).to.equal(1);
-					done();
-				})
-				.catch(done);
+				});
 		});
 
 		it('should cancel a pending debounce', function (done) {
@@ -550,27 +548,31 @@ describe('util', () => {
 	});
 
 	describe('mutex()', () => {
-		it('should error if name is not a string', done => {
-			util.mutex()
-				.then(() => done(new Error('Expected rejection')))
-				.catch(err => {
-					expect(err).to.be.an.instanceof(TypeError);
-					expect(err.message).to.equal('Expected name to be a non-empty string');
-					done();
-				});
+		it('should error if name is not a string', async () => {
+			try {
+				await util.mutex();
+			} catch (err) {
+				expect(err).to.be.an.instanceof(TypeError);
+				expect(err.message).to.equal('Expected name to be a non-empty string');
+				return;
+			}
+
+			throw new Error('Expected rejection');
 		});
 
-		it('should error if callback is not a function', done => {
-			util.mutex('foo', 'bar')
-				.then(() => done(new Error('Expected rejection')))
-				.catch(err => {
-					expect(err).to.be.an.instanceof(TypeError);
-					expect(err.message).to.equal('Expected callback to be a function');
-					done();
-				});
+		it('should error if callback is not a function', async () => {
+			try {
+				await util.mutex('foo', 'bar');
+			} catch (err) {
+				expect(err).to.be.an.instanceof(TypeError);
+				expect(err.message).to.equal('Expected callback to be a function');
+				return;
+			}
+
+			throw new Error('Expected rejection');
 		});
 
-		it('should queue up multiple calls', done => {
+		it('should queue up multiple calls', async () => {
 			let count = 0;
 
 			const fn = () => {
@@ -579,54 +581,43 @@ describe('util', () => {
 				});
 			};
 
-			Promise
-				.all([ fn(), fn(), fn() ])
-				.then(results => {
-					expect(count).to.equal(3);
-					expect(results).to.have.lengthOf(3);
-					expect(results[1]).to.not.equal(results[0]);
-					expect(results[2]).to.not.equal(results[0]);
-					done();
-				})
-				.catch(done);
+			const results = await Promise.all([ fn(), fn(), fn() ]);
+			expect(count).to.equal(3);
+			expect(results).to.have.lengthOf(3);
+			expect(results[1]).to.not.equal(results[0]);
+			expect(results[2]).to.not.equal(results[0]);
 		});
 
-		it('should queue up multiple async calls', done => {
+		it('should queue up multiple async calls', async () => {
 			let count = 0;
 
 			const fn = () => {
 				return util.mutex('foo', () => {
-					return new Promise(resolve => {
+					return new Promise(resolve => setTimeout(() => {
 						resolve(++count);
-					});
+					}, 100));
 				});
 			};
 
-			Promise
-				.all([ fn(), fn(), fn() ])
-				.then(results => {
-					expect(count).to.equal(3);
-					expect(results).to.have.lengthOf(3);
-					expect(results[1]).to.equal(results[0] + 1);
-					expect(results[2]).to.equal(results[0] + 2);
-					done();
-				})
-				.catch(done);
+			const results = await Promise.all([ fn(), fn(), fn() ]);
+			expect(count).to.equal(3);
+			expect(results).to.have.lengthOf(3);
+			expect(results[1]).to.equal(results[0] + 1);
+			expect(results[2]).to.equal(results[0] + 2);
 		});
 
-		it('should catch errors', done => {
-			util
-				.mutex('foo', () => {
+		it('should catch errors', async () => {
+			try {
+				await util.mutex('foo', () => {
 					throw new Error('oh snap');
-				})
-				.then(() => {
-					done(new Error('Expected error to be caught'));
-				})
-				.catch(err => {
-					expect(err).to.be.instanceof(Error);
-					expect(err.message).to.equal('oh snap');
-					done();
 				});
+			} catch (err) {
+				expect(err).to.be.instanceof(Error);
+				expect(err.message).to.equal('oh snap');
+				return;
+			}
+
+			throw new Error('Expected error to be caught');
 		});
 	});
 
@@ -702,124 +693,99 @@ describe('util', () => {
 	});
 
 	describe('sleep', () => {
-		it('should wait 1 second', function (done) {
+		it('should wait 1 second', async function () {
 			this.slow(3000);
 			this.timeout(3000);
 
 			const start = Date.now();
-			util.sleep(1000)
-				.then(() => {
-					expect(Date.now() - start).to.be.at.least(1000);
-					done();
-				})
-				.catch(done);
+			await util.sleep(1000);
+			expect(Date.now() - start).to.be.at.least(1000);
 		});
 
-		it('should error if ms is not a number', done => {
-			util.sleep('foo')
-				.then(() => {
-					done(new Error('Expected type error'));
-				})
-				.catch(err => {
-					expect(err).to.be.instanceof(TypeError);
-					expect(err.message).to.equal('Expected timeout milliseconds to be a number');
-					done();
-				})
-				.catch(done);
+		it('should error if ms is not a number', async () => {
+			try {
+				await util.sleep('foo');
+			} catch (err) {
+				expect(err).to.be.instanceof(TypeError);
+				expect(err.message).to.equal('Expected timeout milliseconds to be a number');
+				return;
+			}
+
+			throw new Error('Expected type error');
 		});
 
-		it('should error if ms is less than zero', done => {
-			util.sleep(-666)
-				.then(() => {
-					done(new Error('Expected range error'));
-				})
-				.catch(err => {
-					expect(err).to.be.instanceof(RangeError);
-					expect(err.message).to.equal('Expected timeout milliseconds to be greater than or equal to zero');
-					done();
-				})
-				.catch(done);
+		it('should error if ms is less than zero', async () => {
+			try {
+				await util.sleep(-666);
+			} catch (err) {
+				expect(err).to.be.instanceof(RangeError);
+				expect(err.message).to.equal('Expected timeout milliseconds to be greater than or equal to zero');
+				return;
+			}
+
+			throw new Error('Expected range error');
 		});
 	});
 
 	describe('tailgate()', () => {
-		it('should error if name is not a string', done => {
-			util.tailgate()
-				.then(() => done(new Error('Expected rejection')))
-				.catch(err => {
-					expect(err).to.be.an.instanceof(TypeError);
-					expect(err.message).to.equal('Expected name to be a non-empty string');
-					done();
-				});
+		it('should error if name is not a string', async () => {
+			try {
+				await util.tailgate();
+			} catch (err) {
+				expect(err).to.be.an.instanceof(TypeError);
+				expect(err.message).to.equal('Expected name to be a non-empty string');
+				return;
+			}
+
+			throw new Error('Expected rejection');
 		});
 
-		it('should error if callback is not a function', done => {
-			util.tailgate('foo', 'bar')
-				.then(() => done(new Error('Expected rejection')))
-				.catch(err => {
-					expect(err).to.be.an.instanceof(TypeError);
-					expect(err.message).to.equal('Expected callback to be a function');
-					done();
-				});
+		it('should error if callback is not a function', async () => {
+			try {
+				await util.tailgate('foo', 'bar');
+			} catch (err) {
+				expect(err).to.be.an.instanceof(TypeError);
+				expect(err.message).to.equal('Expected callback to be a function');
+				return;
+			}
+
+			throw new Error('Expected rejection');
 		});
 
-		it('should queue up multiple calls', done => {
+		it('should queue up multiple calls', async () => {
 			let count = 0;
+			const fn = () => util.tailgate('foo', () => ++count);
+			const results = await Promise.all([ fn(), fn(), fn() ]);
 
-			const fn = () => {
-				return util.tailgate('foo', () => {
-					return ++count;
-				});
-			};
-
-			Promise
-				.all([ fn(), fn(), fn() ])
-				.then(results => {
-					expect(count).to.equal(3);
-					expect(results).to.have.lengthOf(3);
-					expect(results[1]).to.equal(results[0] + 1);
-					expect(results[2]).to.equal(results[0] + 2);
-					done();
-				})
-				.catch(done);
+			expect(count).to.equal(3);
+			expect(results).to.have.lengthOf(3);
+			expect(results[1]).to.equal(results[0] + 1);
+			expect(results[2]).to.equal(results[0] + 2);
 		});
 
-		it('should queue up multiple async calls', done => {
+		it('should queue up multiple async calls', async () => {
 			let count = 0;
+			const fn = () => util.tailgate('foo', () => new Promise(resolve => resolve(++count)));
+			const results = await Promise.all([ fn(), fn(), fn() ]);
 
-			const fn = () => {
-				return util.tailgate('foo', () => {
-					return new Promise(resolve => {
-						resolve(++count);
-					});
-				});
-			};
-
-			Promise
-				.all([ fn(), fn(), fn() ])
-				.then(results => {
-					expect(count).to.equal(1);
-					expect(results).to.have.lengthOf(3);
-					expect(results[1]).to.equal(results[0]);
-					expect(results[2]).to.equal(results[0]);
-					done();
-				})
-				.catch(done);
+			expect(count).to.equal(1);
+			expect(results).to.have.lengthOf(3);
+			expect(results[1]).to.equal(results[0]);
+			expect(results[2]).to.equal(results[0]);
 		});
 
-		it('should catch errors', done => {
-			util
-				.tailgate('foo', () => {
+		it('should catch errors', async () => {
+			try {
+				await util.tailgate('foo', () => {
 					throw new Error('oh snap');
-				})
-				.then(() => {
-					done(new Error('Expected error to be caught'));
-				})
-				.catch(err => {
-					expect(err).to.be.instanceof(Error);
-					expect(err.message).to.equal('oh snap');
-					done();
 				});
+			} catch (err) {
+				expect(err).to.be.instanceof(Error);
+				expect(err.message).to.equal('oh snap');
+				return;
+			}
+
+			throw new Error('Expected error to be caught');
 		});
 	});
 

@@ -65,33 +65,36 @@ describe('Plugin Path', () => {
 		}).to.throw(TypeError, 'Expected plugin path to be a non-empty string');
 	});
 
-	it('should watch non-existent path to become a plugin', function (done) {
+	it('should watch non-existent path to become a plugin', async function () {
 		this.timeout(10000);
 		this.slow(9000);
 
 		const tmp = makeTempName();
+		this.pp = new PluginPath(tmp);
 
-		this.pp = new PluginPath(tmp)
-			.on('added', plugin => {
-				try {
-					expect(plugin.name).to.equal('good');
-					done();
-				} catch (e) {
-					done(e);
-				}
-			});
+		return Promise.race([
+			new Promise((resolve, reject) => {
+				this.pp.on('added', plugin => {
+					try {
+						expect(plugin.name).to.equal('good');
+						resolve();
+					} catch (e) {
+						reject(e);
+					}
+				});
+			}),
 
-		this.pp.detect()
-			.then(() => {
+			(async () => {
+				await this.pp.detect();
 				log(renderTree());
 
-				setTimeout(() => {
-					const good = path.join(__dirname, 'fixtures', 'good');
-					log('Copying %s => %s', highlight(good), highlight(tmp));
-					fs.copySync(good, tmp);
-				}, 1000);
-			})
-			.catch(done);
+				await sleep(1000);
+
+				const good = path.join(__dirname, 'fixtures', 'good');
+				log('Copying %s => %s', highlight(good), highlight(tmp));
+				await fs.copy(good, tmp);
+			})()
+		]);
 	});
 
 	it('should watch existing file to become a plugin', function (done) {
@@ -227,7 +230,7 @@ describe('Plugin Path', () => {
 		}, 1000);
 	});
 
-	it('should run the path scheme gauntlet and survive', function (done) {
+	it('should run the path scheme gauntlet and survive', async function () {
 		this.timeout(30000);
 		this.slow(29000);
 
@@ -235,9 +238,13 @@ describe('Plugin Path', () => {
 		log('Plugin directory will be %s', highlight(tmp));
 
 		let counter = 0;
+		let src;
+		let dest;
 
-		this.pp = new PluginPath(tmp)
-			.on('added', plugin => {
+		this.pp = new PluginPath(tmp);
+
+		const promise = new Promise((resolve, reject) => {
+			this.pp.on('added', plugin => {
 				counter++;
 				log('%s Plugin added: %s', magenta(`[${counter}]`), highlight(`${plugin.name}@${plugin.version}`));
 				try {
@@ -283,10 +290,10 @@ describe('Plugin Path', () => {
 							expect(plugin.version).to.equal('1.2.3');
 					}
 				} catch (e) {
-					done(e);
+					reject(e);
 				}
-			})
-			.on('removed', plugin => {
+			});
+			this.pp.on('removed', plugin => {
 				counter++;
 				log('%s Plugin deleted: %s', magenta(`[${counter}]`), highlight(`${plugin.name}@${plugin.version}`));
 				try {
@@ -332,279 +339,263 @@ describe('Plugin Path', () => {
 							expect(plugin.version).to.equal('1.2.3');
 					}
 				} catch (e) {
-					done(e);
+					reject(e);
 				}
 			});
+		});
 
 		this.pp.detect();
 
-		Promise.resolve()
-			.then(() => sleep(1000))
-			// 1
-			.then(() => {
+		await sleep(1000);
+
+		return Promise.race([
+			promise,
+
+			(async () => {
+				// 1
 				expect(counter).to.equal(0);
 				log(renderTree());
 				expect(this.pp.scheme).to.be.instanceof(InvalidScheme);
 
-				const src = path.join(__dirname, 'fixtures', 'good');
-				const dest = tmp;
+				src = path.join(__dirname, 'fixtures', 'good');
+				dest = tmp;
 				log('%s Copying %s => %s', magenta(`[${counter}]`), highlight(src), highlight(dest));
-				fs.mkdirsSync(dest);
-				fs.copySync(src, dest);
+				await fs.mkdirs(dest);
+				await fs.copy(src, dest);
 
-				return sleep(1000);
-			})
-			// 2
-			.then(() => {
+				await sleep(1000);
+
+				// 2
 				expect(counter).to.equal(1);
 				log(renderTree());
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(1);
 				expect(this.pp.scheme).to.be.instanceof(PluginScheme);
 
 				log('%s Deleting %s', magenta(`[${counter}]`), highlight(tmp));
-				fs.removeSync(tmp);
+				await fs.remove(tmp);
 
-				return sleep(1000);
-			})
-			.then(() => {
+				await sleep(1000);
+
 				expect(counter).to.equal(2);
 				log(renderTree());
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(0);
 				expect(this.pp.scheme).to.be.instanceof(InvalidScheme);
 
 				log('%s Creating directory: %s', magenta(`[${counter}]`), highlight(tmp));
-				fs.mkdirsSync(tmp);
+				await fs.mkdirs(tmp);
 
-				return sleep(1000);
-			})
-			// 3
-			.then(() => {
+				await sleep(1000);
+
+				// 3
 				expect(counter).to.equal(2);
 				log(renderTree());
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(0);
 				expect(this.pp.scheme).to.be.instanceof(InvalidScheme);
 
-				const src = path.join(__dirname, 'fixtures', 'good');
-				const dest = path.join(tmp, 'good');
+				src = path.join(__dirname, 'fixtures', 'good');
+				dest = path.join(tmp, 'good');
 				log('%s Copying %s => %s', magenta(`[${counter}]`), highlight(src), highlight(dest));
-				fs.mkdirsSync(dest);
-				fs.copySync(src, dest);
+				await fs.mkdirs(dest);
+				await fs.copy(src, dest);
 
-				return sleep(1000);
-			})
-			// 4
-			.then(() => {
+				await sleep(1000);
+
+				// 4
 				expect(counter).to.equal(3);
 				log(renderTree());
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(1);
 				expect(this.pp.scheme).to.be.instanceof(PluginsDirScheme);
 
-				const src = path.join(__dirname, 'fixtures', 'good2');
-				const dest = path.join(tmp, 'good2');
+				src = path.join(__dirname, 'fixtures', 'good2');
+				dest = path.join(tmp, 'good2');
 				log('%s Copying %s => %s', magenta(`[${counter}]`), highlight(src), highlight(dest));
-				fs.mkdirsSync(dest);
-				fs.copySync(src, dest);
+				await fs.mkdirs(dest);
+				await fs.copy(src, dest);
 
-				return sleep(1000);
-			})
-			// 5
-			.then(() => {
+				await sleep(1000);
+
+				// 5
 				expect(counter).to.equal(4);
 				log(renderTree());
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(2);
 				expect(this.pp.scheme).to.be.instanceof(PluginsDirScheme);
 
-				const dest = path.join(tmp, 'good');
+				dest = path.join(tmp, 'good');
 				log('%s Deleting %s', magenta(`[${counter}]`), highlight(dest));
-				fs.removeSync(dest);
+				await fs.remove(dest);
 
-				return sleep(1000);
-			})
-			// 6
-			.then(() => {
+				await sleep(1000);
+
+				// 6
 				expect(counter).to.equal(5);
 				log(renderTree());
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(1);
 				expect(this.pp.scheme).to.be.instanceof(PluginsDirScheme);
 
-				const dest = path.join(tmp, 'good2');
+				dest = path.join(tmp, 'good2');
 				log('%s Deleting %s', magenta(`[${counter}]`), highlight(dest));
-				fs.removeSync(dest);
+				await fs.remove(dest);
 
-				return sleep(1000);
-			})
-			// 7
-			.then(() => {
+				await sleep(1000);
+
+				// 7
 				expect(counter).to.equal(6);
 				log(renderTree());
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(0);
 				expect(this.pp.scheme).to.be.instanceof(InvalidScheme);
 
-				const src = path.join(__dirname, 'fixtures', 'good');
-				const dest = path.join(tmp, 'good');
+				src = path.join(__dirname, 'fixtures', 'good');
+				dest = path.join(tmp, 'good');
 				log('%s Copying %s => %s', magenta(`[${counter}]`), highlight(src), highlight(dest));
-				fs.mkdirsSync(dest);
-				fs.copySync(src, dest);
+				await fs.mkdirs(dest);
+				await fs.copy(src, dest);
 
-				return sleep(1000);
-			})
-			// 8, 9
-			.then(() => {
+				await sleep(1000);
+
+				// 8, 9
 				expect(counter).to.equal(7);
 				log(renderTree());
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(1);
 				expect(this.pp.scheme).to.be.instanceof(PluginsDirScheme);
 
-				const src = path.join(__dirname, 'fixtures', 'good2');
-				const dest = tmp;
+				src = path.join(__dirname, 'fixtures', 'good2');
+				dest = tmp;
 				log('%s Copying %s => %s', magenta(`[${counter}]`), highlight(src), highlight(dest));
-				fs.mkdirsSync(dest);
-				fs.copySync(src, dest);
+				await fs.mkdirs(dest);
+				await fs.copy(src, dest);
 
-				return sleep(1000);
-			})
-			// 10
-			.then(() => {
+				await sleep(1000);
+
+				// 10
 				expect(counter).to.equal(9);
 				log(renderTree());
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(1);
 				expect(this.pp.scheme).to.be.instanceof(PluginScheme);
 
 				log('%s Deleting %s', magenta(`[${counter}]`), highlight(tmp));
-				fs.removeSync(tmp);
+				await fs.remove(tmp);
 
-				return sleep(1000);
-			})
-			// 11, 12, 13, 14
-			.then(() => {
+				await sleep(1000);
+
+				// 11, 12, 13, 14
 				log(renderTree());
 				expect(this.pp.scheme).to.be.instanceof(InvalidScheme);
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(0);
 
-				const src = path.join(__dirname, 'fixtures', 'nested-plugin-dir');
-				const dest = tmp;
+				src = path.join(__dirname, 'fixtures', 'nested-plugin-dir');
+				dest = tmp;
 				log('%s Copying %s => %s', magenta(`[${counter}]`), highlight(src), highlight(dest));
-				fs.mkdirsSync(dest);
-				fs.copySync(src, dest);
+				await fs.mkdirs(dest);
+				await fs.copy(src, dest);
 
-				return sleep(1000);
-			})
-			// 15
-			.then(() => {
+				await sleep(1000);
+
+				// 15
 				log(renderTree());
 				expect(this.pp.scheme).to.be.instanceof(NestedPluginsDirScheme);
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(4);
 
-				const src = path.join(__dirname, 'fixtures', 'good3');
-				const dest = path.join(tmp, 'good3', '3.4.5');
+				src = path.join(__dirname, 'fixtures', 'good3');
+				dest = path.join(tmp, 'good3', '3.4.5');
 				log('%s Copying %s => %s', magenta(`[${counter}]`), highlight(src), highlight(dest));
-				fs.mkdirsSync(dest);
-				fs.copySync(src, dest);
+				await fs.mkdirs(dest);
+				await fs.copy(src, dest);
 
-				return sleep(1000);
-			})
-			// 16
-			.then(() => {
+				await sleep(1000);
+
+				// 16
 				log(renderTree());
 				expect(this.pp.scheme).to.be.instanceof(NestedPluginsDirScheme);
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(5);
 
-				const dest = path.join(tmp, 'good', '1.0.0');
+				dest = path.join(tmp, 'good', '1.0.0');
 				log('%s Deleting %s', magenta(`[${counter}]`), highlight(dest));
-				fs.removeSync(dest);
+				await fs.remove(dest);
 
-				return sleep(1000);
-			})
-			// 17, 18, 19, 20
-			.then(() => {
+				await sleep(1000);
+
+				// 17, 18, 19, 20
 				log(renderTree());
 				expect(this.pp.scheme).to.be.instanceof(NestedPluginsDirScheme);
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(4);
 
-				let dest = path.join(tmp, 'good', '1.1.0', 'package.json');
+				dest = path.join(tmp, 'good', '1.1.0', 'package.json');
 				log('%s Deleting %s', magenta(`[${counter}]`), highlight(dest));
-				fs.removeSync(dest);
+				await fs.remove(dest);
 
 				dest = path.join(tmp, 'good2', '1.0.0', 'package.json');
 				log('%s Deleting %s', magenta(`[${counter}]`), highlight(dest));
-				fs.removeSync(dest);
+				await fs.remove(dest);
 
 				dest = path.join(tmp, 'good2', '1.1.0', 'package.json');
 				log('%s Deleting %s', magenta(`[${counter}]`), highlight(dest));
-				fs.removeSync(dest);
+				await fs.remove(dest);
 
 				dest = path.join(tmp, 'good3', '3.4.5', 'package.json');
 				log('%s Deleting %s', magenta(`[${counter}]`), highlight(dest));
-				fs.removeSync(dest);
+				await fs.remove(dest);
 
-				return sleep(1000);
-			})
-			.then(() => {
+				await sleep(1000);
+
 				log(renderTree());
 				expect(this.pp.scheme).to.be.instanceof(InvalidScheme);
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(0);
 
 				log('%s Deleting %s', magenta(`[${counter}]`), highlight(tmp));
-				fs.removeSync(tmp);
+				await fs.remove(tmp);
 
-				return sleep(1000);
-			})
-			// 21, 22, 23, 24
-			.then(() => {
+				await sleep(1000);
+
+				// 21, 22, 23, 24
 				log(renderTree());
 				expect(this.pp.scheme).to.be.instanceof(InvalidScheme);
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(0);
 
-				const src = path.join(__dirname, 'fixtures', 'nested-plugin-dir');
-				const dest = tmp;
+				src = path.join(__dirname, 'fixtures', 'nested-plugin-dir');
+				dest = tmp;
 				log('%s Copying %s => %s', magenta(`[${counter}]`), highlight(src), highlight(dest));
-				fs.mkdirsSync(dest);
-				fs.copySync(src, dest);
+				await fs.mkdirs(dest);
+				await fs.copy(src, dest);
 
-				return sleep(1000);
-			})
-			// 25, 26, 27, 28
-			.then(() => {
+				await sleep(1000);
+
+				// 25, 26, 27, 28
 				log(renderTree());
 				expect(this.pp.scheme).to.be.instanceof(NestedPluginsDirScheme);
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(4);
 
 				log('%s Deleting %s', magenta(`[${counter}]`), highlight(tmp));
-				fs.removeSync(tmp);
+				await fs.remove(tmp);
 
-				return sleep(1000);
-			})
-			// 29, 30
-			.then(() => {
+				await sleep(1000);
+
+				// 29, 30
 				log(renderTree());
 				expect(this.pp.scheme).to.be.instanceof(InvalidScheme);
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(0);
 
-				const src = path.join(__dirname, 'fixtures', 'plugin-dir');
-				const dest = tmp;
+				src = path.join(__dirname, 'fixtures', 'plugin-dir');
+				dest = tmp;
 				log('%s Copying %s => %s', magenta(`[${counter}]`), highlight(src), highlight(dest));
-				fs.mkdirsSync(dest);
-				fs.copySync(src, dest);
+				await fs.mkdirs(dest);
+				await fs.copy(src, dest);
 
-				return sleep(1000);
-			})
-			// 31, 32
-			.then(() => {
+				await sleep(1000);
+
+				// 31, 32
 				log(renderTree());
 				expect(this.pp.scheme).to.be.instanceof(PluginsDirScheme);
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(2);
 
 				log('%s Deleting %s', magenta(`[${counter}]`), highlight(tmp));
-				fs.removeSync(tmp);
+				await fs.remove(tmp);
 
-				return sleep(1000);
-			})
-			.then(() => {
+				await sleep(1000);
+
 				log(renderTree());
 				expect(this.pp.scheme).to.be.instanceof(InvalidScheme);
-				done();
-			})
-			.catch(done);
+			})()
+		]);
 	});
 
 	it('should remove all plugins when destroyed', function (done) {

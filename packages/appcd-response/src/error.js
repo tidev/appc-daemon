@@ -19,6 +19,7 @@ export function errorToJSON(err) {
 		json.code = err.code;
 	}
 	if (err.stack) {
+		// eslint-disable-next-line security/detect-non-literal-regexp
 		const re = new RegExp(`(?<= \\()(${expandPath('~')})(?=.*:)`, 'g');
 		json.stack = err.stack.replace(re, '<REDACTED>').split(/\r\n|\n/).slice(1).map(s => s.trim());
 	}

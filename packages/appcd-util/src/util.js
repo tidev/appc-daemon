@@ -376,7 +376,7 @@ export function mergeDeep(dest, src) {
 export const pendingMutexes = {};
 
 /**
- * Ensures that only a function is executed by a single task at a time. If the function is currently
+ * Ensures that a function is only executed by a single task at a time. If the function is currently
  * being run, then additional requests are queued and areexecuted in order when the function
  * completes.
  *
@@ -384,57 +384,46 @@ export const pendingMutexes = {};
  * @param {Function} callback - A function to call mutually exclusive.
  * @returns {Promise} Resolves whatever value `callback` returns/resolves.
  */
-export function mutex(name, callback) {
-	// ensure this function is async
-	return new Promise(setImmediate)
-		.then(() => new Promise((resolve, reject) => {
-			// we want this promise to resolve as soon as `callback()` finishes
-			if (typeof name !== 'string' || !name) {
-				return reject(new TypeError('Expected name to be a non-empty string'));
-			}
+export async function mutex(name, callback) {
+	return new Promise((resolve, reject) => {
+		// we want this promise to resolve as soon as `callback()` finishes
+		if (typeof name !== 'string' || !name) {
+			return reject(new TypeError('Expected name to be a non-empty string'));
+		}
 
-			if (typeof callback !== 'function') {
-				return reject(new TypeError('Expected callback to be a function'));
-			}
+		if (typeof callback !== 'function') {
+			return reject(new TypeError('Expected callback to be a function'));
+		}
 
-			// if another function is current running, add this function to the queue and wait
-			if (pendingMutexes[name]) {
-				pendingMutexes[name].push({ callback, resolve, reject });
+		// if another function is current running, add this function to the queue and wait
+		if (pendingMutexes[name]) {
+			pendingMutexes[name].push({ callback, resolve, reject });
+			return;
+		}
+
+		// init the queue
+		pendingMutexes[name] = [ { callback, resolve, reject } ];
+
+		// start a recursive function that drains the queue
+		(async function next() {
+			const pending = pendingMutexes[name] && pendingMutexes[name].shift();
+			if (!pending) {
+				// all done
+				delete pendingMutexes[name];
 				return;
 			}
 
-			// init the queue
-			pendingMutexes[name] = [ { callback, resolve, reject } ];
-
-			// start a recursive function that drains the queue
-			(function next() {
-				const pending = pendingMutexes[name] && pendingMutexes[name].shift();
-				if (!pending) {
-					// all done
-					delete pendingMutexes[name];
-					return;
-				}
-
-				// call the function
-				let result;
-				try {
-					result = pending.callback();
-				} catch (err) {
-					pending.reject(err);
-					return next();
-				}
-
-				if (result instanceof Promise) {
-					result
-						.then(pending.resolve)
-						.catch(err => pending.reject(err))
-						.then(() => next());
-				} else {
-					pending.resolve(result);
-					next();
-				}
-			}());
-		}));
+			// call the function
+			try {
+				const result = await pending.callback();
+				pending.resolve(result);
+			} catch (err) {
+				pending.reject(err);
+			} finally {
+				next();
+			}
+		}());
+	});
 }
 
 /**

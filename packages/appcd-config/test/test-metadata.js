@@ -117,7 +117,7 @@ describe('Metadata', () => {
 	describe('registerType()', () => {
 		it('should add a custom type', () => {
 			const md = new Metadata();
-			md.registerType('Foo', it => true);
+			md.registerType('Foo', () => true);
 		});
 
 		it('should error if type is not a string', () => {
@@ -137,13 +137,13 @@ describe('Metadata', () => {
 		it('should error if type is already registered', () => {
 			expect(() => {
 				const md = new Metadata();
-				md.registerType('Foo', it => true);
-				md.registerType('Foo', it => true);
+				md.registerType('Foo', () => true);
+				md.registerType('Foo', () => true);
 			}).to.throw(Error, 'Type "foo" is already registered');
 
 			expect(() => {
 				const md = new Metadata();
-				md.registerType('String', it => true);
+				md.registerType('String', () => true);
 			}).to.throw(Error, 'Type "string" is already registered');
 		});
 

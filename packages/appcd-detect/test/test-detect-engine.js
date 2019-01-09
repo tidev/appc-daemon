@@ -444,7 +444,7 @@ describe('Detect', () => {
 			}
 		});
 
-		it('should watch a path for changes', function (done) {
+		it('should watch a path for changes', async function () {
 			this.timeout(5000);
 			this.slow(4000);
 
@@ -462,38 +462,39 @@ describe('Detect', () => {
 				watch: true
 			});
 
-			this.engine.on('results', results => {
-				try {
-					if (counter === 1) {
-						throw new Error('Expected results to be emitted only if result is not null');
-					} else if (counter > 1) {
-						expect(results).to.deep.equal({ foo: 'bar' });
-						done();
+			const promise = new Promise((resolve, reject) => {
+				this.engine.on('results', results => {
+					try {
+						if (counter === 1) {
+							throw new Error('Expected results to be emitted only if result is not null');
+						} else if (counter > 1) {
+							expect(results).to.deep.equal({ foo: 'bar' });
+							resolve();
+						}
+					} catch (e) {
+						reject(e);
 					}
-				} catch (e) {
-					done(e);
-				}
+				});
 			});
 
-			this.engine.start()
-				.then(results => {
-					expect(results).to.be.undefined;
+			const results = await this.engine.start();
+			expect(results).to.be.undefined;
 
-					const stats = status();
-					delete stats.tree;
-					log(stats);
-					expect(stats.watchers).to.equal(1);
+			const stats = status();
+			delete stats.tree;
+			log(stats);
+			expect(stats.watchers).to.equal(1);
 
-					setTimeout(() => {
-						const file = path.join(tmp, 'foo.txt');
-						log(`Writing ${highlight(file)}`);
-						fs.writeFileSync(file, 'bar');
-					}, 250);
-				})
-				.catch(done);
+			await sleep(250);
+
+			const file = path.join(tmp, 'foo.txt');
+			log(`Writing ${highlight(file)}`);
+			fs.writeFileSync(file, 'bar');
+
+			return promise;
 		});
 
-		it('should watch for updates in a detected path', function (done) {
+		it('should watch for updates in a detected path', async function () {
 			this.timeout(5000);
 			this.slow(4000);
 
@@ -515,30 +516,33 @@ describe('Detect', () => {
 				watch: true
 			});
 
-			this.engine.on('results', results => {
-				try {
-					if (!updated) {
-						expect(results).to.deep.equal({ contents: 'foo' });
-					} else {
-						expect(results).to.deep.equal({ contents: 'bar' });
-						done();
+			const promise = new Promise((resolve, reject) => {
+				this.engine.on('results', results => {
+					try {
+						if (!updated) {
+							expect(results).to.deep.equal({ contents: 'foo' });
+						} else {
+							expect(results).to.deep.equal({ contents: 'bar' });
+							resolve();
+						}
+					} catch (e) {
+						reject(e);
 					}
-				} catch (e) {
-					done(e);
-				}
+				});
 			});
 
-			this.engine.start()
-				.then(() => setTimeout(() => {
-					// update the test file to trigger re-detection
-					log('Writing bar');
-					updated = true;
-					fs.writeFileSync(testFile, 'bar');
-				}, 100))
-				.catch(done);
+			await this.engine.start();
+			await sleep(100);
+
+			// update the test file to trigger re-detection
+			log('Writing bar');
+			updated = true;
+			fs.writeFileSync(testFile, 'bar');
+
+			return promise;
 		});
 
-		it('should recursivly watch for updates in a detected path', function (done) {
+		it('should recursivly watch for updates in a detected path', async function () {
 			this.timeout(5000);
 			this.slow(4000);
 
@@ -565,31 +569,34 @@ describe('Detect', () => {
 				watch: true
 			});
 
-			this.engine.on('results', results => {
-				log('Got results:', results);
-				try {
-					counter++;
-					if (counter === 1) {
-						expect(results).to.deep.equal({ contents: 'foo' });
-					} else if (counter === 2) {
-						expect(results).to.deep.equal({ contents: 'bar' });
-						done();
+			const promise = new Promise((resolve, reject) => {
+				this.engine.on('results', results => {
+					log('Got results:', results);
+					try {
+						counter++;
+						if (counter === 1) {
+							expect(results).to.deep.equal({ contents: 'foo' });
+						} else if (counter === 2) {
+							expect(results).to.deep.equal({ contents: 'bar' });
+							resolve();
+						}
+					} catch (e) {
+						reject(e);
 					}
-				} catch (e) {
-					done(e);
-				}
+				});
 			});
 
-			this.engine.start()
-				.then(() => setTimeout(() => {
-					// update the test file to trigger re-detection
-					log(`Writing ${highlight(testFile)}`);
-					fs.writeFileSync(testFile, 'bar');
-				}, 100))
-				.catch(done);
+			await this.engine.start();
+			await sleep(100);
+
+			// update the test file to trigger re-detection
+			log(`Writing ${highlight(testFile)}`);
+			fs.writeFileSync(testFile, 'bar');
+
+			return promise;
 		});
 
-		it('should redetect after initial detection', function (done) {
+		it('should redetect after initial detection', async function () {
 			this.timeout(5000);
 			this.slow(4000);
 
@@ -616,31 +623,35 @@ describe('Detect', () => {
 				watch: true
 			});
 
-			this.engine.on('results', results => {
-				log('Got results:', results);
-				try {
-					switch (++resultsCounter) {
-						case 1:
-							expect(results).to.deep.equal([ { version: '1.0.0' } ]);
+			const promise = new Promise((resolve, reject) => {
+				this.engine.on('results', results => {
+					log('Got results:', results);
+					try {
+						switch (++resultsCounter) {
+							case 1:
+								expect(results).to.deep.equal([ { version: '1.0.0' } ]);
 
-							// trigger an update
-							fs.writeFileSync(path.join(tmp, 'foo.txt'), 'bar');
-							break;
+								// trigger an update
+								fs.writeFileSync(path.join(tmp, 'foo.txt'), 'bar');
+								break;
 
-						case 2:
-							expect(results).to.deep.equal([ { version: '2.0.0' } ]);
-							done();
-							break;
+							case 2:
+								expect(results).to.deep.equal([ { version: '2.0.0' } ]);
+								resolve();
+								break;
+						}
+					} catch (e) {
+						reject(e);
 					}
-				} catch (e) {
-					done(e);
-				}
+				});
 			});
 
-			this.engine.start();
+			await this.engine.start();
+
+			return promise;
 		});
 
-		it('should watch a directory and wire up fs watchers for found items', function (done) {
+		it('should watch a directory and wire up fs watchers for found items', async function () {
 			this.timeout(10000);
 			this.slow(9000);
 
@@ -675,46 +686,42 @@ describe('Detect', () => {
 				log(results);
 			});
 
-			this.engine.start()
-				.then(async (results) => {
-					gawk.watch(results, obj => {
-						log('Gawk watch results:');
-						log(obj);
-					});
+			const results = await this.engine.start();
 
-					log('After ready...');
-					let stats = status();
-					delete stats.tree;
-					log(stats);
-					expect(stats.watchers).to.equal(2);
+			gawk.watch(results, obj => {
+				log('Gawk watch results:');
+				log(obj);
+			});
 
-					await sleep(500);
+			log('After ready...');
+			stats = status();
+			delete stats.tree;
+			log(stats);
+			expect(stats.watchers).to.equal(2);
 
-					log(`Removing ${highlight(dir)}`);
-					fs.removeSync(dir);
+			await sleep(500);
 
-					await sleep(500);
+			log(`Removing ${highlight(dir)}`);
+			fs.removeSync(dir);
 
-					log('After removal...');
-					log(stats = status());
-					expect(stats.watchers).to.equal(1);
+			await sleep(500);
 
-					await sleep(500);
+			log('After removal...');
+			log(stats = status());
+			expect(stats.watchers).to.equal(1);
 
-					log(`Adding back ${highlight(dir)}`);
-					fs.mkdirsSync(dir);
+			await sleep(500);
 
-					await sleep(500);
+			log(`Adding back ${highlight(dir)}`);
+			fs.mkdirsSync(dir);
 
-					log(stats = status());
-					expect(stats.watchers).to.equal(2);
+			await sleep(500);
 
-					done();
-				})
-				.catch(done);
+			log(stats = status());
+			expect(stats.watchers).to.equal(2);
 		});
 
-		it('should not detect something that was already recursively detected', function (done) {
+		it('should not detect something that was already recursively detected', async function () {
 			this.timeout(10000);
 			this.slow(9000);
 
@@ -740,12 +747,8 @@ describe('Detect', () => {
 				watch: true
 			});
 
-			this.engine.start()
-				.then(results => {
-					expect(results).to.deep.equal([ { foo: 'bar' } ]);
-					done();
-				})
-				.catch(done);
+			const results = await this.engine.start();
+			expect(results).to.deep.equal([ { foo: 'bar' } ]);
 		});
 	});
 });

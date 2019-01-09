@@ -1,4 +1,5 @@
 /* eslint max-depth: ['warn', 7] */
+/* eslint-disable promise/no-nesting */
 
 /* istanbul ignore if */
 if (!Error.prepareStackTrace) {
@@ -9,6 +10,7 @@ import appcdLogger from 'appcd-logger';
 import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
+import pluralize from 'pluralize';
 import progress from 'progress';
 import request from 'appcd-request';
 import tar from 'tar-stream';
@@ -18,12 +20,11 @@ import zlib from 'zlib';
 
 import { execSync, spawn, spawnSync } from 'child_process';
 import { isDir, isFile } from 'appcd-fs';
-import { arch as getArch, formatNumber } from 'appcd-util';
+import { arch as getArch, formatNumber, sleep } from 'appcd-util';
 import { STATUS_CODES } from 'http';
 
 const logger = appcdLogger('appcd:nodejs');
 const { highlight } = appcdLogger.styles;
-const { pluralize } = appcdLogger;
 
 /**
  * A regular expression to match archive filenames.
@@ -100,7 +101,7 @@ export function prepareNode({ arch, nodeHome, version } = {}) {
  * @param {String} params.version - The Node.js version to download.
  * @returns {Promise}
  */
-export function downloadNode({ arch, nodeHome, version } = {}) {
+export async function downloadNode({ arch, nodeHome, version } = {}) {
 	if (version[0] !== 'v') {
 		version = `v${version}`;
 	}
@@ -120,56 +121,56 @@ export function downloadNode({ arch, nodeHome, version } = {}) {
 	const outFile = path.join(os.tmpdir(), filename);
 	const out = fs.createWriteStream(outFile);
 
-	logger.log('Downloading %s => %s', highlight(url), highlight(outFile));
+	try {
+		logger.log('Downloading %s => %s', highlight(url), highlight(outFile));
 
-	// download node
-	return Promise.resolve()
-		.then(() => request({ url }))
-		.then(request => new Promise((resolve, reject) => {
-			request
-				.on('response', response => {
-					if (response.statusCode !== 200) {
-						return reject(new Error(`Failed to download Node.js: ${response.statusCode} - ${STATUS_CODES[response.statusCode]}`));
-					}
+		// download node
+		const req = await request({ url });
 
-					const len = parseInt(response.headers['content-length']);
+		return await new Promise((resolve, reject) => {
+			req.on('response', response => {
+				if (response.statusCode !== 200) {
+					return reject(new Error(`Failed to download Node.js: ${response.statusCode} - ${STATUS_CODES[response.statusCode]}`));
+				}
 
-					if (logger.enabled) {
-						const bar = new progress('  [:bar] :percent :etas', {
-							clear: true,
-							complete: '=',
-							incomplete: ' ',
-							width: 50,
-							total: len
-						});
+				const len = parseInt(response.headers['content-length']);
 
-						response.on('data', chunk => bar.tick(chunk.length));
-					}
+				if (logger.enabled) {
+					const bar = new progress('  [:bar] :percent :etas', {
+						clear: true,
+						complete: '=',
+						incomplete: ' ',
+						width: 50,
+						total: len
+					});
 
-					response.once('end', () => {
+					response.on('data', chunk => bar.tick(chunk.length));
+				}
+
+				response.once('end', async () => {
+					try {
 						logger.log(`Downloaded ${formatNumber(len)} bytes`);
-						extractNode({
+						resolve(await extractNode({
 							archive: outFile,
 							dest: path.join(nodeHome, version, platform, arch)
-						}).then(resolve, reject);
-					});
-				})
-				.once('error', reject)
-				.pipe(out);
-		}))
-		.then(binary => {
-			if (isFile(outFile)) {
-				fs.removeSync(outFile);
-			}
-			return binary;
-		})
-		.catch(err => {
-			logger.error(err);
-			if (isFile(outFile)) {
-				fs.removeSync(outFile);
-			}
-			throw err;
+						}));
+					} catch (err) {
+						reject(err);
+					}
+				});
+			});
+
+			req.once('error', reject);
+			req.pipe(out);
 		});
+	} catch (err) {
+		logger.error(err);
+		throw err;
+	} finally {
+		if (isFile(outFile)) {
+			await fs.remove(outFile);
+		}
+	}
 }
 
 /**
@@ -433,25 +434,22 @@ export async function spawnNode({ arch, args, detached, nodeHome, nodeArgs, stdi
 
 	let tries = 3;
 
-	return (function trySpawn() {
-		return Promise.resolve()
-			.then(() => {
-				tries--;
-				const child = spawn(node, args, opts);
-				if (detached) {
-					child.unref();
-				}
-				return child;
-			})
-			.catch(err => {
-				if ((err.code === 'ETXTBSY' || err.code === 'EBUSY') && tries) {
-					logger.log(`Spawn threw ${err.code}, retrying...`);
-					return new Promise((resolve, reject) => {
-						setTimeout(() => trySpawn().then(resolve, reject), 50);
-					});
-				}
-				throw err;
-			});
+	return (async function trySpawn() {
+		try {
+			tries--;
+			const child = spawn(node, args, opts);
+			if (detached) {
+				child.unref();
+			}
+			return child;
+		} catch (err) {
+			if ((err.code === 'ETXTBSY' || err.code === 'EBUSY') && tries) {
+				logger.log(`Spawn threw ${err.code}, retrying...`);
+				await sleep(50);
+				return await trySpawn();
+			}
+			throw err;
+		}
 	}());
 }
 

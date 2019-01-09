@@ -76,7 +76,7 @@ describe('dispatcher', () => {
 	});
 
 	describe('dispatch', () => {
-		it('should dispatch to valid route', done => {
+		it('should dispatch to valid route', async () => {
 			const d = new Dispatcher();
 			let count = 0;
 
@@ -84,18 +84,11 @@ describe('dispatcher', () => {
 				count++;
 			});
 
-			d.call('/foo')
-				.then(() => {
-					expect(count).to.equal(1);
-					done();
-				})
-				.catch(done);
+			await d.call('/foo');
+			expect(count).to.equal(1);
 		});
 
-		it('should dispatch to async route', function (done) {
-			this.timeout(5000);
-			this.slow(5000);
-
+		it('should dispatch to async route', async () => {
 			const d = new Dispatcher();
 			let count = 0;
 
@@ -108,15 +101,11 @@ describe('dispatcher', () => {
 				});
 			});
 
-			d.call('/foo')
-				.then(() => {
-					expect(count).to.equal(1);
-					done();
-				})
-				.catch(done);
+			await d.call('/foo');
+			expect(count).to.equal(1);
 		});
 
-		it('should dispatch to valid route with payload', done => {
+		it('should dispatch to valid route with payload', async () => {
 			const d = new Dispatcher();
 			let count = 0;
 			const data = { a: 1 };
@@ -128,15 +117,11 @@ describe('dispatcher', () => {
 				expect(ctx.request.a).to.equal(1);
 			});
 
-			d.call('/foo', data)
-				.then(() => {
-					expect(count).to.equal(1);
-					done();
-				})
-				.catch(done);
+			await d.call('/foo', data);
+			expect(count).to.equal(1);
 		});
 
-		it('should parse params and pass them to the handler', done => {
+		it('should parse params and pass them to the handler', async () => {
 			const d = new Dispatcher();
 
 			d.register('/foo/:bar', ctx => {
@@ -147,108 +132,99 @@ describe('dispatcher', () => {
 				expect(ctx.request.params.bar).to.equal('abc');
 			});
 
-			d.call('/foo/abc')
-				.then(() => {
-					done();
-				})
-				.catch(done);
+			await d.call('/foo/abc');
 		});
 
-		it('should error if route not found', done => {
+		it('should error if route not found', async () => {
 			const d = new Dispatcher();
 
-			d.call('/foo')
-				.then(() => {
-					done(new Error('Expected error for no route'));
-				})
-				.catch(err => {
-					expect(err).to.be.instanceof(Error);
-					expect(err.message).to.equal('Not Found');
-					done();
-				})
-				.catch(done);
+			try {
+				await d.call('/foo');
+			} catch (err) {
+				expect(err).to.be.instanceof(Error);
+				expect(err.message).to.equal('Not Found');
+				return;
+			}
+
+			throw new Error('Expected error for no route');
 		});
 
-		it('should handle a route that emits an error', done => {
+		it('should handle a route that emits an error', async () => {
 			const d = new Dispatcher();
 
 			d.register('/foo', () => {
 				throw new Error('oops');
 			});
 
-			d.call('/foo')
-				.then(() => {
-					done(new Error('Expected error from handler'));
-				})
-				.catch(err => {
-					expect(err).to.be.instanceof(Error);
-					expect(err.message).to.equal('oops');
-					done();
-				})
-				.catch(done);
+			try {
+				await d.call('/foo');
+			} catch (err) {
+				expect(err).to.be.instanceof(Error);
+				expect(err.message).to.equal('oops');
+				return;
+			}
+
+			throw new Error('Expected error from handler');
 		});
 
-		it('should handle a route that emits an DispatcherError', done => {
+		it('should handle a route that emits an DispatcherError', async () => {
 			const d = new Dispatcher();
 
 			d.register('/foo', () => {
 				throw new DispatcherError(123, 'oops');
 			});
 
-			d.call('/foo')
-				.then(() => {
-					done(new Error('Expected error from handler'));
-				})
-				.catch(err => {
-					expect(err).to.be.instanceof(DispatcherError);
-					expect(err.status).to.equal(123);
-					expect(err.message).to.equal('oops');
-					done();
-				})
-				.catch(done);
+			try {
+				await d.call('/foo');
+			} catch (err) {
+				expect(err).to.be.instanceof(DispatcherError);
+				expect(err.status).to.equal(123);
+				expect(err.message).to.equal('oops');
+				return;
+			}
+
+			throw new Error('Expected error from handler');
 		});
 
-		it('should handle a route that emits an DispatcherError with no status', done => {
+		it('should handle a route that emits an DispatcherError with no status', async () => {
 			const d = new Dispatcher();
 
 			d.register('/foo', () => {
 				throw new DispatcherError('oops');
 			});
 
-			d.call('/foo')
-				.then(() => {
-					done(new Error('Expected error from handler'));
-				})
-				.catch(err => {
-					expect(err).to.be.instanceof(DispatcherError);
-					expect(err.status).to.be.undefined;
-					expect(err.message).to.equal('oops');
-					done();
-				})
-				.catch(done);
+			try {
+				await d.call('/foo');
+			} catch (err) {
+				expect(err).to.be.instanceof(DispatcherError);
+				expect(err.status).to.be.undefined;
+				expect(err.message).to.equal('oops');
+				return;
+			}
+
+			throw new Error('Expected error from handler');
 		});
 
-		it('should handle a route that emits an DispatcherError with no args', done => {
+		it('should handle a route that emits an DispatcherError with no args', async () => {
 			const d = new Dispatcher();
 
 			d.register('/foo', () => {
 				throw new DispatcherError(123);
 			});
 
-			d.call('/foo')
-				.then(() => {
-					done(new Error('Expected error from handler'));
-				})
-				.catch(err => {
-					expect(err).to.be.instanceof(DispatcherError);
-					expect(err.status).to.equal(123);
-					expect(err.message).to.equal('Unknown Error');
-					done();
-				})
-				.catch(done);
+			try {
+				await d.call('/foo');
+			} catch (err) {
+				expect(err).to.be.instanceof(DispatcherError);
+				expect(err.status).to.equal(123);
+				expect(err.message).to.equal('Unknown Error');
+				return;
+			}
+
+			throw new Error('Expected error from handler');
 		});
 
-		it('should handle a route that rejects', done => {
+		it('should handle a route that rejects', async () => {
 			const d = new Dispatcher();
 
 			d.register('/foo', () => {
@@ -257,38 +233,36 @@ describe('dispatcher', () => {
 				});
 			});
 
-			d.call('/foo')
-				.then(() => {
-					done(new Error('Expected error from handler'));
-				})
-				.catch(err => {
-					expect(err).to.be.instanceof(Error);
-					expect(err.message).to.equal('oops');
-					done();
-				})
-				.catch(done);
+			try {
+				await d.call('/foo');
+			} catch (err) {
+				expect(err).to.be.instanceof(Error);
+				expect(err.message).to.equal('oops');
+				return;
+			}
+
+			throw new Error('Expected error from handler');
 		});
 
-		it('should handle a route that returns error', done => {
+		it('should handle a route that returns error', async ()  => {
 			const d = new Dispatcher();
 
 			d.register('/foo', () => {
 				throw new Error('oops');
 			});
 
-			d.call('/foo')
-				.then(() => {
-					done(new Error('Expected error from handler'));
-				})
-				.catch(err => {
-					expect(err).to.be.instanceof(Error);
-					expect(err.message).to.equal('oops');
-					done();
-				})
-				.catch(done);
+			try {
+				await d.call('/foo');
+			} catch (err) {
+				expect(err).to.be.instanceof(Error);
+				expect(err.message).to.equal('oops');
+				return;
+			}
+
+			throw new Error('Expected error from handler');
 		});
 
-		it('should re-route to error', done => {
+		it('should re-route to error', async () => {
 			const d = new Dispatcher();
 			let fooCount = 0;
 
@@ -297,20 +271,19 @@ describe('dispatcher', () => {
 				await next();
 			});
 
-			d.call('/foo')
-				.then(() => {
-					done(new Error('Expected error for no route'));
-				})
-				.catch(err => {
-					expect(fooCount).to.equal(1);
-					expect(err).to.be.instanceof(AppcdError);
-					expect(err.message).to.equal('Not Found');
-					done();
-				})
-				.catch(done);
+			try {
+				await d.call('/foo');
+			} catch (err) {
+				expect(fooCount).to.equal(1);
+				expect(err).to.be.instanceof(AppcdError);
+				expect(err.message).to.equal('Not Found');
+				return;
+			}
+
+			throw new Error('Expected error for no route');
 		});
 
-		it('should re-route to new route', done => {
+		it('should re-route to new route', async () => {
 			const d = new Dispatcher();
 			let fooCount = 0;
 			let barCount = 0;
@@ -325,16 +298,12 @@ describe('dispatcher', () => {
 				barCount++;
 			});
 
-			d.call('/foo')
-				.then(() => {
-					expect(fooCount).to.equal(1);
-					expect(barCount).to.equal(1);
-					done();
-				})
-				.catch(done);
+			await d.call('/foo');
+			expect(fooCount).to.equal(1);
+			expect(barCount).to.equal(1);
 		});
 
-		it('should scan multiple routes', done => {
+		it('should scan multiple routes', async () => {
 			const d = new Dispatcher();
 			let count = 0;
 
@@ -346,15 +315,11 @@ describe('dispatcher', () => {
 				count++;
 			});
 
-			d.call('/bar')
-				.then(() => {
-					expect(count).to.equal(1);
-					done();
-				})
-				.catch(done);
+			await d.call('/bar');
+			expect(count).to.equal(1);
 		});
 
-		it('should be ok if next() is called multiple times', done => {
+		it('should be ok if next() is called multiple times', async () => {
 			const d = new Dispatcher();
 			let count = 0;
 
@@ -368,15 +333,11 @@ describe('dispatcher', () => {
 				count++;
 			});
 
-			d.call('/foo')
-				.then(() => {
-					expect(count).to.equal(2);
-					done();
-				})
-				.catch(done);
+			await d.call('/foo');
+			expect(count).to.equal(2);
 		});
 
-		it('should handle route to child dispatcher handler', done => {
+		it('should handle route to child dispatcher handler', async () => {
 			const d = new Dispatcher();
 			const d2 = new Dispatcher();
 			let count = 0;
@@ -386,15 +347,11 @@ describe('dispatcher', () => {
 			});
 			d2.register('/foo', d);
 
-			d2.call('/foo/bar')
-				.then(() => {
-					expect(count).to.equal(1);
-					done();
-				})
-				.catch(done);
+			await d2.call('/foo/bar');
+			expect(count).to.equal(1);
 		});
 
-		it('should handle route to child dispatcher handler (reordered)', done => {
+		it('should handle route to child dispatcher handler (reordered)', async () => {
 			const d = new Dispatcher();
 			const d2 = new Dispatcher();
 			let count = 0;
@@ -404,15 +361,11 @@ describe('dispatcher', () => {
 				count++;
 			});
 
-			d2.call('/foo/bar')
-				.then(() => {
-					expect(count).to.equal(1);
-					done();
-				})
-				.catch(done);
+			await d2.call('/foo/bar');
+			expect(count).to.equal(1);
 		});
 
-		it('should route to deeply nested dispatchers', done => {
+		it('should route to deeply nested dispatchers', async () => {
 			const d = new Dispatcher();
 			const d2 = new Dispatcher();
 			const d3 = new Dispatcher();
@@ -424,30 +377,25 @@ describe('dispatcher', () => {
 				count++;
 			});
 
-			d.call('/foo/bar/baz')
-				.then(() => {
-					expect(count).to.equal(1);
-					done();
-				})
-				.catch(done);
+			await d.call('/foo/bar/baz');
+			expect(count).to.equal(1);
 		});
 
-		it('should error if no route to child dispatcher handler', done => {
+		it('should error if no route to child dispatcher handler', async () => {
 			const d = new Dispatcher();
 			const d2 = new Dispatcher();
 
 			d2.register('/foo', d);
 
-			d2.call('/foo/baz')
-				.then(() => {
-					done(new Error('Expected error for no route'));
-				})
-				.catch(err => {
-					expect(err).to.be.instanceof(AppcdError);
-					expect(err.message).to.equal('Not Found');
-					done();
-				})
-				.catch(done);
+			try {
+				await d2.call('/foo/baz');
+			} catch (err) {
+				expect(err).to.be.instanceof(AppcdError);
+				expect(err.message).to.equal('Not Found');
+				return;
+			}
+
+			throw new Error('Expected error for no route');
 		});
 
 		it('should error if path is invalid', async () => {
@@ -475,19 +423,15 @@ describe('dispatcher', () => {
 			}
 		});
 
-		it('should return 404 status if not found', done => {
+		it('should return 404 status if not found', async () => {
 			const d = new Dispatcher();
 
 			d.register('/foo', ctx => {
 				ctx.response = new Response(codes.NOT_FOUND);
 			});
 
-			d.call('/foo')
-				.then(result => {
-					expect(result.status).equal(404);
-					done();
-				})
-				.catch(done);
+			const result = await d.call('/foo');
+			expect(result.status).equal(404);
 		});
 	});
 
@@ -498,7 +442,7 @@ describe('dispatcher', () => {
 			expect(middleware).to.be.a('function');
 		});
 
-		it('should dispatch GET request', done => {
+		it('should dispatch GET request', async () => {
 			const d = new Dispatcher();
 
 			d.register('/foo', ctx => {
@@ -511,17 +455,12 @@ describe('dispatcher', () => {
 				originalUrl: '/foo'
 			};
 
-			Promise.resolve()
-				.then(() => middleware(ctx, Promise.resolve))
-				.then(() => {
-					expect(ctx.body).to.be.a('string');
-					expect(ctx.body).to.equal('foo!');
-					done();
-				})
-				.catch(done);
+			await middleware(ctx, Promise.resolve);
+			expect(ctx.body).to.be.a('string');
+			expect(ctx.body).to.equal('foo!');
 		});
 
-		it('should call next middleware if no route', done => {
+		it('should call next middleware if no route', async () => {
 			const d = new Dispatcher();
 			const middleware = d.callback();
 			const ctx = {
@@ -533,16 +472,11 @@ describe('dispatcher', () => {
 				count++;
 			};
 
-			Promise.resolve()
-				.then(() => middleware(ctx, next))
-				.then(() => {
-					expect(count).to.equal(1);
-					done();
-				})
-				.catch(done);
+			await middleware(ctx, next);
+			expect(count).to.equal(1);
 		});
 
-		it('should deeply call next middleware if no route', done => {
+		it('should deeply call next middleware if no route', async () => {
 			const d = new Dispatcher();
 			const middleware = d.callback();
 			const ctx = {
@@ -554,16 +488,11 @@ describe('dispatcher', () => {
 				count++;
 			};
 
-			Promise.resolve()
-				.then(() => middleware(ctx, next))
-				.then(() => {
-					expect(count).to.equal(1);
-					done();
-				})
-				.catch(done);
+			await middleware(ctx, next);
+			expect(count).to.equal(1);
 		});
 
-		it('should dispatch POST request', done => {
+		it('should dispatch POST request', async () => {
 			const d = new Dispatcher();
 
 			d.register('/foo', ctx => {
@@ -585,17 +514,12 @@ describe('dispatcher', () => {
 				}
 			};
 
-			Promise.resolve()
-				.then(() => middleware(ctx, Promise.resolve))
-				.then(() => {
-					expect(ctx.body).to.be.a('string');
-					expect(ctx.body).to.equal('foo!');
-					done();
-				})
-				.catch(done);
+			await middleware(ctx, Promise.resolve);
+			expect(ctx.body).to.be.a('string');
+			expect(ctx.body).to.equal('foo!');
 		});
 
-		it('should ignore HEAD request', done => {
+		it('should ignore HEAD request', async () => {
 			const d = new Dispatcher();
 			let count = 0;
 			let count2 = 0;
@@ -613,17 +537,12 @@ describe('dispatcher', () => {
 				count++;
 			};
 
-			Promise.resolve()
-				.then(() => middleware(ctx, next))
-				.then(() => {
-					expect(count).to.equal(1);
-					expect(count2).to.equal(0);
-					done();
-				})
-				.catch(done);
+			await middleware(ctx, next);
+			expect(count).to.equal(1);
+			expect(count2).to.equal(0);
 		});
 
-		it('should return 500 error if handler throws error', done => {
+		it('should return 500 error if handler throws error', async () => {
 			const d = new Dispatcher();
 
 			d.register('/foo', () => {
@@ -636,17 +555,12 @@ describe('dispatcher', () => {
 				originalUrl: '/foo'
 			};
 
-			Promise.resolve()
-				.then(() => middleware(ctx, Promise.resolve))
-				.then(() => {
-					expect(ctx.status).to.equal(500);
-					expect(ctx.body).to.equal('Error: foo!');
-					done();
-				})
-				.catch(done);
+			await middleware(ctx, Promise.resolve);
+			expect(ctx.status).to.equal(500);
+			expect(ctx.body).to.equal('Error: foo!');
 		});
 
-		it('should return dispatcher error', done => {
+		it('should return dispatcher error', async () => {
 			const d = new Dispatcher();
 
 			d.register('/foo', () => {
@@ -659,17 +573,12 @@ describe('dispatcher', () => {
 				originalUrl: '/foo'
 			};
 
-			Promise.resolve()
-				.then(() => middleware(ctx, Promise.resolve))
-				.then(() => {
-					expect(ctx.status).to.equal(403);
-					expect(ctx.body).to.equal('DispatcherError: Not authorized! (code 403)');
-					done();
-				})
-				.catch(done);
+			await middleware(ctx, Promise.resolve);
+			expect(ctx.status).to.equal(403);
+			expect(ctx.body).to.equal('DispatcherError: Not authorized! (code 403)');
 		});
 
-		it('should return dispatcher error with null status', done => {
+		it('should return dispatcher error with null status', async () => {
 			const d = new Dispatcher();
 
 			d.register('/foo', () => {
@@ -687,17 +596,12 @@ describe('dispatcher', () => {
 				}
 			};
 
-			Promise.resolve()
-				.then(() => middleware(ctx, Promise.resolve))
-				.then(() => {
-					expect(ctx.status).to.equal(500);
-					expect(ctx.body).to.equal('DispatcherError: Not authorized! (code 403)');
-					done();
-				})
-				.catch(done);
+			await middleware(ctx, Promise.resolve);
+			expect(ctx.status).to.equal(500);
+			expect(ctx.body).to.equal('DispatcherError: Not authorized! (code 403)');
 		});
 
-		it('should return a Response object', done => {
+		it('should return a Response object', async () => {
 			const d = new Dispatcher();
 
 			d.register('/foo', ctx => {
@@ -716,18 +620,13 @@ describe('dispatcher', () => {
 				}
 			};
 
-			Promise.resolve()
-				.then(() => middleware(ctx, Promise.resolve))
-				.then(() => {
-					expect(ctx.status).to.equal(200);
-					expect(ctx.body).to.be.a('string');
-					expect(ctx.body).to.equal('OK');
-					done();
-				})
-				.catch(done);
+			await middleware(ctx, Promise.resolve);
+			expect(ctx.status).to.equal(200);
+			expect(ctx.body).to.be.a('string');
+			expect(ctx.body).to.equal('OK');
 		});
 
-		it('should return a Response object with null status', done => {
+		it('should return a Response object with null status', async () => {
 			const d = new Dispatcher();
 
 			d.register('/foo', ctx => {
@@ -741,15 +640,10 @@ describe('dispatcher', () => {
 				originalUrl: '/foo'
 			};
 
-			Promise.resolve()
-				.then(() => middleware(ctx, Promise.resolve))
-				.then(() => {
-					expect(ctx.status).to.equal(200);
-					expect(ctx.body).to.be.a('string');
-					expect(ctx.body).to.equal('OK');
-					done();
-				})
-				.catch(done);
+			await middleware(ctx, Promise.resolve);
+			expect(ctx.status).to.equal(200);
+			expect(ctx.body).to.be.a('string');
+			expect(ctx.body).to.equal('OK');
 		});
 	});
 
@@ -762,22 +656,18 @@ describe('dispatcher', () => {
 			Dispatcher.root.routes = [];
 		});
 
-		it('should register handler and call it', done => {
+		it('should register handler and call it', async () => {
 			let count = 0;
 
 			Dispatcher.register('/foo', () => {
 				count++;
 			});
 
-			Dispatcher.call('/foo')
-				.then(() => {
-					expect(count).to.equal(1);
-					done();
-				})
-				.catch(done);
+			await Dispatcher.call('/foo');
+			expect(count).to.equal(1);
 		});
 
-		it('should register handler, unregister it, and call it', done => {
+		it('should register handler, unregister it, and call it', async () => {
 			let count = 0;
 			const handler = () => {
 				count++;
@@ -787,18 +677,15 @@ describe('dispatcher', () => {
 
 			Dispatcher.unregister([ '/foo' ], handler);
 
-			Dispatcher.call('/foo')
-				.then(() => {
-					done(new Error('Expected call to fail'));
-				})
-				.catch(() => {
-					expect(count).to.equal(0);
-					done();
-				})
-				.catch(done);
+			try {
+				await Dispatcher.call('/foo');
+				throw new Error('Expected call to fail');
+			} catch (e) {
+				expect(count).to.equal(0);
+			}
 		});
 
-		it('should dispatch GET request', done => {
+		it('should dispatch GET request', async () => {
 			Dispatcher.register('/foo', ctx => {
 				ctx.response = 'foo!';
 			});
@@ -809,14 +696,9 @@ describe('dispatcher', () => {
 				originalUrl: '/foo'
 			};
 
-			Promise.resolve()
-				.then(() => middleware(ctx, Promise.resolve))
-				.then(() => {
-					expect(ctx.body).to.be.a('string');
-					expect(ctx.body).to.equal('foo!');
-					done();
-				})
-				.catch(done);
+			await middleware(ctx, Promise.resolve);
+			expect(ctx.body).to.be.a('string');
+			expect(ctx.body).to.equal('foo!');
 		});
 
 		it('should fail to set invalid root instance', () => {

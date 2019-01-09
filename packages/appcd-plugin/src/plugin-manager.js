@@ -3,6 +3,7 @@ import Dispatcher from 'appcd-dispatcher';
 import gawk from 'gawk';
 import Response, { codes } from 'appcd-response';
 import path from 'path';
+import pluralize from 'pluralize';
 import PluginError from './plugin-error';
 import PluginPath from './plugin-path';
 import semver from 'semver';
@@ -394,7 +395,7 @@ export default class PluginManager extends Dispatcher {
 	 */
 	shutdown() {
 		const paths = Object.keys(this.pluginPaths);
-		logger.log(appcdLogger.pluralize(`Shutting down plugin manager and ${highlight(paths.length)} plugin path`, paths.length));
+		logger.log(pluralize(`Shutting down plugin manager and ${highlight(paths.length)} plugin path`, paths.length));
 
 		// disable telemetry since we're shutting down
 		this.telemetryEnabled = false;

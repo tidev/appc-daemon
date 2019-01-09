@@ -105,45 +105,34 @@ describe('webserver', () => {
 		}).to.throw(TypeError, 'Expected index to be a string');
 	});
 
-	it('should create a server, listen, and get static html file', done => {
+	it('should create a server, listen, and get static html file', async () => {
 		const server = new WebServer({
 			port: 1337,
 			hostname: '127.0.0.1'
 		});
 
-		server
-			.listen()
-			.then(() => {
-				return request('http://127.0.0.1:1337')
-					.get('/')
-					.expect('Content-Type', /html/)
-					.expect(200)
-					.then(response => {
-						expect(response.text).to.match(/<h1>appcd-http<\/h1>/);
-					});
-			})
-			.then(() => {
-				server
-					.shutdown()
-					.then(() => done())
-					.catch(() => done());
-			})
-			.catch(err => {
-				server
-					.shutdown()
-					.then(() => done(err))
-					.catch(() => done(err));
-			});
+		try {
+			await server.listen();
+
+			const response = await request('http://127.0.0.1:1337')
+				.get('/')
+				.expect('Content-Type', /html/)
+				.expect(200);
+
+			expect(response.text).to.match(/<h1>appcd-http<\/h1>/);
+		} finally {
+			await server.shutdown();
+		}
 	});
 
-	it('should accept incoming WebSocket connection', done => {
+	it('should accept incoming WebSocket connection', async () => {
 		const server = new WebServer({
 			port: 1337,
 			hostname: '127.0.0.1'
 		});
 
-		server
-			.on('websocket', conn => {
+		try {
+			server.on('websocket', conn => {
 				conn.on('message', msg => {
 					try {
 						conn.send(JSON.parse(msg).foo.split('').reverse().join(''));
@@ -152,9 +141,11 @@ describe('webserver', () => {
 					}
 					conn.close();
 				});
-			})
-			.listen()
-			.then(() => new Promise((resolve, reject) => {
+			});
+
+			await server.listen();
+
+			await new Promise((resolve, reject) => {
 				const ws = new WebSocket('ws://127.0.0.1:1337');
 				ws.on('open', () => ws.send(JSON.stringify({ foo: 'hello' })));
 				ws.on('message', data => {
@@ -167,125 +158,83 @@ describe('webserver', () => {
 				});
 				ws.on('error', reject);
 				ws.on('close', () => resolve());
-			}))
-			.then(() => {
-				server
-					.shutdown()
-					.then(() => done())
-					.catch(() => done());
-			})
-			.catch(err => {
-				server
-					.shutdown()
-					.then(() => done(err))
-					.catch(() => done(err));
 			});
+		} finally {
+			await server.shutdown();
+		}
 	});
 
-	it('should execute middleware', done => {
+	it('should execute middleware', async () => {
 		const server = new WebServer({
 			port: 1337,
 			hostname: '127.0.0.1'
 		});
 
-		server
-			.use(ctx => {
+		try {
+			server.use(ctx => {
 				ctx.body = 'hello!';
-			})
-			.listen()
-			.then(() => {
-				return request('http://127.0.0.1:1337')
-					.get('/')
-					.expect('Content-Type', /text/)
-					.expect(200)
-					.then(response => {
-						expect(response.text).to.equal('hello!');
-					});
-			})
-			.then(() => {
-				server
-					.shutdown()
-					.then(() => done())
-					.catch(() => done());
-			})
-			.catch(err => {
-				server
-					.shutdown()
-					.then(() => done(err))
-					.catch(() => done(err));
 			});
+
+			await server.listen();
+
+			const response = await request('http://127.0.0.1:1337')
+				.get('/')
+				.expect('Content-Type', /text/)
+				.expect(200);
+			expect(response.text).to.equal('hello!');
+		} finally {
+			await server.shutdown();
+		}
 	});
 
-	it('should handle 400 errors', done => {
+	it('should handle 400 errors', async () => {
 		const server = new WebServer({
 			port: 1337,
 			hostname: '127.0.0.1'
 		});
 
-		server
-			.use(() => {
+		try {
+			server.use(() => {
 				const err = new Error('go away!');
 				err.expose = true;
 				err.status = 403;
 				throw err;
-			})
-			.listen()
-			.then(() => {
-				return request('http://127.0.0.1:1337')
-					.get('/')
-					.expect('Content-Type', /text/)
-					.expect(403)
-					.then(response => {
-						expect(response.text).to.equal('go away!');
-					});
-			})
-			.then(() => {
-				server
-					.shutdown()
-					.then(() => done())
-					.catch(() => done());
-			})
-			.catch(err => {
-				server
-					.shutdown()
-					.then(() => done(err))
-					.catch(() => done(err));
 			});
+
+			await server.listen();
+
+			const response = await request('http://127.0.0.1:1337')
+				.get('/')
+				.expect('Content-Type', /text/)
+				.expect(403);
+			expect(response.text).to.equal('go away!');
+		} finally {
+			await server.shutdown();
+		}
 	});
 
-	it('should handle 500 errors', done => {
+	it('should handle 500 errors', async () => {
 		const server = new WebServer({
 			port: 1337,
 			hostname: '127.0.0.1'
 		});
 
-		server
-			.use(() => {
+		try {
+			server.use(() => {
 				const err = new Error('oh no!');
 				err.expose = true;
 				throw err;
-			})
-			.listen()
-			.then(() => {
-				return request('http://127.0.0.1:1337')
-					.get('/')
-					.expect('Content-Type', /text/)
-					.expect(500)
-					.then(response => {
-						expect(response.text).to.equal('oh no!');
-					});
-			})
-			.then(() => {
-				server
-					.shutdown()
-					.then(() => done())
-					.catch(() => done());
-			})
-			.catch(err => {
-				server
-					.shutdown()
-					.then(() => done(err))
-					.catch(() => done(err));
 			});
+
+			await server.listen();
+
+			const response = await request('http://127.0.0.1:1337')
+				.get('/')
+				.expect('Content-Type', /text/)
+				.expect(500);
+			expect(response.text).to.equal('oh no!');
+		} finally {
+			await server.shutdown();
+		}
 	});
 });

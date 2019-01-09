@@ -19,25 +19,19 @@ describe('ServiceDispatcher', () => {
 	});
 
 	describe('call', () => {
-		it('should invoke handler', done => {
+		it('should invoke handler', async () => {
 			const sd = new ServiceDispatcher('/foo', {});
 
-			Promise.resolve()
-				.then(() => sd.handler({}, () => Promise.resolve()))
-				.then(() => done())
-				.catch(done);
+			await sd.handler({}, () => Promise.resolve());
 		});
 
-		it('should invoke handler without leading slash', done => {
+		it('should invoke handler without leading slash', async () => {
 			const sd = new ServiceDispatcher('foo', {});
 
-			Promise.resolve()
-				.then(() => sd.handler({}, () => Promise.resolve()))
-				.then(() => done())
-				.catch(done);
+			await sd.handler({}, () => Promise.resolve());
 		});
 
-		it('should invoke service with call handler', done => {
+		it('should invoke service with call handler', async () => {
 			let count = 0;
 			const sd = new ServiceDispatcher('/foo', {
 				onCall() {
@@ -45,16 +39,12 @@ describe('ServiceDispatcher', () => {
 				}
 			});
 
-			Promise.resolve()
-				.then(() => sd.handler({}, () => Promise.resolve()))
-				.then(() => {
-					expect(count).to.equal(1);
-					done();
-				})
-				.catch(done);
+			await sd.handler({}, () => Promise.resolve());
+
+			expect(count).to.equal(1);
 		});
 
-		it('should invoke service with call handler with explicit type', done => {
+		it('should invoke service with call handler with explicit type', async () => {
 			let count = 0;
 			const sd = new ServiceDispatcher('/foo', {
 				onCall() {
@@ -62,41 +52,33 @@ describe('ServiceDispatcher', () => {
 				}
 			});
 
-			Promise.resolve()
-				.then(() => sd.handler({
-					request: {
-						type: 'call'
-					}
-				}, () => Promise.resolve()))
-				.then(() => {
-					expect(count).to.equal(1);
-					done();
-				})
-				.catch(done);
+			await sd.handler({
+				request: {
+					type: 'call'
+				}
+			}, () => Promise.resolve());
+
+			expect(count).to.equal(1);
 		});
 
-		it('should error if type is invalid', done => {
+		it('should error if type is invalid', async () => {
 			const sd = new ServiceDispatcher('/foo', {});
 
-			Promise.resolve()
-				.then(() => {
-					sd.handler({
-						request: {
-							type: 'foo'
-						}
-					}, () => Promise.resolve());
-				})
-				.then(() => {
-					done(new Error('Expected type "foo" to be invalid'));
-				})
-				.catch(err => {
-					expect(err.message).to.equal('Invalid service handler type "foo"');
-					done();
-				})
-				.catch(done);
+			try {
+				await sd.handler({
+					request: {
+						type: 'foo'
+					}
+				}, () => Promise.resolve());
+			} catch (err) {
+				expect(err.message).to.equal('Invalid service handler type "foo"');
+				return;
+			}
+
+			throw new Error('Expected type "foo" to be invalid');
 		});
 
-		it('should invoke service that doesn\'t have a path', done => {
+		it('should invoke service that doesn\'t have a path', async () => {
 			let count = 0;
 			const sd = new ServiceDispatcher({
 				onCall() {
@@ -104,18 +86,14 @@ describe('ServiceDispatcher', () => {
 				}
 			});
 
-			Promise.resolve()
-				.then(() => sd.handler({}, () => Promise.resolve()))
-				.then(() => {
-					expect(count).to.equal(1);
-					done();
-				})
-				.catch(done);
+			await sd.handler({}, () => Promise.resolve());
+
+			expect(count).to.equal(1);
 		});
 	});
 
 	describe('subscribe', () => {
-		it('should create a new subscription', done => {
+		it('should create a new subscription', async () => {
 			let count = 0;
 			const sd = new ServiceDispatcher('/foo', {
 				onSubscribe() {
@@ -123,38 +101,33 @@ describe('ServiceDispatcher', () => {
 				}
 			});
 
-			Promise.resolve()
-				.then(() => {
-					sd.handler({
-						path: '/foo',
-						realPath: '/foo',
-						request: {
-							type: 'subscribe'
-						},
-						response: {
-							end() {
-								// noop
-							},
-							once() {
-								// noop
-							},
-							write: response => {
-								expect(response.message).to.be.instanceof(Response);
-								expect(response.message.toString()).to.equal('Subscribed');
-								expect(response.message.status).to.equal(201);
-								expect(response.topic).to.equal('/foo');
-								expect(response.type).to.equal('subscribe');
-							}
-						}
-					}, () => Promise.resolve());
+			sd.handler({
+				path: '/foo',
+				realPath: '/foo',
+				request: {
+					type: 'subscribe'
+				},
+				response: {
+					end() {
+						// noop
+					},
+					once() {
+						// noop
+					},
+					write: response => {
+						expect(response.message).to.be.instanceof(Response);
+						expect(response.message.toString()).to.equal('Subscribed');
+						expect(response.message.status).to.equal(201);
+						expect(response.topic).to.equal('/foo');
+						expect(response.type).to.equal('subscribe');
+					}
+				}
+			}, () => Promise.resolve());
 
-					expect(count).to.equal(1);
-					done();
-				})
-				.catch(done);
+			expect(count).to.equal(1);
 		});
 
-		it('should create a new subscriptions for multiple subs', done => {
+		it('should create a new subscriptions for multiple subs', async () => {
 			const fns = [];
 			const sd = new ServiceDispatcher('/foo', {
 				onSubscribe({ publish }) {
@@ -162,62 +135,57 @@ describe('ServiceDispatcher', () => {
 				}
 			});
 
-			Promise.resolve()
-				.then(() => {
-					sd.handler({
-						path: '/foo',
-						realPath: '/foo',
-						request: {
-							type: 'subscribe'
-						},
-						response: {
-							end() {
-								// noop
-							},
-							once() {
-								// noop
-							},
-							write(response) {
-								expect(response.message).to.be.instanceof(Response);
-								expect(response.message.toString()).to.equal('Subscribed');
-								expect(response.message.status).to.equal(201);
-								expect(response.topic).to.equal('/foo');
-								expect(response.type).to.equal('subscribe');
-							}
-						}
-					}, () => Promise.resolve());
+			await sd.handler({
+				path: '/foo',
+				realPath: '/foo',
+				request: {
+					type: 'subscribe'
+				},
+				response: {
+					end() {
+						// noop
+					},
+					once() {
+						// noop
+					},
+					write(response) {
+						expect(response.message).to.be.instanceof(Response);
+						expect(response.message.toString()).to.equal('Subscribed');
+						expect(response.message.status).to.equal(201);
+						expect(response.topic).to.equal('/foo');
+						expect(response.type).to.equal('subscribe');
+					}
+				}
+			}, () => Promise.resolve());
 
-					sd.handler({
-						path: '/foo',
-						realPath: '/foo',
-						request: {
-							type: 'subscribe'
-						},
-						response: {
-							end() {
-								// noop
-							},
-							once() {
-								// noop
-							},
-							write(response) {
-								expect(response.message).to.be.instanceof(Response);
-								expect(response.message.toString()).to.equal('Subscribed');
-								expect(response.message.status).to.equal(201);
-								expect(response.topic).to.equal('/foo');
-								expect(response.type).to.equal('subscribe');
-							}
-						}
-					}, () => Promise.resolve());
+			await sd.handler({
+				path: '/foo',
+				realPath: '/foo',
+				request: {
+					type: 'subscribe'
+				},
+				response: {
+					end() {
+						// noop
+					},
+					once() {
+						// noop
+					},
+					write(response) {
+						expect(response.message).to.be.instanceof(Response);
+						expect(response.message.toString()).to.equal('Subscribed');
+						expect(response.message.status).to.equal(201);
+						expect(response.topic).to.equal('/foo');
+						expect(response.type).to.equal('subscribe');
+					}
+				}
+			}, () => Promise.resolve());
 
-					expect(fns).to.have.lengthOf(2);
-					expect(fns[0]).to.not.equal(fns[1]);
-					done();
-				})
-				.catch(done);
+			expect(fns).to.have.lengthOf(2);
+			expect(fns[0]).to.not.equal(fns[1]);
 		});
 
-		it('should publish message to subscriber', done => {
+		it('should publish message to subscriber', async () => {
 			let count = 0;
 			const sd = new ServiceDispatcher('/foo', {
 				onSubscribe({ publish }) {
@@ -228,22 +196,22 @@ describe('ServiceDispatcher', () => {
 				}
 			});
 
-			Promise.resolve()
-				.then(() => new Promise(resolve => {
-					sd.handler({
-						path: '/foo',
-						realPath: '/foo',
-						request: {
-							type: 'subscribe'
+			await new Promise((resolve, reject) => {
+				sd.handler({
+					path: '/foo',
+					realPath: '/foo',
+					request: {
+						type: 'subscribe'
+					},
+					response: {
+						end() {
+							// noop
 						},
-						response: {
-							end() {
-								// noop
-							},
-							once() {
-								// noop
-							},
-							write(response) {
+						once() {
+							// noop
+						},
+						write(response) {
+							try {
 								if (count === 0) {
 									expect(response.message).to.be.instanceof(Response);
 									expect(response.message.toString()).to.equal('Subscribed');
@@ -256,20 +224,20 @@ describe('ServiceDispatcher', () => {
 									expect(response.type).to.equal('event');
 									resolve();
 								}
+							} catch (err) {
+								reject(err);
 							}
 						}
-					}, () => Promise.resolve());
-				}))
-				.then(() => {
-					expect(count).to.equal(1);
-					done();
-				})
-				.catch(done);
+					}
+				}, () => Promise.resolve());
+			});
+
+			expect(count).to.equal(1);
 		});
 	});
 
 	describe('unsubscribe', () => {
-		it('should error if missing subscription id', done => {
+		it('should error if missing subscription id', async () => {
 			const sd = new ServiceDispatcher('/foo', {
 				initSubscription() {
 					// noop
@@ -285,37 +253,32 @@ describe('ServiceDispatcher', () => {
 				}
 			});
 
-			Promise.resolve()
-				.then(() => {
-					const ctx = {
-						path: '/foo',
-						request: {
-							type: 'unsubscribe'
-						},
-						response: {
-							end() {
-								// noop
-							},
-							once() {
-								// noop
-							},
-							write() {
-								// noop
-							}
-						}
-					};
+			const ctx = {
+				path: '/foo',
+				request: {
+					type: 'unsubscribe'
+				},
+				response: {
+					end() {
+						// noop
+					},
+					once() {
+						// noop
+					},
+					write() {
+						// noop
+					}
+				}
+			};
 
-					sd.handler(ctx, () => Promise.resolve());
+			sd.handler(ctx, () => Promise.resolve());
 
-					expect(ctx.response).to.be.instanceof(Response);
-					expect(ctx.response.toString()).to.equal('Missing Subscription ID');
-					expect(ctx.response.status).to.equal(400);
-					done();
-				})
-				.catch(done);
+			expect(ctx.response).to.be.instanceof(Response);
+			expect(ctx.response.toString()).to.equal('Missing Subscription ID');
+			expect(ctx.response.status).to.equal(400);
 		});
 
-		it('should notify if not subscribed', done => {
+		it('should notify if not subscribed', async () => {
 			const sd = new ServiceDispatcher('/foo', {
 				initSubscription() {
 					// noop
@@ -331,38 +294,33 @@ describe('ServiceDispatcher', () => {
 				}
 			});
 
-			Promise.resolve()
-				.then(() => {
-					const ctx = {
-						path: '/foo',
-						request: {
-							sid: 'foo',
-							type: 'unsubscribe'
-						},
-						response: {
-							end() {
-								// noop
-							},
-							once() {
-								// noop
-							},
-							write() {
-								// noop
-							}
-						}
-					};
+			const ctx = {
+				path: '/foo',
+				request: {
+					sid: 'foo',
+					type: 'unsubscribe'
+				},
+				response: {
+					end() {
+						// noop
+					},
+					once() {
+						// noop
+					},
+					write() {
+						// noop
+					}
+				}
+			};
 
-					sd.handler(ctx, () => Promise.resolve());
+			sd.handler(ctx, () => Promise.resolve());
 
-					expect(ctx.response).to.be.instanceof(Response);
-					expect(ctx.response.toString()).to.equal('Not Subscribed');
-					expect(ctx.response.status).to.equal(404);
-					done();
-				})
-				.catch(done);
+			expect(ctx.response).to.be.instanceof(Response);
+			expect(ctx.response.toString()).to.equal('Not Subscribed');
+			expect(ctx.response.status).to.equal(404);
 		});
 
-		it('should unsubscribe and delete subscription topic', done => {
+		it('should unsubscribe and delete subscription topic', async () => {
 			const sd = new ServiceDispatcher('/foo', {
 				initSubscription() {
 					// noop
@@ -380,22 +338,22 @@ describe('ServiceDispatcher', () => {
 
 			let counter = 0;
 
-			Promise.resolve()
-				.then(() => {
-					sd.handler({
-						path: '/foo',
-						realPath: '/foo',
-						request: {
-							type: 'subscribe'
+			await new Promise((resolve, reject) => {
+				sd.handler({
+					path: '/foo',
+					realPath: '/foo',
+					request: {
+						type: 'subscribe'
+					},
+					response: {
+						end() {
+							// noop
 						},
-						response: {
-							end() {
-								// noop
-							},
-							once() {
-								// noop
-							},
-							write(response) {
+						once() {
+							// noop
+						},
+						write(response) {
+							try {
 								switch (++counter) {
 									case 1:
 										expect(response.message).to.be.instanceof(Response);
@@ -441,17 +399,19 @@ describe('ServiceDispatcher', () => {
 										expect(response.message.status).to.equal(200);
 										expect(response.topic).to.equal('/foo');
 										expect(response.type).to.equal('unsubscribe');
-										done();
+										resolve();
 										break;
 								}
+							} catch (err) {
+								reject(err);
 							}
 						}
-					}, () => Promise.resolve());
-				})
-				.catch(done);
+					}
+				}, () => Promise.resolve());
+			});
 		});
 
-		it('should unsubscribe if stream closes', done => {
+		it('should unsubscribe if stream closes', async () => {
 			const sd = new ServiceDispatcher('/foo', {
 				initSubscription() {
 					// noop
@@ -467,40 +427,35 @@ describe('ServiceDispatcher', () => {
 				}
 			});
 
-			Promise.resolve()
-				.then(() => {
-					let unsub = {};
+			let unsub = {};
 
-					sd.handler({
-						path: '/foo',
-						realPath: '/foo',
-						request: {
-							type: 'subscribe'
-						},
-						response: {
-							once(evt, fn) {
-								unsub[evt] = fn;
-							},
-							write(response) {
-								expect(response.message).to.be.instanceof(Response);
-								expect(response.message.toString()).to.equal('Subscribed');
-								expect(response.message.status).to.equal(201);
-								expect(response.topic).to.equal('/foo');
-								expect(response.type).to.equal('subscribe');
-							}
-						}
-					}, () => Promise.resolve());
+			sd.handler({
+				path: '/foo',
+				realPath: '/foo',
+				request: {
+					type: 'subscribe'
+				},
+				response: {
+					once(evt, fn) {
+						unsub[evt] = fn;
+					},
+					write(response) {
+						expect(response.message).to.be.instanceof(Response);
+						expect(response.message.toString()).to.equal('Subscribed');
+						expect(response.message.status).to.equal(201);
+						expect(response.topic).to.equal('/foo');
+						expect(response.type).to.equal('subscribe');
+					}
+				}
+			}, () => Promise.resolve());
 
-					expect(sd.topics['/foo'].subs.size).to.equal(1);
-					unsub.end();
+			expect(sd.topics['/foo'].subs.size).to.equal(1);
+			unsub.end();
 
-					expect(sd.topics['/foo']).to.be.undefined;
-					done();
-				})
-				.catch(done);
+			expect(sd.topics['/foo']).to.be.undefined;
 		});
 
-		it('should unsubscribe if stream errors', done => {
+		it('should unsubscribe if stream errors', async () => {
 			const sd = new ServiceDispatcher('/foo', {
 				onSubscribe() {
 					// noop
@@ -510,37 +465,32 @@ describe('ServiceDispatcher', () => {
 				}
 			});
 
-			Promise.resolve()
-				.then(() => {
-					let unsub = {};
+			let unsub = {};
 
-					sd.handler({
-						path: '/foo',
-						realPath: '/foo',
-						request: {
-							type: 'subscribe'
-						},
-						response: {
-							once(evt, fn) {
-								unsub[evt] = fn;
-							},
-							write(response) {
-								expect(response.message).to.be.instanceof(Response);
-								expect(response.message.toString()).to.equal('Subscribed');
-								expect(response.message.status).to.equal(201);
-								expect(response.topic).to.equal('/foo');
-								expect(response.type).to.equal('subscribe');
-							}
-						}
-					}, () => Promise.resolve());
+			sd.handler({
+				path: '/foo',
+				realPath: '/foo',
+				request: {
+					type: 'subscribe'
+				},
+				response: {
+					once(evt, fn) {
+						unsub[evt] = fn;
+					},
+					write(response) {
+						expect(response.message).to.be.instanceof(Response);
+						expect(response.message.toString()).to.equal('Subscribed');
+						expect(response.message.status).to.equal(201);
+						expect(response.topic).to.equal('/foo');
+						expect(response.type).to.equal('subscribe');
+					}
+				}
+			}, () => Promise.resolve());
 
-					expect(sd.topics['/foo'].subs.size).to.equal(1);
-					unsub.error();
+			expect(sd.topics['/foo'].subs.size).to.equal(1);
+			unsub.error();
 
-					expect(sd.topics).to.not.have.property('/foo');
-					done();
-				})
-				.catch(done);
+			expect(sd.topics).to.not.have.property('/foo');
 		});
 	});
 });

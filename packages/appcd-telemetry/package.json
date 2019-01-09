@@ -30,8 +30,7 @@
     "uuid": "^3.3.2"
   },
   "devDependencies": {
-    "appcd-gulp": "^1.2.1",
-    "gulp": "^4.0.0",
+    "appcd-gulp": "^2.0.0",
     "tmp": "^0.0.33"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-telemetry",

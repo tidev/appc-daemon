@@ -190,7 +190,7 @@ exports.lint = series(cyclic, function lint() {
 /*
  * build tasks
  */
-const build = exports.build = series(cyclic, function build() {
+const build = exports.build = series(cyclic, async function build() {
 	return runLerna([ 'run', '--parallel', 'build' ]);
 });
 
@@ -280,7 +280,7 @@ async function runTests(cover) {
 			log(red(`${failedProjects.length} failured projects:`));
 		}
 		failedProjects.forEach(p => log(red(p)));
-		process.exit(1);
+		process.exitCode = 1;
 	}
 }
 
@@ -608,9 +608,6 @@ async function checkPackages({ skipSecurity } = {}) {
 					const version = required.replace(cleanVersionRegExp, '');
 					if (!dependencies[dep].versions[version]) {
 						dependencies[dep].versions[version] = [];
-						if (!skipSecurity) {
-							tasks.push([ 'nsp', dep, version ]);
-						}
 					}
 
 					// check if the dependency is an appcd-* dependency
@@ -655,10 +652,6 @@ async function checkPackages({ skipSecurity } = {}) {
 	// console.log(tasks);
 
 	const npm = require('npm');
-	const nspAPI = require('nsp/lib/api');
-	const nspConf = {
-		baseUrl: 'https://api.nodesecurity.io'
-	};
 	const limit = promiseLimit(20);
 
 	await new Promise((resolve, reject) => {
@@ -682,29 +675,6 @@ async function checkPackages({ skipSecurity } = {}) {
 		// log(`Running task ${taskCounter++}/${totalTasks}: ${action} ${pkg}${version ? `@${version}` : ''}`);
 
 		switch (action) {
-			case 'nsp':
-				return new nspAPI(nspConf)
-					.check({}, {
-						package: {
-							name: `check-${pkg}-${Date.now()}`,
-							version: '0.0.0',
-							dependencies: {
-								[pkg]: version
-							}
-						}
-					})
-					.then(({ data }) => {
-						for (const issue of data) {
-							issue.nsp = true;
-							dependencies[pkg].versions[version].push(issue);
-						}
-						bar.tick();
-					})
-					.catch(err => {
-						log(yellow(`nsp failed for ${pkg}@${version}: ${err.message}`));
-						bar.tick();
-					});
-
 			case 'retire':
 				let { execPath } = process;
 				const args = [
@@ -940,9 +910,6 @@ function renderPackages(results) {
 				// for (const ver of Object.keys(pkg.nodeSecurityIssues[name])) {
 				// 	const info = pkg.nodeSecurityIssues[name][ver];
 				// 	const tools = [];
-				// 	if (info.nsp) {
-				// 		tools.push('nsp');
-				// 	}
 				// 	if (info.retire) {
 				// 		tools.push('retire');
 				// 	}

@@ -16,139 +16,100 @@ describe('subprocess', () => {
 	});
 
 	describe('run()', () => {
-		it('should run a subprocess that exits successfully', done => {
-			subprocess
-				.run(process.execPath, [ '-e', 'process.stdout.write("foo");process.stderr.write("bar");process.exit(0);' ])
-				.then(({ stdout, stderr }) => {
-					expect(stdout).to.equal('foo');
-					expect(stderr).to.equal('bar');
-					done();
-				})
-				.catch(done);
+		it('should run a subprocess that exits successfully', async () => {
+			const { stdout, stderr } = await subprocess.run(process.execPath, [ '-e', 'process.stdout.write("foo");process.stderr.write("bar");process.exit(0);' ]);
+			expect(stdout).to.equal('foo');
+			expect(stderr).to.equal('bar');
 		});
 
-		it('should run a subprocess that exits unsuccessfully', done => {
-			subprocess
-				.run(process.execPath, [ '-e', 'process.stdout.write("foo");process.stderr.write("bar");process.exit(1);' ])
-				.then(() => {
-					done(new Error('Expected subprocess to fail'));
-				})
-				.catch(({ code, stdout, stderr }) => {
-					expect(code).to.equal(1);
-					expect(stdout).to.equal('foo');
-					expect(stderr).to.equal('bar');
-					done();
-				});
+		it('should run a subprocess that exits unsuccessfully', async () => {
+			try {
+				await subprocess.run(process.execPath, [ '-e', 'process.stdout.write("foo");process.stderr.write("bar");process.exit(1);' ]);
+			} catch ({ code, stdout, stderr }) {
+				expect(code).to.equal(1);
+				expect(stdout).to.equal('foo');
+				expect(stderr).to.equal('bar');
+				return;
+			}
+
+			throw new Error('Expected subprocess to fail');
 		});
 
-		it('should ignore subprocess exit code and resolve successfully', done => {
-			subprocess
-				.run(
-					process.execPath,
-					[ '-e', 'process.exit(1);' ],
-					{ ignoreExitCode: true }
-				)
-				.then(({ code }) => {
-					expect(code).to.equal(1);
-					done();
-				})
-				.catch(done);
+		it('should ignore subprocess exit code and resolve successfully', async () => {
+			const { code } = await subprocess.run(process.execPath, [ '-e', 'process.exit(1);' ], { ignoreExitCode: true });
+			expect(code).to.equal(1);
 		});
 
-		it('should run a subprocess without args and without options', done => {
-			subprocess
-				.run(fullpath)
-				.then(({ stdout, stderr }) => {
-					expect(stdout.trim()).to.equal('this is a test');
-					expect(stderr.trim()).to.equal('');
-					done();
-				})
-				.catch(done);
+		it('should run a subprocess without args and without options', async () => {
+			const { stdout, stderr } = await subprocess.run(fullpath);
+			expect(stdout.trim()).to.equal('this is a test');
+			expect(stderr.trim()).to.equal('');
 		});
 
-		it('should run a subprocess without args and with options', done => {
-			subprocess
-				.run(fullpath, {})
-				.then(({ stdout, stderr }) => {
-					expect(stdout.trim()).to.equal('this is a test');
-					expect(stderr.trim()).to.equal('');
-					done();
-				})
-				.catch(done);
+		it('should run a subprocess without args and with options', async () => {
+			const { stdout, stderr } = await subprocess.run(fullpath, {});
+			expect(stdout.trim()).to.equal('this is a test');
+			expect(stderr.trim()).to.equal('');
 		});
 
-		it('should run a command with an argument containing a space', done => {
-			subprocess
-				.run(process.execPath, [
-					path.join(__dirname, 'fixtures', 'echo.js'),
-					'Hello world!'
-				])
-				.then(({ stdout }) => {
-					expect(stdout.trim()).to.equal('Hello world!');
-					done();
-				})
-				.catch(done);
+		it('should run a command with an argument containing a space', async () => {
+			const { stdout } = await subprocess.run(process.execPath, [
+				path.join(__dirname, 'fixtures', 'echo.js'),
+				'Hello world!'
+			]);
+			expect(stdout.trim()).to.equal('Hello world!');
 		});
 
-		it('should fail if command is invalid', done => {
-			subprocess
-				.run()
-				.then(() => {
-					done(new Error('Expected error'));
-				})
-				.catch(err => {
-					expect(err.message).to.equal('Expected command to be a non-empty string');
-					done();
-				})
-				.catch(done);
+		it('should fail if command is invalid', async () => {
+			try {
+				await subprocess.run();
+			} catch (err) {
+				expect(err.message).to.equal('Expected command to be a non-empty string');
+				return;
+			}
+
+			throw new Error('Expected error');
 		});
 
-		it('should fail if options is not an object', done => {
-			subprocess
-				.run(process.execPath, [], 'foo')
-				.then(() => {
-					done(new Error('Expected error'));
-				})
-				.catch(err => {
-					expect(err.message).to.equal('Expected options to be an object');
-					done();
-				})
-				.catch(done);
+		it('should fail if options is not an object', async () => {
+			try {
+				await subprocess.run(process.execPath, [], 'foo');
+			} catch (err) {
+				expect(err.message).to.equal('Expected options to be an object');
+				return;
+			}
+
+			throw new Error('Expected error');
 		});
 
-		it('should run with null options', done => {
-			subprocess
-				.run(fullpath, null)
-				.then(({ stdout, stderr }) => {
-					expect(stdout.trim()).to.equal('this is a test');
-					expect(stderr.trim()).to.equal('');
-					done();
-				})
-				.catch(done);
+		it('should run with null options', async () => {
+			const { stdout, stderr } = await subprocess.run(fullpath, null);
+			expect(stdout.trim()).to.equal('this is a test');
+			expect(stderr.trim()).to.equal('');
 		});
 
-		it('should default to opts.windowsHide: true when not specified', done => {
-			subprocess
-				.run(process.execPath, [ '-e', 'process.stdout.write("foo");process.stderr.write("bar");process.exit(1);' ])
-				.then(() => {
-					done(new Error('Expected subprocess to fail'));
-				})
-				.catch(({ opts }) => {
-					expect(opts.windowsHide).to.equal(true);
-					done();
-				});
+		it('should default to opts.windowsHide: true when not specified', async () => {
+			try {
+				await subprocess.run(process.execPath, [ '-e', 'process.stdout.write("foo");process.stderr.write("bar");process.exit(1);' ]);
+			} catch (err) {
+				expect(err.opts).to.be.an('object');
+				expect(err.opts.windowsHide).to.equal(true);
+				return;
+			}
+
+			throw new Error('Expected subprocess to fail');
 		});
 
-		it('should not override opts.windowsHide when specified', done => {
-			subprocess
-				.run(process.execPath, [ '-e', 'process.stdout.write("foo");process.stderr.write("bar");process.exit(1);' ], { windowsHide: false })
-				.then(() => {
-					done(new Error('Expected subprocess to fail'));
-				})
-				.catch(({ opts }) => {
-					expect(opts.windowsHide).to.equal(false);
-					done();
-				});
+		it('should not override opts.windowsHide when specified', async () => {
+			try {
+				await subprocess.run(process.execPath, [ '-e', 'process.stdout.write("foo");process.stderr.write("bar");process.exit(1);' ], { windowsHide: false });
+			} catch (err) {
+				expect(err.opts).to.be.an('object');
+				expect(err.opts.windowsHide).to.equal(false);
+				return;
+			}
+
+			throw new Error('Expected subprocess to fail');
 		});
 	});
 
@@ -274,48 +235,44 @@ describe('subprocess', () => {
 	});
 
 	describe('which()', () => {
-		it('should find a well-known executable', done => {
+		it('should find a well-known executable', async () => {
 			process.env.PATH = path.join(__dirname, 'fixtures');
-			subprocess.which(executable)
-				.then(result => {
-					expect(result).to.be.a('string');
-					expect(result).to.equal(fullpath);
-					done();
-				})
-				.catch(done);
+			const result = await subprocess.which(executable);
+			expect(result).to.be.a('string');
+			expect(result).to.equal(fullpath);
 		});
 
-		it('should not find an invalid executable', done => {
-			subprocess.which('no_way_does_this_already_exist')
-				.then(executable => {
-					done(new Error(`Somehow there's an executable called "${executable}"`));
-				})
-				.catch(err => {
-					expect(err).to.be.instanceof(Error);
-					done();
-				});
+		it('should not find an invalid executable', async () => {
+			let executable;
+
+			try {
+				executable = await subprocess.which('no_way_does_this_already_exist');
+			} catch (err) {
+				expect(err).to.be.instanceof(Error);
+				return;
+			}
+
+			throw new Error(`Somehow there's an executable called "${executable}"`);
 		});
 
-		it('should scan list of executables and find well-known executable', done => {
+		it('should scan list of executables and find well-known executable', async () => {
 			process.env.PATH = path.join(__dirname, 'fixtures');
-			subprocess.which([ 'no_way_does_this_already_exist', executable ])
-				.then(result => {
-					expect(result).to.be.a('string');
-					expect(result).to.equal(fullpath);
-					done();
-				})
-				.catch(done);
+			const result = await subprocess.which([ 'no_way_does_this_already_exist', executable ]);
+			expect(result).to.be.a('string');
+			expect(result).to.equal(fullpath);
 		});
 
-		it('should scan list of invalid executables', done => {
-			subprocess.which([ 'no_way_does_this_already_exist', null, 'this_also_should_not_exist' ])
-				.then(executable => {
-					done(new Error(`Somehow there's an executable called "${executable}"`));
-				})
-				.catch(err => {
-					expect(err).to.be.instanceof(Error);
-					done();
-				});
+		it('should scan list of invalid executables', async () => {
+			let executable;
+
+			try {
+				executable = await subprocess.which([ 'no_way_does_this_already_exist', null, 'this_also_should_not_exist' ]);
+			} catch (err) {
+				expect(err).to.be.instanceof(Error);
+				return;
+			}
+
+			throw new Error(`Somehow there's an executable called "${executable}"`);
 		});
 	});
 });
