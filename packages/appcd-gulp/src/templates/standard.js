@@ -88,9 +88,9 @@ module.exports = (opts) => {
 			.pipe($.debug({ title: 'build' }))
 			.pipe($.sourcemaps.init())
 			.pipe($.babel({
-				cwd: __dirname,
-				plugins: babelConf.plugins,
-				presets: babelConf.presets,
+				cwd:        __dirname,
+				plugins:    babelConf.plugins,
+				presets:    babelConf.presets,
 				sourceRoot: 'src'
 			}))
 			.pipe($.sourcemaps.write())

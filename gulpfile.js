@@ -340,8 +340,8 @@ async function watchOnly() {
 		process.on('SIGINT', () => {
 			if (!stopping) {
 				stopping = true;
-				binWatcher._watcher.close();
-				srcWatcher._watcher.close();
+				binWatcher.close();
+				srcWatcher.close();
 				resolve();
 			}
 		});
