@@ -1,3 +1,9 @@
+# v2.0.0 (Jan 16, 2019)
+
+ * Upgraded to Gulp 4.
+ * Added chai and promise lint rules.
+ * Updated dependencies.
+
 # v1.2.1 (Nov 26, 2018)
 
  * Updated dependencies.

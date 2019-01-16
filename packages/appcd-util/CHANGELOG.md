@@ -1,4 +1,4 @@
-# 1.1.5
+# 1.1.5 (Jan 16, 2019)
 
  * Updated `getActiveHandles()` to gracefully work in the event Node.js deprecates
    `process._getActiveHandles()`.
@@ -9,6 +9,8 @@
    Node.js 8.1.0.
    [(DAEMON-268)](https://jira.appcelerator.org/browse/DAEMON-268)
  * `tailgate()` no longer forces asynchronous execution of the callback using `setImmediate()`.
+ * Refactored promises to async/await.
+ * Updated dependencies.
 
 # v1.1.4 (Nov 26, 2018)
 

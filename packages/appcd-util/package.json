@@ -1,6 +1,6 @@
 {
   "name": "appcd-util",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "Various utility functions to support the Appc Daemon.",
   "main": "./dist/util",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
@@ -16,7 +16,7 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-fs": "^1.1.4",
+    "appcd-fs": "^1.1.5",
     "lodash.get": "^4.4.2",
     "semver": "^5.6.0",
     "source-map-support": "^0.5.10"

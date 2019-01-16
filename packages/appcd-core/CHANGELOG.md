@@ -1,8 +1,12 @@
-# v2.0.1
+# v2.0.1 (Jan 16, 2019)
 
  * Removed `getActiveHandles()` call which no longer works in Node.js 11 and switched to
    `trackTimers()` which uses async hooks and works with Node.js 8.1.0 or newer.
    [(DAEMON-268)](https://jira.appcelerator.org/browse/DAEMON-268)
+ * Added humanize dependency since it was removed from snooplogg 2.
+ * Refactored promises to async/await.
+ * Updated dependencies.
+
 
 # v2.0.0 (Nov 27, 2018)
 

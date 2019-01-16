@@ -1,6 +1,6 @@
 {
   "name": "appcd",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A daemon that powers Appcelerator tooling and makes the impossible possible.",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
@@ -28,15 +28,15 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-client": "^1.1.2",
-    "appcd-config": "^1.1.3",
-    "appcd-core": "^2.0.0",
+    "appcd-client": "^1.1.3",
+    "appcd-config": "^1.1.4",
+    "appcd-core": "^2.0.1",
     "appcd-dump-viewer": "^1.1.4",
-    "appcd-fs": "^1.1.4",
-    "appcd-logger": "^1.1.3",
-    "appcd-nodejs": "^1.1.3",
-    "appcd-path": "^1.1.3",
-    "appcd-util": "^1.1.4",
+    "appcd-fs": "^1.1.5",
+    "appcd-logger": "^1.1.4",
+    "appcd-nodejs": "^1.1.4",
+    "appcd-path": "^1.1.4",
+    "appcd-util": "^1.1.5",
     "cli-kit": "^0.6.1",
     "cli-table2": "^0.2.0",
     "humanize": "^0.0.9",

@@ -1,13 +1,5 @@
 import appcdLogger from 'appcd-logger';
 import CLI from 'cli-kit';
-import config from './commands/config';
-import dump from './commands/dump';
-import exec from './commands/exec';
-import logcat from './commands/logcat';
-import restart from './commands/restart';
-import start from './commands/start';
-import status from './commands/status';
-import stop from './commands/stop';
 
 import { getAppcdVersion } from './common';
 
@@ -21,16 +13,7 @@ if (!process.env.hasOwnProperty('APPC_NPM_VERSION')) {
 
 export default new CLI({
 	banner,
-	commands: {
-		config,
-		dump,
-		exec,
-		logcat,
-		restart,
-		start,
-		status,
-		stop
-	},
+	commands: `${__dirname}/commands`,
 	desc: 'The Appc Daemon is a local server that runs in the background and hosts services which power the tooling for Axway products such as Axway Titanium SDK.',
 	help: true,
 	helpExitCode: 2,
