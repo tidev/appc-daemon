@@ -1,3 +1,9 @@
+# v1.2.2 (Jan 16, 2019)
+
+ * Added pluralize dependency since it was removed from snooplogg 2.
+ * Refactored promises to async/await.
+ * Updated dependencies.
+
 # v1.2.1 (Nov 27, 2018)
 
  * Updated dependencies.

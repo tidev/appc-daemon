@@ -1,3 +1,7 @@
+# v1.1.3 (Jan 16, 2019)
+
+ * Updated dependencies.
+
 # v1.1.2 (Nov 27, 2018)
 
  * Fixed handling streamed responses, specifically knowing when the last message has been sent.

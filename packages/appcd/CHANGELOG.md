@@ -1,8 +1,11 @@
-# v2.0.1
+# v2.0.1 (Jan 16, 2019)
 
  * fix(config): Actions were not being translated correctly when dispatching request to daemon
    config service.
    [(DAEMON-269)](https://jira.appcelerator.org/browse/DAEMON-269)
+ * Added humanize dependency since it was removed from snooplogg 2.
+ * Refactored promises to async/await.
+ * Updated dependencies.
 
 # v2.0.0 (Nov 27, 2018)
 

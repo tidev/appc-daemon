@@ -1,3 +1,8 @@
+# v1.1.4 (Jan 16, 2019)
+
+ * Refactored promises to async/await.
+ * Updated dependencies.
+
 # v1.1.3 (Nov 27, 2018)
 
  * Added `/send/:pid?` service endpoint for sending an IPC message to a subprocess.
