@@ -21,7 +21,7 @@
     "appcd-util": "^1.1.4",
     "gawk": "^4.6.2",
     "pluralize": "^7.0.0",
-    "source-map-support": "^0.5.9"
+    "source-map-support": "^0.5.10"
   },
   "devDependencies": {
     "appcd-gulp": "^2.0.0",

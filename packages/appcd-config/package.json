@@ -25,7 +25,7 @@
     "doctrine": "^3.0.0",
     "fs-extra": "^7.0.1",
     "gawk": "^4.6.2",
-    "source-map-support": "^0.5.9"
+    "source-map-support": "^0.5.10"
   },
   "devDependencies": {
     "appcd-gulp": "^2.0.0",
