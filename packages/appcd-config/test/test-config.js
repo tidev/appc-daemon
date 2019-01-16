@@ -198,8 +198,8 @@ describe('Config', () => {
 		});
 
 		it('should load js file with shebang', () => {
-			const config = new Config({ configFile: path.join(__dirname, 'fixtures', 'shebang.js') });
-			const config2 = new Config({ configFile: path.join(__dirname, 'fixtures', 'shebang2.js') });
+			new Config({ configFile: path.join(__dirname, 'fixtures', 'shebang.js') });
+			new Config({ configFile: path.join(__dirname, 'fixtures', 'shebang2.js') });
 		});
 
 		it('should load js file with shebang and exported config', () => {

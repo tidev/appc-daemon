@@ -117,9 +117,10 @@ export default class Agent extends EventEmitter {
 	/**
 	 * Polls the CPU and memory.
 	 *
+	 * @returns {Promise}
 	 * @access private
 	 */
-	poll() {
+	async poll() {
 		const cpu    = process.cpuUsage(this.initCpu);
 		const hrtime = process.hrtime(this.initHrtime);
 		const mem    = process.memoryUsage();
@@ -131,67 +132,68 @@ export default class Agent extends EventEmitter {
 			rss:       mem.rss
 		};
 
-		Promise
-			.all(this.collectors.map(async fn => {
+		try {
+			await Promise.all(this.collectors.map(async fn => {
 				const result = await fn();
 				if (result && typeof result === 'object') {
 					Object.assign(stats, result);
 				}
-			}))
-			.then(() => {
-				// figure out how long it's been since we started the last poll
-				const now = Date.now();
-				const delta = this.lastTimestamp ? (now - this.lastTimestamp) : 0;
-				this.lastTimestamp = now;
+			}));
 
-				// schedule the next poll
-				const next = this.pollInterval - (delta % this.pollInterval);
-				this.pollTimer = setTimeout(this.poll.bind(this), next);
+			// figure out how long it's been since we started the last poll
+			const now = Date.now();
+			const delta = this.lastTimestamp ? (now - this.lastTimestamp) : 0;
+			this.lastTimestamp = now;
 
-				// figure out how many intervals we missed, we'll interpolate the values later
-				const missed = Math.floor((delta - this.pollInterval) / this.pollInterval) + 1;
+			// schedule the next poll
+			const next = this.pollInterval - (delta % this.pollInterval);
+			this.pollTimer = setTimeout(this.poll.bind(this), next);
 
-				// make sure we have collections for all the data we want to store
-				for (const name of Object.keys(stats)) {
-					if (!this.buckets[name]) {
-						this.buckets[name] = {
-							collection: new Collection(60 * 15), // 15 minutes worth of data
-							last:       null
-						};
-					}
+			// figure out how many intervals we missed, we'll interpolate the values later
+			const missed = Math.floor((delta - this.pollInterval) / this.pollInterval) + 1;
+
+			// make sure we have collections for all the data we want to store
+			for (const name of Object.keys(stats)) {
+				if (!this.buckets[name]) {
+					this.buckets[name] = {
+						collection: new Collection(60 * 15), // 15 minutes worth of data
+						last:       null
+					};
 				}
+			}
 
-				// add the values for each stat to its bucket, or set zero if we don't have a value
-				// for this poll
-				for (const name of Object.keys(this.buckets)) {
-					if (stats.hasOwnProperty(name)) {
-						const value = stats[name];
-						const bucket = this.buckets[name];
-						let last = bucket.last || 0;
+			// add the values for each stat to its bucket, or set zero if we don't have a value
+			// for this poll
+			for (const name of Object.keys(this.buckets)) {
+				if (stats.hasOwnProperty(name)) {
+					const value = stats[name];
+					const bucket = this.buckets[name];
+					let last = bucket.last || 0;
 
-						// if we missed any intervals, interpolate the values
-						// note that we don't emit stats for missed intervals
-						for (let i = 1; i < missed; i++) {
-							bucket.collection.add((value - last) * i / missed + last);
-						}
-
-						// add the value and set it as the last value
-						bucket.collection.add(value);
-						bucket.last = value;
-					} else {
-						// the bucket didn't receive a value so that probably means the collector
-						// was removed or the bucket is no longer monitored, so remove the bucket
-						delete this.buckets[name];
+					// if we missed any intervals, interpolate the values
+					// note that we don't emit stats for missed intervals
+					for (let i = 1; i < missed; i++) {
+						bucket.collection.add((value - last) * i / missed + last);
 					}
+
+					// add the value and set it as the last value
+					bucket.collection.add(value);
+					bucket.last = value;
+				} else {
+					// the bucket didn't receive a value so that probably means the collector
+					// was removed or the bucket is no longer monitored, so remove the bucket
+					delete this.buckets[name];
 				}
+			}
 
-				// add in the timestamp
-				stats.ts = process.uptime();
+			// add in the timestamp
+			stats.ts = process.uptime();
 
-				// emit the stats!
-				this.emit('stats', stats);
-			})
-			.catch(err => this.emit('error', err));
+			// emit the stats!
+			this.emit('stats', stats);
+		} catch (err) {
+			this.emit('error', err);
+		}
 	}
 
 	/**

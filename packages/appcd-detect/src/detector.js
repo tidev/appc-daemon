@@ -2,13 +2,13 @@ import appcdLogger from 'appcd-logger';
 import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs';
 import path from 'path';
+import pluralize from 'pluralize';
 
 import { EventEmitter } from 'events';
 import { isDir } from 'appcd-fs';
 import { real } from 'appcd-path';
 
 const { highlight } = appcdLogger.styles;
-const { pluralize } = appcdLogger;
 
 /**
  * A detector watches a specific path. If the path exists, it will scan the path for items of

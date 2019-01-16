@@ -27,60 +27,62 @@ describe('request', () => {
 		}
 	});
 
-	it('should error if parameters is not an object', done => {
-		request('foo')
-			.then(() => {
-				done(new Error('Expected error'));
-			})
-			.catch(err => {
-				expect(err).to.be.an.instanceof(TypeError);
-				expect(err.message).to.equal('Expected parameters to be an object');
-				done();
-			})
-			.catch(done);
+	it('should error if parameters is not an object', async () => {
+		try {
+			await request('foo');
+		} catch (err) {
+			expect(err).to.be.an.instanceof(TypeError);
+			expect(err.message).to.equal('Expected parameters to be an object');
+			return;
+		}
+
+		throw new Error('Expected error');
 	});
 
-	it('should error if callback is not a function', done => {
-		request({}, 'foo')
-			.then(() => {
-				done(new Error('Expected error'));
-			})
-			.catch(err => {
-				expect(err).to.be.an.instanceof(TypeError);
-				expect(err.message).to.equal('Expected callback to be a function');
-				done();
-			})
-			.catch(done);
+	it('should error if callback is not a function', async () => {
+		try {
+			await request({}, 'foo');
+		} catch (err) {
+			expect(err).to.be.an.instanceof(TypeError);
+			expect(err.message).to.equal('Expected callback to be a function');
+			return;
+		}
+
+		throw new Error('Expected error');
 	});
 
-	it('should error if no URL using callback', function (done) {
+	it('should error if no URL using callback', async function () {
 		this.server = http.createServer((req, res) => {
 			res.writeHead(200);
 			res.end('foo!');
 		});
 
-		this.server.listen(1337, '127.0.0.1', () => {
+		await new Promise(resolve => this.server.listen(1337, '127.0.0.1', resolve));
+
+		await new Promise((resolve, reject) => {
 			request({}, err => {
 				try {
-					if (err) {
-						expect(err.message).to.equal('options.uri is a required argument');
-						done();
-					} else {
-						done(new Error('Expected request to fail'));
+					if (!err) {
+						throw new Error('Expected request to fail');
 					}
+
+					expect(err.message).to.equal('options.uri is a required argument');
+					resolve();
 				} catch (e) {
-					done(e);
+					reject(e);
 				}
 			});
 		});
 	});
 
-	it('should make http request without default config', function (done) {
+	it('should make http request without default config', async function () {
 		this.server = http.createServer((req, res) => {
 			res.end('foo!');
 		});
 
-		this.server.listen(1337, '127.0.0.1', () => {
+		await new Promise(resolve => this.server.listen(1337, '127.0.0.1', resolve));
+
+		await new Promise((resolve, reject) => {
 			request({
 				url: 'http://127.0.0.1:1337'
 			}, (err, res, body) => {
@@ -90,9 +92,9 @@ describe('request', () => {
 					}
 					expect(res.statusCode).to.equal(200);
 					expect(body).to.equal('foo!');
-					done();
+					resolve();
 				} catch (e) {
-					done(e);
+					reject(e);
 				}
 			});
 		});
@@ -413,7 +415,7 @@ describe('request', () => {
 		});
 	});
 
-	it('should proxy https request', function (done) {
+	it('should proxy https request', async function () {
 		this.timeout(5000);
 		this.slow(4000);
 
@@ -446,30 +448,30 @@ describe('request', () => {
 			res.end('foo!');
 		});
 
-		Promise
-			.all([
-				new Promise(resolve => this.server.listen(1337, '127.0.0.1', resolve)),
-				new Promise(resolve => this.server2.listen(1338, '127.0.0.1', resolve))
-			])
-			.then(() => {
-				// wait 1 second for the default config to load
-				setTimeout(() => {
-					request({
-						url: 'https://127.0.0.1:1337'
-					}, (err, res, body) => {
-						try {
-							if (err) {
-								throw err;
-							}
-							expect(res.statusCode).to.equal(200);
-							expect(parseInt(res.headers['content-length'])).to.equal(4);
-							expect(body).to.equal('foo!');
-							done();
-						} catch (e) {
-							done(e);
-						}
-					});
-				}, 1000);
+		await Promise.all([
+			new Promise(resolve => this.server.listen(1337, '127.0.0.1', resolve)),
+			new Promise(resolve => this.server2.listen(1338, '127.0.0.1', resolve))
+		]);
+
+		// wait 1 second for the default config to load
+		await new Promise(resolve => setTimeout(resolve, 1000));
+
+		await new Promise((resolve, reject) => {
+			request({
+				url: 'https://127.0.0.1:1337'
+			}, (err, res, body) => {
+				try {
+					if (err) {
+						throw err;
+					}
+					expect(res.statusCode).to.equal(200);
+					expect(parseInt(res.headers['content-length'])).to.equal(4);
+					expect(body).to.equal('foo!');
+					resolve();
+				} catch (e) {
+					reject(e);
+				}
 			});
+		});
 	});
 });

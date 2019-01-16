@@ -26,12 +26,11 @@
     "appcd-response": "^1.1.4",
     "appcd-util": "^1.1.4",
     "fs-extra": "^7.0.1",
-    "source-map-support": "^0.5.9",
+    "source-map-support": "^0.5.10",
     "uuid": "^3.3.2"
   },
   "devDependencies": {
-    "appcd-gulp": "^1.2.1",
-    "gulp": "^3.9.1",
+    "appcd-gulp": "^2.0.0",
     "tmp": "^0.0.33"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-telemetry",

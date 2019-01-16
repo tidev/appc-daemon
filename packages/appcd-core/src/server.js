@@ -15,7 +15,7 @@ import Telemetry from 'appcd-telemetry';
 import WebServer from 'appcd-http';
 import WebSocketSession from './websocket-session';
 
-import { arch as getArch, arrayify, get, sleep, trackTimers } from 'appcd-util';
+import { arch as getArch, arrayify, get, trackTimers } from 'appcd-util';
 import { expandPath } from 'appcd-path';
 import { i18n } from 'appcd-response';
 import { isDir, isFile } from 'appcd-fs';

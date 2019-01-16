@@ -1,23 +1,32 @@
 'use strict';
 
 module.exports = (opts) => {
-	const gulp        = opts.gulp;
+	const {
+		exports,
+		projectDir
+	} = opts;
+
+	if (!exports) {
+		throw new Error('Missing required "exports" option');
+	}
 
 	const $           = require('gulp-load-plugins')();
 	const ansiColors  = require('ansi-colors');
 	const babelConf   = require('../babel')(opts);
 	const fs          = require('fs-extra');
+	const gulp        = require('gulp');
 	const log         = require('fancy-log');
 	const Module      = require('module');
 	const path        = require('path');
 	const spawnSync   = require('child_process').spawnSync;
 
-	const projectDir  = opts.projectDir;
 	const coverageDir = path.join(projectDir, 'coverage');
 	const distDir     = path.join(projectDir, 'dist');
 	const docsDir     = path.join(projectDir, 'docs');
 
 	const isWindows   = process.platform === 'win32';
+
+	const { parallel, series } = gulp;
 
 	/*
 	 * Inject appcd-gulp into require() search path
@@ -31,13 +40,10 @@ module.exports = (opts) => {
 	/*
 	 * Clean tasks
 	 */
-	gulp.task('clean', [ 'clean-coverage', 'clean-dist', 'clean-docs' ]);
-
-	gulp.task('clean-coverage', done => fs.remove(coverageDir, done));
-
-	gulp.task('clean-dist', done => fs.remove(distDir, done));
-
-	gulp.task('clean-docs', done => fs.remove(docsDir, done));
+	async function cleanCoverage() { return fs.remove(coverageDir); }
+	async function cleanDist() { return fs.remove(distDir); }
+	async function cleanDocs() { return fs.remove(docsDir); }
+	exports.clean = parallel(cleanCoverage, cleanDist, cleanDocs);
 
 	/*
 	 * lint tasks
@@ -63,38 +69,37 @@ module.exports = (opts) => {
 		}
 
 		return gulp.src(pattern)
-			.pipe($.plumber())
 			.pipe($.eslint({ baseConfig }))
 			.pipe($.eslint.format())
 			.pipe($.eslint.failAfterError());
 	}
-
-	gulp.task('lint', [ 'lint-src', 'lint-test' ]);
-
-	gulp.task('lint-src', () => lint('src/**/*.js'));
-
-	gulp.task('lint-test', () => lint('test/**/test-*.js', 'eslint-tests.json'));
+	async function lintSrc() { return lint('src/**/*.js'); }
+	async function lintTest() { return lint('test/**/test-*.js', 'eslint-tests.json'); }
+	exports['lint-src'] = lintSrc;
+	exports['lint-test'] = lintTest;
+	exports.lint = parallel(lintSrc, lintTest);
 
 	/*
 	 * build tasks
 	 */
-	gulp.task('build', [ 'build-src' ]);
-
-	gulp.task('build-src', [ 'clean-dist', 'lint-src' ], () => {
+	const build = series(parallel(cleanDist, lintSrc), function build() {
 		return gulp.src('src/**/*.js')
 			.pipe($.plumber())
 			.pipe($.debug({ title: 'build' }))
 			.pipe($.sourcemaps.init())
 			.pipe($.babel({
-				plugins: babelConf.plugins,
-				presets: babelConf.presets,
+				cwd:        __dirname,
+				plugins:    babelConf.plugins,
+				presets:    babelConf.presets,
 				sourceRoot: 'src'
 			}))
 			.pipe($.sourcemaps.write())
 			.pipe(gulp.dest(distDir));
 	});
+	exports.build = build;
+	exports.default = build;
 
-	gulp.task('docs', [ 'lint-src', 'clean-docs' ], () => {
+	exports.docs = series(parallel(cleanDocs, lintSrc), async () => {
 		const esdoc = require('esdoc').default;
 
 		esdoc.generate({
@@ -126,12 +131,7 @@ module.exports = (opts) => {
 	/*
 	 * test tasks
 	 */
-	gulp.task('test',          [ 'build', 'lint-test' ],                      () => runTests());
-	gulp.task('test-only',     [ 'lint-test' ],                               () => runTests());
-	gulp.task('coverage',      [ 'clean-coverage', 'lint-src', 'lint-test' ], () => runTests(true));
-	gulp.task('coverage-only', [ 'clean-coverage', 'lint-test' ],             () => runTests(true));
-
-	function runTests(cover) {
+	async function runTests(cover) {
 		const args = [];
 		let { execPath } = process;
 
@@ -207,7 +207,7 @@ module.exports = (opts) => {
 			args.push('test/**/test-*.js');
 		}
 
-		log('Running: ' + ansiColors.cyan(execPath + ' ' + args.join(' ')));
+		log(`Running: ${ansiColors.cyan(`${execPath} ${args.join(' ')}`)}`);
 
 		// run!
 		try {
@@ -223,18 +223,6 @@ module.exports = (opts) => {
 			}
 		}
 	}
-
-	gulp.task('watch', cb => {
-		gulp.watch(`${process.cwd()}/src/**/*.js`, [ 'build' ], function (event) {
-			console.log('File ' + event.path + ' was ' + event.type + ', running tasks...');
-		});
-	});
-
-	gulp.task('watch-test', cb => {
-		gulp.watch([ `${process.cwd()}/src/**/*.js`, `${process.cwd()}/test/*.js` ], [ 'test' ], function (event) {
-			console.log('File ' + event.path + ' was ' + event.type + ', running tasks...');
-		});
-	});
 
 	function resolveModuleBin(name) {
 		return path.resolve(resolveModule(name), '..', '.bin');
@@ -253,5 +241,27 @@ module.exports = (opts) => {
 		}
 	}
 
-	gulp.task('default', [ 'build' ]);
+	exports.test             = series(parallel(lintTest, build),                function test() { return runTests(); });
+	exports['test-only']     = series(lintTest,                                 function test() { return runTests(); });
+	exports.coverage         = series(parallel(cleanCoverage, lintTest, build), function test() { return runTests(true); });
+	exports['coverage-only'] = series(parallel(cleanCoverage, lintTest),        function test() { return runTests(true); });
+
+	/*
+	 * watch tasks
+	 */
+	exports.watch = async function watch() {
+		gulp.watch(`${process.cwd()}/src/**/*.js`)
+			.on('all', async (type, path) => {
+				await build();
+				console.log(`File ${path} was ${type}, running tasks...`);
+			});
+	};
+
+	exports['watch-test'] = async function watchTest() {
+		gulp.watch([ `${process.cwd()}/src/**/*.js`, `${process.cwd()}/test/*.js` ])
+			.on('all', async (type, path) => {
+				await test();
+				console.log(`File ${path} was ${type}, running tasks...`);
+			});
+	};
 };

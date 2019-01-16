@@ -16,12 +16,11 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "source-map-support": "^0.5.9",
+    "source-map-support": "^0.5.10",
     "winreg": "^1.2.4"
   },
   "devDependencies": {
-    "appcd-gulp": "^1.2.1",
-    "gulp": "^3.9.1"
+    "appcd-gulp": "^2.0.0"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-winreg",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",

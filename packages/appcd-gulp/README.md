@@ -4,11 +4,17 @@ Common gulp tasks and utilities.
 
 Visit https://github.com/appcelerator/appc-daemon for more information.
 
+> :warning: appcd-gulp@2.x requires Gulp 4. Use appcd-gulp@1.x for Gulp 3 compatibility.
+
+## Prerequisites
+
+appcd-gulp requires you to globally install [gulp](https://npmjs.org/package/gulp) 4.x:
+
+	[sudo] npm i -g gulp
+
 ## Installation
 
-> Note: You must install [gulp](https://npmjs.org/package/gulp) 3.x globally.
-
-	npm i appcd-gulp gulp --save-dev
+	npm i appcd-gulp --save-dev
 
 ## Usage
 

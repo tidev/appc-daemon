@@ -112,7 +112,7 @@ describe('FSWatcher', () => {
 			}
 		});
 
-		afterEach(function (done) {
+		afterEach(async function () {
 			this.timeout(10000);
 			if (restricted.shouldRunTests()) {
 				process.setuid(0);
@@ -122,20 +122,22 @@ describe('FSWatcher', () => {
 			if (logger.enabled) {
 				console.log('\n**********************************************************************************\n');
 			}
-			setTimeout(() => done(), 1000);
+			await sleep(1000);
 		});
 
 		describe('directories', () => {
-			it('should watch an existing directory for a new file', done => {
+			it('should watch an existing directory for a new file', async () => {
 				const tmp = makeTempDir();
 				const filename = path.join(tmp, 'foo.txt');
 				let counter = 0;
 
-				setTimeout(() => {
+				await sleep(150);
+
+				await new Promise((resolve, reject) => {
 					new FSWatcher(tmp, null)
 						.on('change', evt => {
 							expect(evt).to.be.an('object');
-							if (evt.file.indexOf(tmpDir) === 0 && ++counter === 1) {
+							if (evt.file.startsWith(tmpDir) && ++counter === 1) {
 								expect(evt.action).to.equal('add');
 								expect(evt.file).to.equal(real(filename));
 
@@ -144,18 +146,18 @@ describe('FSWatcher', () => {
 								expect(stats.fswatchers).to.be.above(0);
 								expect(stats.watchers).to.equal(1);
 
-								done();
+								resolve();
 							}
 						})
-						.once('error', done);
+						.once('error', reject);
 
 					log(renderTree());
 					log('Writing %s', highlight(filename));
 					fs.writeFileSync(filename, 'foo!');
-				}, 150);
+				});
 			});
 
-			it('should close and re-open watcher', function (done) {
+			it('should close and re-open watcher', async function () {
 				this.timeout(10000);
 				this.slow(8000);
 
@@ -163,57 +165,61 @@ describe('FSWatcher', () => {
 				const filename = path.join(tmp, 'foo.txt');
 				let counter = 0;
 
-				setTimeout(() => {
-					const watcher = new FSWatcher(tmp)
-						.on('change', evt => {
-							if (evt.file.indexOf(tmpDir) === 0) {
-								switch (++counter) {
-									case 1:
-										expect(evt.action).to.equal('add');
-										expect(evt.file).to.equal(real(filename));
+				await sleep(150);
 
+				await new Promise((resolve, reject) => {
+					const watcher = new FSWatcher(tmp);
+
+					watcher.on('change', evt => {
+						if (evt.file.startsWith(tmpDir)) {
+							switch (++counter) {
+								case 1:
+									expect(evt.action).to.equal('add');
+									expect(evt.file).to.equal(real(filename));
+
+									const stats = status();
+									expect(stats.nodes).to.be.above(0);
+									expect(stats.fswatchers).to.be.above(0);
+									expect(stats.watchers).to.equal(1);
+
+									log('Closing watcher');
+									expect(watcher.close()).to.be.true;
+
+									setTimeout(() => {
 										const stats = status();
-										expect(stats.nodes).to.be.above(0);
-										expect(stats.fswatchers).to.be.above(0);
-										expect(stats.watchers).to.equal(1);
+										expect(stats.nodes).to.equal(0);
+										expect(stats.fswatchers).to.equal(0);
+										expect(stats.watchers).to.equal(0);
 
-										log('Closing watcher');
-										expect(watcher.close()).to.be.true;
+										log('Opening watcher');
+										watcher.open();
 
 										setTimeout(() => {
-											const stats = status();
-											expect(stats.nodes).to.equal(0);
-											expect(stats.fswatchers).to.equal(0);
-											expect(stats.watchers).to.equal(0);
-
-											log('Opening watcher');
-											watcher.open();
-
-											setTimeout(() => {
-												log('Appending to %s', highlight(filename));
-												fs.appendFileSync(filename, '\nbar!');
-											}, 1000);
+											log('Appending to %s', highlight(filename));
+											fs.appendFileSync(filename, '\nbar!');
 										}, 1000);
-										break;
+									}, 1000);
+									break;
 
-									case 2:
-										expect(evt.action).to.equal('change');
-										expect(evt.file).to.equal(real(filename));
+								case 2:
+									expect(evt.action).to.equal('change');
+									expect(evt.file).to.equal(real(filename));
 
-										expect(() => {
-											log('Re-opening watcher');
-											watcher.open();
-										}).to.throw(Error, 'Already open');
+									expect(() => {
+										log('Re-opening watcher');
+										watcher.open();
+									}).to.throw(Error, 'Already open');
 
-										done();
-								}
+									resolve();
 							}
-						})
-						.once('error', done);
+						}
+					});
+
+					watcher.once('error', reject);
 
 					log('Writing %s', highlight(filename));
 					fs.writeFileSync(filename, 'foo!');
-				}, 150);
+				});
 			});
 
 			it('should watch an existing directing for a new file that is changed', done => {
@@ -224,7 +230,7 @@ describe('FSWatcher', () => {
 				setTimeout(() => {
 					new FSWatcher(tmp)
 						.on('change', evt => {
-							if (evt.file.indexOf(tmpDir) === 0) {
+							if (evt.file.startsWith(tmpDir)) {
 								counter++;
 								if (counter === 1) {
 									// adding the file
@@ -261,7 +267,7 @@ describe('FSWatcher', () => {
 
 				new FSWatcher(tmp)
 					.on('change', evt => {
-						if (evt.file.indexOf(tmpDir) === 0) {
+						if (evt.file.startsWith(tmpDir)) {
 							log('Change Event: %s %s (counter=%s)', green(`[${evt.action}]`), highlight(evt.file), counter);
 							log(renderTree());
 
@@ -301,7 +307,7 @@ describe('FSWatcher', () => {
 
 				const watcher = new FSWatcher(tmp)
 					.on('change', evt => {
-						if (evt.file.indexOf(tmpDir) === 0) {
+						if (evt.file.startsWith(tmpDir)) {
 							if (counter === 1) {
 								log('Got event!');
 								expect(evt.action).to.equal('add');
@@ -350,7 +356,7 @@ describe('FSWatcher', () => {
 				setTimeout(() => {
 					new FSWatcher(fooDir)
 						.on('change', evt => {
-							if (evt.file.indexOf(tmpDir) === 0) {
+							if (evt.file.startsWith(tmpDir)) {
 								counter++;
 								log('Change Event: %s %s (counter=%s)', green(`[${evt.action}]`), highlight(evt.file), counter);
 
@@ -505,7 +511,7 @@ describe('FSWatcher', () => {
 
 						new FSWatcher(tmp)
 							.on('change', evt => {
-								if (evt.file.indexOf(tmpDir) === 0) {
+								if (evt.file.startsWith(tmpDir)) {
 									expect(evt.action).to.equal('add');
 									expect(evt.file).to.equal(real(filename));
 									done();
@@ -530,7 +536,7 @@ describe('FSWatcher', () => {
 
 				new FSWatcher(filename)
 					.on('change', evt => {
-						if (evt.file.indexOf(tmpDir) === 0) {
+						if (evt.file.startsWith(tmpDir)) {
 							expect(evt.action).to.equal('change');
 							expect(evt.file).to.equal(real(filename));
 							done();
@@ -554,7 +560,7 @@ describe('FSWatcher', () => {
 
 				new FSWatcher(tmp)
 					.on('change', evt => {
-						if (counter && evt.file.indexOf(tmpDir) === 0) {
+						if (counter && evt.file.startsWith(tmpDir)) {
 							try {
 								expect(evt.action).to.equal('add');
 								expect(evt.file).to.equal(real(filename));
@@ -585,7 +591,7 @@ describe('FSWatcher', () => {
 					.on('change', evt => {
 						// console.log(counter, evt);
 
-						if (counter && evt.file.indexOf(tmpDir) === 0) {
+						if (counter && evt.file.startsWith(tmpDir)) {
 							if (counter === 1) {
 								expect(evt.action).to.equal('add');
 								expect(evt.file).to.equal(real(filename));
@@ -642,7 +648,7 @@ describe('FSWatcher', () => {
 				setTimeout(() => {
 					new FSWatcher(filename)
 						.on('change', evt => {
-							if (evt.file.indexOf(tmpDir) === 0) {
+							if (evt.file.startsWith(tmpDir)) {
 								counter++;
 
 								if (counter === 1) {
@@ -693,7 +699,7 @@ describe('FSWatcher', () => {
 				setTimeout(() => {
 					new FSWatcher(tmp, { recursive: true })
 						.on('change', evt => {
-							if (evt.file.indexOf(tmpDir) === 0) {
+							if (evt.file.startsWith(tmpDir)) {
 								counter++;
 								log('Change Event: %s %s (counter=%s)', green(`[${evt.action}]`), highlight(evt.file), counter);
 
@@ -750,7 +756,7 @@ describe('FSWatcher', () => {
 				setTimeout(() => {
 					new FSWatcher(tmp, { recursive: true })
 						.on('change', evt => {
-							if (evt.file.indexOf(tmpDir) === 0) {
+							if (evt.file.startsWith(tmpDir)) {
 								switch (++counter) {
 									case 1:
 										expect(evt.action).to.equal('add');
@@ -797,7 +803,7 @@ describe('FSWatcher', () => {
 				}, 150);
 			});
 
-			it('should fire an event for two watcher down same path', function (done) {
+			it('should fire an event for two watcher down same path', async function () {
 				this.timeout(10000);
 				this.slow(8000);
 
@@ -806,44 +812,45 @@ describe('FSWatcher', () => {
 
 				const barDir = path.join(tmp, 'foo', 'bar');
 				log('Creating foo/bar directory: %s', highlight(barDir));
-				fs.mkdirsSync(barDir);
+				await fs.mkdirs(barDir);
 
 				let counter = 0;
 				const bazFile = path.join(barDir, 'baz.txt');
 
-				setTimeout(() => {
-					function check() {
-						if (++counter === 3) {
-							done();
-						}
-					}
+				await sleep(150);
 
-					const watcher1 = new FSWatcher(tmp, { recursive: true })
-						.on('change', evt => {
-							if (evt.file.indexOf(tmpDir) === 0) {
+				await new Promise((resolve, reject) => {
+					const check = () => {
+						if (++counter === 3) {
+							resolve();
+						}
+					};
+
+					new FSWatcher(tmp, { recursive: true })
+						.on('change', async evt => {
+							if (evt.file.startsWith(tmpDir)) {
 								check();
-								setTimeout(() => {
-									fs.appendFileSync(bazFile, 'more baz!');
-								}, 1000);
+								await sleep(1000);
+								fs.appendFileSync(bazFile, 'more baz!');
 							}
 						})
-						.on('error', done);
+						.on('error', reject);
 
 					const watcher2 = new FSWatcher(barDir)
 						.on('change', evt => {
-							if (evt.file.indexOf(tmpDir) === 0) {
+							if (evt.file.startsWith(tmpDir)) {
 								log('Closing watcher 2');
 								watcher2.close();
 								log(renderTree());
 								check();
 							}
 						})
-						.on('error', done);
+						.on('error', reject);
 
 					log(renderTree());
 					log('Writing %s', highlight(bazFile));
 					fs.writeFileSync(bazFile, 'baz!');
-				}, 150);
+				});
 			});
 
 			it('should unwatch recursive directory watcher', function (done) {
@@ -864,7 +871,7 @@ describe('FSWatcher', () => {
 				setTimeout(() => {
 					const watcher = new FSWatcher(tmp, { recursive: true })
 						.on('change', evt => {
-							if (evt.file.indexOf(tmpDir) === 0) {
+							if (evt.file.startsWith(tmpDir)) {
 								expect(evt.action).to.equal('change');
 								expect(evt.file).to.equal(real(filename));
 								watcher.close();
@@ -911,7 +918,7 @@ describe('FSWatcher', () => {
 				setTimeout(() => {
 					const watcher = new FSWatcher(tmp, { recursive: true, depth: 2 })
 						.on('change', evt => {
-							if (evt.file.indexOf(tmpDir) === 0) {
+							if (evt.file.startsWith(tmpDir)) {
 								clearTimeout(timer);
 								lastEvt = evt;
 								checkEvent();
@@ -998,7 +1005,7 @@ describe('FSWatcher', () => {
 				setTimeout(() => {
 					new FSWatcher(tmp, { recursive: true })
 						.on('change', evt => {
-							if (evt.file.indexOf(tmpDir) === 0) {
+							if (evt.file.startsWith(tmpDir)) {
 								firstCounter++;
 								if (++firstCounter >= files.length) {
 									finalize();
@@ -1009,7 +1016,7 @@ describe('FSWatcher', () => {
 
 					new FSWatcher(tmp, { recursive: true, depth: 2 })
 						.on('change', evt => {
-							if (evt.file.indexOf(tmpDir) === 0) {
+							if (evt.file.startsWith(tmpDir)) {
 								clearTimeout(timer);
 								lastEvt = evt;
 								checkEvent();
@@ -1201,7 +1208,7 @@ describe('FSWatcher', () => {
 				setTimeout(() => {
 					new FSWatcher(bazDir, { recursive: true })
 						.on('change', evt => {
-							if (evt.file.indexOf(tmpDir) === 0) {
+							if (evt.file.startsWith(tmpDir)) {
 								// console.log(evt);
 
 								switch (++counter) {
@@ -1255,7 +1262,7 @@ describe('FSWatcher', () => {
 				setTimeout(() => {
 					new FSWatcher(bazDir, { recursive: true })
 						.on('change', evt => {
-							if (evt.file.indexOf(tmpDir) === 0) {
+							if (evt.file.startsWith(tmpDir)) {
 								// console.log(evt);
 
 								switch (++counter) {
@@ -1312,7 +1319,7 @@ describe('FSWatcher', () => {
 				setTimeout(() => {
 					new FSWatcher(bazDir, { recursive: true })
 						.on('change', evt => {
-							if (evt.file.indexOf(tmpDir) === 0) {
+							if (evt.file.startsWith(tmpDir)) {
 								// console.log(evt);
 
 								switch (++counter) {
@@ -1369,7 +1376,7 @@ describe('FSWatcher', () => {
 				setTimeout(() => {
 					new FSWatcher(bazDir, { recursive: true })
 						.on('change', evt => {
-							if (evt.file.indexOf(tmpDir) === 0) {
+							if (evt.file.startsWith(tmpDir)) {
 								// console.log(evt);
 
 								switch (++counter) {
@@ -1428,7 +1435,7 @@ describe('FSWatcher', () => {
 				setTimeout(() => {
 					new FSWatcher(bazDir, { recursive: true })
 						.on('change', evt => {
-							if (evt.file.indexOf(tmpDir) === 0) {
+							if (evt.file.startsWith(tmpDir)) {
 								// console.log(evt);
 
 								expect(evt.action).to.equal('change');
@@ -1476,7 +1483,7 @@ describe('FSWatcher', () => {
 				setTimeout(() => {
 					new FSWatcher(bazDir, { recursive: true })
 						.on('change', evt => {
-							if (evt.file.indexOf(tmpDir) === 0) {
+							if (evt.file.startsWith(tmpDir)) {
 								// console.log(evt);
 
 								expect(evt.action).to.equal('change');
@@ -1496,9 +1503,9 @@ describe('FSWatcher', () => {
 		});
 
 		describe('restricted', () => {
-			let _it = restricted.shouldRunTests() ? it : it.skip;
+			let _it = restricted.shouldRunTests() ? it.only : it.skip;
 
-			_it(`should detect restricted directory${restricted.getDescription()}`, function (done) {
+			_it(`should detect restricted directory${restricted.getDescription()}`, async function () {
 				this.slow(10000);
 				this.timeout(9000);
 
@@ -1507,7 +1514,7 @@ describe('FSWatcher', () => {
 
 				const fooDir = path.join(tmp, 'foo');
 				log('Creating foo directory: %s', highlight(fooDir));
-				fs.mkdirSync(fooDir);
+				await fs.mkdirs(fooDir);
 
 				const barDir = path.join(fooDir, 'bar');
 				const bazFile = path.join(barDir, 'baz.txt');
@@ -1518,50 +1525,54 @@ describe('FSWatcher', () => {
 				log('Switching to effective user to %s', restricted.getUser());
 				process.seteuid(restricted.getUser());
 
-				let watcher = null;
 				let originalStatus = null;
 				let counter = 0;
 
-				Promise.resolve()
-					.then(() => sleep(150))
-					.then(() => {
-						watcher = new FSWatcher(tmp, { recursive: true })
+				await sleep(150);
+
+				await Promise.race([
+					new Promise((resolve, reject) => {
+						new FSWatcher(tmp, { recursive: true })
 							.on('change', evt => {
+								if (evt.file.startsWith(tmpDir)) {
+									log(`counter = ${++counter}`);
+								}
 								log(evt);
-								if (evt.file.indexOf(tmpDir) === 0) {
+								if (evt.file.startsWith(tmpDir)) {
 									log(renderTree());
-									counter++;
 								}
 							})
 							.on('error', err => {
 								log('ERROR!', err);
-								done(err);
+								reject(err);
 							});
-					})
-					.then(() => sleep(150))
-					.then(() => {
+					}),
+
+					(async () => {
+						await sleep(250);
+
 						log(renderTree());
 						originalStatus = status();
 						logStats(originalStatus);
 
 						log('Switching back to root user');
 						process.setuid(0);
-					})
-					.then(() => sleep(150))
-					.then(() => {
+
+						await sleep(250);
+
 						log('Creating bar dir: %s', highlight(barDir));
-						fs.mkdirsSync(barDir);
+						await fs.mkdirs(barDir);
 
 						log('Writing baz file: %s', highlight(bazFile));
 						fs.writeFileSync(bazFile, 'baz!');
 
 						expect(counter).to.equal(0);
-					})
-					.then(() => sleep(150))
-					.then(() => {
+
+						await sleep(250);
+
 						log(renderTree());
 
-						const stats = status();
+						let stats = status();
 						logStats(stats);
 						expect(stats.nodes).to.equal(originalStatus.nodes);
 						expect(stats.fswatchers).to.equal(originalStatus.fswatchers);
@@ -1569,10 +1580,10 @@ describe('FSWatcher', () => {
 
 						log('Unrestricting %s', highlight(fooDir));
 						fs.chmodSync(fooDir, '755');
-					})
-					.then(() => sleep(150))
-					.then(() => {
-						const stats = status();
+
+						await sleep(250);
+
+						stats = status();
 						logStats(stats);
 						expect(stats.nodes).to.equal(originalStatus.nodes + 1);
 						expect(stats.fswatchers).to.equal(originalStatus.fswatchers + 2);
@@ -1586,13 +1597,13 @@ describe('FSWatcher', () => {
 
 						log('Writing baz file again: %s', highlight(bazFile));
 						fs.writeFileSync(bazFile, 'baz 2!');
-					})
-					.then(() => sleep(150))
-					.then(() => {
+
+						await sleep(250);
+
 						// now we have the event for baz.txt
 						expect(counter).to.equal(4);
 
-						const stats = status();
+						stats = status();
 						logStats(stats);
 
 						log('Locking down foo to root user only again');
@@ -1600,10 +1611,10 @@ describe('FSWatcher', () => {
 
 						log('Switching to effective user to %s', restricted.getUser());
 						process.seteuid(restricted.getUser());
-					})
-					.then(() => sleep(150))
-					.then(() => {
-						const stats = status();
+
+						await sleep(250);
+
+						stats = status();
 						logStats(stats);
 						expect(stats.nodes).to.equal(originalStatus.nodes);
 						expect(stats.fswatchers).to.equal(originalStatus.fswatchers);
@@ -1617,23 +1628,24 @@ describe('FSWatcher', () => {
 
 						log('Writing baz file yet again: %s', highlight(bazFile));
 						fs.writeFileSync(bazFile, 'baz 2!');
-					})
-					.then(() => sleep(150))
-					.then(() => {
+
+						await sleep(250);
+
 						// we should not have seen the last update to baz.txt
 						expect(counter).to.equal(5);
-						done();
-					})
-					.catch(done);
+					})()
+				]);
 			});
 		});
 
 		describe('errors', () => {
-			it('should emit error if directory watch handler throws exception', done => {
+			it('should emit error if directory watch handler throws exception', async () => {
 				const tmp = makeTempDir();
 				const filename = path.join(tmp, 'foo.txt');
 
-				setTimeout(() => {
+				await sleep(150);
+
+				await new Promise((resolve, reject) => {
 					new FSWatcher(tmp)
 						.on('change', () => {
 							throw new Error('Oh no!');
@@ -1642,22 +1654,24 @@ describe('FSWatcher', () => {
 							try {
 								expect(err).to.be.an.instanceof(Error);
 								expect(err.message).to.equal('Oh no!');
-								done();
+								resolve();
 							} catch (e) {
-								done(e);
+								reject(e);
 							}
 						});
 
 					fs.writeFileSync(filename, 'foo!');
-				}, 150);
+				});
 			});
 
-			it('should emit error if file watch handler throws exception', done => {
+			it('should emit error if file watch handler throws exception', async () => {
 				const tmp = makeTempDir();
 				const filename = path.join(tmp, 'foo.txt');
 				fs.writeFileSync(filename, 'foo!');
 
-				setTimeout(() => {
+				await sleep(150);
+
+				await new Promise((resolve, reject) => {
 					new FSWatcher(filename)
 						.on('change', () => {
 							throw new Error('Oh no!');
@@ -1666,14 +1680,14 @@ describe('FSWatcher', () => {
 							try {
 								expect(err).to.be.an.instanceof(Error);
 								expect(err.message).to.equal('Oh no!');
-								done();
+								resolve();
 							} catch (e) {
-								done(e);
+								reject(e);
 							}
 						});
 
 					fs.appendFileSync(filename, 'more foo!');
-				}, 150);
+				});
 			});
 		});
 	});

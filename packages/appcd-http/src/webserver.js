@@ -4,6 +4,7 @@ import EventEmitter from 'events';
 import helmet from 'koa-helmet';
 import Koa from 'koa';
 import path from 'path';
+import pluralize from 'pluralize';
 import Router from './router';
 import send from 'koa-send';
 
@@ -12,7 +13,6 @@ import { Server as WebSocketServer } from 'ws';
 
 const logger = appcdLogger('appcd:http:webserver');
 const { alert, highlight, note, notice, ok, yellow } = appcdLogger.styles;
-const { pluralize } = appcdLogger;
 
 /**
  * The internal web server that serves up API and WebSocket requests.

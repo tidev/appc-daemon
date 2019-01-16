@@ -1,5 +1,5 @@
 {
-	"extends": [ "axway/env-node", "axway/+mocha", "axway/+babel" ],
+	"extends": [ "axway/env-node", "axway/+babel", "axway/+chai", "axway/+mocha" ],
 	"globals": {
 		"appcd": false,
 		"after": false,
@@ -13,5 +13,8 @@
 		"spy": false,
 		"stub": false,
 		"sinon": false
+	},
+	"rules": {
+		"promise/always-return": "off"
 	}
 }

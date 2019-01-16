@@ -143,28 +143,26 @@ export function spawn(params = {}) {
  * @param {String} [opts.pathExt] - A delimited list of executable extensions. Windows only.
  * @returns {Promise} Resolves the specified executable.
  */
-export function which(executables, opts) {
+export async function which(executables, opts) {
 	if (!Array.isArray(executables)) {
 		executables = [ executables ];
 	}
 
-	return Promise.resolve()
-		.then(function next() {
-			const executable = executables.shift();
-
-			if (!executable) {
-				return executables.length ? next() : Promise.reject(new Error('Unable to find executable'));
-			}
-
-			return new Promise((resolve, reject) => {
-				_which(executable, opts || {}, (err, file) => {
-					if (err) {
-						next().then(resolve).catch(reject);
-					} else {
-						resolve(file);
-					}
+	return executables
+		.reduce(async (promise, executable) => {
+			return promise.then(result => {
+				return result || new Promise(resolve => {
+					return _which(executable, opts || {}, (err, file) => {
+						return resolve(err ? undefined : file);
+					});
 				});
 			});
+		}, Promise.resolve())
+		.then(result => {
+			if (result) {
+				return result;
+			}
+			throw new Error('Unable to find executable');
 		});
 }
 

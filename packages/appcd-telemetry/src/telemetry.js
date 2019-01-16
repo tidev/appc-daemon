@@ -1,3 +1,5 @@
+/* eslint-disable promise/always-return */
+
 /* istanbul ignore if */
 if (!Error.prepareStackTrace) {
 	require('source-map-support/register');

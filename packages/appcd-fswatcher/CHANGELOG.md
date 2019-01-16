@@ -1,3 +1,8 @@
+# v1.1.3
+
+ * Fixed bug where directories becoming unrestricted were not sending correct "add" notifications
+   for child files and directories.
+
 # v1.1.2 (Nov 27, 2018)
 
  * Updated dependencies.

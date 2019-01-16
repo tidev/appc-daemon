@@ -364,29 +364,30 @@ export default class Plugin extends EventEmitter {
 			this.inactivityTimer = null;
 		}
 
-		const resetTimer = () => {
-			// we get the default inactivity timeout even if we have one to preserve a single
-			// code path
-			Dispatcher.call('/appcd/config/plugins/defaultInactivityTimeout')
-				.then(ctx => ctx.response)
-				.catch(() => Promise.resolve(60 * 60 * 1000)) // 1 hour
-				.then(defaultInactivityTimeout => {
-					const timeout = this.inactivityTimeout || defaultInactivityTimeout;
+		const resetTimer = async () => {
+			let timeout = this.inactivityTimeout;
+			if (!timeout) {
+				try {
+					const { response } = await Dispatcher.call('/appcd/config/plugins/defaultInactivityTimeout');
+					timeout = response;
+				} catch (e) {
+					timeout = 60 * 60 * 1000; // 1 hour
+				}
+			}
 
-					if (this.type === 'external' && timeout !== 0 && this.info.state === states.STARTED) {
-						// restart the inactivity timer
-						this.inactivityTimer = setTimeout(() => {
-							if (this.info.activeRequests === 0) {
-								this.logger.log('Deactivating plugin after %s of inactivity: %s', prettyMs(timeout, { verbose: true }), highlight(this.toString()));
-								this.stop();
-							}
-						}, timeout);
-
-						this.inactivityTimer.id = inactivityTimerID++;
-
-						this.logger.log('Setting inactivity timer for %s ms: %s', timeout, this.inactivityTimer.id);
+			if (this.type === 'external' && timeout !== 0 && this.info.state === states.STARTED) {
+				// restart the inactivity timer
+				this.inactivityTimer = setTimeout(() => {
+					if (this.info.activeRequests === 0) {
+						this.logger.log('Deactivating plugin after %s of inactivity: %s', prettyMs(timeout, { verbose: true }), highlight(this.toString()));
+						this.stop();
 					}
-				});
+				}, timeout);
+
+				this.inactivityTimer.id = inactivityTimerID++;
+
+				this.logger.log('Setting inactivity timer for %s ms: %s', timeout, this.inactivityTimer.id);
+			}
 		};
 
 		if (!this.impl) {

@@ -97,7 +97,7 @@ describe('telemetry', () => {
 			}
 		});
 
-		it('should error if not initialized', function (done) {
+		it('should error if not initialized', async function () {
 			const telemetry = this.telemetry = createTelemetry({
 				telemetry: {
 					enabled: true,
@@ -105,21 +105,18 @@ describe('telemetry', () => {
 				}
 			});
 
-			new Dispatcher()
+			const ctx = await new Dispatcher()
 				.register('/appcd/telemetry', telemetry)
 				.call('/appcd/telemetry', {
 					type: 'test'
-				})
-				.then(ctx => {
-					expect(ctx.response.status).to.equal(codes.SERVER_ERROR);
-					expect(ctx.response.statusCode).to.equal(codes.NOT_INITIALIZED);
-					expect(ctx.response.message).to.equal('The telemetry system has not been initialized');
-					done();
-				})
-				.catch(done);
+				});
+
+			expect(ctx.response.status).to.equal(codes.SERVER_ERROR);
+			expect(ctx.response.statusCode).to.equal(codes.NOT_INITIALIZED);
+			expect(ctx.response.message).to.equal('The telemetry system has not been initialized');
 		});
 
-		it('should error if home dir is not valid', function (done) {
+		it('should error if home dir is not valid', async function () {
 			const telemetry = this.telemetry = createTelemetry({
 				telemetry: {
 					enabled: true,
@@ -127,18 +124,18 @@ describe('telemetry', () => {
 				}
 			});
 
-			telemetry.init({})
-				.then(() => {
-					throw new Error('Expected type error');
-				}, err => {
-					expect(err).to.be.instanceof(TypeError);
-					expect(err.message).to.equal('Expected home directory to be a non-empty string');
-					done();
-				})
-				.catch(done);
+			try {
+				await telemetry.init({});
+			} catch (err) {
+				expect(err).to.be.instanceof(TypeError);
+				expect(err.message).to.equal('Expected home directory to be a non-empty string');
+				return;
+			}
+
+			throw new Error('Expected type error');
 		});
 
-		it('should not re-initialize', function (done) {
+		it('should not re-initialize', async function () {
 			const telemetry = this.telemetry = createTelemetry({
 				telemetry: {
 					enabled: true,
@@ -147,14 +144,10 @@ describe('telemetry', () => {
 			});
 
 			expect(telemetry.mid).to.be.null;
-			telemetry.init(makeTempDir())
-				.then(() => {
-					expect(telemetry.mid).to.be.a('string');
-					expect(telemetry.mid).to.not.equal('');
-					return telemetry.init(); // would throw a TypeError if no homeDir
-				})
-				.then(() => done())
-				.catch(done);
+			await telemetry.init(makeTempDir());
+			expect(telemetry.mid).to.be.a('string');
+			expect(telemetry.mid).to.not.equal('');
+			await telemetry.init(); // would throw a TypeError if no homeDir
 		});
 	});
 
@@ -295,30 +288,25 @@ describe('telemetry', () => {
 	});
 
 	describe('Sending Events', () => {
-		afterEach(function (done) {
-			Promise.resolve()
-				.then(async () => {
-					if (this.telemetry) {
-						await this.telemetry.shutdown();
-						this.telemetry = null;
-					}
-				})
-				.then(() => {
-					if (this.server) {
-						return new Promise(resolve => {
-							this.server.close(() => {
-								this.server = null;
-								resolve();
-							});
-						});
-					}
-				})
-				.then(() => sleep(1000))
-				.then(() => done())
-				.catch(done);
+		afterEach(async function () {
+			if (this.telemetry) {
+				await this.telemetry.shutdown();
+				this.telemetry = null;
+			}
+
+			if (this.server) {
+				await new Promise(resolve => {
+					this.server.close(() => {
+						this.server = null;
+						resolve();
+					});
+				});
+			}
+
+			await sleep(1000);
 		});
 
-		it('should send events to the server', function (done) {
+		it('should send events to the server', async function () {
 			this.timeout(20000);
 			this.slow(19000);
 
@@ -334,16 +322,16 @@ describe('telemetry', () => {
 			let i = 0;
 			const eventsDir = makeTempDir();
 
-			createInitializedTelemetry({
+			const telemetry = this.telemetry = await createInitializedTelemetry({
 				telemetry: {
 					eventsDir,
 					sendBatchSize: 5,
 					sendInterval: 5000, // 5 seconds
 					url: 'http://127.0.0.1:1337'
 				}
-			}).then(telemetry => {
-				this.telemetry = telemetry;
+			});
 
+			return new Promise((resolve, reject) => {
 				const timers = [
 					// verify 3 events queued
 					setTimeout(() => {
@@ -352,7 +340,7 @@ describe('telemetry', () => {
 							expect(counter).to.equal(0);
 						} catch (e) {
 							timers.forEach(timer => clearTimeout(timer));
-							done(e);
+							reject(e);
 						}
 					}, 3000),
 
@@ -371,7 +359,7 @@ describe('telemetry', () => {
 							expect(counter).to.equal(1);
 						} catch (e) {
 							timers.forEach(timer => clearTimeout(timer));
-							done(e);
+							reject(e);
 						}
 					}, 8500),
 
@@ -381,9 +369,9 @@ describe('telemetry', () => {
 						try {
 							expect(fs.readdirSync(eventsDir)).to.have.lengthOf(0);
 							expect(counter).to.equal(2);
-							done();
+							resolve();
 						} catch (e) {
-							done(e);
+							reject(e);
 						}
 					}, 12500)
 				];
@@ -403,7 +391,7 @@ describe('telemetry', () => {
 				addEvent();
 				addEvent();
 				addEvent();
-			}).catch(err => done(err));
+			});
 		});
 
 		it('should not delete events if the server fails', async function () {
@@ -673,27 +661,22 @@ describe('telemetry', () => {
 	});
 
 	describe('Shutdown', () => {
-		afterEach(function (done) {
-			Promise.resolve()
-				.then(async () => {
-					if (this.telemetry) {
-						await this.telemetry.shutdown();
-						this.telemetry = null;
-					}
-				})
-				.then(() => {
-					if (this.server) {
-						return new Promise(resolve => {
-							this.server.close(() => {
-								this.server = null;
-								resolve();
-							});
-						});
-					}
-				})
-				.then(() => sleep(1000))
-				.then(() => done())
-				.catch(done);
+		afterEach(async function () {
+			if (this.telemetry) {
+				await this.telemetry.shutdown();
+				this.telemetry = null;
+			}
+
+			if (this.server) {
+				await new Promise(resolve => {
+					this.server.close(() => {
+						this.server = null;
+						resolve();
+					});
+				});
+			}
+
+			await sleep(1000);
 		});
 
 		it('should wait for pending request when shutting down', async function () {

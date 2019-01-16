@@ -6,11 +6,13 @@ import Response, { codes } from 'appcd-response';
 import appcdLogger from './logger';
 
 import { DataServiceDispatcher, DispatcherError } from 'appcd-dispatcher';
+import { filesize } from 'humanize';
 
 const logger = appcdLogger('appcd:core:status');
 const { alert, note, ok } = appcdLogger.styles;
-const { arrowUp, arrowDown } = appcdLogger.symbols;
-const { filesize } = appcdLogger.humanize;
+
+const arrowUp = '↑';
+const arrowDown = '↓';
 
 /**
  * Monitors the Appc Daemon status.

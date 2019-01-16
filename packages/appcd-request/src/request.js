@@ -6,6 +6,7 @@ if (!Error.prepareStackTrace) {
 import appcdLogger from 'appcd-logger';
 import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs';
+import humanize from 'humanize';
 import path from 'path';
 import _request from 'request';
 
@@ -14,7 +15,6 @@ import { Stream } from 'stream';
 
 const logger = appcdLogger('appcd:request');
 const { alert, ok, note } = appcdLogger.styles;
-const { humanize } = appcdLogger;
 
 /**
  * Makes an HTTP request.

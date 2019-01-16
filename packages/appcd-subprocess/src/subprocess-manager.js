@@ -1,3 +1,5 @@
+/* eslint-disable promise/always-return, promise/no-nesting */
+
 import appcdLogger from 'appcd-logger';
 import Dispatcher from 'appcd-dispatcher';
 import gawk from 'gawk';
@@ -8,6 +10,7 @@ import SubprocessError from './subprocess-error';
 import { EventEmitter } from 'events';
 import { expandPath } from 'appcd-path';
 import { prepareNode } from 'appcd-nodejs';
+import { sleep } from 'appcd-util';
 import { spawn } from './subprocess';
 
 const { __n } = i18n();
@@ -82,16 +85,16 @@ export default class SubprocessManager extends Dispatcher {
 						tries--;
 						return spawn(data);
 					})
-					.catch(err => {
+					.catch(async err => {
 						if (err.code === 'ETXTBSY' && tries) {
 							// this error happens on Linux when the executable was just written
 							// and is not ready to be called
 							log('Spawn threw ETXTBSY, retrying...');
-							return new Promise((resolve, reject) => {
-								setTimeout(() => trySpawn().then(resolve, reject), 100);
-							});
+							await sleep(100);
+							await trySpawn();
+						} else {
+							throw err;
 						}
-						throw err;
 					});
 			};
 
@@ -260,7 +263,7 @@ export default class SubprocessManager extends Dispatcher {
 			throw new SubprocessError(codes.NOT_FOUND, 'Process "%s" not running', 'pid');
 		});
 
-		this.register('/kill/:pid?', ctx => {
+		this.register('/kill/:pid?', async ctx => {
 			const { data, params } = ctx.request;
 
 			if (!params.pid) {
@@ -277,11 +280,9 @@ export default class SubprocessManager extends Dispatcher {
 				signal = 0;
 			}
 
-			return this.kill(pid, signal)
-				.then(result => {
-					ctx.response = new Response(result);
-					emitter.emit('kill', pid);
-				});
+			const result = await this.kill(pid, signal);
+			ctx.response = new Response(result);
+			emitter.emit('kill', pid);
 		});
 
 		this.register('/status', ctx => {
@@ -354,12 +355,9 @@ export default class SubprocessManager extends Dispatcher {
 	 * @returns {Promise}
 	 * @access public
 	 */
-	shutdown(forceTimeout = 2000) {
+	async shutdown(forceTimeout = 2000) {
 		log(__n(this.subprocesses.length, 'Shutting down %d subprocess', 'Shutting down %d subprocesses'));
-		return Promise
-			.all(this.subprocesses.map(subprocess => subprocess.kill(forceTimeout)))
-			.then(() => {
-				this.subprocesses.splice(0, this.subprocesses.length);
-			});
+		await Promise.all(this.subprocesses.map(subprocess => subprocess.kill(forceTimeout)));
+		this.subprocesses.splice(0, this.subprocesses.length);
 	}
 }

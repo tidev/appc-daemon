@@ -220,7 +220,7 @@ describe('PluginManager', () => {
 	});
 
 	describe('Internal Plugins', () => {
-		it('should register, start, and stop an internal plugin', function (done) {
+		it('should register, start, and stop an internal plugin', async function () {
 			this.timeout(10000);
 			this.slow(9000);
 
@@ -230,28 +230,20 @@ describe('PluginManager', () => {
 				paths: [ pluginDir ]
 			});
 
-			setTimeout(() => {
-				log('Calling square...');
-				Dispatcher.call('/good-internal/1.2.3/square', { data: { num: 3 } })
-					.then(async (ctx) => {
-						expect(ctx.response).to.equal(9);
+			await sleep(1000);
 
-						await pm.unregisterPluginPath(pluginDir);
+			log('Calling square...');
+			const ctx = await Dispatcher.call('/good-internal/1.2.3/square', { data: { num: 3 } });
+			expect(ctx.response).to.equal(9);
 
-						setTimeout(() => {
-							try {
-								expect(pm.registered).to.have.lengthOf(0);
-								done();
-							} catch (e) {
-								done(e);
-							}
-						}, 1000);
-					})
-					.catch(done);
-			}, 1000);
+			await pm.unregisterPluginPath(pluginDir);
+
+			await sleep(1000);
+
+			expect(pm.registered).to.have.lengthOf(0);
 		});
 
-		it('should fail to load bad internal plugin', function (done) {
+		it('should fail to load bad internal plugin', async function () {
 			this.timeout(10000);
 			this.slow(9000);
 
@@ -259,32 +251,30 @@ describe('PluginManager', () => {
 
 			pm = new PluginManager();
 
-			pm
-				.call('/register', {
-					data: {
-						path: pluginDir
-					}
-				})
-				.then(() => {
-					log('Calling square...');
-					return Dispatcher.call('/bad-internal/1.2.3/square', { data: { num: 3 } })
-						.then(() => {
-							throw new Error('Expected the route to not be found');
-						}, err => {
-							expect(err).to.be.instanceof(PluginError);
-							expect(err.message).to.match(/Failed to load plugin: .*Unexpected token/);
-							const p = pm.registered[0];
-							expect(p.state).to.equal('stopped');
-							expect(p.error).to.match(/Failed to load plugin: .*Unexpected token/);
-						});
-				})
-				.then(() => done())
-				.catch(done);
+			await pm.call('/register', {
+				data: {
+					path: pluginDir
+				}
+			});
+
+			log('Calling square...');
+			try {
+				await Dispatcher.call('/bad-internal/1.2.3/square', { data: { num: 3 } });
+			} catch (err) {
+				expect(err).to.be.instanceof(PluginError);
+				expect(err.message).to.match(/Failed to load plugin: .*Unexpected token/);
+				const p = pm.registered[0];
+				expect(p.state).to.equal('stopped');
+				expect(p.error).to.match(/Failed to load plugin: .*Unexpected token/);
+				return;
+			}
+
+			throw new Error('Expected the route to not be found');
 		});
 	});
 
 	describe('External Plugins', () => {
-		it('should register, start, and stop an external plugin', function (done) {
+		it('should register, start, and stop an external plugin', async function () {
 			// we need to wait a long time just in case the Node.js version isn't installed
 			this.timeout(30000);
 			this.slow(29000);
@@ -295,18 +285,14 @@ describe('PluginManager', () => {
 				paths: [ pluginDir ]
 			});
 
-			setTimeout(() => {
-				log('Calling square...');
-				Dispatcher.call('/good/1.2.3/square', { data: { num: 3 } })
-					.then(ctx => {
-						expect(ctx.response).to.equal(9);
-						done();
-					})
-					.catch(done);
-			}, 1000);
+			await sleep(1000);
+
+			log('Calling square...');
+			const ctx = await Dispatcher.call('/good/1.2.3/square', { data: { num: 3 } });
+			expect(ctx.response).to.equal(9);
 		});
 
-		it('should register, start, and stop an external plugin using partial version match', function (done) {
+		it('should register, start, and stop an external plugin using partial version match', async function () {
 			this.timeout(40000);
 			this.slow(39000);
 
@@ -316,18 +302,14 @@ describe('PluginManager', () => {
 				paths: [ pluginDir ]
 			});
 
-			setTimeout(() => {
-				log('Calling square...');
-				Dispatcher.call('/good/1.x/square', { data: { num: 3 } })
-					.then(ctx => {
-						expect(ctx.response).to.equal(9);
-						done();
-					})
-					.catch(done);
-			}, 1000);
+			await sleep(1000);
+
+			log('Calling square...');
+			const ctx = await Dispatcher.call('/good/1.x/square', { data: { num: 3 } });
+			expect(ctx.response).to.equal(9);
 		});
 
-		it('should call current time service plugin', function (done) {
+		it('should call current time service plugin', async function () {
 			this.timeout(40000);
 			this.slow(39000);
 
@@ -337,20 +319,16 @@ describe('PluginManager', () => {
 				paths: [ pluginDir ]
 			});
 
-			setTimeout(() => {
-				log('Getting current time...');
-				Dispatcher.call('/time-service/latest/current-time')
-					.then(ctx => {
-						log('Current time =', ctx.response);
-						expect(ctx.response).to.be.a('string');
-						expect(ctx.response).to.match(/^\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)$/);
-						done();
-					})
-					.catch(done);
-			}, 1000);
+			await sleep(1000);
+
+			log('Getting current time...');
+			const ctx = await Dispatcher.call('/time-service/latest/current-time');
+			log('Current time =', ctx.response);
+			expect(ctx.response).to.be.a('string');
+			expect(ctx.response).to.match(/^\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)$/);
 		});
 
-		it('should subscribe to current time service plugin', function (done) {
+		it('should subscribe to current time service plugin', async function () {
 			this.timeout(40000);
 			this.slow(39000);
 
@@ -360,52 +338,53 @@ describe('PluginManager', () => {
 				paths: [ pluginDir ]
 			});
 
-			setTimeout(() => {
-				log('Getting current time...');
-				Dispatcher.call('/time-service/latest/current-time', { type: 'subscribe' })
-					.then(ctx => {
-						let counter = 0;
+			await sleep(1000);
 
-						ctx.response
-							.on('data', res => {
-								try {
-									switch (++counter) {
-										case 1:
-											log('Subscription started: %s', highlight(res.topic));
-											expect(res.type).to.equal('subscribe');
-											break;
+			log('Getting current time...');
+			const { response } = await Dispatcher.call('/time-service/latest/current-time', { type: 'subscribe' });
+			let counter = 0;
 
-										case 2:
-										case 3:
-										case 4:
-											log('Received time: %s', highlight(res.message.time));
-											expect(res.type).to.equal('event');
-											expect(res.message.time).to.be.a('string');
-											expect(res.message.time).to.match(/^\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)$/);
+			await new Promise((resolve, reject) => {
+				response
+					.on('data', async res => {
+						try {
+							switch (++counter) {
+								case 1:
+									log('Subscription started: %s', highlight(res.topic));
+									expect(res.type).to.equal('subscribe');
+									break;
 
-											if (counter === 4) {
-												// unsubscribe... we don't care if it succeeds
-												log('Unsubscribing from %s', highlight(res.topic));
-												Dispatcher
-													.call('/time-service/latest/current-time', { sid: res.sid, type: 'unsubscribe', topic: res.topic })
-													.catch(done);
-											}
-											break;
+								case 2:
+								case 3:
+								case 4:
+									log('Received time: %s', highlight(res.message.time));
+									expect(res.type).to.equal('event');
+									expect(res.message.time).to.be.a('string');
+									expect(res.message.time).to.match(/^\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)$/);
+
+									if (counter === 4) {
+										// unsubscribe... we don't care if it succeeds
+										log('Unsubscribing from %s', highlight(res.topic));
+										try {
+											await Dispatcher.call('/time-service/latest/current-time', { sid: res.sid, type: 'unsubscribe', topic: res.topic });
+										} catch (err) {
+											reject(err);
+										}
 									}
-								} catch (e) {
-									done(e);
-								}
-							})
-							.once('end', () => {
-								log('Subscription stream closed');
-								done();
-							});
+									break;
+							}
+						} catch (e) {
+							reject(e);
+						}
 					})
-					.catch(done);
-			}, 1000);
+					.once('end', () => {
+						log('Subscription stream closed');
+						resolve();
+					});
+			});
 		});
 
-		it('should reload a modified external plugin', function (done) {
+		it('should reload a modified external plugin', async function () {
 			this.timeout(40000);
 			this.slow(39000);
 
@@ -416,53 +395,39 @@ describe('PluginManager', () => {
 
 			pm = new PluginManager();
 
-			setTimeout(() => {
-				pm
-					.call('/register', {
-						data: {
-							path: pluginDir
-						}
-					})
-					.then(() => {
-						log('Calling square...');
-						return Dispatcher
-							.call('/good/1.2.3/square', { data: { num: 3 } });
-					})
-					.then(ctx => {
-						log(`Expecting ${ctx.response} to equal 9`);
-						expect(ctx.response).to.equal(9);
+			await sleep(1000);
 
-						log('Copying modified square.js');
-						fs.copySync(path.join(__dirname, 'fixtures', 'modified-square.js'), path.join(pluginDir, 'index.js'));
+			await pm.call('/register', {
+				data: {
+					path: pluginDir
+				}
+			});
 
-						// need to wait at least 2 seconds for the source change to be detected
-						return sleep(3000);
-					})
-					.then(() => {
-						log('Calling square again...');
-						return Dispatcher
-							.call('/good/1.2.3/square', { data: { num: 3 } });
-					})
-					.then(ctx => {
-						expect(ctx.response).to.equal(27);
+			log('Calling square...');
+			let ctx = await Dispatcher.call('/good/1.2.3/square', { data: { num: 3 } });
+			log(`Expecting ${ctx.response} to equal 9`);
+			expect(ctx.response).to.equal(9);
 
-						log('Unregistering plugin');
-						return pm
-							.call('/unregister', {
-								data: {
-									path: pluginDir
-								}
-							});
-					})
-					.then(() => {
-						log('Done');
-						done();
-					})
-					.catch(done);
-			}, 1000);
+			log('Copying modified square.js');
+			fs.copySync(path.join(__dirname, 'fixtures', 'modified-square.js'), path.join(pluginDir, 'index.js'));
+
+			// need to wait at least 2 seconds for the source change to be detected
+			await sleep(3000);
+
+			log('Calling square again...');
+			ctx = await Dispatcher.call('/good/1.2.3/square', { data: { num: 3 } });
+			expect(ctx.response).to.equal(27);
+
+			log('Unregistering plugin');
+			await pm.call('/unregister', {
+				data: {
+					path: pluginDir
+				}
+			});
+			log('Done');
 		});
 
-		it('should spawn a plugin with a cwd of the plugin path', function (done) {
+		it('should spawn a plugin with a cwd of the plugin path', async function () {
 			this.timeout(20000);
 			this.slow(19000);
 
@@ -473,33 +438,24 @@ describe('PluginManager', () => {
 
 			pm = new PluginManager();
 
-			setTimeout(() => {
-				pm
-					.call('/register', {
-						data: {
-							path: pluginDir
-						}
-					})
-					.then(() => {
-						log('Calling counter...');
-						return Dispatcher
-							.call('/good-with-ignore/1.2.3/counter');
-					})
-					.then(ctx => {
-						const counterFile = path.join(pluginDir, 'counter.txt');
-						expect(fs.existsSync(counterFile)).to.equal(true);
-						expect(fs.readFileSync(counterFile, { encoding: 'utf8' })).to.equal('1');
-						fs.removeSync(counterFile);
-					})
-					.then(() => {
-						log('Done');
-						done();
-					})
-					.catch(done);
-			}, 1000);
+			await sleep(1000);
+
+			await pm.call('/register', {
+				data: {
+					path: pluginDir
+				}
+			});
+
+			log('Calling counter...');
+			await Dispatcher.call('/good-with-ignore/1.2.3/counter');
+			const counterFile = path.join(pluginDir, 'counter.txt');
+			expect(fs.existsSync(counterFile)).to.equal(true);
+			expect(fs.readFileSync(counterFile, { encoding: 'utf8' })).to.equal('1');
+			fs.removeSync(counterFile);
+			log('Done');
 		});
 
-		it('should not reload a plugin when file is ignored', function (done) {
+		it('should not reload a plugin when file is ignored', async function () {
 			this.timeout(40000);
 			this.slow(39000);
 
@@ -510,65 +466,48 @@ describe('PluginManager', () => {
 
 			pm = new PluginManager();
 
-			setTimeout(() => {
-				pm
-					.call('/register', {
-						data: {
-							path: pluginDir
-						}
-					})
-					.then(() => {
-						log('Calling counter...');
-						return Dispatcher
-							.call('/good-with-ignore/1.2.3/counter');
-					})
-					.then(ctx => {
-						log(ctx.response);
-						expect(ctx.response).to.equal(1);
-						log('Writing to ignored file "ignoredFile.txt"');
-						fs.writeFileSync(path.join(pluginDir, 'ignoredFile.txt'), 'hello');
-						return sleep(3000);
-					})
-					.then(() => {
-						log('Calling counter again...');
-						return Dispatcher
-							.call('/good-with-ignore/1.2.3/counter');
-					})
-					.then(ctx => {
-						log(ctx.response);
-						expect(ctx.response).to.equal(2);
+			await sleep(1000);
 
-						log('Writing to non-ignored file "file.txt"');
-						fs.writeFileSync(path.join(pluginDir, 'file.txt'), 'hello');
-						return sleep(3000);
-					})
-					.then(() => {
-						log('Calling counter again...');
-						return Dispatcher
-							.call('/good-with-ignore/1.2.3/counter');
-					})
-					.then(ctx => {
-						log(ctx.response);
-						expect(ctx.response).to.equal(1);
-					})
-					.then(ctx => {
-						log('Unregistering plugin');
-						return pm
-							.call('/unregister', {
-								data: {
-									path: pluginDir
-								}
-							});
-					})
-					.then(() => {
-						log('Done');
-						done();
-					})
-					.catch(done);
-			}, 1000);
+			await pm.call('/register', {
+				data: {
+					path: pluginDir
+				}
+			});
+
+			log('Calling counter...');
+			let ctx = await Dispatcher.call('/good-with-ignore/1.2.3/counter');
+			log(ctx.response);
+			expect(ctx.response).to.equal(1);
+			log('Writing to ignored file "ignoredFile.txt"');
+			fs.writeFileSync(path.join(pluginDir, 'ignoredFile.txt'), 'hello');
+
+			await sleep(3000);
+
+			log('Calling counter again...');
+			ctx = await Dispatcher.call('/good-with-ignore/1.2.3/counter');
+			log(ctx.response);
+			expect(ctx.response).to.equal(2);
+
+			log('Writing to non-ignored file "file.txt"');
+			fs.writeFileSync(path.join(pluginDir, 'file.txt'), 'hello');
+
+			await sleep(3000);
+
+			log('Calling counter again...');
+			ctx = await Dispatcher.call('/good-with-ignore/1.2.3/counter');
+			log(ctx.response);
+			expect(ctx.response).to.equal(1);
+
+			log('Unregistering plugin');
+			await pm.call('/unregister', {
+				data: {
+					path: pluginDir
+				}
+			});
+			log('Done');
 		});
 
-		it('should not reload a plugin when file is ignored using wildcards', function (done) {
+		it('should not reload a plugin when file is ignored using wildcards', async function () {
 			this.timeout(40000);
 			this.slow(39000);
 
@@ -579,70 +518,52 @@ describe('PluginManager', () => {
 
 			pm = new PluginManager();
 
-			setTimeout(() => {
-				pm
-					.call('/register', {
-						data: {
-							path: pluginDir
-						}
-					})
-					.then(() => {
-						log('Calling counter...');
-						return Dispatcher
-							.call('/good-with-ignore-wildcard/1.2.3/counter');
-					})
-					.then(ctx => {
-						log(ctx.response);
-						expect(ctx.response).to.equal(1);
-						log('Writing to ignored file "ignored.txt"');
-						fs.writeFileSync(path.join(pluginDir, 'ignored.txt'), 'hello');
-						log('Writing to ignored file "ignored.js"');
-						fs.writeFileSync(path.join(pluginDir, 'ignored.js'), 'exports = "hello"');
-						log('Creating "ignored" directory');
-						fs.mkdirsSync(path.join(pluginDir, 'ignored'));
+			await sleep(1000);
 
-						return sleep(3000);
-					})
-					.then(() => {
-						log('Calling counter again...');
-						return Dispatcher
-							.call('/good-with-ignore-wildcard/1.2.3/counter');
-					})
-					.then(ctx => {
-						log(ctx.response);
-						expect(ctx.response).to.equal(2);
+			await pm.call('/register', {
+				data: {
+					path: pluginDir
+				}
+			});
 
-						log('Writing to non-ignored file "file.txt"');
-						fs.writeFileSync(path.join(pluginDir, 'file.txt'), 'hello');
-						return sleep(3000);
-					})
-					.then(() => {
-						log('Calling counter again...');
-						return Dispatcher
-							.call('/good-with-ignore-wildcard/1.2.3/counter');
-					})
-					.then(ctx => {
-						log(ctx.response);
-						expect(ctx.response).to.equal(1);
-					})
-					.then(ctx => {
-						log('Unregistering plugin');
-						return pm
-							.call('/unregister', {
-								data: {
-									path: pluginDir
-								}
-							});
-					})
-					.then(() => {
-						log('Done');
-						done();
-					})
-					.catch(done);
-			}, 1000);
+			log('Calling counter...');
+			let ctx = await Dispatcher.call('/good-with-ignore-wildcard/1.2.3/counter');
+			log(ctx.response);
+			expect(ctx.response).to.equal(1);
+			log('Writing to ignored file "ignored.txt"');
+			fs.writeFileSync(path.join(pluginDir, 'ignored.txt'), 'hello');
+			log('Writing to ignored file "ignored.js"');
+			fs.writeFileSync(path.join(pluginDir, 'ignored.js'), 'exports = "hello"');
+			log('Creating "ignored" directory');
+			fs.mkdirsSync(path.join(pluginDir, 'ignored'));
+
+			await sleep(3000);
+
+			log('Calling counter again...');
+			ctx = await Dispatcher.call('/good-with-ignore-wildcard/1.2.3/counter');
+			log(ctx.response);
+			expect(ctx.response).to.equal(2);
+
+			log('Writing to non-ignored file "file.txt"');
+			fs.writeFileSync(path.join(pluginDir, 'file.txt'), 'hello');
+
+			await sleep(3000);
+
+			log('Calling counter again...');
+			ctx = await Dispatcher.call('/good-with-ignore-wildcard/1.2.3/counter');
+			log(ctx.response);
+			expect(ctx.response).to.equal(1);
+
+			log('Unregistering plugin');
+			await pm.call('/unregister', {
+				data: {
+					path: pluginDir
+				}
+			});
+			log('Done');
 		});
 
-		it('should handle bad plugins', function (done) {
+		it('should handle bad plugins', async function () {
 			this.timeout(40000);
 			this.slow(39000);
 
@@ -650,32 +571,29 @@ describe('PluginManager', () => {
 
 			pm = new PluginManager();
 
-			pm
-				.call('/register', {
-					data: {
-						path: pluginDir
-					}
-				})
-				.then(() => {
-					log('Calling square...');
-					return Dispatcher.call('/bad/1.2.3/foo', { data: { num: 3 } })
-						.then(() => {
-							done(new Error('Expected the route to not be found'));
-						})
-						.catch(err => {
-							expect(err.message).to.match(/Failed to load plugin: .*Unexpected token/);
-							const p = pm.registered[0];
-							expect(p.state).to.equal('stopped');
-							expect(p.exitCode).to.equal(6);
-							expect(p.error).to.match(/Failed to load plugin: .*Unexpected token/);
-							expect(p.pid).to.be.null;
-						});
-				})
-				.then(() => done())
-				.catch(done);
+			await pm.call('/register', {
+				data: {
+					path: pluginDir
+				}
+			});
+
+			log('Calling square...');
+			try {
+				await Dispatcher.call('/bad/1.2.3/foo', { data: { num: 3 } });
+			} catch (err) {
+				expect(err.message).to.match(/Failed to load plugin: .*Unexpected token/);
+				const p = pm.registered[0];
+				expect(p.state).to.equal('stopped');
+				expect(p.exitCode).to.equal(6);
+				expect(p.error).to.match(/Failed to load plugin: .*Unexpected token/);
+				expect(p.pid).to.be.null;
+				return;
+			}
+
+			throw new Error('Expected the route to not be found');
 		});
 
-		it('should return list of registered plugin versions', function (done) {
+		it('should return list of registered plugin versions', async function () {
 			this.timeout(10000);
 			this.slow(9000);
 
@@ -685,17 +603,13 @@ describe('PluginManager', () => {
 				paths: [ pluginDir ]
 			});
 
-			setTimeout(() => {
-				Dispatcher.call('/good')
-					.then(ctx => {
-						expect(ctx.response).to.deep.equal([ '1.2.3' ]);
-						done();
-					})
-					.catch(done);
-			}, 1000);
+			await sleep(1000);
+
+			const ctx = await Dispatcher.call('/good');
+			expect(ctx.response).to.deep.equal([ '1.2.3' ]);
 		});
 
-		it('should call a service that calls a service in another plugin', function (done) {
+		it('should call a service that calls a service in another plugin', async function () {
 			this.timeout(40000);
 			this.slow(39000);
 
@@ -705,17 +619,13 @@ describe('PluginManager', () => {
 				paths: [ pluginDir ]
 			});
 
-			setTimeout(() => {
-				Dispatcher.call('/foo/1.0.0/reverse', { data: { str: 'Hello world!' } })
-					.then(ctx => {
-						expect(ctx.response).to.equal('!dlrow olleH');
-						done();
-					})
-					.catch(done);
-			}, 1000);
+			await sleep(1000);
+
+			const ctx = await Dispatcher.call('/foo/1.0.0/reverse', { data: { str: 'Hello world!' } });
+			expect(ctx.response).to.equal('!dlrow olleH');
 		});
 
-		it('should call a service that passes to the next route', function (done) {
+		it('should call a service that passes to the next route', async function () {
 			this.timeout(10000);
 			this.slow(9000);
 
@@ -725,19 +635,13 @@ describe('PluginManager', () => {
 				paths: [ pluginDir ]
 			});
 
-			setTimeout(() => {
-				Dispatcher.call('/foo/1.0.0/pass')
-					.then(ctx => {
-						expect(ctx.response).to.equal('pass!');
-						done();
-					})
-					.catch(err => {
-						done(err);
-					});
-			}, 1000);
+			await sleep(1000);
+
+			const ctx = await Dispatcher.call('/foo/1.0.0/pass');
+			expect(ctx.response).to.equal('pass!');
 		});
 
-		it('should 404 after a plugin is unregistered', function (done) {
+		it('should 404 after a plugin is unregistered', async function () {
 			this.timeout(40000);
 			this.slow(39000);
 
@@ -747,30 +651,29 @@ describe('PluginManager', () => {
 				paths: [ pluginDir ]
 			});
 
-			setTimeout(() => {
-				log('Calling square...');
-				Dispatcher.call('/good/1.2.3/square', { data: { num: 3 } })
-					.then(ctx => {
-						expect(ctx.response).to.equal(9);
-						return pm.unregisterPluginPath(pluginDir);
-					})
-					.then(() => sleep(1000))
-					.then(() => {
-						return Dispatcher.call('/good/1.2.3/square', { data: { num: 3 } });
-					})
-					.then(() => {
-						throw new Error('Expected 404');
-					}, err => {
-						expect(err).to.be.instanceof(DispatcherError);
-						expect(err.status).to.equal(404);
-						expect(err.statusCode).to.equal(404);
-						done();
-					})
-					.catch(done);
-			}, 1000);
+			await sleep(1000);
+
+			log('Calling square...');
+			const ctx = await Dispatcher.call('/good/1.2.3/square', { data: { num: 3 } });
+			expect(ctx.response).to.equal(9);
+
+			await pm.unregisterPluginPath(pluginDir);
+
+			await sleep(1000);
+
+			try {
+				await Dispatcher.call('/good/1.2.3/square', { data: { num: 3 } });
+			} catch (err) {
+				expect(err).to.be.instanceof(DispatcherError);
+				expect(err.status).to.equal(404);
+				expect(err.statusCode).to.equal(404);
+				return;
+			}
+
+			throw new Error('Expected 404');
 		});
 
-		it('should call service implemented in a require()\'d js file', function (done) {
+		it('should call service implemented in a require()\'d js file', async function () {
 			this.timeout(10000);
 			this.slow(9000);
 
@@ -780,19 +683,13 @@ describe('PluginManager', () => {
 				paths: [ pluginDir ]
 			});
 
-			setTimeout(() => {
-				Dispatcher.call('/require-test/1.0.0/hi')
-					.then(ctx => {
-						expect(ctx.response).to.match(/^Hello .+!$/);
-						done();
-					})
-					.catch(err => {
-						done(err);
-					});
-			}, 1000);
+			await sleep(1000);
+
+			const ctx = await Dispatcher.call('/require-test/1.0.0/hi');
+			expect(ctx.response).to.match(/^Hello .+!$/);
 		});
 
-		it('should subscribe to a service that subscribes a service in another plugin', function (done) {
+		it('should subscribe to a service that subscribes a service in another plugin', async function () {
 			this.timeout(20000);
 			this.slow(19000);
 
@@ -804,45 +701,47 @@ describe('PluginManager', () => {
 
 			let counter = 0;
 
-			setTimeout(() => {
-				Dispatcher.call('/foo/1.0.0/time', { type: 'subscribe' })
-					.then(({ response }) => {
-						response
-							.on('data', res => {
-								counter++;
-								log(counter, res);
+			await sleep(1000);
 
-								switch (counter) {
-									case 1:
-										expect(res.type).to.equal('subscribe');
-										expect(res.message).to.equal('Subscribed');
-										break;
+			const { response } = await Dispatcher.call('/foo/1.0.0/time', { type: 'subscribe' });
 
-									case 2:
-										expect(res.type).to.equal('event');
-										expect(res.message).to.be.an('object');
-										expect(res.message.time).to.be.a('string');
-										expect(res.message.time).to.match(/^\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)$/);
-										break;
+			await new Promise((resolve, reject) => {
+				response
+					.on('data', async res => {
+						counter++;
+						log(counter, res);
 
-									case 3:
-										log('Unsubscribing from %s', highlight(res.sid));
-										Dispatcher
-											.call('/foo/1.0.0/time', { sid: res.sid, type: 'unsubscribe' })
-											.catch(done);
+						switch (counter) {
+							case 1:
+								expect(res.type).to.equal('subscribe');
+								expect(res.message).to.equal('Subscribed');
+								break;
+
+							case 2:
+								expect(res.type).to.equal('event');
+								expect(res.message).to.be.an('object');
+								expect(res.message.time).to.be.a('string');
+								expect(res.message.time).to.match(/^\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)$/);
+								break;
+
+							case 3:
+								log('Unsubscribing from %s', highlight(res.sid));
+								try {
+									await Dispatcher.call('/foo/1.0.0/time', { sid: res.sid, type: 'unsubscribe' });
+								} catch (err) {
+									reject(err);
 								}
-							})
-							.once('end', () => {
-								log('foo response ended');
-								done();
-							})
-							.once('error', done);
+						}
 					})
-					.catch(done);
-			}, 1000);
+					.once('end', () => {
+						log('foo response ended');
+						resolve();
+					})
+					.once('error', reject);
+			});
 		});
 
-		it('should load a plugin with a js file with empty shebang', function (done) {
+		it('should load a plugin with a js file with empty shebang', async function () {
 			this.timeout(10000);
 			this.slow(9000);
 
@@ -852,21 +751,21 @@ describe('PluginManager', () => {
 				paths: [ pluginDir ]
 			});
 
-			setTimeout(() => {
-				log('Calling square...');
-				Dispatcher.call('/shebang-empty/1.0.0/square', { data: { num: 3 } })
-					.then(() => {
-						throw new Error('Expected 404');
-					}, err => {
-						expect(err).to.be.instanceof(DispatcherError);
-						expect(err.statusCode).to.equal(404);
-						done();
-					})
-					.catch(done);
-			}, 1000);
+			await sleep(1000);
+
+			log('Calling square...');
+			try {
+				await Dispatcher.call('/shebang-empty/1.0.0/square', { data: { num: 3 } });
+			} catch (err) {
+				expect(err).to.be.instanceof(DispatcherError);
+				expect(err.statusCode).to.equal(404);
+				return;
+			}
+
+			throw new Error('Expected 404');
 		});
 
-		it('should load a plugin with a js file with non-empty shebang', function (done) {
+		it('should load a plugin with a js file with non-empty shebang', async function () {
 			this.timeout(10000);
 			this.slow(9000);
 
@@ -876,21 +775,21 @@ describe('PluginManager', () => {
 				paths: [ pluginDir ]
 			});
 
-			setTimeout(() => {
-				log('Calling square...');
-				Dispatcher.call('/shebang-empty/1.0.0/square', { data: { num: 3 } })
-					.then(() => {
-						throw new Error('Expected 404');
-					}, err => {
-						expect(err).to.be.instanceof(DispatcherError);
-						expect(err.statusCode).to.equal(404);
-						done();
-					})
-					.catch(done);
-			}, 1000);
+			await sleep(1000);
+
+			log('Calling square...');
+			try {
+				await Dispatcher.call('/shebang-empty/1.0.0/square', { data: { num: 3 } });
+			} catch (err) {
+				expect(err).to.be.instanceof(DispatcherError);
+				expect(err.statusCode).to.equal(404);
+				return;
+			}
+
+			throw new Error('Expected 404');
 		});
 
-		it('should return plugin info', function (done) {
+		it('should return plugin info', async function () {
 			this.timeout(10000);
 			this.slow(9000);
 
@@ -900,28 +799,23 @@ describe('PluginManager', () => {
 				paths: [ pluginDir ]
 			});
 
-			setTimeout(() => {
-				log('Calling info...');
-				Dispatcher.call('/good/1.2.3/')
-					.then(ctx => {
-						const resp = ctx.response;
-						expect(resp.type).to.equal('external');
-						expect(resp.path).to.equal(pluginDir);
-						expect(resp.version).to.equal('1.2.3');
-						return Dispatcher.call('/good/latest/');
-					})
-					.then(ctx => {
-						const resp = ctx.response;
-						expect(resp.type).to.equal('external');
-						expect(resp.path).to.equal(pluginDir);
-						expect(resp.version).to.equal('1.2.3');
-					})
-					.then(done)
-					.catch(done);
-			}, 1000);
+			await sleep(1000);
+
+			log('Calling info...');
+			let ctx = await Dispatcher.call('/good/1.2.3/');
+			let resp = ctx.response;
+			expect(resp.type).to.equal('external');
+			expect(resp.path).to.equal(pluginDir);
+			expect(resp.version).to.equal('1.2.3');
+
+			ctx = await Dispatcher.call('/good/latest/');
+			resp = ctx.response;
+			expect(resp.type).to.equal('external');
+			expect(resp.path).to.equal(pluginDir);
+			expect(resp.version).to.equal('1.2.3');
 		});
 
-		it('should spawn a process and receive all output events', function (done) {
+		it('should spawn a process and receive all output events', async function () {
 			this.timeout(10000);
 			this.slow(9000);
 
@@ -931,50 +825,46 @@ describe('PluginManager', () => {
 				paths: [ pluginDir ]
 			});
 
-			setTimeout(() => {
-				log('Calling spawn-test...');
-				Dispatcher.call('/spawn-test/1.2.3/spawn')
-					.then(ctx => {
-						expect(ctx.response).to.be.instanceof(PassThrough);
+			await sleep(1000);
 
-						return new Promise((resolve, reject) => {
-							let counter = 0;
+			log('Calling spawn-test...');
+			const ctx = await Dispatcher.call('/spawn-test/1.2.3/spawn');
+			expect(ctx.response).to.be.instanceof(PassThrough);
 
-							ctx.response
-								.on('data', message => {
-									try {
-										switch (++counter) {
-											case 1:
-												expect(message.type).to.equal('spawn');
-												break;
-											case 2:
-												expect(message.type).to.equal('stdout');
-												expect(message.output).to.equal('Hello\n');
-												break;
-											case 3:
-												expect(message.type).to.equal('stderr');
-												expect(message.output).to.equal('Oh no!\n');
-												break;
-											case 4:
-												expect(message.type).to.equal('stdout');
-												expect(message.output).to.equal('Just kidding\n');
-												break;
-											case 5:
-												expect(message.type).to.equal('exit');
-												expect(message.code).to.equal(0);
-												break;
-										}
-									} catch (e) {
-										reject(e);
-									}
-								})
-								.on('end', resolve)
-								.on('error', reject);
-						});
+			await new Promise((resolve, reject) => {
+				let counter = 0;
+
+				ctx.response
+					.on('data', message => {
+						try {
+							switch (++counter) {
+								case 1:
+									expect(message.type).to.equal('spawn');
+									break;
+								case 2:
+									expect(message.type).to.equal('stdout');
+									expect(message.output).to.equal('Hello\n');
+									break;
+								case 3:
+									expect(message.type).to.equal('stderr');
+									expect(message.output).to.equal('Oh no!\n');
+									break;
+								case 4:
+									expect(message.type).to.equal('stdout');
+									expect(message.output).to.equal('Just kidding\n');
+									break;
+								case 5:
+									expect(message.type).to.equal('exit');
+									expect(message.code).to.equal(0);
+									break;
+							}
+						} catch (e) {
+							reject(e);
+						}
 					})
-					.then(done)
-					.catch(done);
-			}, 1000);
+					.on('end', resolve)
+					.on('error', reject);
+			});
 		});
 	});
 
