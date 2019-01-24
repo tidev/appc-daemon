@@ -1,5 +1,11 @@
+# v2.0.0 (Jan 24, 2019)
+
+ * Republish of appcd-logger@1.1.4
+
 # v1.1.4 (Jan 16, 2019)
 
+ * **UNPUBLISHED ON JAN 24, 2019**
+   - v1.1.4 upgraded snooplogg to v2.x which had public API changes that affected appcd-logger.
  * Updated dependencies.
 
 # v1.1.3 (Nov 27, 2018)

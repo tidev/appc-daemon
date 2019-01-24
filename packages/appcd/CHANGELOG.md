@@ -1,3 +1,7 @@
+# v2.1.0 (Jan 24, 2019)
+
+ * Upgraded to appcd-logger@2.0.0.
+
 # v2.0.1 (Jan 16, 2019)
 
  * fix(config): Actions were not being translated correctly when dispatching request to daemon

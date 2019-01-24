@@ -43,11 +43,10 @@ if (process.argv.indexOf('--silent') !== -1) {
 	log = function () {};
 }
 
-async function nodeInfo() {
+const nodeInfo = exports['node-info'] = async function nodeInfo() {
 	log(`Node.js ${process.version} (${process.platform})`);
 	log(process.env);
 }
-exports['node-info'] = nodeInfo;
 
 /*
  * misc tasks
