@@ -1,3 +1,7 @@
+# v1.3.0 (Jan 24, 2019)
+
+ * Upgraded to appcd-logger@2.0.0
+
 # v1.2.2 (Jan 16, 2019)
 
  * Added pluralize dependency since it was removed from snooplogg 2.
