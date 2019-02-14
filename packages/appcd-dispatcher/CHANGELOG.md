@@ -1,3 +1,8 @@
+# v1.3.1
+
+ * Fixed bug where streamed objects were not being stringified in the middleware callback.
+   [(DAEMON-271)](https://jira.appcelerator.org/browse/DAEMON-271)
+
 # v1.3.0 (Jan 24, 2019)
 
  * Upgraded to appcd-logger@2.0.0.

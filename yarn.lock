@@ -1428,6 +1428,14 @@ appcd-dump-viewer@^1.1.4:
     vue "^2.5.13"
     vuetify "^1.0.0"
 
+appcd-logger@^1.1.0, appcd-logger@^1.1.1:
+  version "1.1.5"
+  resolved "https://registry.yarnpkg.com/appcd-logger/-/appcd-logger-1.1.5.tgz#bf6043996d18d75db072a0a50e14937ce8989da2"
+  integrity sha512-jKju+2yxRDmQSNK31xhA/YoSKgPyyC8QXJXDeoWqHcXJx03WS6hCSgxGIMP1mvPUjVXBIWo+33ER5kUZddKbPg==
+  dependencies:
+    snooplogg "^1.13.2"
+    source-map-support "^0.5.9"
+
 append-buffer@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/append-buffer/-/append-buffer-1.0.2.tgz#d8220cf466081525efea50614f3de6514dfa58f1"
@@ -9931,7 +9939,7 @@ snapdragon@^0.8.1:
     source-map-resolve "^0.5.0"
     use "^3.1.0"
 
-snooplogg@^1.10.1:
+snooplogg@^1.10.1, snooplogg@^1.13.2:
   version "1.13.2"
   resolved "https://registry.yarnpkg.com/snooplogg/-/snooplogg-1.13.2.tgz#c98d9211ab2b2cc635266bfd70db18e6e5011dca"
   integrity sha512-dYYkCDCHTYySEKUK4QTSAmq/17WSQeZV4fFaFCn4WltPeYoZYm9bBceP2eYQLPETd285zEM2fJ5ptC3nmgFIqA==

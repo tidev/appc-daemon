@@ -7,7 +7,7 @@ import pathToRegExp from 'path-to-regexp';
 import Response, { AppcdError, codes, errorToJSON, lookup } from 'appcd-response';
 import ServiceDispatcher from './service-dispatcher';
 
-import { PassThrough } from 'stream';
+import { PassThrough, Readable, Transform } from 'stream';
 
 const logger = appcdLogger('appcd:dispatcher');
 const { highlight } = appcdLogger.styles;
@@ -17,6 +17,35 @@ const { highlight } = appcdLogger.styles;
  * @type {RegExp}
  */
 const stripRegExp = /\x1B\[\d+m/g;
+
+/**
+ * Transforms non-string and non-buffer stream chunks using `JSON.stringify()`.
+ */
+class Stringify extends Transform {
+	/**
+	 * Initializes the stream in object mode.
+	 *
+	 * @access public
+	 */
+	constructor() {
+		super({ objectMode: true });
+	}
+
+	/**
+	 * Performs the transformation.
+	 *
+	 * @param {*} chunk - A chunk of data coming from the incoming stream.
+	 * @param {String} encoding - The chunk encoding.
+	 * @param {Function} callback - A function to call with the transformed chunk.
+	 * @access private
+	 */
+	_transform(chunk, encoding, callback) {
+		callback(
+			null,
+			typeof chunk !== 'string' && !Buffer.isBuffer(chunk) ? JSON.stringify(chunk) : chunk
+		);
+	}
+}
 
 /**
  * The (global) root dispatcher instance that is used across multiple packages.
@@ -259,8 +288,18 @@ export default class Dispatcher {
 					koactx.status = ctx.status = ctx.response.status || (ctx.response.statusCode && parseInt(ctx.response.statusCode)) || ctx.status || codes.OK;
 					koactx.body = ctx.response.toString(koactx.request && koactx.request.acceptsLanguages()).replace(stripRegExp, '');
 				} else {
+					let body = ctx.response;
+
+					if (body instanceof Readable) {
+						// need to stringify all non-string/buffer streamed chunks
+						body = new Stringify();
+						ctx.response.pipe(body);
+					} else if (typeof body !== 'string' && !Buffer.isBuffer(body)) {
+						body = JSON.stringify(body);
+					}
+
 					koactx.status = ctx.status;
-					koactx.body = ctx.response;
+					koactx.body = body;
 				}
 			} catch (err) {
 				if (err instanceof AppcdError && err.status === codes.NOT_FOUND) {
