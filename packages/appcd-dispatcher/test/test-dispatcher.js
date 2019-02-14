@@ -1,8 +1,9 @@
 import Dispatcher from '../dist/index';
 import DispatcherError from '../dist/dispatcher-error';
+import Response, { AppcdError, codes } from 'appcd-response';
 import ServiceDispatcher from '../dist/service-dispatcher';
 
-import Response, { AppcdError, codes } from 'appcd-response';
+import { WritableStream } from 'memory-streams';
 
 describe('dispatcher', () => {
 	describe('register', () => {
@@ -644,6 +645,80 @@ describe('dispatcher', () => {
 			expect(ctx.status).to.equal(200);
 			expect(ctx.body).to.be.a('string');
 			expect(ctx.body).to.equal('OK');
+		});
+
+		it('should call onRequest callback', async () => {
+			const d = new Dispatcher();
+
+			let info;
+
+			d.register('/foo', ctx => {
+				ctx.response = 'foo!';
+			});
+
+			const middleware = d.callback(i => {
+				info = i;
+			});
+
+			const ctx = {
+				method: 'GET',
+				originalUrl: '/foo'
+			};
+
+			await middleware(ctx, Promise.resolve);
+
+			expect(info).to.be.an('object');
+			expect(info.size).to.equal(4);
+			expect(info.status).to.equal(200);
+		});
+
+		it('should stringify a object response', async () => {
+			const d = new Dispatcher();
+			d.register('/foo', ctx => {
+				ctx.response = { foo: 'bar' };
+			});
+
+			const middleware = d.callback();
+			const ctx = {
+				method: 'GET',
+				originalUrl: '/foo'
+			};
+
+			await middleware(ctx, Promise.resolve);
+
+			expect(ctx.body).to.be.a('string');
+			expect(ctx.body).to.equal('{"foo":"bar"}');
+		});
+
+		it('should stringify streamed objects', async () => {
+			const d = new Dispatcher();
+			d.register('/foo', ctx => {
+				ctx.response.write({ foo: 'bar' });
+				ctx.response.write({ baz: 'wiz' });
+				ctx.response.end();
+			});
+
+			const middleware = d.callback();
+			const ctx = {
+				method: 'GET',
+				originalUrl: '/foo'
+			};
+
+			await middleware(ctx, Promise.resolve);
+
+			const out = new WritableStream();
+			ctx.body.pipe(out);
+
+			await new Promise((resolve, reject) => {
+				ctx.body.on('end', () => {
+					try {
+						expect(out.toString()).to.equal('{"foo":"bar"}{"baz":"wiz"}');
+						resolve();
+					} catch (err) {
+						reject(err);
+					}
+				});
+			});
 		});
 	});
 

@@ -315,7 +315,7 @@ export default class Dispatcher {
 			}
 
 			if (typeof onRequest === 'function') {
-				info.size   = koactx.response.length;
+				info.size   = koactx.response ? koactx.response.length : koactx.body ? koactx.body.length : null;
 				info.status = ctx.status;
 				info.time   = ctx.time;
 				await onRequest(info);
