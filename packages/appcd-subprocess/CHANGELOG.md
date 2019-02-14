@@ -1,3 +1,8 @@
+# v1.3.0
+
+ * Removed broken and useless 'http' source restriction.
+   [(DAEMON-272)](https://jira.appcelerator.org/browse/DAEMON-272)
+
 # v1.2.0 (Jan 24, 2019)
 
  * Upgraded to appcd-logger@2.0.0.
