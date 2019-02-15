@@ -723,6 +723,7 @@ async function checkPackages({ skipSecurity } = {}) {
 					dependencies[pkg].latestTimestamp = info.time[latest] || null;
 					dependencies[pkg].next            = next;
 					dependencies[pkg].nextTimestamp   = next && info.time[next] || null;
+					dependencies[pkg].deprecated      = info.versions[latest].deprecated;
 				} catch (error) {
 					log(yellow(`npm lookup failed for ${pkg} ${error}`));
 				}
