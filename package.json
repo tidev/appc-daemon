@@ -29,5 +29,8 @@
     "packages": [
       "packages/*"
     ]
+  },
+  "scripts": {
+    "test": "gulp coverage"
   }
 }
