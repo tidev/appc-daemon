@@ -40,11 +40,6 @@ export default class SubprocessManager extends Dispatcher {
 		this.register('/spawn/node/:version?', async ctx => {
 			const { data, params, source } = ctx.request;
 
-			// if the source is http, then block the spawn
-			if (source === 'http') {
-				throw new SubprocessError(codes.FORBIDDEN, 'Spawn not permitted');
-			}
-
 			const { response } = await Dispatcher.call('/appcd/config/home');
 			const node = await prepareNode({
 				nodeHome: expandPath(response, 'node'),
@@ -54,11 +49,6 @@ export default class SubprocessManager extends Dispatcher {
 		});
 
 		this.register('/spawn', ctx => new Promise((resolve, reject) => {
-			// if the source is http, then block the spawn
-			if (ctx.request.source === 'http') {
-				throw new SubprocessError(codes.FORBIDDEN, 'Spawn not permitted');
-			}
-
 			const data = ctx.request.data || {};
 			data.options || (data.options = {});
 

@@ -123,27 +123,6 @@ describe('SubprocessManager', () => {
 			});
 		});
 
-		it('should fail if spawn call is via http', async () => {
-			const subprocessMgr = new SubprocessManager();
-
-			try {
-				await subprocessMgr.call('/spawn', {
-					source: 'http',
-					data: {
-						command: process.execPath,
-						args: path.join(__dirname, 'fixtures', 'node-version.js')
-					}
-				});
-			} catch (err) {
-				expect(err).to.be.instanceof(SubprocessError);
-				expect(err.toString()).to.equal('SubprocessError: Spawn not permitted (code 403)');
-				expect(err.statusCode).to.equal(403);
-				return;
-			}
-
-			throw new Error('Expected call to be forbidden');
-		});
-
 		it('should fail if command does not exist', async () => {
 			const subprocessMgr = new SubprocessManager();
 
@@ -506,27 +485,6 @@ describe('SubprocessManager', () => {
 					}
 				});
 			});
-		});
-
-		it('should fail if spawn node call is via http', async () => {
-			const subprocessMgr = new SubprocessManager();
-
-			try {
-				await subprocessMgr.call('/spawn/node', {
-					source: 'http',
-					data: {
-						command: process.execPath,
-						args: path.join(__dirname, 'fixtures', 'node-version.js')
-					}
-				});
-			} catch (err) {
-				expect(err).to.be.instanceof(SubprocessError);
-				expect(err.toString()).to.equal('SubprocessError: Spawn not permitted (code 403)');
-				expect(err.statusCode).to.equal(403);
-				return;
-			}
-
-			throw new Error('Expected call to be forbidden');
 		});
 	});
 
