@@ -1,3 +1,7 @@
+# v2.0.1 (Mar 6, 2019)
+
+ * Added cobertura reporter when running nyc.
+
 # v2.0.0 (Jan 16, 2019)
 
  * Upgraded to Gulp 4.

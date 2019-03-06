@@ -155,6 +155,7 @@ module.exports = (opts) => {
 				'--reporter=json',
 				'--reporter=text',
 				'--reporter=text-summary',
+				'--reporter=cobertura',
 				'--require', path.resolve(__dirname, '../test-transpile.js'),
 				'--show-process-tree',
 				process.execPath // need to specify node here so that spawn-wrap works
