@@ -20,7 +20,7 @@
     "appcd-response": "^1.1.5",
     "gawk": "^4.6.2",
     "ignore": "^5.0.4",
-    "lerna": "^3.10.5",
+    "lerna": "^3.13.1",
     "npm": "^6.5.0",
     "path-to-regexp": "^3.0.0",
     "pluralize": "^7.0.0",

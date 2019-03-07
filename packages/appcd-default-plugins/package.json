@@ -14,7 +14,7 @@
     "@appcd/plugin-ios": "^1.2.0",
     "@appcd/plugin-jdk": "^1.2.0",
     "@appcd/plugin-system-info": "^1.2.0",
-    "@appcd/plugin-titanium-sdk": "^1.3.0",
+    "@appcd/plugin-titanium": "^1.3.0",
     "@appcd/plugin-windows": "^1.2.0"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-default-plugins",

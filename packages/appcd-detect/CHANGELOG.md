@@ -1,3 +1,7 @@
+# v1.3.0
+
+ * Added `paths` property to dynamically change the paths to scan and kicks off a rescan.
+
 # v1.2.0 (Jan 24, 2019)
 
  * Upgraded to appcd-logger@2.0.0.
