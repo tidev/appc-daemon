@@ -20,7 +20,7 @@
     "appcd-logger": "^2.0.0",
     "koa": "^2.6.2",
     "koa-bodyparser": "^4.2.1",
-    "koa-helmet": "^4.0.0",
+    "koa-helmet": "^4.1.0",
     "koa-send": "^5.0.0",
     "path-to-regexp": "^3.0.0",
     "source-map-support": "^0.5.10",
@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "appcd-gulp": "^2.0.0",
-    "supertest": "^3.4.1"
+    "supertest": "^4.0.0"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-http",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",

@@ -1,7 +1,6 @@
 import appcdLogger from 'appcd-logger';
 import Dispatcher from 'appcd-dispatcher';
 import path from 'path';
-import SubprocessError from '../dist/subprocess-error';
 import SubprocessManager from '../dist/index';
 import tmp from 'tmp';
 

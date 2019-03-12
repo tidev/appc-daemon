@@ -1,39 +1,49 @@
 import Response, { codes } from 'appcd-response';
 import ServiceDispatcher from '../dist/service-dispatcher';
 
+class TestServiceDispatcher extends ServiceDispatcher {}
+
 describe('ServiceDispatcher', () => {
-	it('should fail if path is invalid', () => {
-		expect(() => {
-			new ServiceDispatcher(123);
-		}).to.throw(TypeError, 'Expected path to be a string');
-	});
+	describe('Error Handling', () => {
+		it('should error if directly instantiated', () => {
+			expect(() => {
+				new ServiceDispatcher();
+			}).to.throw(TypeError, 'ServiceDispatcher is an abstract base class that cannot be directly instantiated and must be extended');
+		});
 
-	it('should fail if instance is invalid', () => {
-		expect(() => {
-			new ServiceDispatcher('/foo', '');
-		}).to.throw(TypeError, 'Expected instance to be an object');
+		it('should fail if path is invalid', () => {
+			expect(() => {
+				new TestServiceDispatcher(123);
+			}).to.throw(TypeError, 'Expected path to be a string');
+		});
 
-		expect(() => {
-			new ServiceDispatcher('/foo', 123);
-		}).to.throw(TypeError, 'Expected instance to be an object');
+		it('should fail if instance is invalid', () => {
+			expect(() => {
+				new TestServiceDispatcher('/foo', '');
+			}).to.throw(TypeError, 'Expected instance to be an object');
+
+			expect(() => {
+				new TestServiceDispatcher('/foo', 123);
+			}).to.throw(TypeError, 'Expected instance to be an object');
+		});
 	});
 
 	describe('call', () => {
 		it('should invoke handler', async () => {
-			const sd = new ServiceDispatcher('/foo', {});
+			const sd = new TestServiceDispatcher('/foo', {});
 
 			await sd.handler({}, () => Promise.resolve());
 		});
 
 		it('should invoke handler without leading slash', async () => {
-			const sd = new ServiceDispatcher('foo', {});
+			const sd = new TestServiceDispatcher('foo', {});
 
 			await sd.handler({}, () => Promise.resolve());
 		});
 
 		it('should invoke service with call handler', async () => {
 			let count = 0;
-			const sd = new ServiceDispatcher('/foo', {
+			const sd = new TestServiceDispatcher('/foo', {
 				onCall() {
 					count++;
 				}
@@ -46,7 +56,7 @@ describe('ServiceDispatcher', () => {
 
 		it('should invoke service with call handler with explicit type', async () => {
 			let count = 0;
-			const sd = new ServiceDispatcher('/foo', {
+			const sd = new TestServiceDispatcher('/foo', {
 				onCall() {
 					count++;
 				}
@@ -62,7 +72,7 @@ describe('ServiceDispatcher', () => {
 		});
 
 		it('should error if type is invalid', async () => {
-			const sd = new ServiceDispatcher('/foo', {});
+			const sd = new TestServiceDispatcher('/foo', {});
 
 			try {
 				await sd.handler({
@@ -80,7 +90,7 @@ describe('ServiceDispatcher', () => {
 
 		it('should invoke service that doesn\'t have a path', async () => {
 			let count = 0;
-			const sd = new ServiceDispatcher({
+			const sd = new TestServiceDispatcher({
 				onCall() {
 					count++;
 				}
@@ -95,7 +105,7 @@ describe('ServiceDispatcher', () => {
 	describe('subscribe', () => {
 		it('should create a new subscription', async () => {
 			let count = 0;
-			const sd = new ServiceDispatcher('/foo', {
+			const sd = new TestServiceDispatcher('/foo', {
 				onSubscribe() {
 					count++;
 				}
@@ -129,7 +139,7 @@ describe('ServiceDispatcher', () => {
 
 		it('should create a new subscriptions for multiple subs', async () => {
 			const fns = [];
-			const sd = new ServiceDispatcher('/foo', {
+			const sd = new TestServiceDispatcher('/foo', {
 				onSubscribe({ publish }) {
 					fns.push(publish);
 				}
@@ -187,7 +197,7 @@ describe('ServiceDispatcher', () => {
 
 		it('should publish message to subscriber', async () => {
 			let count = 0;
-			const sd = new ServiceDispatcher('/foo', {
+			const sd = new TestServiceDispatcher('/foo', {
 				onSubscribe({ publish }) {
 					setImmediate(() => {
 						count++;
@@ -238,7 +248,7 @@ describe('ServiceDispatcher', () => {
 
 	describe('unsubscribe', () => {
 		it('should error if missing subscription id', async () => {
-			const sd = new ServiceDispatcher('/foo', {
+			const sd = new TestServiceDispatcher('/foo', {
 				initSubscription() {
 					// noop
 				},
@@ -279,7 +289,7 @@ describe('ServiceDispatcher', () => {
 		});
 
 		it('should notify if not subscribed', async () => {
-			const sd = new ServiceDispatcher('/foo', {
+			const sd = new TestServiceDispatcher('/foo', {
 				initSubscription() {
 					// noop
 				},
@@ -321,7 +331,7 @@ describe('ServiceDispatcher', () => {
 		});
 
 		it('should unsubscribe and delete subscription topic', async () => {
-			const sd = new ServiceDispatcher('/foo', {
+			const sd = new TestServiceDispatcher('/foo', {
 				initSubscription() {
 					// noop
 				},
@@ -412,7 +422,7 @@ describe('ServiceDispatcher', () => {
 		});
 
 		it('should unsubscribe if stream closes', async () => {
-			const sd = new ServiceDispatcher('/foo', {
+			const sd = new TestServiceDispatcher('/foo', {
 				initSubscription() {
 					// noop
 				},
@@ -456,7 +466,7 @@ describe('ServiceDispatcher', () => {
 		});
 
 		it('should unsubscribe if stream errors', async () => {
-			const sd = new ServiceDispatcher('/foo', {
+			const sd = new TestServiceDispatcher('/foo', {
 				onSubscribe() {
 					// noop
 				},

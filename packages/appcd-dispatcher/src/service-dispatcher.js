@@ -28,6 +28,10 @@ export default class ServiceDispatcher {
 	 * @access public
 	 */
 	constructor(path, instance) {
+		if (this.constructor === ServiceDispatcher) {
+			throw new TypeError('ServiceDispatcher is an abstract base class that cannot be directly instantiated and must be extended');
+		}
+
 		if (instance === undefined) {
 			if (typeof path === 'object') {
 				instance = path;
@@ -83,7 +87,7 @@ export default class ServiceDispatcher {
 	 *
 	 * @param {DispatcherContext} ctx - A dispatcher context.
 	 * @param {Function} next - A function to continue to next dispatcher route.
-	 * @returns {Promise}
+	 * @returns {*|Promise}
 	 * @access public
 	 */
 	handler(ctx, next) {
@@ -112,7 +116,7 @@ export default class ServiceDispatcher {
 	 * Invokes the service's `onCall()` handler.
 	 *
 	 * @param {DispatcherContext} ctx - A dispatcher context.
-	 * @returns {Promise}
+	 * @returns {*} A response or the context.
 	 * @access private
 	 */
 	call(ctx) {

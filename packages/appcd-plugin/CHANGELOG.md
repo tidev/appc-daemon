@@ -1,3 +1,9 @@
+# v1.3.0
+
+ * Reimplemented the `/` endpoint using a `DataServiceDispatcher` so that the data can be filtered
+   and subscribed to. This also fixes proper 404 handling.
+ * Added support for plugins with scopes in their package name.
+
 # v1.2.0 (Jan 24, 2019)
 
  * Upgraded to appcd-logger@2.0.0.

@@ -5,11 +5,12 @@ import appcdLogger from 'appcd-logger';
 
 import { expandPath } from 'appcd-path';
 import { isFile } from 'appcd-fs';
+import { sleep } from 'appcd-util';
 import { spawn } from 'child_process';
 
 import * as config from 'appcd-config';
 
-const { log } = appcdLogger('appcd:common');
+const { error, log } = appcdLogger('appcd:common');
 const { highlight } = appcdLogger.styles;
 
 let appcdVersion = null;
@@ -45,7 +46,6 @@ export function createRequest(cfg, path, data, type) {
 	log('Creating request: %s', highlight(`${type || 'call'}://${client.host}:${client.port}${path}`));
 	const request = client
 		.request({ path, data, type })
-		.once('close', () => process.exit(0))
 		.once('error', err => {
 			if (err.code !== 'ECONNREFUSED') {
 				process
@@ -216,9 +216,9 @@ export function startServer({ cfg, argv }) {
  * @param {Config} params.cfg - The configuration object.
  * @param {Boolean} [params.force=false] - When `true`, forcefully kills the server. When `false`,
  * tries to gracefully shutdown the server, but will force kill the server if it takes too long.
- * @returns {Promise}
+ * @returns {Promise} Resolves `true` if the daemon was running.
  */
-export function stopServer({ cfg, force }) {
+export async function stopServer({ cfg, force }) {
 	const pidFile = expandPath(cfg.get('server.pidFile'));
 
 	const isAlive = () => {
@@ -226,81 +226,72 @@ export function stopServer({ cfg, force }) {
 		if (pid) {
 			try {
 				process.kill(pid, 0);
-				// server is running
+				log(`Server is running: ${highlight(pid)}`);
 				return pid;
 			} catch (e) {
-				// stale pid file
+				log(`pid file is stale, deleting ${highlight(pidFile)}`);
 				fs.unlinkSync(pidFile);
-				log('pid file was stale');
 			}
+		} else {
+			log('No pidfile or invalid pid');
 		}
 	};
 
-	const isRunning = () => {
-		return new Promise(resolve => {
-			const pid = isAlive();
-			if (pid) {
-				return resolve(pid);
-			}
+	let pid = await new Promise(resolve => {
+		const pid = isAlive();
+		if (pid) {
+			return resolve(pid);
+		}
 
-			// either we didn't have a pid file or the pid was stale
+		// either we didn't have a pid file or the pid was stale
 
-			// now we need to try to connect to the server and ask it for the
-			// pid so we can kill it
+		// now we need to try to connect to the server and ask it for the
+		// pid so we can kill it
 
-			log('Attempting to connect to the daemon and get the pid');
+		log('Attempting to connect to the daemon and get the pid');
 
-			createRequest(cfg, '/appcd/status/pid')
-				.request
-				.on('response', resolve)
-				.once('close', resolve)
-				.once('error', err => {
-					if (err.code === 'ECONNREFUSED') {
-						resolve();
-					} else {
-						console.error('Unable to get server pid');
-						console.error(err.toString());
-						process.exit(1);
-					}
-				});
-		});
-	};
-
-	return isRunning()
-		.then(async (pid) => {
-			let wasRunning = !!pid;
-			if (!pid) {
-				return wasRunning;
-			}
-
-			if (!wasRunning) {
-				log('Daemon was running, attempting to stop');
-				wasRunning = true;
-			}
-
-			const signal = force ? 'SIGKILL' : 'SIGTERM';
-			log(`Daemon is running, sending ${signal}`);
-			process.kill(pid, signal);
-
-			const { sleep } = await import('appcd-util');
-
-			await sleep(500);
-
-			// check is alive 10 times waiting 2 seconds between tries
-			for (let tries = 0; tries < 30; tries++) {
-				pid = isAlive();
-				if (!pid) {
-					log('Daemon has stopped');
-					return wasRunning;
+		createRequest(cfg, '/appcd/status/pid')
+			.request
+			.on('response', resolve)
+			.once('close', resolve)
+			.once('error', err => {
+				error(err.stack);
+				if (err.code === 'ECONNREFUSED') {
+					resolve();
+				} else {
+					console.error('Unable to get server pid');
+					console.error(err.toString());
+					process.exit(1);
 				}
+			});
+	});
 
-				log('Daemon is still running, waiting 1 seconds');
-				await sleep(1000);
-			}
+	if (!pid) {
+		return false;
+	}
 
-			log('Daemon is running, sending SIGKILL');
-			process.kill(pid, 'SIGKILL');
+	log('Daemon was running, attempting to stop');
 
-			return wasRunning;
-		});
+	const signal = force ? 'SIGKILL' : 'SIGTERM';
+	log(`Daemon is running, sending ${signal}`);
+	process.kill(pid, signal);
+
+	await sleep(500);
+
+	// check is alive 10 times waiting 2 seconds between tries
+	for (let tries = 0; tries < 30; tries++) {
+		pid = isAlive();
+		if (!pid) {
+			log('Daemon has stopped');
+			return true;
+		}
+
+		log('Daemon is still running, waiting 1 seconds');
+		await sleep(1000);
+	}
+
+	log('Daemon is running, sending SIGKILL');
+	process.kill(pid, 'SIGKILL');
+
+	return true;
 }
