@@ -134,14 +134,20 @@ export default class PluginManager extends Dispatcher {
 			return new Response(code);
 		});
 
-		this.register(/^\/status(?:\/(@[^/]+?))?(?:\/([^/]+?))?(?:\/([^/]+?))?(?:\/)?$/, [ 'scope', 'pluginName', 'version' ], ({ request }) => {
+		this.register(/^\/status(?:\/(@[^/]+?))?(?:\/([^/]+?))?(?:\/([^/]+?))?(?:\/)?$/, [ 'scope', 'pluginName', 'version' ], ({ request }, next) => {
 			const { path } = request.data;
 			const { scope, pluginName, version } = request.params;
 			const name = scope ? `${scope}/${pluginName}` : pluginName;
 
-			return this.registered.filter(plugin => {
+			const plugins = this.registered.filter(plugin => {
 				return (!name && !path) || (path && plugin.path === path) || (name && plugin.packageName === name && (!version || semver.satisfies(plugin.version, version)));
 			});
+
+			if (plugins.length) {
+				return plugins;
+			}
+
+			return next();
 		});
 
 		this.register('/', new DataServiceDispatcher({
