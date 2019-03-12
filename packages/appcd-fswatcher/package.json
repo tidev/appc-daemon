@@ -20,7 +20,7 @@
     "appcd-util": "^1.1.5",
     "gawk": "^4.6.2",
     "pluralize": "^7.0.0",
-    "source-map-support": "^0.5.10"
+    "source-map-support": "^0.5.11"
   },
   "devDependencies": {
     "appcd-gulp": "^2.0.0",

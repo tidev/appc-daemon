@@ -25,7 +25,7 @@
     "fs-extra": "^7.0.1",
     "macaddress": "^0.2.9",
     "simple-plist": "^1.0.0",
-    "source-map-support": "^0.5.10"
+    "source-map-support": "^0.5.11"
   },
   "devDependencies": {
     "appcd-gulp": "^2.0.0",
