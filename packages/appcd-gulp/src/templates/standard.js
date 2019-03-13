@@ -147,8 +147,8 @@ module.exports = (opts) => {
 			args.push(
 				'--cache', 'false',
 				'--exclude', 'test',
-				'--instrument', 'false',
-				'--source-map', 'false',
+				'--instrument', 'true',
+				'--source-map', 'true',
 				// supported reporters:
 				//   https://github.com/istanbuljs/istanbuljs/tree/master/packages/istanbul-reports/lib
 				'--reporter=html',

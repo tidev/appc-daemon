@@ -1,3 +1,8 @@
+# v2.0.2
+
+ * Switched from using the Istanbul Babel plugin to letting nyc instrument the code so that
+   spawned code gets covered too.
+
 # v2.0.1 (Mar 6, 2019)
 
  * Added cobertura reporter when running nyc.

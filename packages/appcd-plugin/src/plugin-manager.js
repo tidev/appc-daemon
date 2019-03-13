@@ -144,7 +144,7 @@ export default class PluginManager extends Dispatcher {
 			});
 
 			if (plugins.length) {
-				return plugins;
+				return version ? plugins[0] : plugins;
 			}
 
 			return next();

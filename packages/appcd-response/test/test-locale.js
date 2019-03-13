@@ -14,4 +14,21 @@ describe('locale', () => {
 			expect(l2).to.match(/^([a-z]{2})(?:[-_](?:\w+[-_])?([A-Z]{2}))?$/i);
 		}
 	});
+
+	it('should bypass the cache and gracefully handle if locale is undeterminable', async () => {
+		const p = process.env.PATH;
+		process.env.PATH = '';
+		let before;
+
+		try {
+			before = await locale(true);
+		} finally {
+			process.env.PATH = p;
+		}
+
+		expect(before).to.be.null;
+
+		const after = await locale(true);
+		expect(after).to.not.equal(before);
+	});
 });

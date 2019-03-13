@@ -7,14 +7,6 @@ const minifyRE = /^minify|babili$/;
 const conf = require('./babel.js')();
 const originalResolveFilename = Module._resolveFilename;
 
-if (process.env.APPCD_COVERAGE && conf.plugins.indexOf('istanbul') === -1) {
-	// inject the istanbul babel plugin
-	conf.plugins.unshift([
-		'istanbul',
-		{ exclude: 'test' }
-	]);
-}
-
 // remove babili from tests and resolve all babel plugins/presets
 Object.keys(conf).forEach(function (key) {
 	if ((key === 'plugins' || key === 'presets') && Array.isArray(conf[key])) {
