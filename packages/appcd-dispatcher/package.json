@@ -19,7 +19,7 @@
     "appcd-logger": "^2.0.0",
     "appcd-response": "^1.1.5",
     "gawk": "^4.6.2",
-    "ignore": "^5.0.4",
+    "ignore": "^5.0.6",
     "lerna": "^3.13.1",
     "npm": "^6.5.0",
     "path-to-regexp": "^3.0.0",

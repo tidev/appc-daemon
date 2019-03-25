@@ -1,7 +1,7 @@
 export default {
 	desc: 'displays the Appc Daemon status',
 	options: {
-		'--json': { desc: 'outputs the status as JSON' }
+		'--json': 'outputs the status as JSON'
 	},
 	async action({ argv }) {
 		const [
@@ -87,7 +87,7 @@ export default {
 					for (const plugin of status.plugins.registered.sort((a, b) => a.name.localeCompare(b.name))) {
 						let status = '';
 						if (plugin.error) {
-							status = plugin.error;
+							status = `${plugin.pid ? '' : 'Inactive: '}${plugin.error}`;
 						} else if (plugin.pid) {
 							if (plugin.type === 'external') {
 								status = `Active, PID=${plugin.pid || 'null'}`;

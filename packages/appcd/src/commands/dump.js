@@ -4,7 +4,7 @@ export default {
 		{ name: 'file', desc: 'the file to dump the info to, otherwise stdout' },
 	],
 	options: {
-		'--view': { desc: 'open the dump in the web browser' }
+		'--view': 'open the dump in the web browser'
 	},
 	async action({ argv }) {
 		const [

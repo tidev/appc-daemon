@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "appcd-gulp": "^2.0.0",
-    "supertest": "^4.0.0"
+    "supertest": "^4.0.2"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-http",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",

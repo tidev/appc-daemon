@@ -53,7 +53,7 @@ export function createRequest(cfg, path, data, type) {
 					.removeListener('SIGTERM', disconnect);
 			}
 		})
-		.once('finish', () => process.exit(0));
+		.once('finish', () => client.disconnect());
 
 	function disconnect() {
 		client.disconnect();
