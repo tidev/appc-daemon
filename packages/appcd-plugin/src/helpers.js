@@ -78,7 +78,7 @@ export async function watch({ debounce, depth, handler, paths, type }) {
 
 	const sids = Object.values(sidsByPath);
 	if (sids.length) {
-		unwatch(type, sids);
+		await unwatch(type, sids);
 	}
 
 	return results;
@@ -109,7 +109,10 @@ export async function unwatch(type, sids) {
 				type: 'unsubscribe'
 			});
 
-			delete subscriptions[type][sidToPath[sid]];
+			const path = sidToPath[sid];
+			if (path) {
+				delete subscriptions[type][path];
+			}
 		}
 
 		if (!Object.keys(subscriptions[type]).length) {
