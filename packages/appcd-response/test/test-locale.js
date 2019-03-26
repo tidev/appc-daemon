@@ -15,10 +15,12 @@ describe('locale', () => {
 		}
 	});
 
-	it('should bypass the cache and gracefully handle if locale is undeterminable', async () => {
+	it.only('should bypass the cache and gracefully handle if locale is undeterminable', async () => {
 		const p = process.env.PATH;
 		process.env.PATH = '';
 		let before;
+
+		console.log(p);
 
 		try {
 			before = await locale(true);

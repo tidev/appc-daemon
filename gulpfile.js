@@ -221,7 +221,7 @@ async function runTests(cover) {
 	process.env.SNOOPLOGG = '*';
 
 	const gulp = path.join(path.dirname(require.resolve('gulp')), 'bin', 'gulp.js');
-	const gulpfiles = globule.find([ 'packages/*/gulpfile.js' ]);
+	const gulpfiles = globule.find([ 'packages/appcd-response/gulpfile.js' ]);
 	const failedProjects = [];
 
 	await gulpfiles

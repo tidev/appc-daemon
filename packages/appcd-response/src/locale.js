@@ -24,7 +24,11 @@ export async function locale(force) {
 				cachedLocale = m ? m[1].replace(/_/g, '-') : null;
 			}
 		} else {
-			const m = spawnSync('locale').stdout.toString().match(/^LANG="?([^".\s]+)/);
+			const output = spawnSync('locale').stdout.toString();
+			console.log('OUTPUT');
+			console.log(output);
+			const m = output.match(/^LANG="?([^".\s]+)/);
+			console.log(m);
 			cachedLocale = m ? m[1].replace(/_/g, '-') : null;
 		}
 	} catch (e) {
