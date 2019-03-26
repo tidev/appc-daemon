@@ -1,6 +1,14 @@
 import { DataServiceDispatcher, DispatcherError } from '../dist/index';
 
 describe('DataServiceDispatcher', () => {
+	describe('Error Handling', () => {
+		it('should error if initial dataset is not an object', () => {
+			expect(() => {
+				new DataServiceDispatcher(123);
+			}).to.throw(TypeError, 'Expected data to be an object or array');
+		});
+	});
+
 	describe('topic', () => {
 		it('should get the topic when no filter is specified', () => {
 			const svc = new DataServiceDispatcher();

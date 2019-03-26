@@ -8,10 +8,32 @@ Accessing the service returns the Plugin Manager status including the plugin pat
 found and registered in those paths.
 
 ```javascript
+// internal usage
 Dispatcher
     .call('/appcd/plugin')
     .then(result => {
         console.log(result);
+    });
+```
+
+```javascript
+// appcd plugin usage
+appcd.call('/appcd/plugin')
+    .then(result => {
+        console.log(result);
+    });
+```
+
+```javascript
+// appcd-client usage
+client
+    .request('/appcd/plugin')
+    // or .request({ path: '/appcd/plugin', data: { } })
+    .on('response', () => {
+        console.log(result);
+    })
+    .on('error', err => {
+        console.error(err);
     });
 ```
 
@@ -30,7 +52,7 @@ Dispatcher
         path: '/path/to/directory'
     })
     .then(result => {
-		// 200 Plugin Registered
+        // 200 Plugin Registered
         console.log(result);
     });
 ```
@@ -50,7 +72,7 @@ Dispatcher
         path: '/path/to/directory'
     })
     .then(result => {
-		// 200 Plugin Unregistered
+        // 200 Plugin Unregistered
         console.log(result);
     });
 ```
@@ -69,7 +91,7 @@ Dispatcher
         path: '/path/to/directory'
     })
     .then(result => {
-		// 200 OK
+        // 200 OK
         console.log(result);
     });
 ```
@@ -86,7 +108,7 @@ Stops all versions of the specified plugin name.
 Dispatcher
     .call('/appcd/plugin/stop/foo')
     .then(result => {
-		// 200 OK
+        // 200 OK
         console.log(result);
     });
 ```
@@ -103,7 +125,7 @@ Stops a specific version or version range for the specified plugin name.
 Dispatcher
     .call('/appcd/plugin/stop/foo/1.0.0')
     .then(result => {
-		// 200 OK
+        // 200 OK
         console.log(result);
     });
 ```
@@ -116,7 +138,7 @@ $ appcd exec /appcd/plugin/stop/foo/1.0.0
 Dispatcher
     .call('/appcd/plugin/stop/foo/2.x')
     .then(result => {
-		// 200 OK
+        // 200 OK
         console.log(result);
     });
 ```
@@ -133,7 +155,7 @@ Returns the status of all registered plugins.
 Dispatcher
     .call('/appcd/plugin/status')
     .then(result => {
-		// 200 OK
+        // 200 OK
         console.log(result);
     });
 ```
@@ -156,7 +178,7 @@ Gets the status for all plugins matching the specified name.
 Dispatcher
     .call('/appcd/plugin/status/appcd-plugin-titanium-sdk')
     .then(result => {
-		// 200 OK
+        // 200 OK
         console.log(result);
     });
 ```
@@ -173,7 +195,7 @@ Gets the status for all plugins matching the specified name and version range.
 Dispatcher
     .call('/appcd/plugin/status/appcd-plugin-titanium-sdk/1.x')
     .then(result => {
-		// 200 OK
+        // 200 OK
         console.log(result);
     });
 ```

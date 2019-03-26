@@ -5,6 +5,8 @@ import ServiceDispatcher from '../dist/service-dispatcher';
 
 import { WritableStream } from 'memory-streams';
 
+class TestServiceDispatcher extends ServiceDispatcher {}
+
 describe('dispatcher', () => {
 	describe('register', () => {
 		it('should register with valid path and handler', () => {
@@ -62,17 +64,17 @@ describe('dispatcher', () => {
 
 		it('should accept a ServiceDispatcher without any paths', () => {
 			const d = new Dispatcher();
-			d.register(new ServiceDispatcher('/foo', {}));
+			d.register(new TestServiceDispatcher('/foo', {}));
 		});
 
 		it('should accept a path and a ServiceDispatcher with a path', () => {
 			const d = new Dispatcher();
-			d.register('/foo', new ServiceDispatcher('/bar', {}));
+			d.register('/foo', new TestServiceDispatcher('/bar', {}));
 		});
 
 		it('should accept a path and ServiceDispatcher without a path', () => {
 			const d = new Dispatcher();
-			d.register('/foo', new ServiceDispatcher({}));
+			d.register('/foo', new TestServiceDispatcher({}));
 		});
 	});
 
@@ -497,7 +499,8 @@ describe('dispatcher', () => {
 			const d = new Dispatcher();
 
 			d.register('/foo', ctx => {
-				expect(ctx.request).to.deep.equal({ foo: 'bar', params: {} });
+				console.log(ctx.request);
+				expect(ctx.request.foo).to.equal('bar');
 				expect(ctx.headers).to.deep.equal({});
 				expect(ctx.source).to.equal('http');
 				ctx.response = 'foo!';

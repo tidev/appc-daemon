@@ -38,7 +38,7 @@ export default class SubprocessManager extends Dispatcher {
 		const subprocesses = this.subprocesses = gawk([]);
 
 		this.register('/spawn/node/:version?', async ctx => {
-			const { data, params, source } = ctx.request;
+			const { data, params } = ctx.request;
 
 			const { response } = await Dispatcher.call('/appcd/config/home');
 			const node = await prepareNode({

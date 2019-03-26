@@ -23,9 +23,9 @@
     "fs-extra": "^7.0.1",
     "pluralize": "^7.0.0",
     "progress": "^2.0.3",
-    "source-map-support": "^0.5.10",
-    "tar-stream": "^1.6.2",
-    "tmp": "^0.0.33",
+    "source-map-support": "^0.5.11",
+    "tar-stream": "^2.0.1",
+    "tmp": "^0.1.0",
     "yauzl": "^2.10.0"
   },
   "devDependencies": {

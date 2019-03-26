@@ -15,16 +15,21 @@ export default class DataServiceDispatcher extends ServiceDispatcher {
 	/**
 	 * Initializes the service.
 	 *
+	 * @param {Object} [data] - The initial dataset.
 	 * @access public
 	 */
-	constructor() {
+	constructor(data = {}) {
+		if (!data || typeof data !== 'object') {
+			throw new TypeError('Expected data to be an object or array');
+		}
+
 		super('/:filter*');
 
 		/**
 		 * The data store object.
 		 * @type {Object}
 		 */
-		this.data = gawk({});
+		this.data = gawk(data);
 	}
 
 	/**

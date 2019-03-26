@@ -1,7 +1,7 @@
 export default {
 	desc: 'starts the Appc Daemon if it\'s not already running',
 	options: {
-		'--debug': { desc: 'don\'t run as a background daemon' }
+		'--debug': 'don\'t run as a background daemon'
 	},
 	async action({ argv }) {
 		const { loadConfig, startServer } = await import('../common');

@@ -1,3 +1,7 @@
+# v1.1.6
+
+ * Fixed bug where exception was being thrown if locale command was not found.
+
 # v1.1.5 (Jan 16, 2019)
 
  * Updated dependencies.

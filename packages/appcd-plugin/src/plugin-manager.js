@@ -1,5 +1,5 @@
 import appcdLogger from 'appcd-logger';
-import Dispatcher from 'appcd-dispatcher';
+import Dispatcher, { DataServiceDispatcher } from 'appcd-dispatcher';
 import gawk from 'gawk';
 import Response, { codes } from 'appcd-response';
 import path from 'path';
@@ -35,75 +35,6 @@ export default class PluginManager extends Dispatcher {
 
 		const emitter = new EventEmitter();
 		this.on = emitter.on.bind(emitter);
-
-		this.register('/register', ctx => {
-			return this.registerPluginPath(ctx.request.data.path)
-				.then(() => new Response(codes.PLUGIN_REGISTERED))
-				.catch(err => {
-					logger.warn(err);
-					throw err;
-				});
-		});
-
-		this.register('/unregister', ctx => {
-			return this.unregisterPluginPath(ctx.request.data.path)
-				.then(() => new Response(codes.PLUGIN_UNREGISTERED))
-				.catch(err => {
-					logger.warn(err);
-					throw err;
-				});
-		});
-
-		this.register('/stop/:pluginName?/:version?', async ({ request }) => {
-			const { path } = request.data;
-			const { pluginName, version } = request.params;
-			const paths = [];
-			let code = codes.NOT_FOUND;
-
-			if (pluginName) {
-				for (const [ pluginPath, plugin ] of Object.entries(this.registry)) {
-					if (plugin.packageName === pluginName && (!version || semver.satisfies(plugin.version, version))) {
-						paths.push(pluginPath);
-					}
-				}
-			} else if (!path) {
-				throw new PluginError('Missing name or path of plugin to stop');
-			} else if (this.registry[path]) {
-				paths.push(path);
-			}
-
-			for (const pluginPath of paths) {
-				const plugin = this.registry[pluginPath];
-				if (plugin) {
-					if (plugin.type === 'internal') {
-						code = code === codes.OK ? code : codes.PLUGIN_CANNOT_STOP_INTERNAL_PLUGIN;
-					} else if (!plugin.impl || !plugin.info.pid) {
-						code = code === codes.OK ? code : codes.PLUGIN_ALREADY_STOPPED;
-					} else {
-						await plugin.stop();
-						code = codes.OK;
-					}
-				}
-			}
-
-			return new Response(code);
-		});
-
-		this.register('/', () => this.status());
-
-		this.register('/status/:pluginName?/:version?', ({ request }) => {
-			const { path } = request.data;
-			const { pluginName, version } = request.params;
-			let results = [];
-
-			for (const plugin of Object.values(this.registry)) {
-				if ((!pluginName && !path) || (path && plugin.path === path) || (pluginName && plugin.packageName === pluginName && (!version || semver.satisfies(plugin.version, version)))) {
-					results.push(plugin.info);
-				}
-			}
-
-			return results;
-		});
 
 		/**
 		 * A map of namespaces to versions to plugins
@@ -142,6 +73,88 @@ export default class PluginManager extends Dispatcher {
 		 */
 		this.registry = {};
 
+		this.register('/register', ctx => {
+			return this.registerPluginPath(ctx.request.data.path)
+				.then(() => new Response(codes.PLUGIN_REGISTERED))
+				.catch(err => {
+					logger.warn(err);
+					throw err;
+				});
+		});
+
+		this.register('/unregister', ctx => {
+			return this.unregisterPluginPath(ctx.request.data.path)
+				.then(() => new Response(codes.PLUGIN_UNREGISTERED))
+				.catch(err => {
+					logger.warn(err);
+					throw err;
+				});
+		});
+
+		// the following 'stop' and 'status' handlers both use a regex for the path match so that
+		// scoped package names work properly
+		//
+		// it's basically the same thing as '/stop|status/:scope?/:pluginName?/:version?', but
+		// correctly handles the '@' in the scope name and doesn't throw off the capture group
+		// indexes
+
+		this.register(/^\/stop(?:\/(@[^/]+?))?(?:\/([^/]+?))?(?:\/([^/]+?))?(?:\/)?$/, [ 'scope', 'pluginName', 'version' ], async ({ request }) => {
+			const { path } = request.data;
+			const { scope, pluginName, version } = request.params;
+			const name = scope ? `${scope}/${pluginName}` : pluginName;
+			const paths = [];
+			let code = codes.NOT_FOUND;
+
+			if (name) {
+				for (const [ pluginPath, plugin ] of Object.entries(this.registry)) {
+					if (plugin.packageName === name && (!version || semver.satisfies(plugin.version, version))) {
+						paths.push(pluginPath);
+					}
+				}
+			} else if (!path) {
+				throw new PluginError('Missing name or path of plugin to stop');
+			} else if (this.registry[path]) {
+				paths.push(path);
+			}
+
+			for (const pluginPath of paths) {
+				const plugin = this.registry[pluginPath];
+				if (plugin) {
+					if (plugin.type === 'internal') {
+						code = code === codes.OK ? code : codes.PLUGIN_CANNOT_STOP_INTERNAL_PLUGIN;
+					} else if (!plugin.impl || !plugin.info.pid) {
+						code = code === codes.OK ? code : codes.PLUGIN_ALREADY_STOPPED;
+					} else {
+						await plugin.stop();
+						code = codes.OK;
+					}
+				}
+			}
+
+			return new Response(code);
+		});
+
+		this.register(/^\/status(?:\/(@[^/]+?))?(?:\/([^/]+?))?(?:\/([^/]+?))?(?:\/)?$/, [ 'scope', 'pluginName', 'version' ], ({ request }, next) => {
+			const { path } = request.data;
+			const { scope, pluginName, version } = request.params;
+			const name = scope ? `${scope}/${pluginName}` : pluginName;
+
+			const plugins = this.registered.filter(plugin => {
+				return (!name && !path) || (path && plugin.path === path) || (name && plugin.packageName === name && (!version || semver.satisfies(plugin.version, version)));
+			});
+
+			if (plugins.length) {
+				return version ? plugins[0] : plugins;
+			}
+
+			return next();
+		});
+
+		this.register('/', new DataServiceDispatcher({
+			paths:      this.paths,
+			registered: this.registered
+		}));
+
 		// register all plugins the initial list of paths
 		for (const dir of this.paths) {
 			if (dir) {
@@ -152,7 +165,7 @@ export default class PluginManager extends Dispatcher {
 		/**
 		 * Indicates that telemetry data should be captured.
 		 *
-		 * NOTE: This property MUST be set AFTER doing the initial path scanning and plugin
+		 * IMPORTANT! This property MUST be set AFTER doing the initial path scanning and plugin
 		 * registration.
 		 *
 		 * @type {Boolean}

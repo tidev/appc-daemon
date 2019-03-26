@@ -16,7 +16,7 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "source-map-support": "^0.5.10"
+    "source-map-support": "^0.5.11"
   },
   "devDependencies": {
     "appcd-gulp": "^2.0.0"

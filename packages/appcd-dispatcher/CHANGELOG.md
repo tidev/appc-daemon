@@ -2,6 +2,14 @@
 
  * Fixed bug where streamed objects were not being stringified in the middleware callback.
    [(DAEMON-271)](https://jira.appcelerator.org/browse/DAEMON-271)
+ * Added check to ensure `ServiceDispatcher` is not directly instantiable.
+ * Fixed bug when dispatch handler is a `Dispatcher` or `ServiceDispatcher` and the route path is
+   `/` route causing the leading `/` to get stripped off and not match the descending dispatcher's
+   routes.
+ * When a route `path` is a regex, sets the request params to the match result instead of setting
+   each param's key name to the capture group index.
+ * When registering a dispatcher route and the `path` is a regex, the second argument can be an
+   array of key names used to name the capture groups.
 
 # v1.3.0 (Jan 24, 2019)
 

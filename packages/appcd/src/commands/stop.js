@@ -1,7 +1,7 @@
 export default {
 	desc: 'stops the Appc Daemon if running',
 	options: {
-		'--force': { desc: 'force the daemon to stop' }
+		'--force': 'force the daemon to stop'
 	},
 	async action({ argv }) {
 		const { loadConfig, stopServer } = await import('../common');
