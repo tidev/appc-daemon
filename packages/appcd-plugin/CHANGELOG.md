@@ -6,6 +6,8 @@
  * When requesting a plugin's status by name and version, it will return that specific plugin's
    info. If there is no specific version, an array of matches is returned. If no matches, a 404 is
    returned.
+ * Added `appcd.fs.watch()` and `appcd.fs.unwatch()` which optimizes filesystem watching
+   subscriptions.
 
 # v1.2.0 (Jan 24, 2019)
 
