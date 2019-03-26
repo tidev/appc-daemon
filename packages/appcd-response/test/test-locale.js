@@ -1,6 +1,20 @@
 import { locale } from '../dist/locale';
 
 describe('locale', () => {
+	beforeEach(function () {
+		this.lang = process.env.LANG;
+		this.path = process.env.PATH;
+
+		if (!this.lang) {
+			process.env.LANG = 'en_US.UTF-8';
+		}
+	});
+
+	afterEach(function () {
+		process.env.LANG = this.lang;
+		process.env.PATH = this.path;
+	});
+
 	it('should detect the system\'s locale', async () => {
 		const l = await locale();
 		if (l !== null) {
@@ -15,20 +29,14 @@ describe('locale', () => {
 		}
 	});
 
-	it.only('should bypass the cache and gracefully handle if locale is undeterminable', async () => {
-		const p = process.env.PATH;
+	it('should bypass the cache and gracefully handle if locale is undeterminable', async () => {
+		const path = process.env.PATH;
 		process.env.PATH = '';
-		let before;
 
-		console.log(p);
-
-		try {
-			before = await locale(true);
-		} finally {
-			process.env.PATH = p;
-		}
-
+		const before = await locale(true);
 		expect(before).to.be.null;
+
+		process.env.PATH = path;
 
 		const after = await locale(true);
 		expect(after).to.not.equal(before);

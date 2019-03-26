@@ -1,6 +1,11 @@
 import { get } from 'appcd-winreg';
 import { spawnSync } from 'child_process';
 
+/**
+ * The cached locale value.
+ *
+ * @type {?String}
+ */
 let cachedLocale;
 
 /**
@@ -24,11 +29,7 @@ export async function locale(force) {
 				cachedLocale = m ? m[1].replace(/_/g, '-') : null;
 			}
 		} else {
-			const output = spawnSync('locale').stdout.toString();
-			console.log('OUTPUT');
-			console.log(output);
-			const m = output.match(/^LANG="?([^".\s]+)/);
-			console.log(m);
+			const m = spawnSync('locale').stdout.toString().match(/^LANG="?([^".\s]+)/);
 			cachedLocale = m ? m[1].replace(/_/g, '-') : null;
 		}
 	} catch (e) {
