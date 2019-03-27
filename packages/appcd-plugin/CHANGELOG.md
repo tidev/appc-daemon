@@ -1,3 +1,14 @@
+# v1.3.0
+
+ * Reimplemented the `/` endpoint using a `DataServiceDispatcher` so that the data can be filtered
+   and subscribed to. This also fixes proper 404 handling.
+ * Added support for plugins with scopes in their package name.
+ * When requesting a plugin's status by name and version, it will return that specific plugin's
+   info. If there is no specific version, an array of matches is returned. If no matches, a 404 is
+   returned.
+ * Added `appcd.fs.watch()` and `appcd.fs.unwatch()` which optimizes filesystem watching
+   subscriptions.
+
 # v1.2.0 (Jan 24, 2019)
 
  * Upgraded to appcd-logger@2.0.0.

@@ -37,10 +37,10 @@
     "appcd-nodejs": "^1.2.0",
     "appcd-path": "^1.1.4",
     "appcd-util": "^1.1.5",
-    "cli-kit": "^0.6.1",
+    "cli-kit": "^0.7.2",
     "cli-table2": "^0.2.0",
     "humanize": "^0.0.9",
-    "source-map-support": "^0.5.10",
+    "source-map-support": "^0.5.11",
     "v8-compile-cache": "^2.0.2"
   },
   "devDependencies": {

@@ -4,6 +4,7 @@ import gawk from 'gawk';
 import PluginModule from './plugin-module';
 
 import { EventEmitter } from 'events';
+import { watch, unwatch } from './helpers';
 
 const { highlight } = appcdLogger.styles;
 
@@ -121,7 +122,11 @@ export default class PluginBase extends EventEmitter {
 		this.globals = {
 			appcd: {
 				call: Dispatcher.call.bind(Dispatcher),
-				register: this.dispatcher.register.bind(this.dispatcher)
+				register: this.dispatcher.register.bind(this.dispatcher),
+				fs: {
+					watch,
+					unwatch
+				}
 			},
 
 			console: this.logger

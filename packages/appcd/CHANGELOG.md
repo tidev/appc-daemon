@@ -1,3 +1,8 @@
+# v2.1.1
+
+ * Fixed bug where the appcd client would exit when the connection to the server closed.
+ * Updated internal `stopServer()` function to async/await.
+
 # v2.1.0 (Jan 24, 2019)
 
  * Upgraded to appcd-logger@2.0.0.

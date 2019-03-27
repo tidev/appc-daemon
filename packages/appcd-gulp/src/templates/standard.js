@@ -147,14 +147,15 @@ module.exports = (opts) => {
 			args.push(
 				'--cache', 'false',
 				'--exclude', 'test',
-				'--instrument', 'false',
-				'--source-map', 'false',
+				'--instrument', 'true',
+				'--source-map', 'true',
 				// supported reporters:
 				//   https://github.com/istanbuljs/istanbuljs/tree/master/packages/istanbul-reports/lib
 				'--reporter=html',
 				'--reporter=json',
 				'--reporter=text',
 				'--reporter=text-summary',
+				'--reporter=cobertura',
 				'--require', path.resolve(__dirname, '../test-transpile.js'),
 				'--show-process-tree',
 				process.execPath // need to specify node here so that spawn-wrap works

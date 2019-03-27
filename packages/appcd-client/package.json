@@ -27,9 +27,9 @@
     "appcd-util": "^1.1.5",
     "fs-extra": "^7.0.1",
     "msgpack-lite": "^0.1.26",
-    "source-map-support": "^0.5.10",
+    "source-map-support": "^0.5.11",
     "uuid": "^3.3.2",
-    "ws": "^6.1.2"
+    "ws": "^6.2.0"
   },
   "devDependencies": {
     "appcd-gulp": "^2.0.0"

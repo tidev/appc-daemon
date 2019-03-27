@@ -21,7 +21,7 @@
     "appcd-logger": "^2.0.0",
     "humanize": "^0.0.9",
     "request": "^2.88.0",
-    "source-map-support": "^0.5.10"
+    "source-map-support": "^0.5.11"
   },
   "devDependencies": {
     "appcd-gulp": "^2.0.0"

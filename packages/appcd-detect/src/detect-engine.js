@@ -53,7 +53,7 @@ export default class DetectEngine extends EventEmitter {
 	 * A list of all active search paths.
 	 * @type {Set}
 	 */
-	searchPaths = [];
+	searchPaths = null;
 
 	/**
 	 * Initializes the detect engine instance and validates the options.
@@ -74,7 +74,7 @@ export default class DetectEngine extends EventEmitter {
 	 * @param {Boolean} [opts.multiple=false] - When true, the scanner will continue to scan paths
 	 * even after a result has been found.
 	 * @param {String} [opts.name] - A name to prepend to the detect engine instance for logging.
-	 * @param {String|Array<String>|Set} [opts.paths] - One or more global search paths to search.
+	 * @param {String|Array<String>|Set} [opts.paths] - One or more paths to scan.
 	 * @param {Function} [opts.processResults] - A function that is called after the scanning is
 	 * complete and the results may be modified.
 	 * @param {Boolean} [opts.recursive=false] - When `true`, recursively watches a path for
@@ -168,57 +168,6 @@ export default class DetectEngine extends EventEmitter {
 	}
 
 	/**
-	 * Recomputes the search and default paths. If they changed, then it triggers a re-scan. This
-	 * function will resolve the results from the initial scan.
-	 *
-	 * @returns {Promise<Array|Object>}
-	 * @access public
-	 */
-	async start() {
-		try {
-			await this.rescan();
-			if (this.opts.watch) {
-				this.refreshPaths();
-			}
-			return this.opts.multiple ? this.results : this.results[0];
-		} catch (err) {
-			this.emit('error', err);
-			throw err;
-		}
-	}
-
-	/**
-	 * Stops the detection. This method is only required when `watch=true`.
-	 *
-	 * @returns {Promise}
-	 * @access public
-	 */
-	async stop() {
-		this.logger.log('stop()');
-		if (this.refreshPathsTimer) {
-			this.logger.log('  Cancelling refresh paths timer');
-			clearTimeout(this.refreshPathsTimer);
-			this.refreshPathsTimer = null;
-		}
-
-		this.logger.log(pluralize(`  Stopping ${highlight(this.detectors.size)} detector`, this.detectors.size));
-		for (const detector of this.detectors.values()) {
-			await detector.stop();
-		}
-		this.detectors.clear();
-	}
-
-	/**
-	 * Forces a rescan.
-	 *
-	 * @returns {Promise}
-	 * @access public
-	 */
-	async rescan() {
-		await this.scan(await this.getPaths());
-	}
-
-	/**
 	 * Determines the list of search paths and the default path.
 	 *
 	 * @returns {Promise<Object>}
@@ -292,6 +241,75 @@ export default class DetectEngine extends EventEmitter {
 	}
 
 	/**
+	 * The list of paths to scan.
+	 *
+	 * @type {Array.<String>}
+	 * @access public
+	 */
+	get paths() {
+		return Array.from(this.searchPaths || []);
+	}
+
+	set paths(value) {
+		const paths = arrayify(value, true);
+		if (paths.some(s => !s || typeof s !== 'string')) {
+			throw new TypeError('Expected "paths" option to be a non-empty string or an array or set of non-empty strings');
+		}
+		this.logger.log(`Changing paths from ${highlight(JSON.stringify(this.opts.paths))} to ${highlight(JSON.stringify(value))}`);
+		this.opts.paths = paths;
+		this.rescan();
+	}
+
+	/**
+	 * Processes the results and then saves them.
+	 *
+	 * @param {Array.<Object>} results - The results from the scan.
+	 * @returns {Promise}
+	 * @access private
+	 */
+	async processResults(results) {
+		if (this.opts.processResults) {
+			this.logger.log('  Processing results...');
+			results = (await this.opts.processResults(results, this)) || results;
+		}
+		gawk.set(this.results, arrayify(results, true));
+	}
+
+	/**
+	 * Schedules the paths to refreshed. When the timer fires, it checks if a rescan is needed.
+	 *
+	 * @access private
+	 */
+	refreshPaths() {
+		this.refreshPathsTimer = setTimeout(async () => {
+			try {
+				const { defaultPath, searchPaths } = await this.getPaths();
+
+				if (searchPaths.size !== this.detectors.size || [ ...searchPaths ].some(dir => !this.detector.has(dir))) {
+					await this.scan({ defaultPath, searchPaths });
+				} else if (defaultPath !== this.defaultPath) {
+					this.defaultPath = defaultPath;
+					await this.processResults(this.results);
+				}
+			} catch (err) {
+				this.emit('error', err);
+			}
+
+			this.refreshPaths();
+		}, this.opts.refreshPathsInterval);
+	}
+
+	/**
+	 * Forces a rescan.
+	 *
+	 * @returns {Promise}
+	 * @access public
+	 */
+	async rescan() {
+		await this.scan(await this.getPaths());
+	}
+
+	/**
 	 * Calls upon the detectors to scan for items.
 	 *
 	 * @param {Object} params - Various parameters.
@@ -361,41 +379,43 @@ export default class DetectEngine extends EventEmitter {
 	}
 
 	/**
-	 * Schedules the paths to refreshed. When the timer fires, it checks if a rescan is needed.
+	 * Recomputes the search and default paths. If they changed, then it triggers a re-scan. This
+	 * function will resolve the results from the initial scan.
 	 *
-	 * @access private
+	 * @returns {Promise<Array|Object>}
+	 * @access public
 	 */
-	refreshPaths() {
-		this.refreshPathsTimer = setTimeout(async () => {
-			try {
-				const { defaultPath, searchPaths } = await this.getPaths();
-
-				if (searchPaths.size !== this.detectors.size || [ ...searchPaths ].some(dir => !this.detector.has(dir))) {
-					await this.scan({ defaultPath, searchPaths });
-				} else if (defaultPath !== this.defaultPath) {
-					this.defaultPath = defaultPath;
-					await this.processResults(this.results);
-				}
-			} catch (err) {
-				this.emit('error', err);
+	async start() {
+		try {
+			await this.rescan();
+			if (this.opts.watch) {
+				this.refreshPaths();
 			}
-
-			this.refreshPaths();
-		}, this.opts.refreshPathsInterval);
+			return this.opts.multiple ? this.results : this.results[0];
+		} catch (err) {
+			this.emit('error', err);
+			throw err;
+		}
 	}
 
 	/**
-	 * Processes the results and then saves them.
+	 * Stops the detection. This method is only required when `watch=true`.
 	 *
-	 * @param {Array.<Object>} results - The results from the scan.
 	 * @returns {Promise}
-	 * @access private
+	 * @access public
 	 */
-	async processResults(results) {
-		if (this.opts.processResults) {
-			this.logger.log('  Processing results...');
-			results = (await this.opts.processResults(results, this)) || results;
+	async stop() {
+		this.logger.log('stop()');
+		if (this.refreshPathsTimer) {
+			this.logger.log('  Cancelling refresh paths timer');
+			clearTimeout(this.refreshPathsTimer);
+			this.refreshPathsTimer = null;
 		}
-		gawk.set(this.results, arrayify(results, true));
+
+		this.logger.log(pluralize(`  Stopping ${highlight(this.detectors.size)} detector`, this.detectors.size));
+		for (const detector of this.detectors.values()) {
+			await detector.stop();
+		}
+		this.detectors.clear();
 	}
 }

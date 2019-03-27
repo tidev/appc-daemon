@@ -5,7 +5,7 @@ export default {
 	],
 	desc: 'connects to the Appc Daemon and executes the request',
 	options: {
-		'--subscribe': { desc: 'request a subscription' }
+		'--subscribe': 'request a subscription'
 	},
 	async action({ argv }) {
 		const { createRequest, loadConfig } = await import('../common');

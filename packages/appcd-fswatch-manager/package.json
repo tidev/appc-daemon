@@ -20,14 +20,14 @@
     "appcd-fswatcher": "^1.2.0",
     "appcd-logger": "^2.0.0",
     "appcd-response": "^1.1.5",
-    "source-map-support": "^0.5.10"
+    "source-map-support": "^0.5.11"
   },
   "devDependencies": {
     "appcd-gulp": "^2.0.0",
     "appcd-path": "^1.1.4",
     "appcd-util": "^1.1.5",
     "fs-extra": "^7.0.1",
-    "tmp": "^0.0.33"
+    "tmp": "^0.1.0"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-fswatch-manager",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",

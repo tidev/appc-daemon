@@ -175,17 +175,18 @@ export default class Dispatcher {
 			logger.log('Found matching route: %s', highlight(route.path));
 
 			// extract the params from the path
-			ctx.request.params = {};
-			m.slice(1).forEach((param, i) => {
-				if (route.keys[i]) {
-					ctx.request.params[route.keys[i].name] = param;
+			const { keys } = route;
+			ctx.request.params = !keys.length ? m : m.slice(1).reduce((params, param, i) => {
+				if (keys[i]) {
+					params[keys[i]] = param;
 				}
-			});
+				return params;
+			}, {});
 
 			if (route.handler instanceof Dispatcher) {
 				// call the nested dispatcher
 				logger.log('Calling dispatcher handler %s', highlight(route.prefix));
-				return route.handler.call(ctx.path.replace(route.prefix, '') || '/', ctx);
+				return route.handler.call(`/${ctx.path.replace(route.prefix, '').replace(/^\//, '')}`, ctx);
 			}
 
 			let fired = false;
@@ -349,19 +350,35 @@ export default class Dispatcher {
 	 * @param {ServiceDispatcher|Object|String|RegExp|Array<String>|Array<RegExp>} path - The path
 	 * to register the handler to. This can also be a `ServiceDispatcher` instance or any object
 	 * that has a path and a handler.
+	 * @param {Array.<String>} [keys] - An array of key names when `path` is a regex. If `path` is
+	 * a string and `keys` is set, then an error is thrown.
 	 * @param {Function|Dispatcher|ServiceDispatcher} handler - A function to call when the path matches.
 	 * @returns {Dispatcher}
 	 * @access public
 	 */
-	register(path, handler) {
+	register(path, keys, handler) {
 		if (Array.isArray(path)) {
 			for (const p of path) {
-				this.register(p, handler);
+				this.register(p, keys, handler);
 			}
 		} else {
+			if (!Array.isArray(keys)) {
+				handler = keys;
+				keys = undefined;
+			}
+
 			const handle = this.normalize(path, handler);
-			handle.keys = [];
-			handle.regexp = pathToRegExp(handle.path, handle.keys, { end: !(handle.handler instanceof Dispatcher) });
+			if (path instanceof RegExp) {
+				handle.keys = keys || [];
+				handle.regexp = handle.path;
+			} else {
+				if (keys) {
+					throw new TypeError('Keys are only allowed when path is a regex');
+				}
+				keys = [];
+				handle.regexp = pathToRegExp(handle.path, keys, { end: !(handle.handler instanceof Dispatcher) });
+				handle.keys = keys.map(k => k.name);
+			}
 			handle.prefix = handle.handler instanceof Dispatcher ? handle.path : null;
 			this.routes.push(handle);
 
