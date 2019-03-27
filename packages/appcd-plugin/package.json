@@ -43,7 +43,7 @@
     "ignore": "^5.0.6",
     "pluralize": "^7.0.0",
     "pretty-ms": "^4.0.0",
-    "semver": "^5.6.0",
+    "semver": "^6.0.0",
     "slugg": "^1.2.1",
     "source-map-support": "^0.5.11",
     "uuid": "^3.3.2"
