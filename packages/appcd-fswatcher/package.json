@@ -23,7 +23,7 @@
     "source-map-support": "^0.5.11"
   },
   "devDependencies": {
-    "appcd-gulp": "^2.0.0",
+    "appcd-gulp": "^2.0.1",
     "appcd-path": "^1.1.4",
     "fs-extra": "^7.0.1",
     "tmp": "^0.1.0"

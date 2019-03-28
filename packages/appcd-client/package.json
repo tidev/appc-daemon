@@ -29,10 +29,10 @@
     "msgpack-lite": "^0.1.26",
     "source-map-support": "^0.5.11",
     "uuid": "^3.3.2",
-    "ws": "^6.2.0"
+    "ws": "^6.2.1"
   },
   "devDependencies": {
-    "appcd-gulp": "^2.0.0"
+    "appcd-gulp": "^2.0.1"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-client",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",

@@ -28,7 +28,7 @@
     "source-map-support": "^0.5.11"
   },
   "devDependencies": {
-    "appcd-gulp": "^2.0.0",
+    "appcd-gulp": "^2.0.1",
     "tmp": "^0.1.0"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-config",

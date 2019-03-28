@@ -29,7 +29,7 @@
     "yauzl": "^2.10.0"
   },
   "devDependencies": {
-    "appcd-gulp": "^2.0.0"
+    "appcd-gulp": "^2.0.1"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-nodejs",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
