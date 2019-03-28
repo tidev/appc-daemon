@@ -49,8 +49,8 @@
     "uuid": "^3.3.2"
   },
   "devDependencies": {
-    "appcd-fswatch-manager": "^1.0.3",
-    "appcd-gulp": "^2.0.0",
+    "appcd-fswatch-manager": "^1.1.0",
+    "appcd-gulp": "^2.0.1",
     "fs-extra": "^7.0.1",
     "tmp": "^0.1.0"
   },
