@@ -139,91 +139,95 @@ export default class Client {
 							return;
 						}
 
-						log(`Failed to connect to appcd: ${highlight(`${this.host}:${this.port}`)}`);
-						log('Attempting to locate appcd, then determine configuration...');
+						try {
+							log(`Failed to connect to appcd: ${highlight(`${this.host}:${this.port}`)}`);
+							log('Attempting to locate appcd, then determine configuration...');
 
-						if (this.appcd === undefined) {
-							this.appcd = await find('appcd');
-						}
-
-						if (this.appcd) {
-							if (this.fetchedAppcdConfig) {
-								// maybe it just needs to be started?
-								log('Starting daemon...');
-								run(this.appcd, 'start');
-
-								// at this point, we've done all we can do and if connect() throws an error, then so be it
-								return tryConnect();
-							}
-							log('Fetching appcd config to determine host and port...');
-
-							let start = false;
-							this.fetchedAppcdConfig = true;
-
-							try {
-								const cfg = JSON.parse(run(this.appcd, 'config', 'get', 'server', '--json').stdout);
-								if (cfg) {
-									const { host: currentHost, port: currentPort } = this;
-									const { hostname: newHost, port: newPort } = cfg.result;
-									if (newHost && currentHost !== newHost) {
-										this.host = newHost;
-										start = true;
-									}
-									if (newPort && currentPort !== newPort) {
-										this.port = newPort;
-										start = true;
-									}
-									if (start) {
-										log(`Updating client config from ${highlight(`${currentHost}:${currentPort}`)} to ${highlight(`${newHost}:${newPort}`)}`);
-									} else {
-										log(`Client config is unchanged: ${highlight(`${currentHost}:${currentPort}`)}`);
-									}
-								}
-							} catch (e) {
-								error(`Failed to get appcd config: ${e.message}`);
-								start = true;
+							if (this.appcd === undefined) {
+								this.appcd = await find('appcd');
 							}
 
-							if (start) {
-								log('Starting daemon...');
-								run(this.appcd, 'start');
-							}
+							if (this.appcd) {
+								if (this.fetchedAppcdConfig) {
+									// maybe it just needs to be started?
+									log('Starting daemon...');
+									run(this.appcd, 'start');
 
-							return tryConnect();
-						}
-
-						log(`${highlight('appcd')} not found, attempting to locate ${highlight('amplify')}...`);
-
-						if (this.amplify === undefined) {
-							this.amplify = await find('amplify');
-						}
-
-						if (this.amplify) {
-							try {
-								// check if appcd is installed
-								log('Checking amplify if appcd is installed...');
-								const packages = JSON.parse(run(this.amplify, 'pm', 'list', '--json').stdout);
-								const appcdPkg = Array.isArray(packages) && packages.filter(p => p.name === 'appcd')[0];
-								if (appcdPkg) {
-									const appcdPath = path.resolve(appcdPkg.versions[appcdPkg.version].path, 'bin', 'appcd');
-									if (fs.existsSync(appcdPath)) {
-										this.appcd = appcdPath;
-										this.fetchedAppcdConfig = false;
-										log(`amplify found appcd: ${highlight(appcd)}`);
-									}
+									// at this point, we've done all we can do and if connect() throws an error, then so be it
 									return tryConnect();
 								}
-							} catch (e) {
-								error(`Failed to check amplify for appcd: ${e.message}`);
-							}
-						} else {
-							log(`${highlight('amplify')} not found`);
-						}
+								log('Fetching appcd config to determine host and port...');
 
-						throw new Error(
-							'Unable to find the Appc Daemon (appcd).\n'
-							+ `Run ${this.amplify ? '"amplify pm i appcd" or ' : ''}"npm i -g appcd" to install it.`
-						);
+								let start = false;
+								this.fetchedAppcdConfig = true;
+
+								try {
+									const cfg = JSON.parse(run(this.appcd, 'config', 'get', 'server', '--json').stdout);
+									if (cfg) {
+										const { host: currentHost, port: currentPort } = this;
+										const { hostname: newHost, port: newPort } = cfg.result;
+										if (newHost && currentHost !== newHost) {
+											this.host = newHost;
+											start = true;
+										}
+										if (newPort && currentPort !== newPort) {
+											this.port = newPort;
+											start = true;
+										}
+										if (start) {
+											log(`Updating client config from ${highlight(`${currentHost}:${currentPort}`)} to ${highlight(`${newHost}:${newPort}`)}`);
+										} else {
+											log(`Client config is unchanged: ${highlight(`${currentHost}:${currentPort}`)}`);
+										}
+									}
+								} catch (e) {
+									error(`Failed to get appcd config: ${e.message}`);
+									start = true;
+								}
+
+								if (start) {
+									log('Starting daemon...');
+									run(this.appcd, 'start');
+								}
+
+								return tryConnect();
+							}
+
+							log(`${highlight('appcd')} not found, attempting to locate ${highlight('amplify')}...`);
+
+							if (this.amplify === undefined) {
+								this.amplify = await find('amplify');
+							}
+
+							if (this.amplify) {
+								try {
+									// check if appcd is installed
+									log('Checking amplify if appcd is installed...');
+									const packages = JSON.parse(run(this.amplify, 'pm', 'list', '--json').stdout);
+									const appcdPkg = Array.isArray(packages) && packages.filter(p => p.name === 'appcd')[0];
+									if (appcdPkg) {
+										const appcdPath = path.resolve(appcdPkg.versions[appcdPkg.version].path, 'bin', 'appcd');
+										if (fs.existsSync(appcdPath)) {
+											this.appcd = appcdPath;
+											this.fetchedAppcdConfig = false;
+											log(`amplify found appcd: ${highlight(appcd)}`);
+										}
+										return tryConnect();
+									}
+								} catch (e) {
+									error(`Failed to check amplify for appcd: ${e.message}`);
+								}
+							} else {
+								log(`${highlight('amplify')} not found`);
+							}
+
+							throw new Error(
+								'Unable to find the Appc Daemon (appcd).\n'
+								+ `Run ${this.amplify ? '"amplify pm i appcd" or ' : ''}"npm i -g appcd" to install it.`
+							);
+						} catch (e) {
+							emitter.emit('error', e);
+						}
 					});
 			} catch (err) {
 				emitter.emit('error', err);
