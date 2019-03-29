@@ -46,6 +46,41 @@ client
 	});
 ```
 
+## Starting the Appc Daemon
+
+`request()` will automatically call `connect()`, however it will error if the daemon is not
+running. You can call `connect()` prior to making your request and specify the `startDaemon` flag:
+
+```js
+const client = new Client();
+
+(async () => {
+	try {
+		// connect to the daemon and start it if its not running.
+		await new Promise((resolve, reject) => {
+			client
+				.connect({ startDaemon: true })
+				.on('connected', resolve)
+				.on('error', reject);
+		});
+
+		await new Promise((resolve, reject) => {
+			client
+				.request('/appcd/status')
+				.on('response', status => {
+					console.log(status);
+					client.disconnect();
+					resolve();
+				})
+				.on('error', reject);
+		});
+	} catch (err) {
+		console.error('ERROR!');
+		console.error(err);
+	}
+})();
+```
+
 ## Legal
 
 This project is open source under the [Apache Public License v2][1] and is developed by
