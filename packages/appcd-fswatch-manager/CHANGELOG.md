@@ -1,3 +1,7 @@
+# v1.1.1 (Mar 29, 2019)
+
+ * Updated dependencies.
+
 # v1.1.0 (Jan 24, 2019)
 
  * Upgraded to appcd-logger@2.0.0.

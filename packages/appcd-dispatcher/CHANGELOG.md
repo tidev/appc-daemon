@@ -1,4 +1,4 @@
-# v1.3.1
+# v1.4.0 (Mar 29, 2019)
 
  * Fixed bug where streamed objects were not being stringified in the middleware callback.
    [(DAEMON-271)](https://jira.appcelerator.org/browse/DAEMON-271)
@@ -10,6 +10,7 @@
    each param's key name to the capture group index.
  * When registering a dispatcher route and the `path` is a regex, the second argument can be an
    array of key names used to name the capture groups.
+ * Updated dependencies.
 
 # v1.3.0 (Jan 24, 2019)
 

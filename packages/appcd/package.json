@@ -1,6 +1,6 @@
 {
   "name": "appcd",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "A daemon that powers Appcelerator tooling and makes the impossible possible.",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
   "maintainers": [

@@ -1,6 +1,8 @@
-# v1.1.6
+# v1.1.6 (Mar 29, 2019)
 
  * Fixed bug where exception was being thrown if locale command was not found.
+ * Added 'force' flag when detecting the locale.
+ * Updated dependencies.
 
 # v1.1.5 (Jan 16, 2019)
 

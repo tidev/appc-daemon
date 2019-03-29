@@ -1,3 +1,7 @@
+# v1.1.5 (Mar 29, 2019)
+
+ * Updated dependencies.
+
 # v1.1.4 (Jan 16, 2019)
 
  * Refactored promises to async/await.

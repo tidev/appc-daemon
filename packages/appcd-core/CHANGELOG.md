@@ -1,3 +1,8 @@
+# v2.2.0 (Mar 29, 2019)
+
+ * Bumped Node.js version from 8.15.0 to 10.15.3.
+ * Updated dependencies.
+
 # v2.1.0 (Jan 24, 2019)
 
  * Upgraded to appcd-logger@2.0.0.
@@ -9,6 +14,7 @@
    [(DAEMON-268)](https://jira.appcelerator.org/browse/DAEMON-268)
  * Added humanize dependency since it was removed from snooplogg 2.
  * Refactored promises to async/await.
+ * Bumped Node.js version from 8.13.0 to 10.15.0.
  * Updated dependencies.
 
 

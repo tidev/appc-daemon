@@ -1,7 +1,8 @@
-# v2.1.1
+# v2.2.0 (Mar 29, 2019)
 
  * Fixed bug where the appcd client would exit when the connection to the server closed.
  * Updated internal `stopServer()` function to async/await.
+ * Updated dependencies.
 
 # v2.1.0 (Jan 24, 2019)
 
