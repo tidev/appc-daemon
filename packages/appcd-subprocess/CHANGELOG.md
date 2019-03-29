@@ -1,7 +1,8 @@
-# v1.3.0
+# v1.3.0 (Mar 29, 2019)
 
  * Removed broken and useless 'http' source restriction.
    [(DAEMON-272)](https://jira.appcelerator.org/browse/DAEMON-272)
+ * Updated dependencies.
 
 # v1.2.0 (Jan 24, 2019)
 
