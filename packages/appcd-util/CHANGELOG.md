@@ -1,4 +1,8 @@
-# 1.1.5 (Jan 16, 2019)
+# v1.1.6 (Mar 29, 2019)
+
+ * Updated dependencies.
+
+# v1.1.5 (Jan 16, 2019)
 
  * Updated `getActiveHandles()` to gracefully work in the event Node.js deprecates
    `process._getActiveHandles()`.
