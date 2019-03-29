@@ -1,4 +1,4 @@
-# v1.3.0
+# v1.3.0 (Mar 29, 2019)
 
  * Reimplemented the `/` endpoint using a `DataServiceDispatcher` so that the data can be filtered
    and subscribed to. This also fixes proper 404 handling.
@@ -8,6 +8,7 @@
    returned.
  * Added `appcd.fs.watch()` and `appcd.fs.unwatch()` which optimizes filesystem watching
    subscriptions.
+ * Updated dependencies.
 
 # v1.2.0 (Jan 24, 2019)
 
