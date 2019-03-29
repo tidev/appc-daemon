@@ -1,3 +1,8 @@
+# v1.3.0
+
+ * Added `startDaemon` flag to `connect()` that will attempt to locate and start the daemon if it
+   is not running.
+
 # v1.2.0 (Jan 24, 2019)
 
  * Upgraded to appcd-logger@2.0.0.
