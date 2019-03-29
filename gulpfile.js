@@ -11,7 +11,6 @@ let log            = require('fancy-log');
 const path         = require('path');
 const plumber      = require('gulp-plumber');
 const promiseLimit = require('promise-limit');
-const runSequence  = require('run-sequence');
 const semver       = require('semver');
 const spawn        = require('child_process').spawn;
 const spawnSync    = require('child_process').spawnSync;
