@@ -2,62 +2,76 @@
 # yarn lockfile v1
 
 
-"@appcd/plugin-android@^1.2.0":
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/@appcd/plugin-android/-/plugin-android-1.2.0.tgz#a963fd953c6d94a20f7927124319059976f32e1b"
-  integrity sha512-rQaTR8hAEs8hEph9Lh7aAEdwCnFuLPYUCAz90oREt5fZ7HwUjdRWl0XAiTr3MuibhKO0LdNZ/tDT1OtzZyzLDA==
+"@appcd/plugin-android@^1.3.0":
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/@appcd/plugin-android/-/plugin-android-1.3.0.tgz#46d124721024606beba5fbf72b9a8b53a95638f2"
+  integrity sha512-d5jo5Y0p9wuNQrrofgjnzpFO6lRgf6MPsiH+in+l/7QNSjs6uBp9xBUF4LK6crKg5AfDQIx/FfiSOQmGchwnFw==
   dependencies:
-    androidlib "^2.3.6"
-    gawk "^4.5.0"
-    semver "^5.5.1"
-    source-map-support "^0.5.9"
+    androidlib "^2.5.0"
+    gawk "^4.6.2"
+    semver "^6.0.0"
+    source-map-support "^0.5.11"
 
-"@appcd/plugin-genymotion@^1.2.0":
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/@appcd/plugin-genymotion/-/plugin-genymotion-1.2.0.tgz#a2cf9a8446a02f1a3250eb08b67dd5e70a16131c"
-  integrity sha512-165RQ0WcGPeiloLkWGekdkp2Km/TjnvA/kWheelYnU1g1iGPH9Wb5dHSt183xBIjyqJxawlvZuPUdQrNDmw3lw==
+"@appcd/plugin-genymotion@^1.3.0":
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/@appcd/plugin-genymotion/-/plugin-genymotion-1.3.0.tgz#78fcf7a8f32c38417d0fac1895fab55f460a93fa"
+  integrity sha512-GNFBmkJdlg2NMgF8l+RtYLkZhaeHlSvx8/AS4YcQYLUebKQouWz1Gt5WyPgxJ6ghwQKcI5irK7Asd78iizaXsQ==
   dependencies:
-    androidlib "^2.3.6"
-    gawk "^4.5.0"
-    source-map-support "^0.5.9"
+    androidlib "^2.5.0"
+    gawk "^4.6.2"
+    source-map-support "^0.5.11"
     xmldom "^0.1.27"
 
-"@appcd/plugin-ios@^1.2.0":
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/@appcd/plugin-ios/-/plugin-ios-1.2.0.tgz#306272d693af563d89b32329967fd34afa3f43dc"
-  integrity sha512-rsHbgQzJOUtnItajePxR1rwihb753H54g8Iwetf2vsX8AnTzohtrTv9sdolCd5VDKB94w/RzPjvdROnWc+yFCw==
+"@appcd/plugin-ios@^1.3.0":
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/@appcd/plugin-ios/-/plugin-ios-1.3.0.tgz#7918a4cdf56112537648aa5b28d0fcd9e45ae390"
+  integrity sha512-4ksaZ23qejpixHMEMXqdOqbckS7NIBap8vXs+XTvBenseUxDjES7bOPSSUg30d30tu34+GL23ApwWf5lNJMLqQ==
   dependencies:
-    gawk "^4.5.0"
-    ioslib "^2.2.3"
-    semver "^5.5.1"
-    source-map-support "^0.5.9"
+    gawk "^4.6.2"
+    ioslib "^2.4.0"
+    semver "^6.0.0"
+    source-map-support "^0.5.11"
 
-"@appcd/plugin-jdk@^1.2.0":
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/@appcd/plugin-jdk/-/plugin-jdk-1.2.0.tgz#1cd875e851e30c4749caae667b2e79ffbc785f41"
-  integrity sha512-j4AGscvYR/fxZbjKl1NNEYSsQPDvSrc0z64blv4i8OdOkywfxME7qIsZe/UgxdDWPUC7Fvio8T1+0h5PR2dpKw==
+"@appcd/plugin-jdk@^1.3.0":
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/@appcd/plugin-jdk/-/plugin-jdk-1.3.0.tgz#1f3b2405435d4b7b1b37d5691aee2eb7f82e5d14"
+  integrity sha512-em1bgucdIDsoG4rDD0AI2uqtOtOgRZzYpc83T3gGz+0gyebMvkJriCddhVfHiMo6JJkSy/QH5By1w2uEWJmTzw==
   dependencies:
-    gawk "^4.5.0"
-    jdklib "^2.2.1"
-    semver "^5.5.1"
-    source-map-support "^0.5.9"
+    gawk "^4.6.2"
+    jdklib "^2.4.0"
+    semver "^6.0.0"
+    source-map-support "^0.5.11"
 
-"@appcd/plugin-system-info@^1.2.0":
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/@appcd/plugin-system-info/-/plugin-system-info-1.2.0.tgz#811f197cc2b7bb2554f537925f98ff6f79b70ec9"
-  integrity sha512-OKjtAGretmv7y6uLA6xF3kq8hsi62xMdk1/Jhi9EnbtJG3p2JNRknsM2d8V34Jtmhk+R3kcCVAMNTJibtfDyHQ==
+"@appcd/plugin-system-info@^1.3.0":
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/@appcd/plugin-system-info/-/plugin-system-info-1.3.0.tgz#e1e0d25308b52b3464ff7626294806f60302aefa"
+  integrity sha512-z/ozNptl4VreNd0bSVHhFTCquZw4G/Mk8ed6RINeNMLacl/TszL02OwAO0xs7AUpGSFtCPeALYE9Np0uDRMXwA==
   dependencies:
-    gawk "^4.5.0"
-    source-map-support "^0.5.9"
+    gawk "^4.6.2"
+    source-map-support "^0.5.11"
 
-"@appcd/plugin-windows@^1.2.0":
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/@appcd/plugin-windows/-/plugin-windows-1.2.0.tgz#b1268e797a9674876178aa5a29d6cd611e364759"
-  integrity sha512-iduUoliPpRzNBWAY+CAeYWzuqBqBxT8raN27yd0AO7a0D7tP8lLrX81+qTuMAvwJ1QzyMjZXeCtnVyW2uNS3LA==
+"@appcd/plugin-titanium@^1.4.0":
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/@appcd/plugin-titanium/-/plugin-titanium-1.4.0.tgz#f714feeec1a2661d4848d784d17032c9fa03326d"
+  integrity sha512-cS1kt43q2dVvtPIO3mjB+FGqN6iAHWx0IR4PVZShhU8Wzhz04f3dZVsdnW8RI1NDKtvBs2331ZYZmVrp4KxjPQ==
   dependencies:
-    gawk "^4.5.0"
-    source-map-support "^0.5.9"
-    windowslib "^0.6.7"
+    cli-kit "^0.7.5"
+    fs-extra "^7.0.1"
+    gawk "^4.6.2"
+    sort-object-keys "^1.1.2"
+    source-map-support "^0.5.11"
+    titaniumlib "^1.2.0"
+    tmp "^0.1.0"
+    yauzl "^2.10.0"
+
+"@appcd/plugin-windows@^1.3.0":
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/@appcd/plugin-windows/-/plugin-windows-1.3.0.tgz#f2c4faddba5a8559e09f8f569061d80a29ef56a6"
+  integrity sha512-MVz7rEX9/vQbYgQAbfFK8R/kKBae4E4ViMP+HO73wMPSCiqaQvWNIoKrnS4WbW12rpbA5UKIeWRh3lYqpWjr+A==
+  dependencies:
+    gawk "^4.6.2"
+    source-map-support "^0.5.11"
+    windowslib "^0.6.8"
 
 "@babel/code-frame@^7.0.0":
   version "7.0.0"
@@ -1348,22 +1362,22 @@ ajv@^6.1.0, ajv@^6.5.5, ajv@^6.9.1:
     json-schema-traverse "^0.4.1"
     uri-js "^4.2.2"
 
-androidlib@^2.3.6:
-  version "2.4.0"
-  resolved "https://registry.yarnpkg.com/androidlib/-/androidlib-2.4.0.tgz#1d388fb5b80635a3dd1510fbf13440fd92ea10a4"
-  integrity sha512-90E+gTxz8tSYN3CTpiW1f0dSUnqFHRg4KWyRcA26lJQz444WeYtiBwyPc1PFFjGYV249fIHPjIOOd6lFYREK1A==
+androidlib@^2.5.0:
+  version "2.5.0"
+  resolved "https://registry.yarnpkg.com/androidlib/-/androidlib-2.5.0.tgz#a0b3bb6918a08e0762ba8b780b309ad827c329b6"
+  integrity sha512-RplC4K/QgiGH/iN2g8gA62QmOUAT2/cRfFI5ZGDMGy46bKH1tUD6jL6Socv4s9RWkrgYMjkdLTxrX/W+NHavHw==
   dependencies:
-    appcd-fs "^1.1.5"
-    appcd-logger "^2.0.0"
-    appcd-path "^1.1.4"
-    appcd-subprocess "^1.2.0"
-    appcd-util "^1.1.5"
-    cli-kit "^0.6.2"
+    appcd-fs "^1.1.6"
+    appcd-logger "^2.0.1"
+    appcd-path "^1.1.5"
+    appcd-subprocess "^1.3.0"
+    appcd-util "^1.1.6"
+    cli-kit "^0.7.5"
     fs-extra "^7.0.1"
     gawk "^4.6.2"
     pluralize "^7.0.0"
     simple-plist "^1.0.0"
-    source-map-support "^0.5.10"
+    source-map-support "^0.5.11"
     xmldom "^0.1.27"
 
 ansi-colors@3.2.3:
@@ -2469,22 +2483,6 @@ cli-cursor@^2.1.0:
   integrity sha1-s12sN2R5+sw+lHR9QdDQ9SOP/LU=
   dependencies:
     restore-cursor "^2.0.0"
-
-cli-kit@^0.6.2:
-  version "0.6.2"
-  resolved "https://registry.yarnpkg.com/cli-kit/-/cli-kit-0.6.2.tgz#35423829c2b3cc3eb86eb68b618a86240c5b2857"
-  integrity sha512-xKmrRhyuN+3+sGLJlrSrJvIPyChYDQ9ujV/tHrWtX6yxh7KrzBqGExpLBDY+AfT82BsVQKu7GgvwwdzrpN/lSw==
-  dependencies:
-    fast-levenshtein "^2.0.6"
-    fs-extra "^7.0.1"
-    hook-emitter "^3.1.2"
-    lodash.camelcase "^4.3.0"
-    pkg-dir "^3.0.0"
-    pluralize "^7.0.0"
-    semver "^5.6.0"
-    snooplogg "^2.0.1"
-    source-map-support "^0.5.10"
-    which "^1.3.1"
 
 cli-kit@^0.7.5:
   version "0.7.5"
@@ -4547,7 +4545,7 @@ gauge@~2.7.3:
     strip-ansi "^3.0.1"
     wide-align "^1.1.0"
 
-gawk@^4.5.0, gawk@^4.6.2:
+gawk@^4.6.2:
   version "4.6.2"
   resolved "https://registry.yarnpkg.com/gawk/-/gawk-4.6.2.tgz#353586032b8f89721f6dd708c875c46821eeb654"
   integrity sha512-lGxd9FF2TS/PzTfoJZIAK2osiBCBOS6vnrpIoF3QkuHh4I+QUKZ/6Hb73SmG/Qu4dY61LN2rTxyrx0gVOvsyVA==
@@ -5515,22 +5513,22 @@ invert-kv@^2.0.0:
   resolved "https://registry.yarnpkg.com/invert-kv/-/invert-kv-2.0.0.tgz#7393f5afa59ec9ff5f67a27620d11c226e3eec02"
   integrity sha512-wPVv/y/QQ/Uiirj/vh3oP+1Ww+AWehmi1g5fFWGPF6IpCBCDVrhgHRMvrLfdYcwDh3QJbGXDW4JAuzxElLSqKA==
 
-ioslib@^2.2.3:
-  version "2.3.1"
-  resolved "https://registry.yarnpkg.com/ioslib/-/ioslib-2.3.1.tgz#c6737778834c4c43de1955a221273ec1814411b2"
-  integrity sha512-vicOJvh5kkkAfXGcbRa57tpt6I6DvFcuNY03+PqDdEqpXSFFuoxX6yypqMheEBA6czHvZOnjPzxG4XJBNosvjA==
+ioslib@^2.4.0:
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/ioslib/-/ioslib-2.4.0.tgz#779874c53a5dbd618ce99d14bcc48ce966fa0163"
+  integrity sha512-myNl1L8zvhSZn/msunyHUUBW4+Oa5bDBywg9BMbVjI7OAByUiRdt9UM180cLB1+r3VWAsoIiK1JDQAn/JX5Pjg==
   dependencies:
-    appcd-fs "^1.1.5"
-    appcd-path "^1.1.4"
-    appcd-subprocess "^1.2.0"
-    appcd-util "^1.1.5"
-    cli-kit "^0.6.2"
-    node-forge "^0.7.6"
+    appcd-fs "^1.1.6"
+    appcd-path "^1.1.5"
+    appcd-subprocess "^1.3.0"
+    appcd-util "^1.1.6"
+    cli-kit "^0.7.5"
+    node-forge "^0.8.2"
     node-ios-device "^1.6.3"
     promise-limit "^2.7.0"
-    semver "^5.6.0"
+    semver "^6.0.0"
     simple-plist "^1.0.0"
-    source-map-support "^0.5.10"
+    source-map-support "^0.5.11"
 
 ip@^1.1.5:
   version "1.1.5"
@@ -5946,16 +5944,16 @@ istanbul-reports@^2.1.1:
   dependencies:
     handlebars "^4.1.0"
 
-jdklib@^2.2.1:
-  version "2.3.1"
-  resolved "https://registry.yarnpkg.com/jdklib/-/jdklib-2.3.1.tgz#3702086ceaf9dcfdb2f8db2865c0ceb058d10ac6"
-  integrity sha512-lRK7VNfb9fO/UjKgqrdXTQ+hdo0tziPKBLQaM3/RaWLDOQr5q8ubhtZJ33wKNihdZXeDUMCaT1NJ+X/Aw6Oa6g==
+jdklib@^2.4.0:
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/jdklib/-/jdklib-2.4.0.tgz#5f7f0c691d9686329b9eddd544b202d070aa9b99"
+  integrity sha512-elLvsfP+5qnvqMYtoN6wpz4SoPwtODcORuBEl3ikGNUKVQ2gaNc8JLG491q+NXv0qiO17vKL70o1ZC20WG0GTw==
   dependencies:
-    appcd-fs "^1.1.5"
-    appcd-logger "^2.0.0"
-    appcd-path "^1.1.4"
-    appcd-subprocess "^1.2.0"
-    source-map-support "^0.5.10"
+    appcd-fs "^1.1.6"
+    appcd-logger "^2.0.1"
+    appcd-path "^1.1.5"
+    appcd-subprocess "^1.3.0"
+    source-map-support "^0.5.11"
 
 "js-tokens@^3.0.0 || ^4.0.0", js-tokens@^4.0.0:
   version "4.0.0"
@@ -7446,10 +7444,10 @@ node-fetch@^2.3.0:
   resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.3.0.tgz#1a1d940bbfb916a1d3e0219f037e89e71f8c5fa5"
   integrity sha512-MOd8pV3fxENbryESLgVIeaGKrdl+uaYhCSSVkjeOb/31/njTpcis5aWfdqgNlHIrKOLRbMnfPINPOML2CIFeXA==
 
-node-forge@^0.7.6:
-  version "0.7.6"
-  resolved "https://registry.yarnpkg.com/node-forge/-/node-forge-0.7.6.tgz#fdf3b418aee1f94f0ef642cd63486c77ca9724ac"
-  integrity sha512-sol30LUpz1jQFBjOKwbjxijiE3b6pjd74YwfD0fJOKPjF+fONKb2Yg8rYgS6+bK6VDl+/wfr4IYpC7jDzLUIfw==
+node-forge@^0.8.2:
+  version "0.8.2"
+  resolved "https://registry.yarnpkg.com/node-forge/-/node-forge-0.8.2.tgz#b4bcc59fb12ce77a8825fc6a783dfe3182499c5a"
+  integrity sha512-mXQ9GBq1N3uDCyV1pdSzgIguwgtVpM7f5/5J4ipz12PKWElmPpVWLDuWl8iXmhysr21+WmX/OJ5UKx82wjomgg==
 
 node-gyp@^3.8.0:
   version "3.8.0"
@@ -9416,6 +9414,11 @@ sort-keys@^2.0.0:
   dependencies:
     is-plain-obj "^1.0.0"
 
+sort-object-keys@^1.1.2:
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/sort-object-keys/-/sort-object-keys-1.1.2.tgz#d3a6c48dc2ac97e6bc94367696e03f6d09d37952"
+  integrity sha1-06bEjcKsl+a8lDZ2luA/bQnTeVI=
+
 source-list-map@^2.0.0:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/source-list-map/-/source-list-map-2.0.1.tgz#3993bd873bfc48479cca9ea3a547835c7c154b34"
@@ -9432,7 +9435,7 @@ source-map-resolve@^0.5.0, source-map-resolve@^0.5.2:
     source-map-url "^0.4.0"
     urix "^0.1.0"
 
-source-map-support@^0.5.10, source-map-support@^0.5.11, source-map-support@^0.5.9, source-map-support@~0.5.10:
+source-map-support@^0.5.11, source-map-support@^0.5.9, source-map-support@~0.5.10:
   version "0.5.11"
   resolved "https://registry.yarnpkg.com/source-map-support/-/source-map-support-0.5.11.tgz#efac2ce0800355d026326a0ca23e162aeac9a4e2"
   integrity sha512-//sajEx/fGL3iw6fltKMdPvy8kL3kJ2O3iuYlRoT3k9Kb4BjOoZ+BZzaNHeuaruSt+Kf3Zk9tnfAQg9/AJqUVQ==
@@ -10015,6 +10018,22 @@ timers-ext@^0.1.5:
   dependencies:
     es5-ext "~0.10.46"
     next-tick "1"
+
+titaniumlib@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/titaniumlib/-/titaniumlib-1.2.0.tgz#8a09b2b916d19339bd82c522ffe7d0e20bd89a41"
+  integrity sha512-XIK9JQM6AA6u49oJpDfhOAPJxKwxRhy4MBEUhIilHI7oVdv6PKr9MjzjtqGHVh2Wdflhjxl17OtQq5/hvjLwpQ==
+  dependencies:
+    appcd-fs "^1.1.6"
+    appcd-path "^1.1.5"
+    appcd-util "^1.1.6"
+    fs-extra "^7.0.1"
+    pluralize "^7.0.0"
+    request "^2.88.0"
+    semver "^6.0.0"
+    snooplogg "^2.0.1"
+    tmp "^0.1.0"
+    yauzl "^2.10.0"
 
 tmp@^0.0.33:
   version "0.0.33"
@@ -10621,7 +10640,7 @@ windows-release@^3.1.0:
   dependencies:
     execa "^0.10.0"
 
-windowslib@^0.6.7:
+windowslib@^0.6.8:
   version "0.6.8"
   resolved "https://registry.yarnpkg.com/windowslib/-/windowslib-0.6.8.tgz#4cfb6b96b10e5e84e648e340baeac404b0b8d74a"
   integrity sha512-6cmJsKrWIy/kbQ9Od/QkKZGvSmspAJShTapMSdeRI10E+UxPw3gZ8zvxEYLcdTy3OmAxtJNFUeg8KvdTLsJqRA==
