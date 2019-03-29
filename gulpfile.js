@@ -208,14 +208,18 @@ exports.coverage = series(parallel(nodeInfo, build), function test() {
 });
 
 async function runTests(cover) {
-	const istanbul = require('istanbul');
 	let task = cover ? 'coverage-only' : 'test-only';
+	let libCoverage;
+	let libReport;
+	let reports;
 	let coverageDir;
-	let collector;
+	let mergedCoverageMap;
 
 	if (cover) {
+		libCoverage = require('istanbul-lib-coverage');
+		libReport = require('istanbul-lib-report');
+		reports = require('istanbul-reports');
 		coverageDir = path.join(__dirname, 'coverage');
-		collector = new istanbul.Collector();
 	}
 
 	process.env.SNOOPLOGG = '*';
@@ -245,7 +249,12 @@ async function runTests(cover) {
 							log(`Exit code: ${code}`);
 							if (cover) {
 								for (let coverageFile of globule.find(dir + '/coverage/coverage*.json')) {
-									collector.add(JSON.parse(fs.readFileSync(path.resolve(coverageFile), 'utf8')));
+									const map = libCoverage.createCoverageMap(JSON.parse(fs.readFileSync(path.resolve(coverageFile), 'utf8')));
+									if (mergedCoverageMap) {
+										mergedCoverageMap.merge(map);
+									} else {
+										mergedCoverageMap = map;
+									}
 								}
 							}
 						} else if (out.indexOf(`Task '${task}' is not in your gulpfile`) === -1) {
@@ -265,10 +274,13 @@ async function runTests(cover) {
 		fs.mkdirsSync(coverageDir);
 		console.log();
 
+		const ctx = libReport.createContext({
+			dir: coverageDir
+		});
+
+		const tree = libReport.summarizers.pkg(mergedCoverageMap);
 		for (const type of [ 'lcov', 'json', 'text', 'text-summary', 'cobertura' ]) {
-			istanbul.Report
-				.create(type, { dir: coverageDir })
-				.writeReport(collector, true);
+			tree.visit(reports.create(type), ctx);
 		}
 	}
 
