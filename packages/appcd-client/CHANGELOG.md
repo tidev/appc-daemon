@@ -1,7 +1,8 @@
-# v1.3.0
+# v1.3.0 (Mar 29, 2019)
 
  * Added `startDaemon` flag to `connect()` that will attempt to locate and start the daemon if it
    is not running.
+ * Updated dependencies.
 
 # v1.2.0 (Jan 24, 2019)
 
