@@ -1,3 +1,7 @@
+# v1.3.1 (Mar 29, 2019)
+
+ * Fixed unhandled exception when attempting to spawn the Appc Daemon.
+
 # v1.3.0 (Mar 29, 2019)
 
  * Added `startDaemon` flag to `connect()` that will attempt to locate and start the daemon if it
