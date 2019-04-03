@@ -1,3 +1,9 @@
+# v1.3.1
+
+ * Fixed plugin IPC tunnel to send the `"headers"` and `"source"` `DispatcherContext` properties.
+   The `"data"` property has been renamed to `"request"` to match the `DispatcherContext` property
+   name. [(DAEMON-273)](https://jira.appcelerator.org/browse/DAEMON-273)
+
 # v1.3.0 (Mar 29, 2019)
 
  * Reimplemented the `/` endpoint using a `DataServiceDispatcher` so that the data can be filtered

@@ -125,18 +125,15 @@ export default class Tunnel {
 	send(ctxOrPayload) {
 		return new Promise((resolve, reject) => {
 			const id = uuid.v4();
-			let ctx;
+			let ctx = ctxOrPayload;
 
-			if (ctxOrPayload instanceof DispatcherContext) {
-				ctx = ctxOrPayload;
-				ctx.request = {
-					path: ctxOrPayload.path,
-					data: ctxOrPayload.request
-				};
-			} else {
+			if (!(ctxOrPayload instanceof DispatcherContext)) {
 				ctx = new DispatcherContext({
-					request: typeof ctxOrPayload === 'object' && ctxOrPayload || {},
+					headers: {},
+					path:    ctxOrPayload.path,
+					request: typeof ctxOrPayload === 'object' && ctxOrPayload.data || ctxOrPayload || {},
 					response: new PassThrough({ objectMode: true }),
+					source: null,
 					status: 200
 				});
 			}
@@ -216,7 +213,12 @@ export default class Tunnel {
 
 			const req = {
 				id,
-				message: ctx.request,
+				message: {
+					headers: ctx.headers,
+					path:    ctx.path,
+					request: ctx.request,
+					source:  ctx.source
+				},
 				type: 'request'
 			};
 

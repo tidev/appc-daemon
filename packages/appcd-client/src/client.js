@@ -287,7 +287,7 @@ export default class Client {
 		// be wired up
 		setImmediate(() => {
 			this.connect()
-				.on('connected', client => {
+				.once('connected', client => {
 					this.requests[id] = response => {
 						const status = response.status = ~~response.status || 500;
 						const statusClass = Math.floor(status / 100);
@@ -296,7 +296,9 @@ export default class Client {
 						// no need for the id anymore
 						delete response.id;
 
-						log(`${style(status)} ${highlight(req.path)} ${note(`${new Date() - startTime}ms`)}`);
+						if (response.fin) {
+							log(`${style(status)} ${highlight(req.path)} ${note(`${new Date() - startTime}ms`)}`);
+						}
 
 						switch (statusClass) {
 							case 2:

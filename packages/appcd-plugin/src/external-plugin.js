@@ -1,6 +1,6 @@
 import Agent from 'appcd-agent';
 import appcdLogger from 'appcd-logger';
-import Dispatcher, { DispatcherError } from 'appcd-dispatcher';
+import Dispatcher, { DispatcherContext, DispatcherError } from 'appcd-dispatcher';
 import FSWatcher from 'appcd-fswatcher';
 import gawk from 'gawk';
 import path from 'path';
@@ -11,7 +11,7 @@ import Response, { AppcdError, codes } from 'appcd-response';
 import Tunnel from './tunnel';
 
 import { debounce } from 'appcd-util';
-import { Readable } from 'stream';
+import { PassThrough, Readable } from 'stream';
 
 const { alert, highlight, note, notice, ok } = appcdLogger.styles;
 
@@ -198,7 +198,7 @@ export default class ExternalPlugin extends PluginBase {
 			this.appcdLogger.log('Received request from parent:');
 			this.appcdLogger.log(req);
 
-			if (req.message.type === 'deactivate') {
+			if (req.message.request.type === 'deactivate') {
 				try {
 					await cancelConfigSubscription();
 					if (this.module && typeof this.module.deactivate === 'function') {
@@ -212,7 +212,7 @@ export default class ExternalPlugin extends PluginBase {
 				}
 			}
 
-			if (req.message.type === 'health') {
+			if (req.message.request.type === 'health') {
 				if (this.agent) {
 					return send({
 						message: {
@@ -231,8 +231,13 @@ export default class ExternalPlugin extends PluginBase {
 			}
 
 			try {
-				this.appcdLogger.log('Dispatching %s', highlight(req.message.path), req.message.data);
-				const { status, response } = await this.dispatcher.call(req.message.path, req.message.data);
+				this.appcdLogger.log('Dispatching %s', highlight(req.message.path), req.message.request);
+				const { status, response } = await this.dispatcher.call(req.message.path, new DispatcherContext({
+					headers:  req.message.headers,
+					request:  req.message.request,
+					response: new PassThrough({ objectMode: true }),
+					source:   req.message.source
+				}));
 
 				if (response instanceof Readable) {
 					// we have a stream
@@ -494,7 +499,12 @@ export default class ExternalPlugin extends PluginBase {
 							// dispatcher request
 							try {
 								const startTime = new Date();
-								const { status, response } = await Dispatcher.call(req.message.path, req.message.data);
+								const { status, response } = await Dispatcher.call(req.message.path, new DispatcherContext({
+									headers:  req.message.headers,
+									request:  req.message.request,
+									response: new PassThrough({ objectMode: true }),
+									source:   req.message.source
+								}));
 								const style = status < 400 ? ok : alert;
 
 								let msg = `Plugin dispatcher: ${highlight(req.message.path || '/')} ${style(status)}`;
@@ -506,7 +516,7 @@ export default class ExternalPlugin extends PluginBase {
 								if (response instanceof Readable) {
 									// we have a stream
 
-									const { data } = req.message.data;
+									const { data } = req.message.request;
 									this.appcdLogger.log(`${highlight(req.message.path)} ${data && Array.isArray(data.args) && note(data.args.join(' ')) || ''} returned a streamed response`);
 
 									// track if this stream is a pubsub stream so we know to send the `fin`
