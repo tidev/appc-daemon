@@ -1,3 +1,7 @@
+# v1.3.1
+
+ * Updated dependencies.
+
 # v1.3.0 (Mar 29, 2019)
 
  * Added `paths` property to dynamically change the paths to scan and kicks off a rescan.

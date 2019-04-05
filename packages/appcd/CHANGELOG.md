@@ -1,3 +1,7 @@
+# v2.2.1
+
+ * Updated dependencies.
+
 # v2.2.0 (Mar 29, 2019)
 
  * Fixed bug where the appcd client would exit when the connection to the server closed.

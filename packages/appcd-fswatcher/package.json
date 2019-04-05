@@ -18,7 +18,7 @@
   "dependencies": {
     "appcd-logger": "^2.0.1",
     "appcd-util": "^1.1.6",
-    "gawk": "^4.6.2",
+    "gawk": "^4.6.3",
     "pluralize": "^7.0.0",
     "source-map-support": "^0.5.11"
   },

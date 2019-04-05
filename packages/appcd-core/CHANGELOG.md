@@ -1,3 +1,7 @@
+# v2.2.1
+
+ * Updated dependencies.
+
 # v2.2.0 (Mar 29, 2019)
 
  * Bumped Node.js version from 8.15.0 to 10.15.3.

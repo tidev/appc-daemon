@@ -387,17 +387,6 @@ export default class ExternalPlugin extends PluginBase {
 			args.unshift(`--inspect-brk=${debugPort}`);
 		}
 
-		if (this.plugin.configFile) {
-			this.appcdLogger.log('Loading plugin config file:', highlight(this.plugin.configFile));
-			await Dispatcher.call('/appcd/config', {
-				data: {
-					action:   'load',
-					file:     this.plugin.configFile,
-					override: false
-				}
-			});
-		}
-
 		let autoReload = true;
 		try {
 			const { response } = await Dispatcher.call('/appcd/config/plugins/autoReload');

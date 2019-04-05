@@ -1,3 +1,7 @@
+# v1.3.1
+
+ * Updated dependencies.
+
 # v1.3.0 (Mar 29, 2019)
 
  * Removed broken and useless 'http' source restriction.

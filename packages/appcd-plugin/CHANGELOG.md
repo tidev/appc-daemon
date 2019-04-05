@@ -1,8 +1,14 @@
-# v1.3.1
+# v1.4.0
 
  * Fixed plugin IPC tunnel to send the `"headers"` and `"source"` `DispatcherContext` properties.
    The `"data"` property has been renamed to `"request"` to match the `DispatcherContext` property
    name. [(DAEMON-273)](https://jira.appcelerator.org/browse/DAEMON-273)
+ * Moved plugin config loading from the plugin implementation to the plugin registry where the
+   the config is loaded when the plugin is registered. Config is unloaded when a plugin is
+   unregistered.
+ * Plugin config file changes no longer trigger plugin to be automatically stopped. Plugins are
+   encouraged to watch the config for changes instead of reloading.
+ * Updated dependencies.
 
 # v1.3.0 (Mar 29, 2019)
 

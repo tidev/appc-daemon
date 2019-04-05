@@ -5,6 +5,7 @@ import Metadata from './metadata';
 import path from 'path';
 import vm from 'vm';
 
+import { expandPath } from 'appcd-path';
 import { isFile } from 'appcd-fs';
 import { parse } from '@babel/parser';
 import { wrap } from 'module';
@@ -18,47 +19,260 @@ const { highlight } = appcdLogger.styles;
  */
 export default class Config {
 	/**
+	 * The id of the "root" namespace.
+	 * @type {Symbol}
+	 * @access public
+	 */
+	static Root = Symbol('root');
+
+	/**
+	 * The id of the "user" namespace.
+	 * @type {Symbol}
+	 * @access public
+	 */
+	static User = Symbol('user');
+
+	/**
+	 * A map of namespace names to config values.
+	 * @type {Object}
+	 * @access private
+	 */
+	namespaces = gawk({
+		[Config.Root]: {},
+		[Config.User]: {}
+	});
+
+	/**
+	 * An ordered list of namespace config values.
+	 * @type {Object}
+	 * @access private
+	 */
+	namespaceOrder = [ Config.Root, Config.User ];
+
+	/**
+	 * Config option metadata.
+	 * @type {Metadata}
+	 * @access public
+	 */
+	meta = new Metadata();
+
+	/**
+	 * A readonly composite view of values.
+	 * @type {Object}
+	 * @readonly
+	 * @access public
+	 */
+	values = gawk({});
+
+	/**
 	 * Creates a config instance.
 	 *
 	 * @param {Object} [opts] - Various options.
 	 * @param {Object} [opts.config] - A object to initialize the config with. Note that if a
 	 * `configFile` is also specified, this `config` is applied AFTER the config file has been
 	 * loaded.
-	 * @param {String} [opts.configFile] - The path to a .js or .json config
-	 * file to load.
+	 * @param {String} [opts.configFile] - The path to a .js or .json config file to load.
 	 * @access public
 	 */
 	constructor(opts = {}) {
-		/**
-		 * Config option metadata.
-		 * @type {Metadata}
-		 * @access public
-		 */
-		this.meta = new Metadata();
+		// wire up the gawk watcher that rebuilds the `values` property
+		gawk.watch(this.namespaces, () => {
+			const obj = {};
+			const merge = (src, dest) => {
+				for (const [ key, value ] of Object.entries(src)) {
+					if (value && typeof value === 'object' && !Array.isArray(value)) {
+						merge(value, dest[key] = {});
+					} else {
+						dest[key] = value;
+					}
+				}
+			};
 
-		/**
-		 * The internal values object. This object can be accessed directly,
-		 * though it is only recommended for read operations.
-		 * @type {Object}
-		 * @access public
-		 */
-		this.values = gawk({});
+			for (const id of this.namespaceOrder) {
+				merge(this.namespaces[id], obj);
+			}
 
-		/**
-		 * A lookup of dot-notation user-defined keys.
-		 * @type {Set}
-		 */
-		this.userDefined = new Set();
+			gawk.set(this.values, obj);
+		});
 
+		// if there's a config file, load it into the root namespace
 		if (opts.configFile) {
 			this.load(opts.configFile);
 		}
 
+		// if there's a JavaScript object config, merge it into the root namespace
 		if (opts.config) {
 			if (typeof opts.config !== 'object' || Array.isArray(opts.config)) {
 				throw new TypeError('Expected config to be an object');
 			}
-			this.merge(opts.config, { overrideReadonly: true, write: false });
+			this.merge(opts.config, { namespace: Config.Root, overrideReadonly: true, write: false });
+		}
+	}
+
+	/**
+	 * Deletes a config setting.
+	 *
+	 * @param {String} key - The dot-notation config key.
+	 * @returns {Boolean} Returns `true` if the key was found, otherwise `false`.
+	 * @access public
+	 */
+	delete(key) {
+		const m = this.meta.get(key);
+
+		if (m && m.readonly) {
+			throw new Error('Not allowed to delete read-only property');
+		}
+
+		let obj = this.namespaces[Config.User];
+		const parts = key.split('.');
+		const stack = [];
+
+		for (let i = 0, len = parts.length; i < len; i++) {
+			const prop = parts[i];
+			if (!obj.hasOwnProperty(prop)) {
+				break;
+			}
+
+			stack.push(obj);
+
+			if (i + 1 === len) {
+				this.hasReadonlyDescendant(obj[prop], key, 'delete');
+				delete obj[prop];
+				parts.pop();
+				stack.pop();
+
+				while (stack.length) {
+					if (Object.keys(obj).length) {
+						break;
+					}
+					// delete it
+					obj = stack.pop();
+					delete obj[parts.pop()];
+				}
+
+				return true;
+			}
+
+			obj = obj[prop];
+		}
+
+		return false;
+	}
+
+	/**
+	 * Scans all namespaces looking for a specific key.
+	 *
+	 * @param {String} key - The dot-notation config key.
+	 * @returns {*} Returns the value or `undefined` if not found.
+	 * @access public
+	 */
+	find(key) {
+		if (!key || typeof key !== 'string') {
+			throw new TypeError('Expected key to be a string or object');
+		}
+
+		const parts = key.split('.');
+		let parent = null;
+		let prop = null;
+
+		for (const ns of this.namespaceOrder) {
+			let obj = this.namespaces[ns];
+
+			for (let i = 0, k; obj !== undefined && (k = parts[i++]);) {
+				parent = obj;
+				obj = obj[prop = k];
+			}
+
+			if (obj !== undefined) {
+				return { ns, obj, parent, prop };
+			}
+		}
+	}
+
+	/**
+	 * Gets a config setting.
+	 *
+	 * @param {String} key - The dot-notation config key.
+	 * @param {*} [defaultValue] - The default value to return if the specified key is not found.
+	 * @returns {*} The config value.
+	 * @access public
+	 */
+	get(key, defaultValue) {
+		let it = this.values;
+
+		if (key) {
+			if (typeof key !== 'string') {
+				throw new TypeError('Expected key to be a string');
+			}
+
+			const parts = key.split('.');
+
+			for (let i = 0, k; it !== undefined && (k = parts[i++]);) {
+				if (typeof it !== 'object') {
+					return defaultValue;
+				}
+				it = it[k];
+			}
+		}
+
+		return it !== undefined ? it : defaultValue;
+	}
+
+	/**
+	 * Returns an object containing only the user settings.
+	 *
+	 * @returns {Object}
+	 * @access public
+	 */
+	getUserConfig() {
+		return JSON.parse(JSON.stringify(this.namespaces[Config.User]));
+	}
+
+	/**
+	 * Checks if the config key exists.
+	 *
+	 * @param {String} key - The dot-notation config key.
+	 * @returns {Boolean}
+	 * @access public
+	 */
+	has(key) {
+		if (!key || typeof key !== 'string') {
+			throw new TypeError('Expected key to be a string');
+		}
+
+		let it = this.values;
+		const parts = key.split('.');
+
+		for (let i = 0, k; it !== undefined && (k = parts[i++]);) {
+			if (typeof it !== 'object' || Array.isArray(it)) {
+				return false;
+			}
+			it = it[k];
+		}
+
+		return it !== undefined;
+	}
+
+	/**
+	 * Determines if an object contains any properties that are read-only. If it does, then an error
+	 * is thrown.
+	 *
+	 * @param {Object} obj - The object to scan.
+	 * @param {String} key - The current key to use when looking up the object's metadata.
+	 * @param {String} action - The action to use in the exception message. This is either `set` or
+	 * `delete`.
+	 * @access private
+	 */
+	hasReadonlyDescendant(obj, key, action) {
+		const m = this.meta.get(key);
+		if (m && m.readonly) {
+			throw new Error(`Not allowed to ${action} property with nested read-only property`);
+		}
+
+		if (obj && typeof obj === 'object') {
+			for (const k of Object.keys(obj)) {
+				this.hasReadonlyDescendant(obj[k], `${key}.${k}`, action);
+			}
 		}
 	}
 
@@ -71,6 +285,8 @@ export default class Config {
 	 * @param {Object} [opts] - Various options.
 	 * @param {Boolean} [opts.isUserDefined=false] - When `true`, flags the values as "user"
 	 * settings which will be persisted when the config is saved.
+	 * @param {String} [opts.namespace=Config.Root] - The name of the namespace to merge
+	 * the values into.
 	 * @param {Boolean} [opts.override=true] - When `true`, overrides existing values.
 	 * @returns {Config}
 	 * @access public
@@ -80,6 +296,8 @@ export default class Config {
 			throw new TypeError('Expected config file to be a string');
 		}
 
+		file = expandPath(file);
+
 		const ext = path.extname(file);
 		if (ext !== '.js' && ext !== '.json') {
 			throw new Error('Config file must be a JavaScript or JSON file');
@@ -87,6 +305,10 @@ export default class Config {
 
 		if (!isFile(file)) {
 			throw new Error(`Config file not found: ${file}`);
+		}
+
+		if (opts.namespace && typeof opts.namespace === 'string' && this.namespaceOrder.includes(opts.namespace)) {
+			this.unload(opts.namespace);
 		}
 
 		// load the metadata file
@@ -107,9 +329,10 @@ export default class Config {
 			throw new Error(`Failed to load config file: ${e}`);
 		}
 
-		opts.overrideReadonly = true;
-
-		return this.merge(config, opts);
+		return this.merge(config, {
+			namespace: opts.namespace || (opts.isUserDefined ? Config.User : Config.Root),
+			overrideReadonly: true
+		});
 	}
 
 	/**
@@ -123,7 +346,97 @@ export default class Config {
 	 * @access public
 	 */
 	loadUserConfig(file) {
-		return this.load(file, { isUserDefined: true, override: true });
+		return this.load(file, {
+			namespace: Config.User,
+			override: true
+		});
+	}
+
+	/**
+	 * Merges an object into the "user" namespace values. If the same property exists in a
+	 * different namespace and is an object, it will be copied before merging.
+	 *
+	 * @param {Object} values - The values to merge in.
+	 * @param {Object} [opts] - Various options.
+	 * @param {String} [opts.namespace=Config.User] - The name of the namespace to merge the values
+	 * into.
+	 * @param {Boolean} [opts.override=true] - When `true`, overrides existing values.
+	 * @param {Boolean} [opts.overrideReadonly=false] - When `true`, does not enforce read only.
+	 * @returns {Config}
+	 * @access public
+	 */
+	merge(values, opts = {}) {
+		if (!values || typeof values !== 'object' || Array.isArray(values)) {
+			return this;
+		}
+
+		let ns = opts.namespace || Config.User;
+		if (typeof ns === 'string') {
+			values = { [ns]: values };
+		}
+
+		let obj = this.namespaces[ns];
+		if (obj) {
+			this._merge(values, obj, opts);
+		} else {
+			this.namespaces[ns] = values;
+			this.namespaceOrder.splice(1, 0, ns);
+		}
+
+		return this;
+	}
+
+	/**
+	 * Merges an object into a destination object while taking existing values from namespace
+	 * layers under consideration.
+	 *
+	 * @param {Object} src - The source values.
+	 * @param {Object} dest - The destination to copy the values to.
+	 * @param {Object} opts - Options for metadata validation.
+	 * @param {Array.<Object>} [layers] - An array of namespace layers at the same depth as the
+	 * current destination.
+	 * @param {Array.<String>} [scope] - An array of keys to the current depth.
+	 * @returns {Object}
+	 */
+	_merge(src, dest, opts, layers, scope = []) {
+		if (!layers) {
+			layers = this.namespaceOrder.map(ns => this.namespaces[ns]);
+		}
+
+		for (const [ key, srcValue ] of Object.entries(src)) {
+			scope.push(key);
+
+			const scopeKey = scope.join('.');
+			this.meta.validate(scopeKey, srcValue, opts);
+
+			if (srcValue && typeof srcValue === 'object') {
+				// get previous value
+				let existingValue = layers.reduce((prev, cur) => {
+					return cur[key] !== undefined ? cur[key] : prev;
+				}, undefined);
+
+				if (Array.isArray(srcValue)) {
+					if (Array.isArray(existingValue)) {
+						dest[key] = [ ...existingValue, ...srcValue ];
+					} else {
+						dest[key] = existingValue ? [ existingValue, ...srcValue ] : srcValue;
+					}
+
+				// src value is an object
+				} else if (existingValue && typeof existingValue === 'object') {
+					// merge
+					dest[key] = this._merge(srcValue, existingValue, opts, layers.map(obj => obj[key]).filter(obj => obj), scope);
+				} else {
+					dest[key] = srcValue;
+				}
+			} else {
+				dest[key] = srcValue;
+			}
+
+			scope.pop();
+		}
+
+		return dest;
 	}
 
 	/**
@@ -179,7 +492,7 @@ export default class Config {
 		const compiled = vm.runInNewContext(wrap(code), {
 			filename: file && path.basename(file),
 			lineOffset: 0,
-			displayErrors: false
+			displayerrors: false
 		});
 		const args = [ ctx.exports, require, ctx, file ? path.basename(file) : '', file ? path.dirname(file) : '' ];
 		compiled.apply(ctx.exports, args);
@@ -192,120 +505,28 @@ export default class Config {
 	}
 
 	/**
-	 * Gets a config setting.
+	 * Remove the first value of the config setting and return it.
 	 *
 	 * @param {String} key - The dot-notation config key.
-	 * @param {*} [defaultValue] - The default value to return if the specified key is not found.
-	 * @returns {*} The config value.
-	 * @access public
+	 * @returns {*} The value removed from the config setting.
 	 */
-	get(key, defaultValue) {
-		let it = this.values;
+	pop(key) {
+		const result = this.find(key);
 
-		if (key) {
-			if (typeof key !== 'string') {
-				throw new TypeError('Expected key to be a string');
-			}
-
-			const parts = key.split('.');
-
-			for (let i = 0, k; it !== undefined && (k = parts[i++]);) {
-				if (typeof it !== 'object') {
-					return defaultValue;
-				}
-				it = it[k];
-			}
+		if (!result || !Array.isArray(result.obj)) {
+			throw new TypeError(`Configuration setting ${`"${key}" ` || ''}is not an array`);
 		}
 
-		return it !== undefined ? it : defaultValue;
-	}
-
-	/**
-	 * Checks if the config key exists.
-	 *
-	 * @param {String} key - The dot-notation config key.
-	 * @returns {Boolean}
-	 * @access public
-	 */
-	has(key) {
-		if (!key || typeof key !== 'string') {
-			throw new TypeError('Expected key to be a string');
-		}
-
-		let it = this.values;
-		const parts = key.split('.');
-
-		for (let i = 0, k; it !== undefined && (k = parts[i++]);) {
-			if (typeof it !== 'object' || Array.isArray(it)) {
-				return false;
-			}
-			it = it[k];
-		}
-
-		return it !== undefined;
-	}
-
-	/**
-	 * Sets a config setting.
-	 *
-	 * @param {String|Object} key - The dot-notation config key.
-	 * @param {*} value - The new config value.
-	 * @returns {Config}
-	 * @access public
-	 */
-	set(key, value) {
-		if (!key || (typeof key !== 'string' && (typeof key !== 'object' || Array.isArray(key)))) {
-			throw new TypeError('Expected key to be a string or object');
-		}
-
-		const addUserDefinedKeys = (obj, keys) => {
-			for (const key of Object.keys(obj)) {
-				const value = obj[key];
-				keys.push(key);
-				if (value && typeof value === 'object' && !Array.isArray(value)) {
-					addUserDefinedKeys(value, keys);
-				} else {
-					this.userDefined.add(keys.join('.'));
-				}
-				keys.pop();
-			}
-		};
-
-		if (typeof key === 'string') {
-			this.meta.validate(key, value, { action: 'set' });
-
-			key.split('.').reduce((obj, part, i, arr) => {
-				if (i + 1 === arr.length) {
-					// check if any descendant is read-only
-					if (obj[part] !== value) {
-						this.hasReadonlyDescendant(obj[part], key, 'set');
-						obj[part] = value;
-						this.userDefined.add(key);
-						if (value && typeof value === 'object') {
-							addUserDefinedKeys(value, key.split('.'));
-						}
-					}
-				} else if (typeof obj[part] !== 'object' || Array.isArray(obj[part])) {
-					this.hasReadonlyDescendant(obj[part], key, 'set');
-					obj[part] = {};
-				}
-
-				return obj[part];
-			}, this.values);
-		} else {
-			// key is an object
-			this.merge(key);
-			addUserDefinedKeys(key, []);
-		}
-
-		return this;
+		const value = result.obj[result.obj.length - 1];
+		this.set(key, result.obj.slice(0, -1));
+		return value;
 	}
 
 	/**
 	 * Pushes a value onto the end of a config setting.
 	 *
 	 * @param {String} key - The dot-notation config key.
-	 * @param {String} value - The config value.
+	 * @param {*|Array.<*>} value - The config value.
 	 * @returns {Config}
 	 * @access public
 	 */
@@ -320,279 +541,24 @@ export default class Config {
 
 		this.meta.validate(key, value, { action: 'push' });
 
-		key.split('.').reduce((obj, part, i, arr) => {
-			if (i + 1 === arr.length) {
-				// check if any descendant is read-only
-				this.hasReadonlyDescendant(obj[part], key, 'push');
-				if (!Array.isArray(obj[part])) {
-					if (obj[part]) {
-						obj[part] = [ obj[part] ];
-					} else {
-						obj[part] = [];
-					}
+		const result = this.find(key);
+
+		if (result) {
+			const { ns, obj, parent, prop } = result;
+			this.hasReadonlyDescendant(obj, key, 'push');
+			if (ns === Config.User) {
+				if (Array.isArray(obj)) {
+					obj.push.apply(obj, value);
+				} else {
+					parent[prop] = obj ? [ obj, ...value ] : value;
 				}
-				obj[part].push.apply(obj[part], value);
-			} else if (typeof obj[part] !== 'object' || Array.isArray(obj[part])) {
-				this.hasReadonlyDescendant(obj[part], key, 'push');
-				obj[part] = {};
+				return this;
 			}
-			return obj[part];
-		}, this.values);
 
-		this.userDefined.add(key);
-
-		return this;
-	}
-
-	/**
-	 * Adds a value to the start of a config setting.
-	 *
-	 * @param {String} key - The dot-notation config key.
-	 * @param {String} value - The config value.
-	 * @returns {Config}
-	 * @access public
-	 */
-	unshift(key, value) {
-		if (!key || typeof key !== 'string') {
-			throw new TypeError('Expected key to be a string or object');
+			value = Array.isArray(obj) ? [ ...obj, ...value ] : [ obj, ...value ];
 		}
 
-		if (!Array.isArray(value)) {
-			value = [ value ];
-		}
-
-		this.meta.validate(key, value, { action: 'unshift' });
-
-		key.split('.').reduce((obj, part, i, arr) => {
-			if (i + 1 === arr.length) {
-				// check if any descendant is read-only
-				this.hasReadonlyDescendant(obj[part], key, 'unshift');
-				if (!Array.isArray(obj[part])) {
-					if (obj[part]) {
-						obj[part] = [ obj[part] ];
-					} else {
-						obj[part] = [];
-					}
-				}
-				obj[part].unshift.apply(obj[part], value);
-			}
-			return obj[part];
-		}, this.values);
-
-		this.userDefined.add(key);
-
-		return this;
-	}
-
-	/**
-	 * Remove the first value of the config setting and return it.
-	 *
-	 * @param {String} key - The dot-notation config key.
-	 * @returns {*} The value removed from the config setting.
-	 * @access public
-	 */
-	shift(key) {
-		if (!key || typeof key !== 'string') {
-			throw new TypeError('Expected key to be a string or object');
-		}
-
-		let it = this.values;
-		const parts = key.split('.');
-
-		for (let i = 0, k; it !== undefined && (k = parts[i++]);) {
-			it = it[k];
-		}
-
-		if (!Array.isArray(it)) {
-			throw new TypeError(`Configuration setting ${`"${key}" ` || ''}is not an array`);
-		}
-
-		this.userDefined.add(key);
-
-		return it.shift();
-	}
-
-	/**
-	 * Remove the first value of the config setting and return it.
-	 *
-	 * @param {String} key - The dot-notation config key.
-	 * @returns {*} The value removed from the config setting.
-	 */
-	pop(key) {
-		if (!key || typeof key !== 'string') {
-			throw new TypeError('Expected key to be a string or object');
-		}
-
-		let it = this.values;
-		const parts = key.split('.');
-
-		for (let i = 0, k; it !== undefined && (k = parts[i++]);) {
-			it = it[k];
-		}
-
-		if (!Array.isArray(it)) {
-			throw new TypeError(`Configuration setting ${`"${key}" ` || ''}is not an array`);
-		}
-
-		this.userDefined.add(key);
-
-		return it.pop();
-	}
-
-	/**
-	 * Deletes a config setting.
-	 *
-	 * @param {String} key - The dot-notation config key.
-	 * @returns {Boolean} Returns `true` if the key was found, otherwise `false`.
-	 * @access public
-	 */
-	delete(key) {
-		const _t = this;
-		const m = this.meta.get(key);
-
-		if (m && m.readonly) {
-			throw new Error('Not allowed to delete read-only property');
-		}
-
-		return (function walk(parts, obj) {
-			const part = parts.shift();
-			if (parts.length) {
-				if (obj.hasOwnProperty(part)) {
-					const result = walk(parts, obj[part]);
-					if (result && Object.keys(obj[part]).length === 0) {
-						delete obj[part];
-					}
-					return result;
-				}
-			} else if (obj[part]) {
-				// check if any descendant is read-only
-				_t.hasReadonlyDescendant(obj[part], key, 'delete');
-				delete obj[part];
-				_t.userDefined.delete(key);
-				return true;
-			}
-			return false;
-		}(key.split('.'), this.values));
-	}
-
-	/**
-	 * Determines if an object contains any properties that are read-only. If it does, then an error
-	 * is thrown.
-	 *
-	 * @param {Object} obj - The object to scan.
-	 * @param {String} key - The current key to use when looking up the object's metadata.
-	 * @param {String} action - The action to use in the exception message. This is either `set` or
-	 * `delete`.
-	 * @access private
-	 */
-	hasReadonlyDescendant(obj, key, action) {
-		const m = this.meta.get(key);
-		if (m && m.readonly) {
-			throw new Error(`Not allowed to ${action} property with nested read-only property`);
-		}
-
-		if (obj && typeof obj === 'object') {
-			for (const k of Object.keys(obj)) {
-				this.hasReadonlyDescendant(obj[k], `${key}.${k}`, action);
-			}
-		}
-	}
-
-	/**
-	 * Merges an object into the current config.
-	 *
-	 * @param {Object} values - The values to merge in.
-	 * @param {Object} [opts] - Various options.
-	 * @param {Boolean} [opts.isUserDefined=false] - When `true`, flags the values as "user" settings
-	 * which will be persisted when the config is saved.
-	 * @param {Boolean} [opts.override=true] - When `true`, overrides existing values.
- 	 * @param {Boolean} [opts.overrideReadonly=false] - When `true`, does not enforce read only.
-	 * @returns {Config}
-	 * @access public
-	 */
-	merge(values, opts = {}) {
-		if (!values || typeof values !== 'object' || Array.isArray(values)) {
-			return this;
-		}
-
-		const merger = (dest, src, scope = []) => {
-			for (const key of Object.keys(src)) {
-				const value = src[key];
-
-				scope.push(key);
-
-				const scopeKey = scope.join('.');
-				this.meta.validate(scopeKey, value, opts);
-
-				if (Array.isArray(value)) {
-					if (Array.isArray(dest[key])) {
-						dest[key].push.apply(dest[key], value);
-					} else {
-						dest[key] = value.slice();
-					}
-					if (opts.isUserDefined) {
-						this.userDefined.add(scopeKey);
-					}
-				} else if (typeof value === 'object' && value !== null) {
-					if (typeof dest[key] !== 'object' || dest[key] === null) {
-						dest[key] = {};
-					}
-					merger(dest[key], value, scope);
-				} else if (typeof value !== 'undefined' && value !== dest[key] && (dest[key] === undefined || opts.override !== false)) {
-					dest[key] = value;
-					if (opts.isUserDefined) {
-						this.userDefined.add(scopeKey);
-					}
-				}
-
-				scope.pop();
-			}
-		};
-
-		merger(this.values, values);
-
-		return this;
-	}
-
-	/**
-	 * Returns an object containing only the user settings.
-	 *
-	 * @returns {Object}
-	 * @access public
-	 */
-	getUserConfig() {
-		const keys = Array.from(this.userDefined.values()).sort();
-		const result = {};
-
-		for (const key of keys) {
-			(function walk(dest, src, parts) {
-				const part = parts.shift();
-				if (part && src[part] !== undefined) {
-					if (typeof src[part] === 'object' && !Array.isArray(src[part])) {
-						if (!dest[part]) {
-							dest[part] = {};
-						}
-						walk(dest[part], src[part], parts);
-					} else {
-						dest[part] = src[part];
-					}
-				}
-			}(result, this.values, key.split('.')));
-		}
-
-		return result;
-	}
-
-	/**
-	 * Returns a string prepresentation of the configuration.
-	 *
-	 * @param {Number} [indentation=2] The number of spaces to indent the JSON
-	 * formatted output.
-	 * @returns {String}
-	 * @access public
-	 */
-	toString(indentation = 2) {
-		return JSON.stringify(this.values, null, Math.max(indentation, 0));
+		return this._set(key, value);
 	}
 
 	/**
@@ -608,17 +574,164 @@ export default class Config {
 	}
 
 	/**
-	 * Adds a listener for config changes.
+	 * Sets a config setting into the user namespace.
 	 *
-	 * @param {String|Array.<String>} [filter] - A property name or array of nested properties to
-	 * watch.
-	 * @param {Function} listener - The function to call when something changes.
+	 * @param {String|Object} key - The dot-notation config key.
+	 * @param {*} value - The new config value.
 	 * @returns {Config}
 	 * @access public
 	 */
-	watch(filter, listener) {
-		gawk.watch(this.values, filter, listener);
+	set(key, value) {
+		if (!key || (typeof key !== 'string' && (typeof key !== 'object' || Array.isArray(key)))) {
+			throw new TypeError('Expected key to be a string or object');
+		}
+
+		if (typeof key === 'object') {
+			return this.merge(key);
+		}
+
+		this.meta.validate(key, value, { action: 'set' });
+
+		const result = this.find(key);
+
+		if (result) {
+			const { ns, obj, parent, prop } = result;
+			if (ns === Config.User) {
+				this.hasReadonlyDescendant(obj, key, 'set');
+				parent[prop] = value;
+				return this;
+			}
+		}
+
+		return this._set(key, value);
+	}
+
+	/**
+	 * Performs the actual setting of the value in the user namespace without doing any validation.
+	 *
+	 * @param {String} key - The dot-notation config key.
+	 * @param {*} value - The new config value.
+	 * @returns {Config}
+	 * @access private
+	 */
+	_set(key, value) {
+		key.split('.').reduce((obj, part, i, arr) => {
+			if (i + 1 === arr.length) {
+				// check if any descendant is read-only
+				if (obj[part] !== value) {
+					this.hasReadonlyDescendant(obj[part], key, 'set');
+					obj[part] = value;
+				}
+			} else if (typeof obj[part] !== 'object' || Array.isArray(obj[part])) {
+				this.hasReadonlyDescendant(obj[part], key, 'set');
+				obj[part] = {};
+			}
+
+			return obj[part];
+		}, this.namespaces[Config.User]);
+
 		return this;
+	}
+
+	/**
+	 * Remove the first value of the config setting and return it.
+	 *
+	 * @param {String} key - The dot-notation config key.
+	 * @returns {*} The value removed from the config setting.
+	 * @access public
+	 */
+	shift(key) {
+		const result = this.find(key);
+
+		if (!result || !Array.isArray(result.obj)) {
+			throw new TypeError(`Configuration setting ${`"${key}" ` || ''}is not an array`);
+		}
+
+		const value = result.obj[0];
+		this.set(key, result.obj.slice(1));
+		return value;
+	}
+
+	/**
+	 * Returns a string prepresentation of the configuration.
+	 *
+	 * @param {Number} [indentation=2] The number of spaces to indent the JSON
+	 * formatted output.
+	 * @returns {String}
+	 * @access public
+	 */
+	toString(indentation = 2) {
+		return JSON.stringify(this.values, null, Math.max(indentation, 0));
+	}
+
+	/**
+	 * Unloads a namespace and its config values. If the namespace does not exist, nothing
+	 * happens. You cannot unload the "root" or "user" namespaces.
+	 *
+	 * @param {String} namespace - The namespace name to unload.
+	 * @returns {Boolean} Returns `true` if the namespace exists and was unloaded.
+	 * @access public
+	 */
+	unload(namespace) {
+		if (!namespace || typeof namespace !== 'string') {
+			throw new TypeError('Expected namespace to be a string');
+		}
+
+		if (namespace === Config.Root) {
+			throw new Error('Not allowed to unload root namespace');
+		}
+
+		if (namespace === Config.User) {
+			throw new Error('Not allowed to unload user namespace');
+		}
+
+		if (this.namespaces[namespace]) {
+			log(`Unloading namespace: ${namespace}`);
+			delete this.namespaces[namespace];
+			this.namespaceOrder = this.namespaceOrder.filter(ns => ns !== namespace);
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Adds a value to the start of a config setting.
+	 *
+	 * @param {String} key - The dot-notation config key.
+	 * @param {*|Array.<*>} value - The config value.
+	 * @returns {Config}
+	 * @access public
+	 */
+	unshift(key, value) {
+		if (!key || typeof key !== 'string') {
+			throw new TypeError('Expected key to be a string or object');
+		}
+
+		if (!Array.isArray(value)) {
+			value = [ value ];
+		}
+
+		this.meta.validate(key, value, { action: 'unshift' });
+
+		const result = this.find(key);
+
+		if (result) {
+			const { ns, obj, parent, prop } = result;
+			this.hasReadonlyDescendant(obj, key, 'unshift');
+			if (ns === Config.User) {
+				if (Array.isArray(obj)) {
+					obj.unshift.apply(obj, value);
+				} else {
+					parent[prop] = obj ? [ ...value, obj ] : value;
+				}
+				return this;
+			}
+
+			value = Array.isArray(obj) ? [ ...value, ...obj ] : [ ...value, obj ];
+		}
+
+		return this._set(key, value);
 	}
 
 	/**
@@ -630,6 +743,20 @@ export default class Config {
 	 */
 	unwatch(listener) {
 		gawk.unwatch(this.values, listener);
+		return this;
+	}
+
+	/**
+	 * Adds a listener for config changes.
+	 *
+	 * @param {String|Array.<String>} [filter] - A property name or array of nested properties to
+	 * watch.
+	 * @param {Function} listener - The function to call when something changes.
+	 * @returns {Config}
+	 * @access public
+	 */
+	watch(filter, listener) {
+		gawk.watch(this.values, filter, listener);
 		return this;
 	}
 }

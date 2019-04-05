@@ -38,17 +38,6 @@ export default class InternalPlugin extends PluginBase {
 	 */
 	async onStart() {
 		try {
-			if (this.plugin.configFile) {
-				log('Loading plugin config file:', highlight(this.plugin.configFile));
-				await Dispatcher.call('/appcd/config', {
-					data: {
-						action:   'load',
-						file:     this.plugin.configFile,
-						override: false
-					}
-				});
-			}
-
 			await this.activate();
 		} catch (err) {
 			this.info.error = err.message;

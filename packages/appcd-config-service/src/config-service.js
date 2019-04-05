@@ -81,21 +81,14 @@ export default class ConfigService extends ServiceDispatcher {
 				// fall through
 
 			} else if (action === 'load') {
-				let { file, isUserDefined, override } = data;
-				if (!file || typeof file !== 'string') {
-					throw new DispatcherError(codes.BAD_REQUEST, 'Expected file to be a non-empty string');
-				}
-
-				file = expandPath(file);
-				if (!isFile(file)) {
-					throw new DispatcherError(codes.BAD_REQUEST, `Config file not found: ${data.file}`);
-				}
-
-				log('Loading config file:', highlight(file));
-				this.config.load(file, {
-					isUserDefined: !!isUserDefined,
-					override:      override !== false
+				this.config.load(data.file, {
+					isUserDefined: !!data.isUserDefined,
+					namespace:     data.namespace,
+					override:      data.override !== false
 				});
+
+			} else if (action === 'unload') {
+				this.config.unload(data.namespace);
 
 			} else if (writeRegExp.test(action)) {
 				// performing a modifying action

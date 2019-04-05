@@ -270,10 +270,6 @@ export default class Plugin extends EventEmitter {
 			.add(this.path)
 			.add(path.dirname(this.main));
 
-		if (this.configFile) {
-			this.directories.add(path.dirname(this.configFile));
-		}
-
 		if (typeof pkgJson.directories === 'object') {
 			for (const type of [ 'lib', 'src' ]) {
 				const dir = pkgJson.directories[type];

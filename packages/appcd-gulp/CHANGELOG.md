@@ -1,3 +1,8 @@
+# v2.1.1
+
+ * Added huge timeout when debugging tests.
+ * Updated dependencies.
+
 # v2.1.0 (Mar 29, 2019)
 
  * Switched from using the Istanbul Babel plugin to letting nyc instrument the code so that
