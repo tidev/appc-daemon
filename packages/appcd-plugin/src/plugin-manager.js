@@ -229,7 +229,7 @@ export default class PluginManager extends Dispatcher {
 		}
 
 		this.pluginPaths[pluginPath] = new PluginPath(pluginPath)
-			.on('added', plugin => {
+			.on('added', async plugin => {
 				if (this.registry[plugin.path]) {
 					logger.error('Plugin already registered: %s', highlight(plugin.toString()));
 					return;

@@ -18,7 +18,6 @@
   "dependencies": {
     "appcd-config": "^1.2.1",
     "appcd-dispatcher": "^1.4.0",
-    "appcd-fs": "^1.1.6",
     "appcd-logger": "^2.0.1",
     "appcd-path": "^1.1.5",
     "appcd-response": "^1.1.6",

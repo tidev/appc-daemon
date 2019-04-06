@@ -335,12 +335,26 @@ describe('Config Service', () => {
 		expect(ctx.response.statusCode).to.equal(404);
 	});
 
-	it('should deleting a config value', async () => {
-		const cs = createConfigService({
-			foo: 'bar'
-		});
+	it('should delete a config value', async () => {
+		const cs = createConfigService({});
 
 		let ctx = {
+			request: {
+				data: {
+					action: 'set',
+					key: 'foo',
+					value: 'bar'
+				},
+				params: {
+					filter: null
+				}
+			},
+			response: null
+		};
+
+		await cs.onCall(ctx);
+
+		ctx = {
 			request: {
 				data: {
 					action: 'delete',

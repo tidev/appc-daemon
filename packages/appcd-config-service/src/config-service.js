@@ -4,7 +4,6 @@ import Response, { codes } from 'appcd-response';
 
 import { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
 import { expandPath } from 'appcd-path';
-import { isFile } from 'appcd-fs';
 
 const { log } = appcdLogger('appcd:config-service');
 const { highlight } = appcdLogger.styles;
