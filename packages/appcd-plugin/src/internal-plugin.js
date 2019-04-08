@@ -1,11 +1,7 @@
-import appcdLogger from 'appcd-logger';
 import Dispatcher from 'appcd-dispatcher';
 import PluginBase from './plugin-base';
 
 import { AppcdError, codes } from 'appcd-response';
-
-const { log } = appcdLogger('appcd:plugin:internal');
-const { highlight } = appcdLogger.styles;
 
 /**
  * Internal plugin implementation logic.

@@ -1,5 +1,10 @@
-# v2.2.1
+# v2.3.0
 
+ * Changed `--debug` flag for `start` and `restart` commands so that it no longer starts the
+   Node.js debugger.
+ * Added `--debug-inspect` flag to the `start` and `restart` commands that connects the Node.js
+   debugger.
+ * Changed the Node.js debugger port to the default port of `9229`.
  * Updated dependencies.
 
 # v2.2.0 (Mar 29, 2019)

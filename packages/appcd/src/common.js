@@ -100,14 +100,17 @@ export function loadConfig(argv) {
  *
  * @param {Object} params - Various parameters.
  * @param {Config} params.cfg - The configuration object.
- * @param {Boolean} [params.debug=false] - When `true`, spawns the core, but does not detach the
- * child process.
+ * @param {Object} params.argv - The parsed arguments.
+ * @param {Boolean} [params.argv.debug=false] - When `true`, spawns the core, but does not detach
+ * the child process.
+ * @param {Boolean} [params.argv.debugInspect=false] - When `true`, enables debug mode and listens
+ * for the Node debugger.
  * @returns {Promise}
  */
 export function startServer({ cfg, argv }) {
-	const { config, configFile, debug } = argv;
+	const { config, configFile, debug, debugInspect } = argv;
 	const args = [];
-	const detached = debug ? false : cfg.get('server.daemonize');
+	const detached = debug || debugInspect ? false : cfg.get('server.daemonize');
 	const stdio = detached ? [ 'ignore', 'ignore', 'ignore', 'ipc' ] : [ 'inherit', 'inherit', 'inherit', 'ipc' ];
 	const v8mem = cfg.get('core.v8.memory');
 	const corePkgJson = JSON.parse(fs.readFileSync(require.resolve('appcd-core/package.json'), 'utf8'));
@@ -116,9 +119,9 @@ export function startServer({ cfg, argv }) {
 	const m = nodeVer && nodeVer.match(/(\d+\.\d+\.\d+)/);
 	nodeVer = m ? `v${m[1]}` : null;
 
-	if (debug) {
-		const debugPort = process.env.APPCD_INSPECT_PORT && Math.max(parseInt(process.env.APPCD_INSPECT_PORT), 1024) || 9230;
-		args.push(`--inspect=${debugPort}`);
+	if (debugInspect) {
+		const debugPort = process.env.APPCD_INSPECT_PORT && Math.max(parseInt(process.env.APPCD_INSPECT_PORT), 1024) || 9229;
+		args.push(`--inspect-brk=${debugPort}`);
 	}
 	args.push(require.resolve('appcd-core'));
 	if (config) {
@@ -129,7 +132,7 @@ export function startServer({ cfg, argv }) {
 	}
 
 	process.env.APPCD = appcdVersion;
-	if (debug && !argv.color) {
+	if ((debug || debugInspect) && !argv.color) {
 		process.env.APPCD_NO_COLORS = 1;
 	}
 	process.env.FORCE_COLOR = 1;

@@ -1,7 +1,8 @@
 export default {
 	desc: 'stops the Appc Daemon if running, then starts it',
 	options: {
-		'--debug': 'don\'t run as a background daemon'
+		'--debug': 'starts the daemon in debug mode',
+		'--debug-inspect': 'starts the daemon in debug mode and connects to the Node.js debugger'
 	},
 	async action({ argv }) {
 		const { loadConfig, startServer, stopServer } = await import('../common');

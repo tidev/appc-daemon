@@ -81,7 +81,10 @@ export default class Config {
 			const merge = (src, dest) => {
 				for (const [ key, value ] of Object.entries(src)) {
 					if (value && typeof value === 'object' && !Array.isArray(value)) {
-						merge(value, dest[key] = {});
+						if (!dest[key] || typeof dest[key] !== 'object') {
+							dest[key] = {};
+						}
+						merge(value, dest[key]);
 					} else {
 						dest[key] = value;
 					}
@@ -371,16 +374,12 @@ export default class Config {
 		}
 
 		let ns = opts.namespace || Config.User;
-		if (typeof ns === 'string') {
-			values = { [ns]: values };
-		}
-
 		let obj = this.namespaces[ns];
 		if (obj) {
 			this._merge(values, obj, opts);
 		} else {
-			this.namespaces[ns] = values;
 			this.namespaceOrder.splice(1, 0, ns);
+			this.namespaces[ns] = typeof ns === 'string' && !values.hasOwnProperty(ns) ? { [ns]: values } : values;
 		}
 
 		return this;

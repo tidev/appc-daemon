@@ -362,6 +362,10 @@ exports['watch-only'] = watchOnly;
 
 exports.watch = series(build, startDaemon, watchOnly);
 
+exports.debug = series(build, function debugDaemon() {
+	spawn(process.execPath, [ 'packages/appcd/bin/appcd', 'start', '--debug-break', '--config', '{ \"telemetry\": { \"environment\": \"development\" } }' ], { stdio: 'inherit' });
+});
+
 exports.default = async () => {
 	console.log('\nAvailable tasks:');
 	const table = new Table({
