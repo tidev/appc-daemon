@@ -23,13 +23,13 @@
     "fs-extra": "^7.0.1",
     "pluralize": "^7.0.0",
     "progress": "^2.0.3",
-    "source-map-support": "^0.5.11",
+    "source-map-support": "^0.5.12",
     "tar-stream": "^2.0.1",
-    "tmp": "^0.1.0",
     "yauzl": "^2.10.0"
   },
   "devDependencies": {
-    "appcd-gulp": "^2.1.0"
+    "appcd-gulp": "^2.1.0",
+    "tmp": "^0.1.0"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-nodejs",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",

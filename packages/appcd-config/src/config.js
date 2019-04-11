@@ -92,7 +92,9 @@ export default class Config {
 			};
 
 			for (const id of this.namespaceOrder) {
-				merge(this.namespaces[id], obj);
+				if (this.namespaces[id]) {
+					merge(this.namespaces[id], obj);
+				}
 			}
 
 			gawk.set(this.values, obj);

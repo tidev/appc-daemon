@@ -74,7 +74,7 @@ export default class ConfigService extends ServiceDispatcher {
 
 			const { action } = data;
 
-			log(`Handling ${action} request`);
+			log(`Handling ${highlight(action)} request`);
 
 			if (action === 'get') {
 				// fall through
@@ -146,6 +146,9 @@ export default class ConfigService extends ServiceDispatcher {
 		}
 
 		const filter = key && key.split(/\.|\//).join('.') || undefined;
+		if (filter) {
+			log('Filtering config:', filter);
+		}
 		const node = this.config.get(filter || undefined);
 		if (node === undefined) {
 			throw new DispatcherError(codes.NOT_FOUND, filter && `Not Found: ${filter}`);

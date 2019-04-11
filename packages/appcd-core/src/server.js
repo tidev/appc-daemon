@@ -141,11 +141,16 @@ export default class Server {
 		logger.log(`PID: ${highlight(process.pid)}`);
 
 		// listen for CTRL-C and SIGTERM
-		const shutdown = () => this.shutdown()
-			.then(() => process.exit(0))
-			.catch(logger.error);
-		process.once('SIGINT',  shutdown);
-		process.once('SIGTERM', shutdown);
+		const shutdown = async () => {
+			try {
+				await this.shutdown();
+				process.exit(0);
+			} catch (err) {
+				logger.error(err);
+			}
+		};
+		process.on('SIGINT',  shutdown);
+		process.on('SIGTERM', shutdown);
 
 		// init the home directory
 		const homeDir = expandPath(this.config.get('home'));

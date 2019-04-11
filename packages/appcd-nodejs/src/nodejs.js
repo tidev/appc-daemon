@@ -14,13 +14,12 @@ import pluralize from 'pluralize';
 import progress from 'progress';
 import request from 'appcd-request';
 import tar from 'tar-stream';
-import tmp from 'tmp';
 import yauzl from 'yauzl';
 import zlib from 'zlib';
 
 import { execSync, spawn, spawnSync } from 'child_process';
 import { isDir, isFile } from 'appcd-fs';
-import { arch as getArch, formatNumber, sleep } from 'appcd-util';
+import { arch as getArch, formatNumber, randomBytes, sleep } from 'appcd-util';
 import { STATUS_CODES } from 'http';
 
 const logger = appcdLogger('appcd:nodejs');
@@ -232,7 +231,7 @@ export function extractNode({ archive, dest }) {
 			});
 
 		} else if (/\.pkg$/.test(archive)) {
-			const dir = tmp.tmpNameSync({ prefix: 'appcd-nodejs-' });
+			const dir = path.join(os.tmpdir(), `appcd-nodejs-${randomBytes(12)}`);
 
 			logger.log('Executing: %s', highlight(`pkgutil --expand "${archive}" "${dir}"`));
 			let result = spawnSync('pkgutil', [ '--expand', archive, dir ]);

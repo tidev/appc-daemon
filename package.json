@@ -15,7 +15,7 @@
     "istanbul-lib-coverage": "^2.0.3",
     "istanbul-lib-report": "^2.0.4",
     "istanbul-reports": "^2.1.1",
-    "lerna": "^3.13.1",
+    "lerna": "^3.13.2",
     "libnpm": "^2.0.1",
     "pretty-log": "^0.1.0",
     "progress": "^2.0.3",

@@ -19,7 +19,7 @@
     "appcd-fs": "^1.1.6",
     "appcd-path": "^1.1.5",
     "appcd-winreg": "^1.1.5",
-    "source-map-support": "^0.5.11",
+    "source-map-support": "^0.5.12",
     "sprintf-js": "^1.1.2"
   },
   "devDependencies": {

@@ -1,5 +1,6 @@
 # v2.2.1
 
+ * Refactored shutdown handler to use async/await.
  * Updated dependencies.
 
 # v2.2.0 (Mar 29, 2019)

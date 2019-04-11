@@ -5,6 +5,8 @@
  * Added `--debug-inspect` flag to the `start` and `restart` commands that connects the Node.js
    debugger.
  * Changed the Node.js debugger port to the default port of `9229`.
+ * Fixed config list to show empty arrays.
+ * Fixed SIGINT and SIGTERM signal handlers when debugging.
  * Updated dependencies.
 
 # v2.2.0 (Mar 29, 2019)

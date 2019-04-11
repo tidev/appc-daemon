@@ -26,7 +26,7 @@
     "appcd-response": "^1.1.6",
     "appcd-util": "^1.1.6",
     "fs-extra": "^7.0.1",
-    "source-map-support": "^0.5.11",
+    "source-map-support": "^0.5.12",
     "uuid": "^3.3.2"
   },
   "devDependencies": {

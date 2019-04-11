@@ -1,3 +1,8 @@
+# v1.2.2
+
+ * Removed dependency on `tmp` package so that its SIGINT handler doesn't force exit the program.
+ * Updated dependencies.
+
 # v1.2.1 (Mar 29, 2019)
 
  * Updated dependencies.

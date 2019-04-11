@@ -19,10 +19,6 @@ const writeActions = {
 
 export default {
 	aliases: 'conf',
-	desc: 'get and set config options',
-	options: {
-		'--json': 'outputs the config as JSON'
-	},
 	args: [
 		{
 			name: '<action>',
@@ -39,6 +35,10 @@ export default {
 		{ name: 'key', desc: '' },
 		{ name: 'value', desc: '' }
 	],
+	desc: 'get and set config options',
+	options: {
+		'--json': 'outputs the config as JSON'
+	},
 	async action({ argv }) {
 		const [
 			{ expandPath },
@@ -231,6 +231,13 @@ async function print({ key = null, value, json }) {
 		const rows = [];
 
 		(function walk(scope, segments) {
+			if (Array.isArray(scope) && !scope.length) {
+				const path = segments.join('.');
+				width = Math.max(width, path.length);
+				rows.push([ path, '[]' ]);
+				return;
+			}
+
 			for (const key of Object.keys(scope).sort()) {
 				segments.push(key);
 				if (scope[key] && typeof scope[key] === 'object') {
@@ -243,9 +250,10 @@ async function print({ key = null, value, json }) {
 				segments.pop();
 			}
 		}(value, key ? key.split('.') : []));
+
 		if (rows.length) {
 			for (const row of rows) {
-				console.log(row[0].padEnd(width) + ' = ' + row[1]);
+				console.log(`${row[0].padEnd(width)} = ${row[1]}`);
 			}
 		} else {
 			console.log('No config settings found');
