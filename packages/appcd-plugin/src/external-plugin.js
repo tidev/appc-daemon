@@ -46,18 +46,11 @@ export default class ExternalPlugin extends PluginBase {
 		 */
 		this.watchers = {};
 
+		/**
+		 * The external plugin debug logger used by both the parent and child processes.
+		 * @type {SnoopLogg}
+		 */
 		this.appcdLogger = appcdLogger(`appcd:plugin:external:${this.plugin.isParent ? 'parent' : 'child'}`);
-
-		this.globals.appcd.call = (path, data) => {
-			if (!this.tunnel) {
-				return Promise.reject(new Error('Tunnel not initialized!'));
-			}
-
-			return this.tunnel.send({
-				path,
-				data
-			});
-		};
 	}
 
 	/**
@@ -162,14 +155,22 @@ export default class ExternalPlugin extends PluginBase {
 		// we need to override the global root dispatcher instance so that we can redirect all calls
 		// back to the parent process
 		this.appcdLogger.log('Patching root dispatcher');
-		const rootDispatcher = Dispatcher.root;
+		const rootDispatcher = Dispatcher.root = this.dispatcher;
 		const origCall = rootDispatcher.call;
 		rootDispatcher.call = (path, payload) => {
 			return origCall.call(rootDispatcher, path, payload)
 				.catch(err => {
 					if (err instanceof DispatcherError && err.statusCode === 404) {
 						this.appcdLogger.log(`No route for ${highlight(path)} in child process, forwarding to parent process`);
-						return this.globals.appcd.call(path, payload);
+
+						if (!this.tunnel) {
+							throw new Error('Tunnel not initialized!');
+						}
+
+						return this.tunnel.send({
+							path,
+							data: payload
+						});
 					}
 					throw err;
 				});

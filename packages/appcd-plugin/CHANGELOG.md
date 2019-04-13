@@ -8,6 +8,9 @@
    unregistered.
  * Plugin config file changes no longer trigger plugin to be automatically stopped. Plugins are
    encouraged to watch the config for changes instead of reloading.
+ * Fixed bug where plugins couldn't call their own routes without going across the bridge. To fix
+   this, the child process' root dispatcher instance needed to be replaced with the plugin's scoped
+   dispatcher instance.
  * Updated dependencies.
 
 # v1.3.0 (Mar 29, 2019)
