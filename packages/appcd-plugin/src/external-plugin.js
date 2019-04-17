@@ -292,7 +292,7 @@ export default class ExternalPlugin extends PluginBase {
 						.once('error', err => {
 							this.appcdLogger.error('Response stream error:');
 							this.appcdLogger.error(err);
-							this.send({
+							send({
 								type: 'stream',
 								data: {
 									message: err.message || err,

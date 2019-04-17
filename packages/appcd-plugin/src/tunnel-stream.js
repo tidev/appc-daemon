@@ -1,3 +1,5 @@
+import util from 'util';
+
 import { Writable } from 'stream';
 
 /**
@@ -23,9 +25,7 @@ export default class TunnelStream extends Writable {
 	 */
 	_write(message, enc, cb) {
 		if (process.connected && typeof message === 'object') {
-			if (Array.isArray(message.args)) {
-				message.args = message.args.map(scrub);
-			}
+			message.args = [ util.format.apply(null, message.args) ];
 
 			process.send({
 				type: 'log',
@@ -34,35 +34,4 @@ export default class TunnelStream extends Writable {
 		}
 		cb();
 	}
-}
-
-/**
- * Deeply scrubs an object of values that don't serialize.
- *
- * @param {*} it - The value to check.
- * @returns {*} The original object.
- */
-function scrub(it) {
-	if (it instanceof Error) {
-		return it.stack;
-	}
-
-	if (typeof it === 'function') {
-		return `[Function: ${it.name || 'anonymous'}]`;
-	}
-
-	if (Array.isArray(it)) {
-		return it.map(scrub);
-	}
-
-	if (it && typeof it === 'object') {
-		// need to return a new object as to not clobber the original
-		const obj = {};
-		for (const key of Object.keys(it)) {
-			obj[key] = scrub(it[key]);
-		}
-		return obj;
-	}
-
-	return it;
 }

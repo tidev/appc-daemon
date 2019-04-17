@@ -11,6 +11,11 @@
  * Fixed bug where plugins couldn't call their own routes without going across the bridge. To fix
    this, the child process' root dispatcher instance needed to be replaced with the plugin's scoped
    dispatcher instance.
+ * Log messages from plugin child host processes are now formatted in the plugin host process
+   before being passed over IPC to the parent because the inability to serialize complex object
+   types.
+ * Fixed bug where error was being thrown when trying to send a response stream error to the child
+   host process.
  * Updated dependencies.
 
 # v1.3.0 (Mar 29, 2019)
