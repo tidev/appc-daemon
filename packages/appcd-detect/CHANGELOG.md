@@ -1,5 +1,6 @@
 # v1.3.1
 
+ * Added more debug logging around the default path determination.
  * Updated dependencies.
 
 # v1.3.0 (Mar 29, 2019)
