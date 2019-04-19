@@ -178,6 +178,8 @@ export default class DetectEngine extends EventEmitter {
 
 		// we grab the first path as the default
 		let defaultPath = searchPaths.values().next().value;
+		let prevDefaultPath = defaultPath;
+		this.logger.log(`Initial default path: ${highlight(defaultPath)}`);
 
 		// finish the initialization of the original list of paths
 		for (const exe of this.opts.exe) {
@@ -192,7 +194,10 @@ export default class DetectEngine extends EventEmitter {
 						path: this.opts.envPath
 					}), exe.substring(0, p)));
 				}
-				searchPaths.add(defaultPath);
+				if (defaultPath !== prevDefaultPath) {
+					this.logger.log(`Overwriting default path based on exe: ${highlight(defaultPath)}`);
+					searchPaths.add(prevDefaultPath = defaultPath);
+				}
 			} catch (e) {
 				// squelch
 			}
@@ -202,7 +207,11 @@ export default class DetectEngine extends EventEmitter {
 		for (const name of this.opts.env) {
 			const dir = process.env[name];
 			if (dir) {
-				searchPaths.add(defaultPath = real(dir));
+				defaultPath = real(dir);
+				if (defaultPath !== prevDefaultPath) {
+					searchPaths.add(prevDefaultPath = defaultPath);
+					this.logger.log(`Overwriting default path based on env: ${highlight(defaultPath)}`);
+				}
 			}
 		}
 
@@ -224,8 +233,9 @@ export default class DetectEngine extends EventEmitter {
 						for (const dir of arrayify(result.paths, true)) {
 							searchPaths.add(real(dir));
 						}
-						if (result.defaultPath && typeof result.defaultPath === 'string') {
+						if (result.defaultPath && typeof result.defaultPath === 'string' && defaultPath !== result.defaultPath) {
 							defaultPath = result.defaultPath;
+							this.logger.log(`Overwriting default path based on registry: ${highlight(defaultPath)}`);
 						}
 					}
 				} catch (e) {
