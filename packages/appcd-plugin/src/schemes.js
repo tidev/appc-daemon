@@ -150,11 +150,18 @@ export class PluginScheme extends Scheme {
 	 */
 	watch() {
 		this.watchers[this.path]
-			.on('change', evt => {
+			.on('change', async evt => {
 				if (this.plugin && evt.file === this.path && evt.action === 'delete') {
 					this.emit('plugin-deleted', this.plugin);
 					this.plugin = null;
 					this.onChange();
+				} else if (this.plugin && evt.action ===  'change' && evt.file === _path.join(this.path, 'package.json')) {
+					const plugin = new Plugin(this.path, true);
+					if (plugin.pkgJsonHash !== this.plugin.pkgJsonHash) {
+						await this.emit('plugin-deleted', this.plugin);
+						this.plugin = plugin;
+						this.emit('plugin-added', this.plugin);
+					}
 				} else if (!this.plugin) {
 					this.checkIfPlugin();
 				} else {

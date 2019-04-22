@@ -16,6 +16,10 @@
    types.
  * Fixed bug where error was being thrown when trying to send a response stream error to the child
    host process.
+ * Added hash of plugin's `package.json` to `Plugin` descriptor to assist with detecting plugin
+   changes.
+ * Added check to the plugin schema's filesystem watcher callback when the plugin's `package.json`'s
+   content changes to remove and re-add a plugin.
  * Updated dependencies.
 
 # v1.3.0 (Mar 29, 2019)
