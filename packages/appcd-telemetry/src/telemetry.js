@@ -21,7 +21,7 @@ import { arch, osInfo } from 'appcd-util';
 
 const { __n } = i18n();
 
-const { error, log } = appcdLogger('appcd:telemetry');
+const { error, log, warn } = appcdLogger('appcd:telemetry');
 const { highlight } = appcdLogger.styles;
 
 const jsonRegExp = /\.json$/;
@@ -117,6 +117,7 @@ export default class Telemetry extends Dispatcher {
 
 		// wire up the telemetry route
 		this.register('/', this.addEvent.bind(this));
+		this.register('/crash', this.addCrash.bind(this));
 
 		{
 			const architecture = arch();
@@ -201,6 +202,23 @@ export default class Telemetry extends Dispatcher {
 		} catch (e) {
 			ctx.response = e;
 		}
+	}
+
+	/**
+	 * Handles incoming add crash requests..
+	 *
+	 * @param {Object} ctx - A dispatcher request context.
+	 * @access private
+	 */
+	addCrash(ctx) {
+		if (this.environment !== 'production') {
+			return;
+		}
+		if (!ctx.request.message) {
+			return warn('Error messages must be provided in crashes');
+		}
+		ctx.request.event = 'crash.report';
+		return this.addEvent(ctx);
 	}
 
 	/**
