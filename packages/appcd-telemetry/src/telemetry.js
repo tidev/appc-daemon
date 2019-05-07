@@ -42,9 +42,9 @@ export default class Telemetry extends Dispatcher {
 			throw new TypeError('Expected config to be a valid config object');
 		}
 
-		const aguid = cfg.get('telemetry.guid');
-		if (!aguid || typeof aguid !== 'string') {
-			throw new Error('Config is missing a required, valid "telemetry.guid"');
+		const app = cfg.get('telemetry.app') || cfg.get('telemetry.guid');
+		if (!app || typeof app !== 'string') {
+			throw new Error('Config is missing a required, valid "telemetry.app"');
 		}
 
 		super();
@@ -53,7 +53,7 @@ export default class Telemetry extends Dispatcher {
 		 * The Appc Daemon application guid.
 		 * @type {String}
 		 */
-		this.aguid = aguid;
+		this.app = app;
 
 		/**
 		 * The daemon config instance.
@@ -72,7 +72,7 @@ export default class Telemetry extends Dispatcher {
 		 * The deploy type for the events.
 		 * @type {String}
 		 */
-		this.deployType = cfg.get('telemetry.environment') || 'production';
+		this.environment = cfg.get('telemetry.environment') || 'production';
 
 		/**
 		 * The time, in milliseconds, that the last send was fired.
@@ -85,7 +85,7 @@ export default class Telemetry extends Dispatcher {
 		 * initialized.
 		 * @type {String}
 		 */
-		this.mid = null;
+		this.hardwareId = null;
 
 		/**
 		 * A promise that is resolved when telemetry data is not being sent to the server.
@@ -136,7 +136,7 @@ export default class Telemetry extends Dispatcher {
 	 */
 	addEvent(ctx) {
 		try {
-			if (!this.mid) {
+			if (!this.hardwareId) {
 				throw new AppcdError(codes.NOT_INITIALIZED, 'The telemetry system has not been initialized');
 			}
 
@@ -165,17 +165,17 @@ export default class Telemetry extends Dispatcher {
 				data,
 				event,
 				os: 				this.osInfo,
-				app:				this.aguid,
+				app:				this.app,
 				timestamp: 			Date.now(),
 				version: 			'4',
 				hardware: {
-					id: 			this.mid
+					id: 			this.hardwareId
 				},
 				session: {
 					id: 			this.sessionId
 				},
 				distribution: {
-					environment: 	this.deployType,
+					environment: 	this.environment,
 					version: 		this.version
 				},
 			};
@@ -210,7 +210,7 @@ export default class Telemetry extends Dispatcher {
 	 * @access public
 	 */
 	async init(homeDir) {
-		if (this.mid) {
+		if (this.hardwareId) {
 			return;
 		}
 
@@ -220,7 +220,7 @@ export default class Telemetry extends Dispatcher {
 
 		this.eventsDir = expandPath(this.config.eventsDir || path.join(homeDir, 'telemetry'));
 
-		this.mid = await getMachineId(path.join(homeDir, '.mid'));
+		this.hardwareId = await getMachineId(path.join(homeDir, '.mid'));
 
 		// send any unsent events
 		this.sendEvents();
