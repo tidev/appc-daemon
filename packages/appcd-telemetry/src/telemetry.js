@@ -100,12 +100,6 @@ export default class Telemetry extends Dispatcher {
 		this.sendTimer = null;
 
 		/**
-		 * An internal sequence id that is appended to each event filename.
-		 * @type {Number}
-		 */
-		this.seqId = 1;
-
-		/**
 		 * The session id.
 		 * @type {String}
 		 */
@@ -127,9 +121,9 @@ export default class Telemetry extends Dispatcher {
 		{
 			const { name, version } = osInfo();
 			this.osInfo = {
-				os:       name || 'unknown',
-				osver:    version || 'unknown',
-				platform: process.platform
+				version,
+				name: 		name || process.platform,
+				arch: 		process.arch
 			};
 		}
 	}
@@ -166,19 +160,25 @@ export default class Telemetry extends Dispatcher {
 
 			const id = uuid.v4();
 
-			const payload = Object.assign({
-				aguid:       this.aguid,
-				app_version: this.version,
-				data,
-				deploytype:  this.deployType,
-				event,
+			const payload = {
 				id,
-				mid:         this.mid,
-				seq:         this.seqId++,
-				sid:         this.sessionId,
-				ts:          Date.now(),
-				ver:         3
-			}, this.osInfo);
+				data,
+				event,
+				os: 				this.osInfo,
+				app:				this.aguid,
+				timestamp: 			Date.now(),
+				version: 			'4',
+				hardware: {
+					id: 			this.mid
+				},
+				session: {
+					id: 			this.sessionId
+				},
+				distribution: {
+					environment: 	this.deployType,
+					version: 		this.version
+				},
+			};
 
 			const filename = path.join(this.eventsDir, `${id}.json`);
 

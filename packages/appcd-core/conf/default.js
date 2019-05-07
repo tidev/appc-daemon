@@ -213,6 +213,6 @@ module.exports = {
 		 * The URL to post the telemetry events to.
 		 * @type {String}
 		 */
-		url: 'https://api.appcelerator.com/p/v1/app-track'
+		url: 'https://api.appcelerator.com/p/v4/app-track'
 	}
 };
