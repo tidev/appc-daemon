@@ -57,7 +57,7 @@ describe('telemetry', () => {
 
 			expect(() => {
 				new Telemetry(cfg);
-			}).to.throw(Error, 'Config is missing a required, valid "telemetry.guid"');
+			}).to.throw(Error, 'Config is missing a required, valid "telemetry.app"');
 		});
 	});
 
