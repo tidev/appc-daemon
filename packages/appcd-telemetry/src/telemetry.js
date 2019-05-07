@@ -42,7 +42,7 @@ export default class Telemetry extends Dispatcher {
 			throw new TypeError('Expected config to be a valid config object');
 		}
 
-		const app = cfg.get('telemetry.app') || cfg.get('telemetry.guid');
+		const app = cfg.get('telemetry.guid') || cfg.get('telemetry.app');
 		if (!app || typeof app !== 'string') {
 			throw new Error('Config is missing a required, valid "telemetry.app"');
 		}
