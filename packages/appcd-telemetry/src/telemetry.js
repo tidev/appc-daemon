@@ -17,7 +17,7 @@ import uuid from 'uuid';
 
 import { expandPath } from 'appcd-path';
 import { isDir } from 'appcd-fs';
-import { osInfo } from 'appcd-util';
+import { arch, osInfo } from 'appcd-util';
 
 const { __n } = i18n();
 
@@ -119,11 +119,13 @@ export default class Telemetry extends Dispatcher {
 		this.register('/', this.addEvent.bind(this));
 
 		{
+			const architecture = arch();
 			const { name, version } = osInfo();
+
 			this.osInfo = {
 				version,
-				name: 		name || process.platform,
-				arch: 		process.arch
+				name: name || process.platform,
+				arch: architecture
 			};
 		}
 	}
@@ -164,20 +166,20 @@ export default class Telemetry extends Dispatcher {
 				id,
 				data,
 				event,
-				os: 				this.osInfo,
-				app:				this.app,
-				timestamp: 			Date.now(),
-				version: 			'4',
+				os: 		this.osInfo,
+				app:		this.app,
+				timestamp: 	Date.now(),
+				version: 	'4',
 				hardware: {
-					id: 			this.hardwareId
+					id: this.hardwareId
 				},
 				session: {
-					id: 			this.sessionId
+					id: this.sessionId
 				},
 				distribution: {
-					environment: 	this.environment,
-					version: 		this.version
-				},
+					environment:    this.environment,
+					version:        this.version
+				}
 			};
 
 			const filename = path.join(this.eventsDir, `${id}.json`);
