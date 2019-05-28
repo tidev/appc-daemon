@@ -1,6 +1,3 @@
-import { get } from 'appcd-winreg';
-import { spawnSync } from 'child_process';
-
 /**
  * The cached locale value.
  *
@@ -21,15 +18,16 @@ export async function locale(force) {
 
 	try {
 		if (process.platform === 'win32') {
-			let value = await get('HKCU', 'Control Panel\\International', 'Locale');
+			const winreglib = require('winreglib');
+			let value = winreglib.get('HKCU\\Control Panel\\International', 'Locale');
 			if (value) {
 				value = value.substring(value.length - 4, value.length);
-				const locale = await get('HKLM', 'SOFTWARE\\Classes\\MIME\\Database\\Rfc1766', value);
+				const locale = winreglib.get('HKLM\\SOFTWARE\\Classes\\MIME\\Database\\Rfc1766', value);
 				const m = locale.match(/([^;,\n]+?);/);
 				cachedLocale = m ? m[1].replace(/_/g, '-') : null;
 			}
 		} else {
-			const m = spawnSync('locale').stdout.toString().match(/^LANG="?([^".\s]+)/);
+			const m = require('child_process').spawnSync('locale').stdout.toString().match(/^LANG="?([^".\s]+)/);
 			cachedLocale = m ? m[1].replace(/_/g, '-') : null;
 		}
 	} catch (e) {

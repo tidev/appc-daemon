@@ -157,23 +157,27 @@ export default class ExternalPlugin extends PluginBase {
 		this.appcdLogger.log('Patching root dispatcher');
 		const rootDispatcher = Dispatcher.root = this.dispatcher;
 		const origCall = rootDispatcher.call;
-		rootDispatcher.call = (path, payload) => {
-			return origCall.call(rootDispatcher, path, payload)
-				.catch(err => {
-					if (err instanceof DispatcherError && err.statusCode === 404) {
-						this.appcdLogger.log(`No route for ${highlight(path)} in child process, forwarding to parent process`);
+		rootDispatcher.call = async (path, payload) => {
+			try {
+				return await origCall.call(rootDispatcher, path, payload);
+			} catch (err) {
+				// if the call originates from the plugin and the route is not found, then forward
+				// it to the parent process.
+				// if the call is from the parent and the route is not found, then return a 404.
+				if ((!(payload instanceof DispatcherContext) || payload.origin !== 'parent') && err instanceof DispatcherError && err.statusCode === 404) {
+					this.appcdLogger.log(`No route for ${highlight(path)} in child process, forwarding to parent process`);
 
-						if (!this.tunnel) {
-							throw new Error('Tunnel not initialized!');
-						}
-
-						return this.tunnel.send({
-							path,
-							data: payload
-						});
+					if (!this.tunnel) {
+						throw new Error('Tunnel not initialized!');
 					}
-					throw err;
-				});
+
+					return this.tunnel.send({
+						path,
+						data: payload
+					});
+				}
+				throw err;
+			}
 		};
 
 		const cancelConfigSubscription = async () => {
@@ -235,6 +239,7 @@ export default class ExternalPlugin extends PluginBase {
 				this.appcdLogger.log('Dispatching %s', highlight(req.message.path), req.message.request);
 				const { status, response } = await this.dispatcher.call(req.message.path, new DispatcherContext({
 					headers:  req.message.headers,
+					origin:   'parent',
 					request:  req.message.request,
 					response: new PassThrough({ objectMode: true }),
 					source:   req.message.source

@@ -1,3 +1,7 @@
+> DEPRECATION NOTICE!
+>
+> `appcd-winreg` has been deprecated in favor of the amazing [`winreglib`][2] package.
+
 # appcd-winreg
 
 Simplified API for querying the Windows Registry.
@@ -27,3 +31,4 @@ This project is open source under the [Apache Public License v2][1] and is devel
 in this distribution for more information.
 
 [1]: https://github.com/appcelerator/appc-daemon/blob/master/packages/appcd-winreg/LICENSE
+[2]: https://www.npmjs.com/package/winreglib

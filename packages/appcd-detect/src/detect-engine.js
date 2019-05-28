@@ -4,14 +4,14 @@ import gawk from 'gawk';
 import path from 'path';
 import pluralize from 'pluralize';
 
-import * as winreg from 'appcd-winreg';
-
 import { arrayify, debounce, randomBytes, tailgate } from 'appcd-util';
 import { EventEmitter } from 'events';
 import { real } from 'appcd-path';
 import { which } from 'appcd-subprocess';
 
 const { highlight } = appcdLogger.styles;
+
+const winreglib = process.platform === 'win32' ? require('winreglib') : null;
 
 /**
  * A engine for detecting various things. It walks the search paths and calls a `checkDir()`
@@ -218,7 +218,7 @@ export default class DetectEngine extends EventEmitter {
 		if (process.platform === 'win32') {
 			await Promise.all(this.opts.registryKeys.map(async (obj) => {
 				try {
-					searchPaths.add(real(await winreg.get(obj.hive, obj.key, obj.name)));
+					searchPaths.add(real(winreglib.get(obj.hive ? `${obj.hive}\\${obj.key}` : obj.key, obj.name)));
 				} catch (e) {
 					this.logger.warn('Failed to get registry key: %s', e.message);
 				}

@@ -1,6 +1,8 @@
-# v1.2.2
+# v1.3.0
 
- * Updated dependencies.
+ * feat: Replaced `appcd-winreg` with `winreglib`.
+   [(DAEMON-276)](https://jira.appcelerator.org/browse/DAEMON-276)
+ * chore: Updated dependencies.
 
 # v1.2.1 (Mar 29, 2019)
 

@@ -1,7 +1,9 @@
 # v1.3.1
 
- * Added more debug logging around the default path determination.
- * Updated dependencies.
+ * misc: Added more debug logging around the default path determination.
+ * feat: Replaced `appcd-winreg` with `winreglib`.
+   [(DAEMON-276)](https://jira.appcelerator.org/browse/DAEMON-276)
+ * chore: Updated dependencies.
 
 # v1.3.0 (Mar 29, 2019)
 

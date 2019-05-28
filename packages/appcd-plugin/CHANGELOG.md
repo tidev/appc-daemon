@@ -1,26 +1,30 @@
-# v1.4.0
+# 1.4.0
 
- * Fixed plugin IPC tunnel to send the `"headers"` and `"source"` `DispatcherContext` properties.
-   The `"data"` property has been renamed to `"request"` to match the `DispatcherContext` property
-   name. [(DAEMON-273)](https://jira.appcelerator.org/browse/DAEMON-273)
- * Moved plugin config loading from the plugin implementation to the plugin registry where the
+ * fix: Fixed plugin IPC tunnel to send the `"headers"` and `"source"` `DispatcherContext`
+   properties. The `"data"` property has been renamed to `"request"` to match the
+   `DispatcherContext` property name.
+   [(DAEMON-273)](https://jira.appcelerator.org/browse/DAEMON-273)
+ * fix: Moved plugin config loading from the plugin implementation to the plugin registry where the
    the config is loaded when the plugin is registered. Config is unloaded when a plugin is
    unregistered.
- * Plugin config file changes no longer trigger plugin to be automatically stopped. Plugins are
-   encouraged to watch the config for changes instead of reloading.
- * Fixed bug where plugins couldn't call their own routes without going across the bridge. To fix
-   this, the child process' root dispatcher instance needed to be replaced with the plugin's scoped
-   dispatcher instance.
- * Log messages from plugin child host processes are now formatted in the plugin host process
+ * fix: Plugin config file changes no longer trigger plugin to be automatically stopped. Plugins
+   are encouraged to watch the config for changes instead of reloading.
+ * fix: Fixed bug where plugins couldn't call their own routes without going across the bridge. To
+   fix this, the child process' root dispatcher instance needed to be replaced with the plugin's
+   scoped dispatcher instance.
+ * fix: Log messages from plugin child host processes are now formatted in the plugin host process
    before being passed over IPC to the parent because the inability to serialize complex object
    types.
- * Fixed bug where error was being thrown when trying to send a response stream error to the child
-   host process.
- * Added hash of plugin's `package.json` to `Plugin` descriptor to assist with detecting plugin
-   changes. [(DAEMON-251)](https://jira.appcelerator.org/browse/DAEMON-251)
- * Added check to the plugin schema's filesystem watcher callback when the plugin's `package.json`'s
-   content changes to remove and re-add a plugin.
- * Updated dependencies.
+ * fix: Fixed bug where error was being thrown when trying to send a response stream error to the
+   child host process.
+ * fix: Added hash of plugin's `package.json` to `Plugin` descriptor to assist with detecting
+   plugin changes. [(DAEMON-251)](https://jira.appcelerator.org/browse/DAEMON-251)
+ * fix: Added check to the plugin schema's filesystem watcher callback when the plugin's
+   `package.json`'s content changes to remove and re-add a plugin.
+ * DEPRECATION: `appcd-winreg` will be removed in v2.0.0 and thus will not be implicitly loaded.
+   Plugins will need to either migrate to `winreglib` or explicitly depend on `appcd-winreg`.
+   [(DAEMON-277)](https://jira.appcelerator.org/browse/DAEMON-277)
+ * chore: Updated dependencies.
 
 # v1.3.0 (Mar 29, 2019)
 

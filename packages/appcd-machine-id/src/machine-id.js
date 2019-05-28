@@ -11,7 +11,6 @@ import { expandPath } from 'appcd-path';
 import { isFile } from 'appcd-fs';
 import { randomBytes, sha1 } from 'appcd-util';
 import { run } from 'appcd-subprocess';
-import { get } from 'appcd-winreg';
 
 const { log } = appcdLogger.config({ theme: 'detailed' })('appcd:machine-id');
 const { highlight } = appcdLogger.styles;
@@ -44,7 +43,7 @@ export default async function getMachineId(midFile) {
 				machineId = sha1(json.IOPlatformUUID);
 			}
 		} else if (/^win/.test(platform)) {
-			const result = await get('HKLM', 'Software\\Microsoft\\Cryptography', 'MachineGuid');
+			const result = require('winreglib').get('HKLM\\Software\\Microsoft\\Cryptography', 'MachineGuid');
 			if (result) {
 				machineId = sha1(result);
 			}
