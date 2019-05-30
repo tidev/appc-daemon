@@ -1,7 +1,8 @@
 # v2.2.1
 
- * Refactored shutdown handler to use async/await.
- * Updated dependencies.
+ * refactor: Refactored shutdown handler to use async/await.
+ * chore: Updated telemetry config settings to latest endpoint.
+ * chore: Updated dependencies.
 
 # v2.2.0 (Mar 29, 2019)
 
