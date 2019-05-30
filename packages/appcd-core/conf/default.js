@@ -188,7 +188,7 @@ module.exports = {
 		 * GUID to use for telemetry.
 		 * @type {String}
 		 */
-		guid: 'ea327577-858f-4d31-905e-fa670f50ef48',
+		app: 'ea327577-858f-4d31-905e-fa670f50ef48',
 
 		/**
 		 * The maximum number of events to send at a time.
@@ -213,6 +213,6 @@ module.exports = {
 		 * The URL to post the telemetry events to.
 		 * @type {String}
 		 */
-		url: 'https://api.appcelerator.com/p/v1/app-track'
+		url: 'https://api.appcelerator.com/p/v4/app-track'
 	}
 };

@@ -57,7 +57,7 @@ describe('telemetry', () => {
 
 			expect(() => {
 				new Telemetry(cfg);
-			}).to.throw(Error, 'Config is missing a required, valid "telemetry.guid"');
+			}).to.throw(Error, 'Config is missing a required, valid "telemetry.app"');
 		});
 	});
 
@@ -143,10 +143,10 @@ describe('telemetry', () => {
 				}
 			});
 
-			expect(telemetry.mid).to.be.null;
+			expect(telemetry.hardwareId).to.be.null;
 			await telemetry.init(makeTempDir());
-			expect(telemetry.mid).to.be.a('string');
-			expect(telemetry.mid).to.not.equal('');
+			expect(telemetry.hardwareId).to.be.a('string');
+			expect(telemetry.hardwareId).to.not.equal('');
 			await telemetry.init(); // would throw a TypeError if no homeDir
 		});
 	});

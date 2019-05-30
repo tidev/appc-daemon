@@ -17,11 +17,11 @@ import uuid from 'uuid';
 
 import { expandPath } from 'appcd-path';
 import { isDir } from 'appcd-fs';
-import { osInfo } from 'appcd-util';
+import { arch, osInfo } from 'appcd-util';
 
 const { __n } = i18n();
 
-const { error, log } = appcdLogger('appcd:telemetry');
+const { error, log, warn } = appcdLogger('appcd:telemetry');
 const { highlight } = appcdLogger.styles;
 
 const jsonRegExp = /\.json$/;
@@ -42,9 +42,10 @@ export default class Telemetry extends Dispatcher {
 			throw new TypeError('Expected config to be a valid config object');
 		}
 
-		const aguid = cfg.get('telemetry.guid');
-		if (!aguid || typeof aguid !== 'string') {
-			throw new Error('Config is missing a required, valid "telemetry.guid"');
+		// telemetry.guid can be removed in 3.x as telemetry.app is favoured
+		const app = cfg.get('telemetry.app') || cfg.get('telemetry.guid');
+		if (!app || typeof app !== 'string') {
+			throw new Error('Config is missing a required, valid "telemetry.app"');
 		}
 
 		super();
@@ -53,7 +54,7 @@ export default class Telemetry extends Dispatcher {
 		 * The Appc Daemon application guid.
 		 * @type {String}
 		 */
-		this.aguid = aguid;
+		this.app = app;
 
 		/**
 		 * The daemon config instance.
@@ -72,7 +73,7 @@ export default class Telemetry extends Dispatcher {
 		 * The deploy type for the events.
 		 * @type {String}
 		 */
-		this.deployType = cfg.get('telemetry.environment') || 'production';
+		this.environment = cfg.get('telemetry.environment') || 'production';
 
 		/**
 		 * The time, in milliseconds, that the last send was fired.
@@ -85,7 +86,7 @@ export default class Telemetry extends Dispatcher {
 		 * initialized.
 		 * @type {String}
 		 */
-		this.mid = null;
+		this.hardwareId = null;
 
 		/**
 		 * A promise that is resolved when telemetry data is not being sent to the server.
@@ -98,12 +99,6 @@ export default class Telemetry extends Dispatcher {
 		 * @type {Timer}
 		 */
 		this.sendTimer = null;
-
-		/**
-		 * An internal sequence id that is appended to each event filename.
-		 * @type {Number}
-		 */
-		this.seqId = 1;
 
 		/**
 		 * The session id.
@@ -123,13 +118,16 @@ export default class Telemetry extends Dispatcher {
 
 		// wire up the telemetry route
 		this.register('/', this.addEvent.bind(this));
+		this.register('/crash', this.addCrash.bind(this));
 
 		{
+			const architecture = arch();
 			const { name, version } = osInfo();
+
 			this.osInfo = {
-				os:       name || 'unknown',
-				osver:    version || 'unknown',
-				platform: process.platform
+				version,
+				name: name || process.platform,
+				arch: architecture
 			};
 		}
 	}
@@ -142,7 +140,7 @@ export default class Telemetry extends Dispatcher {
 	 */
 	addEvent(ctx) {
 		try {
-			if (!this.mid) {
+			if (!this.hardwareId) {
 				throw new AppcdError(codes.NOT_INITIALIZED, 'The telemetry system has not been initialized');
 			}
 
@@ -166,19 +164,25 @@ export default class Telemetry extends Dispatcher {
 
 			const id = uuid.v4();
 
-			const payload = Object.assign({
-				aguid:       this.aguid,
-				app_version: this.version,
-				data,
-				deploytype:  this.deployType,
-				event,
+			const payload = {
 				id,
-				mid:         this.mid,
-				seq:         this.seqId++,
-				sid:         this.sessionId,
-				ts:          Date.now(),
-				ver:         3
-			}, this.osInfo);
+				data,
+				event,
+				os: 		this.osInfo,
+				app:		this.app,
+				timestamp: 	Date.now(),
+				version: 	'4',
+				hardware: {
+					id: this.hardwareId
+				},
+				session: {
+					id: this.sessionId
+				},
+				distribution: {
+					environment:    this.environment,
+					version:        this.version
+				}
+			};
 
 			const filename = path.join(this.eventsDir, `${id}.json`);
 
@@ -202,6 +206,23 @@ export default class Telemetry extends Dispatcher {
 	}
 
 	/**
+	 * Handles incoming add crash requests..
+	 *
+	 * @param {Object} ctx - A dispatcher request context.
+	 * @access private
+	 */
+	addCrash(ctx) {
+		if (this.environment !== 'production') {
+			return;
+		}
+		if (!ctx.request.message) {
+			return warn('Error messages must be provided in crashes');
+		}
+		ctx.request.event = 'crash.report';
+		return this.addEvent(ctx);
+	}
+
+	/**
 	 * Initializes the telemetry system.
 	 *
 	 * @param {String} homeDir - The path to the appcd home directory where the machine id will be
@@ -210,7 +231,7 @@ export default class Telemetry extends Dispatcher {
 	 * @access public
 	 */
 	async init(homeDir) {
-		if (this.mid) {
+		if (this.hardwareId) {
 			return;
 		}
 
@@ -220,7 +241,7 @@ export default class Telemetry extends Dispatcher {
 
 		this.eventsDir = expandPath(this.config.eventsDir || path.join(homeDir, 'telemetry'));
 
-		this.mid = await getMachineId(path.join(homeDir, '.mid'));
+		this.hardwareId = await getMachineId(path.join(homeDir, '.mid'));
 
 		// send any unsent events
 		this.sendEvents();
