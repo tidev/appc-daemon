@@ -1,7 +1,7 @@
 # v2.1.1
 
- * Added huge timeout when debugging tests.
- * Updated dependencies.
+ * fix: Added huge timeout when debugging tests.
+ * chore: Updated dependencies.
 
 # v2.1.0 (Mar 29, 2019)
 
