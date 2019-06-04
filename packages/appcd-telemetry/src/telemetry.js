@@ -216,7 +216,8 @@ export default class Telemetry extends Dispatcher {
 			return;
 		}
 		if (!ctx.request.message) {
-			return warn('Error messages must be provided in crashes');
+			warn('Error messages must be provided in crashes');
+			return;
 		}
 		ctx.request.event = 'crash.report';
 		this.addEvent(ctx);
