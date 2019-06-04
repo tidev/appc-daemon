@@ -1,5 +1,6 @@
-# v1.2.0 (Jun 4, 2019)
+# v2.0.0 (Jun 4, 2019)
 
+ * BREAKING CHANGE: Bumped minimum required Node.js version to v8.12.0.
  * feat: Replaced `appcd-winreg` with `winreglib`.
    [(DAEMON-276)](https://jira.appcelerator.org/browse/DAEMON-276)
  * chore: Updated dependencies.
