@@ -1,27 +1,27 @@
-# v2.1.1
+# v2.1.1 (Jun 4, 2019)
 
  * fix: Added huge timeout when debugging tests.
  * chore: Updated dependencies.
 
 # v2.1.0 (Mar 29, 2019)
 
- * Switched from using the Istanbul Babel plugin to letting nyc instrument the code so that
+ * fix: Switched from using the Istanbul Babel plugin to letting nyc instrument the code so that
    spawned code gets covered too.
- * Updated dependencies.
+ * chore: Updated dependencies.
 
 # v2.0.1 (Mar 6, 2019)
 
- * Added cobertura reporter when running nyc.
+ * feat: Added cobertura reporter when running nyc.
 
 # v2.0.0 (Jan 16, 2019)
 
- * Upgraded to Gulp 4.
- * Added chai and promise lint rules.
- * Updated dependencies.
+ * BREAKING CHANGE: Upgraded to Gulp 4.
+ * chore: Added chai and promise lint rules.
+ * chore: Updated dependencies.
 
 # v1.2.1 (Nov 26, 2018)
 
- * Updated dependencies.
+ * chore: Updated dependencies.
 
 # v1.2.0 (Sep 17, 2018)
 
