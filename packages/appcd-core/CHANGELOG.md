@@ -1,5 +1,6 @@
-# v2.2.1
+# v2.3.0
 
+ * BREAKING CHANGE: Bumped minimum required Node.js version from v8.10.0 to v8.12.0.
  * refactor: Refactored shutdown handler to use async/await.
  * chore: Updated telemetry config settings to latest endpoint.
  * chore: Updated dependencies.

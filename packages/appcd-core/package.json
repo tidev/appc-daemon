@@ -48,7 +48,7 @@
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
   "repository": "https://github.com/appcelerator/appc-daemon",
   "engines": {
-    "node": ">=8.10.0"
+    "node": ">=8.12.0"
   },
   "appcd": {
     "node": "10.15.3"
