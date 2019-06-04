@@ -46,18 +46,11 @@ export default class ExternalPlugin extends PluginBase {
 		 */
 		this.watchers = {};
 
+		/**
+		 * The external plugin debug logger used by both the parent and child processes.
+		 * @type {SnoopLogg}
+		 */
 		this.appcdLogger = appcdLogger(`appcd:plugin:external:${this.plugin.isParent ? 'parent' : 'child'}`);
-
-		this.globals.appcd.call = (path, data) => {
-			if (!this.tunnel) {
-				return Promise.reject(new Error('Tunnel not initialized!'));
-			}
-
-			return this.tunnel.send({
-				path,
-				data
-			});
-		};
 	}
 
 	/**
@@ -162,17 +155,29 @@ export default class ExternalPlugin extends PluginBase {
 		// we need to override the global root dispatcher instance so that we can redirect all calls
 		// back to the parent process
 		this.appcdLogger.log('Patching root dispatcher');
-		const rootDispatcher = Dispatcher.root;
+		const rootDispatcher = Dispatcher.root = this.dispatcher;
 		const origCall = rootDispatcher.call;
-		rootDispatcher.call = (path, payload) => {
-			return origCall.call(rootDispatcher, path, payload)
-				.catch(err => {
-					if (err instanceof DispatcherError && err.statusCode === 404) {
-						this.appcdLogger.log(`No route for ${highlight(path)} in child process, forwarding to parent process`);
-						return this.globals.appcd.call(path, payload);
+		rootDispatcher.call = async (path, payload) => {
+			try {
+				return await origCall.call(rootDispatcher, path, payload);
+			} catch (err) {
+				// if the call originates from the plugin and the route is not found, then forward
+				// it to the parent process.
+				// if the call is from the parent and the route is not found, then return a 404.
+				if ((!(payload instanceof DispatcherContext) || payload.origin !== 'parent') && err instanceof DispatcherError && err.statusCode === 404) {
+					this.appcdLogger.log(`No route for ${highlight(path)} in child process, forwarding to parent process`);
+
+					if (!this.tunnel) {
+						throw new Error('Tunnel not initialized!');
 					}
-					throw err;
-				});
+
+					return this.tunnel.send({
+						path,
+						data: payload
+					});
+				}
+				throw err;
+			}
 		};
 
 		const cancelConfigSubscription = async () => {
@@ -234,6 +239,7 @@ export default class ExternalPlugin extends PluginBase {
 				this.appcdLogger.log('Dispatching %s', highlight(req.message.path), req.message.request);
 				const { status, response } = await this.dispatcher.call(req.message.path, new DispatcherContext({
 					headers:  req.message.headers,
+					origin:   'parent',
 					request:  req.message.request,
 					response: new PassThrough({ objectMode: true }),
 					source:   req.message.source
@@ -291,7 +297,7 @@ export default class ExternalPlugin extends PluginBase {
 						.once('error', err => {
 							this.appcdLogger.error('Response stream error:');
 							this.appcdLogger.error(err);
-							this.send({
+							send({
 								type: 'stream',
 								data: {
 									message: err.message || err,
@@ -385,17 +391,6 @@ export default class ExternalPlugin extends PluginBase {
 		let debugEnabled = process.env.APPCD_INSPECT_PLUGIN === this.plugin.name;
 		if (debugEnabled) {
 			args.unshift(`--inspect-brk=${debugPort}`);
-		}
-
-		if (this.plugin.configFile) {
-			this.appcdLogger.log('Loading plugin config file:', highlight(this.plugin.configFile));
-			await Dispatcher.call('/appcd/config', {
-				data: {
-					action:   'load',
-					file:     this.plugin.configFile,
-					override: false
-				}
-			});
 		}
 
 		let autoReload = true;

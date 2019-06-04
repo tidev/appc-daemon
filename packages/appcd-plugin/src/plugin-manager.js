@@ -229,7 +229,7 @@ export default class PluginManager extends Dispatcher {
 		}
 
 		this.pluginPaths[pluginPath] = new PluginPath(pluginPath)
-			.on('added', plugin => {
+			.on('added', async plugin => {
 				if (this.registry[plugin.path]) {
 					logger.error('Plugin already registered: %s', highlight(plugin.toString()));
 					return;
@@ -237,6 +237,17 @@ export default class PluginManager extends Dispatcher {
 
 				this.registered.push(plugin.info);
 				this.registry[plugin.path] = plugin;
+
+				if (plugin.configFile) {
+					logger.log('Registering plugin config file:', highlight(plugin.configFile));
+					await Dispatcher.call('/appcd/config', {
+						data: {
+							action:    'load',
+							file:      plugin.configFile,
+							namespace: plugin.name
+						}
+					});
+				}
 
 				if (plugin.supported) {
 					logger.log('Plugin found: %s', highlight(`${plugin.name}@${plugin.version}`));
@@ -330,9 +341,19 @@ export default class PluginManager extends Dispatcher {
 
 				this.sendTelemetry('plugin.added', plugin);
 			})
-			.on('removed', async (plugin) => {
+			.on('removed', async plugin => {
 				try {
 					delete this.registry[plugin.path];
+
+					if (plugin.configFile) {
+						logger.log('Unregistering plugin config file:', highlight(plugin.configFile));
+						await Dispatcher.call('/appcd/config', {
+							data: {
+								action:    'unload',
+								namespace: plugin.name
+							}
+						});
+					}
 
 					for (let i = 0; i < this.registered.length; i++) {
 						if (this.registered[i].path === plugin.path) {

@@ -13,7 +13,7 @@ import semver from 'semver';
 import slug from 'slugg';
 import types from './types';
 
-import { arrayify } from 'appcd-util';
+import { arrayify, sha1 } from 'appcd-util';
 import { EventEmitter } from 'events';
 import { expandPath } from 'appcd-path';
 import { isDir, isFile } from 'appcd-fs';
@@ -108,9 +108,13 @@ export default class Plugin extends EventEmitter {
 			throw new PluginError('Plugin path does not contain a package.json: %s', pluginPath);
 		}
 
+		this.pkgJsonHash = null;
+
 		let pkgJson;
 		try {
-			pkgJson = JSON.parse(fs.readFileSync(pkgJsonFile, 'utf8'));
+			const contents = fs.readFileSync(pkgJsonFile, 'utf8');
+			this.pkgJsonHash = sha1(contents);
+			pkgJson = JSON.parse(contents);
 		} catch (e) {
 			throw new PluginError('Error parsing %s: %s', pkgJsonFile, e.message);
 		}
@@ -269,10 +273,6 @@ export default class Plugin extends EventEmitter {
 		this.directories = new Set()
 			.add(this.path)
 			.add(path.dirname(this.main));
-
-		if (this.configFile) {
-			this.directories.add(path.dirname(this.configFile));
-		}
 
 		if (typeof pkgJson.directories === 'object') {
 			for (const type of [ 'lib', 'src' ]) {

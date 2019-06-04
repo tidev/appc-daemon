@@ -1,21 +1,32 @@
+# v2.3.0
+
+ * fix: Changed `--debug` flag for `start` and `restart` commands so that it no longer starts the
+   Node.js debugger.
+ * feat: Added `--debug-inspect` flag to the `start` and `restart` commands that connects the
+   Node.js debugger.
+ * fix: Changed the Node.js debugger port to the default port of `9229`.
+ * fix: Fixed config list to show empty arrays.
+ * fix: Fixed SIGINT and SIGTERM signal handlers when debugging.
+ * chore: Updated dependencies.
+
 # v2.2.0 (Mar 29, 2019)
 
- * Fixed bug where the appcd client would exit when the connection to the server closed.
- * Updated internal `stopServer()` function to async/await.
- * Updated dependencies.
+ * fix: Fixed bug where the appcd client would exit when the connection to the server closed.
+ * refactor: Updated internal `stopServer()` function to async/await.
+ * chore: Updated dependencies.
 
 # v2.1.0 (Jan 24, 2019)
 
- * Upgraded to appcd-logger@2.0.0.
+ * chore: Upgraded to appcd-logger@2.0.0.
 
 # v2.0.1 (Jan 16, 2019)
 
  * fix(config): Actions were not being translated correctly when dispatching request to daemon
    config service.
    [(DAEMON-269)](https://jira.appcelerator.org/browse/DAEMON-269)
- * Added humanize dependency since it was removed from snooplogg 2.
- * Refactored promises to async/await.
- * Updated dependencies.
+ * fix: Added humanize dependency since it was removed from snooplogg 2.
+ * refactor: Refactored promises to async/await.
+ * chore: Updated dependencies.
 
 # v2.0.0 (Nov 27, 2018)
 

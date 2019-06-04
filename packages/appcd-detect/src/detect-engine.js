@@ -4,14 +4,14 @@ import gawk from 'gawk';
 import path from 'path';
 import pluralize from 'pluralize';
 
-import * as winreg from 'appcd-winreg';
-
 import { arrayify, debounce, randomBytes, tailgate } from 'appcd-util';
 import { EventEmitter } from 'events';
 import { real } from 'appcd-path';
 import { which } from 'appcd-subprocess';
 
 const { highlight } = appcdLogger.styles;
+
+const winreglib = process.platform === 'win32' ? require('winreglib') : null;
 
 /**
  * A engine for detecting various things. It walks the search paths and calls a `checkDir()`
@@ -178,6 +178,8 @@ export default class DetectEngine extends EventEmitter {
 
 		// we grab the first path as the default
 		let defaultPath = searchPaths.values().next().value;
+		let prevDefaultPath = defaultPath;
+		this.logger.log(`Initial default path: ${highlight(defaultPath)}`);
 
 		// finish the initialization of the original list of paths
 		for (const exe of this.opts.exe) {
@@ -192,7 +194,10 @@ export default class DetectEngine extends EventEmitter {
 						path: this.opts.envPath
 					}), exe.substring(0, p)));
 				}
-				searchPaths.add(defaultPath);
+				if (defaultPath !== prevDefaultPath) {
+					this.logger.log(`Overwriting default path based on exe: ${highlight(defaultPath)}`);
+					searchPaths.add(prevDefaultPath = defaultPath);
+				}
 			} catch (e) {
 				// squelch
 			}
@@ -202,14 +207,18 @@ export default class DetectEngine extends EventEmitter {
 		for (const name of this.opts.env) {
 			const dir = process.env[name];
 			if (dir) {
-				searchPaths.add(defaultPath = real(dir));
+				defaultPath = real(dir);
+				if (defaultPath !== prevDefaultPath) {
+					searchPaths.add(prevDefaultPath = defaultPath);
+					this.logger.log(`Overwriting default path based on env: ${highlight(defaultPath)}`);
+				}
 			}
 		}
 
 		if (process.platform === 'win32') {
 			await Promise.all(this.opts.registryKeys.map(async (obj) => {
 				try {
-					searchPaths.add(real(await winreg.get(obj.hive, obj.key, obj.name)));
+					searchPaths.add(real(winreglib.get(obj.hive ? `${obj.hive}\\${obj.key}` : obj.key, obj.name)));
 				} catch (e) {
 					this.logger.warn('Failed to get registry key: %s', e.message);
 				}
@@ -224,8 +233,9 @@ export default class DetectEngine extends EventEmitter {
 						for (const dir of arrayify(result.paths, true)) {
 							searchPaths.add(real(dir));
 						}
-						if (result.defaultPath && typeof result.defaultPath === 'string') {
+						if (result.defaultPath && typeof result.defaultPath === 'string' && defaultPath !== result.defaultPath) {
 							defaultPath = result.defaultPath;
+							this.logger.log(`Overwriting default path based on registry: ${highlight(defaultPath)}`);
 						}
 					}
 				} catch (e) {

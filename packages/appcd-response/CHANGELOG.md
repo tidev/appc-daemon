@@ -1,3 +1,9 @@
+# v1.2.0
+
+ * feat: Replaced `appcd-winreg` with `winreglib`.
+   [(DAEMON-276)](https://jira.appcelerator.org/browse/DAEMON-276)
+ * chore: Updated dependencies.
+
 # v1.1.6 (Mar 29, 2019)
 
  * Fixed bug where exception was being thrown if locale command was not found.

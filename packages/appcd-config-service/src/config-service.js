@@ -4,7 +4,6 @@ import Response, { codes } from 'appcd-response';
 
 import { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
 import { expandPath } from 'appcd-path';
-import { isFile } from 'appcd-fs';
 
 const { log } = appcdLogger('appcd:config-service');
 const { highlight } = appcdLogger.styles;
@@ -75,27 +74,20 @@ export default class ConfigService extends ServiceDispatcher {
 
 			const { action } = data;
 
-			log(`Handling ${action} request`);
+			log(`Handling ${highlight(action)} request`);
 
 			if (action === 'get') {
 				// fall through
 
 			} else if (action === 'load') {
-				let { file, isUserDefined, override } = data;
-				if (!file || typeof file !== 'string') {
-					throw new DispatcherError(codes.BAD_REQUEST, 'Expected file to be a non-empty string');
-				}
-
-				file = expandPath(file);
-				if (!isFile(file)) {
-					throw new DispatcherError(codes.BAD_REQUEST, `Config file not found: ${data.file}`);
-				}
-
-				log('Loading config file:', highlight(file));
-				this.config.load(file, {
-					isUserDefined: !!isUserDefined,
-					override:      override !== false
+				this.config.load(data.file, {
+					isUserDefined: !!data.isUserDefined,
+					namespace:     data.namespace,
+					override:      data.override !== false
 				});
+
+			} else if (action === 'unload') {
+				this.config.unload(data.namespace);
 
 			} else if (writeRegExp.test(action)) {
 				// performing a modifying action
@@ -154,6 +146,9 @@ export default class ConfigService extends ServiceDispatcher {
 		}
 
 		const filter = key && key.split(/\.|\//).join('.') || undefined;
+		if (filter) {
+			log('Filtering config:', filter);
+		}
 		const node = this.config.get(filter || undefined);
 		if (node === undefined) {
 			throw new DispatcherError(codes.NOT_FOUND, filter && `Not Found: ${filter}`);

@@ -1,3 +1,9 @@
+# v1.3.0
+
+ * Complete refactor to support config namespaces.
+   [(DAEMON-274)](https://jira.appcelerator.org/browse/DAEMON-274)
+ * Updated dependencies.
+
 # v1.2.1 (Mar 29, 2019)
 
  * Updated dependencies.

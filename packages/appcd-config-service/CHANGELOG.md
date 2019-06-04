@@ -1,3 +1,10 @@
+# v1.2.2
+
+ * Removed redundant validation code when loading a config file.
+ * Added action handler for unloading a config file.
+ * Added more debug logging.
+ * Updated dependencies.
+
 # v1.2.1 (Mar 29, 2019)
 
  * Updated dependencies.

@@ -111,32 +111,32 @@ plugin system's module loader (i.e. `import` and `require()`).
 
 The following table describes which `appcd-*` dependencies are auto-injected:
 
-| Package               | Injectable        |
-| --------------------- | ----------------- |
-| appcd                 | No                |
-| appcd-agent           | Yes               |
-| appcd-client          | Yes and should be |
-| appcd-config          | Yes and should be |
-| appcd-config-service  | Yes and should be |
-| appcd-core            | No                |
-| appcd-default-plugins | No                |
-| appcd-detect          | Yes and should be |
-| appcd-dispatcher      | Yes and should be |
-| appcd-fs              | Yes               |
-| appcd-fswatcher       | Yes and should be |
-| appcd-gulp            | No                |
-| appcd-http            | Yes               |
-| appcd-logger          | Yes               |
-| appcd-machine-id      | Yes and should be |
-| appcd-nodejs          | Yes and should be |
-| appcd-path            | Yes               |
-| appcd-plugin          | No                |
-| appcd-request         | Yes               |
-| appcd-response        | Yes and should be |
-| appcd-subprocess      | Yes and should be |
-| appcd-telemetry       | Yes               |
-| appcd-util            | Yes               |
-| appcd-winreg          | Yes               |
+| Package               | Injectable        | Notes  |
+| --------------------- | ----------------- | ------ |
+| appcd                 | No                |        |
+| appcd-agent           | Yes               |        |
+| appcd-client          | Yes and should be |        |
+| appcd-config          | Yes and should be |        |
+| appcd-config-service  | Yes and should be |        |
+| appcd-core            | No                |        |
+| appcd-default-plugins | No                |        |
+| appcd-detect          | Yes and should be |        |
+| appcd-dispatcher      | Yes and should be |        |
+| appcd-fs              | Yes               |        |
+| appcd-fswatcher       | Yes and should be |        |
+| appcd-gulp            | No                |        |
+| appcd-http            | Yes               |        |
+| appcd-logger          | Yes               |        |
+| appcd-machine-id      | Yes and should be |        |
+| appcd-nodejs          | Yes and should be |        |
+| appcd-path            | Yes               |        |
+| appcd-plugin          | No                |        |
+| appcd-request         | Yes               |        |
+| appcd-response        | Yes and should be |        |
+| appcd-subprocess      | Yes and should be |        |
+| appcd-telemetry       | Yes               |        |
+| appcd-util            | Yes               |        |
+| appcd-winreg          | Yes               | :warning: Deprecated in appcd-plugin@1.3.0, removed in appcd-plugin@2.0.0 |
 
 Injectable `appcd-*` packages do _not_ need to be added as a dependency in the plugin's
 `package.json`. This helps keep the disk space requirements down.

@@ -28,20 +28,20 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-client": "^1.2.0",
+    "appcd-client": "^1.3.1",
     "appcd-config": "^1.2.0",
     "appcd-core": "^2.1.0",
     "appcd-dump-viewer": "^1.1.4",
     "appcd-fs": "^1.1.5",
-    "appcd-logger": "^2.0.0",
+    "appcd-logger": "^2.0.1",
     "appcd-nodejs": "^1.2.0",
     "appcd-path": "^1.1.4",
     "appcd-util": "^1.1.5",
-    "cli-kit": "^0.7.5",
+    "cli-kit": "^0.10.3",
     "cli-table2": "^0.2.0",
     "humanize": "^0.0.9",
-    "source-map-support": "^0.5.11",
-    "v8-compile-cache": "^2.0.2"
+    "source-map-support": "^0.5.12",
+    "v8-compile-cache": "^2.0.3"
   },
   "devDependencies": {
     "appcd-gulp": "^2.0.1"

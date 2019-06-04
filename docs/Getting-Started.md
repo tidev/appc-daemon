@@ -2,24 +2,22 @@
 
 ## Getting Started
 
-> :key: The use of _sudo_ below only applies to certain macOS and Linux machines.
-
 ### Installing via npm
 
-> :no_entry: _appcd_ has not yet been publically released.
-
 ```bash
-sudo npm install -g appcd
+npm install -g appcd
 ```
+
+> :key: When globally installing appcd on macOS and Linux machines, you may need to prefix the
+> above command with `sudo`.
 
 ### Installing from Github
 
 #### Requirements
 
-On client machines, Node.js 8 or newer is required.
+On client machines, Node.js v8.10.0 or newer is required.
 
-However, developing on the Appc Daemon requires Node.js >=8.7.0, Gulp 3.9 (but NOT Gulp 4.x),
-Yarn >=1.2, and Lerna >=2.5.
+Additionally, developing on the Appc Daemon also requires Gulp 4, Yarn >=1.15, and Lerna >=3.
 
 For development, you will need at least 400 MB of free space for all of the code, the local git
 checkout, and all of the npm dependencies and dev dependencies.
@@ -159,7 +157,7 @@ will rebuild that package and all parent packages, then restart the Appc Daemon.
 > malformed JavaScript code, it's likely going to cause `gulp` to exit, but the last spawned Appc
 > Daemon process will remain running. You may need to run `appcd stop` or `killall appcd`.
 
-When running the Appc Daemon with the `gulp watch` task telemetry will be sent using the 
+When running the Appc Daemon with the `gulp watch` task telemetry will be sent using the
 `development` deployType.
 
 ### Debugging the Appc Daemon
@@ -189,7 +187,13 @@ For continuous development, run the `watch` task:
 gulp watch
 ```
 
-#### Debug the appcd-core directly
+#### Debugging appcd with the Node debugger
+
+```bash
+gulp debug
+```
+
+#### Debugging the appcd-core with the Node debugger
 
 If for some reason the appcd Bootstrap is getting in the way of debugging, you can debug the
 appcd-core directly:
@@ -199,7 +203,7 @@ gulp build
 node --inspect package/appcd-core/dist/main.js
 ```
 
-### Checking the Source Code
+### Checking dependency updates
 
 Periodically, run the check task to make sure all of the npm dependencies are up-to-date and that
 there is no security issues. If there are any issues, follow the recommended actions.
@@ -207,6 +211,8 @@ there is no security issues. If there are any issues, follow the recommended act
 ```bash
 gulp check
 ```
+
+To upgrade dependencies, run `gulp upgrade`.
 
 ### Updating the Source Code
 

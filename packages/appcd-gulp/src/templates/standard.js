@@ -175,7 +175,7 @@ module.exports = (opts) => {
 
 		// add --inspect
 		if (process.argv.indexOf('--inspect') !== -1 || process.argv.indexOf('--inspect-brk') !== -1) {
-			args.push('--inspect-brk');
+			args.push('--inspect-brk', '--timeout', '9999999');
 		}
 
 		const jenkinsReporter = resolveModule('mocha-jenkins-reporter');

@@ -100,14 +100,17 @@ export function loadConfig(argv) {
  *
  * @param {Object} params - Various parameters.
  * @param {Config} params.cfg - The configuration object.
- * @param {Boolean} [params.debug=false] - When `true`, spawns the core, but does not detach the
- * child process.
+ * @param {Object} params.argv - The parsed arguments.
+ * @param {Boolean} [params.argv.debug=false] - When `true`, spawns the core, but does not detach
+ * the child process.
+ * @param {Boolean} [params.argv.debugInspect=false] - When `true`, enables debug mode and listens
+ * for the Node debugger.
  * @returns {Promise}
  */
-export function startServer({ cfg, argv }) {
-	const { config, configFile, debug } = argv;
+export async function startServer({ cfg, argv }) {
+	const { config, configFile, debug, debugInspect } = argv;
 	const args = [];
-	const detached = debug ? false : cfg.get('server.daemonize');
+	const detached = debug || debugInspect ? false : cfg.get('server.daemonize');
 	const stdio = detached ? [ 'ignore', 'ignore', 'ignore', 'ipc' ] : [ 'inherit', 'inherit', 'inherit', 'ipc' ];
 	const v8mem = cfg.get('core.v8.memory');
 	const corePkgJson = JSON.parse(fs.readFileSync(require.resolve('appcd-core/package.json'), 'utf8'));
@@ -116,9 +119,9 @@ export function startServer({ cfg, argv }) {
 	const m = nodeVer && nodeVer.match(/(\d+\.\d+\.\d+)/);
 	nodeVer = m ? `v${m[1]}` : null;
 
-	if (debug) {
-		const debugPort = process.env.APPCD_INSPECT_PORT && Math.max(parseInt(process.env.APPCD_INSPECT_PORT), 1024) || 9230;
-		args.push(`--inspect=${debugPort}`);
+	if (debugInspect) {
+		const debugPort = process.env.APPCD_INSPECT_PORT && Math.max(parseInt(process.env.APPCD_INSPECT_PORT), 1024) || 9229;
+		args.push(`--inspect-brk=${debugPort}`);
 	}
 	args.push(require.resolve('appcd-core'));
 	if (config) {
@@ -129,37 +132,37 @@ export function startServer({ cfg, argv }) {
 	}
 
 	process.env.APPCD = appcdVersion;
-	if (debug && !argv.color) {
+	if ((debug || debugInspect) && !argv.color) {
 		process.env.APPCD_NO_COLORS = 1;
 	}
 	process.env.FORCE_COLOR = 1;
 
-	return Promise.resolve()
-		.then(() => import('appcd-nodejs'))
-		.then(({ generateV8MemoryArgument, spawnNode }) => {
-			// check if we should use the core's required Node.js version
-			if (cfg.get('core.enforceNodeVersion') !== false) {
-				if (!nodeVer) {
-					throw new Error(`Invalid Node.js engine version from appcd-core package.json: ${nodeVer}`);
-				}
+	try {
+		const { generateV8MemoryArgument, spawnNode } = await import('appcd-nodejs');
+		let child;
 
-				return spawnNode({
-					args,
-
-					// On macOS (and probably Linux), a detached process doesn't stick around to see
-					// if the executable exited with an error, so we must not detach the process,
-					// but rather disconnect it once the daemon is booted. On Windows, we have to
-					// detach it to keep the process running and for some lucky reason, Node sticks
-					// around to see if the executable errors.
-					detached: process.platform === 'win32' ? detached : false,
-
-					nodeHome: expandPath(cfg.get('home'), 'node'),
-					stdio,
-					v8mem,
-					version: nodeVer
-				});
+		// check if we should use the core's required Node.js version
+		if (cfg.get('core.enforceNodeVersion') !== false) {
+			if (!nodeVer) {
+				throw new Error(`Invalid Node.js engine version from appcd-core package.json: ${nodeVer}`);
 			}
 
+			child = await spawnNode({
+				args,
+
+				// On macOS (and probably Linux), a detached process doesn't stick around to see
+				// if the executable exited with an error, so we must not detach the process,
+				// but rather disconnect it once the daemon is booted. On Windows, we have to
+				// detach it to keep the process running and for some lucky reason, Node sticks
+				// around to see if the executable errors.
+				detached: process.platform === 'win32' ? detached : false,
+
+				nodeHome: expandPath(cfg.get('home'), 'node'),
+				stdio,
+				v8mem,
+				version: nodeVer
+			});
+		} else {
 			// using the current Node.js version which may be incompatible with the core
 
 			if (v8mem) {
@@ -169,9 +172,16 @@ export function startServer({ cfg, argv }) {
 				}
 			}
 
-			return spawn(process.execPath, args, { stdio });
-		})
-		.then(child => new Promise((resolve, reject) => {
+			child = spawn(process.execPath, args, { stdio });
+		}
+
+		if (debug || debugInspect) {
+			process
+				.on('SIGINT', () => child.kill('SIGINT'))
+				.on('SIGTERM', () => child.kill('SIGTERM'));
+		}
+
+		await new Promise((resolve, reject) => {
 			child.on('message', msg => {
 				if (msg === 'booted') {
 					if (detached) {
@@ -202,11 +212,11 @@ export function startServer({ cfg, argv }) {
 					resolve();
 				}
 			});
-		}))
-		.catch(err => {
-			log(err);
-			throw err;
 		});
+	} catch (err) {
+		log(err);
+		throw err;
+	}
 }
 
 /**

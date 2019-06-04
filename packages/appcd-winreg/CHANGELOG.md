@@ -1,3 +1,8 @@
+# v1.1.6
+
+ * chore: Added deprecation notice to readme.
+ * chore: Updated dependencies.
+
 # v1.1.5 (Mar 29, 2019)
 
  * Updated dependencies.
