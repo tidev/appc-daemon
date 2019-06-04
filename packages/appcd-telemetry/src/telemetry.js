@@ -219,7 +219,7 @@ export default class Telemetry extends Dispatcher {
 			return warn('Error messages must be provided in crashes');
 		}
 		ctx.request.event = 'crash.report';
-		return this.addEvent(ctx);
+		this.addEvent(ctx);
 	}
 
 	/**
