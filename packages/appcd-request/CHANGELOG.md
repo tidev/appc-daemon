@@ -1,56 +1,40 @@
-# v1.2.2
+# v1.2.2 (Jun 4, 2019)
 
- * Updated dependencies.
+ * chore: Updated dependencies.
 
 # v1.2.1 (Mar 29, 2019)
 
- * Updated dependencies.
+ * chore: Updated dependencies.
 
 # v1.2.0 (Jan 24, 2019)
 
- * Upgraded to appcd-logger@2.0.0.
+ * chore: Upgraded to appcd-logger@2.0.0.
 
 # v1.1.4 (Jan 16, 2019)
 
- * Added humanize dependency since it was removed from snooplogg 2.
- * Updated dependencies.
+ * fix: Added humanize dependency since it was removed from snooplogg 2.
+ * chore: Updated dependencies.
 
 # v1.1.3 (Nov 27, 2018)
 
- * Updated dependencies.
+ * chore: Updated dependencies.
 
 # v1.1.2 (Sep 17, 2018)
 
- * Updated dependencies.
+ * chore: Updated dependencies.
 
 # v1.1.1 (May 24, 2018)
 
- * Updated dependencies:
-   - appcd-dispatcher 1.1.0 -> 1.1.1
-   - appcd-fs 1.1.1 -> 1.1.2
-   - appcd-gulp 1.1.1 -> 1.1.5
-   - appcd-logger 1.1.0 -> 1.1.1
-   - request 2.85.0 -> 2.87.0
-   - source-map-support 0.5.4 -> 0.5.6
+ * chore: Updated dependencies.
 
 # v1.1.0 (Apr 9, 2018)
 
- * Improved readme.
- * Updated dependencies:
-   - appcd-dispatcher 1.0.1 -> 1.1.0
-   - appcd-fs 1.0.1 -> 1.1.1
-   - appcd-gulp 1.0.1 -> 1.1.1
-   - appcd-logger 1.0.1 -> 1.1.0
-   - request 2.83.0 -> 2.85.0
-   - source-map-support 0.5.0 -> 0.5.4
+ * chore: Improved readme.
+ * chore: Updated dependencies.
 
 # v1.0.1 (Dec 15, 2017)
 
- * Updated dependencies:
-   - appcd-dispatcher 1.0.0 -> 1.0.1
-   - appcd-fs 1.0.0 -> 1.0.1
-   - appcd-gulp 1.0.0 -> 1.0.1
-   - appcd-logger 1.0.0 -> 1.0.1
+ * chore: Updated dependencies.
 
 # v1.0.0 (Dec 5, 2017)
 
