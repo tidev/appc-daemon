@@ -1,4 +1,4 @@
-# v2.3.0
+# v2.3.0 (Jun 4, 2019)
 
  * BREAKING CHANGE: Bumped minimum required Node.js version from v8.10.0 to v8.12.0.
  * fix: Changed `--debug` flag for `start` and `restart` commands so that it no longer starts the
