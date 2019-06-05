@@ -1531,6 +1531,19 @@ anymatch@^2.0.0:
     micromatch "^3.1.4"
     normalize-path "^2.1.1"
 
+appcd-default-plugins@^1.1.4:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/appcd-default-plugins/-/appcd-default-plugins-1.2.0.tgz#00555b09c68b61f1888256d549f59775e4f851a6"
+  integrity sha512-bSJ0q/iw73aX8EJQYS7LzJ7Eg7dZ7qV2AqU+FnU2aW9KE61p9hTv/uFH6sCL/behhdW08AMDO0mnrbYY70268g==
+  dependencies:
+    "@appcd/plugin-android" "^1.3.0"
+    "@appcd/plugin-genymotion" "^1.3.0"
+    "@appcd/plugin-ios" "^1.3.0"
+    "@appcd/plugin-jdk" "^1.3.0"
+    "@appcd/plugin-system-info" "^1.3.0"
+    "@appcd/plugin-titanium" "^1.4.0"
+    "@appcd/plugin-windows" "^1.3.0"
+
 appcd-dump-viewer@^1.1.4:
   version "1.1.4"
   resolved "https://registry.yarnpkg.com/appcd-dump-viewer/-/appcd-dump-viewer-1.1.4.tgz#b8a3867250873c4f703ff66b1ceab51c433057d4"
@@ -1544,17 +1557,6 @@ appcd-dump-viewer@^1.1.4:
     sprintf "^0.1.5"
     vue "^2.5.13"
     vuetify "^1.0.0"
-
-appcd-response@^1.1.6:
-  version "1.1.6"
-  resolved "https://registry.yarnpkg.com/appcd-response/-/appcd-response-1.1.6.tgz#0f41069364e110429de92941f6918e73b9dbfcd2"
-  integrity sha512-aKu0qnnWzOMRlZ9PIOQOpo6Fgl8u8ODd5XknMRQ8o00BIZ7RYTCaH9o/JTLfhDTtfFFoDw8XcqRxA9PeLpHfpg==
-  dependencies:
-    appcd-fs "^1.1.6"
-    appcd-path "^1.1.5"
-    appcd-winreg "^1.1.5"
-    source-map-support "^0.5.11"
-    sprintf-js "^1.1.2"
 
 append-buffer@^1.0.2:
   version "1.0.2"
