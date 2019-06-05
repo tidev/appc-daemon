@@ -4,6 +4,9 @@ A complete plugin system for the Appc Daemon.
 
 Visit https://github.com/appcelerator/appc-daemon for more information.
 
+> Deprecation Notice: In `appcd-plugin@2.0.0`, `appcd-winreg` will no longer be provided for
+> plugins. Plugins will need to explicitly depend on `appcd-winreg` or migrate to `winreglib`.
+
 ## Installation
 
 	npm i appcd-plugin
