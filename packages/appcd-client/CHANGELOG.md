@@ -1,3 +1,7 @@
+# v1.3.3 (Jun 5, 2019)
+
+ * fix: Fixed bad `appcd-response` dependency version.
+
 # v1.3.2 (Jun 4, 2019)
 
  * chore: Updated dependencies.
