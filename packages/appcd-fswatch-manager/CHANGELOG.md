@@ -1,36 +1,29 @@
-# v1.1.2
+# v1.1.2 (Jun 4, 2019)
 
- * Updated dependencies.
+ * chore: Updated dependencies.
 
 # v1.1.1 (Mar 29, 2019)
 
- * Updated dependencies.
+ * chore: Updated dependencies.
 
 # v1.1.0 (Jan 24, 2019)
 
- * Upgraded to appcd-logger@2.0.0.
+ * chore: Upgraded to appcd-logger@2.0.0.
 
 # v1.0.3 (Jan 16, 2019)
 
- * Updated dependencies.
+ * chore: Updated dependencies.
 
 # v1.0.2 (Nov 27, 2018)
 
- * Updated dependencies.
+ * chore: Updated dependencies.
 
 # v1.0.1 (May 24, 2018)
 
- * Updated dependencies:
-   - appcd-dispatcher 1.1.0 -> 1.1.1
-   - appcd-fswatcher 1.1.0 -> 1.1.1
-   - appcd-gulp 1.1.1 -> 1.1.5
-   - appcd-logger 1.1.0 -> 1.1.1
-   - appcd-path 1.1.0 -> 1.1.1
-   - appcd-response 1.1.0 -> 1.1.2
-   - fs-extra 5.0.0 -> 6.0.1
-   - source-map-support 0.5.4 -> 0.5.6
+ * chore: Updated dependencies.
 
 # v1.0.0 (Apr 9, 2018)
 
- * Initial release.
- * Extracted `FSWatchManager` from [`appcd-fswatcher`](https://npmjs.org/package/appcd-fswatcher)
+ * chore: Initial release.
+ * refactor: Extracted `FSWatchManager` from
+   [`appcd-fswatcher`](https://npmjs.org/package/appcd-fswatcher)

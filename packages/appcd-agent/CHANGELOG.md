@@ -1,46 +1,41 @@
-# v1.1.6
+# v1.1.6 (Jun 4, 2019)
 
- * Updated dependencies.
+ * chore: Updated dependencies.
 
 # v1.1.5 (Mar 29, 2019)
 
- * Updated dependencies.
+ * chore: Updated dependencies.
 
 # v1.1.4 (Jan 16, 2019)
 
- * Refactored promises to async/await.
- * Updated dependencies.
+ * refactor: Refactored promises to async/await.
+ * chore: Updated dependencies.
 
 # v1.1.3 (Nov 27, 2018)
 
- * Updated dependencies.
+ * chore: Updated dependencies.
 
 # v1.1.2 (May 24, 2018)
 
- * Updated dependencies:
-   - appcd-gulp 1.1.1 -> 1.1.5
-   - source-map-support 0.5.4 -> 0.5.6
+ * chore: Updated dependencies.
 
 # v1.1.1 (Apr 9, 2018)
 
- * Minor code clean up.
+ * chore: Minor code clean up.
 
 # v1.1.1 (Apr 9, 2018)
 
- * Minor code clean up.
- * Improved readme.
- * Updated dependencies:
-   - appcd-gulp 1.0.1 -> 1.1.1
-   - source-map-support 0.5.0 -> 0.5.4
+ * chore: Minor code clean up.
+ * chore: Improved readme.
+ * chore: Updated dependencies.
 
 # v1.1.0 (Apr 2, 2018)
 
- * This was a botched release and has been unpublished.
+ * oops: This was a botched release and has been unpublished.
 
 # v1.0.1 (Dec 15, 2017)
 
- * Updated dependencies:
-   - appcd-gulp 1.0.0 -> 1.0.1
+ * chore: Updated dependencies.
 
 # v1.0.0 (Dec 5, 2017)
 

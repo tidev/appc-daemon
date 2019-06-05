@@ -1,4 +1,4 @@
-# v1.3.0
+# v1.3.0 (Jun 4, 2019)
 
  * refactor: Updated telemetry payload to latest specifications.
  * feat: Added `/crash` endpoint to report crash information.
