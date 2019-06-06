@@ -409,7 +409,19 @@ export class NestedPluginsDirScheme extends Scheme {
 		if (isDir(this.path)) {
 			for (const name of fs.readdirSync(this.path)) {
 				const dir = _path.join(this.path, name);
-				if (isDir(dir)) {
+				if (!isDir(dir)) {
+					continue;
+				}
+
+				if (/^@/.test(name)) {
+					// scope
+					for (const pkgName of fs.readdirSync(dir)) {
+						const pkgDir = _path.join(dir, pkgName);
+						if (isDir(pkgDir)) {
+							this.pluginSchemes[`${name}/${pkgName}`] = this.createPluginsDirScheme(pkgDir);
+						}
+					}
+				} else {
 					this.pluginSchemes[dir] = this.createPluginsDirScheme(dir);
 				}
 			}
@@ -518,7 +530,7 @@ export function detectScheme(dir) {
 	}
 
 	try {
-		if (globule.find('./*/*/package.json', { srcBase: dir }).length) {
+		if (globule.find([ './*/*/package.json', './@*/*/*/package.json' ], { srcBase: dir }).length) {
 			return NestedPluginsDirScheme;
 		}
 	} catch (e) {

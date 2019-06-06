@@ -1,3 +1,7 @@
+# 1.4.1
+
+ * fix: Fixed support for scoped plugin package names for nested directory schemes.
+
 # 1.4.0 (Jun 4, 2019)
 
  * BREAKING CHANGE: Bumped minimum required Node.js version from v8.0.0 to v8.12.0.
