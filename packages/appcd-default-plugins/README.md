@@ -19,16 +19,7 @@ The post-install script will detect if _yarn_ is installed. If found, it will in
 monorepo using _yarn_'s workspaces, otherwise it fallsback to _npm_ with hoisting.
 
 If at all possible, you should install _yarn_ before installing `appcd-default-plugins`. yarn is
-about 12 faster and uses over 80% less disk space.
-
-> Note that part of the problem with _npm_ is when it detects a `"prepare"` script in the plugin's
-> `package.json` (which most plugins do) and the plugin's dependencies are being installed via a
-> local `npm install` with no arguments (which _lerna_ does), then _npm_ will download the dev
-> dependencies (despite specifying production only) and run the `"prepare"` statement.
->
-> To make things worse, if the plugin uses _gulp_ (which most do), _gulp_ will detect the current
-> working directory is not the top-level directory (despite attempts to force the cwd), and build
-> every package in the _appcd_ monorepo.
+about 3 times faster and uses about 75% less disk space.
 
 ## Installation
 

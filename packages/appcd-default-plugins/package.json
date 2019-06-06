@@ -17,25 +17,25 @@
   },
   "plugins": {
     "@appcd/plugin-android": [
-      "^1.3.0"
-    ],
-    "@appcd/plugin-genymotion": [
-      "^1.3.0"
-    ],
-    "@appcd/plugin-ios": [
-      "^1.3.0"
-    ],
-    "@appcd/plugin-jdk": [
-      "^1.3.0"
-    ],
-    "@appcd/plugin-system-info": [
-      "^1.3.0"
-    ],
-    "@appcd/plugin-titanium": [
       "^1.4.0"
     ],
+    "@appcd/plugin-genymotion": [
+      "^1.4.0"
+    ],
+    "@appcd/plugin-ios": [
+      "^1.4.0"
+    ],
+    "@appcd/plugin-jdk": [
+      "^1.4.0"
+    ],
+    "@appcd/plugin-system-info": [
+      "^1.4.0"
+    ],
+    "@appcd/plugin-titanium": [
+      "^1.5.0"
+    ],
     "@appcd/plugin-windows": [
-      "^1.3.0"
+      "^1.4.0"
     ]
   },
   "scripts": {
