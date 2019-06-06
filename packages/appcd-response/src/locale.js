@@ -1,3 +1,5 @@
+/* eslint security/detect-child-process: 0 */
+
 /**
  * The cached locale value.
  *
