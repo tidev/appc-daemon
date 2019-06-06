@@ -164,6 +164,7 @@ export default class Telemetry extends Dispatcher {
 
 			const id = uuid.v4();
 
+			// spec: https://techweb.axway.com/confluence/display/analytics/Analytics+JSON+Payload+V4
 			const payload = {
 				id,
 				data,
