@@ -1,3 +1,7 @@
+# v2.4.0 (Jun 6, 2019)
+
+ * chore: Updated to `appcd-core@2.4.0` which updated to `appcd-default-plugins@2.0.0`.
+
 # v2.3.0 (Jun 4, 2019)
 
  * BREAKING CHANGE: Bumped minimum required Node.js version from v8.10.0 to v8.12.0.

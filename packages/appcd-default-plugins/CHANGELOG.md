@@ -1,4 +1,4 @@
-# v2.0.0
+# v2.0.0 (Jun 6, 2019)
 
  * feat: Added support for multiple plugin versions.
    [(DAEMON-280)](https://jira.appcelerator.org/browse/DAEMON-280)

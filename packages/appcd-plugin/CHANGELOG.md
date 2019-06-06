@@ -1,4 +1,4 @@
-# 1.4.1
+# 1.5.0 (Jun 6, 2019)
 
  * fix: Fixed support for scoped plugin package names for nested directory schemes.
 
