@@ -25,7 +25,11 @@ export default class TunnelStream extends Writable {
 	 */
 	_write(message, enc, cb) {
 		if (process.connected && typeof message === 'object') {
-			message.args = [ util.formatWithOptions({ colors: true, depth: null }, ...message.args) ];
+			message.args = [
+				util.format(...message.args.map(a => {
+					return typeof a === 'string' ? a : util.inspect(a, { colors: true, depth: null });
+				}))
+			];
 
 			process.send({
 				type: 'log',
