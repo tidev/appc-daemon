@@ -1,4 +1,4 @@
-# v1.4.0 (Jun 4, 2019)
+# v2.0.0 (Jun 10, 2019)
 
  * BREAKING CHANGE: Bumped minimum required Node.js version from v8.0.0 to v8.12.0.
  * misc: Added more debug logging around the default path determination.
