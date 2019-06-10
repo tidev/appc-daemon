@@ -1,10 +1,9 @@
-# 1.6.0 (Jun 7, 2019)
+# 2.0.0 (Jun 10, 2019)
 
+ * BREAKING CHANGE: Updated to `appcd-detect@2.0.0`, `appcd-machine-id@2.0.0`, and
+   `appcd-telemetry@2.0.0`.
  * fix: Replaced call to `formatWithOptions()` with `format()` so that appcd@1.x would not break
    on Node.js 8.11.2. [(DAEMON-281)](https://jira.appcelerator.org/browse/DAEMON-281)
-
-# 1.5.0 (Jun 6, 2019)
-
  * fix: Fixed support for scoped plugin package names for nested directory schemes.
 
 # 1.4.0 (Jun 4, 2019)
