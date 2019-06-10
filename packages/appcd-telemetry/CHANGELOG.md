@@ -1,5 +1,6 @@
-# v1.3.0 (Jun 4, 2019)
+# v2.0.0 (Jun 10, 2019)
 
+ * BREAKING CHANGE: Updated to `appcd-machine-id@2.0.0`.
  * refactor: Updated telemetry payload to latest specifications.
  * feat: Added `/crash` endpoint to report crash information.
  * chore: Updated dependencies.
