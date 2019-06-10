@@ -1,6 +1,6 @@
 {
   "name": "appcd-telemetry",
-  "version": "1.2.1",
+  "version": "1.4.0",
   "description": "Library for collecting and sending data to the Appcelerator cloud.",
   "main": "./dist/telemetry",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
