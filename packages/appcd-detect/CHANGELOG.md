@@ -1,3 +1,7 @@
+# v1.5.0 (Jun 10, 2019)
+
+ * Republish of v1.3.0.
+
 # v1.3.0 (Mar 29, 2019)
 
  * Added `paths` property to dynamically change the paths to scan and kicks off a rescan.
