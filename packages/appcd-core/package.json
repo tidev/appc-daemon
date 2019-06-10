@@ -48,6 +48,6 @@
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
   "repository": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-core",
   "appcd": {
-    "node": "8.11.1"
+    "node": "8.16.0"
   }
 }
