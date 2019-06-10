@@ -1,6 +1,11 @@
+# v2.5.0 (Jun 6, 2019)
+
+ * chore: Updated to `appcd-plugin@2.0.0` and `appcd-telemetry@2.0.0`.
+ * chore: Updated to `appcd-default-plugins@2.0.0`.
+
 # v2.4.0 (Jun 6, 2019)
 
- * chore: Updated to `appcd-default-plugins@2.0.0`.
+ * Unpublished Jun 10, 2019.
 
 # v2.3.0 (Jun 4, 2019)
 
