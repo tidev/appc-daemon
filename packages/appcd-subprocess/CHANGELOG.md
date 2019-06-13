@@ -4,7 +4,7 @@
 
 # v1.3.2 (Jun 13, 2019)
 
- * Republish of v1.3.0.
+ * chore: Republish of v1.3.0.
 
 # v1.3.1 (Jun 4, 2019)
 
