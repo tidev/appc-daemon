@@ -1,3 +1,9 @@
+# v2.6.0 (Jun 13, 2019)
+
+ * chore: Updated to `appcd-config-service@1.2.3`, `appcd-dispatcher@2.0.0`,
+   `appcd-fswatch-manager@2.0.0`, `appcd-nodejs@2.0.0`, `appcd-plugin@2.1.0`,
+   `appcd-subprocess@2.0.1`, and `appcd-telemetry@2.0.1`.
+
 # v2.5.0 (Jun 6, 2019)
 
  * chore: Updated to `appcd-plugin@2.0.0` and `appcd-telemetry@2.0.0`.

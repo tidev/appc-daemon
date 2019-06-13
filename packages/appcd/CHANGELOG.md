@@ -1,3 +1,7 @@
+# v2.5.0 (Jun 13, 2019)
+
+ * chore: Updated to `appcd-client@2.0.0`, `appcd-core@2.6.0`, and `appcd-nodejs@2.0.0`.
+
 # v2.4.0 (Jun 6, 2019)
 
  * chore: Updated to `appcd-core@2.4.0` which updated to `appcd-default-plugins@2.0.0`.
