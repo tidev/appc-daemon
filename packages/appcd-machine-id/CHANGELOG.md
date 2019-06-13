@@ -1,3 +1,7 @@
+# v2.0.1 (Jun 13, 2019)
+
+ * chore: Updated to `appcd-subprocess@2.0.1`.
+
 # v2.0.0 (Jun 10, 2019)
 
  * BREAKING CHANGE: Bumped minimum required Node.js version from v8.0.0 to v8.12.0.
