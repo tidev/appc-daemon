@@ -1,3 +1,7 @@
+# v2.0.0 (Jun 13, 2019)
+
+ * BREAKING CHANGE: Updated to `appcd-request@2.0.0`.
+
 # v1.2.2 (Jun 4, 2019)
 
  * fix: Removed dependency on `tmp` package so that its SIGINT handler doesn't force exit the
