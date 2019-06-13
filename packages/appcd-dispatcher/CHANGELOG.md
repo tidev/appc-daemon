@@ -1,3 +1,7 @@
+# v1.4.2 (Jun 13, 2019)
+
+ * chore: Republish of v1.4.0.
+
 # v1.4.1 (Jun 4, 2019)
 
  * chore: Updated dependencies.
