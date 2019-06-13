@@ -1,6 +1,6 @@
 {
   "name": "appcd-dispatcher",
-  "version": "1.4.1",
+  "version": "2.0.0",
   "description": "Provides HTTP-like API for exposing services.",
   "main": "./dist/index",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",

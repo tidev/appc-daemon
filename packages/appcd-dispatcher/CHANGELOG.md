@@ -1,3 +1,7 @@
+# v2.0.0 (Jun 13, 2019)
+
+ * BREAKING CHANGE: Updated to `appcd-response@2.0.0`.
+
 # v1.4.2 (Jun 13, 2019)
 
  * chore: Republish of v1.4.0.
