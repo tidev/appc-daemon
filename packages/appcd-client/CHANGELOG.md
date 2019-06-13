@@ -1,3 +1,11 @@
+# v2.0.0 (Jun 13, 2019)
+
+ * BREAKING CHANGE: Updated to `appcd-response@2.0.0`.
+
+# v1.3.4 (Jun 13, 2019)
+
+ * Republish of v1.3.1.
+
 # v1.3.3 (Jun 5, 2019)
 
  * fix: Fixed bad `appcd-response` dependency version.
