@@ -1,3 +1,7 @@
+# v1.4.2 (Jun 13, 2019)
+
+ * Republish of v1.4.0.
+
 # v1.4.0 (Mar 29, 2019)
 
  * Fixed bug where streamed objects were not being stringified in the middleware callback.
