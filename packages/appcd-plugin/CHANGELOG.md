@@ -1,3 +1,10 @@
+# v2.1.0 (Jun 13, 2019)
+
+ * chore: Updated to `appcd-client@2.0.0`, `appcd-config-service@1.2.3`, `appcd-detect@2.1.0`,
+   `appcd-dispatcher@2.0.0`, `appcd-fswatch-manager@2.0.0`, `appcd-machine-id@2.0.1`,
+   `appcd-nodejs@2.0.0`, `appcd-request@2.0.0`, `appcd-subprocess@2.0.1`, and
+   `appcd-telemetry@2.0.1`.
+
 # 2.0.0 (Jun 10, 2019)
 
  * BREAKING CHANGE: Updated to `appcd-detect@2.0.0`, `appcd-machine-id@2.0.0`, and
