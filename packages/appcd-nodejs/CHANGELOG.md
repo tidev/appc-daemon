@@ -1,3 +1,7 @@
+# v2.0.1 (Jun 13, 2019)
+
+ * chore: Updated to `appcd-nodejs@2.0.0`.
+
 # v2.0.0 (Jun 13, 2019)
 
  * BREAKING CHANGE: Updated to `appcd-request@2.0.0`.
