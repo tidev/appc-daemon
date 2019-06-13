@@ -1,3 +1,11 @@
+# v2.0.0 (Jun 13, 2019)
+
+ * BREAKING CHANGE: Updated to `appcd-dispatche@2.0.0` and `appcd-response@2.0.0`.
+
+# v1.2.3 (Jun 13, 2019)
+
+ * Republish of v1.2.1.
+
 # v1.2.2 (Jun 4, 2019)
 
  * fix: Removed redundant validation code when loading a config file.
