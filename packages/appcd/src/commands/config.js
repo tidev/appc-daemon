@@ -83,6 +83,8 @@ export default {
 			await new Promise((resolve, reject) => {
 				request
 					.once('error', async (err) => {
+						client.disconnect();
+
 						// in general, we do not want to show the help screen for the errors below
 						// since they are valid messages and we're just using errors for flow control
 						this.showHelpOnError = false;

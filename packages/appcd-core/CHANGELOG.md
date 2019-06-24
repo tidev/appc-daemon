@@ -1,3 +1,7 @@
+# v2.7.0 (Jun 24, 2019)
+
+ * chore: Updated to `appcd-config-service@2.0.0`,
+
 # v2.6.0 (Jun 13, 2019)
 
  * chore: Updated to `appcd-config-service@1.2.3`, `appcd-dispatcher@2.0.0`,

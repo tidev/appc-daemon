@@ -1,6 +1,6 @@
 {
   "name": "appcd-core",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "description": "Appc Daemon server implementation.",
   "main": "./dist/main",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
@@ -19,7 +19,7 @@
     "accepts": "^1.3.7",
     "appcd-agent": "^1.1.6",
     "appcd-config": "^1.3.0",
-    "appcd-config-service": "^1.2.3",
+    "appcd-config-service": "^2.0.0",
     "appcd-default-plugins": "^2.0.0",
     "appcd-dispatcher": "^2.0.0",
     "appcd-fs": "^1.1.7",
