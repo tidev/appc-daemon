@@ -1,3 +1,11 @@
+# v3.0.0 (Jun 25, 2019)
+
+ * BREAKING CHANGE: `appcd-default-plugins` no longer includes a "main" JavaScript file so it
+   cannot be `require()`'d.
+ * BREAKING CHANGE: Plugins are installed into `"~/.appcelerator/appcd/plugins"` instead of the
+   `"appcd-default-plugins/plugins"` directory to avoid permission issues when npm installing
+   `appcd` globally using `sudo` due to npm dropping root before running the post install script.
+
 # v2.0.0 (Jun 6, 2019)
 
  * feat: Added support for multiple plugin versions.

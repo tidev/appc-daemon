@@ -1,17 +1,17 @@
 {
   "name": "appcd-default-plugins",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "A psuedo package that bundles all default appcd plugins.",
-  "main": "./index",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
     "Chris Barber <cbarber@axway.com>"
   ],
   "license": "Apache-2.0",
   "dependencies": {
+    "appcd-path": "^1.1.6",
     "fs-extra": "^8.0.1",
     "lerna": "^3.14.1",
-    "pacote": "^9.5.0",
+    "pacote": "^9.5.1",
     "semver": "^6.1.1",
     "which": "^1.3.1"
   },

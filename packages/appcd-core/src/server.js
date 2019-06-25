@@ -1,6 +1,5 @@
 import appcdCoreLogger, { LogcatFormatter } from './logger';
 import ConfigService from 'appcd-config-service';
-import defaultPluginPaths from 'appcd-default-plugins';
 import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs-extra';
 import FSWatcher from 'appcd-fswatcher';
@@ -192,11 +191,8 @@ export default class Server {
 		// init the plugin manager
 		this.systems.pluginManager = new PluginManager({
 			paths: [
-				// default plugins
-				...defaultPluginPaths,
-
 				// globally installed plugins
-				path.join(homeDir, 'plugins'),
+				path.join(homeDir, 'plugins', 'packages'),
 
 				// global npm directory
 				globalModules
