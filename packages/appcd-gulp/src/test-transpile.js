@@ -52,7 +52,6 @@ conf.cache = true;
 // console.log(conf);
 
 require('@babel/register')(conf);
-require('@babel/polyfill');
 
 /**
  * The unit tests reference the source files in the `dist` directory and for coverage tests, they

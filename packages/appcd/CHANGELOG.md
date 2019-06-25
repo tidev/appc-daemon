@@ -1,3 +1,7 @@
+# v2.7.1
+
+ * chore: Updated dependencies
+
 # v2.7.0 (Jun 24, 2019)
 
  * chore: Updated to `appcd-core@2.8.0` which updated to `appcd-default-plugins@3.0.0`.

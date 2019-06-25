@@ -1,3 +1,8 @@
+# v2.2.0
+
+ * chore: Removed deprecated @babel/polyfill
+ * chore: Updated dependencies
+
 # v2.1.1 (Jun 4, 2019)
 
  * fix: Added huge timeout when debugging tests.
