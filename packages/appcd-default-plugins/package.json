@@ -8,7 +8,6 @@
   ],
   "license": "Apache-2.0",
   "dependencies": {
-    "appcd-path": "^1.1.6",
     "fs-extra": "^8.0.1",
     "lerna": "^3.14.1",
     "pacote": "^9.5.1",

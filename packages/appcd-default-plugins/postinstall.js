@@ -4,14 +4,13 @@ const path = require('path');
 const pacote = require('pacote');
 const semver = require('semver');
 const which = require('which');
-const { expandPath } = require('appcd-path');
 const { spawnSync } = require('child_process');
 const { plugins } = require('./package.json');
 
 (async () => {
 	try {
 		const npmClient = which.sync('yarn', { nothrow: true }) ? 'yarn' : 'npm';
-		const pluginsDir = expandPath('~/.appcelerator/appcd/plugins');
+		const pluginsDir = path.join(os.homedir(), '.appcelerator/appcd/plugins');
 		const packagesDir = path.join(pluginsDir, 'packages');
 		const workspaces = [];
 
