@@ -10,7 +10,7 @@ const { plugins } = require('./package.json');
 (async () => {
 	try {
 		const npmClient = which.sync('yarn', { nothrow: true }) ? 'yarn' : 'npm';
-		const pluginsDir = path.join(__dirname, 'plugins');
+		const pluginsDir = path.join(os.homedir(), '.appcelerator/appcd/plugins');
 		const packagesDir = path.join(pluginsDir, 'packages');
 		const workspaces = [];
 

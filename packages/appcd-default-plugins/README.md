@@ -1,13 +1,14 @@
 # appcd-default-plugins
 
-A psuedo package that installs the latest major versions of all default _appcd_ plugins.
+A psuedo package that installs the latest major versions of all default _appcd_ plugins into the
+user's appcd home directrory (e.g. `"~/.appcelerator/appcd/plugins"`).
 
 Visit https://github.com/appcelerator/appc-daemon for more information.
 
 ## Overview
 
 After installing `appcd-default-plugins`, a post-install script will run and download every major
-plugin release and puts it in the `"/path/to/appcd-default-plugins/plugins"` directory.
+plugin release and puts it in the `"~/.appcelerator/appcd/plugins"` directory.
 
 If any of the plugins match locally linked packages using _yarn_, then it will use those instead of
 installing from _npm_.
@@ -20,22 +21,6 @@ monorepo using _yarn_'s workspaces, otherwise it fallsback to _npm_ with hoistin
 
 If at all possible, you should install _yarn_ before installing `appcd-default-plugins`. yarn is
 about 3 times faster and uses about 75% less disk space.
-
-## Installation
-
-	npm i appcd-default-plugins
-
-## Usage
-
-```js
-import defaultPluginPaths from 'appcd-default-plugins';
-
-console.log(defaultPluginPaths);
-```
-
-```json
-[ "/path/to/appcd-default-plugins/plugins/packages" ]
-```
 
 ## Legal
 

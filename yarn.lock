@@ -1525,32 +1525,6 @@ anymatch@^2.0.0:
     micromatch "^3.1.4"
     normalize-path "^2.1.1"
 
-appcd-config-service@^1.2.3:
-  version "1.2.3"
-  resolved "https://registry.yarnpkg.com/appcd-config-service/-/appcd-config-service-1.2.3.tgz#1f3510b761e51b47c86d2209048f94b700e2072a"
-  integrity sha512-NRphZiV6mJxonsMisGxuDX6srBrp6TX6ArQB7Xwcxfx6stUVUNj5AAkfdXI0osevPgExFSz6HbmEoXxKKSYNAA==
-  dependencies:
-    appcd-config "^1.2.1"
-    appcd-dispatcher "^1.4.0"
-    appcd-fs "^1.1.6"
-    appcd-logger "^2.0.1"
-    appcd-path "^1.1.5"
-    appcd-response "^1.1.6"
-    source-map-support "^0.5.11"
-
-appcd-dispatcher@^1.4.0:
-  version "1.4.2"
-  resolved "https://registry.yarnpkg.com/appcd-dispatcher/-/appcd-dispatcher-1.4.2.tgz#13f9105a6db09e3e83ced5a7081a09963c5b4a0e"
-  integrity sha512-9CQJfBdxxZgs37Tzm0DeIY2fh17ThMYHw4euxGBMX+FU3KKFKVitQBplsM04czBM2+Q9QipD/8fR59ynx1ZyOg==
-  dependencies:
-    appcd-logger "^2.0.1"
-    appcd-response "^1.1.6"
-    gawk "^4.6.2"
-    path-to-regexp "^3.0.0"
-    pluralize "^7.0.0"
-    source-map-support "^0.5.11"
-    uuid "^3.3.2"
-
 appcd-dump-viewer@^1.1.4:
   version "1.1.4"
   resolved "https://registry.yarnpkg.com/appcd-dump-viewer/-/appcd-dump-viewer-1.1.4.tgz#b8a3867250873c4f703ff66b1ceab51c433057d4"
@@ -1564,17 +1538,6 @@ appcd-dump-viewer@^1.1.4:
     sprintf "^0.1.5"
     vue "^2.5.13"
     vuetify "^1.0.0"
-
-appcd-response@^1.1.6:
-  version "1.1.6"
-  resolved "https://registry.yarnpkg.com/appcd-response/-/appcd-response-1.1.6.tgz#0f41069364e110429de92941f6918e73b9dbfcd2"
-  integrity sha512-aKu0qnnWzOMRlZ9PIOQOpo6Fgl8u8ODd5XknMRQ8o00BIZ7RYTCaH9o/JTLfhDTtfFFoDw8XcqRxA9PeLpHfpg==
-  dependencies:
-    appcd-fs "^1.1.6"
-    appcd-path "^1.1.5"
-    appcd-winreg "^1.1.5"
-    source-map-support "^0.5.11"
-    sprintf-js "^1.1.2"
 
 append-buffer@^1.0.2:
   version "1.0.2"
@@ -4580,7 +4543,7 @@ gauge@~2.7.3:
     strip-ansi "^3.0.1"
     wide-align "^1.1.0"
 
-gawk@^4.6.2, gawk@^4.6.3:
+gawk@^4.6.3:
   version "4.6.3"
   resolved "https://registry.yarnpkg.com/gawk/-/gawk-4.6.3.tgz#6c4c0cc09df3130c951ba9f33fa43da1f7c09518"
   integrity sha512-Er80uXBfbpkq4urzr9kD0/5QOyo8YBQrzs+hTmK7Xk+aBWyh4w4t1EGhEzTI8JzWRguFGdQnwNRKcZmj/E5qvA==
@@ -7925,7 +7888,7 @@ package-hash@^3.0.0:
     lodash.flattendeep "^4.4.0"
     release-zalgo "^1.0.0"
 
-pacote@^9.2.3, pacote@^9.5.0:
+pacote@^9.2.3, pacote@^9.5.1:
   version "9.5.1"
   resolved "https://registry.yarnpkg.com/pacote/-/pacote-9.5.1.tgz#adb0d23daeef6d0b813ab5891d0c6459ccec998d"
   integrity sha512-Zqvczvf/zZ7QNosdE9uTC7SRuvSs9tFqRkF6cJl+2HH7COBnx4BRAGpeXJlrbN+mM0CMHpbi620xdEHhCflghA==
@@ -8303,11 +8266,6 @@ plur@^3.0.0:
   integrity sha512-t1Ax8KUvV3FFII8ltczPn2tJdjqbd1sIzu6t4JL7nQ3EyeL/lTrj5PWKb06ic5/6XYDr65rQ4uzQEGN70/6X5w==
   dependencies:
     irregular-plurals "^2.0.0"
-
-pluralize@^7.0.0:
-  version "7.0.0"
-  resolved "https://registry.yarnpkg.com/pluralize/-/pluralize-7.0.0.tgz#298b89df8b93b0221dbf421ad2b1b1ea23fc6777"
-  integrity sha512-ARhBOdzS3e41FbkW/XWrTEtukqqLoK5+Z/4UeDaLuSW+39JPeFgs4gCGqsrJHVZX0fUrx//4OF0K1CUGwlIFow==
 
 pluralize@^8.0.0:
   version "8.0.0"
@@ -9272,7 +9230,7 @@ source-map-resolve@^0.5.0, source-map-resolve@^0.5.2:
     source-map-url "^0.4.0"
     urix "^0.1.0"
 
-source-map-support@^0.5.11, source-map-support@^0.5.12, source-map-support@^0.5.9, source-map-support@~0.5.10:
+source-map-support@^0.5.12, source-map-support@^0.5.9, source-map-support@~0.5.10:
   version "0.5.12"
   resolved "https://registry.yarnpkg.com/source-map-support/-/source-map-support-0.5.12.tgz#b4f3b10d51857a5af0138d3ce8003b201613d599"
   integrity sha512-4h2Pbvyy15EE02G+JOZpUCmqWJuqrs+sEkzewTm++BPi7Hvn/HwcqLAcNxYAyI0x13CpPPn+kMjl+hplXMHITQ==

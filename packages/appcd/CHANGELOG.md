@@ -1,7 +1,11 @@
+# v2.7.0 (Jun 24, 2019)
+
+ * chore: Updated to `appcd-core@2.8.0` which updated to `appcd-default-plugins@3.0.0`.
+
 # v2.6.0 (Jun 24, 2019)
 
  * fix(config): Fixed bug where bad `config` command would not disconnect from daemon.
- * chore: Updated to `appcd-core@2.7.0`,
+ * chore: Updated to `appcd-core@2.7.0`.
 
 # v2.5.0 (Jun 13, 2019)
 
