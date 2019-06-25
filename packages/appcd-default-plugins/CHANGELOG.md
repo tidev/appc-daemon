@@ -1,3 +1,7 @@
+# v3.0.1
+
+ * chore: Updated dependencies
+
 # v3.0.0 (Jun 25, 2019)
 
  * BREAKING CHANGE: `appcd-default-plugins` no longer includes a "main" JavaScript file so it

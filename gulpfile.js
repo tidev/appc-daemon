@@ -783,19 +783,19 @@ async function checkPackages({ skipSecurity } = {}) {
 		deprecated:               0,
 		cyclic:                   checkCyclic(),
 		outOfDate:                [],
-		packagesToUpdate:         [],
+		upgradeAvailable:         [],
 		stats:                    computeSloc(),
 		testStats:                computeSloc('test')
 	};
 
 	log('Processing packages...');
 
-	for (const [ packageName, dependency ] of Object.entries(dependencies)) {
-		if (dependency.deprecated) {
+	for (const dep of Object.values(dependencies)) {
+		if (dep.deprecated) {
 			results.deprecated++;
 		}
 
-		for (const issues of Object.values(dependency.versions)) {
+		for (const issues of Object.values(dep.versions)) {
 			results.securityIssues += issues.length;
 		}
 	}
@@ -822,32 +822,37 @@ async function checkPackages({ skipSecurity } = {}) {
 					// is the dependency up-to-date?
 					if (dontUpdate.includes(name)) {
 						dep.status = (dep.status ? ', ' : '') + 'skipping latest';
-					} else if (installed && latest && semver.lt(installed, latest)) {
-						dep.status = (dep.status ? ', ' : '') + 'out-of-date';
+					} else {
+						const req = required ? required.replace(cleanVersionRegExp, '') : null;
+						if (req && latest && semver.lt(req, latest)) {
+							dep.status = (dep.status ? ', ' : '') + 'out-of-date';
 
-						const m = required.match(/^(\^|~|>|>=)/);
-						results.outOfDate.push({
-							path: key,
-							name,
-							current: installed,
-							latest: (m ? m[1] : '') + latest,
-							latestTimestamp,
-							next: next ? `^${next}` : null,
-							nextTimestamp
-						});
-					} else if (!installed && required && latest && semver.lt(required.replace(cleanVersionRegExp, ''), latest)) {
-						dep.status = (dep.status ? ', ' : '') + 'update available';
+							const m = required.match(/^(\^|~|>|>=)/);
+							results.outOfDate.push({
+								path: key,
+								name,
+								current: required,
+								latest: (m ? m[1] : '') + latest,
+								latestTimestamp,
+								next: next ? `^${next}` : null,
+								nextTimestamp
+							});
+						}
 
-						const m = required.match(/^(\^|~|>|>=)/);
-						results.packagesToUpdate.push({
-							path: key,
-							name,
-							current: required,
-							latest: (m ? m[1] : '') + latest,
-							latestTimestamp,
-							next: next ? `^${next}` : null,
-							nextTimestamp
-						});
+						if (installed && latest && semver.lt(installed, latest)) {
+							dep.status = (dep.status ? ', ' : '') + 'update available';
+
+							const m = required.match(/^(\^|~|>|>=)/);
+							results.upgradeAvailable.push({
+								path: key,
+								name,
+								current: required,
+								latest: (m ? m[1] : '') + latest,
+								latestTimestamp,
+								next: next ? `^${next}` : null,
+								nextTimestamp
+							});
+						}
 					}
 				}
 
@@ -1033,7 +1038,11 @@ function renderPackages(results) {
 	]);
 	table.push([
 		'Out-of-date',
-		results.packagesToUpdate.length > 0 ? red(results.packagesToUpdate.length) : green(results.packagesToUpdate.length)
+		results.outOfDate.length > 0 ? red(results.outOfDate.length) : green(results.outOfDate.length)
+	]);
+	table.push([
+		'Upgradable Packages',
+		results.upgradeAvailable.length > 0 ? red(results.upgradeAvailable.length) : green(results.upgradeAvailable.length)
 	]);
 	table.push([
 		'Deprecated',
@@ -1049,52 +1058,36 @@ function renderPackages(results) {
 	]);
 	console.log(table.toString() + '\n');
 
-	if (results.outOfDate.length) {
-		console.log(magenta('Out-of-date Packages') + '\n');
-		table = new Table({
-			chars: cliTableChars,
-			head: [ 'Component', 'Package', 'From', 'To' ],
-			style: {
-				head: [ 'bold', 'gray' ],
-				border: []
-			}
-		});
-		for (const pkg of results.outOfDate) {
-			const rel = path.relative(__dirname, pkg.path) || path.basename(pkg.path);
-			table.push([
-				rel,
-				magenta(pkg.name),
-				pkg.current,
-				'→',
-				hlVer(pkg.latest, pkg.current) + (pkg.latestTimestamp ? gray(` (published ${new Date(pkg.latestTimestamp).toDateString()})`) : '')
-			]);
-		}
-		console.log(table.toString() + '\n');
-	}
+	const updates = [
+		[ results.outOfDate, 'Out-of-Date Dependencies', 'gulp upgrade -u' ],
+		[ results.upgradeAvailable, 'Upgradable Installed Packages', 'gulp upgrade' ]
+	];
 
-	if (results.packagesToUpdate.length) {
-		console.log(magenta('Recommendations') + '\n');
+	for (const [ list, title, cmd ] of updates) {
+		if (list.length) {
+			console.log(magenta(title) + '\n');
 
-		console.log(`Run ${cyan('gulp upgrade')} to update:`);
-		table = new Table({
-			chars: cliTableChars,
-			head: [ 'Component', 'Package', 'From', 'To' ],
-			style: {
-				head: [ 'bold', 'gray' ],
-				border: []
+			table = new Table({
+				chars: cliTableChars,
+				head: [ 'Component', 'Package', 'From', 'To' ],
+				style: {
+					head: [ 'bold', 'gray' ],
+					border: []
+				}
+			});
+			for (const pkg of list) {
+				const rel = path.relative(__dirname, pkg.path) || path.basename(pkg.path);
+				table.push([
+					rel,
+					magenta(pkg.name),
+					pkg.current,
+					'→',
+					hlVer(pkg.latest, pkg.current) + (pkg.latestTimestamp ? gray(` (published ${new Date(pkg.latestTimestamp).toDateString()})`) : '')
+				]);
 			}
-		});
-		for (const pkg of results.packagesToUpdate) {
-			const rel = path.relative(__dirname, pkg.path) || path.basename(pkg.path);
-			table.push([
-				rel,
-				magenta(pkg.name),
-				pkg.current,
-				'→',
-				hlVer(pkg.latest, pkg.current) + (pkg.latestTimestamp ? gray(` (published ${new Date(pkg.latestTimestamp).toDateString()})`) : '')
-			]);
+			console.log(table.toString() + '\n');
+			console.log(`Run ${cyan(cmd)} to update\n`);
 		}
-		console.log(table.toString() + '\n');
 	}
 }
 
