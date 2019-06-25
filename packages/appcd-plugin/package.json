@@ -1,6 +1,6 @@
 {
   "name": "appcd-plugin",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Library for loading and executing plugins.",
   "main": "./dist/index",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
@@ -19,7 +19,7 @@
     "appcd-agent": "^1.1.6",
     "appcd-client": "^2.0.0",
     "appcd-config": "^1.3.0",
-    "appcd-config-service": "^1.2.3",
+    "appcd-config-service": "^2.0.0",
     "appcd-detect": "^2.1.0",
     "appcd-dispatcher": "^2.0.0",
     "appcd-fs": "^1.1.7",
