@@ -65,7 +65,7 @@ exports.check = async function check() {
 	}
 };
 
-exports.clean = async function clean() {
+function getFilesToNuke() {
 	const nuke = [];
 
 	(function walk(dir) {
@@ -115,6 +115,11 @@ exports.clean = async function clean() {
 
 	nuke.push(path.join(__dirname, 'node_modules'));
 
+	return nuke;
+}
+
+exports.clean = async function clean() {
+	const nuke = getFilesToNuke();
 	const s = nuke.length !== 1 ? 's' : '';
 	const ies = nuke.length !== 1 ? 'ies' : 'y';
 
@@ -135,6 +140,17 @@ exports.clean = async function clean() {
 	console.log(`\nNuked ${nuke.length} file${s}/director${ies}\n`);
 };
 
+exports['ci-clean'] = async function ciClean() {
+	if (process.env.JENKINS) {
+		const nuke = getFilesToNuke();
+		for (const file of nuke) {
+			console.log('Deleting:', file);
+			fs.removeSync(file);
+		}
+		console.log(`\nNuked ${nuke.length} file${s}/director${ies}\n`);
+	}
+};
+
 exports.stats = async function stats() {
 	displayStats({
 		stats: computeSloc(),
@@ -143,26 +159,31 @@ exports.stats = async function stats() {
 };
 
 exports.upgrade = async function upgrade() {
-	let results = await checkPackages({ skipSecurity: true });
-	const { outOfDate } = results;
+	let results;
+	let recheck = true;
 
-	if (outOfDate.length) {
-		await upgradeDeps(outOfDate);
-		await run('yarn', [], { cwd: process.cwd(), shell: true });
-	} else {
-		log('Direct dependencies up-to-date');
+	if (process.argv.includes('-u')) {
+		results = await checkPackages({ skipSecurity: true });
+		const { outOfDate } = results;
+		if (outOfDate.length) {
+			await upgradeDeps(outOfDate);
+			await run('yarn', [], { cwd: process.cwd(), shell: true });
+		} else {
+			log('Direct dependencies up-to-date');
+			recheck = false;
+		}
 	}
 
 	await upgradeAllPackages();
+
 	runLerna([ 'bootstrap' ]);
 
-	if (outOfDate.length) {
+	if (recheck) {
 		results = await checkPackages({ skipSecurity: true });
 	}
 
 	renderPackages(results);
 };
-
 
 exports.ls = exports.list = async function listPackages() {
 	for (const [ name, pkg ] of Object.entries(getDepMap())) {
