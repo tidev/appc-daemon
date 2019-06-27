@@ -165,8 +165,10 @@ export default async function installDefaultPlugins(pluginsDir) {
 	}, null, 2));
 
 	// run lerna and add yarn to the system path
-	logger.log(`Executing: ${highlight(`${process.execPath} lerna bootstrap`)}`);
-	const child = spawn(process.execPath, [ lerna, 'bootstrap', '--no-progress' ], {
+	const args = [ lerna, 'bootstrap', '--no-progress' ];
+	const cmd = process.platform === 'win32' ? args.shift() : process.execPath;
+	logger.log(`Executing: ${highlight(`${cmd} ${args.join(' ')}`)}`);
+	const child = spawn(cmd, args, {
 		cwd: pluginsDir,
 		env: {
 			...process.env,
