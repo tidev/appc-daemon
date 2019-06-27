@@ -234,7 +234,7 @@ export default async function installDefaultPlugins(pluginsDir) {
  */
 function find(name) {
 	for (let bin, cur = __dirname, last = null; cur !== last; last = cur, cur = path.dirname(cur)) {
-		if (fs.existsSync(bin = path.join(cur, 'node_modules', '.bin', name))) {
+		if (fs.existsSync(bin = path.join(cur, 'node_modules', '.bin', name + (process.platform === 'win32' ? '.cmd' : '')))) {
 			return bin;
 		}
 	}
