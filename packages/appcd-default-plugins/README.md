@@ -5,22 +5,21 @@ user's appcd home directrory (e.g. `"~/.appcelerator/appcd/plugins"`).
 
 Visit https://github.com/appcelerator/appc-daemon for more information.
 
-## Overview
+## Usage
 
-After installing `appcd-default-plugins`, a post-install script will run and download every major
-plugin release and puts it in the `"~/.appcelerator/appcd/plugins"` directory.
+```js
+import installDefaultPlugins from 'appcd-default-plugins';
 
-If any of the plugins match locally linked packages using _yarn_, then it will use those instead of
-installing from _npm_.
+await installDefaultPlugins('/path/to/plugins/dir');
+```
 
-A list of packages to be installed is used to create a monorepo in the `plugins` directory, then
-it runs `lerna` to initialize it.
+`installDefaultPlugins()` will download all default plugins if not already installed. If any of the
+plugins match locally linked packages using _yarn_, then it will use those instead of installing
+from _npm_.
 
-The post-install script will detect if _yarn_ is installed. If found, it will initialize the
-monorepo using _yarn_'s workspaces, otherwise it fallsback to _npm_ with hoisting.
-
-If at all possible, you should install _yarn_ before installing `appcd-default-plugins`. yarn is
-about 3 times faster and uses about 75% less disk space.
+The default plugins are installed into a `packages` directory inside the specified plugins
+directory, then it initializes the plugins directory as a monorepo and runs `lerna bootstrap` using
+`yarn`.
 
 ## Legal
 

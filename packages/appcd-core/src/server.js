@@ -5,6 +5,7 @@ import fs from 'fs-extra';
 import FSWatcher from 'appcd-fswatcher';
 import FSWatchManager from 'appcd-fswatch-manager';
 import globalModules from 'global-modules';
+import installDefaultPlugins from 'appcd-default-plugins';
 import os from 'os';
 import path from 'path';
 import PluginManager from 'appcd-plugin';
@@ -187,6 +188,9 @@ export default class Server {
 		// init the subprocess manager
 		this.systems.subprocessManager = new SubprocessManager();
 		Dispatcher.register('/appcd/subprocess', this.systems.subprocessManager);
+
+		// install default plugins
+		await installDefaultPlugins(path.join(homeDir, 'plugins'));
 
 		// init the plugin manager
 		this.systems.pluginManager = new PluginManager({
