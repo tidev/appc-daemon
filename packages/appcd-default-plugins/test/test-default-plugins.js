@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
-import installDefaultPlugins from '../dist/index';
 import path from 'path';
 import tmp from 'tmp';
+import { installDefaultPlugins } from '../dist/index';
 
 const tmpDir = tmp.dirSync({
 	mode: '755',

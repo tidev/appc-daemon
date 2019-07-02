@@ -1,6 +1,7 @@
 # v4.0.0
 
- * BREAKING CHANGE: Default plugins are now installed at runtime instead of postinstall.
+ * BREAKING CHANGE: `appcd-default-plugins` supports both postinstall and runtime installation of
+   default plugins.
  * chore: Updated dependencies
 
 # v3.0.0 (Jun 25, 2019)

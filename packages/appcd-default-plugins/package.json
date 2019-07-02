@@ -12,6 +12,7 @@
     "build": "gulp build",
     "coverage": "gulp coverage",
     "docs": "gulp docs",
+    "postinstall": "node postinstall.js",
     "prepare": "gulp build",
     "test": "gulp test"
   },
