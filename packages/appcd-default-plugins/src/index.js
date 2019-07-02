@@ -31,7 +31,7 @@ export async function installDefaultPlugins(pluginsDir) {
 		// make sure the plugins/packages directory exists
 		await fs.mkdirs(packagesDir);
 
-		const testFile = path.join(packagesDir, 'test_${Math.random()*1e6.txt');
+		const testFile = path.join(packagesDir, `test_${Date.now()}.txt`);
 		fs.writeFileSync(testFile, 'delete me');
 		await fs.remove(testFile);
 	} catch (e) {
@@ -59,7 +59,9 @@ export async function installDefaultPlugins(pluginsDir) {
 		return;
 	}
 
-	const linksDir = path.join(os.homedir(), '.config', 'yarn', 'link');
+	const linksDir = process.platform === 'win32'
+		? path.join(os.homedir(), 'AppData', 'Local', 'Yarn', 'Data', 'link')
+		: path.join(os.homedir(), '.config', 'yarn', 'link');
 	const { plugins } = await fs.readJson(path.resolve(__dirname, '..', 'package.json'));
 	const installed = {};
 	const install = [];
