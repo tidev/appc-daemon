@@ -60,7 +60,7 @@ export async function installDefaultPlugins(pluginsDir) {
 	}
 
 	const linksDir = path.join(os.homedir(), '.config', 'yarn', 'link');
-	const { plugins } = fs.readJsonSync(path.resolve(__dirname, '..', 'package.json'));
+	const { plugins } = await fs.readJson(path.resolve(__dirname, '..', 'package.json'));
 	const installed = {};
 	const install = [];
 	const newWorkspaces = new Set();
