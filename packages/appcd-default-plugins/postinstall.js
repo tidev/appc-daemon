@@ -1,5 +1,5 @@
 const os = require('os');
-const { createInstanceWithDefaults, StdioStream } = require('appcd-logger');
+const { createInstanceWithDefaults, StdioStream } = require('snooplogg');
 const { installDefaultPlugins } = require('./dist/index');
 
 const logger = createInstanceWithDefaults()

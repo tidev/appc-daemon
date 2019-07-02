@@ -1,4 +1,4 @@
-import appcdLogger from 'appcd-logger';
+import snooplogg from 'snooplogg';
 import fs from 'fs-extra';
 import globule from 'globule';
 import os from 'os';
@@ -8,8 +8,8 @@ import semver from 'semver';
 
 import { spawn } from 'child_process';
 
-const logger = appcdLogger('appcd:default-plugins');
-const { highlight } = appcdLogger.styles;
+const logger = snooplogg('appcd:default-plugins');
+const { highlight } = snooplogg.styles;
 
 /**
  * Ensures the default appcd plugins are installed.

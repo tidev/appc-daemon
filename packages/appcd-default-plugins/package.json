@@ -17,12 +17,12 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-logger": "^2.0.2",
     "fs-extra": "^8.0.1",
     "globule": "^1.2.1",
     "lerna": "^3.15.0",
     "pacote": "^9.5.1",
     "semver": "^6.1.2",
+    "snooplogg": "^2.0.1",
     "yarn": "^1.16.0"
   },
   "devDependencies": {
