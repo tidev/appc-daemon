@@ -179,8 +179,8 @@ export async function installDefaultPlugins(pluginsDir) {
 			return;
 		}
 
-		if (!manifest.appcd.os || manifest.appcd.os.includes(process.platform)) {
-			logger.warn(`Package manifest missing "appcd" property: ${highlight(pkg)}`);
+		if (manifest.appcd.os && !manifest.appcd.os.includes(process.platform)) {
+			logger.warn(`Skipping incompatible plugin: ${highlight(pkg)}`);
 			return;
 		}
 
