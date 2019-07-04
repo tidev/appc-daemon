@@ -124,7 +124,7 @@ export async function installDefaultPlugins(pluginsDir) {
 			logger.warn(`Failed to parse link package.json: ${pkgJsonFile}`);
 		}
 
-		if (appcd) {
+		if (appcd && (!appcd.os || appcd.os.includes(process.platform))) {
 			const linkPath = path.dirname(pkgJsonFile);
 
 			if (!installed[name]) {
@@ -166,9 +166,19 @@ export async function installDefaultPlugins(pluginsDir) {
 
 		// query npm
 		try {
-			manifest = await pacote.manifest(pkg);
+			manifest = await pacote.manifest(pkg, { 'full-metadata': true });
 		} catch (e) {
 			logger.warn(`Unable to find default plugin on npm: ${highlight(pkg)}`);
+			return;
+		}
+
+		if (!manifest.appcd) {
+			logger.warn(`Package manifest missing "appcd" property: ${highlight(pkg)}`);
+			return;
+		}
+
+		if (!manifest.appcd.os || manifest.appcd.os.includes(process.platform)) {
+			logger.warn(`Package manifest missing "appcd" property: ${highlight(pkg)}`);
 			return;
 		}
 
