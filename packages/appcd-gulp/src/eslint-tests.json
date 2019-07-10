@@ -15,6 +15,7 @@
 		"sinon": false
 	},
 	"rules": {
-		"promise/always-return": "off"
+		"promise/always-return": "off",
+		"require-atomic-updates": "off"
 	}
 }

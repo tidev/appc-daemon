@@ -26,7 +26,7 @@
     "appcd-gulp": "^2.1.1",
     "appcd-path": "^1.1.6",
     "appcd-util": "^1.1.7",
-    "fs-extra": "^8.0.1",
+    "fs-extra": "^8.1.0",
     "tmp": "^0.1.0"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-fswatch-manager",

@@ -134,7 +134,7 @@ export default class Config {
 
 		for (let i = 0, len = parts.length; i < len; i++) {
 			const prop = parts[i];
-			if (!obj.hasOwnProperty(prop)) {
+			if (!Object.prototype.hasOwnProperty.call(obj, prop)) {
 				break;
 			}
 
@@ -381,7 +381,7 @@ export default class Config {
 			this._merge(values, obj, opts);
 		} else {
 			this.namespaceOrder.splice(1, 0, ns);
-			this.namespaces[ns] = typeof ns === 'string' && !values.hasOwnProperty(ns) ? { [ns]: values } : values;
+			this.namespaces[ns] = typeof ns === 'string' && !Object.prototype.hasOwnProperty.call(values, ns) ? { [ns]: values } : values;
 		}
 
 		return this;
@@ -556,7 +556,11 @@ export default class Config {
 				return this;
 			}
 
-			value = Array.isArray(obj) ? [ ...obj, ...value ] : [ obj, ...value ];
+			if (Array.isArray(obj)) {
+				value = [ ...obj, ...value ];
+			} else {
+				value = obj ? [ obj, ...value ] : value;
+			}
 		}
 
 		return this._set(key, value);

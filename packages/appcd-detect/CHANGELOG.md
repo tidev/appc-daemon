@@ -1,3 +1,8 @@
+# v2.2.0
+
+ * feat: Added new `watchRegistryKeys` option for more advanced Windows Registry change detection.
+ * chore: Updated dependencies.
+
 # v2.1.0 (Jun 13, 2019)
 
  * chore: Updated to `appcd-dispatcher@2.0.0`, `appcd-fswatch-manager@2.0.0`, and

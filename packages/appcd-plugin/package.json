@@ -37,13 +37,13 @@
     "appcd-winreg": "^1.1.6",
     "builtin-modules": "^3.1.0",
     "findup-sync": "^3.0.0",
-    "gawk": "^4.6.3",
+    "gawk": "^4.6.4",
     "globule": "^1.2.1",
-    "hook-emitter": "^3.1.2",
+    "hook-emitter": "^4.0.0",
     "ignore": "^5.1.2",
     "pluralize": "^8.0.0",
     "pretty-ms": "^5.0.0",
-    "semver": "^6.1.2",
+    "semver": "^6.2.0",
     "slugg": "^1.2.1",
     "source-map-support": "^0.5.12",
     "uuid": "^3.3.2"
@@ -51,7 +51,7 @@
   "devDependencies": {
     "appcd-fswatch-manager": "^2.0.0",
     "appcd-gulp": "^2.1.1",
-    "fs-extra": "^8.0.1",
+    "fs-extra": "^8.1.0",
     "tmp": "^0.1.0"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-plugin",

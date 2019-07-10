@@ -120,7 +120,7 @@ export default function request(params, callback) {
 						note(conf.method),
 						conf.url,
 						statusCode < 400 ? ok(statusCode) : alert(statusCode),
-						headers.hasOwnProperty('content-length') ? note(`(${humanize.filesize(headers['content-length'])})`) : ''
+						Object.prototype.hasOwnProperty.call(headers, 'content-length') ? note(`(${humanize.filesize(headers['content-length'])})`) : ''
 					);
 				})
 				.on('error', () => {});

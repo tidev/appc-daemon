@@ -165,7 +165,7 @@ export default class Agent extends EventEmitter {
 			// add the values for each stat to its bucket, or set zero if we don't have a value
 			// for this poll
 			for (const name of Object.keys(this.buckets)) {
-				if (stats.hasOwnProperty(name)) {
+				if (Object.prototype.hasOwnProperty.call(stats, name)) {
 					const value = stats[name];
 					const bucket = this.buckets[name];
 					let last = bucket.last || 0;

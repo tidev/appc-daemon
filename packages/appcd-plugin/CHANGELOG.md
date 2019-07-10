@@ -1,6 +1,7 @@
 # v2.2.1
 
- * chore: Updated dependencies
+ * chore: Fixed eslint `hasOwnProperty` warnings.
+ * chore: Updated dependencies.
 
 # v2.2.0 (Jun 25, 2019)
 

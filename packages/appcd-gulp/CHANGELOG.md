@@ -1,5 +1,8 @@
 # v2.2.0
 
+ * feat: Added Node 12 Babel profile.
+   [(DAEMON-275)](https://jira.appcelerator.org/browse/DAEMON-275)
+ * chore: Disabled `require-atomic-updates` rule.
  * chore: Removed deprecated @babel/polyfill
  * chore: Updated dependencies
 

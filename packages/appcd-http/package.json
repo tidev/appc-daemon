@@ -24,7 +24,7 @@
     "koa-send": "^5.0.0",
     "path-to-regexp": "^3.0.0",
     "source-map-support": "^0.5.12",
-    "ws": "^7.0.1"
+    "ws": "^7.1.0"
   },
   "devDependencies": {
     "appcd-gulp": "^2.1.1",

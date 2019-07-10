@@ -1,3 +1,7 @@
+# v2.0.2
+
+ * chore: Updated dependencies.
+
 # v2.0.1 (Jun 13, 2019)
 
  * chore: Updated to `appcd-subprocess@2.0.1`.

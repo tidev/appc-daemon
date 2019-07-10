@@ -1,3 +1,8 @@
+# v2.0.1
+
+ * chore: Fixed eslint `hasOwnProperty` warnings.
+ * chore: Updated dependencies.
+
 # v2.0.0 (Jun 4, 2019)
 
  * BREAKING CHANGE: Bumped minimum required Node.js version to v8.12.0.

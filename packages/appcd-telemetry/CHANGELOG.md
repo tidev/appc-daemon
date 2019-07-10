@@ -1,3 +1,7 @@
+# v2.0.2
+
+ * chore: Updated dependencies.
+
 # v2.0.1 (Jun 13, 2019)
 
  * chore: Updated to `appcd-dispatcher@2.0.0`, `appcd-machine-id@2.0.1`, and `appcd-request@2.0.0`.

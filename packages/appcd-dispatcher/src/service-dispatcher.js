@@ -232,7 +232,7 @@ export default class ServiceDispatcher {
 			return;
 		}
 
-		if (!this.subscriptions.hasOwnProperty(subscriptionId)) {
+		if (!Object.prototype.hasOwnProperty.call(this.subscriptions, subscriptionId)) {
 			logger.log('%s No such subscription found', note(`[${subscriptionId}]`));
 
 			// double check that no topics have this subscription id

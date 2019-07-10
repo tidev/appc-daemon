@@ -2,5 +2,8 @@
 	"extends": [ "axway/env-node", "axway/+babel" ],
 	"globals": {
 		"appcd": false
+	},
+	"rules": {
+		"require-atomic-updates": "off"
 	}
 }
