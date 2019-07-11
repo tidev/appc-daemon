@@ -1,6 +1,7 @@
 # v2.0.1
 
  * chore: Updated dependencies.
+ * chore: Commented out debug log output of FS watcher tree state because it was too noisy.
 
 # v2.0.0 (Jun 13, 2019)
 

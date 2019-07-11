@@ -1,6 +1,6 @@
 # v2.2.0
 
- * feat: Added new `watchRegistryKeys` option for more advanced Windows Registry change detection.
+ * feat: Updated `registryKeys` option for more advanced Windows Registry handling.
  * chore: Updated dependencies.
 
 # v2.1.0 (Jun 13, 2019)

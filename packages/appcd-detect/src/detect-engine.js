@@ -3,6 +3,7 @@ import Detector from './detector';
 import gawk from 'gawk';
 import path from 'path';
 import pluralize from 'pluralize';
+import RegistryWatcher from './registry-watcher';
 
 import { arrayify, debounce, randomBytes, tailgate } from 'appcd-util';
 import { EventEmitter } from 'events';
@@ -10,8 +11,6 @@ import { real } from 'appcd-path';
 import { which } from 'appcd-subprocess';
 
 const { highlight } = appcdLogger.styles;
-
-const winreglib = process.platform === 'win32' ? require('winreglib') : null;
 
 /**
  * A engine for detecting various things. It walks the search paths and calls a `checkDir()`
@@ -44,6 +43,12 @@ export default class DetectEngine extends EventEmitter {
 	refreshPathsTimer = null;
 
 	/**
+	 * A list of active Windows Registry watch handles.
+	 * @type {Array.<WatchHandle>}
+	 */
+	registryWatchHandles = [];
+
+	/**
 	 * A gawked array containing the results from the scan.
 	 * @type {Array.<Object>}
 	 */
@@ -54,6 +59,12 @@ export default class DetectEngine extends EventEmitter {
 	 * @type {Set}
 	 */
 	searchPaths = null;
+
+	/**
+	 * A reference to the `winreglib` module. Only available on Windows machines.
+	 * @type {Object}
+	 */
+	winreglib = process.platform === 'win32' ? require('winreglib') : null;
 
 	/**
 	 * Initializes the detect engine instance and validates the options.
@@ -83,14 +94,17 @@ export default class DetectEngine extends EventEmitter {
 	 * found path. Requires `opts.recursive` to be `true`.
 	 * @param {Boolean} [opts.redetect=false] - When `true`, re-runs detection when a path changes.
 	 * Requires `watch` to be `true`.
-	 * @param {Number} [opts.refreshPathsInterval=30000] - The number of milliseconds to check for
-	 * updated search and default paths, namely from the Windows Registry. Only used when `detect()`
-	 * is called with `watch=true`.
-	 * @param {Function} [opts.registryCallback] - A user-defined function that performs its own
-	 * Windows Registry checks. The callback may return a promise. The result must be a string
-	 * containing a path, an array of paths, or a falsey value if there are no paths to return.
-	 * @param {Object|Array<Object>|Set} [opts.registryKeys] - One or more objects containing the
-	 * registry `hive`, `key`, and value `name` to query the Windows Registry.
+	 * @param {Number} [opts.refreshPathsInterval=30000] - The number of milliseconds to wait
+	 * between calls to `opts.registryCallback`. This option is ignored on non-Windows platforms.
+	 * @param {Function} [opts.registryCallback] - A function that will only be invoked when the
+	 * current platform is `win32` and `opts.watch` is set to `true`. The intent is this function
+	 * performs whatever Windows Registry queries, then returns a promise that resolves an object
+	 * containing two properties: `paths` containing an array of paths to add to the list of search
+	 * paths and `defaultPath` containing either undefined or a string with a path. This option is
+	 * ignored on non-Windows platforms.
+	 * @param {Array<Object>|Set|Object} [opts.registryKeys] - An array containg one or more
+	 * registry watch parameter objects. There are two types of params: `paths` and `rescan`. This
+	 * option is ignored on non-Windows platforms.
 	 * @param {Boolean} [opts.watch=false] - When `true`, watches for changes and emits the new
 	 * results when a change occurs.
 	 * @access public
@@ -128,18 +142,110 @@ export default class DetectEngine extends EventEmitter {
 		// we only set redetect if we're watching
 		opts.redetect = opts.watch ? opts.redetect : false;
 
-		opts.refreshPathsInterval = Math.max(~~opts.refreshPathsInterval || 30000, 0);
-
-		if (opts.registryCallback !== undefined && typeof opts.registryCallback !== 'function') {
-			throw new TypeError('Expected "registryCallback" option to be a function');
-		}
-
-		opts.registryKeys = arrayify(opts.registryKeys, true);
-		if (opts.registryKeys.some(r => !r || typeof r !== 'object' || Array.isArray(r) || !r.hive || !r.key || !r.name)) {
-			throw new TypeError('Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
-		}
-
 		super();
+
+		if (this.winreglib) {
+			opts.refreshPathsInterval = Math.max(~~opts.refreshPathsInterval || 30000, 0);
+
+			if (opts.registryCallback !== undefined && typeof opts.registryCallback !== 'function') {
+				throw new TypeError('Expected "registryCallback" option to be a function');
+			}
+
+			const registryKeys = arrayify(opts.registryKeys, true);
+			opts.registryKeys = [];
+
+			// validate and normalize registry keys
+			for (const params of registryKeys) {
+				if (typeof params !== 'object' || Array.isArray(params)) {
+					throw new TypeError('Expected "registryKeys" option to be an object or array of registry watch parameters');
+				}
+
+				const type = params.type || 'paths';
+				if (type !== 'paths' && type !== 'rescan') {
+					throw new Error(`Invalid "registryKeys" param type "${type}", expected "paths" or "rescan"`);
+				}
+
+				const obj = {
+					keys: [],
+					type
+				};
+
+				const addKey = obj => {
+					const p = {
+						key: obj.key,
+						value: obj.value || obj.name
+					};
+					if (!p.key || typeof p.key !== 'string') {
+						throw new TypeError('Expected "registryKeys" option\'s watch param to have a "key"');
+					}
+					if (!p.value || typeof p.value !== 'string') {
+						throw new TypeError('Expected "registryKeys" option\'s watch param to have a "value" name');
+					}
+					if (obj.hive !== undefined) {
+						if (!obj.hive || typeof obj.hive !== 'string') {
+							throw new TypeError('Expected "registryKeys" option\'s watch param "hive" to be a non-empty string');
+						}
+						p.key = `${obj.hive}\\${p.key}`;
+					}
+					if (obj.filter) {
+						if (type !== 'rescan') {
+							throw new Error('Expected "registryKeys" option\'s watch param "filter" to only be set when type is "rescan"')
+						}
+						if (typeof obj.filter !== 'object' || Array.isArray(obj.filter)) {
+							throw new TypeError('Expected "registryKeys" option\'s watch param "filter" to be an object');
+						}
+						if (obj.filter.values && (typeof obj.filter.values === 'string' || obj.filter.values instanceof RegExp)) {
+							p.filter = {
+								values
+							};
+						}
+						if (obj.filter.subkeys && (typeof obj.filter.subkeys === 'string' || obj.filter.subkeys instanceof RegExp)) {
+							if (!p.filter) {
+								p.filter = {};
+							}
+							p.filter.subkeys = subkeys;
+						}
+					}
+					if (obj.callback !== undefined) {
+						if (typeof obj.callback !== 'function') {
+							throw new TypeError('Expected "registryKeys" option\'s watch param "callback" to be a function');
+						}
+						p.callback = obj.callback;
+					}
+					obj.keys.push(p);
+				};
+
+				if (params.key !== undefined && params.keys !== undefined) {
+					throw new Error('Expected "registryKeys" option\'s watch param to have either "key" or "keys", not both');
+				} else if (params.key !== undefined) {
+					addKey(params);
+				} else if (params.keys !== undefined) {
+					if (!Array.isArray(params.keys)) {
+						throw new TypeError('Expected "registryKeys" option\'s watch param "keys" to be an array of objects');
+					}
+
+					for (const param of params.keys) {
+						if (param) {
+							if (typeof param !== 'object') {
+								throw new TypeError('Expected "registryKeys" option\'s watch param "keys" to be an array of objects');
+							}
+							addKey(param);
+						}
+					}
+
+					if (param.callback !== undefined) {
+						if (typeof param.callback !== 'function') {
+							throw new TypeError('Expected "registryKeys" option\'s watch param "callback" to be a function');
+						}
+						obj.callback = param.callback;
+					}
+				}
+
+				if (obj.keys.length) {
+					opts.registryKeys.push(obj);
+				}
+			}
+		}
 
 		this.opts = opts;
 
@@ -215,10 +321,10 @@ export default class DetectEngine extends EventEmitter {
 			}
 		}
 
-		if (process.platform === 'win32') {
-			await Promise.all(this.opts.registryKeys.map(async (obj) => {
+		if (this.winreglib) {
+			await Promise.all(this.opts.registryKeys.map(async obj => {
 				try {
-					searchPaths.add(real(winreglib.get(obj.hive ? `${obj.hive}\\${obj.key}` : obj.key, obj.name)));
+					searchPaths.add(real(this.winreglib.get(obj.hive ? `${obj.hive}\\${obj.key}` : obj.key, obj.name)));
 				} catch (e) {
 					this.logger.warn('Failed to get registry key: %s', e.message);
 				}
@@ -242,6 +348,15 @@ export default class DetectEngine extends EventEmitter {
 					this.logger.warn('Registry callback threw error: %s', e.message);
 				}
 			}
+
+			await Promise.all(this.opts.watchRegistryKeys.map(async obj => {
+				// obj.key
+				// obj.type
+				// obj.value
+				// obj.filter
+				// obj.callback
+				// obj.keys
+			}));
 		}
 
 		return {
@@ -291,22 +406,24 @@ export default class DetectEngine extends EventEmitter {
 	 * @access private
 	 */
 	refreshPaths() {
-		this.refreshPathsTimer = setTimeout(async () => {
-			try {
-				const { defaultPath, searchPaths } = await this.getPaths();
+		if (this.opts.registryCallback && this.opts.refreshPathsInterval && this.opts.watch) {
+			this.refreshPathsTimer = setTimeout(async () => {
+				try {
+					const { defaultPath, searchPaths } = await this.getPaths();
 
-				if (searchPaths.size !== this.detectors.size || [ ...searchPaths ].some(dir => !this.detector.has(dir))) {
-					await this.scan({ defaultPath, searchPaths });
-				} else if (defaultPath !== this.defaultPath) {
-					this.defaultPath = defaultPath;
-					await this.processResults(this.results);
+					if (searchPaths.size !== this.detectors.size || [ ...searchPaths ].some(dir => !this.detector.has(dir))) {
+						await this.scan({ defaultPath, searchPaths });
+					} else if (defaultPath !== this.defaultPath) {
+						this.defaultPath = defaultPath;
+						await this.processResults(this.results);
+					}
+				} catch (err) {
+					this.emit('error', err);
 				}
-			} catch (err) {
-				this.emit('error', err);
-			}
 
-			this.refreshPaths();
-		}, this.opts.refreshPathsInterval);
+				this.refreshPaths();
+			}, this.opts.refreshPathsInterval);
+		}
 	}
 
 	/**
@@ -397,10 +514,20 @@ export default class DetectEngine extends EventEmitter {
 	 */
 	async start() {
 		try {
+			if (this.winreglib && this.opts.watch) {
+				for (const params of this.opts.registryKeys) {
+					if (params.type === 'rescan') {
+						registryWatchHandles.push(new RegistryWatcher(params, this));
+					}
+				}
+			}
+
 			await this.rescan();
-			if (this.opts.watch) {
+
+			if (this.winreglib) {
 				this.refreshPaths();
 			}
+
 			return this.opts.multiple ? this.results : this.results[0];
 		} catch (err) {
 			this.emit('error', err);
@@ -420,6 +547,11 @@ export default class DetectEngine extends EventEmitter {
 			this.logger.log('  Cancelling refresh paths timer');
 			clearTimeout(this.refreshPathsTimer);
 			this.refreshPathsTimer = null;
+		}
+
+		let handle;
+		while (handle = this.registryWatchHandles.shift()) {
+			handle.destroy();
 		}
 
 		this.logger.log(pluralize(`  Stopping ${highlight(this.detectors.size)} detector`, this.detectors.size));

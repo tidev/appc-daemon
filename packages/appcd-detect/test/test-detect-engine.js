@@ -16,6 +16,8 @@ import { status } from 'appcd-fswatcher';
 const { log } = appcdLogger('test:appcd:detect');
 const { highlight } = appcdLogger.styles;
 
+const isWindows = process.platform === 'win32';
+
 const _tmpDir = tmp.dirSync({
 	mode: '755',
 	prefix: 'appcd-detect-test-',
@@ -132,87 +134,6 @@ describe('Detect', () => {
 				recursiveWatchDepth: -1
 			});
 			expect(engine.opts.recursiveWatchDepth).to.equal(0);
-		});
-
-		it('should reject if registryCallback() is not a function', () => {
-			expect(() => {
-				new DetectEngine({
-					checkDir() {},
-					registryCallback: 123
-				});
-			}).to.throw(TypeError, 'Expected "registryCallback" option to be a function');
-		});
-
-		it('should reject if registryKeys is not a function or object', () => {
-			expect(() => {
-				new DetectEngine({
-					checkDir() {},
-					registryKeys: 'foo'
-				});
-			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
-		});
-
-		it('should reject if registryKeys is an array with a non-object', () => {
-			expect(() => {
-				new DetectEngine({
-					checkDir() {},
-					registryKeys: [ 'foo' ]
-				});
-			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
-		});
-
-		it('should reject if registryKeys is an array with object missing a hive', () => {
-			expect(() => {
-				new DetectEngine({
-					checkDir() {},
-					registryKeys: [ { foo: 'bar' } ]
-				});
-			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
-		});
-
-		it('should reject if registryKeys is an array with object missing a key', () => {
-			expect(() => {
-				new DetectEngine({
-					checkDir() {},
-					registryKeys: [ { hive: 'HKLM' } ]
-				});
-			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
-		});
-
-		it('should reject if registryKeys is an array with object missing a name', () => {
-			expect(() => {
-				new DetectEngine({
-					checkDir() {},
-					registryKeys: [ { hive: 'HKLM', key: 'foo' } ]
-				});
-			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
-		});
-
-		it('should reject if registryKeys is an object missing a hive', () => {
-			expect(() => {
-				new DetectEngine({
-					checkDir() {},
-					registryKeys: { foo: 'bar' }
-				});
-			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
-		});
-
-		it('should reject if registryKeys is an object missing a key', () => {
-			expect(() => {
-				new DetectEngine({
-					checkDir() {},
-					registryKeys: { hive: 'HKLM' }
-				});
-			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
-		});
-
-		it('should reject if registryKeys is an object missing a name', () => {
-			expect(() => {
-				new DetectEngine({
-					checkDir() {},
-					registryKeys: { hive: 'HKLM', key: 'foo' }
-				});
-			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
 		});
 
 		it('should disable redetect if not watching', () => {
@@ -749,6 +670,96 @@ describe('Detect', () => {
 
 			const results = await this.engine.start();
 			expect(results).to.deep.equal([ { foo: 'bar' } ]);
+		});
+	});
+
+	(isWindows ? describe : describe.skip)('Windows Registry', () => {
+		it('should reject if registryCallback() is not a function', () => {
+			expect(() => {
+				new DetectEngine({
+					checkDir() {},
+					registryCallback: 123
+				});
+			}).to.throw(TypeError, 'Expected "registryCallback" option to be a function');
+		});
+
+		it('should reject if registryKeys is not a function or object', () => {
+			expect(() => {
+				new DetectEngine({
+					checkDir() {},
+					registryKeys: 'foo'
+				});
+			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
+		});
+
+		it('should reject if registryKeys is an array with a non-object', () => {
+			expect(() => {
+				new DetectEngine({
+					checkDir() {},
+					registryKeys: [ 'foo' ]
+				});
+			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
+		});
+
+		it('should reject if registryKeys is an array with object missing a hive', () => {
+			expect(() => {
+				new DetectEngine({
+					checkDir() {},
+					registryKeys: [ { foo: 'bar' } ]
+				});
+			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
+		});
+
+		it('should reject if registryKeys is an array with object missing a key', () => {
+			expect(() => {
+				new DetectEngine({
+					checkDir() {},
+					registryKeys: [ { hive: 'HKLM' } ]
+				});
+			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
+		});
+
+		it('should reject if registryKeys is an array with object missing a name', () => {
+			expect(() => {
+				new DetectEngine({
+					checkDir() {},
+					registryKeys: [ { hive: 'HKLM', key: 'foo' } ]
+				});
+			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
+		});
+
+		it('should reject if registryKeys is an object missing a hive', () => {
+			expect(() => {
+				new DetectEngine({
+					checkDir() {},
+					registryKeys: { foo: 'bar' }
+				});
+			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
+		});
+
+		it('should reject if registryKeys is an object missing a key', () => {
+			expect(() => {
+				new DetectEngine({
+					checkDir() {},
+					registryKeys: { hive: 'HKLM' }
+				});
+			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
+		});
+
+		it('should reject if registryKeys is an object missing a name', () => {
+			expect(() => {
+				new DetectEngine({
+					checkDir() {},
+					registryKeys: { hive: 'HKLM', key: 'foo' }
+				});
+			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
+		});
+
+		it('should fire callback every 1 second', function () {
+			this.timeout(10000);
+			this.slow(10000);
+
+			//
 		});
 	});
 });
