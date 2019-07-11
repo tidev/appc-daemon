@@ -5,3 +5,4 @@ if (!Error.prepareStackTrace) {
 
 export { default as default } from './detect-engine';
 export { default as Detector } from './detector';
+export { default as RegistryWatcher } from './registry-watcher';

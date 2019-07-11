@@ -237,6 +237,9 @@ export default class DetectEngine extends EventEmitter {
 						if (typeof param.callback !== 'function') {
 							throw new TypeError('Expected "registryKeys" option\'s watch param "callback" to be a function');
 						}
+						if (type === 'rescan') {
+							throw new Error('Expected "registryKeys" option\'s watch param "callback" to only be set per key when type is "rescan"');
+						}
 						obj.callback = param.callback;
 					}
 				}
@@ -517,7 +520,7 @@ export default class DetectEngine extends EventEmitter {
 			if (this.winreglib && this.opts.watch) {
 				for (const params of this.opts.registryKeys) {
 					if (params.type === 'rescan') {
-						registryWatchHandles.push(new RegistryWatcher(params, this));
+						registryWatchHandles.push(new RegistryWatcher(params.keys, () => this.rescan()));
 					}
 				}
 			}
@@ -551,7 +554,7 @@ export default class DetectEngine extends EventEmitter {
 
 		let handle;
 		while (handle = this.registryWatchHandles.shift()) {
-			handle.destroy();
+			handle.stop();
 		}
 
 		this.logger.log(pluralize(`  Stopping ${highlight(this.detectors.size)} detector`, this.detectors.size));

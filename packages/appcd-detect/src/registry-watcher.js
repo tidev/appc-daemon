@@ -2,24 +2,26 @@ import { debounce } from 'appcd-util';
 
 export default class RegistryWatcher {
 	/**
+	 * A reference to the `winreglib` module. Only available on Windows machines.
+	 * @type {Object}
+	 */
+	winreglib = process.platform === 'win32' ? require('winreglib') : null;
+
+	/**
 	 * ?
 	 *
-	 * @param {Object} params - ?
-	 * @param {Array.<Object>} params.keys - ?
-	 * @param {Function} params.callback - ?
-	 * @param {DetectEngine} engine - ?
+	 * @param {Array.<Object>} keys - ?
+	 * @param {Function} callback - ?
 	 * @access public
 	 */
-	constructor({ keys, callback }, engine) {
-		this.engine = engine;
-
-		for (const { key, value, filter, callback } of keys) {
-			//
-		}
+	constructor(keys, callback) {
+		// for (const { key, value, filter, callback } of keys) {
+		// 	//
+		// }
 	}
 
-	destroy() {
-		this.engine = null;
+	stop() {
+		//
 	}
 }
 
