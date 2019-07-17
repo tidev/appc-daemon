@@ -1,5 +1,5 @@
 import appcdLogger from 'appcd-logger';
-import Dispatcher from 'appcd-dispatcher';
+import Dispatcher, { ServiceDispatcher } from 'appcd-dispatcher';
 import msgpack from 'msgpack-lite';
 import WebServer, { WebSocket } from 'appcd-http';
 import WebSocketSession from '../dist/websocket-session';
@@ -105,6 +105,87 @@ describe('WebSocketSession', () => {
 						id: uuid++,
 						path: '/foo',
 						version: '1.0'
+					}));
+				});
+		});
+	});
+
+	it('should subscribe and unsubscribe service dispatcher from WebSocket', async function () {
+		let subscribed = false;
+		let unsubscribed = false;
+		let uuid = 0;
+		this.server = new WebServer({
+			hostname: '127.0.0.1',
+			port:     1337
+		});
+
+		class TestDispatcher extends ServiceDispatcher {
+			initSubscription({ sid }) {
+				log('Received initSubscription, sending unsubscribe request');
+				this.socket.send(JSON.stringify({
+					id: uuid++,
+					path: '/service',
+					version: '1.0',
+					type: 'unsubscribe',
+					sid
+				}));
+			}
+
+			onUnsubscribe() {
+
+			}
+		}
+		const serviceDispatcher = new TestDispatcher();
+		const dispatcher = new Dispatcher();
+		dispatcher.register('/service', serviceDispatcher);
+
+		this.server.on('websocket', (ws, msg) => new WebSocketSession(ws, msg, dispatcher));
+
+		await this.server.listen();
+		log('Web server listening');
+
+		await new Promise((resolve, reject) => {
+			const socket = new WebSocket('ws://127.0.0.1:1337')
+				.on('error', reject)
+				.on('message', msg => {
+					if (typeof msg === 'string') {
+						try {
+							msg = JSON.parse(msg);
+						} catch (e) {
+							reject(e);
+						}
+					} else {
+						msg = msgpack.decode(msg);
+					}
+
+					log('Got message from server:', msg);
+
+					expect(msg).to.be.an('object');
+					if (msg.type === 'subscribe') {
+						subscribed = true;
+						expect(msg.status).to.equal(201);
+						expect(msg.message).to.equal('Subscribed');
+					}
+					if (msg.type === 'unsubscribe') {
+						unsubscribed = true;
+						expect(msg.status).to.equal(200);
+						expect(msg.message).to.equal('Unsubscribed');
+					}
+
+					if (subscribed && unsubscribed) {
+						resolve();
+					}
+				})
+				.on('open', () => {
+					log('Socket open, sending subscribe request');
+
+					serviceDispatcher.socket = socket;
+
+					socket.send(JSON.stringify({
+						id: uuid++,
+						path: '/service',
+						version: '1.0',
+						type: 'subscribe'
 					}));
 				});
 		});
