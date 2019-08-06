@@ -20,10 +20,10 @@
     "fs-extra": "^8.1.0",
     "globule": "^1.2.1",
     "lerna": "^3.15.0",
-    "pacote": "^9.5.1",
+    "pacote": "^9.5.2",
     "semver": "^6.2.0",
     "snooplogg": "^2.1.0",
-    "yarn": "^1.16.0"
+    "yarn": "^1.17.3"
   },
   "devDependencies": {
     "appcd-gulp": "^2.1.1",

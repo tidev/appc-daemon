@@ -25,7 +25,7 @@
     "macaddress": "^0.2.9",
     "simple-plist": "^1.0.0",
     "source-map-support": "^0.5.12",
-    "winreglib": "^1.0.3"
+    "winreglib": "^1.0.5"
   },
   "devDependencies": {
     "appcd-gulp": "^2.1.1",

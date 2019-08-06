@@ -3,11 +3,11 @@ import Detector from './detector';
 import gawk from 'gawk';
 import path from 'path';
 import pluralize from 'pluralize';
-import RegistryWatcher from './registry-watcher';
 
 import { arrayify, debounce, randomBytes, tailgate } from 'appcd-util';
 import { EventEmitter } from 'events';
 import { real } from 'appcd-path';
+import RegistryWatcher from './registry-watcher';
 import { which } from 'appcd-subprocess';
 
 const { highlight } = appcdLogger.styles;
@@ -43,10 +43,10 @@ export default class DetectEngine extends EventEmitter {
 	refreshPathsTimer = null;
 
 	/**
-	 * A list of active Windows Registry watch handles.
-	 * @type {Array.<WatchHandle>}
+	 * A list of active Windows Registry watchers.
+	 * @type {Array.<RegistryWatcher>}
 	 */
-	registryWatchHandles = [];
+	registryWatchers = [];
 
 	/**
 	 * A gawked array containing the results from the scan.
@@ -151,102 +151,9 @@ export default class DetectEngine extends EventEmitter {
 				throw new TypeError('Expected "registryCallback" option to be a function');
 			}
 
-			const registryKeys = arrayify(opts.registryKeys, true);
-			opts.registryKeys = [];
-
 			// validate and normalize registry keys
-			for (const params of registryKeys) {
-				if (typeof params !== 'object' || Array.isArray(params)) {
-					throw new TypeError('Expected "registryKeys" option to be an object or array of registry watch parameters');
-				}
-
-				const type = params.type || 'paths';
-				if (type !== 'paths' && type !== 'rescan') {
-					throw new Error(`Invalid "registryKeys" param type "${type}", expected "paths" or "rescan"`);
-				}
-
-				const obj = {
-					keys: [],
-					type
-				};
-
-				const addKey = obj => {
-					const p = {
-						key: obj.key,
-						value: obj.value || obj.name
-					};
-					if (!p.key || typeof p.key !== 'string') {
-						throw new TypeError('Expected "registryKeys" option\'s watch param to have a "key"');
-					}
-					if (!p.value || typeof p.value !== 'string') {
-						throw new TypeError('Expected "registryKeys" option\'s watch param to have a "value" name');
-					}
-					if (obj.hive !== undefined) {
-						if (!obj.hive || typeof obj.hive !== 'string') {
-							throw new TypeError('Expected "registryKeys" option\'s watch param "hive" to be a non-empty string');
-						}
-						p.key = `${obj.hive}\\${p.key}`;
-					}
-					if (obj.filter) {
-						if (type !== 'rescan') {
-							throw new Error('Expected "registryKeys" option\'s watch param "filter" to only be set when type is "rescan"')
-						}
-						if (typeof obj.filter !== 'object' || Array.isArray(obj.filter)) {
-							throw new TypeError('Expected "registryKeys" option\'s watch param "filter" to be an object');
-						}
-						if (obj.filter.values && (typeof obj.filter.values === 'string' || obj.filter.values instanceof RegExp)) {
-							p.filter = {
-								values
-							};
-						}
-						if (obj.filter.subkeys && (typeof obj.filter.subkeys === 'string' || obj.filter.subkeys instanceof RegExp)) {
-							if (!p.filter) {
-								p.filter = {};
-							}
-							p.filter.subkeys = subkeys;
-						}
-					}
-					if (obj.callback !== undefined) {
-						if (typeof obj.callback !== 'function') {
-							throw new TypeError('Expected "registryKeys" option\'s watch param "callback" to be a function');
-						}
-						p.callback = obj.callback;
-					}
-					obj.keys.push(p);
-				};
-
-				if (params.key !== undefined && params.keys !== undefined) {
-					throw new Error('Expected "registryKeys" option\'s watch param to have either "key" or "keys", not both');
-				} else if (params.key !== undefined) {
-					addKey(params);
-				} else if (params.keys !== undefined) {
-					if (!Array.isArray(params.keys)) {
-						throw new TypeError('Expected "registryKeys" option\'s watch param "keys" to be an array of objects');
-					}
-
-					for (const param of params.keys) {
-						if (param) {
-							if (typeof param !== 'object') {
-								throw new TypeError('Expected "registryKeys" option\'s watch param "keys" to be an array of objects');
-							}
-							addKey(param);
-						}
-					}
-
-					if (param.callback !== undefined) {
-						if (typeof param.callback !== 'function') {
-							throw new TypeError('Expected "registryKeys" option\'s watch param "callback" to be a function');
-						}
-						if (type === 'rescan') {
-							throw new Error('Expected "registryKeys" option\'s watch param "callback" to only be set per key when type is "rescan"');
-						}
-						obj.callback = param.callback;
-					}
-				}
-
-				if (obj.keys.length) {
-					opts.registryKeys.push(obj);
-				}
+			for (const params of arrayify(opts.registryKeys, true)) {
+				this.registryWatchers.push(new RegistryWatcher(params));
 			}
 		}
 
@@ -325,14 +232,6 @@ export default class DetectEngine extends EventEmitter {
 		}
 
 		if (this.winreglib) {
-			await Promise.all(this.opts.registryKeys.map(async obj => {
-				try {
-					searchPaths.add(real(this.winreglib.get(obj.hive ? `${obj.hive}\\${obj.key}` : obj.key, obj.name)));
-				} catch (e) {
-					this.logger.warn('Failed to get registry key: %s', e.message);
-				}
-			}));
-
 			if (typeof this.opts.registryCallback === 'function') {
 				try {
 					const result = await this.opts.registryCallback();
@@ -352,14 +251,15 @@ export default class DetectEngine extends EventEmitter {
 				}
 			}
 
-			await Promise.all(this.opts.watchRegistryKeys.map(async obj => {
-				// obj.key
-				// obj.type
-				// obj.value
-				// obj.filter
-				// obj.callback
-				// obj.keys
-			}));
+			for (const watcher of this.registryWatchers) {
+				for (const { isDefault, value } of watcher.values) {
+					searchPaths.add(real(value));
+					if (isDefault && value !== defaultPath) {
+						defaultPath = value;
+						this.logger.log(`Overwriting default path based on registry: ${highlight(defaultPath)}`);
+					}
+				}
+			}
 		}
 
 		return {
@@ -517,11 +417,11 @@ export default class DetectEngine extends EventEmitter {
 	 */
 	async start() {
 		try {
-			if (this.winreglib && this.opts.watch) {
-				for (const params of this.opts.registryKeys) {
-					if (params.type === 'rescan') {
-						registryWatchHandles.push(new RegistryWatcher(params.keys, () => this.rescan()));
-					}
+			if (this.opts.watch) {
+				for (const watcher of this.registryWatchers) {
+					watcher
+						.on('change', () => this.rescan())
+						.start();
 				}
 			}
 
@@ -552,9 +452,8 @@ export default class DetectEngine extends EventEmitter {
 			this.refreshPathsTimer = null;
 		}
 
-		let handle;
-		while (handle = this.registryWatchHandles.shift()) {
-			handle.stop();
+		for (const watcher of this.registryWatchers) {
+			watcher.stop();
 		}
 
 		this.logger.log(pluralize(`  Stopping ${highlight(this.detectors.size)} detector`, this.detectors.size));
