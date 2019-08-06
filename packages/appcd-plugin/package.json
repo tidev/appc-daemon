@@ -43,9 +43,9 @@
     "ignore": "^5.1.2",
     "pluralize": "^8.0.0",
     "pretty-ms": "^5.0.0",
-    "semver": "^6.2.0",
+    "semver": "^6.3.0",
     "slugg": "^1.2.1",
-    "source-map-support": "^0.5.12",
+    "source-map-support": "^0.5.13",
     "uuid": "^3.3.2"
   },
   "devDependencies": {

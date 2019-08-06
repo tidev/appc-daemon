@@ -40,8 +40,8 @@
     "cli-kit": "^0.11.2",
     "cli-table2": "^0.2.0",
     "humanize": "^0.0.9",
-    "source-map-support": "^0.5.12",
-    "v8-compile-cache": "^2.0.3"
+    "source-map-support": "^0.5.13",
+    "v8-compile-cache": "^2.1.0"
   },
   "devDependencies": {
     "appcd-gulp": "^2.1.1"

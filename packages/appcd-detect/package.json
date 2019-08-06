@@ -24,7 +24,7 @@
     "appcd-util": "^1.1.7",
     "gawk": "^4.6.4",
     "pluralize": "^8.0.0",
-    "source-map-support": "^0.5.12",
+    "source-map-support": "^0.5.13",
     "winreglib": "^1.0.5"
   },
   "devDependencies": {

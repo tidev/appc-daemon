@@ -23,7 +23,7 @@
     "fs-extra": "^8.1.0",
     "pluralize": "^8.0.0",
     "progress": "^2.0.3",
-    "source-map-support": "^0.5.12",
+    "source-map-support": "^0.5.13",
     "tar-stream": "^2.1.0",
     "yauzl": "^2.10.0"
   },
