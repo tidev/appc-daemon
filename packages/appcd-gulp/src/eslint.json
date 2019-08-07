@@ -4,6 +4,7 @@
 		"appcd": false
 	},
 	"rules": {
+		"node/no-unsupported-features/es-syntax": "off",
 		"require-atomic-updates": "off"
 	}
 }

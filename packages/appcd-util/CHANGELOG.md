@@ -1,5 +1,7 @@
-# v1.1.8
+# v2.0.0
 
+ * BREAKING CHANGE: Bumped minimum supported Node.js version from `>=8.0.0` to `>=8.1.0` to fix
+   issue where 8.0.x didn't support `async_hooks.createHook()`, yet `appcd-util` was using it.
  * chore: Updated dependencies
 
 # v1.1.7 (Jun 4, 2019)

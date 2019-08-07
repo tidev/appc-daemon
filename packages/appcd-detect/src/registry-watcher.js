@@ -131,7 +131,6 @@ class KeyWatcher extends EventEmitter {
 	/**
 	 * Returns the value when `value` name is defined.
 	 *
-	 * @returns {*}
 	 * @access private
 	 */
 	initSubkeys() {

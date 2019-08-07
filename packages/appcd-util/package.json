@@ -28,6 +28,6 @@
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
   "repository": "https://github.com/appcelerator/appc-daemon",
   "engines": {
-    "node": ">=8.0.0"
+    "node": ">=8.1.0"
   }
 }

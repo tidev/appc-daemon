@@ -15,6 +15,7 @@
 		"sinon": false
 	},
 	"rules": {
+		"node/no-unsupported-features/es-syntax": "off",
 		"promise/always-return": "off",
 		"require-atomic-updates": "off"
 	}
