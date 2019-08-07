@@ -134,7 +134,7 @@ class KeyWatcher extends EventEmitter {
 	 * @access private
 	 */
 	initSubkeys() {
-		if (this.depth) {
+		if (this.depth && this.state.subkeys) {
 			// add or change
 			for (const subkey of this.state.subkeys) {
 				if (!this.subkeys[subkey]) {
