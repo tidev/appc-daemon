@@ -1,15 +1,16 @@
 # v2.9.0
 
- * chore: Updated to `appcd-default-plugins@4.0.0`,
+ * fix: Added `sid` to WebSocketSession context so remote clients will know the subscription id.
+ * chore: Updated to `appcd-default-plugins@4.0.0`.
  * chore: Updated dependencies
 
 # v2.8.0 (Jun 25, 2019)
 
- * chore: Updated to `appcd-default-plugins@3.0.0`,
+ * chore: Updated to `appcd-default-plugins@3.0.0`.
 
 # v2.7.0 (Jun 24, 2019)
 
- * chore: Updated to `appcd-config-service@2.0.0`,
+ * chore: Updated to `appcd-config-service@2.0.0`.
 
 # v2.6.0 (Jun 13, 2019)
 
