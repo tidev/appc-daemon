@@ -120,7 +120,8 @@ export default class WebSocketSession extends EventEmitter {
 			request: {
 				data: req.data || {},
 				id:   req.id,
-				type: req.type
+				type: req.type,
+				sid:  req.sid
 			},
 			response: new PassThrough({ objectMode: true }),
 			source: 'websocket'
