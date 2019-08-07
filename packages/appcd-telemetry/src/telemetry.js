@@ -31,6 +31,56 @@ const jsonRegExp = /\.json$/;
  */
 export default class Telemetry extends Dispatcher {
 	/**
+	 * The daemon config instance.
+	 * @type {Config}
+	 */
+	config = {
+		enabled:       false,
+		eventsDir:     null,
+		sendBatchSize: 10,
+		sendInterval:  60000, // 1 minute
+		sendTimeout:   60000, // 1 minute
+		url:           null
+	};
+
+	/**
+	 * The time, in milliseconds, that the last send was fired.
+	 * @type {Number}
+	 */
+	lastSend = null;
+
+	/**
+	 * The machine id. This value is used to also determine if the telemetry system has been
+	 * initialized.
+	 * @type {String}
+	 */
+	hardwareId = null;
+
+	/**
+	 * A promise that is resolved when telemetry data is not being sent to the server.
+	 * @type {Promise}
+	 */
+	pending = Promise.resolve();
+
+	/**
+	 * A flag that indicates if the telemetry system is running.
+	 * @type {Boolean}
+	 */
+	running = false;
+
+	/**
+	 * The timer for sending telemetry data.
+	 * @type {Timer}
+	 */
+	sendTimer = null;
+
+	/**
+	 * The session id.
+	 * @type {String}
+	 */
+	sessionId = uuid.v4();
+
+	/**
 	 * Constructs an analytics instance.
 	 *
 	 * @param {Config} cfg - The Appc Daemon config object.
@@ -57,54 +107,10 @@ export default class Telemetry extends Dispatcher {
 		this.app = app;
 
 		/**
-		 * The daemon config instance.
-		 * @type {Config}
-		 */
-		this.config = {
-			enabled:       false,
-			eventsDir:     null,
-			sendBatchSize: 10,
-			sendInterval:  60000, // 1 minute
-			sendTimeout:   60000, // 1 minute
-			url:           null
-		};
-
-		/**
 		 * The deploy type for the events.
 		 * @type {String}
 		 */
 		this.environment = cfg.get('telemetry.environment') || 'production';
-
-		/**
-		 * The time, in milliseconds, that the last send was fired.
-		 * @type {Number}
-		 */
-		this.lastSend = null;
-
-		/**
-		 * The machine id. This value is used to also determine if the telemetry system has been
-		 * initialized.
-		 * @type {String}
-		 */
-		this.hardwareId = null;
-
-		/**
-		 * A promise that is resolved when telemetry data is not being sent to the server.
-		 * @type {Promise}
-		 */
-		this.pending = Promise.resolve();
-
-		/**
-		 * The timer for sending telemetry data.
-		 * @type {Timer}
-		 */
-		this.sendTimer = null;
-
-		/**
-		 * The session id.
-		 * @type {String}
-		 */
-		this.sessionId = uuid.v4();
 
 		/**
 		 * The app version.
@@ -233,7 +239,7 @@ export default class Telemetry extends Dispatcher {
 	 * @access public
 	 */
 	async init(homeDir) {
-		if (this.hardwareId) {
+		if (this.hardwareId || this.running) {
 			return;
 		}
 
@@ -244,6 +250,8 @@ export default class Telemetry extends Dispatcher {
 		this.eventsDir = expandPath(this.config.eventsDir || path.join(homeDir, 'telemetry'));
 
 		this.hardwareId = await getMachineId(path.join(homeDir, '.mid'));
+
+		this.running = true;
 
 		// send any unsent events
 		this.sendEvents();
@@ -298,7 +306,7 @@ export default class Telemetry extends Dispatcher {
 
 				const scheduleSendEvents = () => {
 					// when flushing, we don't schedule a send
-					if (!flush) {
+					if (!flush && this.running) {
 						this.sendTimer = setTimeout(() => this.sendEvents(), 1000);
 					}
 				};
@@ -309,29 +317,32 @@ export default class Telemetry extends Dispatcher {
 				}
 
 				let batch = [];
+				let files = fs.readdirSync(eventsDir).filter(name => jsonRegExp.test(name));
 				let counter = 0;
 
-				for (const name of fs.readdirSync(eventsDir)) {
-					if (jsonRegExp.test(name)) {
-						const file = path.join(eventsDir, name);
+				for (let i = 0; i < files.length; i++) {
+					const file = path.join(eventsDir, files[i]);
 
-						try {
-							batch.push({
-								evt: await fs.readJson(file),
-								file
-							});
-							counter++;
-						} catch (e) {
-							// Rather then squelch the error we'll remove here
-							log(`Failed to read ${highlight(file)}, removing`);
-							await fs.remove(file);
-						}
+					try {
+						batch.push({
+							evt: await fs.readJson(file),
+							file
+						});
+						counter++;
+					} catch (e) {
+						// Rather then squelch the error we'll remove here
+						log(`Failed to read ${highlight(file)}, removing`);
+						await fs.remove(file);
+					}
 
-						// send batch if full
-						if (batch.length >= sendBatchSize) {
-							await this.sendBatch(batch);
-							batch = [];
-						}
+					// send batch if full
+					if (batch.length >= sendBatchSize) {
+						await this.sendBatch(batch);
+
+						// reset
+						batch = [];
+						i = -1;
+						files = fs.readdirSync(eventsDir).filter(name => jsonRegExp.test(name));
 					}
 				}
 
@@ -359,6 +370,7 @@ export default class Telemetry extends Dispatcher {
 	 */
 	async shutdown() {
 		clearTimeout(this.sendTimer);
+		this.running = false;
 
 		// wait for the pending post to finish
 		await this.pending;
