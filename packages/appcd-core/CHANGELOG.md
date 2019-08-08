@@ -1,6 +1,7 @@
 # v2.9.0
 
  * fix: Added `sid` to WebSocketSession context so remote clients will know the subscription id.
+ * fix: Fixed bug where `server.hostname` was not being correctly referenced.
  * chore: Bumped Node.js version from 10.15.3 to 10.16.2.
  * chore: Updated to `appcd-default-plugins@4.0.0`.
  * chore: Updated dependencies

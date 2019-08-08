@@ -1,7 +1,7 @@
 # ![Appc Daemon logo](images/appc-daemon.png) Daemon Project
 
-appcd is the name of the npm package that contains the Appc Daemon bootstrap, command line interface
-(CLI), core, and supporting packages.
+_appcd_ is the name of the npm package that contains the Appc Daemon bootstrap, command line
+interface (CLI), core, and supporting packages.
 
 ## Table of Contents
 
@@ -22,7 +22,7 @@ appcd is the name of the npm package that contains the Appc Daemon bootstrap, co
 	8. [Subprocess Manager](Components/Subprocess-Manager.md)
 	9. [Telemetry](Components/Telemetry.md)
 	10. [Web Server](Components/Web-Server.md)
-8. [Configuration](Configuration.md)
+8. [Configuration Settings](Configuration-Settings.md)
 9. [Commands](Commands/README.md)
 	1. [config](Commands/config.md)
 	2. [dump](Commands/dump.md)

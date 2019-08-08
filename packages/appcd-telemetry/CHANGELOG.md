@@ -4,6 +4,7 @@
    batch of data.
  * fix: Fixed bug where the next schuduled sending of events was stopped if shutdown prior to
    scheduling.
+ * fix: Fixed live config changes for environment name.
  * chore: Updated dependencies.
 
 # v2.0.1 (Jun 13, 2019)

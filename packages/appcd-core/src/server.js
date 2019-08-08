@@ -244,7 +244,7 @@ export default class Server {
 
 		// init the web server
 		this.systems.webserver = new WebServer({
-			hostname: this.config.get('server.host', '127.0.0.1'),
+			hostname: this.config.get('server.hostname', '127.0.0.1'),
 			port:     this.config.get('server.port'),
 			webroot:  path.resolve(__dirname, '..', 'public')
 		});

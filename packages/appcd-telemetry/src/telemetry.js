@@ -107,12 +107,6 @@ export default class Telemetry extends Dispatcher {
 		this.app = app;
 
 		/**
-		 * The deploy type for the events.
-		 * @type {String}
-		 */
-		this.environment = cfg.get('telemetry.environment') || 'production';
-
-		/**
 		 * The app version.
 		 * @type {String}
 		 */
@@ -186,7 +180,7 @@ export default class Telemetry extends Dispatcher {
 					id: this.sessionId
 				},
 				distribution: {
-					environment:    this.environment,
+					environment:    this.config.environment,
 					version:        this.version
 				}
 			};
@@ -219,7 +213,7 @@ export default class Telemetry extends Dispatcher {
 	 * @access private
 	 */
 	addCrash(ctx) {
-		if (this.environment !== 'production') {
+		if (this.config.environment !== 'production') {
 			return;
 		}
 		if (!ctx.request.message) {
@@ -393,6 +387,10 @@ export default class Telemetry extends Dispatcher {
 
 		// copy over the config
 		Object.assign(this.config, config);
+
+		if (!this.config.environment) {
+			this.config.environment = 'production';
+		}
 
 		// make sure things are sane
 		if (this.config.sendBatchSize) {

@@ -11,10 +11,10 @@ module.exports = {
 
 		v8: {
 			/**
-			 * The maximum amount of memory the spawned appcd-core process
-			 * should allocate. The value must either be the number of megabytes
-			 * or the string `auto`, which will automatically select a sensible
-			 * size based on the system architecture and installed memory.
+			 * The maximum amount of memory the spawned appcd core process should allocate. The
+			 * value must either be the number of megabytes or the string `"auto"`, which will
+			 * automatically select a sensible size based on the system architecture and installed
+			 * memory.
 			 * @type {Number|String}
 			 * @readonly
 			 */
@@ -24,22 +24,25 @@ module.exports = {
 
 	environment: {
 		/**
-		 * Shorthand name for the environment.
+		 * Shorthand environment name used for loading the environment-specific config file. This
+		 * value is sent in the `ti.start` telemetry data payload. This value is not the same as
+		 * the `telemetry.environment`.
 		 * @type {String}
+		 * @readonly
 		 */
 		name: 'prod',
 
 		/**
-		 * Title for the environment
+		 * Title for the environment used in debug logging when the daemon starts.
 		 * @type {String}
 		 */
 		title: 'Production'
 	},
 
 	/**
-	 * The path to the appcd home directory
-	 * @type {String}
+	 * The path to the `appcd` home directory containing user-defined config files and plugins.
 	 * @readonly
+	 * @type {String}
 	 */
 	home: '~/.appcelerator/appcd',
 
@@ -51,7 +54,8 @@ module.exports = {
 		agentOptions: null,
 
 		/**
-		 * Path to a pem file containing one or more certificate authorities.
+		 * Path to a pem file containing one or more certificate authorities. Note that the
+		 * `APPCD_NETWORK_CA_FILE` environment variable overrides this value.
 		 * @type {?String}
 		 */
 		caFile: null,
@@ -63,19 +67,21 @@ module.exports = {
 		certFile: null,
 
 		/**
-		 * The proxy URL to use for all outgoing HTTP network requests.
+		 * The proxy URL to use for outgoing HTTP network requests. Note that the
+		 * `APPCD_NETWORK_PROXY` environment variable overrides this value.
 		 * @type {?String}
 		 */
 		httpProxy: null,
 
 		/**
-		 * The secure proxy URL to use for all outgoing HTTPS network requests.
+		 * The secure proxy URL to use for outgoing HTTPS network requests. Note that the
+		 * `APPCD_NETWORK_PROXY` environment variable overrides this value.
 		 * @type {?String}
 		 */
 		httpsProxy: null,
 
 		/**
-		 * Path to a key file.
+		 * Path to a private key file.
 		 * @type {?String}
 		 */
 		keyFile: null,
@@ -87,7 +93,8 @@ module.exports = {
 		passphrase: null,
 
 		/**
-		 * Enforces SSL certificates to be valid.
+		 * Enforces SSL certificates to be valid. Note that the `APPCD_NETWORK_STRICT_SSL`
+		 * environment variable overrides this value.
 		 * @type {Boolean}
 		 */
 		strictSSL: true
@@ -95,7 +102,7 @@ module.exports = {
 
 	plugins: {
 		/**
-		 * Allow `external` plugins to be auto-reloaded when one of its files is changed.
+		 * Stops `external` plugins when one of its files is changed.
 		 * @type {Boolean}
 		 */
 		autoReload: true,
@@ -116,7 +123,7 @@ module.exports = {
 		agentPollInterval: 1000,
 
 		/**
-		 * Launches the server as a background process
+		 * Launches the server as a background process.
 		 * @type {Boolean}
 		 * @readonly
 		 */
@@ -140,11 +147,12 @@ module.exports = {
 		 * The max age in milliseconds an unused Node.js executable should be kept before it's
 		 * purged. Defaults to 90 days.
 		 * @type {Number}
+		 * @readonly
 		 */
 		nodejsMaxUnusedAge: 90 * 24 * 60 * 60 * 1000,
 
 		/**
-		 * Path to the daemon's pid file.
+		 * Path to the daemon's pid (process id) file.
 		 * @type {String}
 		 * @readonly
 		 */
@@ -167,10 +175,10 @@ module.exports = {
 
 	telemetry: {
 		/**
-		 * Deploy type for the analytics events.
+		 * The Appc Daemon app GUID to send with each event.
 		 * @type {String}
 		 */
-		environment: 'production',
+		app: 'ea327577-858f-4d31-905e-fa670f50ef48',
 
 		/**
 		 * Turns on telemetry recording and submitting.
@@ -179,16 +187,16 @@ module.exports = {
 		enabled: true,
 
 		/**
-		 * The path to the telemetry cache directory.
+		 * Deploy type for the analytics events.
+		 * @type {String}
+		 */
+		environment: 'production',
+
+		/**
+		 * The path store unsent telemetry events.
 		 * @type {String}
 		 */
 		eventsDir: '~/.appcelerator/appcd/telemetry',
-
-		/**
-		 * GUID to use for telemetry.
-		 * @type {String}
-		 */
-		app: 'ea327577-858f-4d31-905e-fa670f50ef48',
 
 		/**
 		 * The maximum number of events to send at a time.
@@ -210,7 +218,7 @@ module.exports = {
 		sendTimeout: 60000,
 
 		/**
-		 * The URL to post the telemetry events to.
+		 * The URL to send the telemetry events to.
 		 * @type {String}
 		 */
 		url: 'https://api.appcelerator.com/p/v4/app-track'
