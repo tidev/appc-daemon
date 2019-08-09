@@ -61,7 +61,7 @@
 | `ios.env.path`                     | String        | `null`                                           | ioslib (via @appcd/plugin-ios)         | No               | An override for the `PATH` environment variable for ioslib's `xcode-select` detection. |
 | `ios.executables.security`         | String        | `null`                                           | ioslib (via @appcd/plugin-ios)         | No               | Path to the `security` executable. |
 | `ios.executables.xcodeSelect`      | String        | `null`                                           | ioslib (via @appcd/plugin-ios)         | No               | Path to the `xcode-select` executable. |
-| `ios.provisionin.path`             | String        | `"~/Library/MobileDevice/Provisioning Profiles"` | ioslib (via @appcd/plugin-ios)         | No               | The path to the provisioning profiles directory. |
+| `ios.provisioning.path`            | String        | `"~/Library/MobileDevice/Provisioning Profiles"` | ioslib (via @appcd/plugin-ios)         | No               | The path to the provisioning profiles directory. |
 | `ios.simulator.devicesDir`         | String        | `"~/Library/Developer/CoreSimulator/Devices"`    | ioslib (via @appcd/plugin-ios)         | No               | The path to the directory containing the simulator device directories. |
 | `ios.xcode.searchPaths`            | String        | `null`                                           | ioslib (via @appcd/plugin-ios)         | No               | A list of paths to search for Xcode installations. |
 | `java.searchPaths`                 | Array[String] | `null`                                           | @appcd/plugin-jdk                      | No               | A list of paths to search for JDKs. |
