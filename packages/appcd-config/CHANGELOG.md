@@ -1,4 +1,4 @@
-# v1.3.1
+# v1.3.1 (Aug 13, 2019)
 
  * fix: Fixed bug when pushing a config value to an existing key with null value.
  * chore: Fixed eslint `hasOwnProperty` warnings.
