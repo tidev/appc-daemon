@@ -17,6 +17,7 @@ import WebSocketSession from './websocket-session';
 import { arch as getArch, arrayify, get, trackTimers } from 'appcd-util';
 import { expandPath } from 'appcd-path';
 import { i18n } from 'appcd-response';
+import { installDefaultPlugins } from 'appcd-default-plugins';
 import { isDir, isFile } from 'appcd-fs';
 import { load as loadConfig } from 'appcd-config';
 import { purgeUnusedNodejsExecutables } from 'appcd-nodejs';
@@ -130,6 +131,17 @@ export default class Server {
 		if (!isDir(homeDir)) {
 			logger.debug('Creating home directory %s', homeDir);
 			fs.mkdirsSync(homeDir);
+		}
+
+		// install default plugins before we drop permissions
+		try {
+			await installDefaultPlugins(path.join(homeDir, 'plugins'));
+		} catch (err) {
+			if (err.code === 'EACCES') {
+				logger.warn(err);
+			} else {
+				logger.error(err);
+			}
 		}
 
 		// check if the current user is root

@@ -1,5 +1,7 @@
-# v3.0.1
+# v4.0.0 (Aug 13, 2019)
 
+ * BREAKING CHANGE: `appcd-default-plugins` supports both postinstall and runtime installation of
+   default plugins.
  * chore: Updated dependencies
 
 # v3.0.0 (Jun 25, 2019)
@@ -9,6 +11,10 @@
  * BREAKING CHANGE: Plugins are installed into `"~/.appcelerator/appcd/plugins"` instead of the
    `"appcd-default-plugins/plugins"` directory to avoid permission issues when npm installing
    `appcd` globally using `sudo` due to npm dropping root before running the post install script.
+
+   UPDATE: Turns out that this won't work because unless there's an explicit `user` set in the
+   npm config, it defaults to the user `nobody` which does not have write permissions to the
+   user's home directory.
 
 # v2.0.0 (Jun 6, 2019)
 

@@ -1,26 +1,55 @@
 # appcd-default-plugins
 
-A psuedo package that installs the latest major versions of all default _appcd_ plugins into the
-user's appcd home directrory (e.g. `"~/.appcelerator/appcd/plugins"`).
+A psuedo package that attempts to install the latest major versions of all default _appcd_ plugins
+into the user's appcd home directrory (e.g. `"~/.appcelerator/appcd/plugins"`) postinstall and
+optionally at runtime.
 
 Visit https://github.com/appcelerator/appc-daemon for more information.
 
-## Overview
+## Usage
 
-After installing `appcd-default-plugins`, a post-install script will run and download every major
-plugin release and puts it in the `"~/.appcelerator/appcd/plugins"` directory.
+```js
+import { installDefaultPlugins } from 'appcd-default-plugins';
 
-If any of the plugins match locally linked packages using _yarn_, then it will use those instead of
-installing from _npm_.
+await installDefaultPlugins('/path/to/plugins/dir');
+```
 
-A list of packages to be installed is used to create a monorepo in the `plugins` directory, then
-it runs `lerna` to initialize it.
+## Details
 
-The post-install script will detect if _yarn_ is installed. If found, it will initialize the
-monorepo using _yarn_'s workspaces, otherwise it fallsback to _npm_ with hoisting.
+`appcd-default-plugins` deploys two strategies for installing the default appcd plugins:
+post-install and at runtime.
 
-If at all possible, you should install _yarn_ before installing `appcd-default-plugins`. yarn is
-about 3 times faster and uses about 75% less disk space.
+Post-install is the ideal time to install the default plugins, however if the user installs as root
+(e.g. sudo), then `npm` will drop permissions and the post-install script will be unable to write
+to the plugins directory. In this case, the permission error is suppressed allowing the install to
+complete.
+
+`appcd-default-plugins` leverages _lerna_ and _yarn_ to create a local workspace for the purpose of
+optimizing a hoisted `node_modules` directory.
+
+Since downloading and installing a plugin and its dependencies is an expensive operation, it will
+only install a plugin from _npm_ if there are no installed plugins that satisfy the plugin's specs.
+Likewise, it will only invoke _lerna_ if a plugin was installed or a plugin was removed/invalidated.
+
+The `installDefaultPlugins()` function performs a number of steps to attempt to install the default
+plugins:
+
+1. Determine if the plugins directory is writable.
+2. Locate the _yarn_ and _lerna_ scripts.
+3. Detect existing list of workspaces that were created during `postinstall` or previous _appcd_
+   start.
+4. Detect existing installed plugins.
+    - Invalid plugins are quarantine in a `/path/to/plugins/invalid` directory.
+5. Detect an global yarn links.
+    - Symlink any new yarn links.
+6. Loop over the list of default _appcd_ plugins and figure out what needs to be installed.
+7. Install the missing _appcd_ plugins.
+8. Assuming one or more plugins where installed or the list of workspaces has changed, then:
+    - Rewrite every plugin's package name in their respective `package.json` files to make
+      lerna/yarn happy.
+    - Write the main `package.json` and `lerna.json` files.
+    - Execute _lerna bootstrap_ which in turn executes _yarn_.
+    - Revert the plugin package names.
 
 ## Legal
 
