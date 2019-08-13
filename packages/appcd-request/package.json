@@ -18,7 +18,7 @@
   "dependencies": {
     "appcd-dispatcher": "^2.0.1",
     "appcd-fs": "^1.1.8",
-    "appcd-logger": "^2.0.2",
+    "appcd-logger": "^2.0.3",
     "humanize": "^0.0.9",
     "request": "^2.88.0",
     "source-map-support": "^0.5.13"

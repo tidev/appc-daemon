@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "appcd-fs": "^1.1.8",
-    "appcd-logger": "^2.0.2",
+    "appcd-logger": "^2.0.3",
     "appcd-request": "^2.1.0",
     "appcd-util": "^2.0.0",
     "fs-extra": "^8.1.0",

@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "appcd-dispatcher": "^2.0.1",
-    "appcd-logger": "^2.0.2",
+    "appcd-logger": "^2.0.3",
     "appcd-nodejs": "^3.0.0",
     "appcd-path": "^1.1.7",
     "appcd-response": "^2.0.1",

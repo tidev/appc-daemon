@@ -22,7 +22,7 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-logger": "^2.0.2",
+    "appcd-logger": "^2.0.3",
     "appcd-response": "^2.0.1",
     "appcd-util": "^2.0.0",
     "fs-extra": "^8.1.0",

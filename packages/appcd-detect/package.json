@@ -18,7 +18,7 @@
   "dependencies": {
     "appcd-dispatcher": "^2.0.1",
     "appcd-fs": "^1.1.8",
-    "appcd-logger": "^2.0.2",
+    "appcd-logger": "^2.0.3",
     "appcd-path": "^1.1.7",
     "appcd-subprocess": "^2.0.2",
     "appcd-util": "^2.0.0",
@@ -28,7 +28,7 @@
     "winreglib": "^1.0.5"
   },
   "devDependencies": {
-    "appcd-fswatch-manager": "^2.0.0",
+    "appcd-fswatch-manager": "^2.0.1",
     "appcd-fswatcher": "^1.2.3",
     "appcd-gulp": "^2.2.0",
     "fs-extra": "^8.1.0"

@@ -25,7 +25,7 @@
     "appcd-fs": "^1.1.8",
     "appcd-fswatcher": "^1.2.3",
     "appcd-http": "^1.2.2",
-    "appcd-logger": "^2.0.2",
+    "appcd-logger": "^2.0.3",
     "appcd-machine-id": "^2.0.2",
     "appcd-nodejs": "^3.0.0",
     "appcd-path": "^1.1.7",
@@ -49,7 +49,7 @@
     "uuid": "^3.3.2"
   },
   "devDependencies": {
-    "appcd-fswatch-manager": "^2.0.0",
+    "appcd-fswatch-manager": "^2.0.1",
     "appcd-gulp": "^2.2.0",
     "fs-extra": "^8.1.0",
     "tmp": "^0.1.0"
