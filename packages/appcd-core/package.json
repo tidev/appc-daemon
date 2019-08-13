@@ -27,7 +27,7 @@
     "appcd-fswatcher": "^1.2.2",
     "appcd-http": "^1.2.2",
     "appcd-logger": "^2.0.2",
-    "appcd-nodejs": "^2.0.0",
+    "appcd-nodejs": "^3.0.0",
     "appcd-path": "^1.1.7",
     "appcd-plugin": "^2.2.0",
     "appcd-response": "^2.0.1",
