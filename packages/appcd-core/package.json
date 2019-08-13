@@ -31,7 +31,7 @@
     "appcd-path": "^1.1.7",
     "appcd-plugin": "^2.2.0",
     "appcd-response": "^2.0.1",
-    "appcd-subprocess": "^2.0.1",
+    "appcd-subprocess": "^2.0.2",
     "appcd-telemetry": "^2.0.1",
     "appcd-util": "^2.0.0",
     "cli-kit": "^0.11.2",
