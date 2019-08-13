@@ -50,7 +50,7 @@
   },
   "devDependencies": {
     "appcd-fswatch-manager": "^2.0.0",
-    "appcd-gulp": "^2.1.1",
+    "appcd-gulp": "^2.2.0",
     "fs-extra": "^8.1.0",
     "tmp": "^0.1.0"
   },

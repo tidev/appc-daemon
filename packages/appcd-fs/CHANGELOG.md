@@ -1,3 +1,7 @@
+# v1.1.8 (Aug 13, 2019)
+
+ * chore: Updated dependencies.
+
 # v1.1.7 (Jun 4, 2019)
 
  * chore: Updated dependencies.

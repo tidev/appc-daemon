@@ -20,7 +20,7 @@
     "winreg": "^1.2.4"
   },
   "devDependencies": {
-    "appcd-gulp": "^2.1.1"
+    "appcd-gulp": "^2.2.0"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-winreg",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
