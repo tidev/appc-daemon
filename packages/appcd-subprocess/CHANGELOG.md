@@ -1,11 +1,15 @@
-# v2.0.1
+# v2.0.2 (Aug 13, 2019)
 
  * chore: Fixed eslint `hasOwnProperty` warnings.
  * chore: Updated dependencies.
 
-# v2.0.0 (Jun 13, 2019)
+# v2.0.1 (Jun 13, 2019)
 
  * BREAKING CHANGE: Updated to `appcd-response@2.0.0`.
+
+# v2.0.0 (Jun 13, 2019)
+
+ * Botched release.
 
 # v1.3.2 (Jun 13, 2019)
 
