@@ -1,4 +1,4 @@
-# v2.0.2
+# v2.0.2 (Aug 13, 2019)
 
  * fix: Fixed bug where events were sent out-of-order if there was a connection error sending a
    batch of data.

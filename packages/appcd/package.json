@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "appcd-client": "^2.0.0",
-    "appcd-config": "^1.3.0",
+    "appcd-config": "^1.3.1",
     "appcd-core": "^2.8.0",
     "appcd-dump-viewer": "^1.1.4",
     "appcd-fs": "^1.1.8",
