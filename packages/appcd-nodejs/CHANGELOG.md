@@ -1,6 +1,6 @@
 # v3.0.0 (Aug 13, 2019)
 
- * chore: Updated to `appcd-nodejs@2.0.0`.
+ * BREAKING CHANGE: Updated to `appcd-nodejs@2.0.0`.
  * chore: Updated dependencies.
 
 # v2.0.0 (Jun 13, 2019)
