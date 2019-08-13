@@ -1,3 +1,7 @@
+# v2.0.1 (Aug 13, 2019)
+
+ * chore: Updated dependencies.
+
 # v2.0.0 (Jun 13, 2019)
 
  * BREAKING CHANGE: Updated to `appcd-dispatche@2.0.0` and `appcd-response@2.0.0`.

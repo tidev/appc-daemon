@@ -1,7 +1,12 @@
-# v2.0.2 (Aug 13, 2019)
+# v3.0.0 (Aug 13, 2019)
 
+ * BREAKING CHANGE: Updated to `appcd-nodejs@3.0.0`.
  * chore: Fixed eslint `hasOwnProperty` warnings.
  * chore: Updated dependencies.
+
+# v2.0.2 (Aug 13, 2019)
+
+ * Botched release.
 
 # v2.0.1 (Jun 13, 2019)
 
