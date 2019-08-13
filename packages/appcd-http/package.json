@@ -1,6 +1,6 @@
 {
   "name": "appcd-http",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "HTTP server with WebSocket support, router, and various middlewares.",
   "main": "./dist/index",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
