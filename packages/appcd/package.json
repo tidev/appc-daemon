@@ -35,7 +35,7 @@
     "appcd-fs": "^1.1.8",
     "appcd-logger": "^2.0.2",
     "appcd-nodejs": "^2.0.0",
-    "appcd-path": "^1.1.6",
+    "appcd-path": "^1.1.7",
     "appcd-util": "^2.0.0",
     "cli-kit": "^0.11.2",
     "cli-table2": "^0.2.0",
