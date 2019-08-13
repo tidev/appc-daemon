@@ -1,4 +1,4 @@
-# v2.1.0
+# v2.1.0 (Aug 13, 2019)
 
  * fix: Fixed request config setting precedence such that environment variables override config
    settings.

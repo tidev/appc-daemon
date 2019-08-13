@@ -29,7 +29,7 @@
     "appcd-machine-id": "^2.0.1",
     "appcd-nodejs": "^2.0.0",
     "appcd-path": "^1.1.7",
-    "appcd-request": "^2.0.0",
+    "appcd-request": "^2.1.0",
     "appcd-response": "^2.0.1",
     "appcd-subprocess": "^2.0.1",
     "appcd-telemetry": "^2.0.1",

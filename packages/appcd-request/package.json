@@ -1,6 +1,6 @@
 {
   "name": "appcd-request",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "HTTP client for the Appc Daemon.",
   "main": "./dist/request",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
