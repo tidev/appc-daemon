@@ -42,7 +42,7 @@ export function run(cmd, args, opts) {
 			opts = {};
 		}
 
-		if (!opts.hasOwnProperty('windowsHide')) {
+		if (!Object.prototype.hasOwnProperty.call(opts, 'windowsHide')) {
 			opts.windowsHide = true;
 		}
 
@@ -87,7 +87,7 @@ export function spawn(params = {}) {
 		throw new TypeError('Expected params to be an object');
 	}
 
-	if (!params.hasOwnProperty('command')) {
+	if (!Object.prototype.hasOwnProperty.call(params, 'command')) {
 		throw new SubprocessError(codes.MISSING_ARGUMENT, 'Missing required argument "%s"', 'command');
 	}
 	if (!params.command || typeof params.command !== 'string') {
@@ -95,7 +95,7 @@ export function spawn(params = {}) {
 	}
 
 	let args = [];
-	if (params.hasOwnProperty('args')) {
+	if (Object.prototype.hasOwnProperty.call(params, 'args')) {
 		if (Array.isArray(params.args)) {
 			args = params.args;
 		} else if (params.args) {
@@ -110,13 +110,13 @@ export function spawn(params = {}) {
 		windowsHide: true
 	};
 
-	if (params.hasOwnProperty('options')) {
+	if (Object.prototype.hasOwnProperty.call(params, 'options')) {
 		if (!params.options || typeof params.options !== 'object') {
 			throw new SubprocessError(codes.INVALID_ARGUMENT, 'Spawn "options" must be an object');
 		}
 
 		for (const prop of [ 'cwd', 'env', 'stdio', 'windowsHide' ]) {
-			if (params.options.hasOwnProperty(prop)) {
+			if (Object.prototype.hasOwnProperty.call(params.options, prop)) {
 				options[prop] = params.options[prop];
 			}
 		}

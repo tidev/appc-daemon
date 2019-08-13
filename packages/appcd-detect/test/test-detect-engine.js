@@ -1,3 +1,5 @@
+/* eslint-disable no-unused-vars, promise/no-callback-in-promise */
+
 import appcdLogger from 'appcd-logger';
 import DetectEngine from '../dist/index';
 import Dispatcher from 'appcd-dispatcher';
@@ -11,10 +13,18 @@ import { exe } from 'appcd-subprocess';
 import { isFile } from 'appcd-fs';
 import { real } from 'appcd-path';
 import { sleep } from 'appcd-util';
+import { spawnSync } from 'child_process';
 import { status } from 'appcd-fswatcher';
 
 const { log } = appcdLogger('test:appcd:detect');
 const { highlight } = appcdLogger.styles;
+
+const reg = (...args) => {
+	log(`Executing: ${highlight(`reg ${args.join(' ')}`)}`);
+	spawnSync('reg', args, { stdio: 'ignore' });
+};
+
+const isWindows = process.platform === 'win32';
 
 const _tmpDir = tmp.dirSync({
 	mode: '755',
@@ -132,87 +142,6 @@ describe('Detect', () => {
 				recursiveWatchDepth: -1
 			});
 			expect(engine.opts.recursiveWatchDepth).to.equal(0);
-		});
-
-		it('should reject if registryCallback() is not a function', () => {
-			expect(() => {
-				new DetectEngine({
-					checkDir() {},
-					registryCallback: 123
-				});
-			}).to.throw(TypeError, 'Expected "registryCallback" option to be a function');
-		});
-
-		it('should reject if registryKeys is not a function or object', () => {
-			expect(() => {
-				new DetectEngine({
-					checkDir() {},
-					registryKeys: 'foo'
-				});
-			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
-		});
-
-		it('should reject if registryKeys is an array with a non-object', () => {
-			expect(() => {
-				new DetectEngine({
-					checkDir() {},
-					registryKeys: [ 'foo' ]
-				});
-			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
-		});
-
-		it('should reject if registryKeys is an array with object missing a hive', () => {
-			expect(() => {
-				new DetectEngine({
-					checkDir() {},
-					registryKeys: [ { foo: 'bar' } ]
-				});
-			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
-		});
-
-		it('should reject if registryKeys is an array with object missing a key', () => {
-			expect(() => {
-				new DetectEngine({
-					checkDir() {},
-					registryKeys: [ { hive: 'HKLM' } ]
-				});
-			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
-		});
-
-		it('should reject if registryKeys is an array with object missing a name', () => {
-			expect(() => {
-				new DetectEngine({
-					checkDir() {},
-					registryKeys: [ { hive: 'HKLM', key: 'foo' } ]
-				});
-			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
-		});
-
-		it('should reject if registryKeys is an object missing a hive', () => {
-			expect(() => {
-				new DetectEngine({
-					checkDir() {},
-					registryKeys: { foo: 'bar' }
-				});
-			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
-		});
-
-		it('should reject if registryKeys is an object missing a key', () => {
-			expect(() => {
-				new DetectEngine({
-					checkDir() {},
-					registryKeys: { hive: 'HKLM' }
-				});
-			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
-		});
-
-		it('should reject if registryKeys is an object missing a name', () => {
-			expect(() => {
-				new DetectEngine({
-					checkDir() {},
-					registryKeys: { hive: 'HKLM', key: 'foo' }
-				});
-			}).to.throw(TypeError, 'Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
 		});
 
 		it('should disable redetect if not watching', () => {
@@ -751,4 +680,766 @@ describe('Detect', () => {
 			expect(results).to.deep.equal([ { foo: 'bar' } ]);
 		});
 	});
+
+	(isWindows ? describe : describe.skip)('Windows Registry', () => {
+		describe('Validation', () => {
+			it('should error if registryCallback() is not a function', () => {
+				expect(() => {
+					new DetectEngine({
+						checkDir() {},
+						registryCallback: 123
+					});
+				}).to.throw(TypeError, 'Expected "registryCallback" option to be a function');
+			});
+
+			it('should error if registryKeys is not a function or object', () => {
+				expect(() => {
+					new DetectEngine({
+						checkDir() {},
+						registryKeys: 'foo'
+					});
+				}).to.throw(TypeError, 'Expected registry watcher params to be an object');
+			});
+
+			it('should error if registryKeys is an array with a non-object', () => {
+				expect(() => {
+					new DetectEngine({
+						checkDir() {},
+						registryKeys: [ 'foo' ]
+					});
+				}).to.throw(TypeError, 'Expected registry watcher params to be an object');
+			});
+
+			it('should error if registryKeys has invalid key', () => {
+				expect(() => {
+					new DetectEngine({
+						checkDir() {},
+						registryKeys: [ { key: null } ]
+					});
+				}).to.throw(TypeError, 'Expected registry watcher "key" param to be a non-empty string');
+
+				expect(() => {
+					new DetectEngine({
+						checkDir() {},
+						registryKeys: [ { key: '' } ]
+					});
+				}).to.throw(TypeError, 'Expected registry watcher "key" param to be a non-empty string');
+			});
+
+			it('should error if registryKeys has invalid depth', () => {
+				expect(() => {
+					new DetectEngine({
+						checkDir() {},
+						registryKeys: [ { key: 'foo', depth: null } ]
+					});
+				}).to.throw(TypeError, 'Expected registry watcher "depth" param to be a positive integer');
+
+				expect(() => {
+					new DetectEngine({
+						checkDir() {},
+						registryKeys: [ { key: 'foo', depth: 'bar' } ]
+					});
+				}).to.throw(TypeError, 'Expected registry watcher "depth" param to be a positive integer');
+
+				expect(() => {
+					new DetectEngine({
+						checkDir() {},
+						registryKeys: [ { key: 'foo', depth: -123 } ]
+					});
+				}).to.throw(TypeError, 'Expected registry watcher "depth" param to be a positive integer');
+			});
+
+			it('should error if registryKeys has invalid value', () => {
+				expect(() => {
+					new DetectEngine({
+						checkDir() {},
+						registryKeys: [ { key: 'foo', value: null } ]
+					});
+				}).to.throw(TypeError, 'Expected registry watcher "value" param to be a non-empty string');
+
+				expect(() => {
+					new DetectEngine({
+						checkDir() {},
+						registryKeys: [ { key: 'foo', value: '' } ]
+					});
+				}).to.throw(TypeError, 'Expected registry watcher "value" param to be a non-empty string');
+
+				expect(() => {
+					new DetectEngine({
+						checkDir() {},
+						registryKeys: [ { key: 'foo', value: 123 } ]
+					});
+				}).to.throw(TypeError, 'Expected registry watcher "value" param to be a non-empty string');
+			});
+
+			it('should error if registryKeys has invalid hive', () => {
+				expect(() => {
+					new DetectEngine({
+						checkDir() {},
+						registryKeys: [ { key: 'foo', value: 'bar', hive: null } ]
+					});
+				}).to.throw(TypeError, 'Expected registry watcher "hive" param to be a non-empty string');
+
+				expect(() => {
+					new DetectEngine({
+						checkDir() {},
+						registryKeys: [ { key: 'foo', value: 'bar', hive: '' } ]
+					});
+				}).to.throw(TypeError, 'Expected registry watcher "hive" param to be a non-empty string');
+
+				expect(() => {
+					new DetectEngine({
+						checkDir() {},
+						registryKeys: [ { key: 'foo', value: 'bar', hive: true } ]
+					});
+				}).to.throw(TypeError, 'Expected registry watcher "hive" param to be a non-empty string');
+			});
+
+			it('should error if registryKeys has invalid filter', () => {
+				expect(() => {
+					new DetectEngine({
+						checkDir() {},
+						registryKeys: [ { key: 'foo', filter: 'baz' } ]
+					});
+				}).to.throw(TypeError, 'Expected registry watcher "filter" param to be an object');
+
+				expect(() => {
+					new DetectEngine({
+						checkDir() {},
+						registryKeys: [ { key: 'foo', filter: [] } ]
+					});
+				}).to.throw(TypeError, 'Expected registry watcher "filter" param to be an object');
+			});
+
+			it('should error if registryKeys has invalid filter values', () => {
+				expect(() => {
+					new DetectEngine({
+						checkDir() {},
+						registryKeys: [ { key: 'foo', filter: { values: null } } ]
+					});
+				}).to.throw(TypeError, 'Expected registry watcher "values" filter param to be a non-empty string or regex');
+
+				expect(() => {
+					new DetectEngine({
+						checkDir() {},
+						registryKeys: [ { key: 'foo', filter: { values: 123 } } ]
+					});
+				}).to.throw(TypeError, 'Expected registry watcher "values" filter param to be a non-empty string or regex');
+
+				expect(() => {
+					new DetectEngine({
+						checkDir() {},
+						registryKeys: [ { key: 'foo', filter: { values: '' } } ]
+					});
+				}).to.throw(TypeError, 'Expected registry watcher "values" filter param to be a non-empty string or regex');
+			});
+
+			it('should error if registryKeys has invalid filter subkeys', () => {
+				expect(() => {
+					new DetectEngine({
+						checkDir() {},
+						registryKeys: [ { key: 'foo', filter: { subkeys: null } } ]
+					});
+				}).to.throw(TypeError, 'Expected registry watcher "subkeys" filter param to be a non-empty string or regex');
+
+				expect(() => {
+					new DetectEngine({
+						checkDir() {},
+						registryKeys: [ { key: 'foo', filter: { subkeys: 123 } } ]
+					});
+				}).to.throw(TypeError, 'Expected registry watcher "subkeys" filter param to be a non-empty string or regex');
+
+				expect(() => {
+					new DetectEngine({
+						checkDir() {},
+						registryKeys: [ { key: 'foo', filter: { subkeys: '' } } ]
+					});
+				}).to.throw(TypeError, 'Expected registry watcher "subkeys" filter param to be a non-empty string or regex');
+			});
+
+			it('should error if registryKeys has key and invalid transform callback', () => {
+				expect(() => {
+					new DetectEngine({
+						checkDir() {},
+						registryKeys: [ { key: 'foo', value: 'bar', transform: null } ]
+					});
+				}).to.throw(TypeError, 'Expected registry watcher "transform" param to be a function');
+
+				expect(() => {
+					new DetectEngine({
+						checkDir() {},
+						registryKeys: [ { key: 'foo', value: 'bar', transform: 'baz' } ]
+					});
+				}).to.throw(TypeError, 'Expected registry watcher "transform" param to be a function');
+
+				expect(() => {
+					new DetectEngine({
+						checkDir() {},
+						registryKeys: [ { key: 'foo', value: 'bar', transform: 123 } ]
+					});
+				}).to.throw(TypeError, 'Expected registry watcher "transform" param to be a function');
+			});
+		});
+
+		describe('Changes', () => {
+			afterEach(async function () {
+				if (this.engine) {
+					await this.engine.stop();
+					this.engine = null;
+				}
+
+				reg('delete', 'HKCU\\Software\\appcd-detect-test', '/f');
+			});
+
+			it('should watch existing key for changes (new subkey)', function (done) {
+				this.timeout(10000);
+				this.slow(10000);
+
+				const dir = makeTempDir();
+				let counter = 0;
+
+				reg('delete', 'HKCU\\Software\\appcd-detect-test', '/f');
+				reg('add', 'HKCU\\Software\\appcd-detect-test\\foo');
+
+				this.engine = new DetectEngine({
+					checkDir: async dir => {
+						// log(`${counter + 1}: ${dir}`);
+
+						switch (++counter) {
+							case 2:
+								done();
+								break;
+						}
+					},
+					paths: [ dir ],
+					registryKeys: [
+						{
+							key: 'HKCU\\Software\\appcd-detect-test\\foo'
+						}
+					],
+					watch: true
+				});
+
+				this.engine.start()
+					.then(() => sleep(100))
+					.then(() => reg('add', 'HKCU\\Software\\appcd-detect-test\\foo\\bar'))
+					.catch(done);
+			});
+
+			it('should watch existing key that is deleted', function (done) {
+				this.timeout(10000);
+				this.slow(10000);
+
+				const dir = makeTempDir();
+				let counter = 0;
+
+				reg('delete', 'HKCU\\Software\\appcd-detect-test', '/f');
+				reg('add', 'HKCU\\Software\\appcd-detect-test\\foo');
+
+				this.engine = new DetectEngine({
+					checkDir: async dir => {
+						// log(`${counter + 1}: ${dir}`);
+
+						switch (++counter) {
+							case 2:
+								done();
+								break;
+						}
+					},
+					paths: [ dir ],
+					registryKeys: [
+						{
+							key: 'HKCU\\Software\\appcd-detect-test\\foo'
+						}
+					],
+					watch: true
+				});
+
+				this.engine.start()
+					.then(() => sleep(100))
+					.then(() => reg('delete', 'HKCU\\Software\\appcd-detect-test\\foo', '/f'))
+					.catch(done);
+			});
+
+			it('should watch a non-existent key to be created', function (done) {
+				this.timeout(10000);
+				this.slow(10000);
+
+				const dir = makeTempDir();
+				let counter = 0;
+
+				reg('delete', 'HKCU\\Software\\appcd-detect-test', '/f');
+				reg('add', 'HKCU\\Software\\appcd-detect-test');
+
+				this.engine = new DetectEngine({
+					checkDir: async dir => {
+						// log(`${counter + 1}: ${dir}`);
+
+						switch (++counter) {
+							case 2:
+								done();
+								break;
+						}
+					},
+					paths: [ dir ],
+					registryKeys: [
+						{
+							key: 'HKCU\\Software\\appcd-detect-test\\foo'
+						}
+					],
+					watch: true
+				});
+
+				this.engine.start()
+					.then(() => sleep(100))
+					.then(() => reg('add', 'HKCU\\Software\\appcd-detect-test\\foo'))
+					.catch(done);
+			});
+
+			it('should watch a subkey for changes', function (done) {
+				this.timeout(10000);
+				this.slow(10000);
+
+				const dir = makeTempDir();
+				let counter = 0;
+
+				reg('delete', 'HKCU\\Software\\appcd-detect-test', '/f');
+				reg('add', 'HKCU\\Software\\appcd-detect-test\\foo\\bar');
+
+				this.engine = new DetectEngine({
+					checkDir: async dir => {
+						// log(`${counter + 1}: ${dir}`);
+
+						switch (++counter) {
+							case 2:
+								done();
+								break;
+						}
+					},
+					paths: [ dir ],
+					registryKeys: [
+						{
+							key: 'HKCU\\Software\\appcd-detect-test\\foo',
+							depth: 1
+						}
+					],
+					watch: true
+				});
+
+				this.engine.start()
+					.then(() => sleep(100))
+					.then(() => reg('add', 'HKCU\\Software\\appcd-detect-test\\foo\\bar\\baz'))
+					.catch(done);
+			});
+		});
+
+		describe('Values', () => {
+			afterEach(async function () {
+				if (this.engine) {
+					await this.engine.stop();
+					this.engine = null;
+				}
+
+				reg('delete', 'HKCU\\Software\\appcd-detect-test', '/f');
+			});
+
+			it('should get existing value', function (done) {
+				this.timeout(10000);
+				this.slow(10000);
+
+				const dir1 = makeTempDir();
+				const dir2 = makeTempDir();
+				const dir3 = makeTempDir();
+				let counter = 0;
+
+				reg('delete', 'HKCU\\Software\\appcd-detect-test', '/f');
+				reg('add', 'HKCU\\Software\\appcd-detect-test');
+				reg('add', 'HKCU\\Software\\appcd-detect-test', '/v', 'foo', '/t', 'REG_SZ', '/d', dir2);
+
+				this.engine = new DetectEngine({
+					checkDir: async dir => {
+						// log(`${counter + 1}: ${dir}`);
+
+						try {
+							switch (++counter) {
+								case 2:
+									expect(this.engine.paths).to.deep.equal([ dir1, dir2 ]);
+									await sleep(250);
+									reg('add', 'HKCU\\Software\\appcd-detect-test', '/v', 'foo', '/t', 'REG_SZ', '/d', dir3, '/f');
+									break;
+
+								case 4:
+									expect(this.engine.paths).to.deep.equal([ dir1, dir3 ]);
+									done();
+									break;
+							}
+						} catch (err) {
+							done(err);
+						}
+					},
+					paths: [ dir1 ],
+					registryKeys: [
+						{
+							key: 'HKCU\\Software\\appcd-detect-test',
+							value: 'foo'
+						}
+					],
+					watch: true
+				});
+
+				this.engine.start();
+			});
+
+			it('should get value once created', function (done) {
+				this.timeout(10000);
+				this.slow(10000);
+
+				const dir1 = makeTempDir();
+				const dir2 = makeTempDir();
+				const dir3 = makeTempDir();
+				let counter = 0;
+
+				reg('delete', 'HKCU\\Software\\appcd-detect-test', '/f');
+				reg('add', 'HKCU\\Software\\appcd-detect-test');
+
+				this.engine = new DetectEngine({
+					checkDir: async dir => {
+						// log(`${counter + 1}: ${dir}`);
+
+						try {
+							switch (++counter) {
+								case 1:
+									expect(this.engine.paths).to.deep.equal([ dir1 ]);
+									await sleep(250);
+									reg('add', 'HKCU\\Software\\appcd-detect-test', '/v', 'foo', '/t', 'REG_SZ', '/d', dir2);
+									break;
+
+								case 3:
+									expect(this.engine.paths).to.deep.equal([ dir1, dir2 ]);
+									await sleep(250);
+									reg('add', 'HKCU\\Software\\appcd-detect-test', '/v', 'foo', '/t', 'REG_SZ', '/d', dir3, '/f');
+									break;
+
+								case 5:
+									expect(this.engine.paths).to.deep.equal([ dir1, dir3 ]);
+									done();
+									break;
+							}
+						} catch (err) {
+							done(err);
+						}
+					},
+					paths: [ dir1 ],
+					registryKeys: [
+						{
+							key: 'HKCU\\Software\\appcd-detect-test',
+							value: 'foo'
+						}
+					],
+					watch: true
+				});
+
+				this.engine.start();
+			});
+
+			it('should get and transform existing value', function (done) {
+				this.timeout(10000);
+				this.slow(10000);
+
+				const dir1 = makeTempDir();
+				const dir2 = makeTempDir();
+				const dir3 = makeTempDir();
+				let counter = 0;
+
+				reg('delete', 'HKCU\\Software\\appcd-detect-test', '/f');
+				reg('add', 'HKCU\\Software\\appcd-detect-test');
+				reg('add', 'HKCU\\Software\\appcd-detect-test', '/v', 'foo', '/t', 'REG_SZ', '/d', dir2);
+
+				this.engine = new DetectEngine({
+					checkDir: async dir => {
+						// log(`${counter + 1}: ${dir}`);
+
+						try {
+							switch (++counter) {
+								case 2:
+									expect(this.engine.paths).to.deep.equal([ dir1, dir3 ]);
+									done();
+									break;
+							}
+						} catch (err) {
+							done(err);
+						}
+					},
+					paths: [ dir1 ],
+					registryKeys: [
+						{
+							key: 'HKCU\\Software\\appcd-detect-test',
+							transform(obj) {
+								obj.value = dir3;
+							},
+							value: 'foo'
+						}
+					],
+					watch: true
+				});
+
+				this.engine.start();
+			});
+		});
+
+		describe('Filtering', () => {
+			afterEach(async function () {
+				if (this.engine) {
+					await this.engine.stop();
+					this.engine = null;
+				}
+
+				reg('delete', 'HKCU\\Software\\appcd-detect-test', '/f');
+			});
+
+			it('should filter out subkeys by string', function (done) {
+				this.timeout(10000);
+				this.slow(10000);
+
+				const dir = makeTempDir();
+				let counter = 0;
+				let nogo = false;
+
+				reg('delete', 'HKCU\\Software\\appcd-detect-test', '/f');
+				reg('add', 'HKCU\\Software\\appcd-detect-test');
+
+				this.engine = new DetectEngine({
+					checkDir: dir => {
+						// log(`${counter + 1}: ${dir}`);
+
+						if (nogo) {
+							done(new Error('Did not expect any events!'));
+							return;
+						}
+
+						switch (++counter) {
+							case 2:
+								nogo = true;
+								reg('add', 'HKCU\\Software\\appcd-detect-test\\bar');
+								setTimeout(() => {
+									nogo = false;
+									reg('delete', 'HKCU\\Software\\appcd-detect-test\\foo', '/f');
+								}, 1000);
+								break;
+
+							case 3:
+								reg('add', 'HKCU\\Software\\appcd-detect-test\\foo');
+								break;
+
+							case 4:
+								done();
+								break;
+						}
+					},
+					paths: [ dir ],
+					registryKeys: [
+						{
+							key: 'HKCU\\Software\\appcd-detect-test',
+							filter: {
+								subkeys: 'foo'
+							}
+						}
+					],
+					watch: true
+				});
+
+				this.engine.start()
+					.then(() => sleep(100))
+					.then(() => reg('add', 'HKCU\\Software\\appcd-detect-test\\foo'))
+					.catch(done);
+			});
+
+			it('should filter out subkeys by regex', function (done) {
+				this.timeout(10000);
+				this.slow(10000);
+
+				const dir = makeTempDir();
+				let counter = 0;
+				let nogo = false;
+
+				reg('delete', 'HKCU\\Software\\appcd-detect-test', '/f');
+				reg('add', 'HKCU\\Software\\appcd-detect-test');
+
+				this.engine = new DetectEngine({
+					checkDir: dir => {
+						// log(`${counter + 1}: ${dir}`);
+
+						if (nogo) {
+							done(new Error('Did not expect any events!'));
+							return;
+						}
+
+						switch (++counter) {
+							case 2:
+								nogo = true;
+								reg('add', 'HKCU\\Software\\appcd-detect-test\\bar');
+								setTimeout(() => {
+									nogo = false;
+									reg('add', 'HKCU\\Software\\appcd-detect-test\\foo2');
+								}, 1000);
+								break;
+
+							case 3:
+								done();
+								break;
+						}
+					},
+					paths: [ dir ],
+					registryKeys: [
+						{
+							key: 'HKCU\\Software\\appcd-detect-test',
+							filter: {
+								subkeys: /^foo/
+							}
+						}
+					],
+					watch: true
+				});
+
+				this.engine.start()
+					.then(() => sleep(100))
+					.then(() => reg('add', 'HKCU\\Software\\appcd-detect-test\\foo'))
+					.catch(done);
+			});
+
+			it('should filter out values by string', function (done) {
+				this.timeout(10000);
+				this.slow(10000);
+
+				const dir = makeTempDir();
+				let counter = 0;
+				let nogo = false;
+
+				reg('delete', 'HKCU\\Software\\appcd-detect-test', '/f');
+				reg('add', 'HKCU\\Software\\appcd-detect-test');
+
+				this.engine = new DetectEngine({
+					checkDir: dir => {
+						// log(`${counter + 1}: ${dir}`);
+
+						if (nogo) {
+							done(new Error('Did not expect any events!'));
+							return;
+						}
+
+						switch (++counter) {
+							case 2:
+								nogo = true;
+								reg('add', 'HKCU\\Software\\appcd-detect-test', '/v', 'bar', '/t', 'REG_SZ', '/d', 'test2');
+								setTimeout(() => {
+									nogo = false;
+									reg('delete', 'HKCU\\Software\\appcd-detect-test', '/v', 'foo', '/f');
+								}, 1000);
+								break;
+
+							case 3:
+								reg('add', 'HKCU\\Software\\appcd-detect-test', '/v', 'foo', '/t', 'REG_SZ', '/d', 'test3', '/f');
+								break;
+
+							case 4:
+								done();
+								break;
+						}
+					},
+					paths: [ dir ],
+					registryKeys: [
+						{
+							key: 'HKCU\\Software\\appcd-detect-test',
+							filter: {
+								values: 'foo'
+							}
+						}
+					],
+					watch: true
+				});
+
+				this.engine.start()
+					.then(() => sleep(100))
+					.then(() => reg('add', 'HKCU\\Software\\appcd-detect-test', '/v', 'foo', '/t', 'REG_SZ', '/d', 'test1'))
+					.catch(done);
+			});
+
+			it('should filter out values by regex', function (done) {
+				this.timeout(10000);
+				this.slow(10000);
+
+				const dir = makeTempDir();
+				let counter = 0;
+				let nogo = false;
+
+				reg('delete', 'HKCU\\Software\\appcd-detect-test', '/f');
+				reg('add', 'HKCU\\Software\\appcd-detect-test');
+
+				this.engine = new DetectEngine({
+					checkDir: dir => {
+						// log(`${counter + 1}: ${dir}`);
+
+						if (nogo) {
+							done(new Error('Did not expect any events!'));
+							return;
+						}
+
+						switch (++counter) {
+							case 2:
+								nogo = true;
+								reg('add', 'HKCU\\Software\\appcd-detect-test', '/v', 'bar', '/t', 'REG_SZ', '/d', 'test2');
+								setTimeout(() => {
+									nogo = false;
+									reg('delete', 'HKCU\\Software\\appcd-detect-test', '/v', 'foo', '/f');
+								}, 1000);
+								break;
+
+							case 3:
+								reg('add', 'HKCU\\Software\\appcd-detect-test', '/v', 'foo2', '/t', 'REG_SZ', '/d', 'test3', '/f');
+								break;
+
+							case 4:
+								done();
+								break;
+						}
+					},
+					paths: [ dir ],
+					registryKeys: [
+						{
+							key: 'HKCU\\Software\\appcd-detect-test',
+							filter: {
+								values: /^foo/
+							}
+						}
+					],
+					watch: true
+				});
+
+				this.engine.start()
+					.then(() => sleep(100))
+					.then(() => reg('add', 'HKCU\\Software\\appcd-detect-test', '/v', 'foo', '/t', 'REG_SZ', '/d', 'test1'))
+					.catch(done);
+			});
+		});
+	});
 });
+
+/*
+
+filtering!!!!
+
+WINDOWS
+
+visual studio:
+
+export const registryKeys = {
+	'HKCU\\Software\\Microsoft\\VisualStudio':              {},
+	'HKCU\\Software\\Microsoft\\VSCommon':                  {},
+	'HKLM\\Software\\RegisteredApplications':               { values: /^VisualStudio.+/ },
+	'HKLM\\Software\\Microsoft\\VisualStudio':              {},
+	'HKLM\\Software\\WOW6432Node\\Microsoft':               { subkeys: /^VisualStudio.+/ },
+	'HKLM\\Software\\WOW6432Node\\Microsoft\\VisualStudio': {}
+};
+
+registryKeys: Object.entries(windowslib.vs.registrykeys).map(([ key, filter ]) => ({ filter, key }))
+*/

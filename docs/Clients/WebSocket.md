@@ -100,11 +100,18 @@ the WebSocket client disconnects.
 
 ### Web Browser Call Example
 
-> Note: The following example requires msgpack. Either download it or reference it via the CDN:
+> ## `msgpack` required
+>
+> The following example requires msgpack. Either download it via `npm install msgpack-lite` or
+> reference it via the CDN:
 >
 > `<script src="https://cdnjs.cloudflare.com/ajax/libs/msgpack-lite/0.1.26/msgpack.min.js"></script>`
+>
+> For development, you may reference it directly from GitHub:
+>
+> `<script src="https://rawgit.com/kawanet/msgpack-lite/master/dist/msgpack.min.js"></script>`
 
-```javascript
+```js
 const ws = new WebSocket('ws://127.0.0.1:1732');
 ws.binaryType = 'arraybuffer';
 
@@ -125,7 +132,7 @@ ws.onmessage = evt => {
 This example uses the [ws](https://www.npmjs.com/package/ws) and
 [msgpack-lite](https://www.npmjs.com/package/msgpack-lite) packages.
 
-```javascript
+```js
 const msgpack = require('msgpack-lite');
 const util = require('util');
 const WebSocket = require('ws');
@@ -145,7 +152,7 @@ const ws = new WebSocket('ws://127.0.0.1:1732', {
 
 ### Node.js Subscribe Example
 
-```javascript
+```js
 const msgpack = require('msgpack-lite');
 const util = require('util');
 const WebSocket = require('ws');

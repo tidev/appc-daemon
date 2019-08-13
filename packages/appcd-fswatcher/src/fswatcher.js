@@ -636,7 +636,7 @@ export class Node {
 				&& evt.action === 'change'
 				&& isDir
 			) {
-				log('Dropping Windows event for change to contents of a directory');
+				// log('Dropping Windows event for change to contents of a directory');
 				return;
 			}
 		} catch (e) {

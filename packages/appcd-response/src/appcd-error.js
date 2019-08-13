@@ -115,11 +115,11 @@ export function createErrorClass(className, opts = {}) {
 			throw new TypeError('Expected options to be an object');
 		}
 
-		if (opts.hasOwnProperty('defaultStatus') && typeof opts.defaultStatus !== 'number') {
+		if (Object.prototype.hasOwnProperty.call(opts, 'defaultStatus') && typeof opts.defaultStatus !== 'number') {
 			throw new TypeError('Expected default status to be a number');
 		}
 
-		if (opts.hasOwnProperty('defaultStatusCode') && typeof opts.defaultStatusCode !== 'number' && typeof opts.defaultStatusCode !== 'string') {
+		if (Object.prototype.hasOwnProperty.call(opts, 'defaultStatusCode') && typeof opts.defaultStatusCode !== 'number' && typeof opts.defaultStatusCode !== 'string') {
 			throw new TypeError('Expected default status code to be a string or number');
 		}
 	}

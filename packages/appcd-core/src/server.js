@@ -88,20 +88,15 @@ export default class Server {
 	 * @access public
 	 */
 	async start() {
-		// check if the current user is root
-		let uid, gid;
+		const uid = this.config.get('server.user');
+		const gid = this.config.get('server.group');
+
 		if (process.getuid && process.getuid() === 0) {
 			// we are on a posix system and we're root, so we need to switch to a non-root user
-			uid = this.config.get('server.user');
-			gid = this.config.get('server.group');
 			if (!uid) {
 				const err = new Error('The daemon cannot be run as root. You must run as a non-root user or set a user in the config.');
 				err.code = 5;
 				throw err;
-			}
-			process.setuid(uid);
-			if (gid) {
-				process.setgid(gid);
 			}
 		}
 
@@ -122,6 +117,29 @@ export default class Server {
 		}
 		fs.writeFileSync(this.pidFile, process.pid);
 
+		// rename the process
+		process.title = 'appcd';
+
+		logger.log(`Appcelerator Daemon v${this.version}`);
+		logger.log('Environment: %s', highlight(this.config.get('environment.title')));
+		logger.log(`Node.js ${process.version} (${process.platform}, module v${process.versions.modules})`);
+		logger.log(`PID: ${highlight(process.pid)}`);
+
+		// init the home directory
+		const homeDir = expandPath(this.config.get('home'));
+		if (!isDir(homeDir)) {
+			logger.debug('Creating home directory %s', homeDir);
+			fs.mkdirsSync(homeDir);
+		}
+
+		// check if the current user is root
+		if (process.getuid && process.getuid() === 0) {
+			process.setuid(uid);
+			if (gid) {
+				process.setgid(gid);
+			}
+		}
+
 		// watch the pid to make sure it always exists
 		this.pidWatcher = new FSWatcher(this.pidFile)
 			.on('change', ({ action }) => {
@@ -130,14 +148,6 @@ export default class Server {
 					fs.writeFileSync(this.pidFile, process.pid);
 				}
 			});
-
-		// rename the process
-		process.title = 'appcd';
-
-		logger.log(`Appcelerator Daemon v${this.version}`);
-		logger.log('Environment: %s', highlight(this.config.get('environment.title')));
-		logger.log(`Node.js ${process.version} (${process.platform}, module v${process.versions.modules})`);
-		logger.log(`PID: ${highlight(process.pid)}`);
 
 		// listen for CTRL-C and SIGTERM
 		const shutdown = async () => {
@@ -150,13 +160,6 @@ export default class Server {
 		};
 		process.on('SIGINT',  shutdown);
 		process.on('SIGTERM', shutdown);
-
-		// init the home directory
-		const homeDir = expandPath(this.config.get('home'));
-		if (!isDir(homeDir)) {
-			logger.debug('Creating home directory %s', homeDir);
-			fs.mkdirsSync(homeDir);
-		}
 
 		// import any Titanium CLI configuration settings
 		await this.importTiConfig();
@@ -229,7 +232,7 @@ export default class Server {
 
 		// init the web server
 		this.systems.webserver = new WebServer({
-			hostname: this.config.get('server.host', '127.0.0.1'),
+			hostname: this.config.get('server.hostname', '127.0.0.1'),
 			port:     this.config.get('server.port'),
 			webroot:  path.resolve(__dirname, '..', 'public')
 		});

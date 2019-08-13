@@ -65,7 +65,7 @@ export default class Plugin extends EventEmitter {
 
 		return new Proxy(this, {
 			get(target, name) {
-				if (target.info.hasOwnProperty(name)) {
+				if (Object.prototype.hasOwnProperty.call(target.info, name)) {
 					return target.info[name];
 				} else {
 					return target[name];
@@ -76,7 +76,7 @@ export default class Plugin extends EventEmitter {
 				if (name === 'info') {
 					throw new Error('The "info" property is readonly');
 				}
-				if (target.info.hasOwnProperty(name)) {
+				if (Object.prototype.hasOwnProperty.call(target.info, name)) {
 					target.info[name] = value;
 				} else {
 					target[name] = value;

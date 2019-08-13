@@ -432,7 +432,7 @@ export default class Dispatcher {
 	 */
 	normalize(path, handler) {
 		// check if the `path` is a ServiceDispatcher or any object with a path and handler callback
-		if (path && typeof path === 'object' && path.hasOwnProperty('path') && typeof path.handler === 'function') {
+		if (path && typeof path === 'object' && Object.prototype.hasOwnProperty.call(path, 'path') && typeof path.handler === 'function') {
 			handler = path.handler;
 			path = path.path;
 		}

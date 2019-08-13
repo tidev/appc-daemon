@@ -18,9 +18,9 @@
   "dependencies": {
     "appcd-fs": "^1.1.7",
     "appcd-path": "^1.1.6",
-    "source-map-support": "^0.5.12",
+    "source-map-support": "^0.5.13",
     "sprintf-js": "^1.1.2",
-    "winreglib": "^1.0.2"
+    "winreglib": "^1.0.5"
   },
   "devDependencies": {
     "appcd-gulp": "^2.1.1"

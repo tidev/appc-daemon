@@ -1,3 +1,5 @@
+/* eslint-disable node/no-deprecated-api */
+
 /* istanbul ignore if */
 if (!Error.prepareStackTrace) {
 	require('source-map-support/register');

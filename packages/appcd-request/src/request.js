@@ -69,46 +69,48 @@ export default function request(params, callback) {
 
 			conf = Object.assign({ method: 'GET' }, conf, params);
 
+			// ca file
 			if (APPCD_NETWORK_CA_FILE && isFile(APPCD_NETWORK_CA_FILE)) {
 				conf.ca = fs.readFileSync(APPCD_NETWORK_CA_FILE).toString();
-			}
-
-			if (APPCD_NETWORK_PROXY) {
-				conf.proxy = APPCD_NETWORK_PROXY;
-			}
-
-			if (APPCD_NETWORK_STRICT_SSL !== undefined && APPCD_NETWORK_STRICT_SSL !== 'false') {
-				conf.strictSSL = true;
-			}
-
-			// ca file
-			const caFile = conf.caFile && typeof conf.caFile === 'string' && path.resolve(conf.caFile);
-			if (isFile(caFile)) {
-				conf.ca = fs.readFileSync(caFile);
-				delete conf.caFile;
+			} else {
+				const caFile = conf.caFile && typeof conf.caFile === 'string' && path.resolve(conf.caFile);
+				if (isFile(caFile)) {
+					conf.ca = fs.readFileSync(caFile);
+				}
 			}
 
 			// cert file
 			const certFile = conf.certFile && typeof conf.certFile === 'string' && path.resolve(conf.certFile);
 			if (isFile(certFile)) {
 				conf.cert = fs.readFileSync(certFile);
-				delete conf.certFile;
 			}
 
 			// key file
 			const keyFile = conf.keyFile && typeof conf.keyFile === 'string' && path.resolve(conf.keyFile);
 			if (isFile(keyFile)) {
 				conf.key = fs.readFileSync(keyFile);
-				delete conf.keyFile;
 			}
 
 			// configure proxy
-			const proxyType = conf.url && conf.url.indexOf('https') === 0 ? 'httpsProxy' : 'httpProxy';
-			if (conf[proxyType]) {
-				conf.proxy = conf[proxyType];
+			if (APPCD_NETWORK_PROXY) {
+				conf.proxy = APPCD_NETWORK_PROXY;
+			} else {
+				const proxyType = conf.url && conf.url.indexOf('https') === 0 ? 'httpsProxy' : 'httpProxy';
+				if (conf[proxyType]) {
+					conf.proxy = conf[proxyType];
+				}
 			}
+
+			// remove unused props
+			delete conf.caFile;
+			delete conf.certFile;
+			delete conf.keyFile;
 			delete conf.httpProxy;
 			delete conf.httpsProxy;
+
+			if (APPCD_NETWORK_STRICT_SSL !== undefined && APPCD_NETWORK_STRICT_SSL !== 'false') {
+				conf.strictSSL = true;
+			}
 
 			// console.log(conf);
 
@@ -120,7 +122,7 @@ export default function request(params, callback) {
 						note(conf.method),
 						conf.url,
 						statusCode < 400 ? ok(statusCode) : alert(statusCode),
-						headers.hasOwnProperty('content-length') ? note(`(${humanize.filesize(headers['content-length'])})`) : ''
+						Object.prototype.hasOwnProperty.call(headers, 'content-length') ? note(`(${humanize.filesize(headers['content-length'])})`) : ''
 					);
 				})
 				.on('error', () => {});
