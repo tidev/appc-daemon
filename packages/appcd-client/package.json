@@ -24,7 +24,7 @@
   "dependencies": {
     "appcd-logger": "^2.0.2",
     "appcd-response": "^2.0.0",
-    "appcd-util": "^1.1.7",
+    "appcd-util": "^2.0.0",
     "fs-extra": "^8.1.0",
     "msgpack-lite": "^0.1.26",
     "source-map-support": "^0.5.13",

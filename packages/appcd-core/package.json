@@ -33,7 +33,7 @@
     "appcd-response": "^2.0.0",
     "appcd-subprocess": "^2.0.1",
     "appcd-telemetry": "^2.0.1",
-    "appcd-util": "^1.1.7",
+    "appcd-util": "^2.0.0",
     "cli-kit": "^0.11.2",
     "fs-extra": "^8.1.0",
     "gawk": "^4.6.4",
