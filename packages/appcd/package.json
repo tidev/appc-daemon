@@ -32,7 +32,7 @@
     "appcd-config": "^1.3.0",
     "appcd-core": "^2.8.0",
     "appcd-dump-viewer": "^1.1.4",
-    "appcd-fs": "^1.1.7",
+    "appcd-fs": "^1.1.8",
     "appcd-logger": "^2.0.2",
     "appcd-nodejs": "^2.0.0",
     "appcd-path": "^1.1.6",

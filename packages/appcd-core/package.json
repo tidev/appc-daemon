@@ -22,7 +22,7 @@
     "appcd-config-service": "^2.0.0",
     "appcd-default-plugins": "^3.0.0",
     "appcd-dispatcher": "^2.0.0",
-    "appcd-fs": "^1.1.7",
+    "appcd-fs": "^1.1.8",
     "appcd-fswatch-manager": "^2.0.0",
     "appcd-fswatcher": "^1.2.2",
     "appcd-http": "^1.2.2",

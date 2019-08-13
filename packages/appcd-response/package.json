@@ -16,7 +16,7 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-fs": "^1.1.7",
+    "appcd-fs": "^1.1.8",
     "appcd-path": "^1.1.6",
     "source-map-support": "^0.5.13",
     "sprintf-js": "^1.1.2",

@@ -19,7 +19,7 @@
     "@babel/parser": "^7.5.5",
     "@babel/traverse": "^7.5.5",
     "@babel/types": "^7.5.5",
-    "appcd-fs": "^1.1.7",
+    "appcd-fs": "^1.1.8",
     "appcd-logger": "^2.0.2",
     "appcd-path": "^1.1.6",
     "doctrine": "^3.0.0",
