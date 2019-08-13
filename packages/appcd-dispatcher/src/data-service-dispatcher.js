@@ -134,7 +134,7 @@ export default class DataServiceDispatcher extends ServiceDispatcher {
 
 		if (filter) {
 			for (let i = 0, len = filter.length; result && typeof result === 'object' && i < len; i++) {
-				if (!result.hasOwnProperty(filter[i])) {
+				if (!Object.prototype.hasOwnProperty.call(result, filter[i])) {
 					return null;
 				}
 				result = result[filter[i]];

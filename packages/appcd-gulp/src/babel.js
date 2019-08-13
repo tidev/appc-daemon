@@ -50,6 +50,13 @@ const profiles = {
 			'@babel/plugin-transform-modules-commonjs',
 			'dynamic-import-node'
 		]
+	},
+
+	node12: {
+		plugins: [
+			'@babel/plugin-transform-modules-commonjs',
+			'dynamic-import-node'
+		]
 	}
 };
 

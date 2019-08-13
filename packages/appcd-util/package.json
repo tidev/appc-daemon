@@ -18,8 +18,8 @@
   "dependencies": {
     "appcd-fs": "^1.1.7",
     "lodash.get": "^4.4.2",
-    "semver": "^6.1.2",
-    "source-map-support": "^0.5.12"
+    "semver": "^6.3.0",
+    "source-map-support": "^0.5.13"
   },
   "devDependencies": {
     "appcd-gulp": "^2.1.1"
@@ -28,6 +28,6 @@
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
   "repository": "https://github.com/appcelerator/appc-daemon",
   "engines": {
-    "node": ">=8.0.0"
+    "node": ">=8.1.0"
   }
 }

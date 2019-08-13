@@ -170,7 +170,7 @@ export function i18n(locales) {
  */
 function loadCodeFile(locales, cls, code) {
 	for (let locale of locales) {
-		if (codesCache[locale] && codesCache[locale].hasOwnProperty(code)) {
+		if (codesCache[locale] && Object.prototype.hasOwnProperty.call(codesCache[locale], code)) {
 			return codesCache[locale][code];
 		}
 

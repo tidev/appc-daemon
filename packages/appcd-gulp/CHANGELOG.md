@@ -1,5 +1,10 @@
 # v2.2.0
 
+ * feat: Added Node 12 Babel profile.
+   [(DAEMON-275)](https://jira.appcelerator.org/browse/DAEMON-275)
+ * chore: Updated to `eslint-config-axway@4.3.0` which added eslint 6 support and added Node.js
+   eslint rules.
+ * chore: Disabled `require-atomic-updates` rule.
  * chore: Removed deprecated @babel/polyfill
  * chore: Updated dependencies
 

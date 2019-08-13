@@ -1,3 +1,9 @@
+# v2.1.0
+
+ * fix: Fixed request config setting precedence such that environment variables override config
+   settings.
+ * chore: Updated dependencies.
+
 # v2.0.0 (Jun 13, 2019)
 
  * BREAKING CHANGE: Updated to `appcd-dispatcher@2.0.0`.

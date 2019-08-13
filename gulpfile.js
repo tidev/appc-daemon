@@ -199,9 +199,7 @@ exports.ls = exports.list = async function listPackages() {
  */
 exports.lint = series(cyclic, function lint() {
 	return gulp
-		.src([
-			path.join(__dirname, 'packages/*/gulpfile.js')
-		])
+		.src(path.join(__dirname, 'packages/*/gulpfile.js'))
 		.pipe(debug({ title: 'Linting project:' }))
 		.pipe(plumber())
 		.pipe(chug({ tasks: [ 'lint' ] }));

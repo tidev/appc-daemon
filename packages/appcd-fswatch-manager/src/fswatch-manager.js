@@ -9,7 +9,7 @@ import Dispatcher, { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher
 import { codes } from 'appcd-response';
 import { EventEmitter } from 'events';
 import { expandPath } from 'appcd-path';
-import { FSWatcher, renderTree, rootEmitter, status as fsStatus, tree as fsTree } from 'appcd-fswatcher';
+import { FSWatcher, /* renderTree, */ rootEmitter, status as fsStatus, tree as fsTree } from 'appcd-fswatcher';
 
 const logger = appcdLogger('appcd:fswatcher:manager');
 const { highlight } = appcdLogger.styles;
@@ -82,7 +82,7 @@ export default class FSWatchManager extends ServiceDispatcher {
 		watcher.on('change', publish);
 		this.watchers[sid] = watcher;
 
-		logger.log(renderTree());
+		// logger.log(renderTree());
 	}
 
 	/**
@@ -101,7 +101,7 @@ export default class FSWatchManager extends ServiceDispatcher {
 			logger.log('Stopping FSWatcher: %s', highlight(sid));
 			watcher.close();
 			delete this.watchers[sid];
-			logger.log(renderTree());
+			// logger.log(renderTree());
 		}
 	}
 

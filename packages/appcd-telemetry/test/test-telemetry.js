@@ -289,6 +289,8 @@ describe('telemetry', () => {
 
 	describe('Sending Events', () => {
 		afterEach(async function () {
+			this.timeout(10000);
+
 			if (this.telemetry) {
 				await this.telemetry.shutdown();
 				this.telemetry = null;

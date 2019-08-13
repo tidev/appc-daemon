@@ -1,3 +1,12 @@
+# v2.0.2
+
+ * fix: Fixed bug where events were sent out-of-order if there was a connection error sending a
+   batch of data.
+ * fix: Fixed bug where the next schuduled sending of events was stopped if shutdown prior to
+   scheduling.
+ * fix: Fixed live config changes for environment name.
+ * chore: Updated dependencies.
+
 # v2.0.1 (Jun 13, 2019)
 
  * chore: Updated to `appcd-dispatcher@2.0.0`, `appcd-machine-id@2.0.1`, and `appcd-request@2.0.0`.

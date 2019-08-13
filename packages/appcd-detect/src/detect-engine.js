@@ -7,11 +7,10 @@ import pluralize from 'pluralize';
 import { arrayify, debounce, randomBytes, tailgate } from 'appcd-util';
 import { EventEmitter } from 'events';
 import { real } from 'appcd-path';
+import RegistryWatcher from './registry-watcher';
 import { which } from 'appcd-subprocess';
 
 const { highlight } = appcdLogger.styles;
-
-const winreglib = process.platform === 'win32' ? require('winreglib') : null;
 
 /**
  * A engine for detecting various things. It walks the search paths and calls a `checkDir()`
@@ -44,6 +43,12 @@ export default class DetectEngine extends EventEmitter {
 	refreshPathsTimer = null;
 
 	/**
+	 * A list of active Windows Registry watchers.
+	 * @type {Array.<RegistryWatcher>}
+	 */
+	registryWatchers = [];
+
+	/**
 	 * A gawked array containing the results from the scan.
 	 * @type {Array.<Object>}
 	 */
@@ -54,6 +59,12 @@ export default class DetectEngine extends EventEmitter {
 	 * @type {Set}
 	 */
 	searchPaths = null;
+
+	/**
+	 * A reference to the `winreglib` module. Only available on Windows machines.
+	 * @type {Object}
+	 */
+	winreglib = process.platform === 'win32' ? require('winreglib') : null;
 
 	/**
 	 * Initializes the detect engine instance and validates the options.
@@ -83,14 +94,17 @@ export default class DetectEngine extends EventEmitter {
 	 * found path. Requires `opts.recursive` to be `true`.
 	 * @param {Boolean} [opts.redetect=false] - When `true`, re-runs detection when a path changes.
 	 * Requires `watch` to be `true`.
-	 * @param {Number} [opts.refreshPathsInterval=30000] - The number of milliseconds to check for
-	 * updated search and default paths, namely from the Windows Registry. Only used when `detect()`
-	 * is called with `watch=true`.
-	 * @param {Function} [opts.registryCallback] - A user-defined function that performs its own
-	 * Windows Registry checks. The callback may return a promise. The result must be a string
-	 * containing a path, an array of paths, or a falsey value if there are no paths to return.
-	 * @param {Object|Array<Object>|Set} [opts.registryKeys] - One or more objects containing the
-	 * registry `hive`, `key`, and value `name` to query the Windows Registry.
+	 * @param {Number} [opts.refreshPathsInterval=30000] - The number of milliseconds to wait
+	 * between calls to `opts.registryCallback`. This option is ignored on non-Windows platforms.
+	 * @param {Function} [opts.registryCallback] - A function that will only be invoked when the
+	 * current platform is `win32` and `opts.watch` is set to `true`. The intent is this function
+	 * performs whatever Windows Registry queries, then returns a promise that resolves an object
+	 * containing two properties: `paths` containing an array of paths to add to the list of search
+	 * paths and `defaultPath` containing either undefined or a string with a path. This option is
+	 * ignored on non-Windows platforms.
+	 * @param {Array<Object>|Set|Object} [opts.registryKeys] - An array containg one or more
+	 * registry watch parameter objects. There are two types of params: `paths` and `rescan`. This
+	 * option is ignored on non-Windows platforms.
 	 * @param {Boolean} [opts.watch=false] - When `true`, watches for changes and emits the new
 	 * results when a change occurs.
 	 * @access public
@@ -128,18 +142,20 @@ export default class DetectEngine extends EventEmitter {
 		// we only set redetect if we're watching
 		opts.redetect = opts.watch ? opts.redetect : false;
 
-		opts.refreshPathsInterval = Math.max(~~opts.refreshPathsInterval || 30000, 0);
-
-		if (opts.registryCallback !== undefined && typeof opts.registryCallback !== 'function') {
-			throw new TypeError('Expected "registryCallback" option to be a function');
-		}
-
-		opts.registryKeys = arrayify(opts.registryKeys, true);
-		if (opts.registryKeys.some(r => !r || typeof r !== 'object' || Array.isArray(r) || !r.hive || !r.key || !r.name)) {
-			throw new TypeError('Expected "registryKeys" option to be an object or array of objects with a "hive", "key", and "name"');
-		}
-
 		super();
+
+		if (this.winreglib) {
+			opts.refreshPathsInterval = Math.max(~~opts.refreshPathsInterval || 30000, 0);
+
+			if (opts.registryCallback !== undefined && typeof opts.registryCallback !== 'function') {
+				throw new TypeError('Expected "registryCallback" option to be a function');
+			}
+
+			// validate and normalize registry keys
+			for (const params of arrayify(opts.registryKeys, true)) {
+				this.registryWatchers.push(new RegistryWatcher(params));
+			}
+		}
 
 		this.opts = opts;
 
@@ -215,15 +231,7 @@ export default class DetectEngine extends EventEmitter {
 			}
 		}
 
-		if (process.platform === 'win32') {
-			await Promise.all(this.opts.registryKeys.map(async (obj) => {
-				try {
-					searchPaths.add(real(winreglib.get(obj.hive ? `${obj.hive}\\${obj.key}` : obj.key, obj.name)));
-				} catch (e) {
-					this.logger.warn('Failed to get registry key: %s', e.message);
-				}
-			}));
-
+		if (this.winreglib) {
 			if (typeof this.opts.registryCallback === 'function') {
 				try {
 					const result = await this.opts.registryCallback();
@@ -240,6 +248,16 @@ export default class DetectEngine extends EventEmitter {
 					}
 				} catch (e) {
 					this.logger.warn('Registry callback threw error: %s', e.message);
+				}
+			}
+
+			for (const watcher of this.registryWatchers) {
+				for (const { isDefault, value } of watcher.values) {
+					searchPaths.add(real(value));
+					if (isDefault && value !== defaultPath) {
+						defaultPath = value;
+						this.logger.log(`Overwriting default path based on registry: ${highlight(defaultPath)}`);
+					}
 				}
 			}
 		}
@@ -291,22 +309,24 @@ export default class DetectEngine extends EventEmitter {
 	 * @access private
 	 */
 	refreshPaths() {
-		this.refreshPathsTimer = setTimeout(async () => {
-			try {
-				const { defaultPath, searchPaths } = await this.getPaths();
+		if (this.opts.registryCallback && this.opts.refreshPathsInterval && this.opts.watch) {
+			this.refreshPathsTimer = setTimeout(async () => {
+				try {
+					const { defaultPath, searchPaths } = await this.getPaths();
 
-				if (searchPaths.size !== this.detectors.size || [ ...searchPaths ].some(dir => !this.detector.has(dir))) {
-					await this.scan({ defaultPath, searchPaths });
-				} else if (defaultPath !== this.defaultPath) {
-					this.defaultPath = defaultPath;
-					await this.processResults(this.results);
+					if (searchPaths.size !== this.detectors.size || [ ...searchPaths ].some(dir => !this.detector.has(dir))) {
+						await this.scan({ defaultPath, searchPaths });
+					} else if (defaultPath !== this.defaultPath) {
+						this.defaultPath = defaultPath;
+						await this.processResults(this.results);
+					}
+				} catch (err) {
+					this.emit('error', err);
 				}
-			} catch (err) {
-				this.emit('error', err);
-			}
 
-			this.refreshPaths();
-		}, this.opts.refreshPathsInterval);
+				this.refreshPaths();
+			}, this.opts.refreshPathsInterval);
+		}
 	}
 
 	/**
@@ -397,10 +417,20 @@ export default class DetectEngine extends EventEmitter {
 	 */
 	async start() {
 		try {
-			await this.rescan();
 			if (this.opts.watch) {
+				for (const watcher of this.registryWatchers) {
+					watcher
+						.on('change', () => this.rescan())
+						.start();
+				}
+			}
+
+			await this.rescan();
+
+			if (this.winreglib) {
 				this.refreshPaths();
 			}
+
 			return this.opts.multiple ? this.results : this.results[0];
 		} catch (err) {
 			this.emit('error', err);
@@ -420,6 +450,10 @@ export default class DetectEngine extends EventEmitter {
 			this.logger.log('  Cancelling refresh paths timer');
 			clearTimeout(this.refreshPathsTimer);
 			this.refreshPathsTimer = null;
+		}
+
+		for (const watcher of this.registryWatchers) {
+			watcher.stop();
 		}
 
 		this.logger.log(pluralize(`  Stopping ${highlight(this.detectors.size)} detector`, this.detectors.size));

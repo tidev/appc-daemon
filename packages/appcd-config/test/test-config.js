@@ -273,6 +273,12 @@ describe('Config', () => {
 			expect(config.get('foo.bar')).to.deep.equal([ 'baz', 'wiz' ]);
 		});
 
+		it('should push overwrite an existing falsey value', () => {
+			const config = new Config({ config: { foo: { bar: null } } });
+			config.push('foo.bar', 'baz');
+			expect(config.get('foo.bar')).to.deep.equal([ 'baz' ]);
+		});
+
 		it('should combine multiple types ', () => {
 			const config = new Config({ config: { foo: { bar: [ 'baz' ] } } });
 			config.push('foo', 'wiz');
