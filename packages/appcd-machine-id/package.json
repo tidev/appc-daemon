@@ -1,6 +1,6 @@
 {
   "name": "appcd-machine-id",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Determines and caches a unique machine identifier.",
   "main": "./dist/machine-id",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
