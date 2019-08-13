@@ -1,4 +1,4 @@
-# v3.0.0
+# v3.0.0 (Aug 13, 2019)
 
  * BREAKING CHANGE: Updated to `appcd-default-plugins@4.0.0`, `appcd-nodejs@3.0.0`,
    `appcd-plugin@3.0.0`, `appcd-subprocess@3.0.0`, `appcd-telemetry@3.0.0`, and `appcd-util@2.0.0`.
