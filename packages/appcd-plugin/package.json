@@ -32,7 +32,7 @@
     "appcd-request": "^2.1.0",
     "appcd-response": "^2.0.1",
     "appcd-subprocess": "^2.0.2",
-    "appcd-telemetry": "^2.0.1",
+    "appcd-telemetry": "^2.0.2",
     "appcd-util": "^2.0.0",
     "appcd-winreg": "^1.1.7",
     "builtin-modules": "^3.1.0",
