@@ -1,4 +1,4 @@
-# v2.0.3
+# v2.0.3 (Aug 13, 2019)
 
  * chore: Updated dependencies.
 

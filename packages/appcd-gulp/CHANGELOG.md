@@ -1,4 +1,4 @@
-# v2.2.0
+# v2.2.0 (Aug 13, 2019)
 
  * feat: Added Node 12 Babel profile.
    [(DAEMON-275)](https://jira.appcelerator.org/browse/DAEMON-275)

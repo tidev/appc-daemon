@@ -1,4 +1,4 @@
-# v2.2.0
+# v2.2.0 (Aug 13, 2019)
 
  * feat: Updated `registryKeys` option for more advanced Windows Registry handling.
  * chore: Updated dependencies.

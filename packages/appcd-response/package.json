@@ -1,6 +1,6 @@
 {
   "name": "appcd-response",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Library for responses and errors with i18n support and error codes.",
   "main": "./dist/index",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
@@ -16,14 +16,14 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-fs": "^1.1.7",
-    "appcd-path": "^1.1.6",
+    "appcd-fs": "^1.1.8",
+    "appcd-path": "^1.1.7",
     "source-map-support": "^0.5.13",
     "sprintf-js": "^1.1.2",
     "winreglib": "^1.0.5"
   },
   "devDependencies": {
-    "appcd-gulp": "^2.1.1"
+    "appcd-gulp": "^2.2.0"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-response",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",

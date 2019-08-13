@@ -1,6 +1,15 @@
-# v2.0.2
+# v3.0.1 (Aug 13, 2019)
 
+ * BREAKING CHANGE: Updated to `appcd-subprocess@3.0.0`.
  * chore: Updated dependencies.
+
+# v3.0.0 (Aug 13, 2019)
+
+ * Botched release.
+
+# v2.0.2 (Aug 13, 2019)
+
+ * Botched release.
 
 # v2.0.1 (Jun 13, 2019)
 

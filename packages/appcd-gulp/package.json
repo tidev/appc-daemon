@@ -1,6 +1,6 @@
 {
   "name": "appcd-gulp",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "description": "Common gulp tasks and utilities.",
   "main": "./src/index",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
@@ -47,7 +47,7 @@
     "nyc": "^14.1.1",
     "sinon": "^7.4.1",
     "sinon-chai": "^3.3.0",
-    "webpack": "^4.39.1"
+    "webpack": "^4.39.2"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-gulp",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
