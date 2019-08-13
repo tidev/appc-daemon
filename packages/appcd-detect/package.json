@@ -29,7 +29,7 @@
   },
   "devDependencies": {
     "appcd-fswatch-manager": "^2.0.0",
-    "appcd-fswatcher": "^1.2.2",
+    "appcd-fswatcher": "^1.2.3",
     "appcd-gulp": "^2.2.0",
     "fs-extra": "^8.1.0"
   },

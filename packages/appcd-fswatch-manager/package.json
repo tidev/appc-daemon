@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "appcd-dispatcher": "^2.0.1",
-    "appcd-fswatcher": "^1.2.2",
+    "appcd-fswatcher": "^1.2.3",
     "appcd-logger": "^2.0.2",
     "appcd-response": "^2.0.1",
     "source-map-support": "^0.5.13"
