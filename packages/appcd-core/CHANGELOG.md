@@ -1,5 +1,7 @@
-# v2.9.0
+# v3.0.0 (Aug 13, 2019)
 
+ * BREAKING CHANGE: Updated to `appcd-default-plugins@4.0.0`, `appcd-nodejs@3.0.0`,
+   `appcd-plugin@3.0.0`, `appcd-subprocess@3.0.0`, `appcd-telemetry@3.0.0`, and `appcd-util@2.0.0`.
  * fix: Added `sid` to WebSocketSession context so remote clients will know the subscription id.
  * fix: Fixed bug where `server.hostname` was not being correctly referenced.
  * chore: Bumped Node.js version from 10.15.3 to 10.16.2.
