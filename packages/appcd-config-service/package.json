@@ -20,7 +20,7 @@
     "appcd-dispatcher": "^2.0.0",
     "appcd-logger": "^2.0.2",
     "appcd-path": "^1.1.7",
-    "appcd-response": "^2.0.0",
+    "appcd-response": "^2.0.1",
     "source-map-support": "^0.5.13"
   },
   "devDependencies": {

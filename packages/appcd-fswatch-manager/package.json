@@ -19,7 +19,7 @@
     "appcd-dispatcher": "^2.0.0",
     "appcd-fswatcher": "^1.2.2",
     "appcd-logger": "^2.0.2",
-    "appcd-response": "^2.0.0",
+    "appcd-response": "^2.0.1",
     "source-map-support": "^0.5.13"
   },
   "devDependencies": {

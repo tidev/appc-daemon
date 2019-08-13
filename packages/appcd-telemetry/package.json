@@ -23,7 +23,7 @@
     "appcd-machine-id": "^2.0.1",
     "appcd-path": "^1.1.7",
     "appcd-request": "^2.0.0",
-    "appcd-response": "^2.0.0",
+    "appcd-response": "^2.0.1",
     "appcd-util": "^2.0.0",
     "fs-extra": "^8.1.0",
     "source-map-support": "^0.5.13",
