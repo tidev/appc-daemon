@@ -1,0 +1,21 @@
+[submodule "plugin-android"]
+	path = plugins/android
+	url = git@github.com:appcelerator/appcd-plugin-android.git
+[submodule "plugin-genymotion"]
+	path = plugins/genymotion
+	url = git@github.com:appcelerator/appcd-plugin-genymotion.git
+[submodule "plugin-ios"]
+	path = plugins/ios
+	url = git@github.com:appcelerator/appcd-plugin-ios.git
+[submodule "plugin-jdk"]
+	path = plugins/jdk
+	url = git@github.com:appcelerator/appcd-plugin-jdk.git
+[submodule "plugin-system-info"]
+	path = plugins/system-info
+	url = git@github.com:appcelerator/appcd-plugin-system-info.git
+[submodule "plugin-titanium"]
+	path = plugins/titanium
+	url = git@github.com:appcelerator/appcd-plugin-titanium.git
+[submodule "plugin-windows"]
+	path = plugins/windows
+	url = git@github.com:appcelerator/appcd-plugin-windows.git
