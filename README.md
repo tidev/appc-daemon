@@ -36,6 +36,7 @@ git submodule update
 
 # OPTIONAL: add remote for each submodule
 git submodule foreach "git remote add $GIT_REMOTE `git remote get-url origin | sed -E s/$GITHUB_USER/appcelerator/`"
+git submodule foreach "git fetch --all"
 
 # install deps, link, and build
 yarn
