@@ -1,3 +1,7 @@
+# v4.1.0 (Aug 15, 2019)
+
+ * chore: Updated plugins to latest appcd v3 compatible versions.
+
 # v4.0.0 (Aug 13, 2019)
 
  * BREAKING CHANGE: `appcd-default-plugins` supports both postinstall and runtime installation of
