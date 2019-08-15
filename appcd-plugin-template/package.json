@@ -1,0 +1,37 @@
+{
+  "name": "@appcd/plugin-replace-with-your-name",
+  "version": "0.1.0",
+  "description": "DESCRIPTION GOES HERE",
+  "main": "./dist/index",
+  "author": "Company Name <company@email.com>",
+  "maintainers": [
+    "Developer Name <developer@email.com>"
+  ],
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "gulp build",
+    "coverage": "gulp coverage",
+    "docs": "gulp docs",
+    "prepare": "gulp build",
+    "test": "gulp test"
+  },
+  "dependencies": {
+    "source-map-support": "^0.5.13"
+  },
+  "devDependencies": {
+    "appcd-gulp": "^2.2.0",
+    "gulp": "^4.0.2"
+  },
+  "homepage": "https://github.com/appcelerator/appc-daemon-plugins/tree/master/packages/appcd-plugin-template",
+  "bugs": "https://github.com/appcelerator/appc-daemon-plugins/issues",
+  "repository": "https://github.com/appcelerator/appc-daemon-plugins",
+  "appcd": {
+    "appcdVersion": "1.x || 2.x || 3.x",
+    "config": "./conf/config.js",
+    "name": "[PLUGIN_NAME]",
+    "type": "external"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
