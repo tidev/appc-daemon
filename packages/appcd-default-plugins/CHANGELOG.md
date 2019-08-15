@@ -1,3 +1,7 @@
+# v4.1.1
+
+ * chore: Updated dependencies
+
 # v4.1.0 (Aug 15, 2019)
 
  * chore: Updated plugins to latest appcd v3 compatible versions.

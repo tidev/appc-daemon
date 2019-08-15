@@ -1,3 +1,7 @@
+# v3.0.1
+
+ * chore: Updated dependencies
+
 # v3.0.0 (Aug 13, 2019)
 
  * BREAKING CHANGE: Updated to `appcd-machine-id@3.0.1`, `appcd-nodejs@3.0.0`,

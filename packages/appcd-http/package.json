@@ -20,7 +20,7 @@
     "appcd-logger": "^2.0.3",
     "koa": "^2.7.0",
     "koa-bodyparser": "^4.2.1",
-    "koa-helmet": "^5.0.0",
+    "koa-helmet": "^5.1.0",
     "koa-send": "^5.0.0",
     "path-to-regexp": "^3.0.0",
     "source-map-support": "^0.5.13",
