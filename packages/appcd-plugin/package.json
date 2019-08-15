@@ -40,7 +40,7 @@
     "gawk": "^4.6.4",
     "globule": "^1.2.1",
     "hook-emitter": "^4.0.0",
-    "ignore": "^5.1.2",
+    "ignore": "^5.1.4",
     "pluralize": "^8.0.0",
     "pretty-ms": "^5.0.0",
     "semver": "^6.3.0",

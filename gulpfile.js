@@ -217,6 +217,17 @@ exports.package = series(build, function pkg() {
 });
 
 /*
+ * plugin tasks
+ */
+exports['link-plugins'] = async function linkPlugins() {
+	return runLerna([ 'exec', '--scope', '@appcd/plugin-*', 'yarn', 'link' ]);
+};
+
+exports['unlink-plugins'] = async function unlinkPlugins() {
+	return runLerna([ 'exec', '--scope', '@appcd/plugin-*', 'yarn', 'unlink' ]);
+};
+
+/*
  * test tasks
  */
 exports.test = series(parallel(nodeInfo, build), function test() {
@@ -318,7 +329,7 @@ async function runTests(cover) {
  * watch/debug tasks
  */
 async function startDaemon() {
-	spawn(process.execPath, [ 'packages/appcd/bin/appcd', 'start', '--debug', '--config', '{ \"telemetry\": { \"environment\": \"development\" } }' ], { stdio: 'inherit' });
+	return spawn(process.execPath, [ 'packages/appcd/bin/appcd', 'start', '--debug', '--config', '{ \"telemetry\": { \"environment\": \"development\" } }' ], { stdio: 'inherit' });
 }
 
 function stopDaemon() {
@@ -331,7 +342,7 @@ exports['start-daemon'] = async () => {
 	startDaemon();
 };
 
-async function watchOnly() {
+async function watchOnly(child) {
 	const binWatcher = gulp
 		.watch(`${__dirname}/packages/appcd/bin/*`)
 		.on('all', (type, path) => {
@@ -364,22 +375,27 @@ async function watchOnly() {
 			}
 		});
 
-	let stopping = false;
-
 	return new Promise(resolve => {
-		process.on('SIGINT', () => {
+		let stopping = false;
+		const cleanup = () => {
 			if (!stopping) {
 				stopping = true;
 				binWatcher.close();
 				srcWatcher.close();
 				resolve();
 			}
-		});
+		};
+
+		if (child) {
+			child.on('close', cleanup);
+		}
+		process.on('SIGINT', cleanup);
 	});
 }
-exports['watch-only'] = watchOnly;
 
-exports.watch = series(build, startDaemon, watchOnly);
+exports.watch = series(build, async function watch() {
+	return watchOnly(await startDaemon());
+});
 
 exports.debug = series(build, function debugDaemon() {
 	spawnSync(process.execPath, [ 'packages/appcd/bin/appcd', 'start', '--debug-inspect', '--config', '{ \"telemetry\": { \"environment\": \"development\" } }' ], { stdio: 'inherit' });
