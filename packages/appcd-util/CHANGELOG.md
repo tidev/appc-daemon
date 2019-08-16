@@ -1,3 +1,8 @@
+# v2.0.1
+
+ * chore: Fixed homepage and repository URLs in `package.json`.
+ * chore: Added links to issue trackers in readme.
+
 # v2.0.0 (Aug 13, 2019)
 
  * BREAKING CHANGE: Bumped minimum supported Node.js version from `>=8.0.0` to `>=8.1.0` to fix

@@ -7,7 +7,7 @@ This monorepo contains several packages which collectively define the Appc Daemo
 
 Refer to the [docs](docs/) for getting started and technical information.
 
-Report issues in [JIRA](https://jira.appcelerator.org/projects/DAEMON/issues).
+Report issues to [GitHub issues][2]. Official issue tracker in [JIRA][3].
 
 ## Plugins
 
@@ -25,17 +25,16 @@ git submodule init
 
 # OPTIONAL: update the submodule entries to reference your fork of each
 GITHUB_USER=<your_github_username>
-GIT_REMOTE=<name_of_appc_remote>
+GIT_REMOTE=<name_of_appc_remote> # such as "appc" or "upstream"
 
 mv .git/config .git/config.bak
-
 sed -E "s/(git@github\.com:)appcelerator(\/appcd-plugin-)/\1${GITHUB_USER}\2/" .git/config.bak > .git/config
 
 # fetch the submodules
 git submodule update
 
 # OPTIONAL: add remote for each submodule
-git submodule foreach "git remote add $GIT_REMOTE `git remote get-url origin | sed -E s/$GITHUB_USER/appcelerator/`"
+git submodule foreach "git remote add $GIT_REMOTE git@github.com:appcelerator/\$(basename \$(git remote get-url origin))"
 git submodule foreach "git fetch --all"
 
 # install deps, link, and build
@@ -61,3 +60,5 @@ This project is open source under the [Apache Public License v2][1] and is devel
 in this distribution for more information.
 
 [1]: https://github.com/appcelerator/appc-daemon/blob/master/LICENSE
+[2]: https://github.com/appcelerator/appc-daemon/issues
+[3]: https://jira.appcelerator.org/projects/DAEMON/issues

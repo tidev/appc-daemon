@@ -31,9 +31,9 @@
     "appcd-gulp": "^2.2.0",
     "tmp": "^0.1.0"
   },
-  "homepage": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-config",
+  "homepage": "https://github.com/appcelerator/appc-daemon",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
-  "repository": "https://github.com/appcelerator/appc-daemon",
+  "repository": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-config",
   "engines": {
     "node": ">=8.0.0"
   }

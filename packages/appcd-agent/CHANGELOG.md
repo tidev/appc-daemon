@@ -1,3 +1,8 @@
+# v1.1.8
+
+ * chore: Fixed homepage and repository URLs in `package.json`.
+ * chore: Added links to issue trackers in readme.
+
 # v1.1.7 (Aug 13, 2019)
 
  * chore: Fixed eslint `hasOwnProperty` warnings.

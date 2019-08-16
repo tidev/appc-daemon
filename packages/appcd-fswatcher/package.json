@@ -28,10 +28,10 @@
     "fs-extra": "^8.1.0",
     "tmp": "^0.1.0"
   },
-  "homepage": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-fswatcher",
+  "homepage": "https://github.com/appcelerator/appc-daemon",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
-  "repository": "https://github.com/appcelerator/appc-daemon",
+  "repository": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-fswatcher",
   "engines": {
-    "node": ">=8.0.0"
+    "node": ">=8.1.0"
   }
 }

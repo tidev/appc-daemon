@@ -1,3 +1,8 @@
+# v2.2.1
+
+ * chore: Fixed homepage and repository URLs in `package.json`.
+ * chore: Added links to issue trackers in readme.
+
 # v2.2.0 (Aug 13, 2019)
 
  * feat: Updated `registryKeys` option for more advanced Windows Registry handling.

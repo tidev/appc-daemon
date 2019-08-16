@@ -7,6 +7,8 @@ Visit https://github.com/appcelerator/appc-daemon for more information.
 > Deprecation Notice: In `appcd-plugin@2.0.0`, `appcd-winreg` will no longer be provided for
 > plugins. Plugins will need to explicitly depend on `appcd-winreg` or migrate to `winreglib`.
 
+Report issues to [GitHub issues][2]. Official issue tracker in [JIRA][3].
+
 ## Installation
 
 	npm i appcd-plugin
@@ -38,3 +40,5 @@ This project is open source under the [Apache Public License v2][1] and is devel
 in this distribution for more information.
 
 [1]: https://github.com/appcelerator/appc-daemon/blob/master/packages/appcd-plugin/LICENSE
+[2]: https://github.com/appcelerator/appc-daemon/issues
+[3]: https://jira.appcelerator.org/projects/DAEMON/issues
