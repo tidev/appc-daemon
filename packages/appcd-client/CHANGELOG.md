@@ -1,3 +1,10 @@
+# v2.0.2
+
+ * chore: Fixed homepage and repository URLs in `package.json`.
+ * chore: Added links to issue trackers in readme.
+ * chore: Bumped required Node.js version to 8.12.0 which is technically a breaking change, but
+   `appcd-response@2.0.0` already requires Node.js 8.12.0.
+
 # v2.0.1 (Aug 13, 2019)
 
  * chore: Updated dependencies

@@ -1,3 +1,8 @@
+# v1.3.2
+
+ * chore: Fixed homepage and repository URLs in `package.json`.
+ * chore: Added links to issue trackers in readme.
+
 # v1.3.1 (Aug 13, 2019)
 
  * fix: Fixed bug when pushing a config value to an existing key with null value.

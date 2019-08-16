@@ -4,6 +4,8 @@ Provides an HTTP-like API for registering and invoking service endpoints.
 
 Visit https://github.com/appcelerator/appc-daemon for more information.
 
+Report issues to [GitHub issues][9]. Official issue tracker in [JIRA][10].
+
 ## Installation
 
 	npm i appcd-dispatcher
@@ -231,3 +233,5 @@ in this distribution for more information.
 [6]: https://github.com/appcelerator/appc-daemon/blob/master/packages/appcd-core/src/status-monitor.js
 [7]: https://github.com/appcelerator/appc-daemon/blob/master/packages/appcd-plugin/src/plugin-manager.js
 [8]: https://www.npmjs.com/package/gawk
+[9]: https://github.com/appcelerator/appc-daemon/issues
+[10]: https://jira.appcelerator.org/projects/DAEMON/issues

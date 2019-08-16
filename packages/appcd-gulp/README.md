@@ -6,6 +6,8 @@ Visit https://github.com/appcelerator/appc-daemon for more information.
 
 > :warning: appcd-gulp@2.x requires Gulp 4. Use appcd-gulp@1.x for Gulp 3 compatibility.
 
+Report issues to [GitHub issues][2]. Official issue tracker in [JIRA][3].
+
 ## Prerequisites
 
 appcd-gulp requires you to globally install [gulp](https://npmjs.org/package/gulp) 4.x:
@@ -79,3 +81,5 @@ This project is open source under the [Apache Public License v2][1] and is devel
 in this distribution for more information.
 
 [1]: https://github.com/appcelerator/appc-daemon/blob/master/packages/appcd-gulp/LICENSE
+[2]: https://github.com/appcelerator/appc-daemon/issues
+[3]: https://jira.appcelerator.org/projects/DAEMON/issues

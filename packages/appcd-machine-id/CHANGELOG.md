@@ -1,3 +1,8 @@
+# v3.0.2
+
+ * chore: Fixed homepage and repository URLs in `package.json`.
+ * chore: Added links to issue trackers in readme.
+
 # v3.0.1 (Aug 13, 2019)
 
  * BREAKING CHANGE: Updated to `appcd-subprocess@3.0.0`.

@@ -46,11 +46,11 @@
   "devDependencies": {
     "appcd-gulp": "^2.2.0"
   },
-  "homepage": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd",
+  "homepage": "https://github.com/appcelerator/appc-daemon",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
-  "repository": "https://github.com/appcelerator/appc-daemon",
+  "repository": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd",
   "engines": {
-    "node": ">=8.12.0"
+    "node": "^8.12.0 || >=10.2.0"
   },
   "cli-kit": {
     "description": "The Appc Daemon for powering client-side tooling.",

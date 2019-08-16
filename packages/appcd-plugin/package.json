@@ -54,10 +54,10 @@
     "fs-extra": "^8.1.0",
     "tmp": "^0.1.0"
   },
-  "homepage": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-plugin",
+  "homepage": "https://github.com/appcelerator/appc-daemon",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
-  "repository": "https://github.com/appcelerator/appc-daemon",
+  "repository": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-plugin",
   "engines": {
-    "node": ">=8.12.0"
+    "node": "^8.12.0 || >=10.2.0"
   }
 }

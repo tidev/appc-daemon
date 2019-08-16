@@ -49,9 +49,9 @@
     "sinon-chai": "^3.3.0",
     "webpack": "^4.39.2"
   },
-  "homepage": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-gulp",
+  "homepage": "https://github.com/appcelerator/appc-daemon",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
-  "repository": "https://github.com/appcelerator/appc-daemon",
+  "repository": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-gulp",
   "engines": {
     "node": ">=8.0.0"
   }
