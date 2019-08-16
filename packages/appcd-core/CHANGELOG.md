@@ -1,5 +1,6 @@
-# v3.0.1
+# v3.1.0
 
+ * chore: Updated Node.js version from 10.16.2 to 10.16.3.
  * chore: Fixed homepage and repository URLs in `package.json`.
  * chore: Added links to issue trackers in readme.
  * chore: Updated dependencies
