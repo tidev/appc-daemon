@@ -1,4 +1,4 @@
-const fs = require('fs');
+const fs = require('fs-extra');
 const Module = require('module');
 const path = require('path');
 
@@ -41,6 +41,9 @@ if (process.env.APPCD_COVERAGE) {
 		path.join(process.env.APPCD_COVERAGE, 'src'),
 		path.join(process.env.APPCD_COVERAGE, 'test')
 	];
+	if (process.env.APPCD_GLOBAL_TEST) {
+		conf.only.push(new RegExp(`^${process.env.APPCD_COVERAGE}\/(packages|plugins)\/.+\/src\/`));
+	}
 } else {
 	conf.only = [ 'src', 'test' ];
 }
@@ -61,15 +64,31 @@ require('@babel/register')(conf);
 if (process.env.APPCD_COVERAGE) {
 	const cwd = process.cwd();
 	const realcwd = fs.realpathSync(cwd);
-	const distDir = path.join(cwd, 'dist');
-	const srcDir = path.join(cwd, 'src');
 	const distRegExp = /[\//]dist([\//]|$)/;
 	const distGRegExp = /([/\\])dist([/\\]|$)/g;
+	const appcdPkg = /^appcd/;
 
 	Module._resolveFilename = function (request, parent, isMain) {
 		const parentId = parent && path.resolve(parent.id);
 		if (distRegExp.test(request) && parentId && (parentId.startsWith(cwd) || parentId.startsWith(realcwd)) && !parentId.includes('node_modules')) {
 			request = request.replace(distGRegExp, (m, q1, q2) => `${q1}src${q2}`);
+		} else if (process.env.APPCD_TEST_GLOBAL_PACKAGE_DIR && appcdPkg.test(request)) {
+			const dir = path.resolve(process.env.APPCD_TEST_GLOBAL_PACKAGE_DIR, request);
+			try {
+				if (fs.statSync(dir).isDirectory()) {
+					// built-in package, resolve the main
+					// if main is falsey, then it's likely not transpiled anyways
+					const { main } = fs.readJsonSync(path.join(dir, 'package.json'));
+					if (main) {
+						request = path.resolve(dir, main);
+						if (distRegExp.test(request)) {
+							request = request.replace(distGRegExp, (m, q1, q2) => `${q1}src${q2}`);
+						}
+					}
+				}
+			} catch (e) {
+				// squelch
+			}
 		}
 		return originalResolveFilename(request, parent, isMain);
 	};
