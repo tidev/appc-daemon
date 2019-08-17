@@ -10,21 +10,17 @@ module.exports = (opts) => {
 		throw new Error('Missing required "exports" option');
 	}
 
-	const $           = require('gulp-load-plugins')();
-	const ansiColors  = require('ansi-colors');
-	const babelConf   = require('../babel')(opts);
-	const fs          = require('fs-extra');
-	const gulp        = require('gulp');
-	const log         = require('fancy-log');
-	const Module      = require('module');
-	const path        = require('path');
-	const spawnSync   = require('child_process').spawnSync;
+	const $            = require('gulp-load-plugins')();
+	const babelConf    = require('../babel')(opts);
+	const fs           = require('fs-extra');
+	const gulp         = require('gulp');
+	const Module       = require('module');
+	const path         = require('path');
+	const { runTests } = require('../test-runner');
 
 	const coverageDir = path.join(projectDir, 'coverage');
 	const distDir     = path.join(projectDir, 'dist');
 	const docsDir     = path.join(projectDir, 'docs');
-
-	const isWindows   = process.platform === 'win32';
 
 	const { parallel, series } = gulp;
 
@@ -131,121 +127,10 @@ module.exports = (opts) => {
 	/*
 	 * test tasks
 	 */
-	async function runTests(cover) {
-		const args = [];
-		let { execPath } = process;
-
-		// add nyc
-		if (cover) {
-			const nycModuleBinDir = resolveModuleBin('nyc');
-			if (isWindows) {
-				execPath = path.join(nycModuleBinDir, 'nyc.cmd');
-			} else {
-				args.push(path.join(nycModuleBinDir, 'nyc'));
-			}
-
-			args.push(
-				'--cache', 'false',
-				'--exclude', 'test',
-				'--instrument', 'true',
-				'--source-map', 'true',
-				// supported reporters:
-				//   https://github.com/istanbuljs/istanbuljs/tree/master/packages/istanbul-reports/lib
-				'--reporter=html',
-				'--reporter=json',
-				'--reporter=text',
-				'--reporter=text-summary',
-				'--reporter=cobertura',
-				'--require', path.resolve(__dirname, '../test-transpile.js'),
-				'--show-process-tree',
-				process.execPath // need to specify node here so that spawn-wrap works
-			);
-
-			process.env.FORCE_COLOR = 1;
-			process.env.APPCD_COVERAGE = projectDir;
-		}
-
-		// add mocha
-		const mocha = resolveModule('mocha');
-		if (!mocha) {
-			log('Unable to find mocha!');
-			process.exit(1);
-		}
-		args.push(path.join(mocha, 'bin', 'mocha'));
-
-		// add --inspect
-		if (process.argv.indexOf('--inspect') !== -1 || process.argv.indexOf('--inspect-brk') !== -1) {
-			args.push('--inspect-brk', '--timeout', '9999999');
-		}
-
-		const jenkinsReporter = resolveModule('mocha-jenkins-reporter');
-		if (jenkinsReporter) {
-			args.push(`--reporter=${jenkinsReporter}`);
-		}
-
-		process.env.JUNIT_REPORT_PATH = path.join(projectDir, 'junit.xml');
-		process.env.JUNIT_REPORT_NAME = path.basename(projectDir);
-
-		// add grep
-		let p = process.argv.indexOf('--grep');
-		if (p !== -1 && p + 1 < process.argv.length) {
-			args.push('--grep', process.argv[p + 1]);
-		}
-
-		// add transpile setup
-		if (!cover) {
-			args.push(path.resolve(__dirname, '../test-transpile.js'));
-		}
-
-		// add unit test setup
-		args.push(path.resolve(__dirname, '../test-setup.js'));
-
-		// add suite
-		p = process.argv.indexOf('--suite');
-		if (p !== -1 && p + 1 < process.argv.length) {
-			args.push.apply(args, process.argv[p + 1].split(',').map(s => 'test/**/test-' + s + '.js'));
-		} else {
-			args.push('test/**/test-*.js');
-		}
-
-		log(`Running: ${ansiColors.cyan(`${execPath} ${args.join(' ')}`)}`);
-
-		// run!
-		try {
-			if (spawnSync(execPath, args, { stdio: 'inherit' }).status) {
-				const err = new Error('At least one test failed :(');
-				err.showStack = false;
-				throw err;
-			}
-		} finally {
-			const after = path.join(projectDir, 'test', 'after.js');
-			if (fs.existsSync(after)) {
-				require(after);
-			}
-		}
-	}
-
-	function resolveModuleBin(name) {
-		return path.resolve(resolveModule(name), '..', '.bin');
-	}
-
-	function resolveModule(name) {
-		let dir = path.join(appcdGulpNodeModulesPath, name);
-		if (fs.existsSync(dir)) {
-			return dir;
-		}
-
-		try {
-			return path.dirname(require.resolve(name));
-		} catch (e) {
-			return null;
-		}
-	}
-
-	exports.test             = series(parallel(lintTest, build),                function test() { return runTests(); });
-	exports['test-only']     = series(lintTest,                                 function test() { return runTests(); });
-	exports.coverage         = series(parallel(cleanCoverage, lintTest, build), function test() { return runTests(true); });
-	exports['coverage-only'] = series(parallel(cleanCoverage, lintTest),        function test() { return runTests(true); });
+	exports.test             = series(parallel(lintTest, build),                async function test() { runTests(appcdGulpNodeModulesPath, projectDir); });
+	exports['test-only']     = series(lintTest,                                 async function test() { runTests(appcdGulpNodeModulesPath, projectDir); });
+	exports.coverage         = series(parallel(cleanCoverage, lintTest, build), async function coverage() { runTests(appcdGulpNodeModulesPath, projectDir, true); });
+	exports['coverage-only'] = series(parallel(cleanCoverage, lintTest),        async function coverage() { runTests(appcdGulpNodeModulesPath, projectDir, true); });
 
 	/*
 	 * watch tasks

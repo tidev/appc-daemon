@@ -15,6 +15,7 @@ const semver       = require('semver');
 const spawn        = require('child_process').spawn;
 const spawnSync    = require('child_process').spawnSync;
 const Table        = require('cli-table2');
+const tmp          = require('tmp');
 const toposort     = require('toposort');
 const util         = require('util');
 
@@ -228,15 +229,8 @@ exports['unlink-plugins'] = async function unlinkPlugins() {
 };
 
 /*
- * test tasks
+ * unit test tasks
  */
-exports.test = series(parallel(nodeInfo, build), function test() {
-	return runTests();
-});
-exports.coverage = series(parallel(nodeInfo, build), function test() {
-	return runTests(true);
-});
-
 async function runTests(cover) {
 	let task = cover ? 'coverage-only' : 'test-only';
 	let libCoverage;
@@ -324,6 +318,46 @@ async function runTests(cover) {
 		process.exitCode = 1;
 	}
 }
+
+exports.test             = series(nodeInfo, build, function test() { return runTests(); });
+exports['test-only']     = series(nodeInfo,        function test() { return runTests(); });
+exports.coverage         = series(nodeInfo, build, function coverage() { return runTests(true); });
+exports['coverage-only'] = series(nodeInfo,        function coverage() { return runTests(true); });
+
+/*
+ * functional test tasks
+ */
+let origHomeDir = process.env.HOME;
+let tmpHomeDir = null;
+
+async function protectHome() {
+	tmpHomeDir = tmp.dirSync({
+		mode: '755',
+		prefix: 'appcd-test-home-',
+		unsafeCleanup: true
+	}).name;
+	process.env.HOME = tmpHomeDir;
+}
+
+async function runFunctionalTests(cover) {
+	try {
+		process.env.APPCD_TEST_GLOBAL_PACKAGE_DIR = path.join(__dirname, 'packages');
+		const { runTests } = require('./packages/appcd-gulp/src/test-runner');
+		runTests(__dirname, __dirname, cover);
+	} finally {
+		// restore home directory so that we can delete the temp one
+		process.env.HOME = origHomeDir;
+
+		if (tmpHomeDir) {
+			fs.removeSync(tmpHomeDir);
+		}
+	}
+}
+
+exports['functional-test']          = series(nodeInfo, build, protectHome, function test() { return runFunctionalTests(); });
+exports['functional-test-only']     = series(nodeInfo,        protectHome, function test() { return runFunctionalTests(); });
+exports['functional-coverage']      = series(nodeInfo, build, protectHome, function coverage() { return runFunctionalTests(true); });
+exports['functional-coverage-only'] = series(nodeInfo,        protectHome, function coverage() { return runFunctionalTests(true); });
 
 /*
  * watch/debug tasks

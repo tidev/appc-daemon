@@ -1,5 +1,8 @@
-# v2.2.1
+# v2.3.0
 
+ * refactor: Moved `runTests()` out of standard template and into a separate `test-runner.js` file.
+ * feat: Added support for global appcd tests by setting the `APPCD_TEST_GLOBAL_PACKAGE_DIR`
+   environment variable to the path of the `"packages"` directory.
  * chore: Fixed homepage and repository URLs in `package.json`.
  * chore: Added links to issue trackers in readme.
 
