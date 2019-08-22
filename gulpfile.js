@@ -330,34 +330,38 @@ exports['coverage-only'] = series(nodeInfo,        function coverage() { return 
 let origHomeDir = process.env.HOME;
 let tmpHomeDir = null;
 
-async function protectHome() {
-	tmpHomeDir = tmp.dirSync({
-		mode: '755',
-		prefix: 'appcd-test-home-',
-		unsafeCleanup: true
-	}).name;
-	process.env.HOME = tmpHomeDir;
-}
-
 async function runFunctionalTests(cover) {
 	try {
 		process.env.APPCD_TEST_GLOBAL_PACKAGE_DIR = path.join(__dirname, 'packages');
+		process.env.SPAWN_WRAP_SHIM_ROOT = origHomeDir;
+
+		tmpHomeDir = tmp.dirSync({
+			mode: '755',
+			prefix: 'appcd-test-home-',
+			unsafeCleanup: true
+		}).name;
+
+		log(`Protecting home directory, overriding HOME with temp dir: ${cyan(tmpHomeDir)}`);
+		process.env.HOME = tmpHomeDir;
+
 		const { runTests } = require('./packages/appcd-gulp/src/test-runner');
 		runTests(__dirname, __dirname, cover);
 	} finally {
 		// restore home directory so that we can delete the temp one
-		process.env.HOME = origHomeDir;
-
 		if (tmpHomeDir) {
+			log(`Removing temp home directory: ${cyan(tmpHomeDir)}`);
 			fs.removeSync(tmpHomeDir);
 		}
+
+		log(`Restoring home directory: ${cyan(origHomeDir)}`);
+		process.env.HOME = origHomeDir;
 	}
 }
 
-exports['functional-test']          = series(nodeInfo, build, protectHome, function test() { return runFunctionalTests(); });
-exports['functional-test-only']     = series(nodeInfo,        protectHome, function test() { return runFunctionalTests(); });
-exports['functional-coverage']      = series(nodeInfo, build, protectHome, function coverage() { return runFunctionalTests(true); });
-exports['functional-coverage-only'] = series(nodeInfo,        protectHome, function coverage() { return runFunctionalTests(true); });
+exports['functional-test']          = series(nodeInfo, build, function test() { return runFunctionalTests(); });
+exports['functional-test-only']     = series(nodeInfo,        function test() { return runFunctionalTests(); });
+exports['functional-coverage']      = series(nodeInfo, build, function coverage() { return runFunctionalTests(true); });
+exports['functional-coverage-only'] = series(nodeInfo,        function coverage() { return runFunctionalTests(true); });
 
 /*
  * watch/debug tasks

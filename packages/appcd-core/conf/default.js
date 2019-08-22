@@ -112,7 +112,16 @@ module.exports = {
 		 * deactivated. Defaults to an hour.
 		 * @type {Number}
 		 */
-		defaultInactivityTimeout: 60 * 60 * 1000
+		defaultInactivityTimeout: 60 * 60 * 1000,
+
+		/**
+		 * Ensures that the default plugins are installed in the appcd home directory. This
+		 * operation requires both an Internet connection and write permissions to the appcd home
+		 * directory.
+		 * @type {Boolean}
+		 * @readonly
+		 */
+		installDefault: true
 	},
 
 	server: {

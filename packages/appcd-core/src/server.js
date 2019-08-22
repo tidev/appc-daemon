@@ -133,14 +133,16 @@ export default class Server {
 			fs.mkdirsSync(homeDir);
 		}
 
-		// install default plugins before we drop permissions
-		try {
-			await installDefaultPlugins(path.join(homeDir, 'plugins'));
-		} catch (err) {
-			if (err.code === 'EACCES') {
-				logger.warn(err);
-			} else {
-				logger.error(err);
+		if (this.config.get('plugins.installDefault')) {
+			// install default plugins before we drop permissions
+			try {
+				await installDefaultPlugins(path.join(homeDir, 'plugins'));
+			} catch (err) {
+				if (err.code === 'EACCES') {
+					logger.warn(err);
+				} else {
+					logger.error(err);
+				}
 			}
 		}
 

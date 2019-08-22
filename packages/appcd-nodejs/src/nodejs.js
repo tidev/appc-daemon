@@ -46,7 +46,7 @@ export function getNodeFilename() {
  * required Node.js version is not installed, initiate the download.
  *
  * @param {Object} params - Various parameters.
- * @param {String} params.arch - The compiled machine architecture.
+ * @param {String} [params.arch] - The compiled machine architecture.
  * @param {String} params.nodeHome - The path to where downloaded Node.js
  * binaries are stored.
  * @param {String} params.version - The Node.js version to ensure is installed.

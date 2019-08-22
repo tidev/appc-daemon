@@ -1,5 +1,6 @@
 # v3.0.1
 
+ * fix: Added support for non-transpiled plugin code to be instrumented for code coverage.
  * chore: Fixed homepage and repository URLs in `package.json`.
  * chore: Added links to issue trackers in readme.
  * chore: Updated dependencies

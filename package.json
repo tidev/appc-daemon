@@ -24,6 +24,7 @@
     "retire": "^2.0.3",
     "semver": "^6.3.0",
     "sloc": "^0.2.1",
+    "snooplogg": "^2.1.0",
     "tmp": "^0.1.0",
     "toposort": "^2.0.2",
     "tree-printer": "^1.1.1"

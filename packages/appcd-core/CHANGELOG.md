@@ -1,5 +1,7 @@
 # v3.1.0
 
+ * feat: Added `plugins.installDefault` config setting (default `true`) to control whether the
+   default plugins should be installed on appcd start.
  * chore: Updated Node.js version from 10.16.2 to 10.16.3.
  * chore: Fixed homepage and repository URLs in `package.json`.
  * chore: Added links to issue trackers in readme.
