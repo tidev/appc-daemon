@@ -147,7 +147,7 @@ export default class PluginBase extends EventEmitter {
 
 		this.appcdLogger.log('Activating plugin: %s', highlight(main));
 
-		const exports = PluginModule.load(this, main);
+		const exports = PluginModule.load(this, main, true);
 
 		this.module = exports && typeof exports === 'object' ? exports : null;
 

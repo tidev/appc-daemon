@@ -41,12 +41,16 @@ export default {
 	},
 	async action({ argv }) {
 		const [
+			{ default: appcdLogger },
 			{ expandPath },
 			{ createRequest, loadConfig }
 		] = await Promise.all([
+			import('appcd-logger'),
 			import('appcd-path'),
 			import('../common')
 		]);
+
+		const { log } = appcdLogger('appcd:config');
 
 		let { action, key, value } = argv;
 
@@ -91,6 +95,8 @@ export default {
 
 						if (err.code === 'ECONNREFUSED') {
 							// the daemon is not running, need to do things the easy way
+
+							log('Daemon is not running, using local config file');
 
 							if (readActions[action]) {
 								const filter = key && key.split(/\.|\//).join('.') || undefined;

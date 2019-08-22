@@ -27,7 +27,7 @@
     "appcd-util": "^2.0.0",
     "fs-extra": "^8.1.0",
     "source-map-support": "^0.5.13",
-    "uuid": "^3.3.2"
+    "uuid": "^3.3.3"
   },
   "devDependencies": {
     "appcd-gulp": "^2.2.0",

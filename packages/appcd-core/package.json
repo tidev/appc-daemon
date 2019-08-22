@@ -34,7 +34,7 @@
     "appcd-subprocess": "^3.0.0",
     "appcd-telemetry": "^3.0.0",
     "appcd-util": "^2.0.0",
-    "cli-kit": "^0.11.2",
+    "cli-kit": "^0.12.0",
     "fs-extra": "^8.1.0",
     "gawk": "^4.6.4",
     "global-modules": "^2.0.0",

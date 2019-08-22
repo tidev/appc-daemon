@@ -6,18 +6,18 @@ import {
 	makeTest
 } from './common';
 
-const pluginPath = path.resolve(__dirname, '..', 'plugins', 'android');
+const pluginPath = path.resolve(__dirname, '..', 'plugins', 'jdk');
 const pluginVersion = fs.readJsonSync(path.join(pluginPath, 'package.json')).version;
 
-describe('plugin android', function () {
+describe('plugin jdk', function () {
 	this.timeout(60000);
 
-	it('should register the android plugin', makeTest(async function () {
-		this.symlinkPlugin('android', pluginVersion);
+	it('should register the jdk plugin', makeTest(async function () {
+		this.symlinkPlugin('jdk', pluginVersion);
 		await this.installNode();
 		await this.startDaemonDebugMode(defaultConfig);
 
-		const { status, stdout } = this.runAppcdSync([ 'exec', '/android' ]);
+		const { status, stdout } = this.runAppcdSync([ 'exec', '/jdk' ]);
 		const obj = JSON.parse(stdout);
 
 		expect(status).to.equal(0);
@@ -28,12 +28,12 @@ describe('plugin android', function () {
 		expect(obj.statusCode).to.equal('200');
 	}));
 
-	it('should get the android plugin info', makeTest(async function () {
-		this.symlinkPlugin('android', pluginVersion);
+	it('should get the jdk plugin info', makeTest(async function () {
+		this.symlinkPlugin('jdk', pluginVersion);
 		await this.installNode();
 		await this.startDaemonDebugMode(defaultConfig);
 
-		const { status, stdout } = this.runAppcdSync([ 'exec', `/android/${pluginVersion}` ]);
+		const { status, stdout } = this.runAppcdSync([ 'exec', `/jdk/${pluginVersion}` ]);
 		const obj = JSON.parse(stdout);
 
 		expect(status).to.equal(0);
@@ -42,10 +42,10 @@ describe('plugin android', function () {
 		expect(obj.status).to.equal(200);
 		expect(obj.message).to.be.an('object');
 		expect(obj.message.path).to.equal(pluginPath);
-		expect(obj.message.packageName).to.equal('@appcd/plugin-android');
+		expect(obj.message.packageName).to.equal('@appcd/plugin-jdk');
 		expect(obj.message.version).to.equal(pluginVersion);
 		expect(obj.message.main).to.equal(path.join(pluginPath, 'dist', 'index.js'));
-		expect(obj.message.name).to.equal('android');
+		expect(obj.message.name).to.equal('jdk');
 		expect(obj.message.type).to.equal('external');
 		expect(obj.message.nodeVersion).to.equal(coreNodeVersion);
 		expect(obj.message.supported).to.equal(true);

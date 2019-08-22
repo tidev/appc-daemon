@@ -40,10 +40,21 @@ export default class PluginModule extends Module {
 	 *
 	 * @param {PluginBase} plugin - A reference to the plugin implementation.
 	 * @param {String} filename - The full path of the file to load.
+	 * @param {Boolean} isMain - Indicates that the file to load is the "main" entrypoint (e.g. has
+	 * no parent module).
 	 * @returns {*}
 	 * @access public
 	 */
-	static load(plugin, filename) {
+	static load(plugin, filename, isMain) {
+		// generally, we do not need to resolve the filename, but in order for the original,
+		// non-transpiled plugin module code to be instrumented for code coverage, we need to call
+		// `Module._resolveFilename()`
+		const resolvedFilename = Module._resolveFilename(filename, null, isMain);
+		if (resolvedFilename !== filename) {
+			log(`Resolved ${highlight(filename)} => ${highlight(resolvedFilename)}`);
+			filename = resolvedFilename;
+		}
+
 		const cachedModule = Module._cache[filename];
 		if (cachedModule) {
 			return cachedModule.exports;

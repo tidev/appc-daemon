@@ -4,6 +4,7 @@
  * chore: Added links to issue trackers in readme.
  * chore: Bumped required Node.js version to 8.12.0 which is technically a breaking change, but
    `appcd-response@2.0.0` already requires Node.js 8.12.0.
+ * chore: Updated dependencies
 
 # v2.0.1 (Aug 13, 2019)
 
