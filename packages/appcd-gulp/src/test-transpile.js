@@ -42,7 +42,7 @@ if (process.env.APPCD_COVERAGE) {
 		path.join(process.env.APPCD_COVERAGE, 'test')
 	];
 	if (process.env.APPCD_TEST_GLOBAL_PACKAGE_DIR) {
-		conf.only.push(new RegExp(`^${process.env.APPCD_COVERAGE}\/(packages|plugins)\/.+\/src\/`));
+		conf.only.push(new RegExp(`^${process.env.APPCD_COVERAGE}\/(packages|plugins)\/.+\/(src|test)\/`));
 	}
 } else {
 	conf.only = [ 'src', 'test' ];

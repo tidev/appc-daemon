@@ -1,5 +1,7 @@
 # v3.0.1
 
+ * fix: Fixed bug with order of loading an arbitrary `--config-file` and the user-defined config
+   file.
  * chore: Fixed homepage and repository URLs in `package.json`.
  * chore: Added links to issue trackers in readme.
  * chore: Updated dependencies.

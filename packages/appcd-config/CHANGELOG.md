@@ -1,5 +1,7 @@
 # v1.3.2
 
+ * fix: Fixed bug introduced with config layer feature that wasn't allowing readonly values to be
+   overwritten during initial load.
  * chore: Fixed homepage and repository URLs in `package.json`.
  * chore: Added links to issue trackers in readme.
 

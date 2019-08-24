@@ -1,4 +1,3 @@
-import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
 import {
@@ -17,6 +16,74 @@ describe('appcd config', function () {
 			const { status, stdout } = this.runAppcdSync([ 'config', '--help', '--json' ]);
 			expect(status).to.equal(2);
 			expect(JSON.parse(stdout).desc).to.equal('Get and set config options');
+		}));
+	});
+
+	describe('Error handling', () => {
+		it('should error when loading a bad config file when daemon not running', makeTest(async function () {
+			await this.initHomeDir(path.join(__dirname, 'fixtures', 'bad-config'));
+
+			const { status, stdout, stderr } = this.runAppcdSync([ 'config', 'get' ], {}, defaultConfig);
+
+			expect(status).to.equal(1);
+			expect(stripColors(stdout.toString())).to.match(/^Appcelerator Daemon, version \d+\.\d+\.\d+\nCopyright \(c\) 2015-\d{4}, Axway, Inc\. All Rights Reserved\./);
+			expect(stderr.toString().split('\n\n')[0]).to.equal('Error: Failed to load config file: SyntaxError: Unexpected token { in JSON at position 1');
+		}));
+
+		it('should error when loading a bad config file when starting daemon', makeTest(async function () {
+			await this.initHomeDir(path.join(__dirname, 'fixtures', 'bad-config'));
+
+			const { status, stdout, stderr } = this.runAppcdSync([ 'start' ], {}, defaultConfig);
+
+			expect(status).to.equal(1);
+			expect(stripColors(stdout.toString())).to.match(/^Appcelerator Daemon, version \d+\.\d+\.\d+\nCopyright \(c\) 2015-\d{4}, Axway, Inc\. All Rights Reserved\./);
+			expect(stderr.toString().split('\n\n')[0]).to.equal('Error: Failed to load config file: SyntaxError: Unexpected token { in JSON at position 1');
+		}));
+
+		it('should not error when config file is empty', makeTest(async function () {
+			await this.initHomeDir(path.join(__dirname, 'fixtures', 'empty-config'));
+
+			const { status, stdout } = this.runAppcdSync([ 'config', 'get' ], {}, defaultConfig);
+
+			expect(status).to.equal(0);
+
+			// strip off the banner
+			const chunks = stdout.toString().split('\n\n');
+			expect(stripColors(chunks[0])).to.match(/^Appcelerator Daemon, version \d+\.\d+\.\d+\nCopyright \(c\) 2015-\d{4}, Axway, Inc\. All Rights Reserved\./);
+			expect(chunks[1]).to.equal([
+				'core.enforceNodeVersion          = true',
+				'core.v8.memory                   = auto',
+				'environment.name                 = test',
+				'environment.title                = Test',
+				'home                             = ~/.appcelerator/appcd',
+				'network.agentOptions             = null',
+				'network.caFile                   = null',
+				'network.certFile                 = null',
+				'network.httpProxy                = null',
+				'network.httpsProxy               = null',
+				'network.keyFile                  = null',
+				'network.passphrase               = null',
+				'network.strictSSL                = true',
+				'plugins.autoReload               = true',
+				'plugins.defaultInactivityTimeout = 3600000',
+				'plugins.installDefault           = false',
+				'server.agentPollInterval         = 1000',
+				'server.daemonize                 = true',
+				'server.group                     = null',
+				'server.hostname                  = 127.0.0.1',
+				'server.nodejsMaxUnusedAge        = 7776000000',
+				'server.pidFile                   = ~/.appcelerator/appcd/appcd.pid',
+				'server.port                      = 1732',
+				'server.user                      = null',
+				'telemetry.app                    = ea327577-858f-4d31-905e-fa670f50ef48',
+				'telemetry.enabled                = true',
+				'telemetry.environment            = test',
+				'telemetry.eventsDir              = ~/.appcelerator/appcd/telemetry',
+				'telemetry.sendBatchSize          = 10',
+				'telemetry.sendInterval           = 60000',
+				'telemetry.sendTimeout            = 60000',
+				'telemetry.url                    = https://api.appcelerator.com/p/v4/app-track'
+			].join('\n') + '\n');
 		}));
 	});
 

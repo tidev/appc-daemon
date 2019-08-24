@@ -62,7 +62,7 @@ export function load({ config, configFile, defaultConfigFile } = {}) {
 	}
 
 	if (remerge && config) {
-		cfg.merge(config);
+		cfg.merge(config, { namespace: Config.Root, overrideReadonly: true, write: false });
 	}
 
 	return cfg;
