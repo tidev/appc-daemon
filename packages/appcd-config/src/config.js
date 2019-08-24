@@ -292,7 +292,6 @@ export default class Config {
 	 * settings which will be persisted when the config is saved.
 	 * @param {String} [opts.namespace=Config.Root] - The name of the namespace to merge
 	 * the values into.
-	 * @param {Boolean} [opts.override=true] - When `true`, overrides existing values.
 	 * @returns {Config}
 	 * @access public
 	 */
@@ -351,10 +350,7 @@ export default class Config {
 	 * @access public
 	 */
 	loadUserConfig(file) {
-		return this.load(file, {
-			namespace: Config.User,
-			override: true
-		});
+		return this.load(file, { namespace: Config.User });
 	}
 
 	/**
@@ -365,7 +361,6 @@ export default class Config {
 	 * @param {Object} [opts] - Various options.
 	 * @param {String} [opts.namespace=Config.User] - The name of the namespace to merge the values
 	 * into.
-	 * @param {Boolean} [opts.override=true] - When `true`, overrides existing values.
 	 * @param {Boolean} [opts.overrideReadonly=false] - When `true`, does not enforce read only.
 	 * @returns {Config}
 	 * @access public

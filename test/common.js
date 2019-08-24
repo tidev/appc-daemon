@@ -33,7 +33,6 @@ export const defaultConfig = {
 
 const appcdPath = path.resolve(__dirname, '..', 'packages', 'appcd', process.env.APPCD_COVERAGE ? 'src' : 'dist', 'main.js');
 let isAppcdRunning = false;
-
 export const coreNodeVersion = fs.readJsonSync(path.join(__dirname, '..', 'packages', 'appcd-core', 'package.json')).appcd.node;
 let tmpNodePath = null;
 
@@ -107,9 +106,9 @@ const api = {
 	},
 
 	initHomeDir(fixture) {
-		// const dest = path.join(os.homedir(), '.appcelerator', 'appcd');
-		// log(`Copying ${highlight(home)} => ${highlight(dest)}`);
-		// fs.copySync(home, dest);
+		const appcdHome = path.join(os.homedir(), '.appcelerator', 'appcd');
+		log(`Copying ${highlight(fixture)} => ${highlight(appcdHome)}`);
+		fs.copySync(fixture, appcdHome);
 	},
 
 	runAppcd(args = [], opts = {}, cfg) {

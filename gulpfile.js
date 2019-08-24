@@ -231,106 +231,10 @@ exports['unlink-plugins'] = async function unlinkPlugins() {
 /*
  * unit test tasks
  */
-async function runTests(cover) {
-	let task = cover ? 'coverage-only' : 'test-only';
-	let libCoverage;
-	let libReport;
-	let reports;
-	let coverageDir;
-	let mergedCoverageMap;
-
-	if (cover) {
-		libCoverage = require('istanbul-lib-coverage');
-		libReport = require('istanbul-lib-report');
-		reports = require('istanbul-reports');
-		coverageDir = path.join(__dirname, 'coverage');
-	}
-
-	process.env.SNOOPLOGG = '*';
-
-	const gulp = path.join(path.dirname(require.resolve('gulp')), 'bin', 'gulp.js');
-	const gulpfiles = globule.find([ 'packages/*/gulpfile.js' ]);
-	const failedProjects = [];
-
-	await gulpfiles
-		.reduce((promise, gulpfile) => {
-			return promise
-				.then(() => new Promise((resolve, reject) => {
-					gulpfile = path.resolve(gulpfile);
-					const dir = path.dirname(gulpfile);
-
-					log(`Spawning: ${process.execPath} ${gulp} coverage # CWD=${dir}`);
-					const child = spawn(process.execPath, [ gulp, task, '--colors' ], { cwd: dir, stdio: [ 'inherit', 'pipe', 'inherit' ] });
-
-					let out = '';
-					child.stdout.on('data', data => {
-						out += data.toString();
-						process.stdout.write(data);
-					});
-
-					child.on('close', code => {
-						if (!code) {
-							log(`Exit code: ${code}`);
-							if (cover) {
-								for (let coverageFile of globule.find(dir + '/coverage/coverage*.json')) {
-									const map = libCoverage.createCoverageMap(JSON.parse(fs.readFileSync(path.resolve(coverageFile), 'utf8')));
-									if (mergedCoverageMap) {
-										mergedCoverageMap.merge(map);
-									} else {
-										mergedCoverageMap = map;
-									}
-								}
-							}
-						} else if (out.indexOf(`Task '${task}' is not in your gulpfile`) === -1) {
-							log(`Exit code: ${code}`);
-							failedProjects.push(path.basename(dir));
-						} else {
-							log(`Exit code: ${code}, no '${task}' task, continuing`);
-						}
-
-						resolve();
-					});
-				}));
-		}, Promise.resolve());
-
-	if (cover) {
-		fs.removeSync(coverageDir);
-		fs.mkdirsSync(coverageDir);
-		console.log();
-
-		const ctx = libReport.createContext({
-			dir: coverageDir
-		});
-
-		const tree = libReport.summarizers.pkg(mergedCoverageMap);
-		for (const type of [ 'lcov', 'json', 'text', 'text-summary', 'cobertura' ]) {
-			tree.visit(reports.create(type), ctx);
-		}
-	}
-
-	if (failedProjects.length) {
-		if (failedProjects.length === 1) {
-			log(red('1 failured project:'));
-		} else {
-			log(red(`${failedProjects.length} failured projects:`));
-		}
-		failedProjects.forEach(p => log(red(p)));
-		process.exitCode = 1;
-	}
-}
-
-exports.test             = series(nodeInfo, build, function test() { return runTests(); });
-exports['test-only']     = series(nodeInfo,        function test() { return runTests(); });
-exports.coverage         = series(nodeInfo, build, function coverage() { return runTests(true); });
-exports['coverage-only'] = series(nodeInfo,        function coverage() { return runTests(true); });
-
-/*
- * functional test tasks
- */
 let origHomeDir = process.env.HOME;
 let tmpHomeDir = null;
 
-async function runFunctionalTests(cover) {
+async function runTests(cover, all) {
 	try {
 		process.env.APPCD_TEST_GLOBAL_PACKAGE_DIR = path.join(__dirname, 'packages');
 		process.env.SPAWN_WRAP_SHIM_ROOT = origHomeDir;
@@ -344,8 +248,7 @@ async function runFunctionalTests(cover) {
 		log(`Protecting home directory, overriding HOME with temp dir: ${cyan(tmpHomeDir)}`);
 		process.env.HOME = tmpHomeDir;
 
-		const { runTests } = require('./packages/appcd-gulp/src/test-runner');
-		runTests(__dirname, __dirname, cover);
+		require('./packages/appcd-gulp/src/test-runner').runTests(__dirname, __dirname, cover, all);
 	} finally {
 		// restore home directory so that we can delete the temp one
 		if (tmpHomeDir) {
@@ -358,10 +261,12 @@ async function runFunctionalTests(cover) {
 	}
 }
 
-exports['functional-test']          = series(nodeInfo, build, function test() { return runFunctionalTests(); });
-exports['functional-test-only']     = series(nodeInfo,        function test() { return runFunctionalTests(); });
-exports['functional-coverage']      = series(nodeInfo, build, function coverage() { return runFunctionalTests(true); });
-exports['functional-coverage-only'] = series(nodeInfo,        function coverage() { return runFunctionalTests(true); });
+exports['functional-test']          = series(nodeInfo, build, function test() {     return runTests(); });
+exports['functional-test-only']     = series(nodeInfo,        function test() {     return runTests(); });
+exports['functional-coverage']      = series(nodeInfo, build, function coverage() { return runTests(true); });
+exports['functional-coverage-only'] = series(nodeInfo,        function coverage() { return runTests(true); });
+exports['coverage']                 = series(nodeInfo, build, function coverage() { return runTests(true, true); });
+exports['coverage-only']            = series(nodeInfo,        function coverage() { return runTests(true, true); });
 
 /*
  * watch/debug tasks

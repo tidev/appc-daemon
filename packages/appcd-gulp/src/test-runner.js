@@ -6,7 +6,7 @@ const { spawnSync } = require('child_process');
 
 const isWindows   = process.platform === 'win32';
 
-exports.runTests = function runTests(root, projectDir, cover) {
+exports.runTests = function runTests(root, projectDir, cover, all) {
 	const args = [];
 	let { execPath } = process;
 
@@ -22,6 +22,7 @@ exports.runTests = function runTests(root, projectDir, cover) {
 		args.push(
 			'--cache', 'true',
 			'--exclude', 'test',
+			'--exclude', 'packages/*/test/**/*.js', // exclude tests
 			'--exclude', 'packages/appcd-gulp/src/**/*.js', // exclude appcd-gulp when running from the top-level of the monorepo
 			'--instrument', 'true',
 			'--source-map', 'true',
@@ -79,9 +80,16 @@ exports.runTests = function runTests(root, projectDir, cover) {
 	// add suite
 	p = process.argv.indexOf('--suite');
 	if (p !== -1 && p + 1 < process.argv.length) {
-		args.push.apply(args, process.argv[p + 1].split(',').map(s => `test/**/test-${s}.js`));
+		const suites = process.argv[p + 1].split(',');
+		args.push.apply(args, suites.map(s => `test/**/test-${s}.js`));
+		if (all) {
+			args.push.apply(args, suites.map(s => `packages/*/test/**/test-${s}.js`));
+		}
 	} else {
 		args.push('test/**/test-*.js');
+		if (all) {
+			args.push('packages/*/test/**/test-*.js');
+		}
 	}
 
 	log(`Running: ${ansiColors.cyan(`${execPath} ${args.join(' ')}`)}`);

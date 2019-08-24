@@ -111,6 +111,25 @@ describe('load()', () => {
 		});
 		expect(config.toString(0)).to.equal('{"food":"nachos","name":"foo","age":29}');
 	});
+
+	it('should not error when initializing readonly settings from config object while loading config file', () => {
+		let config;
+
+		expect(() => {
+			config = load({
+				config: {
+					title: 'baz'
+				},
+				configFile: path.join(__dirname, 'fixtures', 'good-readonly.js')
+			});
+		}).to.not.throw(Error);
+
+		expect(config.get('title')).to.equal('baz');
+
+		expect(() => {
+			config.merge({ title: 'wiz' });
+		}).to.throw(Error, 'Config option "title" is read-only');
+	});
 });
 
 describe('Config', () => {

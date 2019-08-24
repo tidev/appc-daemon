@@ -1,4 +1,5 @@
 import Client from 'appcd-client';
+import Config, * as config from 'appcd-config';
 import fs from 'fs';
 import path from 'path';
 import appcdLogger from 'appcd-logger';
@@ -7,8 +8,6 @@ import { expandPath } from 'appcd-path';
 import { isFile } from 'appcd-fs';
 import { sleep } from 'appcd-util';
 import { spawn } from 'child_process';
-
-import * as config from 'appcd-config';
 
 const { error, log } = appcdLogger('appcd:common');
 const { highlight } = appcdLogger.styles;
@@ -74,20 +73,26 @@ export function createRequest(cfg, path, data, type) {
  * @returns {Config}
  */
 export function loadConfig(argv) {
-	let { configFile } = argv;
+	// initialize the config object
 	const cfg = config.load({
 		config:            argv.config,
-		configFile,
 		defaultConfigFile: require.resolve('appcd-core/conf/default.js')
 	});
 
-	if (!configFile && isFile(configFile = expandPath(cfg.get('home'), 'config.json'))) {
+	// load the user-defined config file
+	const configFile = expandPath(cfg.get('home'), 'config.json');
+	if (isFile(configFile)) {
 		cfg.loadUserConfig(configFile);
+	}
 
-		// if we had a `argv.config` object, then we need to re-merge it on top of the user config
-		if (argv.config) {
-			cfg.merge(argv.config);
-		}
+	// load the --config-file
+	if (argv.configFile) {
+		cfg.loadUserConfig(argv.configFile);
+	}
+
+	// if we have a `argv.config` object, then we need to re-merge it on top of the user config
+	if (argv.config) {
+		cfg.merge(argv.config, { namespace: Config.Root, overrideReadonly: true, write: false });
 	}
 
 	log(cfg.toString());
