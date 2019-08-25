@@ -6,13 +6,19 @@ import {
 	makeTest
 } from './common';
 
+const _it = it;
 const pluginPath = path.resolve(__dirname, '..', 'plugins', 'genymotion');
-const pluginVersion = fs.readJsonSync(path.join(pluginPath, 'package.json')).version;
+let pluginVersion;
+try {
+	pluginVersion = fs.readJsonSync(path.join(pluginPath, 'package.json')).version;
+} catch (e) {
+	_it = it.skip;
+}
 
 describe('plugin genymotion', function () {
 	this.timeout(60000);
 
-	it('should register the genymotion plugin', makeTest(async function () {
+	_it('should register the genymotion plugin', makeTest(async function () {
 		this.symlinkPlugin('genymotion', pluginVersion);
 		await this.installNode();
 		await this.startDaemonDebugMode(defaultConfig);
@@ -28,7 +34,7 @@ describe('plugin genymotion', function () {
 		expect(obj.statusCode).to.equal('200');
 	}));
 
-	it('should get the genymotion plugin info', makeTest(async function () {
+	_it('should get the genymotion plugin info', makeTest(async function () {
 		this.symlinkPlugin('genymotion', pluginVersion);
 		await this.installNode();
 		await this.startDaemonDebugMode(defaultConfig);

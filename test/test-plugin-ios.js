@@ -6,16 +6,21 @@ import {
 	makeTest
 } from './common';
 
-const itSupported = process.platform === 'darwin' ? it : it.skip;
-const itUnsupported = process.platform === 'darwin' ? it.skip : it;
+const _it = process.platform === 'darwin' ? it : it.skip;
+const unsupportedIt = process.platform === 'darwin' ? it.skip : it;
 
 const pluginPath = path.resolve(__dirname, '..', 'plugins', 'ios');
-const pluginVersion = fs.readJsonSync(path.join(pluginPath, 'package.json')).version;
+let pluginVersion;
+try {
+	pluginVersion = fs.readJsonSync(path.join(pluginPath, 'package.json')).version;
+} catch (e) {
+	_it = unsupportedIt = it.skip;
+}
 
 describe('plugin iOS', function () {
 	this.timeout(60000);
 
-	itSupported('should register the iOS plugin', makeTest(async function () {
+	_it('should register the iOS plugin', makeTest(async function () {
 		this.symlinkPlugin('ios', pluginVersion);
 		await this.installNode();
 		await this.startDaemonDebugMode(defaultConfig);
@@ -31,7 +36,7 @@ describe('plugin iOS', function () {
 		expect(obj.statusCode).to.equal('200');
 	}));
 
-	itSupported('should get the iOS plugin info', makeTest(async function () {
+	_it('should get the iOS plugin info', makeTest(async function () {
 		this.symlinkPlugin('ios', pluginVersion);
 		await this.installNode();
 		await this.startDaemonDebugMode(defaultConfig);
@@ -66,7 +71,7 @@ describe('plugin iOS', function () {
 		expect(obj.statusCode).to.equal('200');
 	}));
 
-	itUnsupported('should register iOS plugin as unsupported', makeTest(async function () {
+	unsupportedIt('should register iOS plugin as unsupported', makeTest(async function () {
 		this.symlinkPlugin('ios', pluginVersion);
 		await this.installNode();
 		await this.startDaemonDebugMode(defaultConfig);
@@ -96,7 +101,7 @@ describe('plugin iOS', function () {
 		expect(obj.statusCode).to.equal('200');
 	}));
 
-	itUnsupported('should not load iOS plugin for incompatible platform', makeTest(async function () {
+	unsupportedIt('should not load iOS plugin for incompatible platform', makeTest(async function () {
 		this.symlinkPlugin('ios', pluginVersion);
 		await this.installNode();
 		await this.startDaemonDebugMode(defaultConfig);

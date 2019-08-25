@@ -6,13 +6,19 @@ import {
 	makeTest
 } from './common';
 
+const _it = it;
 const pluginPath = path.resolve(__dirname, '..', 'plugins', 'android');
-const pluginVersion = fs.readJsonSync(path.join(pluginPath, 'package.json')).version;
+let pluginVersion;
+try {
+	pluginVersion = fs.readJsonSync(path.join(pluginPath, 'package.json')).version;
+} catch (e) {
+	_it = it.skip;
+}
 
 describe('plugin android', function () {
 	this.timeout(60000);
 
-	it('should register the android plugin', makeTest(async function () {
+	_it('should register the android plugin', makeTest(async function () {
 		this.symlinkPlugin('android', pluginVersion);
 		await this.installNode();
 		await this.startDaemonDebugMode(defaultConfig);
@@ -28,7 +34,7 @@ describe('plugin android', function () {
 		expect(obj.statusCode).to.equal('200');
 	}));
 
-	it('should get the android plugin info', makeTest(async function () {
+	_it('should get the android plugin info', makeTest(async function () {
 		this.symlinkPlugin('android', pluginVersion);
 		await this.installNode();
 		await this.startDaemonDebugMode(defaultConfig);

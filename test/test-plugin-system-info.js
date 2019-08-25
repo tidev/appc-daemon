@@ -6,8 +6,14 @@ import {
 	makeTest
 } from './common';
 
+const _it = it;
 const pluginPath = path.resolve(__dirname, '..', 'plugins', 'system-info');
-const pluginVersion = fs.readJsonSync(path.join(pluginPath, 'package.json')).version;
+let pluginVersion;
+try {
+	pluginVersion = fs.readJsonSync(path.join(pluginPath, 'package.json')).version;
+} catch (e) {
+	_it = it.skip;
+}
 
 describe('plugin system info', function () {
 	this.timeout(60000);

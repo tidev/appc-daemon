@@ -6,16 +6,21 @@ import {
 	makeTest
 } from './common';
 
-const itSupported = process.platform === 'win32' ? it : it.skip;
-const itUnsupported = process.platform === 'win32' ? it.skip : it;
+const _it = process.platform === 'darwin' ? it : it.skip;
+const unsupportedIt = process.platform === 'darwin' ? it.skip : it;
 
 const pluginPath = path.resolve(__dirname, '..', 'plugins', 'windows');
-const pluginVersion = fs.readJsonSync(path.join(pluginPath, 'package.json')).version;
+let pluginVersion;
+try {
+	pluginVersion = fs.readJsonSync(path.join(pluginPath, 'package.json')).version;
+} catch (e) {
+	_it = unsupportedIt = it.skip;
+}
 
 describe('plugin windows', function () {
 	this.timeout(60000);
 
-	itSupported('should register the windows plugin', makeTest(async function () {
+	_it('should register the windows plugin', makeTest(async function () {
 		this.symlinkPlugin('windows', pluginVersion);
 		await this.installNode();
 		await this.startDaemonDebugMode(defaultConfig);
@@ -31,7 +36,7 @@ describe('plugin windows', function () {
 		expect(obj.statusCode).to.equal('200');
 	}));
 
-	itSupported('should get the windows plugin info', makeTest(async function () {
+	_it('should get the windows plugin info', makeTest(async function () {
 		this.symlinkPlugin('windows', pluginVersion);
 		await this.installNode();
 		await this.startDaemonDebugMode(defaultConfig);
@@ -66,7 +71,7 @@ describe('plugin windows', function () {
 		expect(obj.statusCode).to.equal('200');
 	}));
 
-	itUnsupported('should register windows plugin as unsupported', makeTest(async function () {
+	unsupportedIt('should register windows plugin as unsupported', makeTest(async function () {
 		this.symlinkPlugin('windows', pluginVersion);
 		await this.installNode();
 		await this.startDaemonDebugMode(defaultConfig);
@@ -96,7 +101,7 @@ describe('plugin windows', function () {
 		expect(obj.statusCode).to.equal('200');
 	}));
 
-	itUnsupported('should not load windows plugin for incompatible platform', makeTest(async function () {
+	unsupportedIt('should not load windows plugin for incompatible platform', makeTest(async function () {
 		this.symlinkPlugin('windows', pluginVersion);
 		await this.installNode();
 		await this.startDaemonDebugMode(defaultConfig);
