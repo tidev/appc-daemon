@@ -7,7 +7,7 @@ import {
 } from './common';
 
 let _it = process.platform === 'darwin' ? it : it.skip;
-const unsupportedIt = process.platform === 'darwin' ? it.skip : it;
+let unsupportedIt = process.platform === 'darwin' ? it.skip : it;
 
 const pluginPath = path.resolve(__dirname, '..', 'plugins', 'windows');
 let pluginVersion;
