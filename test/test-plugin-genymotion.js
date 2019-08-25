@@ -6,7 +6,7 @@ import {
 	makeTest
 } from './common';
 
-const _it = it;
+let _it = it;
 const pluginPath = path.resolve(__dirname, '..', 'plugins', 'genymotion');
 let pluginVersion;
 try {
