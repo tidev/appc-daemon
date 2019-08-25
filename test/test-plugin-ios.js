@@ -6,7 +6,7 @@ import {
 	makeTest
 } from './common';
 
-const _it = process.platform === 'darwin' ? it : it.skip;
+let _it = process.platform === 'darwin' ? it : it.skip;
 const unsupportedIt = process.platform === 'darwin' ? it.skip : it;
 
 const pluginPath = path.resolve(__dirname, '..', 'plugins', 'ios');
