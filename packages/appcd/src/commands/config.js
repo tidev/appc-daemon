@@ -59,12 +59,10 @@ export default {
 			throw new Error(`Unknown action: ${action}`);
 		}
 
+		action = readActions[action] || writeActions[action] || action;
+
 		const cfg = loadConfig(argv);
-		const data = {
-			action: readActions[action] || writeActions[action] || action,
-			key,
-			value
-		};
+		const data = { action, key, value };
 
 		try {
 			if (writeActions[action]) {
@@ -98,6 +96,7 @@ export default {
 							// the daemon is not running, need to do things the easy way
 
 							log('Daemon is not running, using local config file');
+							log(`action = ${action}`);
 
 							if (readActions[action]) {
 								const filter = key && key.split(/\.|\//).join('.') || undefined;
@@ -130,7 +129,6 @@ export default {
 											e.exitCode = 6;
 											return reject(e);
 										}
-
 										if (!cfg.delete(key)) {
 											return reject(new Error(`Unable to delete key "${key}"`));
 										}

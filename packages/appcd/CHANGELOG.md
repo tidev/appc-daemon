@@ -2,6 +2,7 @@
 
  * fix: Fixed bug with order of loading an arbitrary `--config-file` and the user-defined config
    file.
+ * fix(config): Fixed config 'delete' aliases when daemon is not running.
  * chore: Fixed homepage and repository URLs in `package.json`.
  * chore: Added links to issue trackers in readme.
  * chore: Updated dependencies.

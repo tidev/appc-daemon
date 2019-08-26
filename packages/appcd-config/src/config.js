@@ -571,6 +571,7 @@ export default class Config {
 		const tmpFile = `${destination}.${Date.now()}.tmp`;
 		await fs.outputFile(tmpFile, JSON.stringify(this.getUserConfig(), null, 4));
 		await fs.move(tmpFile, destination, { overwrite: true });
+		log(`Wrote config file: ${highlight(destination)}`);
 	}
 
 	/**
