@@ -6,5 +6,5 @@ buildNPMPackage {
   nodeVersion = '10.15.0'
   publish = false
   tagGit = false
-  junitReportPath = 'junit.xml,packages/*/junit.xml'
+  junitReportPath = 'junit.xml'
 }
