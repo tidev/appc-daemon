@@ -16,7 +16,7 @@ try {
 }
 
 describe('plugin system info', function () {
-	this.timeout(60000);
+	this.timeout(120000);
 
 	it('should register the system info plugin', makeTest(async function () {
 		this.symlinkPlugin('system-info', pluginVersion);

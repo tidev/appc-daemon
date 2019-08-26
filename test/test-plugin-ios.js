@@ -18,7 +18,7 @@ try {
 }
 
 describe('plugin iOS', function () {
-	this.timeout(60000);
+	this.timeout(120000);
 
 	_it('should register the iOS plugin', makeTest(async function () {
 		this.symlinkPlugin('ios', pluginVersion);

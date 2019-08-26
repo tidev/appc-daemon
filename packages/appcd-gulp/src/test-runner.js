@@ -10,6 +10,8 @@ exports.runTests = function runTests(root, projectDir, cover, all) {
 	const args = [];
 	let { execPath } = process;
 
+	process.env.APPCD_TEST = projectDir;
+
 	// add nyc
 	if (cover) {
 		const nycModuleBinDir = resolveModuleBin(root, 'nyc');

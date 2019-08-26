@@ -16,7 +16,7 @@ try {
 }
 
 describe('plugin titanium', function () {
-	this.timeout(60000);
+	this.timeout(120000);
 
 	it('should register the titanium plugin', makeTest(async function () {
 		this.symlinkPlugin('titanium', pluginVersion);

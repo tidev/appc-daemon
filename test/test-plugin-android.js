@@ -16,7 +16,7 @@ try {
 }
 
 describe('plugin android', function () {
-	this.timeout(60000);
+	this.timeout(120000);
 
 	_it('should register the android plugin', makeTest(async function () {
 		this.symlinkPlugin('android', pluginVersion);

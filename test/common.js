@@ -67,7 +67,7 @@ const api = {
 		}
 	},
 
-	async startDaemonDebugMode(cfg) {
+	async startDaemonDebugMode(cfg, output) {
 		if (isAppcdRunning) {
 			this.runAppcdSync([ 'stop' ]);
 			isAppcdRunning = false;
@@ -76,20 +76,28 @@ const api = {
 		const child = this.runAppcd([ 'start', '--debug' ], {}, cfg);
 		isAppcdRunning = true;
 
-		const prom = new Promise(resolve => {
+		const prom = new Promise((resolve, reject) => {
 			child.stdout.on('data', data => {
 				const s = data.toString();
 				if (s.includes('Appc Daemon started')) {
 					resolve(child);
 				}
-				// process.stdout.write(s);
+				if (output) {
+					process.stdout.write(s);
+				}
+			});
+
+			child.on('close', code => {
+				isAppcdRunning = false;
+				if (code) {
+					reject(new Error(`appcd exited (code ${code})`));
+				}
 			});
 		});
-		// child.stderr.on('data', data => process.stdout.write(data.toString()));
 
-		child.on('close', () => {
-			isAppcdRunning = false;
-		});
+		if (output) {
+			child.stderr.on('data', data => process.stdout.write(data.toString()));
+		}
 
 		await prom;
 	},
@@ -114,9 +122,11 @@ const api = {
 	runAppcd(args = [], opts = {}, cfg) {
 		const env = { ...(opts.env || process.env) };
 		delete env.SNOOPLOGG;
+
 		if (cfg) {
 			args.unshift('--config', JSON.stringify(cfg));
 		}
+
 		log(`Executing: ${highlight(`${process.execPath} ${appcdPath} ${args.join(' ')}`)}`);
 		return spawn(process.execPath, [ appcdPath, ...args ], {
 			ignoreExitCodes: true,
@@ -129,6 +139,7 @@ const api = {
 	runAppcdSync(args = [], opts = {},  cfg) {
 		const env = { ...(opts.env || process.env) };
 		delete env.SNOOPLOGG;
+
 		if (cfg) {
 			args.unshift('--config', JSON.stringify(cfg));
 		}

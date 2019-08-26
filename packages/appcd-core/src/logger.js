@@ -13,8 +13,11 @@ const instance = createInstanceWithDefaults()
 		minBrightness: 80,
 		maxBrightness: 200,
 		theme: 'detailed'
-	})
-	.enable('*');
+	});
+
+if (!process.env.APPCD_TEST) {
+	instance.enable('*');
+}
 
 if (~~process.env.APPCD_NO_COLORS) {
 	// need to strip colors
