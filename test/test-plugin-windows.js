@@ -18,7 +18,7 @@ try {
 }
 
 describe('plugin windows', function () {
-	this.timeout(60000);
+	this.timeout(120000);
 
 	_it('should register the windows plugin', makeTest(async function () {
 		this.symlinkPlugin('windows', pluginVersion);

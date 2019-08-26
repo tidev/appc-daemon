@@ -4,7 +4,7 @@ import {
 } from './common';
 
 describe('appcd stop', function () {
-	this.timeout(60000);
+	this.timeout(120000);
 
 	describe('help', () => {
 		it('should output help as JSON', makeTest(async function () {

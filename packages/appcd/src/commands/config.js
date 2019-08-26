@@ -8,6 +8,7 @@ const writeActions = {
 	set:     'set',
 
 	delete:  'delete',
+	remove:  'delete',
 	rm:      'delete',
 	unset:   'delete',
 

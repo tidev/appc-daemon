@@ -16,7 +16,7 @@ try {
 }
 
 describe('plugin genymotion', function () {
-	this.timeout(60000);
+	this.timeout(120000);
 
 	_it('should register the genymotion plugin', makeTest(async function () {
 		this.symlinkPlugin('genymotion', pluginVersion);

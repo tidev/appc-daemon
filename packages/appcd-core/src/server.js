@@ -1,4 +1,5 @@
 import appcdCoreLogger, { LogcatFormatter } from './logger';
+import Config, { load as loadConfig } from 'appcd-config';
 import ConfigService from 'appcd-config-service';
 import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs-extra';
@@ -19,7 +20,6 @@ import { expandPath } from 'appcd-path';
 import { i18n } from 'appcd-response';
 import { installDefaultPlugins } from 'appcd-default-plugins';
 import { isDir, isFile } from 'appcd-fs';
-import { load as loadConfig } from 'appcd-config';
 import { purgeUnusedNodejsExecutables } from 'appcd-nodejs';
 
 const { __n } = i18n();
@@ -49,18 +49,23 @@ export default class Server {
 		 */
 		this.config = loadConfig({
 			config,
-			configFile,
 			defaultConfigFile: path.resolve(__dirname, '..', 'conf', 'default.js')
 		});
 
-		// if we didn't have a `configFile`, then load the user config file
-		if (!configFile && isFile(configFile = expandPath(this.config.get('home'), 'config.json'))) {
-			this.config.loadUserConfig(configFile);
+		// load the user-defined config file
+		const cfgFile = expandPath(this.config.get('home'), 'config.json');
+		if (isFile(cfgFile)) {
+			this.config.loadUserConfig(cfgFile);
+		}
 
-			// if we had a `config` object, then we need to re-merge it on top of the user config
-			if (config) {
-				this.config.merge(config);
-			}
+		// load the override config file
+		if (configFile) {
+			this.config.loadUserConfig(configFile);
+		}
+
+		// if we have a `argv.config` object, then we need to re-merge it on top of the user config
+		if (config) {
+			this.config.merge(config, { namespace: Config.Root, overrideReadonly: true, write: false });
 		}
 
 		/**
