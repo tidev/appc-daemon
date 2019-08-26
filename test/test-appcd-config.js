@@ -9,7 +9,7 @@ import {
 const configFile = path.join(os.homedir(), '.appcelerator', 'appcd', 'config.json');
 
 describe('appcd config', function () {
-	this.timeout(30000);
+	this.timeout(60000);
 
 	describe('help', () => {
 		it('should output help as JSON', makeTest(async function () {
