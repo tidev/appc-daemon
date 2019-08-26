@@ -6,8 +6,8 @@ import {
 	makeTest
 } from './common';
 
-let _it = process.platform === 'darwin' ? it : it.skip;
-let unsupportedIt = process.platform === 'darwin' ? it.skip : it;
+let _it = process.platform === 'win32' ? it : it.skip;
+let unsupportedIt = process.platform === 'win32' ? it.skip : it;
 
 const pluginPath = path.resolve(__dirname, '..', 'plugins', 'windows');
 let pluginVersion;
