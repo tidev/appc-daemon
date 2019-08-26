@@ -114,6 +114,7 @@ export default class ConfigService extends ServiceDispatcher {
 
 						case 'push':
 							this.config.push(key, data.value);
+							value = this.config.get(key);
 							break;
 
 						case 'pop':
@@ -126,6 +127,7 @@ export default class ConfigService extends ServiceDispatcher {
 
 						case 'unshift':
 							this.config.unshift(key, data.value);
+							value = this.config.get(key);
 							break;
 					}
 				} catch (e) {

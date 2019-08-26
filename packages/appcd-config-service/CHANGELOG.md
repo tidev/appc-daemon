@@ -1,5 +1,6 @@
 # v2.0.2
 
+ * fix: Fixed bug where `push` and `unshift` actions were not returning the new value.
  * chore: Fixed homepage and repository URLs in `package.json`.
  * chore: Added links to issue trackers in readme.
  * chore: Bumped required Node.js version to 8.12.0 which is technically a breaking change, but

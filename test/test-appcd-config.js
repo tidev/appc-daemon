@@ -457,7 +457,7 @@ describe('appcd config', function () {
 				});
 			}
 
-			describe.only('arrays', () => {
+			describe('arrays', () => {
 				it('should push to an array config value', makeTest(async function () {
 					await this.initHomeDir(path.join(__dirname, 'fixtures', 'array-config'));
 
