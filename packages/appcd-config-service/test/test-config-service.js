@@ -413,8 +413,7 @@ describe('Config Service', () => {
 
 		await cs.onCall(ctx);
 
-		expect(ctx.response).to.be.instanceof(Response);
-		expect(ctx.response.statusCode).to.equal(200);
+		expect(ctx.response).to.deep.equal([ 'bar', 'baz' ]);
 
 		ctx = {
 			request: {
@@ -456,8 +455,7 @@ describe('Config Service', () => {
 
 		await cs.onCall(ctx);
 
-		expect(ctx.response).to.be.instanceof(Response);
-		expect(ctx.response.statusCode).to.equal(200);
+		expect(ctx.response).to.deep.equal([ 'baz', 'bar' ]);
 
 		ctx = {
 			request: {
