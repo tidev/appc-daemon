@@ -102,21 +102,24 @@ describe('plugin android', function () {
 		expect(obj.status).to.equal(200);
 
 		const { message } = obj;
+		let sdks;
 
 		// targets was removed in 2.x
 		if (semver.lt(pluginVersion, '2.0.0')) {
 			expect(message).to.have.keys('devices', 'emulators', 'ndk', 'sdk', 'targets');
+			sdks = message.sdk;
 		} else {
 			expect(message).to.have.keys('devices', 'emulators', 'ndks', 'sdks');
+			sdks = message.sdks;
 		}
 
-		expect(message.sdks).to.be.an('array');
-		expect(message.sdks).to.have.lengthOf.at.least(1);
+		expect(sdks).to.be.an('array');
+		expect(sdks).to.have.lengthOf.at.least(1);
 
 		sdkDir = real(sdkDir);
 		const bat = process.platform === 'win32' ? '.bat' : '';
 		const exe = process.platform === 'win32' ? '.exe' : '';
-		const sdk = message.sdks.find(info => info.path === sdkDir);
+		const sdk = sdks.find(info => info.path === sdkDir);
 		expect(sdk).to.be.an('object');
 
 		expect(sdk.buildTools).to.be.an('array');
