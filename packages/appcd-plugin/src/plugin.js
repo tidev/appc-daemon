@@ -1,7 +1,8 @@
 import appcdLogger from 'appcd-logger';
 import Dispatcher, { DispatcherError } from 'appcd-dispatcher';
 import ExternalPlugin from './external-plugin';
-import fs from 'fs';
+import findup from 'findup-sync';
+import fs from 'fs-extra';
 import gawk from 'gawk';
 import ignore from 'ignore';
 import ignoreList from './ignore';
@@ -11,6 +12,7 @@ import PluginError, { PluginMissingAppcdError } from './plugin-error';
 import prettyMs from 'pretty-ms';
 import semver from 'semver';
 import slug from 'slugg';
+import sortKeys from 'sort-keys';
 import types from './types';
 
 import { arrayify, sha1 } from 'appcd-util';
@@ -60,7 +62,8 @@ export default class Plugin extends EventEmitter {
 			error:          null,
 			supported:      null,
 			activeRequests: 0,
-			totalRequests:  0
+			totalRequests:  0,
+			dependencies:   {}
 		});
 
 		return new Proxy(this, {
@@ -156,6 +159,18 @@ export default class Plugin extends EventEmitter {
 		this.main = main;
 
 		this.os = null;
+
+		if (pkgJson.dependencies && typeof pkgJson.dependencies === 'object') {
+			for (const pkg of Object.keys(pkgJson.dependencies)) {
+				// try to determine the installed version
+				try {
+					const p = findup('package.json', { cwd: require.resolve(pkg, { paths: [ pluginPath ] }) });
+					this.dependencies[pkg] = p && fs.readJsonSync(p).version || null;
+				} catch (e) {
+					this.dependencies[pkg] = null;
+				}
+			}
+		}
 
 		const appcd = {};
 
@@ -413,7 +428,7 @@ export default class Plugin extends EventEmitter {
 				// if the request was for `/<plugin-name>/version/` and the plugin didn't explicitly
 				// handle the request, then override the error and return the plugin info
 				if (ctx.path === '/' && err instanceof DispatcherError && err.status === 404) {
-					ctx.response = this.info;
+					ctx.response = sortKeys(this.info);
 					ctx.status = 200;
 					return ctx;
 				}

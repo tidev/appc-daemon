@@ -37,6 +37,7 @@
     "appcd-winreg": "^1.1.7",
     "builtin-modules": "^3.1.0",
     "findup-sync": "^4.0.0",
+    "fs-extra": "^8.1.0",
     "gawk": "^4.6.4",
     "globule": "^1.2.1",
     "hook-emitter": "^4.0.0",
@@ -45,6 +46,7 @@
     "pretty-ms": "^5.0.0",
     "semver": "^6.3.0",
     "slugg": "^1.2.1",
+    "sort-keys": "^4.0.0",
     "source-map-support": "^0.5.13",
     "uuid": "^3.3.3"
   },
