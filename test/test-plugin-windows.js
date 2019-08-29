@@ -49,6 +49,7 @@ describe('plugin windows', function () {
 		expect(obj).to.be.an('object');
 		expect(obj.status).to.equal(200);
 		expect(obj.message).to.be.an('object');
+		expect(obj.message.dependencies).to.be.an('object');
 		expect(obj.message.path).to.equal(pluginPath);
 		expect(obj.message.packageName).to.equal('@appcd/plugin-windows');
 		expect(obj.message.version).to.equal(pluginVersion);
@@ -84,19 +85,23 @@ describe('plugin windows', function () {
 		expect(obj).to.be.an('object');
 		expect(obj.status).to.equal(200);
 		expect(obj.message).to.be.an('array');
-		expect(obj.message).to.deep.include({
-			activeRequests: 0,
-			totalRequests: 0,
-			path: pluginPath,
-			packageName: "@appcd/plugin-windows",
-			version: pluginVersion,
-			main: path.join(pluginPath, 'dist', 'index.js'),
-			name: "windows",
-			type: "external",
-			nodeVersion: coreNodeVersion,
-			error: `Unsupported platform "${process.platform}"`,
-			supported: false
-		});
+
+		const info = obj.message.find(p => p.path === pluginPath);
+		expect(info).to.be.an('object');
+		expect(info).to.have.keys('activeRequests', 'totalRequests', 'dependencies', 'path', 'packageName', 'version', 'main', 'name', 'type', 'nodeVersion', 'error', 'supported');
+
+		expect(info.activeRequests).to.equal(0);
+		expect(info.totalRequests).to.equal(0);
+		expect(info.dependencies).to.be.an('object');
+		expect(info.path).to.equal(pluginPath);
+		expect(info.packageName).to.equal('@appcd/plugin-windows');
+		expect(info.version).to.equal(pluginVersion);
+		expect(info.main).to.equal(path.join(pluginPath, 'dist', 'index.js'));
+		expect(info.name).to.equal('windows');
+		expect(info.type).to.equal('external');
+		expect(info.nodeVersion).to.equal(coreNodeVersion);
+		expect(info.error).to.equal(`Unsupported platform "${process.platform}"`);
+		expect(info.supported).to.equal(false);
 		expect(obj.fin).to.equal(true);
 		expect(obj.statusCode).to.equal('200');
 	}));
