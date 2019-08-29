@@ -73,7 +73,15 @@ const api = {
 			isAppcdRunning = false;
 		}
 
-		const child = this.runAppcd([ 'start', '--debug' ], {}, cfg);
+		const opts = {};
+		if (!output) {
+			opts.env = {
+				...process.env,
+				APPCD_TEST: '1'
+			}
+		}
+
+		const child = this.runAppcd([ 'start', '--debug' ], opts, cfg);
 		isAppcdRunning = true;
 
 		const prom = new Promise((resolve, reject) => {
@@ -121,7 +129,9 @@ const api = {
 
 	runAppcd(args = [], opts = {}, cfg) {
 		const env = { ...(opts.env || process.env) };
-		delete env.SNOOPLOGG;
+		if (env.APPCD_TEST) {
+			delete env.SNOOPLOGG;
+		}
 
 		if (cfg) {
 			args.unshift('--config', JSON.stringify(cfg));
@@ -138,7 +148,9 @@ const api = {
 
 	runAppcdSync(args = [], opts = {},  cfg) {
 		const env = { ...(opts.env || process.env) };
-		delete env.SNOOPLOGG;
+		if (env.APPCD_TEST) {
+			delete env.SNOOPLOGG;
+		}
 
 		if (cfg) {
 			args.unshift('--config', JSON.stringify(cfg));
@@ -165,9 +177,7 @@ export function makeTest(fn) {
 		try {
 			await fn.call(api);
 		} finally {
-			if (isAppcdRunning) {
-				api.runAppcdSync([ 'stop' ]);
-			}
+			api.runAppcdSync([ 'stop' ]);
 			emptyHomeDir();
 		}
 	};

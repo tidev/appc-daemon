@@ -6,7 +6,7 @@ const { spawnSync } = require('child_process');
 
 const isWindows   = process.platform === 'win32';
 
-exports.runTests = function runTests(root, projectDir, cover, all) {
+exports.runTests = function runTests({ root, projectDir, cover, all }) {
 	const args = [];
 	let { execPath } = process;
 

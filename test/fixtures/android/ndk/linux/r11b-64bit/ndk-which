@@ -1,0 +1,4 @@
+#!/bin/sh
+echo "mock ndk-which"
+
+# dummy-x86_64/

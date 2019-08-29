@@ -1,5 +1,4 @@
 import appcdCoreLogger, { LogcatFormatter } from './logger';
-import Config, { load as loadConfig } from 'appcd-config';
 import ConfigService from 'appcd-config-service';
 import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs-extra';
@@ -20,6 +19,7 @@ import { expandPath } from 'appcd-path';
 import { i18n } from 'appcd-response';
 import { installDefaultPlugins } from 'appcd-default-plugins';
 import { isDir, isFile } from 'appcd-fs';
+import { loadConfig } from './load-config';
 import { purgeUnusedNodejsExecutables } from 'appcd-nodejs';
 
 const { __n } = i18n();
@@ -42,31 +42,13 @@ export default class Server {
 	 * @param {String} [opts.configFile] - The path to a .js or .json config file to load.
 	 * @access public
 	 */
-	constructor({ config, configFile } = {}) {
+	constructor(opts) {
 		/**
 		 * The config object.
 		 * @type {Config}
 		 */
-		this.config = loadConfig({
-			config,
-			defaultConfigFile: path.resolve(__dirname, '..', 'conf', 'default.js')
-		});
-
-		// load the user-defined config file
-		const cfgFile = expandPath(this.config.get('home'), 'config.json');
-		if (isFile(cfgFile)) {
-			this.config.loadUserConfig(cfgFile);
-		}
-
-		// load the override config file
-		if (configFile) {
-			this.config.loadUserConfig(configFile);
-		}
-
-		// if we have a `argv.config` object, then we need to re-merge it on top of the user config
-		if (config) {
-			this.config.merge(config, { namespace: Config.Root, overrideReadonly: true, write: false });
-		}
+		this.config = loadConfig(opts);
+		logger.log(this.config.toString());
 
 		/**
 		 * The appcd version.

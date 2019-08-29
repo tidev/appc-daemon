@@ -22,7 +22,7 @@ describe('appcd config', function () {
 
 	describe('Error handling', () => {
 		it('should error when loading a bad config file when daemon not running', makeTest(async function () {
-			await this.initHomeDir(path.join(__dirname, 'fixtures', 'bad-config'));
+			await this.initHomeDir(path.join(__dirname, 'fixtures', 'config', 'bad'));
 
 			const { status, stdout, stderr } = this.runAppcdSync([ 'config', 'get' ], {}, defaultConfig);
 
@@ -32,7 +32,7 @@ describe('appcd config', function () {
 		}));
 
 		it('should error when loading a bad config file when starting daemon', makeTest(async function () {
-			await this.initHomeDir(path.join(__dirname, 'fixtures', 'bad-config'));
+			await this.initHomeDir(path.join(__dirname, 'fixtures', 'config', 'bad'));
 
 			const { status, stdout, stderr } = this.runAppcdSync([ 'start' ], {}, defaultConfig);
 
@@ -42,7 +42,7 @@ describe('appcd config', function () {
 		}));
 
 		it('should not error when config file is empty', makeTest(async function () {
-			await this.initHomeDir(path.join(__dirname, 'fixtures', 'empty-config'));
+			await this.initHomeDir(path.join(__dirname, 'fixtures', 'config', 'empty'));
 
 			const { status, stdout } = this.runAppcdSync([ 'config', 'get' ], {}, defaultConfig);
 
@@ -435,7 +435,7 @@ describe('appcd config', function () {
 			for (const action of removeActions) {
 				describe(action, () => {
 					it(`should ${action} config value`, makeTest(async function () {
-						await this.initHomeDir(path.join(__dirname, 'fixtures', 'foo-config'));
+						await this.initHomeDir(path.join(__dirname, 'fixtures', 'config', 'foo'));
 
 						if (appcdState === 'started') {
 							await this.installNode();
@@ -459,7 +459,7 @@ describe('appcd config', function () {
 
 			describe('arrays', () => {
 				it('should push to an array config value', makeTest(async function () {
-					await this.initHomeDir(path.join(__dirname, 'fixtures', 'array-config'));
+					await this.initHomeDir(path.join(__dirname, 'fixtures', 'config', 'array'));
 
 					if (appcdState === 'started') {
 						await this.installNode();
@@ -475,7 +475,7 @@ describe('appcd config', function () {
 				}));
 
 				it('should pop from an array config value', makeTest(async function () {
-					await this.initHomeDir(path.join(__dirname, 'fixtures', 'array-config'));
+					await this.initHomeDir(path.join(__dirname, 'fixtures', 'config', 'array'));
 
 					if (appcdState === 'started') {
 						await this.installNode();
@@ -489,7 +489,7 @@ describe('appcd config', function () {
 				}));
 
 				it('should shift an array config value', makeTest(async function () {
-					await this.initHomeDir(path.join(__dirname, 'fixtures', 'array-config'));
+					await this.initHomeDir(path.join(__dirname, 'fixtures', 'config', 'array'));
 
 					if (appcdState === 'started') {
 						await this.installNode();
@@ -503,7 +503,7 @@ describe('appcd config', function () {
 				}));
 
 				it('should unshift an array config value', makeTest(async function () {
-					await this.initHomeDir(path.join(__dirname, 'fixtures', 'array-config'));
+					await this.initHomeDir(path.join(__dirname, 'fixtures', 'config', 'array'));
 
 					if (appcdState === 'started') {
 						await this.installNode();

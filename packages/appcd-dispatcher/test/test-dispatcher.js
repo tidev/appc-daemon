@@ -499,7 +499,7 @@ describe('dispatcher', () => {
 			const d = new Dispatcher();
 
 			d.register('/foo', ctx => {
-				console.log(ctx.request);
+				// console.log(ctx.request);
 				expect(ctx.request.foo).to.equal('bar');
 				expect(ctx.headers).to.deep.equal({});
 				expect(ctx.source).to.equal('http');

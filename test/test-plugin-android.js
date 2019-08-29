@@ -1,10 +1,18 @@
 import fs from 'fs-extra';
 import path from 'path';
+
 import {
 	coreNodeVersion,
 	defaultConfig,
-	makeTest
+	makeTempDir,
+	makeTest,
+	testLogger,
+	snooplogg
 } from './common';
+import { real } from 'appcd-path';
+
+const { log } = testLogger('android');
+const { highlight } = snooplogg.styles;
 
 let _it = it;
 const pluginPath = path.resolve(__dirname, '..', 'plugins', 'android');
@@ -67,5 +75,247 @@ describe('plugin android', function () {
 		expect(obj.message.activeRequests).to.equal(0);
 		expect(obj.fin).to.equal(true);
 		expect(obj.statusCode).to.equal('200');
+	}));
+
+	_it('should detect an Android SDK', makeTest(async function () {
+		const src = path.join(__dirname, 'fixtures', 'android', 'sdk', process.platform);
+		let sdkDir = makeTempDir();
+		log(`Copying ${highlight(src)} => ${highlight(sdkDir)}`);
+		fs.copySync(src, sdkDir);
+
+		this.symlinkPlugin('android', pluginVersion);
+		await this.installNode();
+		await this.startDaemonDebugMode({
+			...defaultConfig,
+			android: {
+				sdk: {
+					searchPaths: [ sdkDir ]
+				}
+			}
+		});
+
+		const { status, stdout } = this.runAppcdSync([ 'exec', `/android/${pluginVersion}/info` ]);
+		expect(status).to.equal(0);
+
+		const obj = JSON.parse(stdout);
+		expect(obj.status).to.equal(200);
+
+		const { message } = obj;
+		expect(message).to.have.keys('devices', 'emulators', 'ndks', 'sdks');
+
+		expect(message.sdks).to.be.an('array');
+		expect(message.sdks).to.have.lengthOf.at.least(1);
+
+		sdkDir = real(sdkDir);
+		const bat = process.platform === 'win32' ? '.bat' : '';
+		const exe = process.platform === 'win32' ? '.exe' : '';
+		const sdk = message.sdks.find(info => info.path === sdkDir);
+		expect(sdk).to.be.an('object');
+
+		expect(sdk.buildTools).to.be.an('array');
+		expect(sdk.buildTools).to.deep.equal([
+			{
+				dx: path.join(sdkDir, 'build-tools', '23.0.3', 'lib', 'dx.jar'),
+				path: path.join(sdkDir, 'build-tools', '23.0.3'),
+				version: '23.0.3',
+				executables: {
+					aapt: path.join(sdkDir, 'build-tools', '23.0.3', `aapt${exe}`),
+					aapt2: path.join(sdkDir, 'build-tools', '23.0.3', `aapt2${exe}`),
+					aidl: path.join(sdkDir, 'build-tools', '23.0.3', `aidl${exe}`),
+					zipalign: path.join(sdkDir, 'build-tools', '23.0.3', `zipalign${exe}`)
+				}
+			}
+		]);
+
+		expect(sdk.platforms).to.be.an('array');
+		expect(sdk.platforms).to.deep.equal([
+			{
+				aidl: path.join(sdkDir, 'platforms', 'android-23', 'framework.aidl'),
+				androidJar: path.join(sdkDir, 'platforms', 'android-23', 'android.jar'),
+				apiLevel: 23,
+				codename: null,
+				defaultSkin: 'WVGA800',
+				minToolsRev: 22,
+				name: 'Android 6.0',
+				path: path.join(sdkDir, 'platforms', 'android-23'),
+				revision: 3,
+				sdk: 'android-23',
+				version: '6.0',
+				abis: {
+					'android-tv': [
+						'armeabi-v7a',
+						'x86'
+					],
+					'android-wear': [
+						'armeabi-v7a',
+						'x86'
+					],
+					default: [
+						'armeabi-v7a',
+						'x86',
+						'x86_64'
+					],
+					'google_apis': [
+						'armeabi-v7a',
+						'x86',
+						'x86_64'
+					]
+				},
+				skins: [
+					'HVGA',
+					'QVGA',
+					'WQVGA400',
+					'WQVGA432',
+					'WSVGA',
+					'WVGA800',
+					'WVGA854',
+					'WXGA720',
+					'WXGA800',
+					'WXGA800-7in',
+					'AndroidWearRound',
+					'AndroidWearRound360x360',
+					'AndroidWearRound400x400',
+					'AndroidWearRound480x480',
+					'AndroidWearRoundChin320x290',
+					'AndroidWearRoundChin360x325',
+					'AndroidWearRoundChin360x326',
+					'AndroidWearRoundChin360x330',
+					'AndroidWearSquare',
+					'AndroidWearSquare320x320'
+				]
+			},
+			{
+				aidl: path.join(sdkDir, 'platforms', 'android-N', 'framework.aidl'),
+				androidJar: path.join(sdkDir, 'platforms', 'android-N', 'android.jar'),
+				apiLevel: 23,
+				codename: 'N',
+				defaultSkin: 'WVGA800',
+				minToolsRev: 22,
+				name: 'Android N (Preview)',
+				path: path.join(sdkDir, 'platforms', 'android-N'),
+				revision: 2,
+				sdk: 'android-N',
+				version: 'N',
+				abis: {},
+				skins: [
+					'HVGA',
+					'QVGA',
+					'WQVGA400',
+					'WQVGA432',
+					'WSVGA',
+					'WVGA800',
+					'WVGA854',
+					'WXGA720',
+					'WXGA800',
+					'WXGA800-7in'
+				]
+			}
+		]);
+
+		expect(sdk.platformTools).to.be.an('object');
+		expect(sdk.platformTools).to.deep.equal({
+			path: path.join(sdkDir, 'platform-tools'),
+			version: '23.1',
+			executables: {
+				adb: path.join(sdkDir, 'platform-tools', `adb${exe}`)
+			}
+		});
+
+		expect(sdk.systemImages).to.be.an('object');
+		expect(sdk.systemImages).to.deep.equal({
+			'android-23/android-tv/armeabi-v7a': {
+				abi: 'armeabi-v7a',
+				sdk: 'android-23',
+				type: 'android-tv',
+				skins: []
+			},
+			'android-23/android-tv/x86': {
+				abi: 'x86',
+				sdk: 'android-23',
+				type: 'android-tv',
+				skins: []
+			},
+			'android-23/android-wear/armeabi-v7a': {
+				abi: 'armeabi-v7a',
+				sdk: 'android-23',
+				type: 'android-wear',
+				skins: [
+					'AndroidWearRound',
+					'AndroidWearRound360x360',
+					'AndroidWearRound400x400',
+					'AndroidWearRound480x480',
+					'AndroidWearRoundChin320x290',
+					'AndroidWearRoundChin360x325',
+					'AndroidWearRoundChin360x326',
+					'AndroidWearRoundChin360x330',
+					'AndroidWearSquare',
+					'AndroidWearSquare320x320'
+				]
+			},
+			'android-23/android-wear/x86': {
+				abi: 'x86',
+				sdk: 'android-23',
+				type: 'android-wear',
+				skins: [
+					'AndroidWearRound',
+					'AndroidWearRound360x360',
+					'AndroidWearRound400x400',
+					'AndroidWearRound480x480',
+					'AndroidWearRoundChin320x290',
+					'AndroidWearRoundChin360x325',
+					'AndroidWearRoundChin360x326',
+					'AndroidWearRoundChin360x330',
+					'AndroidWearSquare',
+					'AndroidWearSquare320x320'
+				]
+			},
+			'android-23/default/armeabi-v7a': {
+				abi: 'armeabi-v7a',
+				sdk: 'android-23',
+				type: 'default',
+				skins: []
+			},
+			'android-23/default/x86': {
+				abi: 'x86',
+				sdk: 'android-23',
+				type: 'default',
+				skins: []
+			},
+			'android-23/default/x86_64': {
+				abi: 'x86_64',
+				sdk: 'android-23',
+				type: 'default',
+				skins: []
+			},
+			'android-23/google_apis/armeabi-v7a': {
+				abi: 'armeabi-v7a',
+				sdk: 'android-23',
+				type: 'google_apis',
+				skins: []
+			},
+			'android-23/google_apis/x86': {
+				abi: 'x86',
+				sdk: 'android-23',
+				type: 'google_apis',
+				skins: []
+			},
+			'android-23/google_apis/x86_64': {
+				abi: 'x86_64',
+				sdk: 'android-23',
+				type: 'google_apis',
+				skins: []
+			}
+		});
+
+		expect(sdk.tools).to.be.an('object');
+		expect(sdk.tools).to.deep.equal({
+			path: path.join(sdkDir, 'tools'),
+			version: '24.4.1',
+			executables: {
+				android: path.join(sdkDir, 'tools', `android${bat}`),
+				emulator: path.join(sdkDir, 'tools', `emulator${exe}`),
+				sdkmanager: path.join(sdkDir, 'tools', 'bin', `sdkmanager${bat}`)
+			}
+		});
 	}));
 });
