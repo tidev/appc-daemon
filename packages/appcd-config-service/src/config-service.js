@@ -81,7 +81,6 @@ export default class ConfigService extends ServiceDispatcher {
 
 			} else if (action === 'load') {
 				this.config.load(data.file, {
-					isUserDefined: !!data.isUserDefined,
 					namespace:     data.namespace,
 					override:      data.override !== false
 				});

@@ -1,7 +1,16 @@
-# v1.3.2
+# v2.0.0
 
+ * BREAKING CHANGE: Removed `load()` helper as it was too Appc Daemon specific.
+ * BREAKING CHANGE: Renamed `Root` namespace to `Base`.
+ * BREAKING CHANGE: Removed `isUserDefined` option from `load()`.
+ * feat: Added `baseConfig` and `baseConfigFile` to load configuration into the `Base` namespace.
+ * feat: Added new `skipIfNotExists` option to `load()`.
+ * fix: Added new `Runtime` layer to allow config settings set at runtime to override `Base` and
+   `User` config values.
+ * fix: Apply the runtime config after a file is loaded into the runtime namespace.
  * fix: Fixed bug introduced with config layer feature that wasn't allowing readonly values to be
    overwritten during initial load.
+ * fix: Array merging, push, and unshifting no longer allows duplicate values.
  * chore: Fixed homepage and repository URLs in `package.json`.
  * chore: Added links to issue trackers in readme.
 

@@ -127,10 +127,10 @@ module.exports = (opts) => {
 	/*
 	 * test tasks
 	 */
-	exports.test             = series(parallel(lintTest, build),                async function test() { runTests(appcdGulpNodeModulesPath, projectDir); });
-	exports['test-only']     = series(lintTest,                                 async function test() { runTests(appcdGulpNodeModulesPath, projectDir); });
-	exports.coverage         = series(parallel(cleanCoverage, lintTest, build), async function coverage() { runTests(appcdGulpNodeModulesPath, projectDir, true); });
-	exports['coverage-only'] = series(parallel(cleanCoverage, lintTest),        async function coverage() { runTests(appcdGulpNodeModulesPath, projectDir, true); });
+	exports.test             = series(parallel(lintTest, build),                async function test() {     runTests({ root: appcdGulpNodeModulesPath, projectDir }); });
+	exports['test-only']     = series(lintTest,                                 async function test() {     runTests({ root: appcdGulpNodeModulesPath, projectDir }); });
+	exports.coverage         = series(parallel(cleanCoverage, lintTest, build), async function coverage() { runTests({ root: appcdGulpNodeModulesPath, projectDir, cover: true }); });
+	exports['coverage-only'] = series(parallel(cleanCoverage, lintTest),        async function coverage() { runTests({ root: appcdGulpNodeModulesPath, projectDir, cover: true }); });
 
 	/*
 	 * watch tasks

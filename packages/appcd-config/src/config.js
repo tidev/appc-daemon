@@ -1,3 +1,8 @@
+/* istanbul ignore if */
+if (!Error.prepareStackTrace) {
+	require('source-map-support/register');
+}
+
 import appcdLogger from 'appcd-logger';
 import fs from 'fs-extra';
 import gawk from 'gawk';
@@ -16,14 +21,24 @@ const { highlight } = appcdLogger.styles;
 /**
  * A config model that loads config files, retrieves/changes settings, and validates settings based
  * on metadata.
+ *
+ * Config values are stored in ordered namespaces. The final configuration is derived by flattening
+ * all namespaces into a single object.
  */
 export default class Config {
 	/**
-	 * The id of the "root" namespace.
+	 * The id of the "base" namespace.
 	 * @type {Symbol}
 	 * @access public
 	 */
-	static Root = Symbol('root');
+	static Base = Symbol('base');
+
+	/**
+	 * The id of the "runtime" namespace.
+	 * @type {Symbol}
+	 * @access public
+	 */
+	static Runtime = Symbol('runtime');
 
 	/**
 	 * The id of the "user" namespace.
@@ -38,8 +53,9 @@ export default class Config {
 	 * @access private
 	 */
 	namespaces = gawk({
-		[Config.Root]: {},
-		[Config.User]: {}
+		[Config.Base]: {},
+		[Config.User]: {},
+		[Config.Runtime]: {}
 	});
 
 	/**
@@ -47,7 +63,7 @@ export default class Config {
 	 * @type {Object}
 	 * @access private
 	 */
-	namespaceOrder = [ Config.Root, Config.User ];
+	namespaceOrder = [ Config.Base, Config.User, Config.Runtime ];
 
 	/**
 	 * Config option metadata.
@@ -68,6 +84,8 @@ export default class Config {
 	 * Creates a config instance.
 	 *
 	 * @param {Object} [opts] - Various options.
+	 * @param {String} [opts.baseConfig] - A object to initialize the base config with.
+	 * @param {String} [opts.baseConfigFile] - The path to a .js or .json base config file to load.
 	 * @param {Object} [opts.config] - A object to initialize the config with. Note that if a
 	 * `configFile` is also specified, this `config` is applied AFTER the config file has been
 	 * loaded.
@@ -100,17 +118,27 @@ export default class Config {
 			gawk.set(this.values, obj);
 		});
 
-		// if there's a config file, load it into the root namespace
-		if (opts.configFile) {
-			this.load(opts.configFile);
+		this.load(opts.baseConfigFile, { namespace: Config.Base, overrideReadonly: true, skipIfNotExists: true });
+		this.load(opts.configFile, { namespace: Config.Runtime, overrideReadonly: true, skipIfNotExists: true });
+
+		if (opts.baseConfig) {
+			if (typeof opts.baseConfig !== 'object' || Array.isArray(opts.baseConfig)) {
+				throw new TypeError('Expected base config to be an object');
+			}
+			this.merge(opts.baseConfig, {
+				namespace: Config.Base,
+				overrideReadonly: true
+			});
 		}
 
-		// if there's a JavaScript object config, merge it into the root namespace
 		if (opts.config) {
 			if (typeof opts.config !== 'object' || Array.isArray(opts.config)) {
 				throw new TypeError('Expected config to be an object');
 			}
-			this.merge(opts.config, { namespace: Config.Root, overrideReadonly: true, write: false });
+			this.merge(this.runtimeConfig = opts.config, {
+				namespace: Config.Runtime,
+				overrideReadonly: true
+			});
 		}
 	}
 
@@ -128,40 +156,65 @@ export default class Config {
 			throw new Error('Not allowed to delete read-only property');
 		}
 
-		let obj = this.namespaces[Config.User];
+		let result = false;
 		const parts = key.split('.');
 		const stack = [];
+		let obj = {
+			u: this.namespaces[Config.User],
+			r: this.namespaces[Config.Runtime]
+		};
 
 		for (let i = 0, len = parts.length; i < len; i++) {
 			const prop = parts[i];
-			if (!Object.prototype.hasOwnProperty.call(obj, prop)) {
+			stack.push(obj);
+
+			const uHas = obj.u && Object.prototype.hasOwnProperty.call(obj.u, prop);
+			const rHas = obj.r && Object.prototype.hasOwnProperty.call(obj.r, prop);
+
+			if (!uHas && !rHas) {
 				break;
 			}
 
-			stack.push(obj);
-
 			if (i + 1 === len) {
-				this.hasReadonlyDescendant(obj[prop], key, 'delete');
-				delete obj[prop];
+				if (uHas) {
+					this.hasReadonlyDescendant(obj.u[prop], key, 'delete');
+					delete obj.u[prop];
+				}
+				if (rHas) {
+					this.hasReadonlyDescendant(obj.r[prop], key, 'delete');
+					delete obj.r[prop];
+				}
+
 				parts.pop();
 				stack.pop();
 
 				while (stack.length) {
-					if (Object.keys(obj).length) {
+					if ((obj.u && !Object.keys(obj.u).length) || (obj.r && !Object.keys(obj.r).length)) {
+						// empty object, delete it
+						obj = stack.pop();
+						const prop = parts.pop();
+						if (obj.u) {
+							delete obj.u[prop];
+						}
+						if (obj.r) {
+							delete obj.r[prop];
+						}
+					} else {
 						break;
 					}
-					// delete it
-					obj = stack.pop();
-					delete obj[parts.pop()];
 				}
 
-				return true;
+				result = true;
+				break;
 			}
 
-			obj = obj[prop];
+			obj = {
+				u: uHas ? obj.u[prop] : null,
+				r: rHas ? obj.r[prop] : null
+			};
 		}
 
-		return false;
+		return result;
 	}
 
 	/**
@@ -177,20 +230,16 @@ export default class Config {
 		}
 
 		const parts = key.split('.');
-		let parent = null;
-		let prop = null;
+		const namespaceOrder = [ ...this.namespaceOrder ].reverse();
 
-		for (const ns of this.namespaceOrder) {
+		for (const ns of namespaceOrder) {
 			let obj = this.namespaces[ns];
 
 			for (let i = 0, k; obj !== undefined && (k = parts[i++]);) {
-				parent = obj;
-				obj = obj[prop = k];
+				obj = obj[k];
 			}
 
-			if (obj !== undefined) {
-				return { ns, obj, parent, prop };
-			}
+			return obj;
 		}
 	}
 
@@ -288,14 +337,18 @@ export default class Config {
 	 *
 	 * @param {String} file - The path to a .js or .json config file to load.
 	 * @param {Object} [opts] - Various options.
-	 * @param {Boolean} [opts.isUserDefined=false] - When `true`, flags the values as "user"
-	 * settings which will be persisted when the config is saved.
-	 * @param {String} [opts.namespace=Config.Root] - The name of the namespace to merge
+	 * @param {String} [opts.namespace=Config.User] - The name of the namespace to merge
 	 * the values into.
+	 * @param {Boolean} [opts.skipIfNotExists] - When `true`, returns without error if `file` is
+	 * invalid or does not exist.
 	 * @returns {Config}
 	 * @access public
 	 */
 	load(file, opts = {}) {
+		if (!file && opts.skipIfNotExists) {
+			return this;
+		}
+
 		if (!file || typeof file !== 'string') {
 			throw new TypeError('Expected config file to be a string');
 		}
@@ -308,6 +361,9 @@ export default class Config {
 		}
 
 		if (!isFile(file)) {
+			if (opts.skipIfNotExists) {
+				return this;
+			}
 			throw new Error(`Config file not found: ${file}`);
 		}
 
@@ -333,24 +389,19 @@ export default class Config {
 			throw new Error(`Failed to load config file: ${e}`);
 		}
 
-		return this.merge(config, {
-			namespace: opts.namespace || (opts.isUserDefined ? Config.User : Config.Root),
+		this.merge(config, {
+			namespace: opts.namespace || Config.User,
 			overrideReadonly: true
 		});
-	}
 
-	/**
-	 * Loads a config file, flags its settings as "user" settings, and merges the values into the
-	 * config object. It supports both `.js` and`.json` config files. `.js` config files must export
-	 * an object and may optionally contain metadata per config property describing the datatype and
-	 * readonly access.
-	 *
-	 * @param {String} file - The path to a .js or .json config file to load.
-	 * @returns {Config}
-	 * @access public
-	 */
-	loadUserConfig(file) {
-		return this.load(file, { namespace: Config.User });
+		if (opts.namespace === Config.Runtime) {
+			this.merge(this.runtimeConfig, {
+				namespace: Config.Runtime,
+				overrideReadonly: true
+			});
+		}
+
+		return this;
 	}
 
 	/**
@@ -370,13 +421,15 @@ export default class Config {
 			return this;
 		}
 
-		let ns = opts.namespace || Config.User;
-		let obj = this.namespaces[ns];
-		if (obj) {
-			this._merge(values, obj, opts);
-		} else {
+		const ns = opts.namespace;
+		if (ns && !Object.prototype.hasOwnProperty.call(this.namespaces, ns)) {
 			this.namespaceOrder.splice(1, 0, ns);
 			this.namespaces[ns] = typeof ns === 'string' && !Object.prototype.hasOwnProperty.call(values, ns) ? { [ns]: values } : values;
+		} else if (!ns || ns === Config.User) {
+			// need to merge into both user and runtime
+			this._merge(values, [ this.namespaces[Config.User], this.namespaces[Config.Runtime] ], opts);
+		} else {
+			this._merge(values, [ this.namespaces[ns] ], opts);
 		}
 
 		return this;
@@ -387,14 +440,16 @@ export default class Config {
 	 * layers under consideration.
 	 *
 	 * @param {Object} src - The source values.
-	 * @param {Object} dest - The destination to copy the values to.
+	 * @param {Object} dests - The destination to copy the values to.
 	 * @param {Object} opts - Options for metadata validation.
+	 * @param {String} [opts.namespace=Config.User] - The name of the namespace to merge the values
+	 * into.
+	 * @param {Boolean} [opts.overrideReadonly=false] - When `true`, does not enforce read only.
 	 * @param {Array.<Object>} [layers] - An array of namespace layers at the same depth as the
 	 * current destination.
 	 * @param {Array.<String>} [scope] - An array of keys to the current depth.
-	 * @returns {Object}
 	 */
-	_merge(src, dest, opts, layers, scope = []) {
+	_merge(src, dests, opts, layers, scope = []) {
 		if (!layers) {
 			layers = this.namespaceOrder.map(ns => this.namespaces[ns]);
 		}
@@ -412,27 +467,33 @@ export default class Config {
 				}, undefined);
 
 				if (Array.isArray(srcValue)) {
-					if (Array.isArray(existingValue)) {
-						dest[key] = [ ...existingValue, ...srcValue ];
-					} else {
-						dest[key] = existingValue ? [ existingValue, ...srcValue ] : srcValue;
+					const val = unique(
+						Array.isArray(existingValue)
+							? [ ...existingValue, ...srcValue ]
+							: existingValue
+								? [ existingValue, ...srcValue ]
+								: srcValue
+					);
+					for (const dest of dests) {
+						dest[key] = val;
 					}
 
 				// src value is an object
 				} else if (existingValue && typeof existingValue === 'object') {
-					// merge
-					dest[key] = this._merge(srcValue, existingValue, opts, layers.map(obj => obj[key]).filter(obj => obj), scope);
+					this._merge(srcValue, dests.map(dest => dest[key] = existingValue), opts, layers.map(obj => obj[key]).filter(obj => obj), scope);
 				} else {
-					dest[key] = srcValue;
+					for (const dest of dests) {
+						dest[key] = srcValue;
+					}
 				}
 			} else {
-				dest[key] = srcValue;
+				for (const dest of dests) {
+					dest[key] = srcValue;
+				}
 			}
 
 			scope.pop();
 		}
-
-		return dest;
 	}
 
 	/**
@@ -507,14 +568,13 @@ export default class Config {
 	 * @returns {*} The value removed from the config setting.
 	 */
 	pop(key) {
-		const result = this.find(key);
-
-		if (!result || !Array.isArray(result.obj)) {
+		const obj = this.find(key);
+		if (!Array.isArray(obj)) {
 			throw new TypeError(`Configuration setting ${`"${key}" ` || ''}is not an array`);
 		}
 
-		const value = result.obj[result.obj.length - 1];
-		this.set(key, result.obj.slice(0, -1));
+		const value = obj[obj.length - 1];
+		this._set(key, obj.slice(0, -1));
 		return value;
 	}
 
@@ -537,25 +597,10 @@ export default class Config {
 
 		this.meta.validate(key, value, { action: 'push' });
 
-		const result = this.find(key);
-
-		if (result) {
-			const { ns, obj, parent, prop } = result;
+		const obj = this.find(key);
+		if (obj) {
 			this.hasReadonlyDescendant(obj, key, 'push');
-			if (ns === Config.User) {
-				if (Array.isArray(obj)) {
-					obj.push.apply(obj, value);
-				} else {
-					parent[prop] = obj ? [ obj, ...value ] : value;
-				}
-				return this;
-			}
-
-			if (Array.isArray(obj)) {
-				value = [ ...obj, ...value ];
-			} else {
-				value = obj ? [ obj, ...value ] : value;
-			}
+			value = unique(Array.isArray(obj) ? [ ...obj, ...value ] : obj ? [ obj, ...value ] : value);
 		}
 
 		return this._set(key, value);
@@ -593,17 +638,6 @@ export default class Config {
 
 		this.meta.validate(key, value, { action: 'set' });
 
-		const result = this.find(key);
-
-		if (result) {
-			const { ns, obj, parent, prop } = result;
-			if (ns === Config.User) {
-				this.hasReadonlyDescendant(obj, key, 'set');
-				parent[prop] = value;
-				return this;
-			}
-		}
-
 		return this._set(key, value);
 	}
 
@@ -616,20 +650,33 @@ export default class Config {
 	 * @access private
 	 */
 	_set(key, value) {
-		key.split('.').reduce((obj, part, i, arr) => {
+		key.split('.').reduce(({ u, r }, part, i, arr) => {
 			if (i + 1 === arr.length) {
 				// check if any descendant is read-only
-				if (obj[part] !== value) {
-					this.hasReadonlyDescendant(obj[part], key, 'set');
-					obj[part] = value;
+				if (u[part] !== value) {
+					this.hasReadonlyDescendant(u[part], key, 'set');
+					u[part] = value;
 				}
-			} else if (typeof obj[part] !== 'object' || Array.isArray(obj[part])) {
-				this.hasReadonlyDescendant(obj[part], key, 'set');
-				obj[part] = {};
+				if (r[part] !== value) {
+					this.hasReadonlyDescendant(r[part], key, 'set');
+					r[part] = value;
+				}
+			} else {
+				if (typeof u[part] !== 'object' || Array.isArray(u[part])) {
+					this.hasReadonlyDescendant(u[part], key, 'set');
+					u[part] = {};
+				}
+				if (typeof r[part] !== 'object' || Array.isArray(r[part])) {
+					this.hasReadonlyDescendant(r[part], key, 'set');
+					r[part] = {};
+				}
 			}
 
-			return obj[part];
-		}, this.namespaces[Config.User]);
+			return { u: u[part], r: r[part] };
+		}, {
+			u: this.namespaces[Config.User],
+			r: this.namespaces[Config.Runtime]
+		});
 
 		return this;
 	}
@@ -642,14 +689,13 @@ export default class Config {
 	 * @access public
 	 */
 	shift(key) {
-		const result = this.find(key);
-
-		if (!result || !Array.isArray(result.obj)) {
+		const obj = this.find(key);
+		if (!Array.isArray(obj)) {
 			throw new TypeError(`Configuration setting ${`"${key}" ` || ''}is not an array`);
 		}
 
-		const value = result.obj[0];
-		this.set(key, result.obj.slice(1));
+		const value = obj[0];
+		this.set(key, obj.slice(1));
 		return value;
 	}
 
@@ -662,28 +708,46 @@ export default class Config {
 	 * @access public
 	 */
 	toString(indentation = 2) {
-		return JSON.stringify(this.values, null, Math.max(indentation, 0));
+		const obj = {};
+		for (let id of this.namespaceOrder) {
+			const cfg = this.namespaces[id];
+			if (cfg) {
+				if (id === Config.Base) {
+					id = '[base]';
+				} else if (id === Config.User) {
+					id = '[user]';
+				} else if (id === Config.Runtime) {
+					id = '[runtime]';
+				}
+				obj[id] = cfg;
+			}
+		}
+		return JSON.stringify(obj, null, Math.max(indentation, 0));
 	}
 
 	/**
 	 * Unloads a namespace and its config values. If the namespace does not exist, nothing
-	 * happens. You cannot unload the "root" or "user" namespaces.
+	 * happens. You cannot unload the "base" or "user" namespaces.
 	 *
 	 * @param {String} namespace - The namespace name to unload.
 	 * @returns {Boolean} Returns `true` if the namespace exists and was unloaded.
 	 * @access public
 	 */
 	unload(namespace) {
-		if (!namespace || typeof namespace !== 'string') {
-			throw new TypeError('Expected namespace to be a string');
-		}
-
-		if (namespace === Config.Root) {
-			throw new Error('Not allowed to unload root namespace');
+		if (namespace === Config.Base) {
+			throw new Error('Not allowed to unload base namespace');
 		}
 
 		if (namespace === Config.User) {
 			throw new Error('Not allowed to unload user namespace');
+		}
+
+		if (namespace === Config.Runtime) {
+			throw new Error('Not allowed to unload runtime namespace');
+		}
+
+		if (!namespace || typeof namespace !== 'string') {
+			throw new TypeError('Expected namespace to be a string');
 		}
 
 		if (this.namespaces[namespace]) {
@@ -709,27 +773,14 @@ export default class Config {
 			throw new TypeError('Expected key to be a string or object');
 		}
 
-		if (!Array.isArray(value)) {
-			value = [ value ];
-		}
+		value = unique(Array.isArray(value) ? value : [ value ]);
 
 		this.meta.validate(key, value, { action: 'unshift' });
 
-		const result = this.find(key);
-
-		if (result) {
-			const { ns, obj, parent, prop } = result;
+		const obj = this.find(key);
+		if (obj) {
 			this.hasReadonlyDescendant(obj, key, 'unshift');
-			if (ns === Config.User) {
-				if (Array.isArray(obj)) {
-					obj.unshift.apply(obj, value);
-				} else {
-					parent[prop] = obj ? [ ...value, obj ] : value;
-				}
-				return this;
-			}
-
-			value = Array.isArray(obj) ? [ ...value, ...obj ] : [ ...value, obj ];
+			value = unique(Array.isArray(obj) ? [ ...value.filter(v => !obj.includes(v)), ...obj ] : [ ...value.filter(v => v !== obj), obj ]);
 		}
 
 		return this._set(key, value);
@@ -760,4 +811,25 @@ export default class Config {
 		gawk.watch(this.values, filter, listener);
 		return this;
 	}
+}
+
+/**
+ * Removes duplicates from an array and returns a new array.
+ *
+ * @param {Array} arr - The array to remove duplicates.
+ * @returns {Array}
+ */
+function unique(arr) {
+	if (!Array.isArray(arr) || arr.length === 0) {
+		return [];
+	}
+
+	return arr.reduce((prev, cur) => {
+		if (typeof cur !== 'undefined' && cur !== null) {
+			if (prev.indexOf(cur) === -1) {
+				prev.push(cur);
+			}
+		}
+		return prev;
+	}, []);
 }

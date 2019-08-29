@@ -248,7 +248,7 @@ async function runTests(cover, all) {
 		log(`Protecting home directory, overriding HOME with temp dir: ${cyan(tmpHomeDir)}`);
 		process.env.HOME = tmpHomeDir;
 
-		require('./packages/appcd-gulp/src/test-runner').runTests(__dirname, __dirname, cover, all);
+		require('./packages/appcd-gulp/src/test-runner').runTests({ root: __dirname, projectDir: __dirname, cover, all });
 	} finally {
 		// restore home directory so that we can delete the temp one
 		if (tmpHomeDir) {

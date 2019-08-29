@@ -70,8 +70,10 @@ if (process.env.APPCD_COVERAGE) {
 
 	Module._resolveFilename = function (request, parent, isMain) {
 		const parentId = parent && path.resolve(parent.id);
+
 		if (distRegExp.test(request) && (isMain || (parentId && (parentId.startsWith(cwd) || parentId.startsWith(realcwd)) && !parentId.includes('node_modules')))) {
 			request = request.replace(distGRegExp, (m, q1, q2) => `${q1}src${q2}`);
+
 		} else if (process.env.APPCD_TEST_GLOBAL_PACKAGE_DIR && appcdPkg.test(request)) {
 			const dir = path.resolve(process.env.APPCD_TEST_GLOBAL_PACKAGE_DIR, request);
 			try {
@@ -90,6 +92,7 @@ if (process.env.APPCD_COVERAGE) {
 				// squelch
 			}
 		}
+
 		return originalResolveFilename(request, parent, isMain);
 	};
 }

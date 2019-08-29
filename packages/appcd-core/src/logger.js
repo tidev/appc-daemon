@@ -13,19 +13,18 @@ const instance = createInstanceWithDefaults()
 		minBrightness: 80,
 		maxBrightness: 200,
 		theme: 'detailed'
-	});
+	})
+	.enable('*');
 
 if (!process.env.APPCD_TEST) {
-	instance.enable('*');
-}
-
-if (~~process.env.APPCD_NO_COLORS) {
-	// need to strip colors
-	const formatter = new StripColors();
-	formatter.pipe(new StdioStream());
-	instance.pipe(formatter, { flush: true });
-} else {
-	instance.pipe(new StdioStream(), { flush: true });
+	if (~~process.env.APPCD_NO_COLORS) {
+		// need to strip colors
+		const formatter = new StripColors();
+		formatter.pipe(new StdioStream());
+		instance.pipe(formatter, { flush: true });
+	} else {
+		instance.pipe(new StdioStream(), { flush: true });
+	}
 }
 
 export default instance;
