@@ -101,7 +101,13 @@ describe('plugin android', function () {
 		expect(obj.status).to.equal(200);
 
 		const { message } = obj;
-		expect(message).to.have.keys('devices', 'emulators', 'ndks', 'sdks');
+
+		// targets was removed in 2.x
+		if (semver.lt(pluginVersion, '2.0.0')) {
+			expect(message).to.have.keys('devices', 'emulators', 'ndks', 'sdks', 'targets');
+		} else {
+			expect(message).to.have.keys('devices', 'emulators', 'ndks', 'sdks');
+		}
 
 		expect(message.sdks).to.be.an('array');
 		expect(message.sdks).to.have.lengthOf.at.least(1);

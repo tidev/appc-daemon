@@ -15,9 +15,11 @@ The daemon configuration can be accessed via the CLI, WebSocket (external), appc
  * `ls`, `list` - Display all config settings.
  * `get` - Display a specific setting.
  * `set` - Sets a config setting and saves it in the user-defined config file.
- * `rm`, `delete` - Remove a config setting.
+ * `rm`, `delete`, `remove`, `unset` - Remove a config setting.
  * `push` - Add a value to the end of a list.
  * `pop` - Remove the last value in a list.
+ * `shift` - Removes the first value in a list.
+ * `unshift` - Add a value to the beginning of a list.
 
 ### `appcd config` CLI command
 
@@ -91,12 +93,25 @@ ws.onmessage = evt => {
 The Appc Daemon config system is implemented in the `appcd-config` package. It supports both `.js`
 `.json` config files.
 
-`appcd-config` goes beyond loading config files. It supports a default config file, user-defined
-config file, user-defined config object, and environment specific config files. It also allows you
-to define config setting metadata.
+Config settings are stored in ordered namespaces, then merged together to form the official config
+settings. There are three built-in namespaces:
 
-The config can be queried or altered by using the [appcd config](../Commands/config.md) command or
-the [/appcd/config](../Services/config.md) service.
+ * `Base` - Holds initial state such as the default settings.
+ * `User` - Contains the user-defined settings.
+ * `Runtime` - Command line defined settings that override all other settings.
+
+Additional namespaces can be added and reside between the `Base` and `User` namespaces.
+
+```
+<base>
+  ...
+    <user>
+      <runtime>
+```
+
+When a setting is changed via [`appcd config`](../Commands/config.md) or the
+[`/appcd/config`](../Services/config.md) service, the new value is written to both the `Runtime` and
+`User` namespaces, then the `User` namespace is written to disk.
 
 Config setting names __cannot__ contain periods (`.`).
 

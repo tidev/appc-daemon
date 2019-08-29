@@ -1,5 +1,6 @@
-# v3.0.1
+# v3.1.0
 
+ * feat: Added `dependencies` to plugin info.
  * fix: Added support for non-transpiled plugin code to be instrumented for code coverage.
  * chore: Fixed homepage and repository URLs in `package.json`.
  * chore: Added links to issue trackers in readme.
