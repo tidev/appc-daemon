@@ -131,19 +131,19 @@ describe('Plugin', () => {
 		expect(p.nodeVersion).to.equal(nodeVersion);
 		expect(p.error).to.be.null;
 
-		expect(p.info).to.deep.equal({
-			activeRequests: 0,
-			error:          null,
-			main:           path.join(pluginPath, 'foo.js'),
-			name:           'good-main-nojs',
-			nodeVersion,
-			packageName:    'good-main-nojs',
-			path:           pluginPath,
-			supported:      true,
-			totalRequests:  0,
-			type:           'external',
-			version:        '1.2.3'
-		});
+		expect(p.info).to.have.keys('activeRequests', 'dependencies', 'error', 'main', 'name', 'nodeVersion', 'packageName', 'path', 'supported', 'totalRequests', 'type', 'version');
+		expect(p.info.activeRequests).to.equal(0);
+		expect(p.info.dependencies).to.be.an('object');
+		expect(p.info.error).to.be.null;
+		expect(p.info.main).to.be.equal(path.join(pluginPath, 'foo.js'));
+		expect(p.info.name).to.be.equal('good-main-nojs');
+		expect(p.info.nodeVersion).to.be.equal(nodeVersion);
+		expect(p.info.packageName).to.be.equal('good-main-nojs');
+		expect(p.info.path).to.be.equal(pluginPath);
+		expect(p.info.supported).to.be.equal(true);
+		expect(p.info.totalRequests).to.be.equal(0);
+		expect(p.info.type).to.be.equal('external');
+		expect(p.info.version).to.be.equal('1.2.3');
 	});
 
 	it('should error if trying to set plugin info prop', () => {
