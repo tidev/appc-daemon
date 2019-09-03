@@ -1,7 +1,10 @@
 # v3.0.1
 
- * fix: Fixed bug with order of loading an arbitrary `--config-file` and the user-defined config
-   file.
+ * fix(common): Fixed bug with order of loading an arbitrary `--config-file` and the user-defined
+   config file.
+ * fix(common): Fixed bug where the incorrect global package directory was being resolved based on
+   the Node.js executable used to spawn the core instead of the Node.js version used to run the
+   `appcd` command.
  * fix(config): Fixed config 'delete' aliases when daemon is not running.
  * chore: Fixed homepage and repository URLs in `package.json`.
  * chore: Added links to issue trackers in readme.
