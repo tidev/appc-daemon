@@ -2,6 +2,8 @@
 
  * feat: Added support for global appcd tests by setting the `APPCD_TEST_GLOBAL_PACKAGE_DIR`
    environment variable to the path of the `"packages"` directory.
+ * feat: `gulp watch` now builds the project before watching files.
+ * fix: Fixed `gulp watch` to continue to watch after a lint or build error occurs.
  * fix: Fixed coverage transpilation to factor in if module is the main entry point.
  * refactor: Moved `runTests()` out of standard template and into a separate `test-runner.js` file.
  * chore: Fixed homepage and repository URLs in `package.json`.

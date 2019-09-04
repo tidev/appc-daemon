@@ -69,33 +69,40 @@ module.exports = (opts) => {
 			.pipe($.eslint.format())
 			.pipe($.eslint.failAfterError());
 	}
-	async function lintSrc() { return lint('src/**/*.js'); }
-	async function lintTest() { return lint('test/**/test-*.js', 'eslint-tests.json'); }
+	function lintSrc() { return lint('src/**/*.js'); }
+	function lintTest() { return lint('test/**/test-*.js', 'eslint-tests.json'); }
 	exports['lint-src'] = lintSrc;
 	exports['lint-test'] = lintTest;
-	exports.lint = parallel(lintSrc, lintTest);
+	exports.lint = parallel(
+		async function lintSrcWrapper() { return lintSrc(); },
+		async function lintTestWrapper() { return lintTest(); }
+	);
 
 	/*
 	 * build tasks
 	 */
-	const build = series(parallel(cleanDist, lintSrc), function build() {
-		return gulp.src('src/**/*.js')
-			.pipe($.plumber())
-			.pipe($.debug({ title: 'build' }))
-			.pipe($.sourcemaps.init())
-			.pipe($.babel({
-				cwd:        __dirname,
-				plugins:    babelConf.plugins,
-				presets:    babelConf.presets,
-				sourceRoot: 'src'
-			}))
-			.pipe($.sourcemaps.write())
-			.pipe(gulp.dest(distDir));
-	});
+	const build = series(
+		cleanDist,
+		lintSrc,
+		function buildWrapper() {
+			return gulp.src('src/**/*.js')
+				.pipe($.plumber())
+				.pipe($.debug({ title: 'build' }))
+				.pipe($.sourcemaps.init())
+				.pipe($.babel({
+					cwd:        __dirname,
+					plugins:    babelConf.plugins,
+					presets:    babelConf.presets,
+					sourceRoot: 'src'
+				}))
+				.pipe($.sourcemaps.write())
+				.pipe(gulp.dest(distDir));
+		}
+	);
 	exports.build = build;
 	exports.default = build;
 
-	exports.docs = series(parallel(cleanDocs, lintSrc), async () => {
+	exports.docs = series(cleanDocs, lintSrc, async () => {
 		const esdoc = require('esdoc').default;
 
 		esdoc.generate({
@@ -127,27 +134,35 @@ module.exports = (opts) => {
 	/*
 	 * test tasks
 	 */
-	exports.test             = series(parallel(lintTest, build),                async function test() {     runTests({ root: appcdGulpNodeModulesPath, projectDir }); });
-	exports['test-only']     = series(lintTest,                                 async function test() {     runTests({ root: appcdGulpNodeModulesPath, projectDir }); });
-	exports.coverage         = series(parallel(cleanCoverage, lintTest, build), async function coverage() { runTests({ root: appcdGulpNodeModulesPath, projectDir, cover: true }); });
-	exports['coverage-only'] = series(parallel(cleanCoverage, lintTest),        async function coverage() { runTests({ root: appcdGulpNodeModulesPath, projectDir, cover: true }); });
+	exports.test             = series(lintTest, build,                async function test() {     runTests({ root: appcdGulpNodeModulesPath, projectDir }); });
+	exports['test-only']     = series(lintTest,                       async function test() {     runTests({ root: appcdGulpNodeModulesPath, projectDir }); });
+	exports.coverage         = series(cleanCoverage, lintTest, build, async function coverage() { runTests({ root: appcdGulpNodeModulesPath, projectDir, cover: true }); });
+	exports['coverage-only'] = series(cleanCoverage, lintTest,        async function coverage() { runTests({ root: appcdGulpNodeModulesPath, projectDir, cover: true }); });
 
 	/*
 	 * watch tasks
 	 */
-	exports.watch = async function watch() {
-		gulp.watch(`${process.cwd()}/src/**/*.js`)
-			.on('all', async (type, path) => {
-				await build();
-				console.log(`File ${path} was ${type}, running tasks...`);
-			});
-	};
+	exports.watch = series(build, function watch() {
+		return new Promise(resolve => {
+			const watcher = gulp.watch(`${process.cwd()}/src/**/*.js`, build);
+			process
+				.on('uncaughtException', () => {})
+				.on('SIGINT', () => {
+					watcher.close();
+					resolve();
+				});
+		});
+	});
 
-	exports['watch-test'] = async function watchTest() {
-		gulp.watch([ `${process.cwd()}/src/**/*.js`, `${process.cwd()}/test/*.js` ])
-			.on('all', async (type, path) => {
-				await test();
-				console.log(`File ${path} was ${type}, running tasks...`);
-			});
-	};
+	exports['watch-test'] = series(build, function watchTest() {
+		return new Promise(resolve => {
+			const watcher = gulp.watch([ `${process.cwd()}/src/**/*.js`, `${process.cwd()}/test/*.js` ], exports.test);
+			process
+				.on('uncaughtException', () => {})
+				.on('SIGINT', () => {
+					watcher.close();
+					resolve();
+				});
+		});
+	});
 };
