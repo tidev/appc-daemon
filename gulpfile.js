@@ -778,7 +778,7 @@ async function checkPackages({ skipSecurity } = {}) {
 				if (required !== 'latest' && required !== 'next' && required !== '*') {
 					// is the dependency up-to-date?
 					if (dontUpdate.includes(name)) {
-						dep.status = (dep.status ? ', ' : '') + 'skipping latest';
+						dep.status = (dep.status ? `${dep.status}, ` : '') + 'skipping latest';
 					} else {
 						const req = required ? required.replace(cleanVersionRegExp, '') : null;
 						if (req && latest && semver.lt(req, latest)) {
@@ -797,7 +797,7 @@ async function checkPackages({ skipSecurity } = {}) {
 						}
 
 						if (installed && latest && semver.lt(installed, latest)) {
-							dep.status = (dep.status ? ', ' : '') + 'update available';
+							dep.status = (dep.status ? `${dep.status}, ` : '') + 'update available';
 
 							const m = required.match(/^(\^|~|>|>=)/);
 							results.upgradeAvailable.push({
@@ -815,11 +815,7 @@ async function checkPackages({ skipSecurity } = {}) {
 
 				if (deprecated) {
 					pkg.deprecated[name] = deprecated;
-					if (dep.status) {
-						dep.status += ', deprecated';
-					} else {
-						dep.status = 'deprecated';
-					}
+					dep.status = (dep.status ? `${dep.status}, ` : '') + 'deprecated';
 				}
 
 				if (!dep.status) {

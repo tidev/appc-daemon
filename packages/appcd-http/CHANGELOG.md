@@ -2,7 +2,7 @@
 
  * chore: Fixed homepage and repository URLs in `package.json`.
  * chore: Added links to issue trackers in readme.
- * chore: Updated dependencies
+ * chore: Updated dependencies.
 
 # v1.2.3 (Aug 13, 2019)
 

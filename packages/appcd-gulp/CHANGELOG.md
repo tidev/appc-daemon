@@ -8,7 +8,7 @@
  * refactor: Moved `runTests()` out of standard template and into a separate `test-runner.js` file.
  * chore: Fixed homepage and repository URLs in `package.json`.
  * chore: Added links to issue trackers in readme.
- * chore: Updated dependencies
+ * chore: Updated dependencies.
 
 # v2.2.0 (Aug 13, 2019)
 
@@ -17,8 +17,8 @@
  * chore: Updated to `eslint-config-axway@4.3.0` which added eslint 6 support and added Node.js
    eslint rules.
  * chore: Disabled `require-atomic-updates` rule.
- * chore: Removed deprecated @babel/polyfill
- * chore: Updated dependencies
+ * chore: Removed deprecated @babel/polyfill.
+ * chore: Updated dependencies.
 
 # v2.1.1 (Jun 4, 2019)
 
