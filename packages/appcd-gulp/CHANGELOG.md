@@ -2,11 +2,13 @@
 
  * feat: Added support for global appcd tests by setting the `APPCD_TEST_GLOBAL_PACKAGE_DIR`
    environment variable to the path of the `"packages"` directory.
+ * feat: `gulp watch` now builds the project before watching files.
+ * fix: Fixed `gulp watch` to continue to watch after a lint or build error occurs.
  * fix: Fixed coverage transpilation to factor in if module is the main entry point.
  * refactor: Moved `runTests()` out of standard template and into a separate `test-runner.js` file.
  * chore: Fixed homepage and repository URLs in `package.json`.
  * chore: Added links to issue trackers in readme.
- * chore: Updated dependencies
+ * chore: Updated dependencies.
 
 # v2.2.0 (Aug 13, 2019)
 
@@ -15,8 +17,8 @@
  * chore: Updated to `eslint-config-axway@4.3.0` which added eslint 6 support and added Node.js
    eslint rules.
  * chore: Disabled `require-atomic-updates` rule.
- * chore: Removed deprecated @babel/polyfill
- * chore: Updated dependencies
+ * chore: Removed deprecated @babel/polyfill.
+ * chore: Updated dependencies.
 
 # v2.1.1 (Jun 4, 2019)
 
