@@ -251,10 +251,12 @@ exports['sync'] = series(async function sync() {
 	}
 
 	if (!fs.existsSync(rcFile)) {
-		console.error('.appcdrc file not found');
-		console.error('Generating a new one, please edit the file and update the settings');
 		fs.writeFileSync(rcFile, JSON.stringify(rcDefault, null, 2));
-		return;
+		log.error();
+		log.error(yellow('.appcdrc file not found'));
+		log.error(yellow('Generating a new one, please edit the file and update the settings'));
+		log.error();
+		return Promise.reject();
 	}
 
 	const rc = fs.readJsonSync(rcFile);
