@@ -201,10 +201,13 @@ export function makeTempDir(prefix) {
 export function emptyHomeDir() {
 	// sanity check that we're not nuking the real home directory
 	const homedir = os.homedir();
-	if (!/[\\\/]home|users/i.test(homedir) && homedir.startsWith(os.tmpdir())) {
+	if (homedir.startsWith(os.tmpdir())) {
+		log(`Emptying temp home directory: ${highlight(homedir)}`);
 		for (const name of fs.readdirSync(homedir)) {
 			fs.removeSync(path.join(homedir, name));
 		}
+	} else {
+		log(`Refusing to empty home directory! ${highlight(homedir)}`);
 	}
 }
 
