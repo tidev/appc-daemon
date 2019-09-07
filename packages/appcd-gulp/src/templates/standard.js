@@ -145,24 +145,22 @@ module.exports = (opts) => {
 	exports.watch = series(build, function watch() {
 		return new Promise(resolve => {
 			const watcher = gulp.watch(`${process.cwd()}/src/**/*.js`, build);
-			process
-				.on('uncaughtException', () => {})
-				.on('SIGINT', () => {
-					watcher.close();
-					resolve();
-				});
+			process.on('uncaughtException', () => {});
+			process.on('SIGINT', () => {
+				watcher.close();
+				resolve();
+			});
 		});
 	});
 
 	exports['watch-test'] = series(build, function watchTest() {
 		return new Promise(resolve => {
 			const watcher = gulp.watch([ `${process.cwd()}/src/**/*.js`, `${process.cwd()}/test/*.js` ], exports.test);
-			process
-				.on('uncaughtException', () => {})
-				.on('SIGINT', () => {
-					watcher.close();
-					resolve();
-				});
+			process.on('uncaughtException', () => {});
+			process.on('SIGINT', () => {
+				watcher.close();
+				resolve();
+			});
 		});
 	});
 };

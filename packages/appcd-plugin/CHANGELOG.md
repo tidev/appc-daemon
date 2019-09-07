@@ -1,6 +1,7 @@
 # v3.1.0
 
  * feat: Added `dependencies` to plugin info.
+ * feat: `console` object is now a Node.js Console object instead of a SnoopLogg logger.
  * fix: Added support for non-transpiled plugin code to be instrumented for code coverage.
  * chore: Fixed homepage and repository URLs in `package.json`.
  * chore: Added links to issue trackers in readme.

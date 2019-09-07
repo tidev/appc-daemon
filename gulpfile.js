@@ -318,13 +318,20 @@ async function watchOnly(child) {
 			}
 		});
 
-	return new Promise(resolve => {
+	await new Promise(resolve => {
 		let stopping = false;
 		const cleanup = () => {
 			if (!stopping) {
 				stopping = true;
-				binWatcher.close();
-				srcWatcher.close();
+				if (child) {
+					child.removeListener('close', cleanup);
+				}
+				try {
+					binWatcher.close();
+				} catch (e) {}
+				try {
+					srcWatcher.close();
+				} catch (e) {}
 				resolve();
 			}
 		};
