@@ -17,8 +17,8 @@
   },
   "dependencies": {
     "@babel/parser": "^7.5.5",
-    "@babel/traverse": "^7.5.5",
-    "@babel/types": "^7.5.5",
+    "@babel/traverse": "^7.6.0",
+    "@babel/types": "^7.6.1",
     "appcd-fs": "^1.1.8",
     "appcd-logger": "^2.0.3",
     "appcd-path": "^1.1.7",

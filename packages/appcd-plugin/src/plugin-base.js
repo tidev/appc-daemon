@@ -129,7 +129,7 @@ export default class PluginBase extends EventEmitter {
 				}
 			},
 
-			console: this.logger
+			console: this.logger.console
 		};
 
 		this.appcdLogger = appcdLogger(plugin.isParent ? 'appcd:plugin:base:parent' : 'appcd:plugin:base:child');
