@@ -29,7 +29,8 @@ describe('locale', () => {
 		}
 	});
 
-	it('should bypass the cache and gracefully handle if locale is undeterminable', async () => {
+	// on Windows, the locale is in the Windows Registry, which is not easy to mock, so skipping
+	(process.platform === 'win32' ? it.skip : it)('should bypass the cache and gracefully handle if locale is undeterminable', async () => {
 		const path = process.env.PATH;
 		process.env.PATH = '';
 

@@ -63,7 +63,9 @@ describe('Client', () => {
 	});
 
 	describe('connect()', () => {
-		it('should fail to connect', done => {
+		it('should fail to connect', function (done) {
+			this.timeout(10000);
+
 			const client = new Client({ port: 12345 });
 			client.connect()
 				.on('connected', () => {
@@ -610,7 +612,9 @@ describe('Client', () => {
 				});
 		});
 
-		it('should error if server is not running', done => {
+		it('should error if server is not running', function (done) {
+			this.timeout(10000);
+
 			const client = new Client({ port: 12345 });
 			let finished = false;
 
