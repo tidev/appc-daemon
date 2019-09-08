@@ -18,7 +18,7 @@ try {
 describe('plugin system info', function () {
 	this.timeout(120000);
 
-	it('should register the system info plugin', makeTest(async function () {
+	_it('should register the system info plugin', makeTest(async function () {
 		this.symlinkPlugin('system-info', pluginVersion);
 		await this.installNode();
 		await this.startDaemonDebugMode(defaultConfig);
@@ -34,7 +34,7 @@ describe('plugin system info', function () {
 		expect(obj.statusCode).to.equal('200');
 	}));
 
-	it('should get the system info plugin info', makeTest(async function () {
+	_it('should get the system info plugin info', makeTest(async function () {
 		this.symlinkPlugin('system-info', pluginVersion);
 		await this.installNode();
 		await this.startDaemonDebugMode(defaultConfig);
