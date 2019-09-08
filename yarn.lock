@@ -9446,7 +9446,7 @@ snapdragon@^0.8.1:
     source-map-resolve "^0.5.0"
     use "^3.1.0"
 
-snooplogg@2.3.2, snooplogg@^2.1.0:
+snooplogg@^2.1.0, snooplogg@^2.3.2:
   version "2.3.2"
   resolved "https://registry.yarnpkg.com/snooplogg/-/snooplogg-2.3.2.tgz#f0aa6ded24a50b3b4f8ae0e46054702fcb35d226"
   integrity sha512-efUagxabWrrRLoNpSfRkWh2jpzUuwjxOOSK2q7791ElB8fHQpDmrJtUBQ8kE3c7M2F28nOBpUuB0tKkMceHqIw==

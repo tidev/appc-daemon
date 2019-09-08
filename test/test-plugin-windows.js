@@ -102,6 +102,7 @@ describe('plugin windows', function () {
 		expect(info.nodeVersion).to.equal(coreNodeVersion);
 		expect(info.error).to.equal(`Unsupported platform "${process.platform}"`);
 		expect(info.supported).to.equal(false);
+
 		expect(obj.fin).to.equal(true);
 		expect(obj.statusCode).to.equal('200');
 	}));

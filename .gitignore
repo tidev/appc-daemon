@@ -1,6 +1,7 @@
 ._*
 .DS_Store*
 .nyc_output
+.appcdrc
 /coverage
 gulpfile.tmp.*
 junit.xml

@@ -38,11 +38,11 @@ Object.keys(conf).forEach(function (key) {
  */
 if (process.env.APPCD_COVERAGE) {
 	conf.only = [
-		path.join(process.env.APPCD_COVERAGE, 'src'),
-		path.join(process.env.APPCD_COVERAGE, 'test')
+		path.resolve(process.env.APPCD_COVERAGE, 'src'),
+		path.resolve(process.env.APPCD_COVERAGE, 'test')
 	];
 	if (process.env.APPCD_TEST_GLOBAL_PACKAGE_DIR) {
-		conf.only.push(new RegExp(`^${process.env.APPCD_COVERAGE}\/(packages|plugins)\/.+\/(src|test)\/`));
+		conf.only.push(new RegExp(`^${process.env.APPCD_COVERAGE.replace(/[\/\\]/g, '[/\\\\]')}[/\\\\](packages|plugins)[/\\\\].+[/\\\\](src|test)[/\\\\]`));
 	}
 } else {
 	conf.only = [ 'src', 'test' ];

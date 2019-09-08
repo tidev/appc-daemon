@@ -3,9 +3,11 @@
 const ansiColors   = require('ansi-colors');
 const chug         = require('gulp-chug');
 const debug        = require('gulp-debug');
+const execSync     = require('child_process').execSync;
 const fs           = require('fs-extra');
 const globule      = require('globule');
 const gulp         = require('gulp');
+const ini          = require('ini');
 const libnpm       = require('libnpm');
 let log            = require('fancy-log');
 const path         = require('path');
@@ -220,13 +222,123 @@ exports.package = series(build, function pkg() {
 /*
  * plugin tasks
  */
-exports['link-plugins'] = async function linkPlugins() {
+async function linkPlugins() {
 	return runLerna([ 'exec', '--scope', '@appcd/plugin-*', 'yarn', 'link' ]);
 };
+exports['link-plugins'] = linkPlugins;
 
 exports['unlink-plugins'] = async function unlinkPlugins() {
 	return runLerna([ 'exec', '--scope', '@appcd/plugin-*', 'yarn', 'unlink' ]);
 };
+
+/*
+ * submodule tasks
+ */
+exports['sync'] = series(async function sync() {
+	const run = (cmd, opts = {}) => {
+		log(`Executing: ${cyan(cmd)}`);
+		return execSync(cmd, { stdio: 'inherit', ...opts });
+	};
+	const gitmodules = ini.parse(fs.readFileSync(path.join(__dirname, '.gitmodules')).toString());
+	const rcFile = path.join(__dirname, '.appcdrc');
+	const rcDefault = { remoteName: '', plugins: {} };
+
+	for (const info of Object.values(gitmodules)) {
+		const m = info.path.match(/^plugins\/(.+)$/);
+		if (m) {
+			rcDefault.plugins[m[1]] = `git@github.com:appcelerator/appcd-plugin-${m[1]}.git`;
+		}
+	}
+
+	if (!fs.existsSync(rcFile)) {
+		fs.writeFileSync(rcFile, JSON.stringify(rcDefault, null, 2));
+		log.error();
+		log.error(yellow('.appcdrc file not found'));
+		log.error(yellow('Generating a new one, please edit the file and update the settings'));
+		log.error();
+		return Promise.reject();
+	}
+
+	const rc = fs.readJsonSync(rcFile);
+
+	run('git submodule init');
+
+	log(`Checking ${cyan('.git/config')}`);
+	const gitconfigFile = path.join(__dirname, '.git', 'config');
+	const gitconfig = ini.parse(fs.readFileSync(gitconfigFile).toString());
+	let changed = false;
+	const sectionRE = /^submodule "plugin-(.+)"$/;
+
+	for (const [ section, props ] of Object.entries(gitconfig)) {
+		const m = section.match(sectionRE);
+		if (m && rc.plugins[m[1]] && (!props.url || props.url !== rc.plugins[m[1]])) {
+			props.url = m[1];
+			changed = true;
+		}
+	}
+
+	if (changed) {
+		log(`Backing up ${cyan('.git/config')} => ${cyan('.git/config.bak')}`);
+		fs.moveSync(gitconfigFile, path.join(__dirname, '.git', 'config.bak'));
+		const newGitconfig = ini
+			.stringify(gitconfig, { whitespace: true })
+			.replace(/(\r\n|\n)+/g, '\n')
+			.split('\n')
+			.map(line => (/^\s*\[/.test(line) ? '' : '\t') + line.trim())
+			.join('\n');
+		log(`Writing ${cyan('.git/config')}`);
+		fs.writeFileSync(gitconfigFile, newGitconfig);
+	}
+
+	run('git submodule update');
+
+	if (rc.remoteName) {
+		// make sure the remotes are configured
+		for (const name of fs.readdirSync(path.join(__dirname, 'plugins'))) {
+			if (!rc.plugins[name]) {
+				continue;
+			}
+
+			const pluginDir = path.join(__dirname, 'plugins', name);
+			const remotes = {};
+			const output = run('git remote -v', { cwd: pluginDir, stdio: 'pipe' }).toString();
+			const re = /^([^\s]+)\s+(.+)\s+\((.+)\)$/gm;
+			let m;
+			let fetch = false;
+
+			// parse the remotes
+			while (m = re.exec(output)) {
+				remotes[m[1]] = m[2];
+			}
+
+			if (!remotes[rc.remoteName]) {
+				// add the remotes
+				run(`git remote add "${rc.remoteName}" git@github.com:appcelerator/appcd-plugin-${name}.git`, { cwd: pluginDir });
+				fetch = true;
+			}
+
+			if (remotes.origin !== rc.plugins[name]) {
+				run(`git remote set-url origin ${rc.plugins[name]}`, { cwd: pluginDir });
+				fetch = true;
+			}
+
+			run('git fetch --all', { cwd: pluginDir });
+
+			const branches = run('git branch --color=never', { cwd: pluginDir, stdio: 'pipe' })
+				.toString()
+				.replace(/(\r\n|\n)+/g, '\n')
+				.split('\n');
+			for (const branch of branches) {
+				if (branch.startsWith('*') && /detached/i.test(branch)) {
+					run('git checkout master', { cwd: pluginDir });
+					break;
+				}
+			}
+		}
+
+		run('git submodule update');
+	}
+}, linkPlugins);
 
 /*
  * unit test tasks
@@ -246,7 +358,11 @@ async function runTests(cover, all) {
 		}).name;
 
 		log(`Protecting home directory, overriding HOME with temp dir: ${cyan(tmpHomeDir)}`);
-		process.env.HOME = tmpHomeDir;
+		process.env.HOME = process.env.USERPROFILE = tmpHomeDir;
+		if (process.platform === 'win32') {
+			process.env.HOMEDRIVE = path.parse(tmpHomeDir).root.replace(/[\\\/]/g, '');
+			process.env.HOMEPATH = tmpHomeDir.replace(process.env.HOMEDRIVE, '');
+		}
 
 		require('./packages/appcd-gulp/src/test-runner').runTests({ root: __dirname, projectDir: __dirname, cover, all });
 	} finally {
@@ -261,12 +377,10 @@ async function runTests(cover, all) {
 	}
 }
 
-exports['functional-test']          = series(nodeInfo, build, function test() {     return runTests(); });
-exports['functional-test-only']     = series(nodeInfo,        function test() {     return runTests(); });
-exports['functional-coverage']      = series(nodeInfo, build, function coverage() { return runTests(true); });
-exports['functional-coverage-only'] = series(nodeInfo,        function coverage() { return runTests(true); });
-exports['coverage']                 = series(nodeInfo, build, function coverage() { return runTests(true, true); });
-exports['coverage-only']            = series(nodeInfo,        function coverage() { return runTests(true, true); });
+exports['functional-test']      = series(nodeInfo, build, function test() {     return runTests(); });
+exports['functional-test-only'] = series(nodeInfo,        function test() {     return runTests(); });
+exports['functional-coverage']  = series(nodeInfo,        function coverage() { return runTests(true); });
+exports['coverage']             = series(nodeInfo,        function coverage() { return runTests(true, true); });
 
 /*
  * watch/debug tasks
