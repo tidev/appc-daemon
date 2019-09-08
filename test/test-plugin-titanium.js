@@ -18,7 +18,7 @@ try {
 describe('plugin titanium', function () {
 	this.timeout(120000);
 
-	it('should register the titanium plugin', makeTest(async function () {
+	_it('should register the titanium plugin', makeTest(async function () {
 		this.symlinkPlugin('titanium', pluginVersion);
 		await this.installNode();
 		await this.startDaemonDebugMode(defaultConfig);
