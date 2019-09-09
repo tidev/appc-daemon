@@ -350,6 +350,7 @@ async function runTests(cover, all) {
 	try {
 		process.env.APPCD_TEST_GLOBAL_PACKAGE_DIR = path.join(__dirname, 'packages');
 		process.env.SPAWN_WRAP_SHIM_ROOT = origHomeDir;
+		process.env.SNOOPLOGG = '*';
 
 		tmpHomeDir = tmp.dirSync({
 			mode: '755',

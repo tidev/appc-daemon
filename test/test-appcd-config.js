@@ -89,14 +89,14 @@ describe('appcd config', function () {
 	});
 
 	const states = [
-		'stopped',
+		// 'stopped',
 		'started'
 	];
 
 	let getActions = [
-		'get',
-		'ls',
-		'list'
+		'get' // ,
+		// 'ls',
+		// 'list'
 	];
 
 	let removeActions = [
@@ -110,7 +110,7 @@ describe('appcd config', function () {
 		describe(`appcd ${appcdState}`, () => {
 			for (const action of getActions) {
 				describe(action, () => {
-					it(`should ${action} default config as text with banner`, makeTest(async function () {
+					it.only(`should ${action} default config as text with banner`, makeTest(async function () {
 						if (appcdState === 'started') {
 							await this.installNode();
 							await this.startDaemonDebugMode(defaultConfig);
