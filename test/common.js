@@ -12,7 +12,7 @@ const logger = snooplogg.config({
 	maxBrightness: 210,
 	theme: 'detailed'
 })('test');
-const { log } = logger;
+const { error, log } = logger;
 const { highlight } = snooplogg.styles;
 
 export const testLogger = logger;
@@ -176,16 +176,23 @@ const api = {
 };
 
 export function getDebugLog() {
-	try {
-		const dir = path.join(os.homedir(), '.appcelerator', 'appcd', 'log');
-		for (const name of fs.readdirSync(dir).sort().reverse()) {
-			if (/\.log$/.test(name)) {
-				const file = path.join(dir, name);
-				log(`Found debug log file: ${file}`);
-				return fs.readFileSync(file).toString().trim();
+	const dir = path.join(os.homedir(), '.appcelerator', 'appcd', 'log');
+	if (fs.existsSync(dir)) {
+		try {
+			for (const name of fs.readdirSync(dir).sort().reverse()) {
+				if (/\.log$/.test(name)) {
+					const file = path.join(dir, name);
+					log(`Found debug log file: ${file}`);
+					return fs.readFileSync(file).toString().trim();
+				}
 			}
+		} catch (e) {
+			error('Failed trying to get debug log file:');
+			error(e);
+			return;
 		}
-	} catch (e) {}
+	}
+	log('No debug log files found');
 }
 
 export function makeTest(fn) {
