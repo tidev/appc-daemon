@@ -263,13 +263,35 @@ export default class Config {
 
 			for (let i = 0, k; it !== undefined && (k = parts[i++]);) {
 				if (typeof it !== 'object') {
-					return defaultValue;
+					it = defaultValue;
+					break;
 				}
 				it = it[k];
 			}
 		}
 
-		return it !== undefined ? it : defaultValue;
+		const resolve = it => {
+			if (typeof it === 'string') {
+				return it.replace(/\{\{([^}]+)\}\}/g, (m, k) => {
+					const value = this.get(k);
+					if (value === undefined) {
+						throw new Error(`Config key "${key}" references undefined variable "${k}"`);
+					}
+					return value;
+				});
+			} else if (Array.isArray(it)) {
+				return it.map(i => resolve(i));
+			} else if (it && typeof it === 'object') {
+				const obj = {};
+				for (const [ key, value ] of Object.entries(it)) {
+					obj[key] = resolve(value);
+				}
+				return obj;
+			}
+			return it;
+		};
+
+		return resolve(it !== undefined ? it : defaultValue);
 	}
 
 	/**
