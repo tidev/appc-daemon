@@ -1,4 +1,4 @@
-import appcdCoreLogger, { LogcatFormatter } from './logger';
+import appcdCoreLogger, { Format, LogcatFormatter, StripColors } from './logger';
 import ConfigService from 'appcd-config-service';
 import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs-extra';
@@ -179,6 +179,42 @@ export default class Server {
 			formatter.pipe(response);
 			appcdCoreLogger.pipe(formatter, { flush: true });
 		});
+
+		// persist debug log
+		const logFile = {
+			dir:    path.join(homeDir, 'log'),
+			file:   null,
+			out:    null,
+			stream: null
+		};
+		const handleLogging = value => {
+			if (value && !logFile.out) {
+				logFile.file = path.join(logFile.dir, `${new Date().toISOString().replace(/:/g, '')}.log`);
+				logger.log(`Persisting debug log to disk: ${highlight(logFile.file)}`);
+				fs.mkdirsSync(logFile.dir);
+
+				logFile.out = new Format();
+				const stripper = new StripColors();
+				logFile.stream = fs.createWriteStream(logFile.file);
+
+				stripper.pipe(logFile.stream);
+				logFile.out.pipe(stripper);
+				appcdCoreLogger.pipe(logFile.out, { flush: true });
+
+			} else if (!value && logFile.out) {
+				logger.log(`Closing debug log file: ${highlight(logFile.file)}`);
+				appcdCoreLogger.unpipe(logFile.out);
+				logFile.stream.close();
+				logFile.stream = null;
+				logFile.out = null;
+			}
+		};
+		this.config.watch([ 'server', 'persistDebugLog' ], handleLogging);
+		if (this.config.get('server.persistDebugLog')) {
+			handleLogging(true);
+		} else {
+			logger.log('Debug logging not persisted, to enable run: appcd config set server.persistDebugLog true');
+		}
 
 		// init the status monitor
 		this.systems.statusMonitor = new StatusMonitor(this.config);

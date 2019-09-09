@@ -161,11 +161,22 @@ module.exports = {
 		nodejsMaxUnusedAge: 90 * 24 * 60 * 60 * 1000,
 
 		/**
+		 * When `true`, writes the debug log to disk. Each time the Appc Daemon starts when
+		 * logging is enabled or when logging is enabled at runtime, it creates a new log file.
+		 * Log files are stored in `"{{home}}/logs"`.
+		 *
+		 * Note: Old log files are _not_ automatically cleaned up which is partially why
+		 * persisting debug logs is disabled by default.
+		 * @type {Boolean}
+		 */
+		persistDebugLog: false,
+
+		/**
 		 * Path to the daemon's pid (process id) file.
 		 * @type {String}
 		 * @readonly
 		 */
-		pidFile: '~/.appcelerator/appcd/appcd.pid',
+		pidFile: '{{home}}/appcd.pid',
 
 		/**
 		 * The port to listen for incoming requests.
@@ -205,7 +216,7 @@ module.exports = {
 		 * The path store unsent telemetry events.
 		 * @type {String}
 		 */
-		eventsDir: '~/.appcelerator/appcd/telemetry',
+		eventsDir: '{{home}}/telemetry',
 
 		/**
 		 * The maximum number of events to send at a time.

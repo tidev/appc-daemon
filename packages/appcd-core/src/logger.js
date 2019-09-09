@@ -1,5 +1,6 @@
 import {
 	createInstanceWithDefaults,
+	Format,
 	StdioStream,
 	StripColors
 } from 'appcd-logger';
@@ -28,6 +29,8 @@ if (!process.env.APPCD_TEST) {
 }
 
 export default instance;
+
+export { Format, StripColors };
 
 /**
  * Converts a snooplogg message to a rendered message string along with simplified message metadata.

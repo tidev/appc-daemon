@@ -2,6 +2,8 @@
 
  * feat: Added `plugins.installDefault` config setting (default `true`) to control whether the
    default plugins should be installed on appcd start.
+ * feat: Added `server.persistDebugLog` config setting (default `false`) to persist debug log to
+   disk. [(DAEMON-93)](https://jira.appcelerator.org/browse/DAEMON-93)
  * fix: Fixed bug with order of loading an arbitrary `--config-file` and the user-defined config
    file.
  * chore: Updated Node.js version from 10.16.2 to 10.16.3.
