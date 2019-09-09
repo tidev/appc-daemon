@@ -26,6 +26,9 @@ export const defaultConfig = {
 	plugins: {
 		installDefault: false
 	},
+	server: {
+		persistDebugLog: true
+	},
 	telemetry: {
 		environment: 'test'
 	}
@@ -172,10 +175,29 @@ const api = {
 	}
 };
 
+export function getDebugLog() {
+	try {
+		const dir = path.join(os.homedir(), '.appcelerator', 'appcd', 'log');
+		for (const name of fs.readdirSync(dir).sort().reverse()) {
+			if (/\.log$/.test(name)) {
+				const file = path.join(dir, name);
+				log(`Found debug log file: ${file}`);
+				return fs.readFileSync(file).toString().trim();
+			}
+		}
+	} catch (e) {}
+}
+
 export function makeTest(fn) {
 	return async () => {
 		try {
 			await fn.call(api);
+		} catch (e) {
+			try {
+				const s = getDebugLog();
+				s && logger('debug:log').log(s);
+			} catch (e2) {}
+			throw e;
 		} finally {
 			api.runAppcdSync([ 'stop' ]);
 			emptyHomeDir();
