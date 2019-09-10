@@ -9,8 +9,8 @@ def platforms = [
 
 def nodeVersions = [
   // '8.16.0',
-  '10.16.3' // ,
-  // '12.10.0'
+  '10.16.3',
+  '12.10.0'
 ]
 
 timestamps {
@@ -81,7 +81,7 @@ def runTests(os, nodeVersion) {
               unstash 'sources'
               ensureYarn('latest')
 
-              stage('Build') {
+              stage('Install') {
                 sh 'yarn'
               }
 
