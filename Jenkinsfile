@@ -37,11 +37,17 @@ timestamps {
     }
 
     stage('Security') {
-      ensureYarn('latest')
-      sh 'yarn install --production'
-      sh 'yarn global add retire'
-      sh 'retire --exitwith 0'
-      step([$class: 'WarningsPublisher', canComputeNew: false, canResolveRelativePaths: false, consoleParsers: [[parserName: 'Node Security Project Vulnerabilities'], [parserName: 'RetireJS']], defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', unHealthy: ''])
+      nodejs(nodeJSInstallationName: "node 10.16.3") {
+        ansiColor('xterm') {
+          timeout(15) {
+            ensureYarn('latest')
+            sh 'yarn install --production'
+            sh 'yarn global add retire'
+            sh 'retire --exitwith 0'
+            step([$class: 'WarningsPublisher', canComputeNew: false, canResolveRelativePaths: false, consoleParsers: [[parserName: 'Node Security Project Vulnerabilities'], [parserName: 'RetireJS']], defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', unHealthy: ''])
+          }
+        }
+      }
     }
   }
 
