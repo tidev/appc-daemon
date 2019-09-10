@@ -2,13 +2,13 @@
 library 'pipeline-library'
 
 def platforms = [
-  // 'Linux': 'linux',
-  'macOS': 'osx' // ,
-  // 'Windows': 'windows'
+  'Linux': 'linux',
+  'macOS': 'osx',
+  'Windows': 'windows'
 ]
 
 def nodeVersions = [
-  // '8.16.0',
+  '8.16.0',
   '10.16.3',
   '12.10.0'
 ]
