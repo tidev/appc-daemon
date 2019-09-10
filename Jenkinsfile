@@ -14,8 +14,8 @@ def nodeVersions = [
 ]
 
 timestamps {
-  try {
-    node('osx && git') {
+  node('osx && git') {
+    try {
       nodejs(nodeJSInstallationName: "node 10.16.3") {
         ansiColor('xterm') {
           timeout(60) {
@@ -55,18 +55,17 @@ timestamps {
           } // timeout
         } // ansiColor
       } // nodejs
-    } // node
-
-    stage('Integration Tests') {
-      def matrix = [ failFast: false ]
-      platforms.each { name, platform ->
-        matrix["${name}"] = runPlatform(platform)
-      }
-
-      parallel matrix
+    } finally {
+      deleteDir() // always wipe to avoid errors when unstashing in the future
     }
-  } finally {
-    deleteDir() // always wipe to avoid errors when unstashing in the future
+  } // node
+
+  stage('Integration Tests') {
+    def matrix = [ failFast: false ]
+    platforms.each { name, platform ->
+      matrix["${name}"] = runPlatform(platform)
+    }
+    parallel matrix
   }
 }
 
