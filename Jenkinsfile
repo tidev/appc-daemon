@@ -60,7 +60,7 @@ timestamps {
     stage('Integration Tests') {
       def matrix = [ failFast: false ]
       platforms.each { name, platform ->
-        matrix[name] = runPlatform(platform)
+        matrix["${name}"] = runPlatform(platform)
       }
 
       parallel matrix
@@ -71,52 +71,43 @@ timestamps {
 }
 
 def runPlatform(platform) {
-  def matrix = [ failFast: false ]
-  nodeVersions.each { nodeVersion ->
-    matrix["Node.js ${nodeVersion}"] = runNode(nodeVersion)
-  }
-
   return {
     node("${platform} && git") {
-      parallel matrix
+      nodeVersions.each { nodeVersion ->
+        try {
+          unstash 'sources'
+          ensureYarn('latest')
+
+          nodejs(nodeJSInstallationName: "node ${nodeVersion}") {
+            ansiColor('xterm') {
+              timeout(60) {
+                stage('Install') {
+                  sh 'yarn'
+                }
+
+                stage('Test') {
+                  try {
+                    // set special env var so we don't try test requiring sudo prompt
+                    withEnv(['JENKINS=true']) {
+                      sh 'yarn test'
+                    }
+                  } finally {
+                    // record results even if tests/coverage 'fails'
+                    if (fileExists('junit.xml')) {
+                      junit 'junit.xml'
+                    }
+                    if (fileExists('coverage/cobertura-coverage.xml')) {
+                      step([$class: 'CoberturaPublisher', autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: 'coverage/cobertura-coverage.xml', failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 0, onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false])
+                    }
+                  } // try
+                } // stage 'Test'
+              } // timeout
+            } // ansiColor
+          } // nodejs
+        } finally {
+          deleteDir() // always wipe to avoid errors when unstashing in the future
+        }
+      }
     }
   }
-}
-
-def runNode(nodeVersion) {
-  return {
-    try {
-      unstash 'sources'
-      ensureYarn('latest')
-
-      nodejs(nodeJSInstallationName: "node ${nodeVersion}") {
-        ansiColor('xterm') {
-          timeout(60) {
-            stage('Install') {
-              sh 'yarn'
-            }
-
-            stage('Test') {
-              try {
-                // set special env var so we don't try test requiring sudo prompt
-                withEnv(['JENKINS=true']) {
-                  sh 'yarn test'
-                }
-              } finally {
-                // record results even if tests/coverage 'fails'
-                if (fileExists('junit.xml')) {
-                  junit 'junit.xml'
-                }
-                if (fileExists('coverage/cobertura-coverage.xml')) {
-                  step([$class: 'CoberturaPublisher', autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: 'coverage/cobertura-coverage.xml', failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 0, onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false])
-                }
-              } // try
-            } // stage 'Test'
-          } // timeout
-        } // ansiColor
-      } // nodejs
-    } finally {
-      deleteDir() // always wipe to avoid errors when unstashing in the future
-    }
-  } // node
 }
