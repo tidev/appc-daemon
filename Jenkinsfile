@@ -60,7 +60,9 @@ timestamps {
     def matrix = [:]
     platforms.each { osName, os ->
       nodeVersions.each { nodeVersion ->
-        matrix["${osName} + Node.js ${nodeVersion}"] = runTests(os, nodeVersion)
+        def label = "${osName} + Node.js ${nodeVersion}"
+        println "Registering ${label}"
+        matrix[label] = runTests(os, nodeVersion)
       }
     }
 
