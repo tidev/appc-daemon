@@ -163,6 +163,75 @@ describe('Config', () => {
 		});
 	});
 
+	describe('get()', () => {
+		it('should get a value with a dynamic variable', () => {
+			const config = new Config({
+				config: {
+					foo: 'Hello',
+					bar: '{{foo}} world!'
+				}
+			});
+			expect(config.get('bar')).to.equal('Hello world!');
+		});
+
+		it('should error getting a value with an undefined dynamic variable', () => {
+			const config = new Config({
+				config: {
+					bar: '{{foo}} world!'
+				}
+			});
+			expect(() => {
+				config.get('bar');
+			}).to.throw(Error, 'Config key "bar" references undefined variable "foo"');
+		});
+
+		it('should get a value with a deeply nested dynamic variable', () => {
+			const config = new Config({
+				config: {
+					foo: 'Hello',
+					bar: '{{foo}} world!',
+					baz: 'Howdy! {{bar}} Hi!'
+				}
+			});
+			expect(config.get('baz')).to.equal('Howdy! Hello world! Hi!');
+		});
+
+		it('should get a value with multiple dynamic variable', () => {
+			const config = new Config({
+				config: {
+					a: 'A',
+					b: 'B',
+					c: 'C',
+					d: 'D',
+					e: 'E',
+					foo: 'A={{a}} B={{b}} C={{c}} D={{d}} E={{e}}'
+				}
+			});
+			expect(config.get('foo')).to.equal('A=A B=B C=C D=D E=E');
+		});
+
+		it('should resolve dynamic variable values within deep objects', () => {
+			const config = new Config({
+				config: {
+					a: {
+						b: {
+							c: 'C {{d.e}}'
+						}
+					},
+					d: {
+						e: 'E'
+					}
+				}
+			});
+
+			expect(config.get('a')).to.deep.equal({
+				b: {
+					c: 'C E'
+				}
+			});
+		});
+	});
+
 	describe('has()', () => {
 		it('should error if key is not a valid string', () => {
 			const config = new Config();

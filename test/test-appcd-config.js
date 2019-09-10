@@ -73,6 +73,7 @@ describe('appcd config', function () {
 				'server.group                     = null',
 				'server.hostname                  = 127.0.0.1',
 				'server.nodejsMaxUnusedAge        = 7776000000',
+				'server.persistDebugLog           = true',
 				'server.pidFile                   = ~/.appcelerator/appcd/appcd.pid',
 				'server.port                      = 1732',
 				'server.user                      = null',
@@ -145,6 +146,7 @@ describe('appcd config', function () {
 							'server.group                     = null',
 							'server.hostname                  = 127.0.0.1',
 							'server.nodejsMaxUnusedAge        = 7776000000',
+							'server.persistDebugLog           = true',
 							'server.pidFile                   = ~/.appcelerator/appcd/appcd.pid',
 							'server.port                      = 1732',
 							'server.user                      = null',
@@ -191,6 +193,7 @@ describe('appcd config', function () {
 							'server.group                     = null',
 							'server.hostname                  = 127.0.0.1',
 							'server.nodejsMaxUnusedAge        = 7776000000',
+							'server.persistDebugLog           = true',
 							'server.pidFile                   = ~/.appcelerator/appcd/appcd.pid',
 							'server.port                      = 1732',
 							'server.user                      = null',
@@ -249,6 +252,7 @@ describe('appcd config', function () {
 									group: null,
 									hostname: '127.0.0.1',
 									nodejsMaxUnusedAge: 90 * 24 * 60 * 60 * 1000,
+									persistDebugLog: true,
 									pidFile: '~/.appcelerator/appcd/appcd.pid',
 									port: 1732,
 									user: null
@@ -287,7 +291,7 @@ describe('appcd config', function () {
 							await this.startDaemonDebugMode(defaultConfig);
 						}
 
-						const { status, stdout } = this.runAppcdSync([ 'config', action, 'server', '--json' ]);
+						const { status, stdout } = this.runAppcdSync([ 'config', action, 'server', '--json' ], {}, defaultConfig);
 						expect(status).to.equal(0);
 						expect(JSON.parse(stdout)).to.deep.equal({
 							code: 0,
@@ -297,6 +301,7 @@ describe('appcd config', function () {
 								group: null,
 								hostname: '127.0.0.1',
 								nodejsMaxUnusedAge: 90 * 24 * 60 * 60 * 1000,
+								persistDebugLog: true,
 								pidFile: '~/.appcelerator/appcd/appcd.pid',
 								port: 1732,
 								user: null

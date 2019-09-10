@@ -5,6 +5,8 @@
  * BREAKING CHANGE: Removed `isUserDefined` option from `load()`.
  * feat: Added `baseConfig` and `baseConfigFile` to load configuration into the `Base` namespace.
  * feat: Added new `skipIfNotExists` option to `load()`.
+ * feat: Added support for handlebars style variables in string values that resolve other config
+   values.
  * fix: Added new `Runtime` layer to allow config settings set at runtime to override `Base` and
    `User` config values.
  * fix: Apply the runtime config after a file is loaded into the runtime namespace.

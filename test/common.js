@@ -12,7 +12,7 @@ const logger = snooplogg.config({
 	maxBrightness: 210,
 	theme: 'detailed'
 })('test');
-const { log } = logger;
+const { error, log } = logger;
 const { highlight } = snooplogg.styles;
 
 export const testLogger = logger;
@@ -25,6 +25,9 @@ export const defaultConfig = {
 	},
 	plugins: {
 		installDefault: false
+	},
+	server: {
+		persistDebugLog: true
 	},
 	telemetry: {
 		environment: 'test'
@@ -172,10 +175,36 @@ const api = {
 	}
 };
 
+export function getDebugLog() {
+	const dir = path.join(os.homedir(), '.appcelerator', 'appcd', 'log');
+	if (fs.existsSync(dir)) {
+		try {
+			for (const name of fs.readdirSync(dir).sort().reverse()) {
+				if (/\.log$/.test(name)) {
+					const file = path.join(dir, name);
+					log(`Found debug log file: ${file}`);
+					return fs.readFileSync(file).toString().trim();
+				}
+			}
+		} catch (e) {
+			error('Failed trying to get debug log file:');
+			error(e);
+			return;
+		}
+	}
+	log('No debug log files found');
+}
+
 export function makeTest(fn) {
 	return async () => {
 		try {
 			await fn.call(api);
+		} catch (e) {
+			try {
+				const s = getDebugLog();
+				s && logger('debug:log').log(s);
+			} catch (e2) {}
+			throw e;
 		} finally {
 			api.runAppcdSync([ 'stop' ]);
 			emptyHomeDir();
