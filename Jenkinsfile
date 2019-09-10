@@ -1,6 +1,15 @@
 #! groovy
 library 'pipeline-library'
 
+stage('Integration Tests') {
+  parallel(
+    'Linux': run('linux'),
+    'macOS': run('osx'),
+    'Windows': run('windows'),
+    failFast: false
+  )
+}
+
 def run(os) {
   return buildNPMPackage({
     labels = "${os} && git && npm-publish"
@@ -11,10 +20,3 @@ def run(os) {
     junitReportPath = 'junit.xml'
   })
 }
-
-parallel(
-  'Linux tests': run('linux'),
-  'macOS tests': run('osx'),
-  'Windows tests': run('windows'),
-  failFast: false
-)
