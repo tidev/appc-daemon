@@ -74,12 +74,12 @@ def runPlatform(platform, nodeVersions) {
     node("${platform} && git") {
       nodeVersions.each { nodeVersion ->
         try {
-          unstash 'sources'
-          ensureYarn('latest')
-
           nodejs(nodeJSInstallationName: "node ${nodeVersion}") {
             ansiColor('xterm') {
               timeout(60) {
+                unstash 'sources'
+                ensureYarn('latest')
+
                 stage('Install') {
                   sh 'yarn'
                 }
