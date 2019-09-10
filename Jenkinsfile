@@ -66,7 +66,7 @@ timestamps {
       }
     }
 
-    failFast false
+    matrix.failFast = false
     parallel matrix
   }
 }
