@@ -14,7 +14,7 @@ def nodeVersions = [
 ]
 
 timestamps {
-  node('(osx || linux) && git') {
+  node('osx && git') {
     nodejs(nodeJSInstallationName: "node 10.16.3") {
       ansiColor('xterm') {
         timeout(60) {
