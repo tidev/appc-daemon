@@ -63,13 +63,13 @@ timestamps {
   stage('Integration Tests') {
     def matrix = [ failFast: false ]
     platforms.each { name, platform ->
-      matrix["${name}"] = runPlatform(platform)
+      matrix["${name}"] = runPlatform(platform, nodeVersions)
     }
     parallel matrix
   }
 }
 
-def runPlatform(platform) {
+def runPlatform(platform, nodeVersions) {
   return {
     node("${platform} && git") {
       nodeVersions.each { nodeVersion ->
