@@ -382,6 +382,7 @@ exports['functional-test']      = series(nodeInfo, build, function test() {     
 exports['functional-test-only'] = series(nodeInfo,        function test() {     return runTests(); });
 exports['functional-coverage']  = series(nodeInfo,        function coverage() { return runTests(true); });
 exports['coverage']             = series(nodeInfo,        function coverage() { return runTests(true, true); });
+exports['coverage-ci']          = series(nodeInfo, build, function coverage() { return runTests(true, true); });
 
 /*
  * watch/debug tasks

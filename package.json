@@ -37,6 +37,6 @@
     ]
   },
   "scripts": {
-    "test": "gulp coverage"
+    "test": "gulp coverage-ci"
   }
 }
