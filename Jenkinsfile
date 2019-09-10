@@ -59,7 +59,7 @@ timestamps {
   stage('Integration Tests') {
     def matrix = [ failFast: false ]
     platforms.each { name, platform ->
-      matrix[name] = runTests(platform)
+      matrix[name] = runPlatform(platform)
     }
 
     parallel matrix
