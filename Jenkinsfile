@@ -62,7 +62,7 @@ timestamps {
     def matrix = [ failFast: false ]
     platforms.each { name, platform ->
       nodeVersions.each { nodeVersion ->
-        matrix["${name} + Node.js ${nodeVersion}"] = run(platform, nodeVersion)
+        matrix["${name} + Node.js ${nodeVersion}"] = runPlatform(platform, nodeVersion)
       }
     }
     parallel matrix
