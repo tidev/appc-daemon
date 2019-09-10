@@ -291,7 +291,7 @@ describe('appcd config', function () {
 							await this.startDaemonDebugMode(defaultConfig);
 						}
 
-						const { status, stdout } = this.runAppcdSync([ 'config', action, 'server', '--json' ]);
+						const { status, stdout } = this.runAppcdSync([ 'config', action, 'server', '--json' ], {}, defaultConfig);
 						expect(status).to.equal(0);
 						expect(JSON.parse(stdout)).to.deep.equal({
 							code: 0,
