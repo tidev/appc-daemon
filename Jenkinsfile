@@ -67,12 +67,12 @@ timestamps {
 }
 
 def runPlatform(platform) {
-  return {
-    def matrix = [ failFast: false ]
-    nodeVersions.each { nodeVersion ->
-      matrix["Node.js ${nodeVersion}"] = runNode(nodeVersion)
-    }
+  def matrix = [ failFast: false ]
+  nodeVersions.each { nodeVersion ->
+    matrix["Node.js ${nodeVersion}"] = runNode(nodeVersion)
+  }
 
+  return {
     node("${platform} && git") {
       parallel matrix
     }
