@@ -2,8 +2,8 @@
 library 'pipeline-library'
 
 def platforms = [
-  // 'Linux': 'linux',
-  // 'macOS': 'osx',
+  'Linux': 'linux',
+  'macOS': 'osx',
   'Windows': 'windows'
 ]
 
@@ -94,6 +94,7 @@ def runPlatform(platform, nodeVersion) {
                 ])
 
                 if (!isUnix()) {
+                  // force unix line endings so linting doesn't blow up
                   sh 'git config core.autocrlf false && git config core.eof lf && git rm --cached -r -q . && git reset --hard -q'
                   sh 'git submodule foreach "git config core.autocrlf false && git config core.eof lf && git rm --cached -r -q . && git reset --hard -q"'
                 }
