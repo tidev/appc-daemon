@@ -74,8 +74,8 @@ timestamps {
 def runPlatform(platform, nodeVersion) {
   return {
     node("${platform} && git") {
-      def tmpHomeMap = "${System.getProperty('java.io.tmpdir')}/appcd-tmp-home-${java.util.UUID.randomUUID().toString()}"
-      println tmpHomeMap
+      def tmpHomeFile = "${pwd()}/appcd-tmp-home-${java.util.UUID.randomUUID().toString()}.txt"
+      println tmpHomeFile
 
       try {
         nodejs(nodeJSInstallationName: "node ${nodeVersion}") {
