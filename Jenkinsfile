@@ -93,7 +93,10 @@ def runPlatform(platform, nodeVersion) {
                   userRemoteConfigs: scm.userRemoteConfigs
                 ])
 
-                sh 'git config core.autocrlf false && git config core.eof lf && git rm --cached -r -q . && git reset --hard -q'
+                if (!isUnix()) {
+                  sh 'git config core.autocrlf false && git config core.eof lf && git rm --cached -r -q . && git reset --hard -q'
+                  sh 'git submodule foreach "git config core.autocrlf false && git config core.eof lf && git rm --cached -r -q . && git reset --hard -q"'
+                }
               }
 
               stage('Install') {
