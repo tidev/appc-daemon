@@ -1,17 +1,21 @@
 #! groovy
 library 'pipeline-library'
 
-def platforms = [
-  'Linux': 'linux',
-  'macOS': 'osx',
-  'Windows': 'windows'
-]
+import java.util.Date
 
-def nodeVersions = [
-  '8.16.0',
-  '10.16.3',
-  '12.10.0'
-]
+def platforms = [ 'macOS': 'osx' ]
+def nodeVersions = [ '10.16.3' ]
+
+// if (!env.CHANGE_ID) {
+  platforms['Linux'] = 'linux'
+  platforms['Windows'] = 'windows'
+
+  nodeVersions = [
+    '8.16.0',
+    '10.16.3',
+    '12.10.0'
+  ]
+// }
 
 timestamps {
   node('osx && git') {
@@ -72,6 +76,10 @@ timestamps {
 def runPlatform(platform, nodeVersion) {
   return {
     node("${platform} && git") {
+      def now = (new Date()).getTime()
+      def tmpHomeDirKey = "${System.getProperty('java.io.tmpdir')}/${now}"
+      println tmpHomeDirKey
+
       try {
         nodejs(nodeJSInstallationName: "node ${nodeVersion}") {
           ansiColor('xterm') {
@@ -107,9 +115,9 @@ def runPlatform(platform, nodeVersion) {
               stage('Test') {
                 try {
                   // set special env var so we don't try test requiring sudo prompt
-                  withEnv(['JENKINS=true']) {
-                    sh 'yarn test'
-                  }
+                  // withEnv(['JENKINS=true']) {
+                  //  sh 'yarn test'
+                  // }
                 } finally {
                   // record results even if tests/coverage 'fails'
                   if (fileExists('junit.xml')) {
