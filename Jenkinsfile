@@ -77,8 +77,8 @@ def runPlatform(platform, nodeVersion) {
   return {
     node("${platform} && git") {
       def now = (new Date()).getTime()
-      def tmpHomeDirKey = "${System.getProperty('java.io.tmpdir')}/${now}"
-      println tmpHomeDirKey
+      def tmpHomeMap = "${System.getProperty('java.io.tmpdir')}/appcd-tmp-home-${now}"
+      println tmpHomeMap
 
       try {
         nodejs(nodeJSInstallationName: "node ${nodeVersion}") {
