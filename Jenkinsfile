@@ -1,8 +1,6 @@
 #! groovy
 library 'pipeline-library'
 
-import java.util.Date
-
 def platforms = [ 'macOS': 'osx' ]
 def nodeVersions = [ '10.16.3' ]
 
@@ -76,8 +74,7 @@ timestamps {
 def runPlatform(platform, nodeVersion) {
   return {
     node("${platform} && git") {
-      def now = (new Date()).getTime()
-      def tmpHomeMap = "${System.getProperty('java.io.tmpdir')}/appcd-tmp-home-${now}"
+      def tmpHomeMap = "${System.getProperty('java.io.tmpdir')}/appcd-tmp-home-${UUID.randomUUID().toString()}"
       println tmpHomeMap
 
       try {
