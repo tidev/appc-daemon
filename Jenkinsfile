@@ -112,9 +112,9 @@ def runPlatform(platform, nodeVersion) {
               stage('Test') {
                 try {
                   // set special env var so we don't try test requiring sudo prompt
-                  // withEnv(['JENKINS=true']) {
-                  //  sh 'yarn test'
-                  // }
+                  withEnv([ 'JENKINS=true', "JENKINS_APPCD_TMP_HOME_FILE=${tmpHomeFile}" ]) {
+                   sh 'yarn test'
+                  }
                 } finally {
                   // record results even if tests/coverage 'fails'
                   if (fileExists('junit.xml')) {

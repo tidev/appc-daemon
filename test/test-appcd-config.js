@@ -13,7 +13,7 @@ describe('appcd config', function () {
 	this.timeout(120000);
 
 	describe('help', () => {
-		it('should output help as JSON', makeTest(async function () {
+		it.only('should output help as JSON', makeTest(async function () {
 			const { status, stdout } = this.runAppcdSync([ 'config', '--help', '--json' ]);
 			expect(status).to.equal(2);
 			expect(JSON.parse(stdout).desc).to.equal('Get and set config options');
