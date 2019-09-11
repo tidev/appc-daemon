@@ -79,9 +79,6 @@ def runPlatform(platform, nodeVersion) {
               ensureYarn('latest')
 
               stage('Checkout') {
-                sh 'git config core.autocrlf false'
-                sh 'git config core.eof lf'
-
                 checkout([
                   $class: 'GitSCM',
                   branches: scm.branches,
@@ -95,6 +92,8 @@ def runPlatform(platform, nodeVersion) {
                   ],
                   userRemoteConfigs: scm.userRemoteConfigs
                 ])
+
+                sh 'git config core.autocrlf false && git config core.eof lf && git rm --cached -r -q . && git reset --hard -q'
               }
 
               stage('Install') {
