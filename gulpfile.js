@@ -378,11 +378,11 @@ async function runTests(cover, all) {
 	}
 }
 
-exports['functional-test']      = series(nodeInfo, build, function test() {     return runTests(); });
-exports['functional-test-only'] = series(nodeInfo,        function test() {     return runTests(); });
-exports['functional-coverage']  = series(nodeInfo,        function coverage() { return runTests(true); });
-exports['coverage']             = series(nodeInfo,        function coverage() { return runTests(true, true); });
-exports['coverage-ci']          = series(nodeInfo, build, function coverage() { return runTests(true, true); });
+exports['integration-test']      = series(nodeInfo, build, function test()     { return runTests(); });
+exports['integration-test-only'] = series(nodeInfo,        function test()     { return runTests(); });
+exports['integration-coverage']  = series(nodeInfo,        function coverage() { return runTests(true); });
+exports['coverage']              = series(nodeInfo,        function coverage() { return runTests(true, true); });
+exports['coverage-ci']           = series(nodeInfo, build, function coverage() { return runTests(true, true); });
 
 /*
  * watch/debug tasks
