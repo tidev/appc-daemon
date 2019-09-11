@@ -365,6 +365,10 @@ async function runTests(cover, all) {
 			process.env.HOMEPATH = tmpHomeDir.replace(process.env.HOMEDRIVE, '');
 		}
 
+		if (process.env.JENKINS_APPCD_TMP_HOME_FILE) {
+			fs.outputFileSync(process.env.JENKINS_APPCD_TMP_HOME_FILE, tmpHomeDir);
+		}
+
 		require('./packages/appcd-gulp/src/test-runner').runTests({ root: __dirname, projectDir: __dirname, cover, all });
 	} finally {
 		// restore home directory so that we can delete the temp one

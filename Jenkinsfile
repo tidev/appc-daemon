@@ -129,7 +129,13 @@ def runPlatform(platform, nodeVersion) {
           } // ansiColor
         } // nodejs
       } finally {
-        deleteDir() // always wipe to avoid errors when unstashing in the future
+        // if we have a tmp home directory, artifact the log file
+        if (fileExists(tmpHomeFile)) {
+          archiveArtifacts "${readFile(tmpHomeFile)}/log"
+        }
+
+        // always wipe to avoid errors when unstashing in the future
+        deleteDir()
       }
     } // node
   }
