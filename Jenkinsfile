@@ -1,17 +1,19 @@
 #! groovy
 library 'pipeline-library'
 
-def platforms = [
-  'Linux': 'linux',
-  'macOS': 'osx',
-  'Windows': 'windows'
-]
+def platforms = [ 'macOS': 'osx' ]
+def nodeVersions = [ '10.16.3' ]
 
-def nodeVersions = [
-  '8.16.0',
-  '10.16.3',
-  '12.10.0'
-]
+// if (!env.CHANGE_ID) {
+  platforms['Linux'] = 'linux'
+  platforms['Windows'] = 'windows'
+
+  nodeVersions = [
+    '8.16.0',
+    '10.16.3',
+    '12.10.0'
+  ]
+// }
 
 timestamps {
   node('osx && git') {
@@ -72,6 +74,9 @@ timestamps {
 def runPlatform(platform, nodeVersion) {
   return {
     node("${platform} && git") {
+      def tmpHomeFile = "${pwd()}/appcd-tmp-home-${java.util.UUID.randomUUID().toString()}.txt"
+      println tmpHomeFile
+
       try {
         nodejs(nodeJSInstallationName: "node ${nodeVersion}") {
           ansiColor('xterm') {
@@ -107,8 +112,8 @@ def runPlatform(platform, nodeVersion) {
               stage('Test') {
                 try {
                   // set special env var so we don't try test requiring sudo prompt
-                  withEnv(['JENKINS=true']) {
-                    sh 'yarn test'
+                  withEnv([ 'JENKINS=true', "JENKINS_APPCD_TMP_HOME_FILE=${tmpHomeFile}" ]) {
+                   sh 'yarn test'
                   }
                 } finally {
                   // record results even if tests/coverage 'fails'
@@ -124,7 +129,18 @@ def runPlatform(platform, nodeVersion) {
           } // ansiColor
         } // nodejs
       } finally {
-        deleteDir() // always wipe to avoid errors when unstashing in the future
+        // if we have a tmp home directory, artifact the log file
+        if (fileExists(tmpHomeFile)) {
+          println 'Reading temp home file...'
+          def homeDir = readFile(tmpHomeFile)
+          println "Temp home dir: ${homeDir}"
+          archiveArtifacts "${homeDir}/.appcelerator/appcd/log"
+        } else {
+          println 'Temp home file does not exist'
+        }
+
+        // always wipe to avoid errors when unstashing in the future
+        deleteDir()
       }
     } // node
   }
