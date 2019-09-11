@@ -2,8 +2,8 @@
 library 'pipeline-library'
 
 def platforms = [
-  'Linux': 'linux',
-  'macOS': 'osx',
+  // 'Linux': 'linux',
+  // 'macOS': 'osx',
   'Windows': 'windows'
 ]
 
@@ -79,6 +79,9 @@ def runPlatform(platform, nodeVersion) {
               ensureYarn('latest')
 
               stage('Checkout') {
+                sh 'git config core.autocrlf false'
+                sh 'git config core.eof lf'
+
                 checkout([
                   $class: 'GitSCM',
                   branches: scm.branches,

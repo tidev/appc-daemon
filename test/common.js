@@ -40,11 +40,10 @@ export const coreNodeVersion = fs.readJsonSync(path.join(__dirname, '..', 'packa
 let tmpNodePath = null;
 
 const api = {
-	symlinkPlugin(name, version) {
-		const src = path.resolve(__dirname, '..', 'plugins', name);
-		const dest = path.join(getAppcdHome(), 'plugins', 'packages', '@appcd', `plugin-${name}`, version);
-		log(`Symlinking ${highlight(src)} => ${highlight(dest)}`);
-		fs.ensureSymlinkSync(src, dest);
+	initHomeDir(fixture) {
+		const appcdHome = path.join(os.homedir(), '.appcelerator', 'appcd');
+		log(`Copying ${highlight(fixture)} => ${highlight(appcdHome)}`);
+		fs.copySync(fixture, appcdHome);
 	},
 
 	async installNode() {
@@ -68,6 +67,50 @@ const api = {
 			});
 			fs.ensureSymlinkSync(tmpNodePath, dest);
 		}
+	},
+
+	runAppcd(args = [], opts = {}, cfg) {
+		const env = { ...(opts.env || process.env) };
+		if (env.APPCD_TEST) {
+			delete env.SNOOPLOGG;
+		}
+
+		if (cfg) {
+			args.unshift('--config', JSON.stringify(cfg));
+		}
+
+		log(`Executing: ${highlight(`${process.execPath} ${appcdPath} ${args.join(' ')}`)}`);
+		return spawn(process.execPath, [ appcdPath, ...args ], {
+			ignoreExitCodes: true,
+			windowsHide: true,
+			...opts,
+			env
+		});
+	},
+
+	runAppcdSync(args = [], opts = {},  cfg) {
+		const env = { ...(opts.env || process.env) };
+		if (env.APPCD_TEST) {
+			delete env.SNOOPLOGG;
+		}
+
+		if (cfg) {
+			args.unshift('--config', JSON.stringify(cfg));
+		}
+
+		log(`Executing: ${highlight(`${process.execPath} ${appcdPath} ${args.join(' ')}`)}`);
+		const result = spawnSync(process.execPath, [ appcdPath, ...args ], {
+			ignoreExitCodes: true,
+			windowsHide: true,
+			...opts,
+			env
+		});
+
+		testLogger('stdout').log(result.stdout.toString());
+		testLogger('stderr').log(result.stderr.toString());
+
+		log(`Process exited (code ${result.status})`);
+		return result;
 	},
 
 	async startDaemonDebugMode(cfg, output) {
@@ -124,54 +167,11 @@ const api = {
 		return result;
 	},
 
-	initHomeDir(fixture) {
-		const appcdHome = path.join(os.homedir(), '.appcelerator', 'appcd');
-		log(`Copying ${highlight(fixture)} => ${highlight(appcdHome)}`);
-		fs.copySync(fixture, appcdHome);
-	},
-
-	runAppcd(args = [], opts = {}, cfg) {
-		const env = { ...(opts.env || process.env) };
-		if (env.APPCD_TEST) {
-			delete env.SNOOPLOGG;
-		}
-
-		if (cfg) {
-			args.unshift('--config', JSON.stringify(cfg));
-		}
-
-		log(`Executing: ${highlight(`${process.execPath} ${appcdPath} ${args.join(' ')}`)}`);
-		return spawn(process.execPath, [ appcdPath, ...args ], {
-			ignoreExitCodes: true,
-			windowsHide: true,
-			...opts,
-			env
-		});
-	},
-
-	runAppcdSync(args = [], opts = {},  cfg) {
-		const env = { ...(opts.env || process.env) };
-		if (env.APPCD_TEST) {
-			delete env.SNOOPLOGG;
-		}
-
-		if (cfg) {
-			args.unshift('--config', JSON.stringify(cfg));
-		}
-
-		log(`Executing: ${highlight(`${process.execPath} ${appcdPath} ${args.join(' ')}`)}`);
-		const result = spawnSync(process.execPath, [ appcdPath, ...args ], {
-			ignoreExitCodes: true,
-			windowsHide: true,
-			...opts,
-			env
-		});
-
-		testLogger('stdout').log(result.stdout.toString());
-		testLogger('stderr').log(result.stderr.toString());
-
-		log(`Process exited (code ${result.status})`);
-		return result;
+	symlinkPlugin(name, version) {
+		const src = path.resolve(__dirname, '..', 'plugins', name);
+		const dest = path.join(getAppcdHome(), 'plugins', 'packages', '@appcd', `plugin-${name}`, version);
+		log(`Symlinking ${highlight(src)} => ${highlight(dest)}`);
+		fs.ensureSymlinkSync(src, dest);
 	}
 };
 
