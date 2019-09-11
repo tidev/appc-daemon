@@ -131,7 +131,12 @@ def runPlatform(platform, nodeVersion) {
       } finally {
         // if we have a tmp home directory, artifact the log file
         if (fileExists(tmpHomeFile)) {
-          archiveArtifacts "${readFile(tmpHomeFile)}/log"
+          println 'Reading temp home file...'
+          def homeDir = readFile(tmpHomeFile)
+          println "Temp home dir: ${homeDir}"
+          archiveArtifacts "${homeDir}/.appcelerator/appcd/log"
+        } else {
+          println 'Temp home file does not exist'
         }
 
         // always wipe to avoid errors when unstashing in the future
