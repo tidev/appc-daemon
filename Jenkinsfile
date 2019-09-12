@@ -21,7 +21,6 @@ timestamps {
       nodejs(nodeJSInstallationName: "node 10.16.3") {
         ansiColor('xterm') {
           timeout(60) {
-            ensureYarn('latest')
 
             stage('Checkout') {
               checkout([
@@ -43,6 +42,7 @@ timestamps {
             }
 
             stage('Security') {
+              ensureYarn('latest')
               sh 'yarn install --production'
               sh 'yarn global add retire'
               sh 'retire --exitwith 0'
@@ -73,7 +73,7 @@ timestamps {
 
 def runPlatform(platform, nodeVersion) {
   return {
-    node("${platform} && git") {
+    node("${platform} && git && !master") {
       def tmpHomeFile = "${pwd()}/appcd-tmp-home-${java.util.UUID.randomUUID().toString()}.txt"
       println tmpHomeFile
 
@@ -81,7 +81,6 @@ def runPlatform(platform, nodeVersion) {
         nodejs(nodeJSInstallationName: "node ${nodeVersion}") {
           ansiColor('xterm') {
             timeout(60) {
-              ensureYarn('latest')
 
               stage('Checkout') {
                 checkout([
@@ -106,6 +105,7 @@ def runPlatform(platform, nodeVersion) {
               }
 
               stage('Install') {
+                ensureYarn('latest')
                 sh 'yarn'
               }
 
