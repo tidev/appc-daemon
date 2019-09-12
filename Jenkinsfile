@@ -108,7 +108,7 @@ def runPlatform(platform, nodeVersion) {
               try {
                 // set special env var so we don't try test requiring sudo prompt
                 withEnv([ 'JENKINS=true', "JENKINS_APPCD_TMP_HOME_FILE=${tmpHomeFile}" ]) {
-                  sh 'yarn test'
+                  sh returnStatus: true, script: 'yarn test' // don't fail build if tests fail, isntead mark unstable
                 }
               } finally {
                 // record results even if tests/coverage 'fails'
