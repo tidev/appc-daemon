@@ -129,7 +129,9 @@ def runPlatform(platform, nodeVersion) {
           println 'Reading temp home file...'
           def homeDir = readFile(tmpHomeFile)
           println "Temp home dir: ${homeDir}"
-          archiveArtifacts "${homeDir}/.appcelerator/appcd/log"
+          if (fileExists("${homeDir}/.appcelerator/appcd/log")) {
+            archiveArtifacts "${homeDir}/.appcelerator/appcd/log"
+          }
         } else {
           println 'Temp home file does not exist'
         }
