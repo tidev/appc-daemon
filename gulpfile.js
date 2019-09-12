@@ -246,7 +246,7 @@ exports.sync = series(async function sync() {
 	for (const info of Object.values(gitmodules)) {
 		const m = info.path.match(/^plugins\/(.+)$/);
 		if (m) {
-			rcDefault.plugins[m[1]] = `https://github.com/appcelerator/appcelerator/appcd-plugin-${m[1]}.git`;
+			rcDefault.plugins[m[1]] = `https://github.com/appcelerator/appcd-plugin-${m[1]}.git`;
 		}
 	}
 
@@ -313,7 +313,7 @@ exports.sync = series(async function sync() {
 
 			if (!remotes[rc.remoteName]) {
 				// add the remotes
-				run(`git remote add "${rc.remoteName}" git@github.com:appcelerator/appcd-plugin-${name}.git`, { cwd: pluginDir });
+				run(`git remote add "${rc.remoteName}" https://github.com/appcelerator/appcd-plugin-${name}.git`, { cwd: pluginDir });
 				fetch = true;
 			}
 
