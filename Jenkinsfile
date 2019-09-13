@@ -21,7 +21,6 @@ timestamps {
       nodejs(nodeJSInstallationName: "node 10.16.3") {
         ansiColor('xterm') {
           timeout(60) {
-            ensureYarn('latest')
 
             stage('Checkout') {
               checkout([
@@ -43,6 +42,7 @@ timestamps {
             }
 
             stage('Security') {
+              ensureYarn('latest')
               sh 'yarn install --production'
               sh 'yarn global add retire'
               sh 'retire --exitwith 0'
@@ -73,7 +73,7 @@ timestamps {
 
 def runPlatform(platform, nodeVersion) {
   return {
-    node("${platform} && git") {
+    node("${platform} && git && !master") {
       def tmpHomeFile = "${pwd()}/appcd-tmp-home-${java.util.UUID.randomUUID().toString()}.txt"
       println tmpHomeFile
 
@@ -81,50 +81,45 @@ def runPlatform(platform, nodeVersion) {
         nodejs(nodeJSInstallationName: "node ${nodeVersion}") {
           ansiColor('xterm') {
             timeout(60) {
+
+              checkout([
+                $class: 'GitSCM',
+                branches: scm.branches,
+                extensions: scm.extensions + [
+                  // check out to local branch so greenkeeper-lockfile-upload can work!
+                  [$class: 'LocalBranch', localBranch: '**'],
+                  // do a git clean -fdx first to wipe any local changes during last build
+                  [$class: 'CleanBeforeCheckout'],
+                  // If there are submodules recursively update them (and use the credentials from the main repo clone/checkout)
+                  [$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, reference: '', trackingSubmodules: false]
+                ],
+                userRemoteConfigs: scm.userRemoteConfigs
+              ])
+
+              if (!isUnix()) {
+                // force unix line endings so linting doesn't blow up
+                sh 'git config core.autocrlf false && git config core.eof lf && git rm --cached -r -q . && git reset --hard -q'
+                sh 'git submodule foreach "git config core.autocrlf false && git config core.eof lf && git rm --cached -r -q . && git reset --hard -q"'
+              }
+
               ensureYarn('latest')
+              sh 'yarn'
 
-              stage('Checkout') {
-                checkout([
-                  $class: 'GitSCM',
-                  branches: scm.branches,
-                  extensions: scm.extensions + [
-                    // check out to local branch so greenkeeper-lockfile-upload can work!
-                    [$class: 'LocalBranch', localBranch: '**'],
-                    // do a git clean -fdx first to wipe any local changes during last build
-                    [$class: 'CleanBeforeCheckout'],
-                    // If there are submodules recursively update them (and use the credentials from the main repo clone/checkout)
-                    [$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: true, recursiveSubmodules: true, reference: '', trackingSubmodules: false]
-                  ],
-                  userRemoteConfigs: scm.userRemoteConfigs
-                ])
-
-                if (!isUnix()) {
-                  // force unix line endings so linting doesn't blow up
-                  sh 'git config core.autocrlf false && git config core.eof lf && git rm --cached -r -q . && git reset --hard -q'
-                  sh 'git submodule foreach "git config core.autocrlf false && git config core.eof lf && git rm --cached -r -q . && git reset --hard -q"'
+              try {
+                // set special env var so we don't try test requiring sudo prompt
+                withEnv([ 'JENKINS=true', "JENKINS_APPCD_TMP_HOME_FILE=${tmpHomeFile}" ]) {
+                  sh returnStatus: true, script: 'yarn test' // don't fail build if tests fail, isntead mark unstable
                 }
-              }
+              } finally {
+                // record results even if tests/coverage 'fails'
+                if (fileExists('junit.xml')) {
+                  junit 'junit.xml'
+                }
+                if (fileExists('coverage/cobertura-coverage.xml')) {
+                  step([$class: 'CoberturaPublisher', autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: 'coverage/cobertura-coverage.xml', failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 0, onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false])
+                }
+              } // try
 
-              stage('Install') {
-                sh 'yarn'
-              }
-
-              stage('Test') {
-                try {
-                  // set special env var so we don't try test requiring sudo prompt
-                  withEnv([ 'JENKINS=true', "JENKINS_APPCD_TMP_HOME_FILE=${tmpHomeFile}" ]) {
-                   sh 'yarn test'
-                  }
-                } finally {
-                  // record results even if tests/coverage 'fails'
-                  if (fileExists('junit.xml')) {
-                    junit 'junit.xml'
-                  }
-                  if (fileExists('coverage/cobertura-coverage.xml')) {
-                    step([$class: 'CoberturaPublisher', autoUpdateHealth: false, autoUpdateStability: false, coberturaReportFile: 'coverage/cobertura-coverage.xml', failUnhealthy: false, failUnstable: false, maxNumberOfBuilds: 0, onlyStable: false, sourceEncoding: 'ASCII', zoomCoverageChart: false])
-                  }
-                } // try
-              } // stage 'Test'
             } // timeout
           } // ansiColor
         } // nodejs
@@ -134,7 +129,9 @@ def runPlatform(platform, nodeVersion) {
           println 'Reading temp home file...'
           def homeDir = readFile(tmpHomeFile)
           println "Temp home dir: ${homeDir}"
-          archiveArtifacts "${homeDir}/.appcelerator/appcd/log"
+          if (fileExists("${homeDir}/.appcelerator/appcd/log")) {
+            archiveArtifacts "${homeDir}/.appcelerator/appcd/log"
+          }
         } else {
           println 'Temp home file does not exist'
         }
