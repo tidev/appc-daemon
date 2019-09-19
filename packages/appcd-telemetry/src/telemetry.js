@@ -279,6 +279,7 @@ export default class Telemetry extends Dispatcher {
 				highlight(batch.length),
 				err ? err.message : `${resp.statusCode} - ${resp.statusMessage}`
 			));
+			return Promise.reject(err || new Error(`${resp.statusCode} - ${resp.statusMessage}`));
 		} else {
 			log(__n(batch.length, 'Successfully sent %%s event', 'Successfully sent %%s events', highlight(batch.length)));
 			await Promise.all(batch.map(({ file }) => fs.remove(file)));
@@ -293,17 +294,17 @@ export default class Telemetry extends Dispatcher {
 	 * @returns {Promise}
 	 */
 	sendEvents(flush) {
+		const scheduleSendEvents = () => {
+			// when flushing, we don't schedule a send
+			if (!flush && this.running) {
+				this.sendTimer = setTimeout(() => this.sendEvents(), 1000);
+			}
+		};
+
 		return this.pending = Promise.resolve()
 			.then(async () => {
 				const { eventsDir, lastSend } = this;
 				const { enabled, sendBatchSize, sendInterval, url } = this.config;
-
-				const scheduleSendEvents = () => {
-					// when flushing, we don't schedule a send
-					if (!flush && this.running) {
-						this.sendTimer = setTimeout(() => this.sendEvents(), 1000);
-					}
-				};
 
 				if (!enabled || !url || !eventsDir || !isDir(eventsDir) || (!flush && lastSend && (lastSend + sendInterval) > Date.now())) {
 					// not enabled or not time to send
@@ -353,7 +354,10 @@ export default class Telemetry extends Dispatcher {
 				this.lastSend = Date.now();
 				scheduleSendEvents();
 			})
-			.catch(() => {});
+			.catch(e => {
+				this.lastSend = Date.now();
+				scheduleSendEvents();
+			});
 	}
 
 	/**

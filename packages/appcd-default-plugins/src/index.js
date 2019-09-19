@@ -163,7 +163,8 @@ export async function installDefaultPlugins(pluginsDir) {
 	}
 
 	// install missing plugins
-	await Promise.all(install.map(async pkg => {
+	const incompatible = [];
+	await Promise.all(install.map(async (pkg, index) => {
 		let manifest;
 
 		// query npm
@@ -181,6 +182,7 @@ export async function installDefaultPlugins(pluginsDir) {
 
 		if (manifest.appcd.os && !manifest.appcd.os.includes(process.platform)) {
 			logger.warn(`Skipping incompatible plugin: ${highlight(pkg)}`);
+			incompatible.push(index);
 			return;
 		}
 
@@ -189,6 +191,7 @@ export async function installDefaultPlugins(pluginsDir) {
 
 		newWorkspaces.add(`packages/${manifest.name}/${manifest.version}`);
 	}));
+	incompatible.forEach(index => install.splice(index, 1));
 
 	// if anything was installed or workspaces changed, write the package.json and lerna.json
 	// files, then execute lerna
