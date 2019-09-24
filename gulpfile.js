@@ -406,42 +406,56 @@ exports['start-daemon'] = async () => {
 };
 
 async function watchOnly(child) {
-	const binWatcher = gulp
-		.watch(`${__dirname}/packages/appcd/bin/*`)
-		.on('all', (type, path) => {
-			log('Detected change: ' + cyan(path));
-			stopDaemon();
-			startDaemon();
-		});
-
-	const srcWatcher = gulp
-		.watch(`${__dirname}/packages/*/src/**/*.js`)
-		.on('all', (type, path) => {
-			// FIXME: There's almost certainly a better way of doing this than replacing \\ with /
-			path = path.replace(/\\/g, '/');
-			const m = path.match(new RegExp(`^(${__dirname.replace(/\\/g, '/')}/(packages/([^\/]+)))`));
-			if (m) {
-				log(`Detected change: ${cyan(path)}`);
-				stopDaemon();
-				buildDepList(m[2])
-					.reduce((promise, dir) => {
-						return promise.then(() => new Promise((resolve, reject) => {
-							console.log();
-							log(cyan('Rebuilding ' + dir));
-							gulp
-								.src(__dirname + '/' + dir + '/gulpfile.js')
-								.pipe(chug({ tasks: [ 'build' ] }))
-								.on('finish', () => resolve());
-						}));
-					}, Promise.resolve())
-					.then(startDaemon);
-			}
-		});
-
 	await new Promise(resolve => {
+		let restarting = false;
 		let stopping = false;
+
+		const restart = async (path, fn) => {
+			log('Detected change: ' + cyan(path));
+			restarting = true;
+
+			stopDaemon();
+
+			if (typeof fn === 'function') {
+				await fn();
+			}
+
+			if (child) {
+				child.removeListener('close', cleanup);
+			}
+			child = (await startDaemon()).on('close', cleanup);
+
+			restarting = false;
+		};
+
+		const binWatcher = gulp
+			.watch(`${__dirname}/packages/appcd/bin/*`)
+			.on('all', (type, path) => restart(path));
+
+		const srcWatcher = gulp
+			.watch(`${__dirname}/packages/*/src/**/*.js`)
+			.on('all', async (type, path) => {
+				// FIXME: There's almost certainly a better way of doing this than replacing \\ with /
+				path = path.replace(/\\/g, '/');
+				const m = path.match(new RegExp(`^(${__dirname.replace(/\\/g, '/')}/(packages/([^\/]+)))`));
+				if (m) {
+					await restart(path, () => {
+						return buildDepList(m[2]).reduce((promise, dir) => {
+							return promise.then(() => new Promise((resolve, reject) => {
+								console.log();
+								log(cyan('Rebuilding ' + dir));
+								gulp
+									.src(__dirname + '/' + dir + '/gulpfile.js')
+									.pipe(chug({ tasks: [ 'build' ] }))
+									.on('finish', () => resolve());
+							}));
+						}, Promise.resolve());
+					});
+				}
+			});
+
 		const cleanup = () => {
-			if (!stopping) {
+			if (!restarting && !stopping) {
 				stopping = true;
 				if (child) {
 					child.removeListener('close', cleanup);
@@ -459,6 +473,7 @@ async function watchOnly(child) {
 		if (child) {
 			child.on('close', cleanup);
 		}
+
 		process.on('SIGINT', cleanup);
 	});
 }
