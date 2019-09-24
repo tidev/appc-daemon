@@ -64,7 +64,6 @@ export async function installDefaultPlugins(pluginsDir) {
 		: path.join(os.homedir(), '.config', 'yarn', 'link');
 	const { plugins } = await fs.readJson(path.resolve(__dirname, '..', 'package.json'));
 	const installed = {};
-	const install = [];
 	const newWorkspaces = new Set();
 	let existingWorkspaces = new Set();
 
@@ -145,6 +144,7 @@ export async function installDefaultPlugins(pluginsDir) {
 	}
 
 	// loop over default plugins and figure out what is missing
+	let install = [];
 	for (const [ name, specs ] of Object.entries(plugins)) {
 		if (installed[name]) {
 			for (let i = 0; i < specs.length; i++) {
@@ -163,7 +163,7 @@ export async function installDefaultPlugins(pluginsDir) {
 	}
 
 	// install missing plugins
-	await Promise.all(install.map(async pkg => {
+	install = (await Promise.all(install.map(async pkg => {
 		let manifest;
 
 		// query npm
@@ -188,7 +188,9 @@ export async function installDefaultPlugins(pluginsDir) {
 		await pacote.extract(`${manifest.name}@${manifest.version}`, path.join(packagesDir, manifest.name, manifest.version));
 
 		newWorkspaces.add(`packages/${manifest.name}/${manifest.version}`);
-	}));
+
+		return pkg;
+	}))).filter(Boolean);
 
 	// if anything was installed or workspaces changed, write the package.json and lerna.json
 	// files, then execute lerna
