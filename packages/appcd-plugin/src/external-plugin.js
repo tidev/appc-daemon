@@ -90,7 +90,18 @@ export default class ExternalPlugin extends PluginBase {
 				if (ctx.response instanceof Readable) {
 					this.streams[sid] = ctx.response;
 					ctx.response.on('end', () => {
-						delete this.streams[sid];
+						if (this.streams[sid]) {
+							// If we still have a response stream reference at this point
+							// the response was not ended by an "unsubscribe" request. Issue
+							// one manually to properly clean up subscriptions.
+							this.tunnel.send({
+								type: 'unsubscribe',
+								sid,
+								path: `/${ctx.request.params.path}`,
+								params: ctx.request.params
+							});
+							delete this.streams[sid];
+						}
 					});
 				}
 
@@ -480,8 +491,9 @@ export default class ExternalPlugin extends PluginBase {
 
 						case 'unsubscribe':
 							if (this.streams[req.sid]) {
-								this.streams[req.sid].end();
+								const stream = this.streams[req.sid];
 								delete this.streams[req.sid];
+								stream.end();
 							}
 							break;
 

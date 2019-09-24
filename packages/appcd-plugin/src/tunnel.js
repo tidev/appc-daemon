@@ -177,6 +177,12 @@ export default class Tunnel {
 					case 'stream':
 						resolve(ctx);
 
+						ctx.response.once('end', () => {
+							if (typeof ctx.response.writableEnded === 'undefined') {
+								ctx.response.writableEnded = true;
+							}
+						});
+
 						switch (message.data.type) {
 							case 'fin':
 								if (this.requests[id]) {
@@ -185,6 +191,13 @@ export default class Tunnel {
 								}
 								ctx.response.end();
 								break;
+
+							case 'unsubscribe':
+								if (ctx.response.writableEnded) {
+									// don't send any response if stream already ended, i.e. this
+									// was a manual unsubscribe after client closed the connection
+									break;
+								}
 
 							case 'subscribe':
 								ctx.request.sid = message.data.sid;
