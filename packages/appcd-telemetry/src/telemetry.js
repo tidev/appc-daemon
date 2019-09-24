@@ -279,7 +279,7 @@ export default class Telemetry extends Dispatcher {
 				highlight(batch.length),
 				err ? err.message : `${resp.statusCode} - ${resp.statusMessage}`
 			));
-			return Promise.reject(err || new Error(`${resp.statusCode} - ${resp.statusMessage}`));
+			throw err || new Error(`${resp.statusCode} - ${resp.statusMessage}`);
 		} else {
 			log(__n(batch.length, 'Successfully sent %%s event', 'Successfully sent %%s events', highlight(batch.length)));
 			await Promise.all(batch.map(({ file }) => fs.remove(file)));
