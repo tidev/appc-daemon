@@ -32,6 +32,7 @@ exports.runTests = function runTests({ root, projectDir, cover, all }) {
 			//   https://github.com/istanbuljs/istanbuljs/tree/master/packages/istanbul-reports/lib
 			'--reporter=html',
 			'--reporter=json',
+			'--reporter=lcovonly',
 			'--reporter=text',
 			'--reporter=text-summary',
 			'--reporter=cobertura',
