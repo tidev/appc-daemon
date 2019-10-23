@@ -1,7 +1,7 @@
 import appcdLogger from 'appcd-logger';
 import Client from 'appcd-client';
 import fs from 'fs';
-import globalModules from 'global-modules';
+import globalPrefix from 'global-prefix';
 import path from 'path';
 
 import { expandPath } from 'appcd-path';
@@ -120,7 +120,7 @@ export async function startServer({ cfg, argv }) {
 		process.env.APPCD_NO_COLORS = 1;
 	}
 	process.env.FORCE_COLOR = 1;
-	process.env.PREFIX = globalModules;
+	process.env.PREFIX = globalPrefix;
 
 	try {
 		const { generateV8MemoryArgument, spawnNode } = await import('appcd-nodejs');
