@@ -38,7 +38,7 @@
     "appcd-util": "^2.0.0",
     "cli-kit": "^0.12.0",
     "cli-table2": "^0.2.0",
-    "global-modules": "^2.0.0",
+    "global-prefix": "^3.0.0",
     "humanize": "^0.0.9",
     "source-map-support": "^0.5.13",
     "v8-compile-cache": "^2.1.0"
