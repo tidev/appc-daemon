@@ -1,5 +1,8 @@
 # v2.0.2
 
+ * fix(locale): Removed dependency on `winreglib` for detecting the locale on Windows in favor of
+   spawning the Windows Registry `reg.exe` command.
+   [(DAEMON-287)](https://jira.appcelerator.org/browse/DAEMON-287)
  * chore: Fixed homepage and repository URLs in `package.json`.
  * chore: Added links to issue trackers in readme.
 
