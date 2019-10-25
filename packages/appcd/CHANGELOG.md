@@ -5,6 +5,8 @@
  * fix(common): Fixed bug where the incorrect global package directory was being resolved based on
    the Node.js executable used to spawn the core instead of the Node.js version used to run the
    `appcd` command.
+ * fix(common): Re-enable detaching the core when starting the daemon to prevent unintended SIGINT
+   propagation. [(DAEMON-288)](https://jira.appcelerator.org/browse/DAEMON-288)
  * fix(config): Fixed config 'delete' aliases when daemon is not running.
  * chore: Fixed homepage and repository URLs in `package.json`.
  * chore: Added links to issue trackers in readme.

@@ -134,14 +134,7 @@ export async function startServer({ cfg, argv }) {
 
 			child = await spawnNode({
 				args,
-
-				// On macOS (and probably Linux), a detached process doesn't stick around to see
-				// if the executable exited with an error, so we must not detach the process,
-				// but rather disconnect it once the daemon is booted. On Windows, we have to
-				// detach it to keep the process running and for some lucky reason, Node sticks
-				// around to see if the executable errors.
-				detached: process.platform === 'win32' ? detached : false,
-
+				detached,
 				nodeHome: expandPath(cfg.get('home'), 'node'),
 				stdio,
 				v8mem,

@@ -436,11 +436,7 @@ export async function spawnNode({ arch, args, detached, nodeHome, nodeArgs, stdi
 	return (async function trySpawn() {
 		try {
 			tries--;
-			const child = spawn(node, args, opts);
-			if (detached) {
-				child.unref();
-			}
-			return child;
+			return spawn(node, args, opts);
 		} catch (err) {
 			if ((err.code === 'ETXTBSY' || err.code === 'EBUSY') && tries) {
 				logger.log(`Spawn threw ${err.code}, retrying...`);

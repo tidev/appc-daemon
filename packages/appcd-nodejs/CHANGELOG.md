@@ -1,5 +1,6 @@
 # v3.0.1
 
+ * fix: Discontinue automatic unref of detached subprocesses.
  * chore: Fixed homepage and repository URLs in `package.json`.
  * chore: Added links to issue trackers in readme.
  * chore: Bumped required Node.js version to 8.12.0 which is technically a breaking change, but
