@@ -68,7 +68,7 @@ if (process.env.APPCD_COVERAGE) {
 	const distGRegExp = /([/\\])dist([/\\]|$)/g;
 	const appcdPkg = /^appcd/;
 
-	Module._resolveFilename = function (request, parent, isMain) {
+	Module._resolveFilename = function (request, parent, isMain, options) {
 		const parentId = parent && path.resolve(parent.id);
 
 		if (distRegExp.test(request) && (isMain || (parentId && (parentId.startsWith(cwd) || parentId.startsWith(realcwd)) && !parentId.includes('node_modules')))) {
@@ -93,6 +93,6 @@ if (process.env.APPCD_COVERAGE) {
 			}
 		}
 
-		return originalResolveFilename(request, parent, isMain);
+		return originalResolveFilename(request, parent, isMain, options);
 	};
 }

@@ -3,6 +3,7 @@
  * feat: Added `dependencies` to plugin info.
  * feat: `console` object is now a Node.js Console object instead of a SnoopLogg logger.
  * fix: Added support for non-transpiled plugin code to be instrumented for code coverage.
+ * fix: Improved Node.js module API compatibility.
  * chore: Fixed homepage and repository URLs in `package.json`.
  * chore: Added links to issue trackers in readme.
  * chore: Updated dependencies

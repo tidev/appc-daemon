@@ -179,13 +179,8 @@ export default class PluginModule extends Module {
 			});
 
 			const require = request => this.require(request);
-			let resolve = (request, options) => Module._resolveFilename(request, this, false, options);
-			if (semver.lt(process.version, '8.9.0')) {
-				resolve = request => Module._resolveFilename(request, this);
-			} else {
-				resolve.paths = request => Module._resolveLookupPaths(request, this, true);
-			}
-			require.resolve = resolve;
+			require.resolve = (request, options) => Module._resolveFilename(request, this, false, options);
+			require.resolve.paths = request => Module._resolveLookupPaths(request, this, true);
 			require.extensions = Module._extensions;
 			require.cache = Module._cache;
 			require.main = process.mainModule;
