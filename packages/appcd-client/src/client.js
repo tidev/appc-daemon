@@ -383,26 +383,28 @@ function constructUserAgent(userAgent) {
 			entry = entry.parent;
 		}
 
-		const name = path.basename(entry.filename);
-		const root = path.resolve('/');
-		let dir = path.dirname(entry.filename);
+		if (entry.filename) {
+			const name = path.basename(entry.filename);
+			const root = path.resolve('/');
+			let dir = path.dirname(entry.filename);
 
-		do {
-			const pkgJsonFile = path.join(dir, 'package.json');
+			do {
+				const pkgJsonFile = path.join(dir, 'package.json');
 
-			try {
-				parts.push(`${name}/${fs.readJsonSync(pkgJsonFile).version || ''}`);
-				break;
-			} catch (e) {
-				// either the package.json doesn't exist or the JSON was malformed
-				if (e.code !== 'ENOENT') {
-					// must be malformed JSON, we can stop
+				try {
+					parts.push(`${name}/${fs.readJsonSync(pkgJsonFile).version || ''}`);
 					break;
+				} catch (e) {
+					// either the package.json doesn't exist or the JSON was malformed
+					if (e.code !== 'ENOENT') {
+						// must be malformed JSON, we can stop
+						break;
+					}
 				}
-			}
 
-			dir = path.dirname(dir);
-		} while (dir !== root);
+				dir = path.dirname(dir);
+			} while (dir !== root);
+		}
 	}
 
 	parts.push(`appcd-client/${JSON.parse(fs.readFileSync(path.resolve(__dirname, '..', 'package.json'))).version}`);
