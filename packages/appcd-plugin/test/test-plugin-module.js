@@ -6,7 +6,7 @@ function MockPlugin() {
 	this.globals = {};
 }
 
-describe.only('Plugin Module', () => {
+describe('Plugin Module', () => {
 	let plugin;
 
 	beforeEach(() => {
@@ -48,6 +48,7 @@ describe.only('Plugin Module', () => {
 		const exports = PluginModule.load(plugin, testModule);
 		expect(exports.main).to.equal(process.mainModule);
 		expect(exports.resolved).to.equal(require.resolve('fs-extra'));
+		expect(exports.resolvedWithOptions).to.equal(require.resolve('./fixtures/require-api'));
 		const paths = require.resolve.paths('fs-extra');
 		// manually add fixtures subpath
 		paths.unshift(path.join(path.dirname(testModule), 'node_modules'));
