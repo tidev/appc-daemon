@@ -180,7 +180,9 @@ export default class PluginModule extends Module {
 
 			const require = path => this.require(path);
 			const resolve = path => Module._resolveFilename(path, this);
-			resolve.paths = request => Module._resolveLookupPaths(request, this);
+			if (semver.gte(process.version, '8.9.0')) {
+				resolve.paths = request => Module._resolveLookupPaths(request, this, true);
+			}
 			require.resolve = resolve;
 			require.extensions = Module._extensions;
 			require.cache = Module._cache;
