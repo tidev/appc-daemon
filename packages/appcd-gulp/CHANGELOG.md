@@ -6,6 +6,7 @@
  * feat: Added lcov report output for coverage tests.
  * fix: Fixed `gulp watch` to continue to watch after a lint or build error occurs.
  * fix: Fixed coverage transpilation to factor in if module is the main entry point.
+ * fix: Added missing fourth `options` argument to transpile `Module._resolveFilename()` override.
  * refactor: Moved `runTests()` out of standard template and into a separate `test-runner.js` file.
  * chore: Fixed homepage and repository URLs in `package.json`.
  * chore: Added links to issue trackers in readme.

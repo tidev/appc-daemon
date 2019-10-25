@@ -178,10 +178,12 @@ export default class PluginModule extends Module {
 				displayErrors: false
 			});
 
-			const require = path => this.require(path);
-			require.resolve = path => Module._resolveFilename(path, this);
+			const require = request => this.require(request);
+			require.resolve = (request, options) => Module._resolveFilename(request, this, false, options);
+			require.resolve.paths = request => Module._resolveLookupPaths(request, this, true);
 			require.extensions = Module._extensions;
 			require.cache = Module._cache;
+			require.main = process.mainModule;
 
 			const args = [
 				this.exports,
