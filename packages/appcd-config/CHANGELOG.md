@@ -15,6 +15,7 @@
  * fix: Array merging, push, and unshifting no longer allows duplicate values.
  * chore: Fixed homepage and repository URLs in `package.json`.
  * chore: Added links to issue trackers in readme.
+ * chore: Updated dependencies
 
 # v1.3.1 (Aug 13, 2019)
 

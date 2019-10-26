@@ -18,13 +18,13 @@
   "dependencies": {
     "appcd-fs": "^1.1.8",
     "appcd-logger": "^2.0.3",
-    "koa": "^2.8.1",
+    "koa": "^2.10.0",
     "koa-bodyparser": "^4.2.1",
-    "koa-helmet": "^5.1.0",
+    "koa-helmet": "^5.2.0",
     "koa-send": "^5.0.0",
     "path-to-regexp": "^3.1.0",
     "source-map-support": "^0.5.13",
-    "ws": "^7.1.2"
+    "ws": "^7.2.0"
   },
   "devDependencies": {
     "appcd-gulp": "^2.2.0",
