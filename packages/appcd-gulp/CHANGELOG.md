@@ -1,4 +1,4 @@
-# v2.3.0
+# v2.3.0 (Nov 6, 2019)
 
  * feat: Added support for global appcd tests by setting the `APPCD_TEST_GLOBAL_PACKAGE_DIR`
    environment variable to the path of the `"packages"` directory.
