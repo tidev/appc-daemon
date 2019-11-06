@@ -1,4 +1,4 @@
-# v3.1.0
+# v3.1.0 (Nov 6, 2019)
 
  * feat: Added `dependencies` to plugin info.
  * feat: `console` object is now a Node.js Console object instead of a SnoopLogg logger.
