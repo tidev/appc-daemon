@@ -1,6 +1,6 @@
 {
   "name": "appcd-machine-id",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "Determines and caches a unique machine identifier.",
   "main": "./dist/machine-id",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
@@ -16,11 +16,11 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-fs": "^1.1.8",
-    "appcd-logger": "^2.0.3",
-    "appcd-path": "^1.1.7",
-    "appcd-subprocess": "^3.0.0",
-    "appcd-util": "^2.0.0",
+    "appcd-fs": "^1.1.9",
+    "appcd-logger": "^2.0.4",
+    "appcd-path": "^1.1.8",
+    "appcd-subprocess": "^3.0.1",
+    "appcd-util": "^2.0.1",
     "fs-extra": "^8.1.0",
     "macaddress": "^0.2.9",
     "simple-plist": "^1.0.0",
@@ -28,7 +28,7 @@
     "winreglib": "^1.0.5"
   },
   "devDependencies": {
-    "appcd-gulp": "^2.2.0",
+    "appcd-gulp": "^2.3.0",
     "tmp": "^0.1.0"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon",
