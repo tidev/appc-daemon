@@ -1,4 +1,4 @@
-# v3.0.1
+# v3.1.0 (Nov 6, 2019)
 
  * fix(common): Fixed bug with order of loading an arbitrary `--config-file` and the user-defined
    config file.
