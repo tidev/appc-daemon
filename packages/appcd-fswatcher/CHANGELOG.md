@@ -4,6 +4,7 @@
  * chore: Added links to issue trackers in readme.
  * chore: Bumped required Node.js version to 8.1.0 which is technically a breaking change, but
    `appcd-util@2.0.0` already requires Node.js 8.1.0.
+ * chore: Updated dependencies.
 
 # v1.2.3 (Aug 13, 2019)
 

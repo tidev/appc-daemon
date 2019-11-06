@@ -16,16 +16,16 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "@babel/parser": "^7.6.4",
-    "@babel/traverse": "^7.6.3",
-    "@babel/types": "^7.6.3",
+    "@babel/parser": "^7.7.0",
+    "@babel/traverse": "^7.7.0",
+    "@babel/types": "^7.7.1",
     "appcd-fs": "^1.1.8",
     "appcd-logger": "^2.0.3",
     "appcd-path": "^1.1.7",
     "doctrine": "^3.0.0",
     "fs-extra": "^8.1.0",
-    "gawk": "^4.6.4",
-    "source-map-support": "^0.5.13"
+    "gawk": "^4.6.6",
+    "source-map-support": "^0.5.16"
   },
   "devDependencies": {
     "appcd-gulp": "^2.2.0",

@@ -22,9 +22,9 @@
     "appcd-path": "^1.1.7",
     "appcd-subprocess": "^3.0.0",
     "appcd-util": "^2.0.0",
-    "gawk": "^4.6.4",
+    "gawk": "^4.6.6",
     "pluralize": "^8.0.0",
-    "source-map-support": "^0.5.13",
+    "source-map-support": "^0.5.16",
     "winreglib": "^1.0.5"
   },
   "devDependencies": {

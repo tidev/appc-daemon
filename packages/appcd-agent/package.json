@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "nanobuffer": "^1.1.5",
-    "source-map-support": "^0.5.13"
+    "source-map-support": "^0.5.16"
   },
   "devDependencies": {
     "appcd-gulp": "^2.2.0"

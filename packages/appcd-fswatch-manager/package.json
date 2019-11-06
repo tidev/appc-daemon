@@ -20,7 +20,7 @@
     "appcd-fswatcher": "^1.2.3",
     "appcd-logger": "^2.0.3",
     "appcd-response": "^2.0.1",
-    "source-map-support": "^0.5.13"
+    "source-map-support": "^0.5.16"
   },
   "devDependencies": {
     "appcd-gulp": "^2.2.0",
