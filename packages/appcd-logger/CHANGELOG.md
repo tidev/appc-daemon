@@ -1,4 +1,4 @@
-# v2.0.4
+# v2.0.4 (Nov 6, 2019)
 
  * chore: Fixed homepage and repository URLs in `package.json`.
  * chore: Added links to issue trackers in readme.
