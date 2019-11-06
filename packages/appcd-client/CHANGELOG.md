@@ -1,4 +1,4 @@
-# v2.0.2
+# v2.0.2 (Nov 6, 2019)
 
  * fix: Fixed auto user agent generation for Node's repl.
  * chore: Fixed homepage and repository URLs in `package.json`.
