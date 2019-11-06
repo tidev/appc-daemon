@@ -40,7 +40,7 @@
     "cli-table2": "^0.2.0",
     "global-prefix": "^3.0.0",
     "humanize": "^0.0.9",
-    "source-map-support": "^0.5.13",
+    "source-map-support": "^0.5.16",
     "v8-compile-cache": "^2.1.0"
   },
   "devDependencies": {

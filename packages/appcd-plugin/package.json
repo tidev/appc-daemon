@@ -38,7 +38,7 @@
     "builtin-modules": "^3.1.0",
     "findup-sync": "^4.0.0",
     "fs-extra": "^8.1.0",
-    "gawk": "^4.6.4",
+    "gawk": "^4.6.6",
     "globule": "^1.2.1",
     "hook-emitter": "^4.0.0",
     "ignore": "^5.1.4",
@@ -47,7 +47,7 @@
     "semver": "^6.3.0",
     "slugg": "^1.2.1",
     "sort-keys": "^4.0.0",
-    "source-map-support": "^0.5.13",
+    "source-map-support": "^0.5.16",
     "uuid": "^3.3.3"
   },
   "devDependencies": {
