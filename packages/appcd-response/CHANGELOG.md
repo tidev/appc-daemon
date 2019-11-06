@@ -1,4 +1,4 @@
-# v2.0.2
+# v2.0.2 (Nov 6, 2019)
 
  * fix(locale): Removed dependency on `winreglib` for detecting the locale on Windows in favor of
    spawning the Windows Registry `reg.exe` command.
