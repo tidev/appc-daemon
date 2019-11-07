@@ -1,4 +1,4 @@
-# v3.0.1
+# v3.0.1 (Nov 6, 2019)
 
  * fix: Discontinue automatic unref of detached subprocesses.
  * chore: Fixed homepage and repository URLs in `package.json`.

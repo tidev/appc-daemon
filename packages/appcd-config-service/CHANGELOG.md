@@ -1,4 +1,4 @@
-# v2.0.2
+# v2.0.2 (Nov 6, 2019)
 
  * fix: Fixed bug where `push` and `unshift` actions were not returning the new value.
  * chore: Fixed homepage and repository URLs in `package.json`.

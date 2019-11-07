@@ -1,4 +1,4 @@
-# v2.0.0
+# v2.0.0 (Nov 6, 2019)
 
  * BREAKING CHANGE: Removed `load()` helper as it was too Appc Daemon specific.
  * BREAKING CHANGE: Renamed `Root` namespace to `Base`.

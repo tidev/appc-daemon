@@ -1,4 +1,4 @@
-# v3.1.0
+# v3.1.0 (Nov 6, 2019)
 
  * feat: Added `plugins.installDefault` config setting (default `true`) to control whether the
    default plugins should be installed on appcd start.
