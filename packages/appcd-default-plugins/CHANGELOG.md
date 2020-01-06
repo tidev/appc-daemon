@@ -1,8 +1,11 @@
 # v4.1.1
 
+ * fix: Gracefully handle error when yarn links directory exists, but access is denied.
+   [(DAEMON-307)](https://jira.appcelerator.org/browse/DAEMON-307)
+ * chore: Added latest versions of the plugins.
  * chore: Fixed homepage and repository URLs in `package.json`.
  * chore: Added links to issue trackers in readme.
- * chore: Updated dependencies
+ * chore: Updated dependencies.
 
 # v4.1.0 (Aug 15, 2019)
 
@@ -12,7 +15,7 @@
 
  * BREAKING CHANGE: `appcd-default-plugins` supports both postinstall and runtime installation of
    default plugins.
- * chore: Updated dependencies
+ * chore: Updated dependencies.
 
 # v3.0.0 (Jun 25, 2019)
 

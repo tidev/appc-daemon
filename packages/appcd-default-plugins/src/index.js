@@ -115,32 +115,36 @@ export async function installDefaultPlugins(pluginsDir) {
 	}
 
 	// detect any existing yarn links
-	for (const rel of globule.find('*/package.json', '@*/*/package.json', { srcBase: linksDir })) {
-		const pkgJsonFile = path.join(linksDir, rel);
-		let appcd, name, version;
+	try {
+		for (const rel of globule.find('*/package.json', '@*/*/package.json', { srcBase: linksDir })) {
+			const pkgJsonFile = path.join(linksDir, rel);
+			let appcd, name, version;
 
-		try {
-			({ appcd, name, version } = await fs.readJson(pkgJsonFile));
-		} catch (e) {
-			logger.warn(`Failed to parse link package.json: ${pkgJsonFile}`);
-		}
-
-		if (appcd && (!appcd.os || appcd.os.includes(process.platform))) {
-			const linkPath = path.dirname(pkgJsonFile);
-
-			if (!installed[name]) {
-				installed[name] = {};
+			try {
+				({ appcd, name, version } = await fs.readJson(pkgJsonFile));
+			} catch (e) {
+				logger.warn(`Failed to parse link package.json: ${pkgJsonFile}`);
 			}
-			if (!installed[name][version]) {
-				const dest = path.join(packagesDir, name, version);
-				installed[name][version] = dest;
 
-				await fs.mkdirs(path.dirname(dest));
-				logger.log(`Symlinking ${highlight(linkPath)} => ${highlight(path.relative(pluginsDir, dest))}`);
-				fs.symlinkSync(linkPath, dest, 'dir');
+			if (appcd && (!appcd.os || appcd.os.includes(process.platform))) {
+				const linkPath = path.dirname(pkgJsonFile);
+
+				if (!installed[name]) {
+					installed[name] = {};
+				}
+				if (!installed[name][version]) {
+					const dest = path.join(packagesDir, name, version);
+					installed[name][version] = dest;
+
+					await fs.mkdirs(path.dirname(dest));
+					logger.log(`Symlinking ${highlight(linkPath)} => ${highlight(path.relative(pluginsDir, dest))}`);
+					fs.symlinkSync(linkPath, dest, 'dir');
+				}
+				newWorkspaces.delete(`packages/${name}/${version}`);
 			}
-			newWorkspaces.delete(`packages/${name}/${version}`);
 		}
+	} catch (e) {
+		// the linksDir exists, but access is denied
 	}
 
 	// loop over default plugins and figure out what is missing
@@ -168,7 +172,7 @@ export async function installDefaultPlugins(pluginsDir) {
 
 		// query npm
 		try {
-			manifest = await pacote.manifest(pkg, { 'full-metadata': true });
+			manifest = await pacote.manifest(pkg, { fullMetadata: true });
 		} catch (e) {
 			logger.warn(`Unable to find default plugin on npm: ${highlight(pkg)}`);
 			return;
@@ -235,6 +239,7 @@ export async function installDefaultPlugins(pluginsDir) {
 			// run lerna and add yarn to the system path
 			const args = [ lerna, 'bootstrap', '--no-progress' ];
 			const cmd = process.platform === 'win32' ? args.shift() : process.execPath;
+			logger.log(`Plugins dir: ${highlight(pluginsDir)}`);
 			logger.log(`Executing: ${highlight(`${cmd} ${args.join(' ')}`)}`);
 			const child = spawn(cmd, args, {
 				cwd: pluginsDir,
@@ -282,10 +287,7 @@ export async function installDefaultPlugins(pluginsDir) {
 				child.on('close', code => {
 					out.flush();
 					err.flush();
-
-					if (code) {
-						logger.warn(`lerna exited with code ${highlight(code)}`);
-					}
+					logger.warn(`lerna exited with code ${highlight(code)}`);
 					resolve();
 				});
 			});
