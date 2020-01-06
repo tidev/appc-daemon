@@ -3,11 +3,11 @@
 import appcdLogger from 'appcd-logger';
 import DispatcherContext from './dispatcher-context';
 import DispatcherError from './dispatcher-error';
-import pathToRegExp from 'path-to-regexp';
 import Response, { AppcdError, codes, errorToJSON, lookup } from 'appcd-response';
 import ServiceDispatcher from './service-dispatcher';
 
 import { PassThrough, Readable, Transform } from 'stream';
+import { pathToRegexp } from 'path-to-regexp';
 
 const logger = appcdLogger('appcd:dispatcher');
 const { highlight } = appcdLogger.styles;
@@ -376,7 +376,7 @@ export default class Dispatcher {
 					throw new TypeError('Keys are only allowed when path is a regex');
 				}
 				keys = [];
-				handle.regexp = pathToRegExp(handle.path, keys, { end: !(handle.handler instanceof Dispatcher) });
+				handle.regexp = pathToRegexp(handle.path, keys, { end: !(handle.handler instanceof Dispatcher) });
 				handle.keys = keys.map(k => k.name);
 			}
 			handle.prefix = handle.handler instanceof Dispatcher ? handle.path : null;

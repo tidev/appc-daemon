@@ -6,7 +6,8 @@
  */
 
 import appcdLogger from 'appcd-logger';
-import pathToRegexp from 'path-to-regexp';
+
+import { pathToRegexp } from 'path-to-regexp';
 
 const { log } = appcdLogger('appcd:http:router');
 const { highlight, note } = appcdLogger.styles;
