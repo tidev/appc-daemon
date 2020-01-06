@@ -9,7 +9,6 @@ def nodeVersions = [ '10.16.3' ]
   platforms['Windows'] = 'windows'
 
   nodeVersions = [
-    '8.16.0',
     '10.16.3',
     '12.10.0'
   ]

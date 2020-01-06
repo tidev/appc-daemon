@@ -25,7 +25,7 @@
     "gawk": "^4.6.6",
     "ps-tree": "^1.2.0",
     "source-map-support": "^0.5.16",
-    "which": "^2.0.1"
+    "which": "^2.0.2"
   },
   "devDependencies": {
     "appcd-gulp": "^2.3.0",

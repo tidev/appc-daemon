@@ -1,3 +1,7 @@
+# v3.0.3
+
+ * chore: Updated dependencies.
+
 # v3.0.2 (Nov 6, 2019)
 
  * chore: Fixed homepage and repository URLs in `package.json`.

@@ -1,3 +1,7 @@
+# v2.0.1
+
+ * chore: Updated dependencies.
+
 # v2.0.0 (Nov 6, 2019)
 
  * BREAKING CHANGE: Removed `load()` helper as it was too Appc Daemon specific.

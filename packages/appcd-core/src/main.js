@@ -21,8 +21,8 @@ process
 (async () => {
 	const { argv } = await new CLI({
 		options: {
-			'--config <json>':      { type: 'json', desc: 'serialized JSON string to mix into the appcd config' },
-			'--config-file <file>': { type: 'file', desc: 'path to a config file to use instead of the user config file' }
+			'--config [json]':      { type: 'json', desc: 'serialized JSON string to mix into the appcd config' },
+			'--config-file [file]': { type: 'file', desc: 'path to a config file to use instead of the user config file' }
 		},
 		help: false
 	}).exec();

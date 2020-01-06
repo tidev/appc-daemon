@@ -17,8 +17,8 @@ Plugins are installed directly from `npm` or by `appcd-default-plugins` at insta
 
 The plugins are located in separate repos and referenced as git submodules. To work on a plugin,
 begin by forking the specific plugin repo and initialize the submodules referenced in this repo.
-Run `gulp sync-submodules` to generate a `.appcdrc`, then edit this file and update the plugin
-remote URLs, then rerun the command.
+Run `gulp sync` to generate a `.appcdrc`, then edit this file and update the plugin remote URLs,
+then rerun the command.
 
 ```sh
 git pull

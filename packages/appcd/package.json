@@ -36,7 +36,7 @@
     "appcd-nodejs": "^3.0.1",
     "appcd-path": "^1.1.8",
     "appcd-util": "^2.0.1",
-    "cli-kit": "^0.12.0",
+    "cli-kit": "^0.13.0",
     "cli-table2": "^0.2.0",
     "global-prefix": "^3.0.0",
     "humanize": "^0.0.9",
