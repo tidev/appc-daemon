@@ -1,3 +1,7 @@
+# v2.2.0
+
+ * feat: Add support for `HTTP_PROXY` and `HTTPS_PROXY` environment variables.
+
 # v2.1.1 (Nov 6, 2019)
 
  * chore: Fixed homepage and repository URLs in `package.json`.
