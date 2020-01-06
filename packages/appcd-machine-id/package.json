@@ -23,7 +23,7 @@
     "appcd-util": "^2.0.1",
     "fs-extra": "^8.1.0",
     "macaddress": "^0.2.9",
-    "simple-plist": "^1.0.0",
+    "simple-plist": "^1.1.0",
     "source-map-support": "^0.5.16",
     "winreglib": "^1.0.5"
   },

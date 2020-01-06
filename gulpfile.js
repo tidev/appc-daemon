@@ -19,12 +19,12 @@ const spawnSync    = require('child_process').spawnSync;
 const Table        = require('cli-table2');
 const tmp          = require('tmp');
 const toposort     = require('toposort');
-const util         = require('util');
+// const util         = require('util');
 
 const isWindows = process.platform === 'win32';
 
-const { parallel, series } = gulp;
-const { bold, red, yellow, green, cyan, magenta, gray } = ansiColors;
+const { series } = gulp;
+const { red, yellow, green, cyan, magenta, gray } = ansiColors;
 
 const cliTableChars = {
 	bottom: '', 'bottom-left': '', 'bottom-mid': '', 'bottom-right': '',
@@ -34,7 +34,7 @@ const cliTableChars = {
 	top: '', 'top-left': '', 'top-mid': '', 'top-right': ''
 };
 
-const dontUpdate = [ 'npm' ];
+const dontUpdate = [ 'path-to-regexp' ];
 
 const appcdRE = /^appcd-/;
 const appcdPackages = new Set(fs.readdirSync(path.join(__dirname, 'packages')).filter(name => appcdRE.test(name)));
@@ -212,7 +212,7 @@ exports.lint = series(cyclic, function lint() {
  * build tasks
  */
 const build = exports.build = series(cyclic, async function build() {
-	return runLerna([ 'run', '--parallel', 'build' ]);
+	return runLerna([ 'run', 'build' ]);
 });
 
 exports.package = series(build, function pkg() {
@@ -361,7 +361,7 @@ async function runTests(cover, all) {
 		log(`Protecting home directory, overriding HOME with temp dir: ${cyan(tmpHomeDir)}`);
 		process.env.HOME = process.env.USERPROFILE = tmpHomeDir;
 		if (process.platform === 'win32') {
-			process.env.HOMEDRIVE = path.parse(tmpHomeDir).root.replace(/[\\\/]/g, '');
+			process.env.HOMEDRIVE = path.parse(tmpHomeDir).root.replace(/[\\/]/g, '');
 			process.env.HOMEPATH = tmpHomeDir.replace(process.env.HOMEDRIVE, '');
 		}
 
@@ -619,48 +619,6 @@ function run(cmd, args, opts) {
 	}));
 }
 
-function runYarn(cwd) {
-	const packageJsonFile = path.join(cwd, 'package.json');
-	const pkgJson = JSON.parse(fs.readFileSync(packageJsonFile));
-	let changed = false;
-
-	[ 'dependencies', 'devDependencies', 'optionalDependencies' ].forEach(type => {
-		if (pkgJson[type]) {
-			for (const dep of Object.keys(pkgJson[type])) {
-				if (appcdPackages.has(dep)) {
-					delete pkgJson[type][dep];
-					changed = true;
-				}
-			}
-		}
-	});
-
-	// `yarn check` will complain if the `package.json` contains any `appcd-*` dependencies,
-	// we we back up the file and write a `package.json` without them
-	if (changed) {
-		fs.renameSync(packageJsonFile, packageJsonFile + '.bak');
-		fs.writeFileSync(packageJsonFile, JSON.stringify(pkgJson) + '\n');
-	}
-
-	const args = Array.prototype.slice.call(arguments, 1);
-	if (process.argv.indexOf('--json') !== -1 || process.argv.indexOf('--silent') !== -1) {
-		args.push('--no-progress', '--no-emoji');
-	}
-	return run('yarn', args, { cwd: cwd || process.cwd(), shell: true })
-		.then(result => {
-			if (changed) {
-				fs.renameSync(packageJsonFile + '.bak', packageJsonFile);
-			}
-			return result;
-		})
-		.catch(err => {
-			if (changed) {
-				fs.renameSync(packageJsonFile + '.bak', packageJsonFile);
-			}
-			throw err;
-		});
-}
-
 function runLerna(args) {
 	let execPath = '';
 	if (isWindows) {
@@ -671,10 +629,6 @@ function runLerna(args) {
 	}
 	log(`Running ${execPath} ${args.join(' ')}`);
 	spawnSync(execPath, args, { stdio: 'inherit' });
-}
-
-function runNPM(cwd) {
-	return run('npm', Array.prototype.slice.call(arguments, 1), { shell: true });
 }
 
 async function checkPackages({ skipSecurity } = {}) {
@@ -1415,15 +1369,6 @@ function formatPercentage(value) {
 	return value.toFixed(1) + '%';
 }
 
-function exists(file) {
-	try {
-		if (fs.statSync(file)) {
-			return true;
-		}
-	} catch (e) {}
-	return false;
-}
-
 let depmapCache = null;
 
 function getDepMap(allPackages) {
@@ -1477,15 +1422,8 @@ function getDepMap(allPackages) {
 	return depmapCache;
 }
 
-function dump() {
-	for (var i = 0; i < arguments.length; i++) {
-		console.error(util.inspect(arguments[i], false, null, true));
-	}
-}
-
 exports['deps-changelog'] = async function depChangelog() {
 	const depmap = getDepMap(true);
-	const npm = require('npm');
 
 	return Object.keys(depmap)
 		.reduce((promise, name) => {

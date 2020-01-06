@@ -1,3 +1,7 @@
+# v3.1.1
+
+ * chore: Updated dependencies.
+
 # v3.1.0 (Nov 6, 2019)
 
  * feat: Added `dependencies` to plugin info.

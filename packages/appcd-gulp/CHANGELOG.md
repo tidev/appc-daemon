@@ -1,3 +1,8 @@
+# v2.3.1
+
+ * refactor: Moved Node version specific Babel configs into separate files.
+ * chore: Updated dependencies.
+
 # v2.3.0 (Nov 6, 2019)
 
  * feat: Added support for global appcd tests by setting the `APPCD_TEST_GLOBAL_PACKAGE_DIR`

@@ -1,3 +1,8 @@
+# v3.1.1
+
+ * fix: Fixed `--config` and `--config-file` format to require a value.
+ * chore: Updated dependencies.
+
 # v3.1.0 (Nov 6, 2019)
 
  * feat: Added `plugins.installDefault` config setting (default `true`) to control whether the

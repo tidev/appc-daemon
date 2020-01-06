@@ -4,7 +4,7 @@ const path = require('path');
 
 const babelRE = /^(babel-|@babel\/)\w+/;
 const minifyRE = /^minify|babili$/;
-const conf = require('./babel.js')();
+const conf = require('./babel')();
 const originalResolveFilename = Module._resolveFilename;
 
 // remove babili from tests and resolve all babel plugins/presets
