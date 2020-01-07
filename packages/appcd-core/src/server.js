@@ -229,7 +229,7 @@ export default class Server {
 		Dispatcher.register('/appcd/subprocess', this.systems.subprocessManager);
 
 		// init the plugin manager
-		this.systems.pluginManager = new PluginManager({
+		this.systems.pluginManager = await new PluginManager({
 			paths: [
 				// globally installed plugins
 				path.join(homeDir, 'plugins', 'packages'),
@@ -237,7 +237,7 @@ export default class Server {
 				// global npm directory
 				globalModules
 			]
-		});
+		}).init();
 
 		Dispatcher.register('/appcd/plugin', this.systems.pluginManager);
 

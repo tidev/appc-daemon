@@ -1,6 +1,8 @@
 # v3.1.1
 
  * fix: Fixed `--config` and `--config-file` format to require a value.
+ * fix: Await `PluginManager` to initialize.
+   [(DAEMON-308)](https://jira.appcelerator.org/browse/DAEMON-308)
  * chore: Updated dependencies.
 
 # v3.1.0 (Nov 6, 2019)
