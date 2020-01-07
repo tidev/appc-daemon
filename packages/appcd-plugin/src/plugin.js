@@ -24,6 +24,16 @@ import { states } from './plugin-base';
 
 const { highlight } = appcdLogger.styles;
 
+/**
+ * The Appc Daemon plugin API version.
+ * @type {String}
+ */
+const appcdPluginAPIVersion = '1.1.0';
+
+/**
+ * The next number to use for the timer id.
+ * @type {Number}
+ */
 let inactivityTimerID = 1;
 
 /**
@@ -205,6 +215,13 @@ export default class Plugin extends EventEmitter {
 			this.appcdVersion = appcd.appcdVersion;
 		}
 
+		if (appcd.apiVersion) {
+			if (!semver.validRange(appcd.apiVersion)) {
+				throw new PluginError('Invalid "apiVersion" property in the "appcd" section of %s', pkgJsonFile);
+			}
+			this.apiVersion = appcd.apiVersion;
+		}
+
 		if (appcd.type) {
 			if (typeof appcd.type !== 'string' || types.indexOf(appcd.type) === -1) {
 				throw new PluginError('Invalid type "%s" in "appcd" section of %s', appcd.type, pkgJsonFile);
@@ -285,7 +302,12 @@ export default class Plugin extends EventEmitter {
 		}
 
 		if (!this.error && process.env.APPCD && this.appcdVersion && !semver.satisfies(process.env.APPCD, this.appcdVersion)) {
-			this.error = `Requires Appc Daemon ${this.appcdVersion}`;
+			this.error = `Requires Appc Daemon ${this.appcdVersion}, but currently running v${process.env.APPCD}`;
+			this.supported = false;
+		}
+
+		if (!this.error && this.apiVersion && !semver.satisfies(appcdPluginAPIVersion, this.apiVersion)) {
+			this.error = `Requires Appc Daemon plugin API ${this.apiVersion}, but currently running v${appcdPluginAPIVersion}`;
 			this.supported = false;
 		}
 
