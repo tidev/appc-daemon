@@ -53,7 +53,7 @@ export class Scheme extends HookEmitter {
 	 *
 	 * @access public
 	 */
-	destroy() {
+	async destroy() {
 		this.onChange.cancel();
 
 		for (const dir of Object.keys(this.watchers)) {
@@ -123,10 +123,10 @@ export class PluginScheme extends Scheme {
 		 * A function to call when a file system event occurs that will emit the `change` event.
 		 * @type {Function}
 		 */
-		this.checkIfPlugin = debounce(() => {
+		this.checkIfPlugin = debounce(async () => {
 			try {
 				this.plugin = new Plugin(this.path, true);
-				this.emit('plugin-added', this.plugin);
+				await this.emit('plugin-added', this.plugin);
 				return;
 			} catch (e) {
 				if (!(e instanceof PluginMissingAppcdError)) {
@@ -135,7 +135,7 @@ export class PluginScheme extends Scheme {
 			}
 
 			// not a plugin or a bad plugin, emit change and allow redetect
-			this.emit('change');
+			await this.emit('change');
 		});
 	}
 
@@ -145,10 +145,10 @@ export class PluginScheme extends Scheme {
 	 * previous scheme before calling this function which will only twiddle watcher counts and not
 	 * have to stop and restart Node.js FSWatch instances.
 	 *
-	 * @returns {PluginScheme}
+	 * @returns {Promise<PluginScheme>}
 	 * @access public
 	 */
-	watch() {
+	async watch() {
 		this.watchers[this.path]
 			.on('change', async evt => {
 				if (this.plugin && evt.file === this.path && evt.action === 'delete') {
@@ -163,7 +163,7 @@ export class PluginScheme extends Scheme {
 						this.emit('plugin-added', this.plugin);
 					}
 				} else if (!this.plugin) {
-					this.checkIfPlugin();
+					await this.checkIfPlugin();
 				} else {
 					this.onChange();
 				}
@@ -171,7 +171,7 @@ export class PluginScheme extends Scheme {
 
 		try {
 			this.plugin = new Plugin(this.path, true);
-			this.emit('plugin-added', this.plugin);
+			await this.emit('plugin-added', this.plugin);
 		} catch (e) {
 			if (!(e instanceof PluginMissingAppcdError)) {
 				warn(e);
@@ -188,7 +188,7 @@ export class PluginScheme extends Scheme {
 	 * @access public
 	 */
 	async destroy() {
-		super.destroy();
+		await Scheme.prototype.destroy.call(this);
 		if (this.plugin) {
 			await this.emit('plugin-deleted', this.plugin);
 			this.plugin = null;
@@ -241,9 +241,10 @@ export class PluginsDirScheme extends Scheme {
 	 * @param {Boolean} watch - When `true`, starts watching the scoped directory's subdirectories
 	 * to detect plugins. This should only be `true` when a parent directory detects a new scoped
 	 * directory being added.
+	 * @returns {Promise}
 	 * @access private
 	 */
-	initScopedDir(dir, watch) {
+	async initScopedDir(dir, watch) {
 		if (this.watchers[dir]) {
 			// already watching
 			return;
@@ -252,13 +253,14 @@ export class PluginsDirScheme extends Scheme {
 		// we have a @whatever scoped directory, so we watch it for additions/deletions
 		this.watchers[dir] = new FSWatcher(dir);
 
-		this.watchers[dir].on('change', evt => {
+		this.watchers[dir].on('change', async evt => {
 			switch (evt.action) {
 				case 'add':
 					// only set up the plugin scheme if we're dealing with a directory that is a
 					// subdirectory and not the scoped directory
 					if (evt.file !== dir && isDir(evt.file)) {
-						this.pluginSchemes[evt.file] = this.createPluginScheme(evt.file).watch();
+						this.pluginSchemes[evt.file] = this.createPluginScheme(evt.file);
+						await this.pluginSchemes[evt.file].watch();
 					}
 					break;
 
@@ -270,7 +272,7 @@ export class PluginsDirScheme extends Scheme {
 						delete this.watchers[dir];
 						this.onChange();
 					} else if (this.pluginSchemes[evt.file]) {
-						this.pluginSchemes[evt.file].destroy();
+						await this.pluginSchemes[evt.file].destroy();
 						delete this.pluginSchemes[evt.file];
 					}
 					break;
@@ -286,7 +288,7 @@ export class PluginsDirScheme extends Scheme {
 				// we only want to watch if this function is triggered via a fs event.
 				// the plugin path will kick off the watching.
 				if (watch) {
-					scheme.watch();
+					await scheme.watch();
 				}
 			}
 		}
@@ -312,12 +314,12 @@ export class PluginsDirScheme extends Scheme {
 	 * previous scheme before calling this function which will only twiddle watcher counts and not
 	 * have to stop and restart Node.js FSWatch instances.
 	 *
-	 * @returns {PluginsDirScheme}
+	 * @returns {Promise<PluginsDirScheme>}
 	 * @access public
 	 */
-	watch() {
+	async watch() {
 		this.watchers[this.path]
-			.on('change', evt => {
+			.on('change', async evt => {
 				// if this path is being changed, then emit the change event
 				if (evt.file === this.path) {
 					this.onChange();
@@ -329,9 +331,10 @@ export class PluginsDirScheme extends Scheme {
 					case 'add':
 						if (isDir(evt.file)) {
 							if (scopeRegExp.test(evt.filename)) {
-								this.initScopedDir(evt.file, true);
+								await this.initScopedDir(evt.file, true);
 							} else {
-								this.pluginSchemes[evt.file] = this.createPluginScheme(evt.file).watch();
+								this.pluginSchemes[evt.file] = this.createPluginScheme(evt.file);
+								await this.pluginSchemes[evt.file].watch();
 							}
 						}
 						break;
@@ -340,7 +343,7 @@ export class PluginsDirScheme extends Scheme {
 						if (scopeRegExp.test(evt.filename)) {
 							for (const file of Object.keys(this.pluginSchemes)) {
 								if (file.startsWith(`${evt.file}${_path.sep}`)) {
-									this.pluginSchemes[file].destroy();
+									await this.pluginSchemes[file].destroy();
 									delete this.pluginSchemes[file];
 								}
 							}
@@ -349,7 +352,7 @@ export class PluginsDirScheme extends Scheme {
 								delete this.watchers[evt.file];
 							}
 						} else if (this.pluginSchemes[evt.file]) {
-							this.pluginSchemes[evt.file].destroy();
+							await this.pluginSchemes[evt.file].destroy();
 							delete this.pluginSchemes[evt.file];
 						}
 						break;
@@ -362,7 +365,7 @@ export class PluginsDirScheme extends Scheme {
 			});
 
 		for (const scheme of Object.values(this.pluginSchemes)) {
-			scheme.watch();
+			await scheme.watch();
 		}
 
 		return this;
@@ -374,9 +377,9 @@ export class PluginsDirScheme extends Scheme {
 	 * @returns {Promise}
 	 * @access public
 	 */
-	destroy() {
-		super.destroy();
-		return Promise.all(
+	async destroy() {
+		await Scheme.prototype.destroy.call(this);
+		await Promise.all(
 			Object
 				.values(this.pluginSchemes)
 				.map(scheme => scheme.destroy())
@@ -448,12 +451,12 @@ export class NestedPluginsDirScheme extends Scheme {
 	 * previous scheme before calling this function which will only twiddle watcher counts and not
 	 * have to stop and restart Node.js FSWatch instances.
 	 *
-	 * @returns {NestedPluginsDirScheme}
+	 * @returns {Promise<NestedPluginsDirScheme>}
 	 * @access public
 	 */
-	watch() {
+	async watch() {
 		this.watchers[this.path]
-			.on('change', evt => {
+			.on('change', async evt => {
 				// if this path is being changed, then emit the change event
 				if (evt.file === this.path) {
 					this.onChange();
@@ -464,13 +467,14 @@ export class NestedPluginsDirScheme extends Scheme {
 				switch (evt.action) {
 					case 'add':
 						if (isDir(evt.file)) {
-							this.pluginSchemes[evt.file] = this.createPluginsDirScheme(evt.file).watch();
+							this.pluginSchemes[evt.file] = this.createPluginsDirScheme(evt.file);
+							await this.pluginSchemes[evt.file].watch();
 						}
 						break;
 
 					case 'delete':
 						if (this.pluginSchemes[evt.file]) {
-							this.pluginSchemes[evt.file].destroy();
+							await this.pluginSchemes[evt.file].destroy();
 							delete this.pluginSchemes[evt.file];
 						}
 						break;
@@ -483,7 +487,7 @@ export class NestedPluginsDirScheme extends Scheme {
 			});
 
 		for (const scheme of Object.values(this.pluginSchemes)) {
-			scheme.watch();
+			await scheme.watch();
 		}
 
 		return this;
@@ -495,9 +499,9 @@ export class NestedPluginsDirScheme extends Scheme {
 	 * @returns {Promise}
 	 * @access public
 	 */
-	destroy() {
-		super.destroy();
-		return Promise.all(
+	async destroy() {
+		await Scheme.prototype.destroy.call(this);
+		await Promise.all(
 			Object
 				.values(this.pluginSchemes)
 				.map(scheme => scheme.destroy())

@@ -248,6 +248,19 @@ export default class Plugin extends EventEmitter {
 
 		this.ignore = ignore().add(Array.from(new Set([ ...ignoreList ])));
 
+		let { configSchema } = appcd;
+		if (configSchema) {
+			if (typeof configSchema !== 'string') {
+				throw new PluginError('Expected config schema file to be a string');
+			}
+
+			if (!path.isAbsolute(configSchema)) {
+				configSchema = path.resolve(pluginPath, configSchema);
+			}
+
+			this.configSchemaFile = expandPath(configSchema);
+		}
+
 		// validate the name
 		if (!this.name) {
 			throw new PluginError('Invalid "name" property in the "appcd" section of %s', pkgJsonFile);

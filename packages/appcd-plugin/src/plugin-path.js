@@ -84,7 +84,7 @@ export default class PluginPath extends HookEmitter {
 			this.scheme = null;
 		}
 
-		this.scheme = scheme.watch();
+		this.scheme = await scheme.watch();
 
 		return this;
 	}

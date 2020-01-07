@@ -1,3 +1,5 @@
+/* eslint-disable promise/always-return, promise/catch-or-return */
+
 import appcdLogger from 'appcd-logger';
 import Dispatcher, { DataServiceDispatcher } from 'appcd-dispatcher';
 import gawk from 'gawk';
@@ -72,6 +74,16 @@ export default class PluginManager extends Dispatcher {
 		 * @type {Object}
 		 */
 		this.registry = {};
+
+		/**
+		 * Indicates that telemetry data should be captured.
+		 *
+		 * IMPORTANT! This property MUST be set AFTER doing the initial path scanning and plugin
+		 * registration.
+		 *
+		 * @type {Boolean}
+		 */
+		this.telemetryEnabled = false;
 
 		this.register('/register', ctx => {
 			return this.registerPluginPath(ctx.request.data.path)
@@ -154,23 +166,21 @@ export default class PluginManager extends Dispatcher {
 			paths:      this.paths,
 			registered: this.registered
 		}));
+	}
 
-		// register all plugins the initial list of paths
-		for (const dir of this.paths) {
-			if (dir) {
-				this.registerPluginPath(dir);
-			}
+	/**
+	 * Initialize the plugin manager by registering the plugin paths and
+	 *
+	 * @returns {Promise<PluginManager>}
+	 * @access public
+	 */
+	async init() {
+		if (!this.initialized) {
+			await Promise.all(this.paths.map(dir => dir && this.registerPluginPath(dir)));
+			this.telemetryEnabled = true;
+			this.initialized = true;
 		}
-
-		/**
-		 * Indicates that telemetry data should be captured.
-		 *
-		 * IMPORTANT! This property MUST be set AFTER doing the initial path scanning and plugin
-		 * registration.
-		 *
-		 * @type {Boolean}
-		 */
-		this.telemetryEnabled = true;
+		return this;
 	}
 
 	/**
@@ -242,9 +252,10 @@ export default class PluginManager extends Dispatcher {
 					logger.log('Registering plugin config file:', highlight(plugin.configFile));
 					await Dispatcher.call('/appcd/config', {
 						data: {
-							action:    'load',
-							file:      plugin.configFile,
-							namespace: plugin.name
+							action: 'load',
+							file:   plugin.configFile,
+							id:     plugin.name,
+							schema: plugin.configSchemaFile
 						}
 					});
 				}

@@ -63,8 +63,10 @@ export default function request(params, callback) {
 		.then(conf => new Promise(resolve => {
 			const {
 				APPCD_NETWORK_CA_FILE,
+				APPCD_NETWORK_STRICT_SSL,
 				APPCD_NETWORK_PROXY,
-				APPCD_NETWORK_STRICT_SSL
+				HTTP_PROXY,
+				HTTPS_PROXY
 			} = process.env;
 
 			conf = Object.assign({ method: 'GET' }, conf, params);
@@ -92,13 +94,10 @@ export default function request(params, callback) {
 			}
 
 			// configure proxy
-			if (APPCD_NETWORK_PROXY) {
-				conf.proxy = APPCD_NETWORK_PROXY;
+			if (conf.url && conf.url.startsWith('https')) {
+				conf.proxy = HTTPS_PROXY || APPCD_NETWORK_PROXY || conf.httpsProxy || undefined;
 			} else {
-				const proxyType = conf.url && conf.url.indexOf('https') === 0 ? 'httpsProxy' : 'httpProxy';
-				if (conf[proxyType]) {
-					conf.proxy = conf[proxyType];
-				}
+				conf.proxy = HTTP_PROXY || APPCD_NETWORK_PROXY || conf.httpProxy || undefined;
 			}
 
 			// remove unused props

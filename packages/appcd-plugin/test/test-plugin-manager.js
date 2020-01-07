@@ -1,5 +1,5 @@
 import appcdLogger from 'appcd-logger';
-import Config from 'appcd-config';
+import AppcdConfig from 'appcd-config';
 import ConfigService from 'appcd-config-service';
 import Dispatcher, { DispatcherError } from 'appcd-dispatcher';
 import fs from 'fs-extra';
@@ -32,7 +32,7 @@ function makeTempDir() {
 
 let pm = null;
 
-const config = new Config({
+const config = new AppcdConfig({
 	config: {
 		home: expandPath('~/.appcelerator/appcd'),
 		plugins: {
@@ -98,6 +98,7 @@ describe('PluginManager', () => {
 	describe('Register/unregister Plugin Path', () => {
 		it('should not watch when no paths specified', async function () {
 			pm = new PluginManager();
+			await pm.init();
 
 			expect(Object.keys(pm.pluginPaths)).to.have.lengthOf(0);
 			expect(pm.registered).to.have.lengthOf(0);
@@ -115,6 +116,7 @@ describe('PluginManager', () => {
 		it('should watch empty path for plugins and shutdown', async function () {
 			const dir = path.join(__dirname, 'fixtures', 'empty');
 			pm = new PluginManager({ paths: [ '', null, dir ] });
+			await pm.init();
 
 			expect(Object.keys(pm.pluginPaths)).to.have.lengthOf(1);
 			expect(pm.registered).to.have.lengthOf(0);
@@ -129,6 +131,7 @@ describe('PluginManager', () => {
 		it('should error if plugin path is already registered', async function () {
 			const dir = path.join(__dirname, 'fixtures', 'empty');
 			pm = new PluginManager({ paths: [ '', null, dir ] });
+			await pm.init();
 
 			expect(Object.keys(pm.pluginPaths)).to.have.lengthOf(1);
 			expect(pm.registered).to.have.lengthOf(0);
@@ -157,6 +160,7 @@ describe('PluginManager', () => {
 		it('should error if registering an invalid path',  async function () {
 			const dir = path.join(__dirname, 'fixtures', 'empty');
 			pm = new PluginManager({ paths: [ dir ] });
+			await pm.init();
 
 			return pm.registerPluginPath({})
 				.then(() => {
@@ -170,6 +174,7 @@ describe('PluginManager', () => {
 		it('should error if registering a subdirectory of already registered path', async function () {
 			const dir = path.join(__dirname, 'fixtures', 'empty');
 			pm = new PluginManager({ paths: [ dir ] });
+			await pm.init();
 
 			return pm.registerPluginPath(__dirname)
 				.then(() => {
@@ -183,6 +188,7 @@ describe('PluginManager', () => {
 		it('should error if registering a parent directory of already registered path', async function () {
 			const dir = path.join(__dirname, 'fixtures', 'empty');
 			pm = new PluginManager({ paths: [ dir ] });
+			await pm.init();
 
 			return pm.registerPluginPath(path.join(dir, 'foo'))
 				.then(() => {
@@ -193,8 +199,9 @@ describe('PluginManager', () => {
 				});
 		});
 
-		it('should error unregistering if plugin path is invalid', function () {
+		it('should error unregistering if plugin path is invalid', async function () {
 			pm = new PluginManager();
+			await pm.init();
 
 			return pm.unregisterPluginPath(null)
 				.then(() => {
@@ -205,17 +212,20 @@ describe('PluginManager', () => {
 				});
 		});
 
-		it('should error unregistering if plugin path is not registered', function () {
+		it('should error unregistering if plugin path is not registered', async function () {
 			const dir = path.join(__dirname, 'fixtures', 'empty');
 			pm = new PluginManager();
+			await pm.init();
 
-			return pm.unregisterPluginPath(dir)
-				.then(() => {
-					throw new Error('Expected error');
-				}, err => {
-					expect(err).to.be.instanceof(PluginError);
-					expect(err.message).to.equal('Plugin Path Not Registered');
-				});
+			try {
+				await pm.unregisterPluginPath(dir);
+			} catch (err) {
+				expect(err).to.be.instanceof(PluginError);
+				expect(err.message).to.equal('Plugin Path Not Registered');
+				return;
+			}
+
+			throw new Error('Expected error');
 		});
 	});
 
@@ -229,6 +239,7 @@ describe('PluginManager', () => {
 			pm = new PluginManager({
 				paths: [ pluginDir ]
 			});
+			await pm.init();
 
 			await sleep(1000);
 
@@ -250,6 +261,7 @@ describe('PluginManager', () => {
 			const pluginDir = path.join(__dirname, 'fixtures', 'bad-internal');
 
 			pm = new PluginManager();
+			await pm.init();
 
 			await pm.call('/register', {
 				data: {
@@ -284,6 +296,7 @@ describe('PluginManager', () => {
 			pm = new PluginManager({
 				paths: [ pluginDir ]
 			});
+			await pm.init();
 
 			await sleep(1000);
 
@@ -301,6 +314,7 @@ describe('PluginManager', () => {
 			pm = new PluginManager({
 				paths: [ pluginDir ]
 			});
+			await pm.init();
 
 			await sleep(1000);
 
@@ -318,6 +332,7 @@ describe('PluginManager', () => {
 			pm = new PluginManager({
 				paths: [ pluginDir ]
 			});
+			await pm.init();
 
 			await sleep(1000);
 
@@ -337,6 +352,7 @@ describe('PluginManager', () => {
 			pm = new PluginManager({
 				paths: [ pluginDir ]
 			});
+			await pm.init();
 
 			await sleep(1000);
 
@@ -394,6 +410,7 @@ describe('PluginManager', () => {
 			fs.copySync(sourceDir, pluginDir);
 
 			pm = new PluginManager();
+			await pm.init();
 
 			await sleep(1000);
 
@@ -437,6 +454,7 @@ describe('PluginManager', () => {
 			fs.copySync(sourceDir, pluginDir);
 
 			pm = new PluginManager();
+			await pm.init();
 
 			await sleep(1000);
 
@@ -465,6 +483,7 @@ describe('PluginManager', () => {
 			fs.copySync(sourceDir, pluginDir);
 
 			pm = new PluginManager();
+			await pm.init();
 
 			await sleep(1000);
 
@@ -517,6 +536,7 @@ describe('PluginManager', () => {
 			fs.copySync(sourceDir, pluginDir);
 
 			pm = new PluginManager();
+			await pm.init();
 
 			await sleep(1000);
 
@@ -570,6 +590,7 @@ describe('PluginManager', () => {
 			const pluginDir = path.join(__dirname, 'fixtures', 'bad');
 
 			pm = new PluginManager();
+			await pm.init();
 
 			await pm.call('/register', {
 				data: {
@@ -602,6 +623,7 @@ describe('PluginManager', () => {
 			pm = new PluginManager({
 				paths: [ pluginDir ]
 			});
+			await pm.init();
 
 			await sleep(1000);
 
@@ -618,6 +640,7 @@ describe('PluginManager', () => {
 			pm = new PluginManager({
 				paths: [ pluginDir ]
 			});
+			await pm.init();
 
 			await sleep(1000);
 
@@ -634,6 +657,7 @@ describe('PluginManager', () => {
 			pm = new PluginManager({
 				paths: [ pluginDir ]
 			});
+			await pm.init();
 
 			await sleep(1000);
 
@@ -650,6 +674,7 @@ describe('PluginManager', () => {
 			pm = new PluginManager({
 				paths: [ pluginDir ]
 			});
+			await pm.init();
 
 			await sleep(1000);
 
@@ -682,6 +707,7 @@ describe('PluginManager', () => {
 			pm = new PluginManager({
 				paths: [ pluginDir ]
 			});
+			await pm.init();
 
 			await sleep(1000);
 
@@ -698,6 +724,7 @@ describe('PluginManager', () => {
 			pm = new PluginManager({
 				paths: [ pluginDir ]
 			});
+			await pm.init();
 
 			let counter = 0;
 
@@ -750,6 +777,7 @@ describe('PluginManager', () => {
 			pm = new PluginManager({
 				paths: [ pluginDir ]
 			});
+			await pm.init();
 
 			await sleep(1000);
 
@@ -774,6 +802,7 @@ describe('PluginManager', () => {
 			pm = new PluginManager({
 				paths: [ pluginDir ]
 			});
+			await pm.init();
 
 			await sleep(1000);
 
@@ -798,6 +827,7 @@ describe('PluginManager', () => {
 			pm = new PluginManager({
 				paths: [ pluginDir ]
 			});
+			await pm.init();
 
 			await sleep(1000);
 
@@ -824,6 +854,7 @@ describe('PluginManager', () => {
 			pm = new PluginManager({
 				paths: [ pluginDir ]
 			});
+			await pm.init();
 
 			await sleep(1000);
 
