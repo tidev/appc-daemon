@@ -1,8 +1,10 @@
-# v3.1.1
+# v3.2.0
 
  * fix: Update plugin manager and scheme initialization to be fully synchronized so that telemetry
    is correctly enabled after initial scan.
    [(DAEMON-308)](https://jira.appcelerator.org/browse/DAEMON-308)
+ * feat: Added support for an `apiVersion` in the plugin's `package.json`.
+   [(DAEMON-309)](https://jira.appcelerator.org/browse/DAEMON-309)
  * chore: Updated dependencies.
 
 # v3.1.0 (Nov 6, 2019)
