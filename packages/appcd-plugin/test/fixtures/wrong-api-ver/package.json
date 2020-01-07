@@ -1,0 +1,9 @@
+{
+	"name": "wrong-api-ver",
+	"version": "1.2.3",
+	"appcd": {
+		"name": "wrong-node-ver",
+		"type": "internal",
+		"apiVersion": "0.x"
+	}
+}
