@@ -6,7 +6,6 @@ if (!Error.prepareStackTrace) {
 }
 
 import appcdLogger from 'appcd-logger';
-import Config from 'appcd-config';
 import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs-extra';
 import getMachineId from 'appcd-machine-id';
@@ -32,7 +31,7 @@ const jsonRegExp = /\.json$/;
 export default class Telemetry extends Dispatcher {
 	/**
 	 * The daemon config instance.
-	 * @type {Config}
+	 * @type {Object}
 	 */
 	config = {
 		enabled:       false,
@@ -88,7 +87,7 @@ export default class Telemetry extends Dispatcher {
 	 * @access public
 	 */
 	constructor(cfg, version) {
-		if (!cfg || !(cfg instanceof Config)) {
+		if (!cfg || typeof cfg !== 'object') {
 			throw new TypeError('Expected config to be a valid config object');
 		}
 

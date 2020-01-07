@@ -1,5 +1,10 @@
-# v2.0.1
+# v3.0.0
 
+ * BREAKING CHANGE: `appcd-config` is no longer a general purpose config management system. It is
+   solely intended to be used internally by the Appc Daemon. Packages dependent on `appcd-config`
+   should migrate to `cfg-kit`.
+ * BREAKING CHANGE: Metadata has been removed.
+ * BREAKING CHANGE: `save()` is no longer asynchronous and thus does not return a promise.
  * chore: Updated dependencies.
 
 # v2.0.0 (Nov 6, 2019)

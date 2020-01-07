@@ -1,7 +1,7 @@
-import Config from 'appcd-config';
+import AppcdConfig from 'appcd-config';
 import StatusMonitor from '../dist/status-monitor';
 
-const config = new Config();
+const config = new AppcdConfig();
 
 describe('StatusMonitor', () => {
 	it('should throw exception if config not passed in', () => {

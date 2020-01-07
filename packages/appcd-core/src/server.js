@@ -19,7 +19,7 @@ import { expandPath } from 'appcd-path';
 import { i18n } from 'appcd-response';
 import { installDefaultPlugins } from 'appcd-default-plugins';
 import { isDir, isFile } from 'appcd-fs';
-import { loadConfig } from './load-config';
+import { loadConfig } from './config';
 import { purgeUnusedNodejsExecutables } from 'appcd-nodejs';
 
 const { __n } = i18n();

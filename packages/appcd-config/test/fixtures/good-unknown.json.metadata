@@ -1,9 +1,0 @@
-{
-	"test1": {
-		"type": "bar|baz"
-	},
-
-	"test2": {
-		"type": "Array<bar|baz>"
-	}
-}

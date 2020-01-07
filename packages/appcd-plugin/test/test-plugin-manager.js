@@ -33,7 +33,7 @@ function makeTempDir() {
 let pm = null;
 
 const config = new AppcdConfig({
-	config: {
+	data: {
 		home: expandPath('~/.appcelerator/appcd'),
 		plugins: {
 			defaultInactivityTimeout: 60 * 60 * 1000

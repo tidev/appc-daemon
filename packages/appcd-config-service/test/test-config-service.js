@@ -1,6 +1,7 @@
-import Config from 'appcd-config';
+import AppcdConfig from 'appcd-config';
 import ConfigService from '../dist/config-service';
 import Response from 'appcd-response';
+import tmp from 'tmp';
 
 import { DispatcherError } from 'appcd-dispatcher';
 
@@ -571,7 +572,7 @@ describe('Config Service', () => {
 
 		let i = 0;
 
-		const publish = value => {
+		const publish = (value, src, layer) => {
 			switch (++i) {
 				case 1:
 					expect(value).to.deep.equal({ foo: 'bar' });
@@ -595,6 +596,9 @@ describe('Config Service', () => {
 });
 
 function createConfigService(json) {
-	const cfg = new Config({ config: json });
+	const cfg = new AppcdConfig({
+		data: json,
+		file: tmp.tmpNameSync({ postfix: '.json' })
+	});
 	return new ConfigService(cfg);
 }

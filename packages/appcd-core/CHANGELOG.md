@@ -1,5 +1,7 @@
 # v3.1.1
 
+ * refactor: Updated to `appcd-config@3.0.0`, created the Appc Daemon config schema, and converted
+   the `default.js` config to `default.json`.
  * fix: Fixed `--config` and `--config-file` format to require a value.
  * fix: Await `PluginManager` to initialize.
    [(DAEMON-308)](https://jira.appcelerator.org/browse/DAEMON-308)
