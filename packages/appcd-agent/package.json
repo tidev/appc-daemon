@@ -16,7 +16,7 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "nanobuffer": "^1.1.5",
+    "nanobuffer": "^1.1.6",
     "source-map-support": "^0.5.16"
   },
   "devDependencies": {

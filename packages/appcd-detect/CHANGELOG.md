@@ -1,3 +1,7 @@
+# v2.2.2
+
+ * chore: Updated dependencies.
+
 # v2.2.1 (Nov 6, 2019)
 
  * chore: Fixed homepage and repository URLs in `package.json`.

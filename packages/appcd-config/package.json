@@ -24,7 +24,7 @@
     "appcd-path": "^1.1.8",
     "doctrine": "^3.0.0",
     "fs-extra": "^8.1.0",
-    "gawk": "^4.6.6",
+    "gawk": "^4.7.0",
     "source-map-support": "^0.5.16"
   },
   "devDependencies": {
