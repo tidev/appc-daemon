@@ -1,3 +1,7 @@
+# v2.0.3 (Jan 8, 2020)
+
+ * chore: Updated dependencies.
+
 # v2.0.2 (Nov 6, 2019)
 
  * fix(locale): Removed dependency on `winreglib` for detecting the locale on Windows in favor of
