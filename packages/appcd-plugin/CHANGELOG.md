@@ -1,4 +1,4 @@
-# v3.2.0
+# v3.2.0 (Jan 8, 2020)
 
  * fix: Update plugin manager and scheme initialization to be fully synchronized so that telemetry
    is correctly enabled after initial scan.
