@@ -1,3 +1,7 @@
+# v1.1.9 (Jan 8, 2020)
+
+ * chore: Updated dependencies.
+
 # v1.1.8 (Nov 6, 2019)
 
  * chore: Fixed homepage and repository URLs in `package.json`.
