@@ -1,6 +1,6 @@
 {
   "name": "appcd-fswatch-manager",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Filesystem watcher service for the Appc Daemon.",
   "main": "./dist/fswatch-manager",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
@@ -16,16 +16,16 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-dispatcher": "^2.0.2",
-    "appcd-fswatcher": "^1.2.4",
-    "appcd-logger": "^2.0.4",
-    "appcd-response": "^2.0.2",
+    "appcd-dispatcher": "^2.0.3",
+    "appcd-fswatcher": "^1.2.5",
+    "appcd-logger": "^2.0.5",
+    "appcd-response": "^2.0.3",
     "source-map-support": "^0.5.16"
   },
   "devDependencies": {
-    "appcd-gulp": "^2.3.0",
-    "appcd-path": "^1.1.8",
-    "appcd-util": "^2.0.1",
+    "appcd-gulp": "^2.3.1",
+    "appcd-path": "^1.1.9",
+    "appcd-util": "^2.0.2",
     "fs-extra": "^8.1.0",
     "tmp": "^0.1.0"
   },
