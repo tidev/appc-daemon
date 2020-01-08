@@ -1,3 +1,7 @@
+# v3.0.2 (Jan 8, 2020)
+
+ * chore: Updated dependencies.
+
 # v3.0.1 (Nov 6, 2019)
 
  * fix: Discontinue automatic unref of detached subprocesses.
