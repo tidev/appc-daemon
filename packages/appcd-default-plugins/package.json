@@ -22,7 +22,7 @@
     "lerna": "^3.20.2",
     "pacote": "^10.3.0",
     "semver": "^7.1.1",
-    "snooplogg": "^2.3.2",
+    "snooplogg": "^2.3.3",
     "yarn": "^1.21.1"
   },
   "devDependencies": {
