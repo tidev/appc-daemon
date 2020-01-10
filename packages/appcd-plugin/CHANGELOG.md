@@ -1,3 +1,7 @@
+# v3.2.1 (Jan 10, 2020)
+
+ * chore: Updated dependencies.
+
 # v3.2.0 (Jan 8, 2020)
 
  * fix: Update plugin manager and scheme initialization to be fully synchronized so that telemetry
