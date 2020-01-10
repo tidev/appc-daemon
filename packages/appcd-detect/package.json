@@ -1,6 +1,6 @@
 {
   "name": "appcd-detect",
-  "version": "2.2.2",
+  "version": "2.2.3",
   "description": "A engine for detecting and watching filesystem directories for things of interest.",
   "main": "./dist/index",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",

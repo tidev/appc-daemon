@@ -59,19 +59,20 @@ export default class Detector extends EventEmitter {
 			this.logger.log(`  checkDir(${highlight(`'${dir}'`)}) depth=${highlight(depth)}`);
 
 			if (results[dir]) {
-				this.logger.log('      Already found a result for this path');
+				this.logger.log('    Already found a result for this path');
 				return;
 			}
 
 			const result = await opts.checkDir(dir);
 			if (result) {
-				this.logger.log('     Found result');
+				this.logger.log('    Found result');
 				if (Array.isArray(result)) {
 					results[dir] = result;
 				} else {
-					results[result.path || dir] = [ result ];
+					dir = result.path || dir;
+					results[dir] = [ result ];
 				}
-				foundPaths.add(results.path || dir);
+				foundPaths.add(dir);
 				return;
 			}
 
@@ -94,8 +95,12 @@ export default class Detector extends EventEmitter {
 		await checkDir(this.dir, opts.depth);
 
 		if (opts.watch) {
+			// if we're doing recursive (with redetect), then we only need 1 watcher, but if we're
+			// not recursive (with redetect), then we just watch each of the found paths
+
 			if (!this.sid) {
 				this.sid = await this.watch({
+					depth: opts.recursive && opts.redetect ? opts.recursiveWatchDepth : 0,
 					dir: this.dir,
 					onFSEvent: async ({ action, file, filename }) => {
 						if (filename === '.DS_Store') {
@@ -106,20 +111,18 @@ export default class Detector extends EventEmitter {
 							if (action === 'delete') {
 								this.logger.log('Directory was deleted, stopping and requesting rescan...');
 								await this.stop();
-								this.emit('rescan');
 							} else if (action === 'add') {
 								this.logger.log('Directory was added, requesting rescan...');
-								this.emit('rescan');
 							}
-						} else {
-							// something changed in this directory
-							this.emit('rescan');
 						}
-					}
+
+						this.emit('rescan');
+					},
+					recursive: opts.recursive && opts.redetect
 				});
 			}
 
-			if (foundPaths.size && opts.redetect) {
+			if (foundPaths.size && !opts.recursive && opts.redetect) {
 				this.logger.log(pluralize(`Watching ${highlight(foundPaths.size)} subdirectory`, foundPaths.size));
 				this.logger.log(Array.from(foundPaths));
 				await Promise.all([ ...foundPaths ].map(subdir => {
