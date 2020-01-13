@@ -123,7 +123,7 @@ export default class Client {
 						}
 
 						if (json && typeof json === 'object' && this.requests[json.id]) {
-							this.requests[json.id](json);
+							this.requests[json.id].handler(json);
 						} else {
 							emitter.emit('warning', 'Server response is not an object or has an invalid id');
 						}
@@ -288,46 +288,54 @@ export default class Client {
 		setImmediate(() => {
 			this.connect()
 				.once('connected', client => {
-					this.requests[id] = response => {
-						const status = response.status = ~~response.status || 500;
-						const statusClass = Math.floor(status / 100);
-						const style = status < 400 ? ok : alert;
+					// if a response is chunked, this handler will be invoked multiple times
+					this.requests[id] = {
+						handler: response => {
+							// no need for the id anymore
+							delete response.id;
 
-						// no need for the id anymore
-						delete response.id;
+							let { status } = this.requests[id];
+							if (!status) {
+								// first response
+								status = this.requests[id].status = response.status = ~~response.status || 500;
+							}
 
-						if (response.fin) {
-							log(`${style(status)} ${highlight(req.path)} ${note(`${new Date() - startTime}ms`)}`);
-						}
+							const statusClass = Math.floor(status / 100);
 
-						switch (statusClass) {
-							case 2:
-								if (response.type !== 'finish') {
-									emitter.emit('response', response.message, response);
-								}
-								// `fin` exists on the last message from the request which can be
-								// any message type, not just `finish`
-								if (response.fin) {
-									emitter.emit('finish');
-								}
-								break;
+							if (response.fin) {
+								const style = status < 400 ? ok : alert;
+								log(`${style(status)} ${highlight(req.path)} ${note(`${new Date() - startTime}ms`)}`);
+							}
 
-							case 4:
-							case 5:
-								const err = new Error(response.message || 'Server Error');
-								if (!response.statusCode) {
-									response.statusCode = String(status);
-								}
-								for (const prop of Object.keys(response)) {
-									// we need to use defineProperty() to force properties to be created
-									Object.defineProperty(err, prop, {
-										configurable: true,
-										enumerable:   true,
-										value:        response[prop],
-										writable:     true
-									});
-								}
-								emitter.emit('error', err, response);
+							switch (statusClass) {
+								case 2:
+									if (response.type !== 'finish') {
+										emitter.emit('response', response.message, response);
+									}
+									// `fin` exists on the last message from the request which can be
+									// any message type, not just `finish`
+									if (response.fin) {
+										emitter.emit('finish');
+									}
+									break;
+
+								case 4:
+								case 5:
+									const err = new Error(response.message || 'Server Error');
+									if (!response.statusCode) {
+										response.statusCode = String(status);
+									}
+									for (const prop of Object.keys(response)) {
+										// we need to use defineProperty() to force properties to be created
+										Object.defineProperty(err, prop, {
+											configurable: true,
+											enumerable:   true,
+											value:        response[prop],
+											writable:     true
+										});
+									}
+									emitter.emit('error', err, response);
+							}
 						}
 					};
 

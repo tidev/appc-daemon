@@ -1,3 +1,8 @@
+# v2.0.4
+
+ * fix: Fixed bug where messages constructed with both a code and an error instance where using the
+   error object as the message format instead of the error's message.
+
 # v2.0.3 (Jan 8, 2020)
 
  * chore: Updated dependencies.

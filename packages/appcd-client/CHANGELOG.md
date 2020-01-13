@@ -1,3 +1,8 @@
+# v2.0.4
+
+ * fix: Fixed bug where chunked responses that didn't contain a status were treated as 500 errors
+   and the client would disconnect.
+
 # v2.0.3 (Jan 8, 2020)
 
  * chore: Updated dependencies.

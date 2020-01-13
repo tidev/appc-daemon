@@ -3,6 +3,7 @@
  * fix: Fixed `--config` and `--config-file` format to require a value.
  * fix: Await `PluginManager` to initialize.
    [(DAEMON-308)](https://jira.appcelerator.org/browse/DAEMON-308)
+ * fix: Removed `status` and `statusCode` from subsequent non-pubsub chunked responses.
  * chore: Updated dependencies.
 
 # v3.1.0 (Nov 6, 2019)

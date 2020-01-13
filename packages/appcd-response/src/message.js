@@ -45,6 +45,10 @@ export default class Message {
 			}
 		} else {
 			this.format = args.shift();
+
+			if (this.format instanceof Error) {
+				this.format = this.format.message;
+			}
 		}
 
 		this.args = serializeArgs(args);
