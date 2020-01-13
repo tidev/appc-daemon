@@ -27,7 +27,7 @@
     "ws": "^7.2.1"
   },
   "devDependencies": {
-    "appcd-gulp": "^2.3.1",
+    "appcd-gulp": "^2.3.2",
     "supertest": "^4.0.2"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon",

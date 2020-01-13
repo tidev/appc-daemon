@@ -1976,9 +1976,9 @@ aws-sign2@~0.7.0:
   integrity sha1-tG6JCTSpWR8tL2+G1+ap8bP+dqg=
 
 aws4@^1.8.0:
-  version "1.9.0"
-  resolved "https://registry.yarnpkg.com/aws4/-/aws4-1.9.0.tgz#24390e6ad61386b0a747265754d2a17219de862c"
-  integrity sha512-Uvq6hVe90D0B2WEnUqtdgY1bATGz3mw33nH9Y+dmA+w5DHvUmBgkr5rM/KCHpCsiFNRUfokW/szpPPgMK2hm4A==
+  version "1.9.1"
+  resolved "https://registry.yarnpkg.com/aws4/-/aws4-1.9.1.tgz#7e33d8f7d449b3f673cd72deb9abdc552dbe528e"
+  integrity sha512-wMHVg2EOHaMRxbzgFJ9gtjOOCrI80OHLG14rxi28XwOW8ux6IiEbRCGGGqCtdAIg4FQCbW20k9RsT4y3gJlFug==
 
 babel-code-frame@^6.26.0:
   version "6.26.0"
@@ -3219,10 +3219,10 @@ core-js@^2.4.0:
   resolved "https://registry.yarnpkg.com/core-js/-/core-js-2.6.11.tgz#38831469f9922bded8ee21c9dc46985e0399308c"
   integrity sha512-5wjnpaT/3dV+XB4borEsnAYQchn00XSgTAWKDkEqv+K8KevjbzmofK6hfJ9TZIlpj2N0xQpazy7PiRQiWHqzWg==
 
-core-js@^3.6.3:
-  version "3.6.3"
-  resolved "https://registry.yarnpkg.com/core-js/-/core-js-3.6.3.tgz#cebda69dd069bf90066414d2b2425ffd1f3dcd79"
-  integrity sha512-DOO9b18YHR+Wk5kJ/c5YFbXuUETreD4TrvXb6edzqZE3aAEd0eJIAWghZ9HttMuiON8SVCnU3fqA4rPxRDD1HQ==
+core-js@^3.6.4:
+  version "3.6.4"
+  resolved "https://registry.yarnpkg.com/core-js/-/core-js-3.6.4.tgz#440a83536b458114b9cb2ac1580ba377dc470647"
+  integrity sha512-4paDGScNgZP2IXXilaffL9X7968RuvwlkK3xWtZRVqgd8SYNiVKRJvkFd1aqqEuPfN7E68ZHEp9hDj6lHj4Hyw==
 
 core-util-is@1.0.2, core-util-is@~1.0.0:
   version "1.0.2"
@@ -4922,7 +4922,7 @@ gauge@~2.7.3:
     strip-ansi "^3.0.1"
     wide-align "^1.1.0"
 
-gawk@^4.6.4, gawk@^4.7.0:
+gawk@^4.7.0:
   version "4.7.0"
   resolved "https://registry.yarnpkg.com/gawk/-/gawk-4.7.0.tgz#ce4cfb2549016825b81d1969a21aa9618c712d63"
   integrity sha512-sHF0MYn1Ydt/xzdRBaH9QRmrEHteII1KPIhQ4jOSOFZSU1RipR7iADopkxPaqm0tvv48tsGFVjfz2y9QWeMYFA==
@@ -10664,19 +10664,19 @@ timers-ext@^0.1.5:
     next-tick "1"
 
 titaniumlib@^2.0.1:
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/titaniumlib/-/titaniumlib-2.0.1.tgz#9e746e55bd01232152654b33fbff4e533a2956da"
-  integrity sha512-Y8JNmqmGhH+PGJ+Snr8xEnIuOGBsSjfurqNcyaneoboIjZe35UhWBGIKaTG2HPsWcgzWYm/dvZy6mGlPjcSdYg==
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/titaniumlib/-/titaniumlib-2.1.0.tgz#aaea4b125c6e7c048074d746460259419f7a44d9"
+  integrity sha512-ohtK2z99H7TSq3fC5+64o7rua8NQwHoU6oGlkewZ4ie5V+iPpp7pzxUf98HIu8I2qyYEoIbHgF+5bBdMqbBq1g==
   dependencies:
-    appcd-fs "^1.1.8"
-    appcd-path "^1.1.7"
-    appcd-util "^2.0.0"
+    appcd-fs "^1.1.10"
+    appcd-path "^1.1.9"
+    appcd-util "^2.0.2"
     fs-extra "^8.1.0"
     pluralize "^8.0.0"
     request "^2.88.0"
-    semver "^6.3.0"
-    snooplogg "^2.1.0"
-    source-map-support "^0.5.13"
+    semver "^7.1.1"
+    snooplogg "^2.3.3"
+    source-map-support "^0.5.16"
     tmp "^0.1.0"
     yauzl "^2.10.0"
 

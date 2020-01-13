@@ -28,7 +28,7 @@
     "yauzl": "^2.10.0"
   },
   "devDependencies": {
-    "appcd-gulp": "^2.3.1",
+    "appcd-gulp": "^2.3.2",
     "tmp": "^0.1.0"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon",

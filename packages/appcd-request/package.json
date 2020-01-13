@@ -24,7 +24,7 @@
     "source-map-support": "^0.5.16"
   },
   "devDependencies": {
-    "appcd-gulp": "^2.3.1"
+    "appcd-gulp": "^2.3.2"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
