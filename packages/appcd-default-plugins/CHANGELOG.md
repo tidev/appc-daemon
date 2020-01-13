@@ -1,4 +1,4 @@
-# v4.1.1
+# v4.2.0 (Jan 13, 2020)
 
  * fix: Gracefully handle error when yarn links directory exists, but access is denied.
    [(DAEMON-307)](https://jira.appcelerator.org/browse/DAEMON-307)
