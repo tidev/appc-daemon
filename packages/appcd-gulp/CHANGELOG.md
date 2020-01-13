@@ -1,4 +1,8 @@
-# v2.3.1
+# v2.3.2 (Jan 13, 2020)
+
+ * chore: Updated dependencies.
+
+# v2.3.1 (Jan 8, 2020)
 
  * refactor: Moved Node version specific Babel configs into separate files.
  * chore: Updated dependencies.

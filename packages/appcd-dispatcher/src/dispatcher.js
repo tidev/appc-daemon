@@ -3,7 +3,7 @@
 import appcdLogger from 'appcd-logger';
 import DispatcherContext from './dispatcher-context';
 import DispatcherError from './dispatcher-error';
-import Response, { AppcdError, codes, errorToJSON, lookup } from 'appcd-response';
+import Response, { codes, errorToJSON, lookup } from 'appcd-response';
 import ServiceDispatcher from './service-dispatcher';
 
 import { PassThrough, Readable, Transform } from 'stream';
@@ -303,7 +303,7 @@ export default class Dispatcher {
 					koactx.body = body;
 				}
 			} catch (err) {
-				if (err instanceof AppcdError && err.status === codes.NOT_FOUND) {
+				if (err instanceof DispatcherError && err.status === codes.NOT_FOUND) {
 					return next();
 				}
 

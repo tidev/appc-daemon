@@ -1,4 +1,18 @@
-# v3.2.0
+# v3.2.2 (Jan 13, 2020)
+
+ * fix: Fixed bug where only streamed responses that are subscriptions should notify the child
+   plugin process that the response has ended and should initiate an unsubscribe.
+ * fix: Preserved error `stack` when an error is sent through the IPC tunnel from an external child
+   plugin processes to the parent core process.
+ * fix: Route not found errors should only be handled if the error is an instance of
+   `DispatcherError`.
+ * chore: Updated dependencies.
+
+# v3.2.1 (Jan 10, 2020)
+
+ * chore: Updated dependencies.
+
+# v3.2.0 (Jan 8, 2020)
 
  * fix: Update plugin manager and scheme initialization to be fully synchronized so that telemetry
    is correctly enabled after initial scan.

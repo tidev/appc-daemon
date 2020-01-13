@@ -279,7 +279,7 @@ exports.sync = series(async function sync() {
 
 	if (changed) {
 		log(`Backing up ${cyan('.git/config')} => ${cyan('.git/config.bak')}`);
-		fs.moveSync(gitconfigFile, path.join(__dirname, '.git', 'config.bak'));
+		fs.moveSync(gitconfigFile, path.join(__dirname, '.git', 'config.bak'), { overwrite: true });
 		const newGitconfig = ini
 			.stringify(gitconfig, { whitespace: true })
 			.replace(/(\r\n|\n)+/g, '\n')

@@ -1,5 +1,4 @@
 import appcdLogger from '../dist/logger';
-import { SnoopLogg } from 'snooplogg';
 
 describe('appcd-logger', () => {
 	it('should define the default appcd logger', () => {

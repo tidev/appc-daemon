@@ -86,8 +86,10 @@ export default class ExternalPlugin extends PluginBase {
 			.then(ctx => {
 				logRequest(ctx.status);
 
+				// if the request is a subscription, and thus response is a stream, then listen for
+				// the end event so we can unsubscribe the child side
 				const { sid } = ctx.request;
-				if (ctx.response instanceof Readable) {
+				if (sid && ctx.response instanceof Readable) {
 					this.streams[sid] = ctx.response;
 					ctx.response.on('end', () => {
 						if (this.streams[sid]) {
@@ -108,7 +110,7 @@ export default class ExternalPlugin extends PluginBase {
 				return ctx;
 			})
 			.catch(err => {
-				if (err.status === 404) {
+				if (err instanceof DispatcherError && err.status === 404) {
 					this.appcdLogger.log('Plugin did not have handler, passing to next route');
 				} else {
 					logRequest(err.status);
@@ -273,7 +275,15 @@ export default class ExternalPlugin extends PluginBase {
 							let data;
 							const type = message.type || (sid ? 'event' : undefined);
 
-							if (typeof message === 'object') {
+							if (message instanceof Error) {
+								data = {
+									message:    message.message || message.toString(),
+									stack:      message.stack,
+									status:     message.status || 500,
+									statusCode: message.statusCode || '500',
+									type:       'error'
+								};
+							} else if (typeof message === 'object') {
 								data = {
 									...message,
 									type
