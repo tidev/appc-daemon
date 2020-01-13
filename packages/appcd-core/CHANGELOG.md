@@ -1,4 +1,4 @@
-# v3.1.1
+# v3.2.0 (Jan 13, 2020)
 
  * fix: Fixed `--config` and `--config-file` format to require a value.
  * fix: Await `PluginManager` to initialize.
