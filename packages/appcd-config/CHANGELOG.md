@@ -5,6 +5,7 @@
    should migrate to `cfg-kit`.
  * BREAKING CHANGE: Metadata has been removed.
  * BREAKING CHANGE: `save()` is no longer asynchronous and thus does not return a promise.
+ * chore: Updated dependencies.
 
 # v2.0.2 (Jan 13, 2020)
 

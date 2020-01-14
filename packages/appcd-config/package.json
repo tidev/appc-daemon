@@ -21,7 +21,7 @@
     "@babel/types": "^7.8.3",
     "appcd-fs": "^1.1.10",
     "appcd-logger": "^2.0.5",
-    "appcd-path": "^1.1.9",
+    "appcd-path": "^1.1.10",
     "doctrine": "^3.0.0",
     "fs-extra": "^8.1.0",
     "gawk": "^4.7.0",

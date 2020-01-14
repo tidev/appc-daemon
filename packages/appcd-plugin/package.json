@@ -28,7 +28,7 @@
     "appcd-logger": "^2.0.5",
     "appcd-machine-id": "^3.0.3",
     "appcd-nodejs": "^3.0.2",
-    "appcd-path": "^1.1.9",
+    "appcd-path": "^1.1.10",
     "appcd-request": "^2.2.0",
     "appcd-response": "^2.0.4",
     "appcd-subprocess": "^3.0.2",
