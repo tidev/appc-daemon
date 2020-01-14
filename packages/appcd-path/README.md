@@ -20,7 +20,7 @@ console.log(expandPath('~/foo', 'bar'));
 ```
 
 ```js
-import { real } from 'appcd-nodejs';
+import { real } from 'appcd-path';
 
 // resolves symlinks to real path, even if symlink is broken
 console.log(real('/some/path'));
