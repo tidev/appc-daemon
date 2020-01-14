@@ -55,7 +55,7 @@ describe('path', () => {
 			expect(path.real(__filename)).to.equal(__filename);
 		});
 
-		it('should figure out the real path for a symlinked existing file', done => {
+		it('should figure out the real path for a symlinked existing file', () => {
 			const tmpObj = tmp.dirSync({
 				mode: '755',
 				prefix: 'appcd-path-test-'
@@ -70,15 +70,12 @@ describe('path', () => {
 
 			try {
 				expect(path.real(symFilename)).to.equal(fs.realpathSync(filename));
-				done();
-			} catch (e) {
-				done(e);
 			} finally {
 				tmpObj.removeCallback();
 			}
 		});
 
-		it('should figure out the real path for a non-symlinked non-existent file', done => {
+		it('should figure out the real path for a non-symlinked non-existent file', () => {
 			const tmpObj = tmp.dirSync({
 				mode: '755',
 				prefix: 'appcd-path-test-'
@@ -87,12 +84,27 @@ describe('path', () => {
 
 			try {
 				expect(path.real(filename)).to.equal(_path.join(fs.realpathSync(tmpObj.name), 'foo.txt'));
-				done();
-			} catch (e) {
-				done(e);
 			} finally {
 				tmpObj.removeCallback();
 			}
+		});
+
+		it('should figure out the real path for a symlinked nested non-existent directory', () => {
+			const dir = tmp.dirSync({
+				mode: '755',
+				prefix: 'appcd-path-test-'
+			}).name;
+
+			const foo = _path.join(dir, 'foo');
+			const bar = _path.join(dir, 'bar');
+
+			const foobaz = _path.join(dir, 'foo', 'baz');
+			const barbaz = _path.join(fs.realpathSync(dir), 'bar', 'baz');
+
+			// link foo to bar
+			fs.symlinkSync(bar, foo);
+
+			expect(path.real(foobaz)).to.equal(barbaz);
 		});
 	});
 });

@@ -1,3 +1,8 @@
+# v1.1.10 (Jan 14, 2020)
+
+ * fix: Fixed bug when resolving the real path of a non-existent top-level directory/file.
+   [(DAEMON-310)](https://jira.appcelerator.org/browse/DAEMON-310)
+
 # v1.1.9 (Jan 8, 2020)
 
  * chore: Updated dependencies.
