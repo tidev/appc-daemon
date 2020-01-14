@@ -153,26 +153,16 @@ export default class WebSocketSession extends EventEmitter {
 							pubsub = true;
 						}
 
-						let res;
-						const type = message.type || (pubsub ? 'event' : undefined);
-
-						if (typeof message === 'object') {
-							res = {
-								...message,
-								type
-							};
-						} else {
-							res = {
-								message,
-								type
-							};
+						const res = typeof message === 'object' ? message : { message };
+						if (message.type || pubsub) {
+							res.type = message.type || 'event';
 						}
 
 						this.respond({
 							ctx: first,
 							req,
 							res,
-							skipLog: !pubsub && !first
+							chunked: !pubsub && !first
 						});
 
 						first = null;
@@ -231,11 +221,12 @@ export default class WebSocketSession extends EventEmitter {
 	 * @param {DispatcherContext} [params.ctx] - A dispatcher context containing the request info.
 	 * @param {Object} params.req - The WebSocket subprotocol request state.
 	 * @param {*} params.res - The dispatcher response.
-	 * @param {Boolean} [params.skipLog=false] - When true, does not log the request. This `true` when
-	 * sending new, non-pubsub data from a stream.
+	 * @param {Boolean} [params.chunked=false] - When `true`, signifies this is a subsequent chunk
+	 * of streamed data where the request should not be logged and `status` and `statusCode` should
+	 * not be added to the response.
 	 * @access private
 	 */
-	respond({ ctx, req, res, skipLog }) {
+	respond({ ctx, req, res, chunked }) {
 		if (req && req.id) {
 			res.id = req.id;
 		}
@@ -248,69 +239,58 @@ export default class WebSocketSession extends EventEmitter {
 			res.message = res.message.toString(accepts(this.msg).languages());
 		}
 
-		this.send(res, ctx);
-		if (!skipLog) {
+		if (this.ws.readyState === WebSocket.OPEN) {
+			let data;
+			const info = ctx ? {
+				path:      ctx.realPath,
+				size:      null,
+				source:    ctx.source,
+				status:    ctx.status,
+				time:      ctx.time,
+				userAgent: ctx.headers['user-agent'] || null
+			} : {};
+
+			if (res instanceof Error) {
+				info.status = res.status || 500;
+				info.error = errorToJSON(res);
+
+				data = JSON.stringify(Object.assign({}, res, {
+					id:         res.id,
+					message:    res.message,
+					stack:      res.stack,
+					status:     info.status,
+					statusCode: String(res.statusCode || '500'),
+					type:       'error'
+				}));
+			} else {
+				if (!chunked) {
+					if (!res.status) {
+						res.status = ctx && ctx.status || codes.OK;
+					}
+					if (!res.statusCode) {
+						res.statusCode = String(res.status);
+					}
+				}
+
+				data = msgpack.encode(res);
+			}
+
+			info.size = data.length;
+
+			try {
+				this.ws.send(data);
+			} catch (e) {
+				logger.error('%s Failed to send:', note(`[${this.sessionId}]`));
+				logger.error(e);
+			}
+
+			if (ctx) {
+				this.emit('request', info);
+			}
+		}
+
+		if (!chunked) {
 			this.log(req, res);
-		}
-	}
-
-	/**
-	 * Sends a response back over the WebSocket.
-	 *
-	 * @param {*} res - The dispatcher response.
-	 * @param {DispatcherContext} [ctx] - A dispatcher context containing the request info.
-	 * @access private
-	 */
-	send(res, ctx) {
-		if (this.ws.readyState !== WebSocket.OPEN) {
-			return;
-		}
-
-		let data;
-		const info = ctx ? {
-			path:      ctx.realPath,
-			size:      null,
-			source:    ctx.source,
-			status:    ctx.status,
-			time:      ctx.time,
-			userAgent: ctx.headers['user-agent'] || null
-		} : {};
-
-		if (res instanceof Error) {
-			info.status = res.status || 500;
-			info.error = errorToJSON(res);
-
-			data = JSON.stringify(Object.assign({}, res, {
-				id:         res.id,
-				message:    res.message,
-				stack:      res.stack,
-				status:     info.status,
-				statusCode: String(res.statusCode || '500'),
-				type:       'error'
-			}));
-		} else {
-			if (!res.status) {
-				res.status = ctx && ctx.status || codes.OK;
-			}
-
-			if (!res.statusCode) {
-				res.statusCode = String(res.status);
-			}
-
-			data = msgpack.encode(res);
-		}
-
-		info.size = data.length;
-
-		try {
-			this.ws.send(data);
-		} catch (e) {
-			logger.error('%s Failed to send:', note(`[${this.sessionId}]`));
-			logger.error(e);
-		}
-
-		if (ctx) {
-			this.emit('request', info);
 		}
 	}
 

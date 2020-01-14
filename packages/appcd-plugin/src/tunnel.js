@@ -54,6 +54,7 @@ export default class Tunnel {
 					message = Object.assign({}, res, {
 						message:    res.message || res.toString(),
 						instanceof: res.constructor.name,
+						stack:      res.stack,
 						status:     res.status || 500,
 						statusCode: res.statusCode || '500',
 						type:       'error'
@@ -163,6 +164,15 @@ export default class Tunnel {
 
 							default:
 								ctx.response = new AppcdError(status, message.message);
+						}
+
+						if (message.stack) {
+							Object.defineProperty(ctx.response, 'stack', {
+								configurable: true,
+								enumerable: true,
+								value: message.stack,
+								writable: true
+							});
 						}
 
 						// `message` is a special setter and we don't want to override the

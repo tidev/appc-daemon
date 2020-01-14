@@ -1,6 +1,7 @@
-# v2.2.0
+# v2.2.0 (Jan 8, 2020)
 
  * feat: Add support for `HTTP_PROXY` and `HTTPS_PROXY` environment variables.
+ * chore: Updated dependencies.
 
 # v2.1.1 (Nov 6, 2019)
 

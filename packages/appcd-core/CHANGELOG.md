@@ -1,10 +1,14 @@
-# v3.1.1
+# v3.3.0
 
  * refactor: Updated to `appcd-config@3.0.0`, created the Appc Daemon config schema, and converted
    the `default.js` config to `default.json`.
+
+# v3.2.0 (Jan 13, 2020)
+
  * fix: Fixed `--config` and `--config-file` format to require a value.
  * fix: Await `PluginManager` to initialize.
    [(DAEMON-308)](https://jira.appcelerator.org/browse/DAEMON-308)
+ * fix: Removed `status` and `statusCode` from subsequent non-pubsub chunked responses.
  * chore: Updated dependencies.
 
 # v3.1.0 (Nov 6, 2019)

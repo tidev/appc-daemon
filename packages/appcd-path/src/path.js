@@ -28,22 +28,45 @@ export function expandPath(...segments) {
 }
 
 /**
- * Tries to determine the real path for the given path. Unlike `fs.realpathSync()`, it will attempt
- * to figure out the real path even if the path does not exist by resolving the nearest existing
- * parent directory.
+ * Determines a path's real path by walking from the root to target while resolving symlinks and
+ * reconstructing the path. If a path does not exist, it simply appends everything
  *
  * @param {String} path - The path to resolve.
  * @returns {String}
  */
 export function real(path) {
-	try {
-		return fs.realpathSync(expandPath(path));
-	} catch (e) {
-		const basename = _path.basename(path);
+	path = expandPath(path);
+
+	const root = _path.resolve('/');
+	const dirs = [];
+	let dir;
+
+	// chop up the path
+	while (path !== root) {
+		dirs.unshift(_path.basename(path));
 		path = _path.dirname(path);
-		if (path === _path.dirname(path)) {
-			return path;
-		}
-		return _path.join(real(path), basename);
 	}
+
+	// reset path to the root
+	path = root;
+
+	// walk the dirs and construct the real path
+	while (dir = dirs.shift()) {
+		const current = _path.join(path, dir);
+		try {
+			if (fs.lstatSync(current).isSymbolicLink()) {
+				const link = fs.readlinkSync(current);
+				path = _path.isAbsolute(link) ? real(link) : _path.resolve(path, link);
+			} else {
+				path = current;
+			}
+		} catch (e) {
+			// current does not exist which means all subdirectories also do not exist, so just
+			// stitch everything back together
+			return _path.resolve(current, ...dirs);
+		}
+	}
+
+	// resolve any relative symlinks we joined together
+	return path;
 }

@@ -1,6 +1,6 @@
 {
   "name": "appcd-logger",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "description": "Defines the default logger for appcd components.",
   "main": "./dist/logger",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
@@ -16,11 +16,11 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "snooplogg": "^2.3.2",
+    "snooplogg": "^2.3.3",
     "source-map-support": "^0.5.16"
   },
   "devDependencies": {
-    "appcd-gulp": "^2.3.0"
+    "appcd-gulp": "^2.3.2"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",

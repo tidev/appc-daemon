@@ -1,3 +1,12 @@
+# v2.2.3 (Jan 10, 2020)
+
+ * fix: Only use a single recursive file watcher instead of watching each found path when recursive
+   and redetect flags are set.
+
+# v2.2.2 (Jan 8, 2020)
+
+ * chore: Updated dependencies.
+
 # v2.2.1 (Nov 6, 2019)
 
  * chore: Fixed homepage and repository URLs in `package.json`.

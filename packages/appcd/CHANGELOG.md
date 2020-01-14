@@ -1,9 +1,12 @@
-# v3.1.1
+# v3.3.0
 
- * fix: Fixed `--config` and `--config-file` format to require a value.
  * refactor: Updated to latest `AppcdConfig` usage where `save()` is now synchronous and we no
    longer need to set the config file to save to since it uses the same file path that was used to
    load the config.
+
+# v3.2.0 (Jan 13, 2020)
+
+ * fix: Fixed `--config` and `--config-file` format to require a value.
  * chore: Updated dependencies.
 
 # v3.1.0 (Nov 6, 2019)

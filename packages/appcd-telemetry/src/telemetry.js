@@ -353,7 +353,7 @@ export default class Telemetry extends Dispatcher {
 				this.lastSend = Date.now();
 				scheduleSendEvents();
 			})
-			.catch(e => {
+			.catch(() => {
 				this.lastSend = Date.now();
 				scheduleSendEvents();
 			});

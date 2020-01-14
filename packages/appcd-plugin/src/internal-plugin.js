@@ -1,7 +1,7 @@
-import Dispatcher from 'appcd-dispatcher';
+import Dispatcher, { DispatcherError } from 'appcd-dispatcher';
 import PluginBase from './plugin-base';
 
-import { AppcdError, codes } from 'appcd-response';
+import { codes } from 'appcd-response';
 
 /**
  * Internal plugin implementation logic.
@@ -19,7 +19,7 @@ export default class InternalPlugin extends PluginBase {
 		try {
 			return this.dispatcher.call(ctx.path, ctx);
 		} catch (err) {
-			if (err instanceof AppcdError && err.statusCode === codes.NOT_FOUND) {
+			if (err instanceof DispatcherError && err.statusCode === codes.NOT_FOUND) {
 				return next();
 			}
 			throw err;

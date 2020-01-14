@@ -3,6 +3,10 @@
  * refactor: Updated to `appcd-config@3.0.0`, but no major breaking changes as far as the
    `ConfigService` is concerned.
 
+# v2.0.3 (Jan 8, 2020)
+
+ * chore: Updated dependencies.
+
 # v2.0.2 (Nov 6, 2019)
 
  * fix: Fixed bug where `push` and `unshift` actions were not returning the new value.
