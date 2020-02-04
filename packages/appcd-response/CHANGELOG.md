@@ -1,3 +1,7 @@
+# v2.0.5
+
+ * chore: Updated dependencies.
+
 # v2.0.4 (Jan 13, 2020)
 
  * fix: Fixed bug where messages constructed with both a code and an error instance where using the

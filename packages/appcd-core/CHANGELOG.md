@@ -1,3 +1,7 @@
+# v3.2.1
+
+ * chore: Updated dependencies.
+
 # v3.2.0 (Jan 13, 2020)
 
  * fix: Fixed `--config` and `--config-file` format to require a value.

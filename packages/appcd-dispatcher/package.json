@@ -22,7 +22,7 @@
     "path-to-regexp": "^6.1.0",
     "pluralize": "^8.0.0",
     "source-map-support": "^0.5.16",
-    "uuid": "^3.3.3"
+    "uuid": "^3.4.0"
   },
   "devDependencies": {
     "appcd-gulp": "^2.3.2",

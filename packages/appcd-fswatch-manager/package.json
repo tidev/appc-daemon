@@ -24,7 +24,7 @@
   },
   "devDependencies": {
     "appcd-gulp": "^2.3.2",
-    "appcd-path": "^1.1.9",
+    "appcd-path": "^1.1.10",
     "appcd-util": "^2.0.2",
     "fs-extra": "^8.1.0",
     "tmp": "^0.1.0"

@@ -1,3 +1,8 @@
+# v2.4.0
+
+ * feat: Added optional chaining Babel plugin.
+ * chore: Updated dependencies.
+
 # v2.3.2 (Jan 13, 2020)
 
  * chore: Updated dependencies.
