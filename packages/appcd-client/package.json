@@ -28,7 +28,7 @@
     "fs-extra": "^8.1.0",
     "msgpack-lite": "^0.1.26",
     "source-map-support": "^0.5.16",
-    "uuid": "^3.3.3",
+    "uuid": "^3.4.0",
     "which": "^2.0.2",
     "ws": "^7.2.1"
   },

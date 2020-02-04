@@ -21,13 +21,13 @@
     "appcd-fs": "^1.1.10",
     "appcd-logger": "^2.0.5",
     "appcd-machine-id": "^3.0.3",
-    "appcd-path": "^1.1.9",
+    "appcd-path": "^1.1.10",
     "appcd-request": "^2.2.0",
     "appcd-response": "^2.0.4",
     "appcd-util": "^2.0.2",
     "fs-extra": "^8.1.0",
     "source-map-support": "^0.5.16",
-    "uuid": "^3.3.3"
+    "uuid": "^3.4.0"
   },
   "devDependencies": {
     "appcd-gulp": "^2.3.2",

@@ -1,3 +1,7 @@
+# v3.2.3
+
+ * chore: Updated dependencies.
+
 # v3.2.2 (Jan 13, 2020)
 
  * fix: Fixed bug where only streamed responses that are subscriptions should notify the child

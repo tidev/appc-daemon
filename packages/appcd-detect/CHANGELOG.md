@@ -1,3 +1,7 @@
+# v2.2.4
+
+ * chore: Updated dependencies.
+
 # v2.2.3 (Jan 10, 2020)
 
  * fix: Only use a single recursive file watcher instead of watching each found path when recursive

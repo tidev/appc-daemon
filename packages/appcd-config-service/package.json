@@ -19,7 +19,7 @@
     "appcd-config": "^2.0.2",
     "appcd-dispatcher": "^2.0.3",
     "appcd-logger": "^2.0.5",
-    "appcd-path": "^1.1.9",
+    "appcd-path": "^1.1.10",
     "appcd-response": "^2.0.4",
     "source-map-support": "^0.5.16"
   },

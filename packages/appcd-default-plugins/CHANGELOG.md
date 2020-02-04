@@ -1,3 +1,7 @@
+# v4.2.1
+
+ * chore: Updated dependencies.
+
 # v4.2.0 (Jan 13, 2020)
 
  * fix: Gracefully handle error when yarn links directory exists, but access is denied.
