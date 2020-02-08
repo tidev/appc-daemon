@@ -1,5 +1,7 @@
-# v3.2.3
+# v3.3.0
 
+ * feat: Added Plugin API Version to the status.
+   [(DAEMON-314)](https://jira.appcelerator.org/browse/DAEMON-314)
  * chore: Updated dependencies.
 
 # v3.2.2 (Jan 13, 2020)
