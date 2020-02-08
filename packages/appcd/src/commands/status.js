@@ -61,12 +61,13 @@ export default {
 
 				// general information
 				let table = new Table(params);
-				table.push([ 'Core Version', highlight(`v${status.version}`) ]);
-				table.push([ 'PID',          highlight(status.pid) ]);
-				table.push([ 'Uptime',       highlight(`${(status.uptime / 60).toFixed(2)} minutes`) ]);
-				table.push([ 'Node Version', highlight(status.node.version) ]);
-				table.push([ 'Memory RSS',   highlight(filesize(status.memory.rss)) ]);
-				table.push([ 'Memory Heap',  highlight(`${filesize(status.memory.heapUsed)} / ${filesize(status.memory.heapTotal)}`) ]);
+				table.push([ 'Core Version',       highlight(`v${status.version}`) ]);
+				table.push([ 'PID',                highlight(status.pid) ]);
+				table.push([ 'Uptime',             highlight(`${(status.uptime / 60).toFixed(2)} minutes`) ]);
+				table.push([ 'Node Version',       highlight(`v${status.node.version}`) ]);
+				table.push([ 'Plugin API Version', highlight(`v${status.plugins.apiVersion}`) ]);
+				table.push([ 'Memory RSS',         highlight(filesize(status.memory.rss)) ]);
+				table.push([ 'Memory Heap',        highlight(`${filesize(status.memory.heapUsed)} / ${filesize(status.memory.heapTotal)}`) ]);
 				log(table.toString());
 				log();
 

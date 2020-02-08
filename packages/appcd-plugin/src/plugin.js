@@ -1,4 +1,5 @@
 import appcdLogger from 'appcd-logger';
+import appcdPluginAPIVersion from './plugin-api-version';
 import Dispatcher, { DispatcherError } from 'appcd-dispatcher';
 import ExternalPlugin from './external-plugin';
 import findup from 'findup-sync';
@@ -23,12 +24,6 @@ import { Readable } from 'stream';
 import { states } from './plugin-base';
 
 const { highlight } = appcdLogger.styles;
-
-/**
- * The Appc Daemon plugin API version.
- * @type {String}
- */
-const appcdPluginAPIVersion = '1.1.0';
 
 /**
  * The next number to use for the timer id.

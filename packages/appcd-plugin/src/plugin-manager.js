@@ -1,6 +1,7 @@
 /* eslint-disable promise/always-return, promise/catch-or-return */
 
 import appcdLogger from 'appcd-logger';
+import appcdPluginAPIVersion from './plugin-api-version';
 import Dispatcher, { DataServiceDispatcher } from 'appcd-dispatcher';
 import gawk from 'gawk';
 import Response, { codes } from 'appcd-response';
@@ -455,6 +456,7 @@ export default class PluginManager extends Dispatcher {
 	 */
 	status() {
 		return {
+			apiVersion: appcdPluginAPIVersion,
 			paths:      this.paths,
 			registered: this.registered
 		};
