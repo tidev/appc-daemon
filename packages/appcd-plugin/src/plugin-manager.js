@@ -152,9 +152,13 @@ export default class PluginManager extends Dispatcher {
 			const { scope, pluginName, version } = request.params;
 			const name = scope ? `${scope}/${pluginName}` : pluginName;
 
-			const plugins = this.registered.filter(plugin => {
-				return (!name && !path) || (path && plugin.path === path) || (name && plugin.packageName === name && (!version || semver.satisfies(plugin.version, version)));
-			});
+			const plugins = this.registered
+				.filter(plugin => {
+					return (!name && !path) || (path && plugin.path === path) || (name && plugin.packageName === name && (!version || semver.satisfies(plugin.version, version)));
+				})
+				.sort((a, b) => {
+					return b.packageName.localeCompare(a.packageName) || semver.rcompare(a.version, b.version);
+				});
 
 			if (plugins.length) {
 				return version ? plugins[0] : plugins;
