@@ -212,6 +212,16 @@ export async function installDefaultPlugins(pluginsDir) {
 			await fs.writeJson(pkgJsonFile, pkgJson);
 		}));
 
+		// lerna spawns yarn using `execa()` which implicitly overrides the inherited path, so we
+		// have to manually set the environment variables, which for some reason works whereas
+		// setting the `env` in `spawn()` does not.
+		const origPath = process.env.PATH;
+		const origForceColor = process.env.FORCE_COLOR;
+		if (yarn) {
+			process.env.PATH = `${path.dirname(yarn)}${path.delimiter}${origPath}`;
+		}
+		process.env.FORCE_COLOR = '0';
+
 		try {
 			// write the json files
 			logger.log(`Writing ${highlight('plugins/package.json')}`);
@@ -243,11 +253,6 @@ export async function installDefaultPlugins(pluginsDir) {
 			logger.log(`Executing: ${highlight(`${cmd} ${args.join(' ')}`)}`);
 			const child = spawn(cmd, args, {
 				cwd: pluginsDir,
-				env: {
-					...process.env,
-					FORCE_COLOR: '0',
-					PATH: path.dirname(yarn) + path.delimiter + process.env.PATH
-				},
 				windowsHide: true
 			});
 
@@ -292,6 +297,9 @@ export async function installDefaultPlugins(pluginsDir) {
 				});
 			});
 		} finally {
+			process.env.PATH = origPath;
+			process.env.FORCE_COLOR = origForceColor;
+
 			// restore the plugin names in the package.json files
 			await Promise.all(Object.entries(revert).map(async ([ name, pkgJsonFile ]) => {
 				const pkgJson = await fs.readJson(pkgJsonFile);

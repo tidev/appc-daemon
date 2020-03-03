@@ -1,5 +1,7 @@
-# v4.2.1
+# v4.2.1 (Mar 3, 2020)
 
+ * fix: Explicitly update PATH environment variable so that it is properly inherited by the child
+   process on Windows. [(DAEMON-330)](https://jira.appcelerator.org/browse/DAEMON-330)
  * chore: Updated dependencies.
 
 # v4.2.0 (Jan 13, 2020)
