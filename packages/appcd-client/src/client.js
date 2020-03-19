@@ -248,6 +248,9 @@ export default class Client {
 	 * data, and type.
 	 * @param {String} [pathOrParams.path] - The path to request.
 	 * @param {Object} [pathOrParams.data] - An object to send.
+	 * @param {Boolean} [pathOrParams.startDaemon] - When `true`, ensures the daemon is running and
+	 * if not, attempts to locate the daemon, determine the configuration, start it, and
+	 * re-connect.
 	 * @param {String} [pathOrParams.type] - The request type. Valid types include `call`,
 	 * `subscribe`, and `unsubscribe`.
 	 * @returns {EventEmitter} Emits events `response` and `error`.
@@ -266,9 +269,11 @@ export default class Client {
 			path: pathOrParams,
 			id
 		};
+		let startDaemon = false;
 
 		if (typeof pathOrParams === 'object') {
 			Object.assign(req, pathOrParams);
+			({ startDaemon } = req);
 		}
 
 		if (!req.path || typeof req.path !== 'string') {
@@ -286,7 +291,7 @@ export default class Client {
 		// need to delay request so event emitter can be returned and events can
 		// be wired up
 		setImmediate(() => {
-			this.connect()
+			this.connect({ startDaemon })
 				.once('connected', client => {
 					// if a response is chunked, this handler will be invoked multiple times
 					this.requests[id] = {
