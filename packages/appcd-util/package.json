@@ -18,7 +18,7 @@
   "dependencies": {
     "appcd-fs": "^1.1.10",
     "lodash.get": "^4.4.2",
-    "semver": "^7.1.1",
+    "semver": "^7.1.2",
     "source-map-support": "^0.5.16"
   },
   "devDependencies": {

@@ -1,3 +1,11 @@
+# v4.2.1 (Mar 3, 2020)
+
+ * fix: Explicitly update PATH environment variable so that it is properly inherited by the child
+   process on Windows. [(DAEMON-330)](https://jira.appcelerator.org/browse/DAEMON-330)
+ * fix: Create missing `lerna.cmd` and `yarn.cmd` scripts needed for Windows.
+   [(DAEMON-332)](https://jira.appcelerator.org/browse/DAEMON-332)
+ * chore: Updated dependencies.
+
 # v4.2.0 (Jan 13, 2020)
 
  * fix: Gracefully handle error when yarn links directory exists, but access is denied.

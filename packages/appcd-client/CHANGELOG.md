@@ -1,3 +1,8 @@
+# v2.0.5
+
+ * feat: Added `startDaemon` flag to `request()` method which passes it through to `connect()`.
+ * chore: Updated dependencies.
+
 # v2.0.4 (Jan 13, 2020)
 
  * fix: Fixed bug where chunked responses that didn't contain a status were treated as 500 errors

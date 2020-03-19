@@ -1,6 +1,7 @@
 /* eslint-disable promise/always-return, promise/catch-or-return */
 
 import appcdLogger from 'appcd-logger';
+import appcdPluginAPIVersion from './plugin-api-version';
 import Dispatcher, { DataServiceDispatcher } from 'appcd-dispatcher';
 import gawk from 'gawk';
 import Response, { codes } from 'appcd-response';
@@ -151,9 +152,13 @@ export default class PluginManager extends Dispatcher {
 			const { scope, pluginName, version } = request.params;
 			const name = scope ? `${scope}/${pluginName}` : pluginName;
 
-			const plugins = this.registered.filter(plugin => {
-				return (!name && !path) || (path && plugin.path === path) || (name && plugin.packageName === name && (!version || semver.satisfies(plugin.version, version)));
-			});
+			const plugins = this.registered
+				.filter(plugin => {
+					return (!name && !path) || (path && plugin.path === path) || (name && plugin.packageName === name && (!version || semver.satisfies(plugin.version, version)));
+				})
+				.sort((a, b) => {
+					return b.packageName.localeCompare(a.packageName) || semver.rcompare(a.version, b.version);
+				});
 
 			if (plugins.length) {
 				return version ? plugins[0] : plugins;
@@ -456,6 +461,7 @@ export default class PluginManager extends Dispatcher {
 	 */
 	status() {
 		return {
+			apiVersion: appcdPluginAPIVersion,
 			paths:      this.paths,
 			registered: this.registered
 		};

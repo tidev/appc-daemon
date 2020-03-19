@@ -122,11 +122,11 @@ export default class PluginBase extends EventEmitter {
 		this.globals = {
 			appcd: {
 				call: Dispatcher.call.bind(Dispatcher),
-				register: this.dispatcher.register.bind(this.dispatcher),
 				fs: {
 					watch,
 					unwatch
-				}
+				},
+				register: this.dispatcher.register.bind(this.dispatcher)
 			},
 
 			console: this.logger.console

@@ -1,8 +1,11 @@
 # v3.3.0
 
+ * feat: Added Plugin API Version to the status output.
+   [(DAEMON-314)](https://jira.appcelerator.org/browse/DAEMON-314)
  * refactor: Updated to latest `AppcdConfig` usage where `save()` is now synchronous and we no
    longer need to set the config file to save to since it uses the same file path that was used to
    load the config.
+ * chore: Updated dependencies.
 
 # v3.2.0 (Jan 13, 2020)
 

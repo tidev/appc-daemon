@@ -1,10 +1,11 @@
-import snooplogg from 'snooplogg';
+import binLinks from 'bin-links';
 import fs from 'fs-extra';
 import globule from 'globule';
 import os from 'os';
 import pacote from 'pacote';
 import path from 'path';
 import semver from 'semver';
+import snooplogg from 'snooplogg';
 
 import { spawn } from 'child_process';
 
@@ -43,7 +44,7 @@ export async function installDefaultPlugins(pluginsDir) {
 	}
 
 	// find yarn and lerna
-	const yarn = find('yarn');
+	const yarn = await find('yarn');
 	if (yarn) {
 		logger.log(`Found yarn: ${highlight(yarn)}`);
 	} else {
@@ -51,7 +52,7 @@ export async function installDefaultPlugins(pluginsDir) {
 		return;
 	}
 
-	const lerna = find('lerna');
+	const lerna = await find('lerna');
 	if (lerna) {
 		logger.log(`Found lerna: ${highlight(lerna)}`);
 	} else {
@@ -212,6 +213,16 @@ export async function installDefaultPlugins(pluginsDir) {
 			await fs.writeJson(pkgJsonFile, pkgJson);
 		}));
 
+		// lerna spawns yarn using `execa()` which implicitly overrides the inherited path, so we
+		// have to manually set the environment variables, which for some reason works whereas
+		// setting the `env` in `spawn()` does not.
+		const origPath = process.env.PATH;
+		const origForceColor = process.env.FORCE_COLOR;
+		if (yarn) {
+			process.env.PATH = `${path.dirname(yarn)}${path.delimiter}${origPath}`;
+		}
+		process.env.FORCE_COLOR = '0';
+
 		try {
 			// write the json files
 			logger.log(`Writing ${highlight('plugins/package.json')}`);
@@ -243,11 +254,6 @@ export async function installDefaultPlugins(pluginsDir) {
 			logger.log(`Executing: ${highlight(`${cmd} ${args.join(' ')}`)}`);
 			const child = spawn(cmd, args, {
 				cwd: pluginsDir,
-				env: {
-					...process.env,
-					FORCE_COLOR: '0',
-					PATH: path.dirname(yarn) + path.delimiter + process.env.PATH
-				},
 				windowsHide: true
 			});
 
@@ -292,6 +298,9 @@ export async function installDefaultPlugins(pluginsDir) {
 				});
 			});
 		} finally {
+			process.env.PATH = origPath;
+			process.env.FORCE_COLOR = origForceColor;
+
 			// restore the plugin names in the package.json files
 			await Promise.all(Object.entries(revert).map(async ([ name, pkgJsonFile ]) => {
 				const pkgJson = await fs.readJson(pkgJsonFile);
@@ -328,12 +337,28 @@ function eq(s1, s2) {
  * root.
  *
  * @param {String} name - The name of the binary to find.
- * @returns {?String} The path to the binary or `null` if not found.
+ * @returns {Promise<?String>} The path to the binary or `null` if not found.
  */
-function find(name) {
+async function find(name) {
 	for (let bin, cur = __dirname, last = null; cur !== last; last = cur, cur = path.dirname(cur)) {
-		if (fs.existsSync(bin = path.join(cur, 'node_modules', '.bin', name + (process.platform === 'win32' ? '.cmd' : '')))) {
+		bin = path.join(cur, 'node_modules', '.bin', name + (process.platform === 'win32' ? '.cmd' : ''));
+		if (fs.existsSync(bin)) {
 			return bin;
+		}
+
+		// find the package and create the bin link
+		const dir = path.join(cur, 'node_modules', name);
+		const pkgJsonFile = path.join(dir, 'package.json');
+		if (fs.existsSync(pkgJsonFile)) {
+			logger.log(`Unable to find ${name} binary, generating new binary for ${highlight(dir)}`);
+			await binLinks({
+				path: dir,
+				pkg: fs.readJsonSync(pkgJsonFile)
+			});
+
+			if (fs.existsSync(bin)) {
+				return bin;
+			}
 		}
 	}
 	return null;

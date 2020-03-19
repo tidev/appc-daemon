@@ -1481,3 +1481,168 @@ exports['deps-changelog'] = async function depChangelog() {
 			}));
 		}, Promise.resolve());
 };
+
+exports['release-notes'] = async function releaseNotes() {
+	const https = require('https');
+	const tar = require('tar-stream');
+	const zlib = require('zlib');
+
+	const packages = {
+		appcd: { latest: null, releases: {} }
+	};
+	const re = /^appcd-/;
+	const tempDir = tmp.dirSync({
+		mode: '755',
+		prefix: 'appcd-release-notes-',
+		unsafeCleanup: true
+	}).name;
+
+	const fetch = async name => {
+		log(`Fetching ${cyan(name)}`);
+		return await (await libnpm.fetch(name)).json();
+	};
+
+	const getReleases = async name => {
+		if (packages[name] || !re.test(name)) {
+			return;
+		}
+
+		const { time } = await fetch(`/${name}`);
+		packages[name] = { latest: null, releases: {} };
+
+		for (const [ ver, ts ] of Object.entries(time)) {
+			if (semver.valid(ver) && semver.gt(ver, '0.0.0')) {
+				const { prerelease } = semver.parse(ver);
+				if (!prerelease || !prerelease.length) {
+					packages[name].releases[ver] = { changelog: null, ts };
+				}
+			}
+		}
+
+		const latest = Object.keys(packages[name].releases).sort(semver.compare).pop();
+		packages[name].latest = latest;
+
+		const release = await fetch(`/${name}/${latest}`);
+		for (const type of [ 'dependencies', 'devDependencies' ]) {
+			if (release[type]) {
+				for (const name of Object.keys(release[type])) {
+					await getReleases(name);
+				}
+			}
+		}
+	};
+
+	try {
+		// Step 1: get all the `appcd` releases and their `appcd-*` dependencies
+
+		for (const [ ver, ts ] of Object.entries((await fetch('/appcd')).time)) {
+			if (semver.valid(ver) && semver.gt(ver, '0.0.0')) {
+				const { prerelease } = semver.parse(ver);
+				if (!prerelease || !prerelease.length) {
+					packages.appcd.releases[ver] = { changelog: null, ts };
+
+					const release = await fetch(`/appcd/${ver}`);
+					for (const type of [ 'dependencies', 'devDependencies' ]) {
+						if (release[type]) {
+							for (const name of Object.keys(release[type])) {
+								await getReleases(name);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		packages.appcd.latest = Object.keys(packages.appcd.releases).sort(semver.compare).pop();
+
+		// Step 2: for each package, fetch the latest npm package and extract the changelog
+
+		for (const [ pkg, info ] of Object.entries(packages)) {
+			const url = `https://registry.npmjs.org/${pkg}/-/${pkg}-${info.latest}.tgz`;
+			const file = path.join(tempDir, `${pkg}-${info.latest}.tgz`);
+
+			await new Promise((resolve, reject) => {
+				const dest = fs.createWriteStream(file);
+				dest.on('finish', () => dest.close(resolve));
+				log(`Downloading ${cyan(url)}`);
+				https.get(url, response => response.pipe(dest))
+					.on('error', reject);
+			});
+
+			await new Promise((resolve, reject) => {
+				const gunzip = zlib.createGunzip();
+				const extract = tar.extract();
+
+				extract.on('entry', (header, stream, next) => {
+					if (header.name !== 'package/CHANGELOG.md') {
+						stream.resume();
+						return next();
+					}
+
+					let changelog = '';
+					stream
+						.on('data', chunk => changelog += chunk)
+						.on('end', () => {
+							const changes = changelog.split('\n\n#').map((s, i) => `${i ? '#' : ''}${s}`.trim());
+							for (const chunk of changes) {
+								const m = chunk.match(/^# v?([^\s\n]*)[^\n]*\n+(.+)$/s);
+								if (m && info.releases[m[1]]) {
+									info.releases[m[1]].changelog = m[2];
+								}
+							}
+							next();
+						})
+						.on('error', reject)
+						.resume();
+				});
+
+				extract.on('finish', resolve);
+				extract.on('error', reject);
+
+				log(`Extract changelog from ${cyan(file)}`);
+				fs.createReadStream(file).pipe(gunzip).pipe(extract);
+			});
+		}
+	} finally {
+		fs.removeSync(tempDir);
+	}
+
+	const { appcd } = packages;
+	delete packages.appcd;
+	const pkgs = Object.keys(packages).sort();
+
+	// Step 3: loop over every `appcd` release and generate the changelog
+
+	for (const ver of Object.keys(appcd.releases).sort(semver.compare)) {
+		const { minor, patch } = semver.parse(ver);
+		const dest = path.join(__dirname, 'docs', 'Release Notes', `Appc Daemon ${ver}.md`);
+		const { changelog, ts } = appcd.releases[ver];
+		const dt = new Date(ts);
+		const rd = dt.toDateString().split(' ').slice(1);
+		let s = `# Appc Daemon ${ver}\n\n## ${rd[0]} ${rd[1]}, ${rd[2]}\n\n`;
+		if (patch === 0) {
+			if (minor === 0) {
+				s += 'This is a major release with breaking changes, new features, bug fixes, and dependency updates.\n\n';
+			} else {
+				s += 'This is a minor release with new features, bug fixes, and dependency updates.\n\n';
+			}
+		} else {
+			s += 'This is a patch release with bug fixes and minor dependency updates.\n\n';
+		}
+		s += `### Installation\n\n\`\`\`\nnpm i -g appcd@${ver}\n\`\`\`\n\n`
+		s += `### appcd@${ver}\n\n${changelog}\n\n`;
+
+		for (const pkg of pkgs) {
+			const vers = Object.keys(packages[pkg].releases).filter(ver => new Date(packages[pkg].releases[ver].ts) < dt).sort(semver.compare);
+			for (const v of vers) {
+				if (packages[pkg].releases[v].changelog) {
+					s += `### ${pkg}@${v}\n\n${packages[pkg].releases[v].changelog}\n\n`;
+				}
+				delete packages[pkg].releases[v];
+			}
+		}
+
+		log(`Writing release notes ${cyan(dest)}`);
+		fs.writeFileSync(dest, s.trim());
+	}
+};

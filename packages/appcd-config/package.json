@@ -16,8 +16,8 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "@babel/parser": "^7.8.3",
-    "@babel/traverse": "^7.8.3",
+    "@babel/parser": "^7.8.4",
+    "@babel/traverse": "^7.8.4",
     "@babel/types": "^7.8.3",
     "appcd-fs": "^1.1.10",
     "appcd-logger": "^2.0.5",
