@@ -365,8 +365,8 @@ async function runTests(cover, all) {
 			process.env.HOMEPATH = tmpHomeDir.replace(process.env.HOMEDRIVE, '');
 		}
 
-		if (process.env.JENKINS_APPCD_TMP_HOME_FILE) {
-			fs.outputFileSync(process.env.JENKINS_APPCD_TMP_HOME_FILE, tmpHomeDir);
+		if (process.env.JENKINS_ARTIFACTS_MANIFEST) {
+			fs.outputFileSync(process.env.JENKINS_ARTIFACTS_MANIFEST, path.join(tmpHomeDir, '.appcelerator/appcd/log/*'));
 		}
 
 		require('./packages/appcd-gulp/src/test-runner').runTests({ root: __dirname, projectDir: __dirname, cover, all });

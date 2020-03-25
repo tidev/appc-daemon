@@ -38,6 +38,7 @@
     ]
   },
   "scripts": {
+    "lint": "gulp lint",
     "test": "gulp coverage-ci"
   }
 }
