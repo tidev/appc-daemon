@@ -1,11 +1,8 @@
 #! groovy
 library 'pipeline-library@runNPMPackage'
 
-def packageJSON = jsonParse(readFile('packages/appcd-core/package.json'))
-def major = packageJSON['appcd']['node'].split('.')[0]
-
 runNPMPackage {
-  defaultNodeJSVersion = "${major}.x"
+  defaultNodeJSVersion = "${jsonParse(readFile('packages/appcd-core/package.json'))['appcd']['node'].split('.')[0]}.x"
   nodeVersions = [ '10.19.0', '12.16.1', '13.11.0' ]
   packageJsonPath = 'packages/appcd/package.json'
   publish = false
