@@ -1,5 +1,5 @@
 #! groovy
-library 'pipeline-library@runNPMPackage'
+library 'pipeline-library'
 
 runNPMPackage {
   defaultNodeJSVersion = '10.19.0' // keep this in sync with appcd-core Node.js version!
