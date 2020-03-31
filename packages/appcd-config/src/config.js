@@ -3,7 +3,7 @@ if (!Error.prepareStackTrace) {
 	require('source-map-support/register');
 }
 
-import Config, { Joi, JSONStore } from 'cfg-kit';
+import Config, { Joi, JSONStore } from 'config-kit';
 
 export { Joi };
 
