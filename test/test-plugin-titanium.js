@@ -55,27 +55,7 @@ describe('plugin titanium', function () {
 		expect(obj.message.type).to.equal('external');
 		expect(obj.message.nodeVersion).to.equal(coreNodeVersion);
 		expect(obj.message.supported).to.equal(true);
-		expect(obj.message.services).to.deep.equal([
-			'/cli',
-			'/cli/schema',
-			'/module',
-			'/module/list',
-			'/module/list/:filter*',
-			'/module/locations',
-			'/modules',
-			'/modules/list',
-			'/modules/list/:filter*',
-			'/modules/locations',
-			'/sdk',
-			'/sdk/list',
-			'/sdk/list/:filter*',
-			'/sdk/branches',
-			'/sdk/builds/:branch?',
-			'/sdk/locations',
-			'/sdk/releases',
-			'/sdk/install/:name?',
-			'/sdk/uninstall/:name?'
-		]);
+		expect(obj.message.services).to.be.an('array');
 		expect(obj.message.error).to.be.null;
 		expect(obj.message.stack).to.be.null;
 		expect(obj.message.pid).to.be.at.gt(0);
