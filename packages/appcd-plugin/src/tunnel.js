@@ -1,10 +1,10 @@
 import appcdLogger from 'appcd-logger';
 import PluginError from './plugin-error';
 import Response, { AppcdError, codes } from 'appcd-response';
-import uuid from 'uuid';
 
 import { DispatcherContext, DispatcherError } from 'appcd-dispatcher';
 import { PassThrough } from 'stream';
+import { v4 as uuidv4 } from 'uuid';
 
 const { highlight, magenta } = appcdLogger.styles;
 
@@ -125,7 +125,7 @@ export default class Tunnel {
 	 */
 	send(ctxOrPayload) {
 		return new Promise((resolve, reject) => {
-			const id = uuid.v4();
+			const id = uuidv4();
 			let ctx = ctxOrPayload;
 
 			if (!(ctxOrPayload instanceof DispatcherContext)) {
