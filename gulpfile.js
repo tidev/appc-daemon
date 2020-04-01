@@ -375,6 +375,18 @@ async function runTests(cover, all) {
 
 		log(`Restoring home directory: ${cyan(origHomeDir)}`);
 		process.env.HOME = origHomeDir;
+
+		if (process.env.JENKINS_ARTIFACTS_DIR) {
+			const artifactsDir = path.resolve(process.env.JENKINS_ARTIFACTS_DIR);
+			if (fs.existsSync(artifactsDir)) {
+				log(`Artifacts directory exists: ${artifactsDir}`);
+				for (const name of fs.readdirSync(artifactsDir)) {
+					log(`  ${name}`);
+				}
+			} else {
+				log(`Artifacts directory does NOT exist: ${artifactsDir}`);
+			}
+		}
 	}
 }
 
