@@ -1,5 +1,7 @@
-# v2.0.4
+# v2.1.0
 
+ * refactor: Updated to `appcd-config@3.0.0`, but no major breaking changes as far as the
+   `ConfigService` is concerned.
  * chore: Updated dependencies.
 
 # v2.0.3 (Jan 8, 2020)

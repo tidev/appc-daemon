@@ -1,5 +1,5 @@
 import appcdLogger from 'appcd-logger';
-import Config from 'appcd-config';
+import AppcdConfig from 'appcd-config';
 import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs-extra';
 import http from 'http';
@@ -49,8 +49,8 @@ describe('telemetry', () => {
 		});
 
 		it('should error if the config doesn\'t contain an app guid', () => {
-			const cfg = new Config({
-				config: {
+			const cfg = new AppcdConfig({
+				data: {
 					foo: 'bar'
 				}
 			});
@@ -213,8 +213,8 @@ describe('telemetry', () => {
 		it('should stop writing events if event dir is nulled', async function () {
 			const eventsDir = makeTempDir();
 
-			const cfg = new Config({
-				config: {
+			const cfg = new AppcdConfig({
+				data: {
 					telemetry: {
 						enabled: true,
 						eventsDir,
@@ -747,7 +747,7 @@ function createTelemetry(json) {
 	if (!json.telemetry.guid) {
 		json.telemetry.guid = '<GUID>';
 	}
-	const cfg = new Config({ config: json });
+	const cfg = new AppcdConfig({ data: json });
 	return new Telemetry(cfg);
 }
 

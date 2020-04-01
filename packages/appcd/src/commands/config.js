@@ -43,11 +43,9 @@ export default {
 	async action({ argv }) {
 		const [
 			{ default: appcdLogger },
-			{ expandPath },
 			{ createRequest, loadConfig }
 		] = await Promise.all([
 			import('appcd-logger'),
-			import('appcd-path'),
 			import('../common')
 		]);
 
@@ -173,12 +171,7 @@ export default {
 										break;
 								}
 
-								const home = cfg.get('home');
-								if (!home) {
-									return reject(new Error('The "home" directory is not configured and the change was not saved'));
-								}
-
-								await cfg.save(expandPath(home, 'config.json'));
+								cfg.save();
 
 								await print({ value: result, json: argv.json });
 								return resolve();

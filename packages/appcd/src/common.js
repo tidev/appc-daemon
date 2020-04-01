@@ -6,7 +6,7 @@ import path from 'path';
 
 import { expandPath } from 'appcd-path';
 import { isFile } from 'appcd-fs';
-import { loadConfig as appcdLoadConfig } from 'appcd-core/dist/load-config';
+import { loadConfig as appcdLoadConfig } from 'appcd-core/dist/config';
 import { sleep } from 'appcd-util';
 import { spawn } from 'child_process';
 

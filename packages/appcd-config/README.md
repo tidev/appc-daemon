@@ -1,6 +1,6 @@
 # appcd-config
 
-Library for config files with metadata.
+Appc Daemon configuration object.
 
 Visit https://github.com/appcelerator/appc-daemon for more information.
 
@@ -13,21 +13,22 @@ Report issues to [GitHub issues][2]. Official issue tracker in [JIRA][3].
 ## Usage
 
 ```js
-import Config from 'appcd-config';
+import AppcdConfig from 'appcd-config';
 
-const conf = new Config({
-	config: {
+const conf = new AppcdConfig({
+	data: {
 		some: {
 			setting: 'value'
 		}
-	},
-	configFile: '/path/to/js-or-json-file'
+	}
 });
+
+conf.load('/path/to/js-or-json-file');
 
 conf.get('some.setting');
 
-conf.on('change', () => {
-	console.log('config changed!');
+conf.watch(obj => {
+	console.log('config changed!', obj);
 });
 
 conf.set('some.setting', 'another value');

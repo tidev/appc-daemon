@@ -16,7 +16,6 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-config": "^2.0.2",
     "appcd-dispatcher": "^2.0.3",
     "appcd-logger": "^2.0.5",
     "appcd-path": "^1.1.10",
@@ -24,7 +23,8 @@
     "source-map-support": "^0.5.16"
   },
   "devDependencies": {
-    "appcd-gulp": "^2.3.2"
+    "appcd-gulp": "^2.3.2",
+    "tmp": "^0.1.0"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",

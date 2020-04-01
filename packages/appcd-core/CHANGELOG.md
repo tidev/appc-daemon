@@ -1,5 +1,7 @@
-# v3.2.1
+# v3.3.0
 
+ * refactor: Updated to `appcd-config@3.0.0`, created the Appc Daemon config schema, and converted
+   the `default.js` config to `default.json`.
  * chore: Updated dependencies.
 
 # v3.2.0 (Jan 13, 2020)

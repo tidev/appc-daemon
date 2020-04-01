@@ -1,9 +1,12 @@
+/* istanbul ignore if */
+if (!Error.prepareStackTrace) {
+	require('source-map-support/register');
+}
+
 import appcdLogger from 'appcd-logger';
-import Config from 'appcd-config';
 import Response, { codes } from 'appcd-response';
 
 import { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
-import { expandPath } from 'appcd-path';
 
 const { log } = appcdLogger('appcd:config-service');
 const { highlight } = appcdLogger.styles;
@@ -22,7 +25,7 @@ export default class ConfigService extends ServiceDispatcher {
 	 * @access public
 	 */
 	constructor(cfg) {
-		if (!cfg || !(cfg instanceof Config)) {
+		if (!cfg || typeof cfg !== 'object') {
 			throw new TypeError('Expected config to be a valid config object');
 		}
 
@@ -81,12 +84,14 @@ export default class ConfigService extends ServiceDispatcher {
 
 			} else if (action === 'load') {
 				this.config.load(data.file, {
-					namespace:     data.namespace,
-					override:      data.override !== false
+					id:        data.id || data.namespace,
+					namespace: data.namespace || data.id,
+					readonly:  data.readonly,
+					schema:    data.schema
 				});
 
 			} else if (action === 'unload') {
-				this.config.unload(data.namespace);
+				this.config.unload(data.id || data.namespace);
 
 			} else if (writeRegExp.test(action)) {
 				// performing a modifying action
@@ -133,10 +138,7 @@ export default class ConfigService extends ServiceDispatcher {
 					throw new DispatcherError(codes.BAD_REQUEST, e.message);
 				}
 
-				const home = this.config.get('home');
-				if (home) {
-					await this.config.save(expandPath(home, 'config.json'));
-				}
+				this.config.save({ file: data.file });
 
 				ctx.response = value || new Response(codes.OK);
 				return;
@@ -150,6 +152,7 @@ export default class ConfigService extends ServiceDispatcher {
 		if (filter) {
 			log('Filtering config:', filter);
 		}
+		log(this.config.toString());
 		const node = this.config.get(filter || undefined);
 		if (node === undefined) {
 			throw new DispatcherError(codes.NOT_FOUND, filter && `Not Found: ${filter}`);

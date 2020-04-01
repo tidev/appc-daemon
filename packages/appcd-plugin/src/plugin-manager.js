@@ -257,10 +257,11 @@ export default class PluginManager extends Dispatcher {
 					logger.log('Registering plugin config file:', highlight(plugin.configFile));
 					await Dispatcher.call('/appcd/config', {
 						data: {
-							action: 'load',
-							file:   plugin.configFile,
-							id:     plugin.name,
-							schema: plugin.configSchemaFile
+							action:    'load',
+							file:      plugin.configFile,
+							id:        `${plugin.packageName}@${plugin.version}`,
+							namespace: plugin.name,
+							schema:    plugin.configSchemaFile
 						}
 					});
 				}
@@ -365,8 +366,8 @@ export default class PluginManager extends Dispatcher {
 						logger.log('Unregistering plugin config file:', highlight(plugin.configFile));
 						await Dispatcher.call('/appcd/config', {
 							data: {
-								action:    'unload',
-								namespace: plugin.name
+								action: 'unload',
+								id:     `${plugin.packageName}@${plugin.version}`
 							}
 						});
 					}

@@ -16,25 +16,16 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "@babel/parser": "^7.8.4",
-    "@babel/traverse": "^7.8.4",
-    "@babel/types": "^7.8.3",
-    "appcd-fs": "^1.1.10",
-    "appcd-logger": "^2.0.5",
-    "appcd-path": "^1.1.10",
-    "doctrine": "^3.0.0",
-    "fs-extra": "^8.1.0",
-    "gawk": "^4.7.0",
+    "config-kit": "^1.0.0",
     "source-map-support": "^0.5.16"
   },
   "devDependencies": {
-    "appcd-gulp": "^2.3.2",
-    "tmp": "^0.1.0"
+    "appcd-gulp": "^2.3.2"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
   "repository": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-config",
   "engines": {
-    "node": ">=8.0.0"
+    "node": ">=10.13.0"
   }
 }
