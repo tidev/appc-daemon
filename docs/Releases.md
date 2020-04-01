@@ -4,21 +4,22 @@
 
 | Version | Date       | Plugin API Version | System Node.js        | Core Node.js |     |
 | :-----: | :--------: | :----------------: | :-------------------: | :----------: | --- |
-| 3.2.0   | 2020-01-13 | 1.1.0              | ^8.12.0 \|\| >=10.2.0 | 10.16.3   | [Changelog](Release%20Notes/Appc%20Daemon%203.2.0.md) |
-| 3.1.0   | 2019-11-06 | 1.0.0              | ^8.12.0 \|\| >=10.2.0 | 10.16.3   | [Changelog](Release%20Notes/Appc%20Daemon%203.1.0.md) |
-| 3.0.0   | 2019-08-13 | 1.0.0              | >=8.12.0              | 10.16.2   | [Changelog](Release%20Notes/Appc%20Daemon%203.0.0.md) |
-| 2.7.0   | 2019-06-25 | 1.0.0              | >=8.12.0              | 10.15.3   | [Changelog](Release%20Notes/Appc%20Daemon%202.7.0.md) |
-| 2.6.0   | 2019-06-24 | 1.0.0              | >=8.12.0              | 10.15.3   | [Changelog](Release%20Notes/Appc%20Daemon%202.6.0.md) |
-| 2.5.0   | 2019-06-13 | 1.0.0              | >=8.12.0              | 10.15.3   | [Changelog](Release%20Notes/Appc%20Daemon%202.5.0.md) |
-| 2.4.0   | 2019-06-06 | 1.0.0              | >=8.12.0              | 10.15.3   | [Changelog](Release%20Notes/Appc%20Daemon%202.4.0.md) |
-| 2.3.0   | 2019-06-04 | 1.0.0              | >=8.12.0              | 10.15.3   | [Changelog](Release%20Notes/Appc%20Daemon%202.3.0.md) |
-| 2.2.0   | 2019-05-29 | 1.0.0              | >=8.10.0              | 10.15.3   | [Changelog](Release%20Notes/Appc%20Daemon%202.2.0.md) |
-| 2.1.0   | 2019-01-24 | 1.0.0              | >=8.10.0              | 10.15.0   | [Changelog](Release%20Notes/Appc%20Daemon%202.1.0.md) |
-| 2.0.1   | 2018-01-16 | 1.0.0              | >=8.10.0              | 10.15.0   | [Changelog](Release%20Notes/Appc%20Daemon%202.0.1.md) |
-| 2.0.0   | 2018-11-27 | 1.0.0              | >=8.10.0              | 10.13.0   | [Changelog](Release%20Notes/Appc%20Daemon%202.0.0.md) |
-| 1.1.3   | 2018-05-24 | 1.0.0              | >=8.0.0               | 8.11.1    | [Changelog](Release%20Notes/Appc%20Daemon%201.1.3.md) |
-| 1.1.2   | 2018-05-17 | 1.0.0              | >=8.0.0               | 8.11.1    | [Changelog](Release%20Notes/Appc%20Daemon%201.1.2.md) |
-| 1.1.1   | 2018-04-10 | 1.0.0              | >=8.0.0               | 8.11.1    | [Changelog](Release%20Notes/Appc%20Daemon%201.1.1.md) |
-| 1.1.0   | 2018-04-09 | 1.0.0              | >=8.0.0               | 8.11.1    | [Changelog](Release%20Notes/Appc%20Daemon%201.1.0.md) |
-| 1.0.1   | 2017-12-15 | 1.0.0              | >=8.0.0               | 8.9.1     | [Changelog](Release%20Notes/Appc%20Daemon%201.0.1.md) |
-| 1.0.0   | 2017-12-05 | 1.0.0              | >=8.0.0               | 8.9.1     | [Changelog](Release%20Notes/Appc%20Daemon%201.0.0.md) |
+| 4.0.0   | ?          | 2.0.0              | >=10.13.0             | 12.16.1      |     |
+| 3.2.0   | 2020-01-13 | 1.1.0              | ^8.12.0 \|\| >=10.2.0 | 10.16.3      | [Changelog](Release%20Notes/Appc%20Daemon%203.2.0.md) |
+| 3.1.0   | 2019-11-06 | 1.0.0              | ^8.12.0 \|\| >=10.2.0 | 10.16.3      | [Changelog](Release%20Notes/Appc%20Daemon%203.1.0.md) |
+| 3.0.0   | 2019-08-13 | 1.0.0              | >=8.12.0              | 10.16.2      | [Changelog](Release%20Notes/Appc%20Daemon%203.0.0.md) |
+| 2.7.0   | 2019-06-25 | 1.0.0              | >=8.12.0              | 10.15.3      | [Changelog](Release%20Notes/Appc%20Daemon%202.7.0.md) |
+| 2.6.0   | 2019-06-24 | 1.0.0              | >=8.12.0              | 10.15.3      | [Changelog](Release%20Notes/Appc%20Daemon%202.6.0.md) |
+| 2.5.0   | 2019-06-13 | 1.0.0              | >=8.12.0              | 10.15.3      | [Changelog](Release%20Notes/Appc%20Daemon%202.5.0.md) |
+| 2.4.0   | 2019-06-06 | 1.0.0              | >=8.12.0              | 10.15.3      | [Changelog](Release%20Notes/Appc%20Daemon%202.4.0.md) |
+| 2.3.0   | 2019-06-04 | 1.0.0              | >=8.12.0              | 10.15.3      | [Changelog](Release%20Notes/Appc%20Daemon%202.3.0.md) |
+| 2.2.0   | 2019-05-29 | 1.0.0              | >=8.10.0              | 10.15.3      | [Changelog](Release%20Notes/Appc%20Daemon%202.2.0.md) |
+| 2.1.0   | 2019-01-24 | 1.0.0              | >=8.10.0              | 10.15.0      | [Changelog](Release%20Notes/Appc%20Daemon%202.1.0.md) |
+| 2.0.1   | 2018-01-16 | 1.0.0              | >=8.10.0              | 10.15.0      | [Changelog](Release%20Notes/Appc%20Daemon%202.0.1.md) |
+| 2.0.0   | 2018-11-27 | 1.0.0              | >=8.10.0              | 10.13.0      | [Changelog](Release%20Notes/Appc%20Daemon%202.0.0.md) |
+| 1.1.3   | 2018-05-24 | 1.0.0              | >=8.0.0               | 8.11.1       | [Changelog](Release%20Notes/Appc%20Daemon%201.1.3.md) |
+| 1.1.2   | 2018-05-17 | 1.0.0              | >=8.0.0               | 8.11.1       | [Changelog](Release%20Notes/Appc%20Daemon%201.1.2.md) |
+| 1.1.1   | 2018-04-10 | 1.0.0              | >=8.0.0               | 8.11.1       | [Changelog](Release%20Notes/Appc%20Daemon%201.1.1.md) |
+| 1.1.0   | 2018-04-09 | 1.0.0              | >=8.0.0               | 8.11.1       | [Changelog](Release%20Notes/Appc%20Daemon%201.1.0.md) |
+| 1.0.1   | 2017-12-15 | 1.0.0              | >=8.0.0               | 8.9.1        | [Changelog](Release%20Notes/Appc%20Daemon%201.0.1.md) |
+| 1.0.0   | 2017-12-05 | 1.0.0              | >=8.0.0               | 8.9.1        | [Changelog](Release%20Notes/Appc%20Daemon%201.0.0.md) |

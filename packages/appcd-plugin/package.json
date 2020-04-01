@@ -34,7 +34,6 @@
     "appcd-subprocess": "^3.0.2",
     "appcd-telemetry": "^3.0.2",
     "appcd-util": "^2.0.2",
-    "appcd-winreg": "^1.1.7",
     "builtin-modules": "^3.1.0",
     "findup-sync": "^4.0.0",
     "fs-extra": "^8.1.0",
