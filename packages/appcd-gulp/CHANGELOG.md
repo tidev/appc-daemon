@@ -1,3 +1,7 @@
+# v3.0.0
+
+ * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.
+
 # v2.4.0 (Feb 4, 2020)
 
  * feat: Added optional chaining Babel plugin.

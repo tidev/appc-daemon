@@ -1,3 +1,7 @@
+# v5.0.0
+
+ * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.
+
 # v4.2.1 (Mar 3, 2020)
 
  * fix: Explicitly update PATH environment variable so that it is properly inherited by the child

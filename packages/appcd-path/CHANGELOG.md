@@ -1,3 +1,7 @@
+# v2.0.0
+
+ * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.
+
 # v1.1.10 (Jan 14, 2020)
 
  * fix: Fixed bug when resolving the real path of a non-existent top-level directory/file.

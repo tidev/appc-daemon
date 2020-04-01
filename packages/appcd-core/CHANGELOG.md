@@ -1,5 +1,6 @@
-# v3.3.0
+# v4.0.0
 
+ * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.
  * refactor: Updated to `appcd-config@3.0.0`, created the Appc Daemon config schema, and converted
    the `default.js` config to `default.json`.
  * chore: Updated dependencies.

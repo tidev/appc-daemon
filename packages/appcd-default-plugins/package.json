@@ -57,6 +57,9 @@
       "^2.0.1"
     ]
   },
+  "engines": {
+    "node": ">=10.13.0"
+  },
   "homepage": "https://github.com/appcelerator/appc-daemon",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
   "repository": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-default-plugins"

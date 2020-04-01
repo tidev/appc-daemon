@@ -1,5 +1,6 @@
-# v2.1.0
+# v3.0.0
 
+ * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.
  * refactor: Updated to `appcd-config@3.0.0`, but no major breaking changes as far as the
    `ConfigService` is concerned.
  * chore: Updated dependencies.

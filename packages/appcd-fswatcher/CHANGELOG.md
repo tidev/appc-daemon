@@ -1,5 +1,6 @@
-# v1.2.6
+# v2.0.0
 
+ * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.
  * chore: Updated dependencies.
 
 # v1.2.5 (Jan 8, 2020)
