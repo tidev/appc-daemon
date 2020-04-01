@@ -2,6 +2,8 @@
 
  * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.
    [(DAEMON-334)](https://jira.appcelerator.org/browse/DAEMON-334)
+ * BREAKING CHANGE: Bumped core Node.js version to 12.16.1. This affects all plugins.
+   [(DAEMON-319)](https://jira.appcelerator.org/browse/DAEMON-319)
  * refactor: Updated to `appcd-config@3.0.0`, created the Appc Daemon config schema, and converted
    the `default.js` config to `default.json`.
  * chore: Updated dependencies.
