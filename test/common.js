@@ -196,14 +196,32 @@ export function getDebugLog() {
 }
 
 export function makeTest(fn) {
-	return async () => {
+	return async function () {
 		try {
 			await fn.call(api);
 		} catch (e) {
 			try {
-				const s = getDebugLog();
-				s && logger('debug:log').log(s);
+				const { JENKINS_ARTIFACTS_DIR, JENKINS_NODEJS_VERSION, JENKINS_PLATFORM_NAME } = process.env;
+				const artifactsDir = JENKINS_ARTIFACTS_DIR && path.resolve(JENKINS_ARTIFACTS_DIR);
+				const logDir = path.join(os.homedir(), '.appcelerator', 'appcd', 'log');
+
+				if (artifactsDir && fs.existsSync(logDir)) {
+					const prefix = `appcd_${JENKINS_PLATFORM_NAME || process.platform}_${JENKINS_NODEJS_VERSION || process.versions.node}_`;
+					const testName = this.test.fullTitle();
+
+					await fs.mkdirs(artifactsDir);
+
+					for (const name of fs.readdirSync(dir)) {
+						if (/\.log$/.test(name)) {
+							const data = fs.readFileSync(path.join(dir, name), 'utf8');
+							const dest = path.join(artifactsDir, `${prefix}${name}`);
+							fs.writeFileSync(dest, `Test Name: ${testName}\n\n${data}`);
+						}
+					}
+				}
 			} catch (e2) {}
+
+			// rethrow original error
 			throw e;
 		} finally {
 			api.runAppcdSync([ 'stop' ]);
