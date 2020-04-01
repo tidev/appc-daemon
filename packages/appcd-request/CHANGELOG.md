@@ -1,3 +1,8 @@
+# v3.0.0
+
+ * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.
+   [(DAEMON-334)](https://jira.appcelerator.org/browse/DAEMON-334)
+
 # v2.2.0 (Jan 8, 2020)
 
  * feat: Add support for `HTTP_PROXY` and `HTTPS_PROXY` environment variables.

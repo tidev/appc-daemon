@@ -1,5 +1,7 @@
-# v3.3.0
+# v4.0.0
 
+ * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.
+   [(DAEMON-334)](https://jira.appcelerator.org/browse/DAEMON-334)
  * feat: Added Plugin API Version to the status output.
    [(DAEMON-314)](https://jira.appcelerator.org/browse/DAEMON-314)
  * refactor: Updated to latest `AppcdConfig` usage where `save()` is now synchronous and we no
