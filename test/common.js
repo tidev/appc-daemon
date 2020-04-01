@@ -202,22 +202,29 @@ export function makeTest(fn) {
 		} catch (e) {
 			try {
 				const { JENKINS_ARTIFACTS_DIR, JENKINS_NODEJS_VERSION, JENKINS_PLATFORM_NAME } = process.env;
-				const artifactsDir = JENKINS_ARTIFACTS_DIR && path.resolve(JENKINS_ARTIFACTS_DIR);
 				const logDir = path.join(os.homedir(), '.appcelerator', 'appcd', 'log');
 
-				if (artifactsDir && fs.existsSync(logDir)) {
+				if (JENKINS_ARTIFACTS_DIR && fs.existsSync(logDir)) {
+					const artifactsDir = path.resolve(JENKINS_ARTIFACTS_DIR);
 					const prefix = `appcd_${JENKINS_PLATFORM_NAME || process.platform}_${JENKINS_NODEJS_VERSION || process.versions.node}_`;
 					const testName = this.test.fullTitle();
 
 					await fs.mkdirs(artifactsDir);
 
-					for (const name of fs.readdirSync(dir)) {
+					log(`Found log directory: ${highlight(logDir)}`);
+
+					for (const name of fs.readdirSync(logDir)) {
 						if (/\.log$/.test(name)) {
-							const data = fs.readFileSync(path.join(dir, name), 'utf8');
+							const data = fs.readFileSync(path.join(logDir, name), 'utf8');
 							const dest = path.join(artifactsDir, `${prefix}${name}`);
+							log(`Writing log: ${highlight(dest)}`);
 							fs.writeFileSync(dest, `Test Name: ${testName}\n\n${data}`);
 						}
 					}
+				} else if (!artifactsDir) {
+					log('Artifacts dir not defined, skipping');
+				} else {
+					log('Log directory does not exist, skipping');
 				}
 			} catch (e2) {}
 
