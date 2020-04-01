@@ -2,6 +2,8 @@
 
  * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.
    [(DAEMON-334)](https://jira.appcelerator.org/browse/DAEMON-334)
+ * BREAKING CHANGE: Removed `appcd-winreg` and is no longer available to plugins.
+   [(DAEMON-277)](https://jira.appcelerator.org/browse/DAEMON-277)
  * feat: Added Plugin API Version to the status.
    [(DAEMON-314)](https://jira.appcelerator.org/browse/DAEMON-314)
  * fix: Fixed bug where `status` would search an unsorted list of registered plugins which caused

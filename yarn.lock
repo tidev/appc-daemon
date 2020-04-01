@@ -1782,14 +1782,6 @@ appcd-dump-viewer@^1.1.4:
     vue "^2.5.13"
     vuetify "^1.0.0"
 
-appcd-winreg@^1.1.7:
-  version "1.1.7"
-  resolved "https://registry.yarnpkg.com/appcd-winreg/-/appcd-winreg-1.1.7.tgz#74017a6e6769ca1b5b7f2c3fe845451e8399ca54"
-  integrity sha512-aK0AeKchdif6bd8OU2DJM6vEEL/t4CmORcrXV6EoQPrYTOUT4x+BfUIBtMYFDX3Vq3mOkNHIe0dshjTCNgOy2g==
-  dependencies:
-    source-map-support "^0.5.13"
-    winreg "^1.2.4"
-
 append-buffer@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/append-buffer/-/append-buffer-1.0.2.tgz#d8220cf466081525efea50614f3de6514dfa58f1"
@@ -10592,7 +10584,7 @@ source-map-resolve@^0.5.0, source-map-resolve@^0.5.2:
     source-map-url "^0.4.0"
     urix "^0.1.0"
 
-source-map-support@^0.5.13, source-map-support@^0.5.16, source-map-support@~0.5.12:
+source-map-support@^0.5.16, source-map-support@~0.5.12:
   version "0.5.16"
   resolved "https://registry.yarnpkg.com/source-map-support/-/source-map-support-0.5.16.tgz#0ae069e7fe3ba7538c64c98515e35339eac5a042"
   integrity sha512-efyLRJDr68D9hBBNIPWFjhpFzURh+KJykQwvMyW5UiZzYwoF6l4YMMDIJJEyFWxWCqfyxLzz6tSfUFR+kXXsVQ==
@@ -11976,11 +11968,6 @@ windowslib@^2.1.1:
     cli-kit "^0.13.0"
     winreglib "^1.0.5"
     xmldom "^0.2.1"
-
-winreg@^1.2.4:
-  version "1.2.4"
-  resolved "https://registry.yarnpkg.com/winreg/-/winreg-1.2.4.tgz#ba065629b7a925130e15779108cf540990e98d1b"
-  integrity sha1-ugZWKbepJRMOFXeRCM9UCZDpjRs=
 
 winreglib@^1.0.5:
   version "1.0.5"
