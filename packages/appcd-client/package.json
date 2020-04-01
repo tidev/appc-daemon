@@ -25,15 +25,15 @@
     "appcd-logger": "^2.0.5",
     "appcd-response": "^2.0.4",
     "appcd-util": "^2.0.2",
-    "fs-extra": "^8.1.0",
+    "fs-extra": "^9.0.0",
     "msgpack-lite": "^0.1.26",
     "source-map-support": "^0.5.16",
-    "uuid": "^3.4.0",
+    "uuid": "^7.0.3",
     "which": "^2.0.2",
-    "ws": "^7.2.1"
+    "ws": "^7.2.3"
   },
   "devDependencies": {
-    "appcd-gulp": "^2.3.2"
+    "appcd-gulp": "^2.4.0"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",

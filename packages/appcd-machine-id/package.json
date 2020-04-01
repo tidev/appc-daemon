@@ -21,14 +21,14 @@
     "appcd-path": "^1.1.10",
     "appcd-subprocess": "^3.0.2",
     "appcd-util": "^2.0.2",
-    "fs-extra": "^8.1.0",
+    "fs-extra": "^9.0.0",
     "macaddress": "^0.2.9",
     "simple-plist": "^1.1.0",
     "source-map-support": "^0.5.16",
     "winreglib": "^1.0.5"
   },
   "devDependencies": {
-    "appcd-gulp": "^2.3.2",
+    "appcd-gulp": "^2.4.0",
     "tmp": "^0.1.0"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon",

@@ -19,15 +19,15 @@
     "appcd-fs": "^1.1.10",
     "appcd-logger": "^2.0.5",
     "koa": "^2.11.0",
-    "koa-bodyparser": "^4.2.1",
+    "koa-bodyparser": "^4.3.0",
     "koa-helmet": "^5.2.0",
     "koa-send": "^5.0.0",
     "path-to-regexp": "^6.1.0",
     "source-map-support": "^0.5.16",
-    "ws": "^7.2.1"
+    "ws": "^7.2.3"
   },
   "devDependencies": {
-    "appcd-gulp": "^2.3.2",
+    "appcd-gulp": "^2.4.0",
     "supertest": "^4.0.2"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon",

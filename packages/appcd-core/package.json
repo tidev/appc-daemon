@@ -20,7 +20,7 @@
     "appcd-agent": "^1.1.9",
     "appcd-config": "^2.0.2",
     "appcd-config-service": "^2.0.3",
-    "appcd-default-plugins": "^4.2.0",
+    "appcd-default-plugins": "^4.2.1",
     "appcd-dispatcher": "^2.0.3",
     "appcd-fs": "^1.1.10",
     "appcd-fswatch-manager": "^2.0.3",
@@ -34,15 +34,15 @@
     "appcd-subprocess": "^3.0.2",
     "appcd-telemetry": "^3.0.2",
     "appcd-util": "^2.0.2",
-    "cli-kit": "^0.13.2",
-    "fs-extra": "^8.1.0",
+    "cli-kit": "^0.14.0",
+    "fs-extra": "^9.0.0",
     "gawk": "^4.7.0",
     "global-modules": "^2.0.0",
     "humanize": "^0.0.9",
     "msgpack-lite": "^0.1.26"
   },
   "devDependencies": {
-    "appcd-gulp": "^2.3.2"
+    "appcd-gulp": "^2.4.0"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
