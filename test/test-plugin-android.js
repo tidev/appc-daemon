@@ -27,7 +27,7 @@ try {
 describe('plugin android', function () {
 	this.timeout(120000);
 
-	_it('should register the android plugin', makeTest(async function () {
+	_it.only('should register the android plugin', makeTest(async function () {
 		this.symlinkPlugin('android', pluginVersion);
 		await this.installNode();
 		await this.startDaemonDebugMode(defaultConfig);
