@@ -210,7 +210,7 @@ export function makeTest(fn) {
 					const platform = JENKINS_PLATFORM_NAME || process.platform;
 					const nodeVer = JENKINS_NODEJS_VERSION || process.versions.node;
 					const testName = this.test.fullTitle();
-					const prefix = `${platform}_${nodeVer}_${filenamify(testName, { maxLength: 160 })}`;
+					const prefix = `${platform} ${nodeVer} ${filenamify(testName, { maxLength: 160 })} `;
 
 					await fs.mkdirs(artifactsDir);
 
@@ -219,7 +219,7 @@ export function makeTest(fn) {
 					for (const name of fs.readdirSync(logDir)) {
 						if (/\.log$/.test(name)) {
 							const src = path.join(logDir, name);
-							const dest = path.join(artifactsDir, `${prefix}${name}`);
+							const dest = path.join(artifactsDir, prefix + name);
 							log(`Writing log: ${highlight(dest)}`);
 							await fs.move(src, dest);
 						}
