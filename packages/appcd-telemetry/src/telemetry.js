@@ -12,11 +12,11 @@ import getMachineId from 'appcd-machine-id';
 import path from 'path';
 import request from 'appcd-request';
 import Response, { AppcdError, codes, i18n } from 'appcd-response';
-import uuid from 'uuid';
 
+import { arch, osInfo } from 'appcd-util';
 import { expandPath } from 'appcd-path';
 import { isDir } from 'appcd-fs';
-import { arch, osInfo } from 'appcd-util';
+import { v4 as uuidv4 } from 'uuid';
 
 const { __n } = i18n();
 
@@ -77,7 +77,7 @@ export default class Telemetry extends Dispatcher {
 	 * The session id.
 	 * @type {String}
 	 */
-	sessionId = uuid.v4();
+	sessionId = uuidv4();
 
 	/**
 	 * Constructs an analytics instance.
@@ -161,7 +161,7 @@ export default class Telemetry extends Dispatcher {
 			delete data.event;
 			delete data.params;
 
-			const id = uuid.v4();
+			const id = uuidv4();
 
 			// spec: https://techweb.axway.com/confluence/display/analytics/Analytics+JSON+Payload+V4
 			const payload = {

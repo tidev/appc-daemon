@@ -369,13 +369,6 @@ async function runTests(cover, all) {
 	} finally {
 		// restore home directory so that we can delete the temp one
 		if (tmpHomeDir) {
-			const artifactsDir = process.env.JENKINS_ARTIFACTS_DIR && path.resolve(process.env.JENKINS_ARTIFACTS_DIR);
-			const logDir = path.join(tmpHomeDir, '.appcelerator', 'appcd', 'log');
-			if (artifactsDir && fs.existsSync(logDir)) {
-				log(`Moving log files to artifacts directory: ${cyan(logDir)} -> ${cyan(artifactsDir)}`);
-				fs.moveSync(logDir, artifactsDir);
-			}
-
 			log(`Removing temp home directory: ${cyan(tmpHomeDir)}`);
 			fs.removeSync(tmpHomeDir);
 		}

@@ -1,7 +1,8 @@
 import appcdLogger from 'appcd-logger';
 import pluralize from 'pluralize';
 import Response, { codes } from 'appcd-response';
-import uuid from 'uuid';
+
+import { v4 as uuidv4 } from 'uuid';
 
 const logger = appcdLogger('appcd:service-dispatcher');
 const { highlight, note } = appcdLogger.styles;
@@ -130,7 +131,7 @@ export default class ServiceDispatcher {
 	 * @access private
 	 */
 	subscribe(ctx) {
-		const subscriptionId = ctx.request.sid = uuid.v4();
+		const subscriptionId = ctx.request.sid = uuidv4();
 		const topic = typeof this.instance.getTopic === 'function' && this.instance.getTopic(ctx) || ctx.realPath || '';
 		let descriptor = this.topics[topic];
 		const firstSubscription = !descriptor;

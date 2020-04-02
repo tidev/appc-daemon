@@ -2,6 +2,7 @@
 
  * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.
    [(DAEMON-334)](https://jira.appcelerator.org/browse/DAEMON-334)
+ * chore: Updated dependencies.
 
 # v4.2.1 (Mar 3, 2020)
 

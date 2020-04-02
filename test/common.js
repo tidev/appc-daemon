@@ -1,3 +1,4 @@
+import filenamify from 'filenamify';
 import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
@@ -196,14 +197,41 @@ export function getDebugLog() {
 }
 
 export function makeTest(fn) {
-	return async () => {
+	return async function () {
 		try {
 			await fn.call(api);
 		} catch (e) {
 			try {
-				const s = getDebugLog();
-				s && logger('debug:log').log(s);
+				const { JENKINS_ARTIFACTS_DIR, JENKINS_NODEJS_VERSION, JENKINS_PLATFORM_NAME } = process.env;
+				const logDir = path.join(os.homedir(), '.appcelerator', 'appcd', 'log');
+
+				if (JENKINS_ARTIFACTS_DIR && fs.existsSync(logDir)) {
+					const artifactsDir = path.resolve(JENKINS_ARTIFACTS_DIR);
+					const platform = JENKINS_PLATFORM_NAME || process.platform;
+					const nodeVer = JENKINS_NODEJS_VERSION || process.versions.node;
+					const testName = this.test.fullTitle();
+					const prefix = `${platform} ${nodeVer} ${filenamify(testName, { maxLength: 160 })} `;
+
+					await fs.mkdirs(artifactsDir);
+
+					log(`Found log directory: ${highlight(logDir)}`);
+
+					for (const name of fs.readdirSync(logDir)) {
+						if (/\.log$/.test(name)) {
+							const src = path.join(logDir, name);
+							const dest = path.join(artifactsDir, prefix + name);
+							log(`Writing log: ${highlight(dest)}`);
+							await fs.move(src, dest);
+						}
+					}
+				} else if (!artifactsDir) {
+					log('Artifacts dir not defined, skipping');
+				} else {
+					log('Log directory does not exist, skipping');
+				}
 			} catch (e2) {}
+
+			// rethrow original error
 			throw e;
 		} finally {
 			api.runAppcdSync([ 'stop' ]);

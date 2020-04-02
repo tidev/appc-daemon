@@ -7,7 +7,7 @@ import FSWatchManager from 'appcd-fswatch-manager';
 import globalModules from 'global-modules';
 import os from 'os';
 import path from 'path';
-import PluginManager from 'appcd-plugin';
+import PluginManager, { appcdPluginAPIVersion } from 'appcd-plugin';
 import StatusMonitor from './status-monitor';
 import SubprocessManager from 'appcd-subprocess';
 import Telemetry from 'appcd-telemetry';
@@ -229,6 +229,7 @@ export default class Server {
 		Dispatcher.register('/appcd/subprocess', this.systems.subprocessManager);
 
 		// init the plugin manager
+		logger.log(`Initializing plugin system (api version ${appcdPluginAPIVersion})`);
 		this.systems.pluginManager = await new PluginManager({
 			paths: [
 				// globally installed plugins
@@ -308,7 +309,8 @@ export default class Server {
 				packageName: p.packageName,
 				nodeVersion: p.nodeVersion,
 				version:     p.version,
-				type:        p.type
+				type:        p.type,
+				error:       p.error
 			})),
 			startupTime
 		});

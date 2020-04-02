@@ -7,7 +7,6 @@ import appcdLogger from 'appcd-logger';
 import fs from 'fs-extra';
 import msgpack from 'msgpack-lite';
 import path from 'path';
-import uuid from 'uuid';
 import WebSocket from 'ws';
 import which from 'which';
 
@@ -15,6 +14,7 @@ import { arch } from 'appcd-util';
 import { EventEmitter } from 'events';
 import { locale } from 'appcd-response';
 import { spawnSync } from 'child_process';
+import { v4 as uuidv4 } from 'uuid';
 
 const { error, log } = appcdLogger('appcd:client');
 const { alert, highlight, note, ok } = appcdLogger.styles;
@@ -262,7 +262,7 @@ export default class Client {
 		}
 
 		const emitter = new EventEmitter();
-		const id = uuid.v4();
+		const id = uuidv4();
 		const startTime = new Date();
 		const req = {
 			version: '1.0',

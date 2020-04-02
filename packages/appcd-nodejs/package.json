@@ -20,15 +20,15 @@
     "appcd-logger": "^2.0.5",
     "appcd-request": "^2.2.0",
     "appcd-util": "^2.0.2",
-    "fs-extra": "^8.1.0",
+    "fs-extra": "^9.0.0",
     "pluralize": "^8.0.0",
     "progress": "^2.0.3",
     "source-map-support": "^0.5.16",
-    "tar-stream": "^2.1.0",
+    "tar-stream": "^2.1.2",
     "yauzl": "^2.10.0"
   },
   "devDependencies": {
-    "appcd-gulp": "^2.3.2",
+    "appcd-gulp": "^2.4.0",
     "tmp": "^0.1.0"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon",

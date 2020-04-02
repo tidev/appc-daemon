@@ -24,13 +24,13 @@
     "appcd-request": "^2.2.0",
     "appcd-response": "^2.0.4",
     "appcd-util": "^2.0.2",
-    "fs-extra": "^8.1.0",
+    "fs-extra": "^9.0.0",
     "source-map-support": "^0.5.16",
-    "uuid": "^3.4.0"
+    "uuid": "^7.0.3"
   },
   "devDependencies": {
     "appcd-config": "^2.0.2",
-    "appcd-gulp": "^2.3.2",
+    "appcd-gulp": "^2.4.0",
     "tmp": "^0.1.0"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon",
