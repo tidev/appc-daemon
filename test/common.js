@@ -1,3 +1,4 @@
+import filenamify from 'filenamify';
 import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
@@ -206,8 +207,10 @@ export function makeTest(fn) {
 
 				if (JENKINS_ARTIFACTS_DIR && fs.existsSync(logDir)) {
 					const artifactsDir = path.resolve(JENKINS_ARTIFACTS_DIR);
-					const prefix = `appcd_${JENKINS_PLATFORM_NAME || process.platform}_${JENKINS_NODEJS_VERSION || process.versions.node}_`;
+					const platform = JENKINS_PLATFORM_NAME || process.platform;
+					const nodeVer = JENKINS_NODEJS_VERSION || process.versions.node;
 					const testName = this.test.fullTitle();
+					const prefix = `${platform}_${nodeVer}_${filenamify(testName, { maxLength: 160 })}`;
 
 					await fs.mkdirs(artifactsDir);
 
@@ -215,10 +218,10 @@ export function makeTest(fn) {
 
 					for (const name of fs.readdirSync(logDir)) {
 						if (/\.log$/.test(name)) {
-							const data = fs.readFileSync(path.join(logDir, name), 'utf8');
+							const src = path.join(logDir, name);
 							const dest = path.join(artifactsDir, `${prefix}${name}`);
 							log(`Writing log: ${highlight(dest)}`);
-							fs.writeFileSync(dest, `Test Name: ${testName}\n\n${data}`);
+							await fs.move(src, dest);
 						}
 					}
 				} else if (!artifactsDir) {
