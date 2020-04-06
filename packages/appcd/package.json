@@ -37,7 +37,7 @@
     "appcd-path": "^1.1.10",
     "appcd-util": "^2.0.2",
     "cli-kit": "^0.14.0",
-    "cli-table2": "^0.2.0",
+    "cli-table3": "^0.6.0",
     "global-prefix": "^3.0.0",
     "humanize": "^0.0.9",
     "source-map-support": "^0.5.16",

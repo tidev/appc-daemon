@@ -6,7 +6,7 @@ export default {
 	options: {
 		'--view': 'open the dump in the web browser'
 	},
-	async action({ argv }) {
+	async action({ argv, console }) {
 		const [
 			fs,
 			os,

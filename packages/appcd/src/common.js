@@ -6,7 +6,7 @@ import path from 'path';
 
 import { expandPath } from 'appcd-path';
 import { isFile } from 'appcd-fs';
-import { loadConfig as appcdLoadConfig } from 'appcd-core/dist/config';
+import { loadConfig as appcdLoadConfig } from 'appcd-core';
 import { sleep } from 'appcd-util';
 import { spawn } from 'child_process';
 
@@ -107,7 +107,7 @@ export async function startServer({ cfg, argv }) {
 		const debugPort = process.env.APPCD_INSPECT_PORT && Math.max(parseInt(process.env.APPCD_INSPECT_PORT), 1024) || 9229;
 		args.push(`--inspect-brk=${debugPort}`);
 	}
-	args.push(require.resolve('appcd-core'));
+	args.push(require.resolve('appcd-core/dist/main'));
 	if (config) {
 		args.push('--config', JSON.stringify(config));
 	}

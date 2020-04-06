@@ -3,14 +3,14 @@ export default {
 	options: {
 		'--json': 'outputs the status as JSON'
 	},
-	async action({ argv }) {
+	async action({ argv, console }) {
 		const [
 			{ default: Table },
 			{ createRequest, loadConfig },
 			{ createInstanceWithDefaults, StdioStream },
 			{ filesize, numberFormat, relativeTime }
 		] = await Promise.all([
-			import('cli-table2'),
+			import('cli-table3'),
 			import('../common'),
 			import('appcd-logger'),
 			import('humanize')
@@ -83,7 +83,7 @@ export default {
 
 				// plugin information
 				if (status.plugins && status.plugins.registered.length) {
-					params.head = [ 'Plugin', 'Version', 'Type', 'Path', 'Node.js', 'Status', 'Active/Total Requests' ];
+					params.head = [ 'Plugin', 'Type', 'Path', 'Status', 'Active/Total Requests' ];
 					table = new Table(params);
 					for (const plugin of status.plugins.registered.sort((a, b) => a.name.localeCompare(b.name))) {
 						let status = '';
@@ -100,11 +100,9 @@ export default {
 						}
 
 						const row = [
-							plugin.name,
-							plugin.version,
+							`${plugin.name}@${plugin.version}`,
 							plugin.type,
 							plugin.path,
-							plugin.nodeVersion,
 							status,
 							`${numberFormat(plugin.activeRequests, 0)} / ${numberFormat(plugin.totalRequests, 0)}`
 						];

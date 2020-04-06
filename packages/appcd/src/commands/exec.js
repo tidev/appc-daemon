@@ -7,7 +7,7 @@ export default {
 	options: {
 		'--subscribe': 'request a subscription'
 	},
-	async action({ argv }) {
+	async action({ argv, console }) {
 		const { createRequest, loadConfig } = await import('../common');
 
 		const cfg = loadConfig(argv);

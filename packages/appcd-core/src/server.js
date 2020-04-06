@@ -4,7 +4,6 @@ import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs-extra';
 import FSWatcher from 'appcd-fswatcher';
 import FSWatchManager from 'appcd-fswatch-manager';
-import globalModules from 'global-modules';
 import os from 'os';
 import path from 'path';
 import PluginManager, { appcdPluginAPIVersion } from 'appcd-plugin';
@@ -16,6 +15,7 @@ import WebSocketSession from './websocket-session';
 
 import { arch as getArch, arrayify, get, trackTimers } from 'appcd-util';
 import { expandPath } from 'appcd-path';
+import { getPluginPaths } from './pm';
 import { i18n } from 'appcd-response';
 import { installDefaultPlugins } from 'appcd-default-plugins';
 import { isDir, isFile } from 'appcd-fs';
@@ -231,13 +231,7 @@ export default class Server {
 		// init the plugin manager
 		logger.log(`Initializing plugin system (api version ${appcdPluginAPIVersion})`);
 		this.systems.pluginManager = await new PluginManager({
-			paths: [
-				// globally installed plugins
-				path.join(homeDir, 'plugins', 'packages'),
-
-				// global npm directory
-				globalModules
-			]
+			paths: getPluginPaths(this.config)
 		}).init();
 
 		Dispatcher.register('/appcd/plugin', this.systems.pluginManager);

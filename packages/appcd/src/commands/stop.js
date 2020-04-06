@@ -3,7 +3,7 @@ export default {
 	options: {
 		'--force': 'force the daemon to stop'
 	},
-	async action({ argv }) {
+	async action({ argv, console }) {
 		const { loadConfig, stopServer } = await import('../common');
 
 		const wasRunning = await stopServer({
