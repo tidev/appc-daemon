@@ -20,7 +20,6 @@
     "appcd-agent": "^1.1.9",
     "appcd-config": "^2.0.2",
     "appcd-config-service": "^2.0.3",
-    "appcd-default-plugins": "^4.2.1",
     "appcd-dispatcher": "^2.0.3",
     "appcd-fs": "^1.1.10",
     "appcd-fswatch-manager": "^2.0.3",

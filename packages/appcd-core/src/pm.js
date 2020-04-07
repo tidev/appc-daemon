@@ -9,6 +9,56 @@ import semver from 'semver';
 import { appcdPluginAPIVersion } from 'appcd-plugin';
 import { expandPath } from 'appcd-path';
 import { loadConfig } from './config';
+import { version } from '../package.json';
+
+/*
+await installDefaultPlugins(path.join(homeDir, 'plugins'));
+*/
+
+async function getPluginManifest(pkg) {
+	let manifest;
+
+	try {
+		manifest = await pacote.manifest(pkg, { fullMetadata: true });
+	} catch (e) {
+		if (e.code === 'E404') {
+			const e2 = new Error(`Plugin ${pkg} not found`);
+			e2.code = 'ENOTFOUND';
+			throw e2;
+		}
+		throw e;
+	}
+
+	if (!manifest.appcd) {
+		const e = new Error(`${pkg} is not an appcd plugin`);
+		e.code = 'ENOAPPCD';
+		throw e;
+	}
+
+	// old plugins didn't have an api version, so default it to 1.x
+	if (!manifest.appcd.apiVersion) {
+		manifest.appcd.apiVersion = '1.x';
+	}
+
+	manifest.issues = [];
+
+	if (manifest.appcd.os && !manifest.appcd.os.includes(process.platform)) {
+		manifest.issues.push(`${pkg} does not support platform "${process.platform}"`);
+	}
+
+	if (manifest.appcd.apiVersion && !semver.satisfies(appcdPluginAPIVersion, manifest.appcd.apiVersion)) {
+		manifest.issues.push(`${pkg} is not compatible with plugin API version ${appcdPluginAPIVersion}`);
+	}
+
+	const { version } = await fs.readJson(path.resolve(__dirname, '..', 'package.json'));
+	if (manifest.appcd.appcdVersion && !semver.satisfies(version, manifest.appcd.appcdVersion)) {
+		manifest.issues.push(`${pkg} is not compatible with Appcd Core version ${version}`);
+	}
+
+	manifest.supported = manifest.issues.length === 0;
+
+	return manifest;
+}
 
 export function getPluginPaths(cfg) {
 	if (!cfg) {
@@ -28,40 +78,26 @@ export async function install() {
 	//
 }
 
-export async function list() {
-	//
+export async function list(cfg) {
+	const paths = getPluginPaths(cfg);
+
+	console.log(paths);
+
+	return [];
 }
 
 export async function search(criteria) {
 	criteria = (Array.isArray(criteria) ? criteria : [ criteria ]).filter(Boolean);
-	const { version } = await fs.readJson(path.resolve(__dirname, '..', 'package.json'));
 	const keywords = new Set([ 'appcd', 'appcd-plugin', ...criteria ]);
 	const limit = promiseLimit(10);
 	const packages = await npmsearch(Array.from(keywords));
 	const results = [];
 
 	await Promise.all(packages.map(pkg => limit(async () => {
-		const manifest = await pacote.manifest(pkg.name, { fullMetadata: true });
-		if (manifest?.appcd) {
-			// old plugins didn't have an api version, so default it to 1.x
-			if (!manifest.appcd.apiVersion) {
-				manifest.appcd.apiVersion = '1.x';
-			}
-
-			const reasons = [];
-			if (manifest.appcd.os && !manifest.appcd.os.includes(process.platform)) {
-				reasons.push(`Unsupported platform "${process.platform}"`);
-			} else if (manifest.appcd.apiVersion && !semver.satisfies(appcdPluginAPIVersion, manifest.appcd.apiVersion)) {
-				reasons.push(`Incompatible plugin API v${appcdPluginAPIVersion}`);
-			} else if (manifest.appcd.appcdVersion && !semver.satisfies(version, manifest.appcd.appcdVersion)) {
-				reasons.push(`Incompatible with Appcd v${version}`);
-			}
-			manifest.appcd.supported = !reasons.length;
-			if (reasons.length) {
-				manifest.appcd.unsupportedReasons = reasons;
-			}
-
-			results.push(manifest);
+		try {
+			results.push(await getPluginManifest(pkg.name));
+		} catch (e) {
+			// silence
 		}
 	})));
 
@@ -82,5 +118,5 @@ export async function view(pkg) {
 	if (!pkg || typeof pkg !== 'string') {
 		throw new TypeError('Invalid package name');
 	}
-	return await pacote.manifest(pkg, { fullMetadata: true });
+	return await getPluginManifest(pkg);
 }

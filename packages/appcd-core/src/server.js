@@ -17,7 +17,6 @@ import { arch as getArch, arrayify, get, trackTimers } from 'appcd-util';
 import { expandPath } from 'appcd-path';
 import { getPluginPaths } from './pm';
 import { i18n } from 'appcd-response';
-import { installDefaultPlugins } from 'appcd-default-plugins';
 import { isDir, isFile } from 'appcd-fs';
 import { loadConfig } from './config';
 import { purgeUnusedNodejsExecutables } from 'appcd-nodejs';
@@ -118,19 +117,6 @@ export default class Server {
 		if (!isDir(homeDir)) {
 			logger.debug('Creating home directory %s', homeDir);
 			fs.mkdirsSync(homeDir);
-		}
-
-		if (this.config.get('plugins.installDefault')) {
-			// install default plugins before we drop permissions
-			try {
-				await installDefaultPlugins(path.join(homeDir, 'plugins'));
-			} catch (err) {
-				if (err.code === 'EACCES') {
-					logger.warn(err);
-				} else {
-					logger.error(err);
-				}
-			}
 		}
 
 		// check if the current user is root

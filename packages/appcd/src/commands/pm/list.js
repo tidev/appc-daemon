@@ -1,9 +1,20 @@
 export default {
 	aliases: [ 'ls' ],
 	desc: 'lists all installed plugins',
-	async action({ _, argv, console }) {
-		console.log('list command');
-		console.log(_);
-		console.log(argv);
+	async action({ argv, console }) {
+		const [
+			{ appcdPluginAPIVersion, pm },
+			{ snooplogg },
+			{ loadConfig }
+		] = await Promise.all([
+			import('appcd-core'),
+			import('appcd-logger'),
+			import('../../common')
+		]);
+
+		const cfg = loadConfig(argv);
+		const plugins = await pm.list(cfg);
+
+		console.log(plugins);
 	}
 };

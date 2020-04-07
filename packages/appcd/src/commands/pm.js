@@ -1,11 +1,13 @@
 export default {
 	commands: `${__dirname}/pm`,
-	desc: 'appcd plugin manager',
+	desc: 'list, install, update, search, and uninstall appcd plugins',
 	async action(ctx) {
-		ctx.cmd.desc = `The plugin manager (pm) lists installed plugins, installs new plugins, updates
-existing plugins, and uninstalls plugins.
+		console.log('The plugin manager lists installed plugins, installs new plugins, and updates or uninstalls plugins.');
+		console.log();
+		console.log('The Appc Daemon does not bundle any plugins and thus they must be manually installed. To install the default set of plugins, run:\n');
+		console.log('    appcd pm install default\n');
 
-To install the default plugins, run: appcd pm install default`;
+		ctx.cmd.desc = '';
 
 		console.log(await ctx.help());
 	}

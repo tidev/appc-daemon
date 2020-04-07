@@ -13,7 +13,7 @@ export default {
 	},
 	async action({ argv, console }) {
 		const [
-			{ pm },
+			{ appcdPluginAPIVersion, pm },
 			{ snooplogg },
 			{ default: Table }
 		] = await Promise.all([
@@ -24,7 +24,7 @@ export default {
 
 		const { cyan, gray } = snooplogg.chalk;
 		const results = await pm.search(argv.search);
-		const supported = results.filter(pkg => pkg.appcd.supported);
+		const supported = results.filter(pkg => pkg.supported);
 		const plugins = (argv.all ? results : supported).sort((a, b) => a.name.localeCompare(b.name));
 		const unsupported = results.length - supported.length;
 
@@ -33,12 +33,15 @@ export default {
 			return;
 		}
 
+		console.log(`Appcd Core Version: ${cyan(require('appcd-core/package.json').version)}`);
+		console.log(`Plugin API Version: ${cyan(appcdPluginAPIVersion)}\n`);
+
 		if (!plugins.length) {
 			console.log('No appcd plugins found');
 			return;
 		}
 
-		console.log(`Found ${plugins.length} plugin${plugins.length !== 1 ? 's' : ''}${unsupported ? ` (${unsupported} unsupported)` : ''}:\n`);
+		console.log(`Found ${cyan(plugins.length)} plugin${plugins.length !== 1 ? 's' : ''}${unsupported ? gray(` (${unsupported} unsupported)`) : ''}\n`);
 
 		const table = new Table({
 			chars: {
