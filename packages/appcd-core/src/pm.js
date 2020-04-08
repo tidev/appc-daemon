@@ -6,14 +6,41 @@ import path from 'path';
 import promiseLimit from 'promise-limit';
 import semver from 'semver';
 
-import { appcdPluginAPIVersion } from 'appcd-plugin';
+import { appcdPluginAPIVersion, detectScheme } from 'appcd-plugin';
 import { expandPath } from 'appcd-path';
 import { loadConfig } from './config';
-import { version } from '../package.json';
 
 /*
 await installDefaultPlugins(path.join(homeDir, 'plugins'));
 */
+
+export const defaultPlugins = {
+	'@appcd/plugin-android': [
+		'^1.5.2',
+		'^2.0.1'
+	],
+	'@appcd/plugin-genymotion': [
+		'^1.6.1'
+	],
+	'@appcd/plugin-ios': [
+		'^1.5.2',
+		'^2.0.2'
+	],
+	'@appcd/plugin-jdk': [
+		'^1.6.1'
+	],
+	'@appcd/plugin-system-info': [
+		'^1.5.1',
+		'^2.0.0'
+	],
+	'@appcd/plugin-titanium': [
+		'^1.7.0'
+	],
+	'@appcd/plugin-windows': [
+		'^1.5.2',
+		'^2.0.1'
+	]
+};
 
 async function getPluginManifest(pkg) {
 	let manifest;
@@ -79,11 +106,29 @@ export async function install() {
 }
 
 export async function list(cfg) {
-	const paths = getPluginPaths(cfg);
+	const plugins = [];
 
-	console.log(paths);
+	for (const pluginPath of getPluginPaths(cfg)) {
+		const SchemeClass = detectScheme(pluginPath);
+		const scheme = new SchemeClass(pluginPath);
+		plugins.push.apply(plugins, await scheme.detect());
+	}
 
-	return [];
+	return plugins.map(plugin => ({
+		name:         plugin.packageName,
+		version:      plugin.version,
+		description:  plugin.description,
+		homepage:     plugin.homepage,
+		license:      plugin.license,
+		endpoint:     `/${plugin.name}/${plugin.version}`,
+		path:         plugin.path,
+		type:         plugin.type,
+		error:        plugin.error,
+		supported:    plugin.supported,
+		os:           plugin.os,
+		apiVersion:   plugin.apiVersion,
+		appcdVersion: plugin.appcdVersion
+	}));
 }
 
 export async function search(criteria) {

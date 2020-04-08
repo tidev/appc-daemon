@@ -136,7 +136,7 @@ describe('Plugin', () => {
 		expect(p.nodeVersion).to.equal(nodeVersion);
 		expect(p.error).to.be.null;
 
-		expect(p.info).to.have.keys('activeRequests', 'dependencies', 'error', 'main', 'name', 'nodeVersion', 'packageName', 'path', 'supported', 'totalRequests', 'type', 'version');
+		expect(p.info).to.have.keys('activeRequests', 'apiVersion', 'appcdVersion', 'dependencies', 'description', 'error', 'homepage', 'license', 'main', 'name', 'nodeVersion', 'os', 'packageName', 'path', 'supported', 'totalRequests', 'type', 'version');
 		expect(p.info.activeRequests).to.equal(0);
 		expect(p.info.dependencies).to.be.an('object');
 		expect(p.info.error).to.be.null;

@@ -2,14 +2,12 @@
 
 ## Architecture
 
-The Appc Daemon is comprised of two main components: the bootstrap and the core.
+The Appc Daemon is comprised of two main components: the CLI and the core.
 
-### Bootstrap
+### appcd CLI
 
-The Bootstrap defines the appcd CLI and the distributable npm package. It is responsible for
-making sure the Appc Daemon Core's required Node.js version is installed and then invokes the Core.
-
-#### appcd CLI
+The appcd CLI is an npm package and is responsible for making sure the Appc Daemon core's
+required Node.js version is installed before invoking the core.
 
 The appcd CLI is responsible for:
 
@@ -21,28 +19,28 @@ The appcd CLI is responsible for:
 
 #### Node.js Versions
 
-The Appc Daemon requires Node.js 8 or newer installed on your machine.
+The Appc Daemon requires Node.js 10.13.0 or newer installed on your machine.
 
-The bootstrap will spawn the appcd core using with the exact Node.js version that the core has
+The appcd CLI will spawn the appcd core using with the exact Node.js version that the core has
 specified in its `package.json`.
 
-The Bootstrap will check to see if `~/.appcelerator/appcd/node/<version>/<platform>/<arch>/node`
-exists. If it doesn't, the Bootstrap will download it from Node.js' website, then extract and
+The appcd CLI will check to see if `~/.appcelerator/appcd/node/<version>/<platform>/<arch>/node`
+exists. If it doesn't, the appcd CLI will download it from Node.js' website, then extract and
 install it.
 
 No compiler or root privileges are required.
 
-> Note that npm (or Yarn) are only required for installing the Appc Daemon and development. The Appc
-> Daemon does not use npm beyond reporting what version is installed.
+Note that npm or Yarn can be used to install the Appc Daemon, however Yarn is required for
+development.
 
-As the Appc Daemon is upgraded, the `appcd-core` may depend on a new version of Node.js. In order to
+As the Appc Daemon is upgraded, the appcd core may depend on a new version of Node.js. In order to
 avoid having unused Node.js versions in the `~/.appcelerator/appcd/node` directory, the daemon will
 delete Node.js versions that haven't been used for some period of time. If an old version is needed,
 it will re-download and install it.
 
 #### Daemon Mode
 
-When the Bootstrap spawns the Appc Daemon Core, it will by default detach the Core process without
+When the appcd CLI spawns the Appc Daemon Core, it will by default detach the Core process without
 stdio, then exit leaving the Core running in the background. If the Appc Daemon is started with the
 `--debug` flag, it will _not_ detach the Core process and stdio will be inherited.
 
@@ -62,8 +60,8 @@ It resides in the [appcd-core](../../packages/appcd-core) package.
 
 The Core can only be invoked directly and cannot be loaded via `require('appcd-core')`.
 
-The Core is and should almost always be spawned by the Bootstrap. However, it is possible to spawn
-the Core directly bypassing the Bootstrap. This is useful for debugging, but is very cumbersome. For
+The Core is and should almost always be spawned by the appcd CLI. However, it is possible to spawn
+the Core directly bypassing the appcd CLI. This is useful for debugging, but is very cumbersome. For
 more information about debugging the Core directly, please refer to the
 [Debugging the Appc Daemon](Getting-Started.md#debugging-the-appc-daemon) in the Getting Started
 documenation.

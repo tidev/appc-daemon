@@ -13,7 +13,7 @@ export default {
 	},
 	async action({ argv, console }) {
 		const [
-			{ appcdPluginAPIVersion, pm },
+			{ pm },
 			{ snooplogg },
 			{ default: Table }
 		] = await Promise.all([
@@ -22,7 +22,7 @@ export default {
 			import('cli-table3')
 		]);
 
-		const { cyan, gray } = snooplogg.chalk;
+		const { cyan, gray, green } = snooplogg.chalk;
 		const results = await pm.search(argv.search);
 		const supported = results.filter(pkg => pkg.supported);
 		const plugins = (argv.all ? results : supported).sort((a, b) => a.name.localeCompare(b.name));
@@ -32,9 +32,6 @@ export default {
 			console.log(plugins);
 			return;
 		}
-
-		console.log(`Appcd Core Version: ${cyan(require('appcd-core/package.json').version)}`);
-		console.log(`Plugin API Version: ${cyan(appcdPluginAPIVersion)}\n`);
 
 		if (!plugins.length) {
 			console.log('No appcd plugins found');
@@ -53,7 +50,7 @@ export default {
 			},
 			head: [ 'Name', 'Version', 'Description', 'API Version' ],
 			style: {
-				head: [ 'gray' ],
+				head: [ 'bold' ],
 				'padding-left': 0,
 				'padding-right': 0
 			}
@@ -61,7 +58,7 @@ export default {
 
 		for (const pkg of plugins) {
 			if (pkg.appcd.supported) {
-				table.push([ pkg.name, pkg.version, pkg.description, pkg.appcd.apiVersion || '*' ]);
+				table.push([ green(pkg.name), pkg.version, pkg.description, pkg.appcd.apiVersion || '*' ]);
 			} else {
 				table.push([ gray(pkg.name), gray(pkg.version), gray(pkg.description), gray(pkg.appcd.apiVersion || '*') ]);
 			}

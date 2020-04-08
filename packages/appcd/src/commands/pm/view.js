@@ -16,7 +16,7 @@ export default {
 	desc: 'display info for an appcd plugin',
 	async action({ argv, cli, console }) {
 		const [
-			{ appcdPluginAPIVersion, pm },
+			{ pm },
 			{ snooplogg },
 			{ get }
 		] = await Promise.all([
@@ -25,7 +25,7 @@ export default {
 			import('appcd-util')
 		]);
 
-		const { cyan, green, red, yellow } = snooplogg.chalk;
+		const { bold, cyan, magenta, red, yellow } = snooplogg.chalk;
 		let plugin;
 
 		try {
@@ -39,8 +39,6 @@ export default {
 					}
 				}, null, '  '));
 			} else {
-				console.log(`Appcd Core Version: ${cyan(require('appcd-core/package.json').version)}`);
-				console.log(`Plugin API Version: ${cyan(appcdPluginAPIVersion)}\n`);
 				console.log(red(`Error: ${e.message}`));
 			}
 			return;
@@ -62,10 +60,7 @@ export default {
 			return;
 		}
 
-		console.log(`Appcd Core Version: ${cyan(require('appcd-core/package.json').version)}`);
-		console.log(`Plugin API Version: ${cyan(appcdPluginAPIVersion)}\n`);
-
-		console.log(`${green(`${plugin.name} v${plugin.version}`)}\n`);
+		console.log(`${bold(magenta(`${plugin.name} ${plugin.version}`))}\n`);
 
 		if (plugin.description) {
 			console.log(`${plugin.description}\n`);
@@ -76,9 +71,9 @@ export default {
 		}
 
 		console.log(`Homepage:     ${cyan(plugin.homepage || 'n/a')}`);
-		console.log(`Author:       ${cyan(plugin.author?.name || 'n/a')}`);
+		console.log(`Author:       ${cyan(plugin.author?.name || plugin.author || 'n/a')}`);
 		if (plugin.license) {
-			console.log(`License:      ${cyan(plugin.license?.type || 'n/a')}`);
+			console.log(`License:      ${cyan(plugin.license?.type || plugin.license || 'n/a')}`);
 		}
 		console.log(`Dependencies: ${cyan(plugin.dependencies ? Object.keys(plugin.dependencies).length : 0)}`);
 		if (plugin.appcd.os) {

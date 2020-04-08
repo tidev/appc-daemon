@@ -61,9 +61,15 @@ export default class Plugin extends EventEmitter {
 			name:           undefined,
 			packageName:    undefined,
 			version:        undefined,
+			description:    undefined,
+			homepage:       undefined,
+			license:        undefined,
 			main:           undefined,
 			type:           'external',
+			appcdVersion:   undefined,
+			apiVersion:     undefined,
 			nodeVersion:    undefined,
+			os:             undefined,
 			error:          null,
 			supported:      null,
 			activeRequests: 0,
@@ -150,6 +156,10 @@ export default class Plugin extends EventEmitter {
 		}
 		this.version = version;
 
+		this.description = pkgJson.description;
+		this.homepage = pkgJson.homepage;
+		this.license = pkgJson.license;
+
 		// find the main file
 		let main = expandPath(pluginPath, pkgJson.main || 'index.js');
 		if (isDir(main)) {
@@ -162,8 +172,6 @@ export default class Plugin extends EventEmitter {
 			throw new PluginError('Unable to find main file "%s"', pkgJson.main || 'index.js');
 		}
 		this.main = main;
-
-		this.os = null;
 
 		if (pkgJson.dependencies && typeof pkgJson.dependencies === 'object') {
 			for (const pkg of Object.keys(pkgJson.dependencies)) {

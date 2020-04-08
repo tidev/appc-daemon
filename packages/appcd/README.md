@@ -12,6 +12,8 @@ Report issues to [GitHub issues][2]. Official issue tracker in [JIRA][3].
 
 	npm i -g appcd
 
+	appcd pm install default
+
 ## Quick Start
 
 Start the server:
@@ -39,6 +41,10 @@ Invoke a service:
 	appcd exec /appcd/status
 
 	appcd exec /jdk/latest/info
+
+List installed plugins:
+
+	appcd pm ls
 
 ## Legal
 

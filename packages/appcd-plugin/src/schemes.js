@@ -21,6 +21,18 @@ const scopeRegExp = /^@[a-z0-9][\w-.]+$/;
  */
 export class Scheme extends HookEmitter {
 	/**
+	 * The file system watcher for this scheme's path.
+	 * @type {Object}
+	 */
+	watchers = {};
+
+	/**
+	 * A function to call when a file system event occurs that will emit the `change` event.
+	 * @type {Function}
+	 */
+	onChange = debounce(() => this.emit('change'));
+
+	/**
 	 * Initializes the scheme.
 	 *
 	 * @param {String} path - The path to watch and scan for plugins.
@@ -34,28 +46,29 @@ export class Scheme extends HookEmitter {
 		 * @type {String}
 		 */
 		this.path = real(path);
+	}
 
-		/**
-		 * The file system watcher for this scheme's path.
-		 * @type {Object}
-		 */
-		this.watchers = {};
-
-		/**
-		 * A function to call when a file system event occurs that will emit the `change` event.
-		 * @type {Function}
-		 */
-		this.onChange = debounce(() => this.emit('change'));
+	/**
+	 * The base implementation that doesn't detect anything.
+	 *
+	 * @returns {Promise<Array>}
+	 * @access public
+	 */
+	async detect() {
+		return [];
 	}
 
 	/**
 	 * Closes all file system watchers.
 	 *
+	 * @returns {Promise}
 	 * @access public
 	 */
 	async destroy() {
+		// stop the debounce
 		this.onChange.cancel();
 
+		// stop all filesystem watchers
 		for (const dir of Object.keys(this.watchers)) {
 			this.watchers[dir].close();
 			delete this.watchers[dir];
@@ -68,31 +81,22 @@ export class Scheme extends HookEmitter {
  */
 export class InvalidScheme extends Scheme {
 	/**
-	 * Initializes the scheme and starts watching the file system.
-	 *
-	 * @param {String} path - The path to watch and scan for plugins.
-	 * @access public
-	 */
-	constructor(path) {
-		super(path);
-
-		log('Watching invalid scheme: %s', highlight(this.path));
-
-		// we have to recursively watch
-		this.watchers[this.path] = new FSWatcher(this.path, { depth: 1, recursive: true });
-	}
-
-	/**
 	 * Starts listening for file system changes. This is split up from the FSWatcher instantiation
 	 * so that the caller (i.e. `PluginPath`) can destroy a previous scheme before calling this
 	 * function which will only twiddle watcher counts and not have to stop and restart Node.js
 	 * FSWatch instances.
 	 *
-	 * @returns {InvalidScheme}
+	 * @returns {Promise<InvalidScheme>}
 	 * @access public
 	 */
-	watch() {
-		this.watchers[this.path].on('change', () => this.onChange());
+	async watch() {
+		if (!this.watchers[this.path]) {
+			log('Watching invalid scheme: %s', highlight(this.path));
+
+			// we have to recursively watch
+			this.watchers[this.path] = new FSWatcher(this.path, { depth: 1, recursive: true })
+				.on('change', () => this.onChange());
+		}
 		return this;
 	}
 }
@@ -102,41 +106,43 @@ export class InvalidScheme extends Scheme {
  */
 export class PluginScheme extends Scheme {
 	/**
-	 * Initializes the scheme and starts watching the file system.
-	 *
-	 * @param {String} path - The path to watch and scan for plugins.
-	 * @access public
+	 * A reference to the plugin descriptor for the plugin found in this scheme's path.
+	 * @type {Plugin}
 	 */
-	constructor(path) {
-		super(path);
+	plugin = null;
 
-		log('Watching plugin scheme: %s', highlight(this.path));
-		this.watchers[this.path] = new FSWatcher(this.path);
+	/**
+	 * A function to call when a file system event occurs that will emit the `change` event.
+	 * @type {Function}
+	 */
+	checkIfPlugin = debounce(async () => {
+		await this.detect();
 
-		/**
-		 * A reference to the plugin descriptor for the plugin found in this scheme's path.
-		 * @type {Plugin}
-		 */
-		this.plugin = null;
-
-		/**
-		 * A function to call when a file system event occurs that will emit the `change` event.
-		 * @type {Function}
-		 */
-		this.checkIfPlugin = debounce(async () => {
-			try {
-				this.plugin = new Plugin(this.path, true);
-				await this.emit('plugin-added', this.plugin);
-				return;
-			} catch (e) {
-				if (!(e instanceof PluginMissingAppcdError)) {
-					warn(e);
-				}
-			}
-
+		if (this.plugin) {
+			await this.emit('plugin-added', this.plugin);
+		} else {
 			// not a plugin or a bad plugin, emit change and allow redetect
 			await this.emit('change');
-		});
+		}
+	});
+
+	/**
+	 * Detects the plugin in the defined path.
+	 *
+	 * @returns {Promise<Array<Plugin>>}
+	 * @access public
+	 */
+	async detect() {
+		try {
+			this.plugin = new Plugin(this.path, true);
+			return [ this.plugin ];
+		} catch (e) {
+			this.plugin = null;
+			if (!(e instanceof PluginMissingAppcdError)) {
+				warn(e);
+			}
+		}
+		return [];
 	}
 
 	/**
@@ -149,6 +155,14 @@ export class PluginScheme extends Scheme {
 	 * @access public
 	 */
 	async watch() {
+		if (this.watchers[this.path]) {
+			// already watching
+			return this;
+		}
+
+		log('Watching plugin scheme: %s', highlight(this.path));
+		this.watchers[this.path] = new FSWatcher(this.path);
+
 		this.watchers[this.path]
 			.on('change', async evt => {
 				if (this.plugin && evt.file === this.path && evt.action === 'delete') {
@@ -160,7 +174,7 @@ export class PluginScheme extends Scheme {
 					if (plugin.pkgJsonHash !== this.plugin.pkgJsonHash) {
 						await this.emit('plugin-deleted', this.plugin);
 						this.plugin = plugin;
-						this.emit('plugin-added', this.plugin);
+						await this.emit('plugin-added', this.plugin);
 					}
 				} else if (!this.plugin) {
 					await this.checkIfPlugin();
@@ -169,13 +183,10 @@ export class PluginScheme extends Scheme {
 				}
 			});
 
-		try {
-			this.plugin = new Plugin(this.path, true);
+		await this.detect();
+
+		if (this.plugin) {
 			await this.emit('plugin-added', this.plugin);
-		} catch (e) {
-			if (!(e instanceof PluginMissingAppcdError)) {
-				warn(e);
-			}
 		}
 
 		return this;
@@ -201,98 +212,10 @@ export class PluginScheme extends Scheme {
  */
 export class PluginsDirScheme extends Scheme {
 	/**
-	 * Initializes the scheme and starts watching the file system.
-	 *
-	 * @param {String} path - The path to watch and scan for plugins.
-	 * @access public
+	 * A map of directories to plugin schemes.
+	 * @type {Object}
 	 */
-	constructor(path) {
-		super(path);
-
-		log('Watching plugins dir scheme: %s', highlight(this.path));
-		this.watchers[this.path] = new FSWatcher(this.path);
-
-		/**
-		 * A map of directories to plugin schemes.
-		 * @type {Object}
-		 */
-		this.pluginSchemes = {};
-
-		if (isDir(this.path)) {
-			for (const name of fs.readdirSync(this.path)) {
-				const dir = _path.join(this.path, name);
-				if (!isDir(dir)) {
-					continue;
-				}
-
-				if (scopeRegExp.test(name)) {
-					this.initScopedDir(dir);
-				} else {
-					this.pluginSchemes[dir] = this.createPluginScheme(dir);
-				}
-			}
-		}
-	}
-
-	/**
-	 * Wires up the scoped directory fs watcher and scans the scoped directory for plugins.
-	 *
-	 * @param {String} dir - The path to the scoped directory.
-	 * @param {Boolean} watch - When `true`, starts watching the scoped directory's subdirectories
-	 * to detect plugins. This should only be `true` when a parent directory detects a new scoped
-	 * directory being added.
-	 * @returns {Promise}
-	 * @access private
-	 */
-	async initScopedDir(dir, watch) {
-		if (this.watchers[dir]) {
-			// already watching
-			return;
-		}
-
-		// we have a @whatever scoped directory, so we watch it for additions/deletions
-		this.watchers[dir] = new FSWatcher(dir);
-
-		this.watchers[dir].on('change', async evt => {
-			switch (evt.action) {
-				case 'add':
-					// only set up the plugin scheme if we're dealing with a directory that is a
-					// subdirectory and not the scoped directory
-					if (evt.file !== dir && isDir(evt.file)) {
-						this.pluginSchemes[evt.file] = this.createPluginScheme(evt.file);
-						await this.pluginSchemes[evt.file].watch();
-					}
-					break;
-
-				case 'delete':
-					if (evt.file === dir) {
-						// the scoped directory was deleted, clean up the fs watcher and notify the
-						// plugin path that the scheme might have changed
-						this.watchers[dir].close();
-						delete this.watchers[dir];
-						this.onChange();
-					} else if (this.pluginSchemes[evt.file]) {
-						await this.pluginSchemes[evt.file].destroy();
-						delete this.pluginSchemes[evt.file];
-					}
-					break;
-			}
-		});
-
-		// scan the scoped directory for any packages
-		for (const packageName of fs.readdirSync(dir)) {
-			const packageDir = _path.join(dir, packageName);
-			if (isDir(packageDir)) {
-				const scheme = this.pluginSchemes[packageDir] = this.createPluginScheme(packageDir);
-
-				// we only want to watch if this function is triggered via a fs event.
-				// the plugin path will kick off the watching.
-				if (watch) {
-					await scheme.watch();
-				}
-			}
-		}
-	}
+	pluginSchemes = {};
 
 	/**
 	 * Creates a plugin scheme and wires up the event handlers.
@@ -309,6 +232,106 @@ export class PluginsDirScheme extends Scheme {
 	}
 
 	/**
+	 * Detects plugins in the defined path.
+	 *
+	 * @returns {Promise.<Array.<Plugin>>}
+	 * @access public
+	 */
+	async detect() {
+		const plugins = [];
+
+		if (isDir(this.path)) {
+			for (const name of fs.readdirSync(this.path)) {
+				const dir = _path.join(this.path, name);
+				if (!isDir(dir)) {
+					continue;
+				}
+
+				if (scopeRegExp.test(name)) {
+					for (const packageName of fs.readdirSync(dir)) {
+						const packageDir = _path.join(dir, packageName);
+						if (isDir(packageDir)) {
+							const scheme = this.pluginSchemes[packageDir] = this.createPluginScheme(packageDir);
+							plugins.push.apply(plugins, await scheme.detect());
+						}
+					}
+				} else if (!this.pluginSchemes[dir]) {
+					const scheme = this.pluginSchemes[dir] = this.createPluginScheme(dir);
+					plugins.push.apply(plugins, await scheme.detect());
+				}
+			}
+		}
+
+		return plugins;
+	}
+
+	/**
+	 * Wires up the scoped directory fs watcher and scans the scoped directory for plugins.
+	 *
+	 * @param {String} dir - The path to the scoped directory.
+	 * @param {Boolean} watch - When `true`, starts watching the scoped directory's subdirectories
+	 * to detect plugins. This should only be `true` when a parent directory detects a new scoped
+	 * directory being added.
+	 * @returns {Promise}
+	 * @access private
+	 */
+	async initScopedDir(dir, watch) {
+		const plugins = [];
+
+		if (watch) {
+			if (this.watchers[dir]) {
+				// already watching
+				return plugins;
+			}
+
+			// we have a @whatever scoped directory, so we watch it for additions/deletions
+			this.watchers[dir] = new FSWatcher(dir);
+
+			this.watchers[dir].on('change', async evt => {
+				switch (evt.action) {
+					case 'add':
+						// only set up the plugin scheme if we're dealing with a directory that is a
+						// subdirectory and not the scoped directory
+						if (evt.file !== dir && isDir(evt.file)) {
+							this.pluginSchemes[evt.file] = this.createPluginScheme(evt.file);
+							await this.pluginSchemes[evt.file].watch();
+						}
+						break;
+
+					case 'delete':
+						if (evt.file === dir) {
+							// the scoped directory was deleted, clean up the fs watcher and notify the
+							// plugin path that the scheme might have changed
+							this.watchers[dir].close();
+							delete this.watchers[dir];
+							this.onChange();
+						} else if (this.pluginSchemes[evt.file]) {
+							await this.pluginSchemes[evt.file].destroy();
+							delete this.pluginSchemes[evt.file];
+						}
+						break;
+				}
+			});
+		}
+
+		// scan the scoped directory for any packages
+		for (const packageName of fs.readdirSync(dir)) {
+			const packageDir = _path.join(dir, packageName);
+			if (isDir(packageDir)) {
+				const scheme = this.pluginSchemes[packageDir] = this.createPluginScheme(packageDir);
+
+				// we only want to watch if this function is triggered via a fs event.
+				// the plugin path will kick off the watching.
+				if (watch) {
+					plugins.push.apply(plugins, await scheme.watch());
+				}
+			}
+		}
+
+		return plugins;
+	}
+
+	/**
 	 * Starts listening for file system changes and detects plugins in the path. This is split up
 	 * from the FSWatcher instantiation so that the caller (i.e. `PluginPath`) can destroy a
 	 * previous scheme before calling this function which will only twiddle watcher counts and not
@@ -318,6 +341,14 @@ export class PluginsDirScheme extends Scheme {
 	 * @access public
 	 */
 	async watch() {
+		if (this.watchers[this.path]) {
+			// already watching
+			return this;
+		}
+
+		log('Watching plugins dir scheme: %s', highlight(this.path));
+		this.watchers[this.path] = new FSWatcher(this.path);
+
 		this.watchers[this.path]
 			.on('change', async evt => {
 				// if this path is being changed, then emit the change event
@@ -364,6 +395,8 @@ export class PluginsDirScheme extends Scheme {
 				}
 			});
 
+		await this.detect();
+
 		for (const scheme of Object.values(this.pluginSchemes)) {
 			await scheme.watch();
 		}
@@ -392,44 +425,10 @@ export class PluginsDirScheme extends Scheme {
  */
 export class NestedPluginsDirScheme extends Scheme {
 	/**
-	 * Initializes the scheme and starts watching the file system.
-	 *
-	 * @param {String} path - The path to watch and scan for plugins.
-	 * @access public
+	 * A map of directories to plugin schemes.
+	 * @type {Object}
 	 */
-	constructor(path) {
-		super(path);
-
-		log('Watching nested plugins dir scheme: %s', highlight(this.path));
-		this.watchers[this.path] = new FSWatcher(this.path);
-
-		/**
-		 * A map of directories to plugin schemes.
-		 * @type {Object}
-		 */
-		this.pluginSchemes = {};
-
-		if (isDir(this.path)) {
-			for (const name of fs.readdirSync(this.path)) {
-				const dir = _path.join(this.path, name);
-				if (!isDir(dir)) {
-					continue;
-				}
-
-				if (/^@/.test(name)) {
-					// scope
-					for (const pkgName of fs.readdirSync(dir)) {
-						const pkgDir = _path.join(dir, pkgName);
-						if (isDir(pkgDir)) {
-							this.pluginSchemes[`${name}/${pkgName}`] = this.createPluginsDirScheme(pkgDir);
-						}
-					}
-				} else {
-					this.pluginSchemes[dir] = this.createPluginsDirScheme(dir);
-				}
-			}
-		}
-	}
+	pluginSchemes = {};
 
 	/**
 	 * Creates a plugins dir scheme and wires up the event handlers.
@@ -446,6 +445,41 @@ export class NestedPluginsDirScheme extends Scheme {
 	}
 
 	/**
+	 * Detects plugins in the defined path.
+	 *
+	 * @returns {Promise.<Array.<Plugin>>}
+	 * @access public
+	 */
+	async detect() {
+		const plugins = [];
+
+		if (isDir(this.path)) {
+			for (const name of fs.readdirSync(this.path)) {
+				const dir = _path.join(this.path, name);
+				if (!isDir(dir)) {
+					continue;
+				}
+
+				if (scopeRegExp.test(name)) {
+					// scope
+					for (const packageName of fs.readdirSync(dir)) {
+						const packageDir = _path.join(dir, packageName);
+						if (isDir(packageDir)) {
+							const schema = this.pluginSchemes[packageDir] = this.createPluginsDirScheme(packageDir);
+							plugins.push.apply(plugins, await schema.detect());
+						}
+					}
+				} else {
+					const schema = this.pluginSchemes[dir] = this.createPluginsDirScheme(dir);
+					plugins.push.apply(plugins, await schema.detect());
+				}
+			}
+		}
+
+		return plugins;
+	}
+
+	/**
 	 * Starts listening for file system changes and detects nested plugins in the path. This is split
 	 * up from the FSWatcher instantiation so that the caller (i.e. `PluginPath`) can destroy a
 	 * previous scheme before calling this function which will only twiddle watcher counts and not
@@ -455,6 +489,14 @@ export class NestedPluginsDirScheme extends Scheme {
 	 * @access public
 	 */
 	async watch() {
+		if (this.watchers[this.path]) {
+			// already watching
+			return this;
+		}
+
+		log('Watching nested plugins dir scheme: %s', highlight(this.path));
+		this.watchers[this.path] = new FSWatcher(this.path);
+
 		this.watchers[this.path]
 			.on('change', async evt => {
 				// if this path is being changed, then emit the change event
@@ -485,6 +527,8 @@ export class NestedPluginsDirScheme extends Scheme {
 					this.onChange();
 				}
 			});
+
+		await this.detect();
 
 		for (const scheme of Object.values(this.pluginSchemes)) {
 			await scheme.watch();
