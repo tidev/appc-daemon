@@ -1,8 +1,8 @@
 export default {
 	args: [
-		{ name: 'filters...', desc: 'one or more namespace patterns' }
+		{ name: 'filters...', desc: 'One or more namespace patterns' }
 	],
-	desc: 'streams Appc Daemon debug log output',
+	desc: 'Streams Appc Daemon debug log output',
 	async action({ argv, terminal }) {
 		const [
 			{ createInstanceWithDefaults, Format, StdioStream, StripColors },

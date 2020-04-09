@@ -217,7 +217,7 @@ export default class Server {
 		// init the plugin manager
 		logger.log(`Initializing plugin system (api version ${appcdPluginAPIVersion})`);
 		this.systems.pluginManager = await new PluginManager({
-			paths: getPluginPaths(this.config)
+			paths: getPluginPaths(this.config.get('home'))
 		}).init();
 
 		Dispatcher.register('/appcd/plugin', this.systems.pluginManager);

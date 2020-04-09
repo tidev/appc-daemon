@@ -4,16 +4,16 @@ export default {
 		{
 			name: 'package',
 			hint: 'package[@version]',
-			desc: 'the plugin package name and version',
+			desc: 'The plugin package name and version',
 			required: true
 		},
 		{
 			name: 'filter',
 			hint: 'field[.subfield]',
-			desc: 'display specific plugin fields'
+			desc: 'Display specific plugin fields'
 		}
 	],
-	desc: 'display info for an appcd plugin',
+	desc: 'Display info for an appcd plugin',
 	async action({ argv, cli, console }) {
 		const [
 			{ plugins: pm },

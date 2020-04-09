@@ -1,11 +1,28 @@
 export default {
 	args: [
-		{ name: 'path', required: true, regex: /^\//, desc: 'the path to request' },
-		{ name: 'json', type: 'json', desc: 'an option JSON payload to send' }
+		{ name: 'path', required: true, regex: /^\//, desc: 'The path to request' },
+		{ name: 'json', type: 'json', desc: 'Optional JSON payload to send' }
 	],
-	desc: 'connects to the Appc Daemon and executes the request',
+	desc: 'Connects to the Appc Daemon and executes the request',
+	help: {
+		header() {
+			return `${this.desc}.
+
+Note that the command will fail if the Appc Daemon is not running.`;
+		},
+		footer: ({ style }) => `${style.heading('Examples:')}
+
+  Query the daemon status:
+    ${style.highlight('appcd exec /appcd/status')}
+
+  Subscribe to filtered data updates:
+    ${style.highlight('appcd exec /appcd/status/system/memory --subscribe')}
+
+  Call the JDK service to return all installed JDKs:
+    ${style.highlight('appcd exec /jdk/latest/info')}`
+	},
 	options: {
-		'--subscribe': 'request a subscription'
+		'--subscribe': 'Request a subscription'
 	},
 	async action({ argv, console }) {
 		const { createRequest, loadConfig } = await import('../common');

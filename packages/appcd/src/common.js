@@ -16,15 +16,22 @@ const { highlight } = appcdLogger.styles;
 let appcdVersion = null;
 
 /**
- * Retrieves the Appc Daemon version.
+ * Ensures that the current process is not being run as sudo as that would likely lead to file
+ * permission issues.
  *
- * @returns {String}
+ * @param {Console} out - A console instance to write output with.
  */
-export function getAppcdVersion() {
-	if (!appcdVersion) {
-		appcdVersion = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')).version;
+export function assertNotSudo(out = console) {
+	if (process.getuid && process.SUDO_UID) {
+		const sudoUID = parseInt(process.SUDO_UID);
+		const uid = process.getuid();
+		if (sudoUID !== uid) {
+			out.error(`Command is being run for a different user (${uid}) than expected (${sudoUID}).`);
+			out.error('Running this command as a different user will lead to file permission issues.');
+			out.error('Please re-run this command without "sudo".');
+			process.exit(9);
+		}
 	}
-	return appcdVersion;
 }
 
 /**
@@ -65,6 +72,18 @@ export function createRequest(cfg, path, data, type) {
 		.on('SIGTERM', disconnect);
 
 	return { client, request };
+}
+
+/**
+ * Retrieves the Appc Daemon version.
+ *
+ * @returns {String}
+ */
+export function getAppcdVersion() {
+	if (!appcdVersion) {
+		appcdVersion = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')).version;
+	}
+	return appcdVersion;
 }
 
 /**

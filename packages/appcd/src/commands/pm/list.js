@@ -4,10 +4,10 @@ export default {
 		{
 			name: 'filter',
 			hint: 'field[.subfield]',
-			desc: 'filter installed plugins'
+			desc: 'Filter installed plugins'
 		}
 	],
-	desc: 'lists all installed plugins',
+	desc: 'Lists all installed plugins',
 	options: {
 		'-d, --detailed': 'Display detailed plugin information'
 	},

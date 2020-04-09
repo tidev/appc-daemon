@@ -3,11 +3,11 @@ export default {
 	args: [
 		{
 			name: 'search',
-			desc: 'the package name or keywords',
+			desc: 'A package name or keywords',
 			required: false
 		}
 	],
-	desc: 'search npm for appcd plugins',
+	desc: 'Search npm for appcd plugins',
 	options: {
 		'--show-deprecated': 'Show deprecated plugins'
 	},

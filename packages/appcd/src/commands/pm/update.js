@@ -3,10 +3,10 @@ export default {
 	args: [
 		{
 			name: 'plugin',
-			desc: 'the plugin name to update'
+			desc: 'The plugin name to update or blank for all'
 		}
 	],
-	desc: 'check and install plugin updates',
+	desc: 'Check and install plugin updates',
 	async action({ _, argv, console }) {
 		console.log('update command');
 		console.log(_);

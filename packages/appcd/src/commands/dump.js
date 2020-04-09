@@ -1,10 +1,10 @@
 export default {
-	desc: 'dumps the config, status, health, and debug logs to a file',
+	desc: 'Dumps the config, status, health, and debug logs to a file',
 	args: [
-		{ name: 'file', desc: 'the file to dump the info to, otherwise stdout' },
+		{ name: 'file', desc: 'The file to dump the info to, otherwise stdout' },
 	],
 	options: {
-		'--view': 'open the dump in the web browser'
+		'--view': 'Open the dump in the web browser'
 	},
 	async action({ argv, console }) {
 		const [

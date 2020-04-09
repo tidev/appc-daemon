@@ -1,7 +1,7 @@
 export default {
-	desc: 'displays the Appc Daemon status',
+	desc: 'Displays the Appc Daemon status',
 	options: {
-		'--json': 'outputs the status as JSON'
+		'--json': 'Outputs the status as JSON'
 	},
 	async action({ argv, console }) {
 		const [

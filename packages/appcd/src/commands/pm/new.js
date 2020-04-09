@@ -2,10 +2,10 @@ export default {
 	args: [
 		{
 			name: 'name',
-			desc: 'the plugin name'
+			desc: 'The plugin name'
 		}
 	],
-	desc: 'create a new plugin project',
+	desc: 'Create a new plugin project',
 	async action({ _, argv, console }) {
 		console.log('new command');
 		console.log(_);

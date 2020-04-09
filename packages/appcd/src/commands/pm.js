@@ -1,14 +1,29 @@
 export default {
 	commands: `${__dirname}/pm`,
-	desc: 'list, install, update, search, and uninstall appcd plugins',
-	async action(ctx) {
-		console.log('The plugin manager lists installed plugins, installs new plugins, and updates or uninstalls plugins.');
-		console.log();
-		console.log('The Appc Daemon does not bundle any plugins and thus they must be manually installed. To install the default set of plugins, run:\n');
-		console.log('    appcd pm install default\n');
+	desc: 'List, install, update, search, and uninstall appcd plugins',
+	help: {
+		header: ({ style }) => `The plugin manager lists installed plugins, installs new plugins, and updates or uninstalls plugins.
 
-		ctx.cmd.desc = '';
+The Appc Daemon does not bundle any plugins and thus they must be manually installed. To install the default set of plugins, run: ${style.highlight('appcd pm install default')}`,
 
-		console.log(await ctx.help());
+		footer: ({ style }) => `${style.heading('Examples:')}
+
+  Search npm for an appcd plugin:
+    ${style.highlight('appcd pm search')}
+
+  or with a filter:
+    ${style.highlight('appcd pm search android')}
+
+  Install a plugin:
+    ${style.highlight('appcd pm install @appcd/plugin-android')}
+
+  Install all default plugins:
+    ${style.highlight('appcd pm install default')}
+
+  Uninstall a plugin:
+    ${style.highlight('appcd pm uninstall default')}`
+	},
+	async action({ help, terminal }) {
+		terminal.stdout.write(await help());
 	}
 };

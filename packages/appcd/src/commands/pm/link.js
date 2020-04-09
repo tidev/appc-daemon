@@ -1,36 +1,39 @@
-// // detect any existing yarn links
-// try {
-// 	const linksDir = process.platform === 'win32'
-// 		? path.join(os.homedir(), 'AppData', 'Local', 'Yarn', 'Data', 'link')
-// 		: path.join(os.homedir(), '.config', 'yarn', 'link');
+export default {
+	aliases: [ 'ln' ],
+	desc: 'Register Yarn linked appcd plugins',
+	help: `The Appc Daemon uses the Yarn package manager to manage plugin packages. Yarn has a \
+"links" feature where you can link a package somewhere on your machine so that it can be \
+referenced from another project.
 
-// 	for (const rel of globule.find('*/package.json', '@*/*/package.json', { srcBase: linksDir })) {
-// 		const pkgJsonFile = path.join(linksDir, rel);
-// 		let appcd, name, version;
+This command will scan all Yarn linked packages for appcd plugins and register them in the appcd \
+home plugins directory. This helpful for plugin development.`,
+	async action({ argv, console }) {
+		const [
+			{ plugins: pm },
+			{ snooplogg },
+			{ assertNotSudo, loadConfig }
+		] = await Promise.all([
+			import('appcd-core'),
+			import('appcd-logger'),
+			import('../../common')
+		]);
 
-// 		try {
-// 			({ appcd, name, version } = await fs.readJson(pkgJsonFile));
-// 		} catch (e) {
-// 			logger.warn(`Failed to parse link package.json: ${pkgJsonFile}`);
-// 		}
+		assertNotSudo();
 
-// 		if (appcd && (!appcd.os || appcd.os.includes(process.platform))) {
-// 			const linkPath = path.dirname(pkgJsonFile);
+		const { cyan } = snooplogg.chalk;
+		const plugins = await pm.link(loadConfig(argv).get('home'));
 
-// 			if (!installed[name]) {
-// 				installed[name] = {};
-// 			}
-// 			if (!installed[name][version]) {
-// 				const dest = path.join(packagesDir, name, version);
-// 				installed[name][version] = dest;
+		if (argv.json) {
+			console.log(JSON.stringify(plugins, null, '  '));
+			return;
+		}
 
-// 				await fs.mkdirs(path.dirname(dest));
-// 				logger.log(`Symlinking ${highlight(linkPath)} => ${highlight(path.relative(pluginsDir, dest))}`);
-// 				fs.symlinkSync(linkPath, dest, 'dir');
-// 			}
-// 			newWorkspaces.delete(`packages/${name}/${version}`);
-// 		}
-// 	}
-// } catch (e) {
-// 	logger.warn('The yarn links directory exists, but access is denied');
-// }
+		if (plugins.length) {
+			for (const plugin of plugins) {
+				console.log(`Linked ${cyan(`${plugin.name}@${plugin.version}`)}`);
+			}
+		} else {
+			console.log('No Yarn linked appcd plugins found.');
+		}
+	}
+};

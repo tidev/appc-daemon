@@ -24,7 +24,7 @@
     "babel-plugin-dynamic-import-node": "^2.3.0",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
-    "core-js": "^3.6.4",
+    "core-js": "^3.6.5",
     "esdoc": "^1.1.0",
     "esdoc-ecmascript-proposal-plugin": "^1.0.0",
     "esdoc-standard-plugin": "^1.0.0",

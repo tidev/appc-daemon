@@ -23,20 +23,40 @@ export default {
 	args: [
 		{
 			name: '<action>',
-			desc: 'the action to run',
+			desc: 'The action to run',
 			values: {
-				'ls, list': 'display all settings',
-				get: 'display a specific setting',
-				set: 'change a setting',
-				'rm, delete': 'remove a setting',
-				push: 'add a value to the end of a list',
-				pop: 'remove the last value in a list'
+				'ls, list': 'Display all settings',
+				get: 'Display a specific setting',
+				set: 'Change a setting',
+				'rm, delete': 'Remove a setting',
+				push: 'Add a value to the end of a list',
+				pop: 'Remove the last value in a list'
 			}
 		},
 		{ name: 'key', desc: '' },
 		{ name: 'value', desc: '' }
 	],
-	desc: 'get and set config options',
+	desc: 'Get and set config options',
+	help: {
+		header() {
+			return `${this.desc}.
+
+When setting a config setting and the Appc Daemon is running, settings will be both saved to disk and applied at runtime without needing to restart the daemon.`;
+		},
+		footer: ({ style }) => `${style.heading('Examples:')}
+
+  List all config settings:
+    ${style.highlight('appcd config ls')}
+
+  Return the config as JSON:
+    ${style.highlight('appcd config ls --json')}
+
+  Get a specific config setting:
+    ${style.highlight('appcd config get home')}
+
+  Set a config setting:
+    ${style.highlight('appcd config set telemetry.enabled true')}`
+	},
 	options: {
 		'--json': 'outputs the config as JSON'
 	},
@@ -99,6 +119,11 @@ export default {
 							if (readActions[action]) {
 								const filter = key && key.split(/\.|\//).join('.') || undefined;
 								const value = cfg.get(filter);
+
+								if (filter) {
+									this.banner = false;
+								}
+
 								if (value === undefined) {
 									const e = new Error(`Not Found: ${key}`);
 									e.exitCode = 6;
