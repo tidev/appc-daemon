@@ -1,5 +1,5 @@
-import * as pm from './pm';
-export { pm };
+import * as plugins from './plugins';
+export { plugins };
 
 export { appcdPluginAPIVersion } from 'appcd-plugin';
 

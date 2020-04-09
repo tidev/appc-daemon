@@ -1,12 +1,19 @@
 export default {
 	aliases: [ 'ls' ],
+	args: [
+		{
+			name: 'filter',
+			hint: 'field[.subfield]',
+			desc: 'filter installed plugins'
+		}
+	],
 	desc: 'lists all installed plugins',
 	options: {
 		'-d, --detailed': 'Display detailed plugin information'
 	},
 	async action({ _argv, argv, console }) {
 		const [
-			{ pm },
+			{ plugins: pm },
 			{ snooplogg },
 			{ loadConfig },
 			{ default: Table }
@@ -19,7 +26,7 @@ export default {
 
 		const { cyan, gray, green, magenta, yellow } = snooplogg.chalk;
 		const cfg = loadConfig(argv);
-		const plugins = await pm.list(cfg);
+		const plugins = await pm.list(cfg.get('home'), argv.filter);
 
 		if (argv.json) {
 			console.log(JSON.stringify(plugins, null, '  '));
@@ -28,7 +35,7 @@ export default {
 
 		if (!plugins.length) {
 			console.log('No plugins found\n');
-			console.log(`To install a plugin, run ${cyan('appcd pm install <name>')}`);
+			console.log(`To install the default plugins, run ${cyan('appcd pm install default')}`);
 			return;
 		}
 

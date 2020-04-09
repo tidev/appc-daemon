@@ -9,24 +9,23 @@ export default {
 	],
 	desc: 'search npm for appcd plugins',
 	options: {
-		'-a, --all': 'show unsupported plugins'
+		'--show-deprecated': 'Show deprecated plugins'
 	},
 	async action({ argv, console }) {
 		const [
-			{ pm },
+			{ plugins: pm },
 			{ snooplogg },
-			{ default: Table }
+			{ default: Table },
+			semver
 		] = await Promise.all([
 			import('appcd-core'),
 			import('appcd-logger'),
-			import('cli-table3')
+			import('cli-table3'),
+			import('semver')
 		]);
 
 		const { cyan, gray, green } = snooplogg.chalk;
-		const results = await pm.search(argv.search);
-		const supported = results.filter(pkg => pkg.supported);
-		const plugins = (argv.all ? results : supported).sort((a, b) => a.name.localeCompare(b.name));
-		const unsupported = results.length - supported.length;
+		const plugins = await pm.search(argv.search);
 
 		if (argv.json) {
 			console.log(plugins);
@@ -38,7 +37,31 @@ export default {
 			return;
 		}
 
-		console.log(`Found ${cyan(plugins.length)} plugin${plugins.length !== 1 ? 's' : ''}${unsupported ? gray(` (${unsupported} unsupported)`) : ''}\n`);
+		let unsupported = 0;
+		const latestVersions = [];
+
+		for (const pkg of plugins.sort((a, b) => a.name.localeCompare(b.name))) {
+			const latest = pkg['dist-tags'].latest || Object.keys(pkg.versions).sort(semver.rcompare)[0];
+			if (!pkg.versions[latest]?.deprecated || argv.showDeprecated) {
+				// need to identify the latest for each major
+				pkg.majors = {};
+				for (const ver of Object.keys(pkg.versions)) {
+					const major = semver.major(ver);
+					if (pkg.majors[major] === undefined || semver.gt(ver, pkg.majors[major])) {
+						pkg.majors[major] = ver;
+					}
+				}
+
+				for (const ver of Object.values(pkg.majors).sort(semver.rcompare)) {
+					latestVersions.push(pkg.versions[ver]);
+					if (!pkg.supported) {
+						unsupported++;
+					}
+				}
+			}
+		}
+
+		console.log(`Found ${cyan(latestVersions.length)} plugin${latestVersions.length !== 1 ? 's' : ''}${unsupported ? gray(` (${unsupported} unsupported)`) : ''}\n`);
 
 		const table = new Table({
 			chars: {
@@ -48,7 +71,7 @@ export default {
 				right: '', 'right-mid': '',
 				top: '', 'top-left': '', 'top-mid': '', 'top-right': ''
 			},
-			head: [ 'Name', 'Version', 'Description', 'API Version' ],
+			head: [ 'Name', 'Version', 'Description' ],
 			style: {
 				head: [ 'bold' ],
 				'padding-left': 0,
@@ -56,11 +79,11 @@ export default {
 			}
 		});
 
-		for (const pkg of plugins) {
-			if (pkg.appcd.supported) {
-				table.push([ green(pkg.name), pkg.version, pkg.description, pkg.appcd.apiVersion || '*' ]);
+		for (const pkg of latestVersions) {
+			if (pkg.supported) {
+				table.push([ green(pkg.name), pkg.version, pkg.description || 'n/a' ]);
 			} else {
-				table.push([ gray(pkg.name), gray(pkg.version), gray(pkg.description), gray(pkg.appcd.apiVersion || '*') ]);
+				table.push([ gray(pkg.name), gray(pkg.version), gray(pkg.description || 'n/a') ]);
 			}
 		}
 

@@ -15,7 +15,7 @@ import WebSocketSession from './websocket-session';
 
 import { arch as getArch, arrayify, get, trackTimers } from 'appcd-util';
 import { expandPath } from 'appcd-path';
-import { getPluginPaths } from './pm';
+import { getPluginPaths } from './plugins';
 import { i18n } from 'appcd-response';
 import { isDir, isFile } from 'appcd-fs';
 import { loadConfig } from './config';

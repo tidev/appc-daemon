@@ -1,0 +1,24 @@
+{
+	"@appcd/plugin-android": [
+		"^1.5.2",
+		"^2.0.1"
+	],
+	"@appcd/plugin-ios": [
+		"^1.5.2",
+		"^2.0.2"
+	],
+	"@appcd/plugin-jdk": [
+		"^1.6.1"
+	],
+	"@appcd/plugin-system-info": [
+		"^1.5.1",
+		"^2.0.0"
+	],
+	"@appcd/plugin-titanium": [
+		"^1.7.0"
+	],
+	"@appcd/plugin-windows": [
+		"^1.5.2",
+		"^2.0.1"
+	]
+}
