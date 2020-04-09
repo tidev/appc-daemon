@@ -21,47 +21,46 @@ import { spawnNode } from 'appcd-nodejs';
 const logger = appcdLogger('appcd:plugins');
 const { highlight } = appcdLogger.styles;
 
-export const defaultPlugins = fs.readJSONSync(path.resolve(__dirname, '..', 'default-plugins.json'));
-
+/**
+ * The parsed contents of the Appc Daemon core `package.json`.
+ * @type {Object}
+ */
 const appcdCorePkgJson = fs.readJsonSync(path.resolve(__dirname, '..', 'package.json'));
+
+/**
+ * The Appc Daemon core version.
+ * @type {String}
+ */
 const appcdCoreVersion = appcdCorePkgJson.version;
+
+/**
+ * The Node.js version required to run the Appc Daemon core.
+ * @type {String}
+ */
 const appcdCoreNodejs = appcdCorePkgJson.appcd.node;
 
+/**
+ * The path to the Yarn config directory.
+ * @type {String}
+ */
 const yarnDir = process.platform === 'win32'
 	? path.join(os.homedir(), 'AppData', 'Local', 'Yarn')
 	: path.join(os.homedir(), '.config', 'yarn');
 
-function checkVersion(manifest) {
-	if (!manifest.appcd) {
-		throw new Error(`${manifest.name}@${manifest.version} is not an appcd plugin`);
-	}
-
-	manifest.issues = {};
-
-	// old plugins didn't have an api version, so default it to 1.x
-	if (!manifest.appcd.apiVersion) {
-		manifest.appcd.apiVersion = '1.x';
-	}
-
-	if (manifest.appcd.os && !manifest.appcd.os.includes(process.platform)) {
-		manifest.issues.platform = `Plugin ${manifest.name}@${manifest.version} is not compatible with the current platform`;
-	}
-
-	if (manifest.appcd.apiVersion && !semver.satisfies(appcdPluginAPIVersion, manifest.appcd.apiVersion)) {
-		manifest.issues.apiVersion = `${manifest.name}@${manifest.version} is not compatible with plugin API version ${appcdPluginAPIVersion}`;
-	}
-
-	if (manifest.appcd.appcdVersion && !semver.satisfies(appcdCoreVersion, manifest.appcd.appcdVersion)) {
-		manifest.issues.appcdVersoin = `${manifest.name}@${manifest.version} is not compatible with Appcd Core version ${appcdCoreVersion}`;
-	}
-
-	manifest.supported = Object.keys(manifest.issues).length === 0;
-}
-
+/**
+ * Scans the appcd home plugin directory for existing plugins. This uses a lazy scanning method
+ * instead of the more involved scheme detection system in appcd-plugin because we know it's always
+ * going to be a nested plugin directory scheme.
+ *
+ * @param {String} pluginsDir - The path to the appcd home plugins directory.
+ * @returns {Promise<Object>}
+ */
 async function detectInstalled(pluginsDir) {
 	const installed = {};
 	const packagesDir = path.join(pluginsDir, 'packages');
 	const workspaces = new Set();
+
+	// as we scan, we clean up anything that doesn't look good
 	const cleanup = (src, invalidDest, msg) => {
 		if (fs.lstatSync(src).isSymbolicLink()) {
 			logger.warn(`${msg}, unlinking...`);
@@ -128,7 +127,7 @@ function eq(s1, s2) {
 /**
  * Scans `node_modules/.bin` directories until it locates `yarn`.
  *
- * @returns {Promise<?String>} The path to the yarn binary.
+ * @returns {Promise<String>} The path to the yarn binary.
  */
 async function findYarn() {
 	let yarn;
@@ -163,6 +162,14 @@ async function findYarn() {
 	return yarn;
 }
 
+/**
+ * Retrieves the packument from npm for the specified package. The packument contains manifests for
+ * all versions of a package. If all versions are detected as invalid appcd plugins, then an error
+ * is thrown.
+ *
+ * @param {String} pkg - The name of the package.
+ * @returns {Promise<Object>}
+ */
 async function getPluginInfo(pkg) {
 	let info;
 
@@ -179,7 +186,7 @@ async function getPluginInfo(pkg) {
 
 	for (const [ ver, manifest ] of Object.entries(info.versions)) {
 		try {
-			await checkVersion(manifest);
+			await validateManifest(manifest);
 		} catch (e) {
 			delete info.versions[ver];
 			if (!Object.keys(info.versions).length) {
@@ -191,6 +198,13 @@ async function getPluginInfo(pkg) {
 	return info;
 }
 
+/**
+ * Retrieves the manifest from npm for the specified package. If package is not a valid appcd
+ * plugin, then an error is thrown.
+ *
+ * @param {String} pkg - The name of the package.
+ * @returns {Promise<Object>}
+ */
 async function getPluginManifest(pkg) {
 	let manifest;
 
@@ -205,11 +219,15 @@ async function getPluginManifest(pkg) {
 		throw e;
 	}
 
-	await checkVersion(manifest);
-
-	return manifest;
+	return await validateManifest(manifest);
 }
 
+/**
+ * Returns a list of all paths to search for appcd plugins.
+ *
+ * @param {String} [home] - The path to the appcd home directory.
+ * @returns {Array.<String>}
+ */
 export function getPluginPaths(home) {
 	if (!home) {
 		home = loadConfig().get('home');
@@ -221,7 +239,15 @@ export function getPluginPaths(home) {
 	];
 }
 
-export function install(pluginName, home) {
+/**
+ * Installs a plugin from npm.
+ *
+ * @param {Object} params - Various parameters.
+ * @param {String} params.home - The path to the appcd home directory.
+ * @param {String} params.plugin - The name of the plugin.
+ * @returns {HookEmitter}
+ */
+export function install({ home, plugin: pluginName }) {
 	const emitter = new HookEmitter();
 
 	setImmediate(async () => {
@@ -277,6 +303,7 @@ export function install(pluginName, home) {
 			};
 
 			if (pluginName === 'default') {
+				const defaultPlugins = await fs.readJSON(path.resolve(__dirname, '..', 'default-plugins.json'));
 				for (const [ name, specs ] of Object.entries(defaultPlugins)) {
 					if (installed[name]) {
 						for (let i = 0; i < specs.length; i++) {
@@ -325,7 +352,6 @@ export function install(pluginName, home) {
 				await updateMonorepo({
 					fn: () => emitter.emit('install'),
 					home,
-					pluginsDir,
 					workspaces: Array.from(newWorkspaces),
 					yarn
 				});
@@ -340,6 +366,12 @@ export function install(pluginName, home) {
 	return emitter;
 }
 
+/**
+ * Detects all Yarn linked appcd plugins and symlinks to them in the appcd home plugin directory.
+ *
+ * @param {String} home - The path to the appcd home directory.
+ * @returns {Promise<Array.<String>>}
+ */
 export async function link(home) {
 	const plugins = [];
 	const pluginsDir = expandPath(home, 'plugins');
@@ -382,14 +414,22 @@ export async function link(home) {
 
 	await updateMonorepo({
 		home,
-		pluginsDir,
 		yarn
 	});
 
 	return plugins;
 }
 
-export async function list(home, { filter, searchPaths } = {}) {
+/**
+ * Detects all installed plugins, both global and in the appcd home plugins directory.
+ *
+ * @param {Object} params - Various parameters.
+ * @param {String} [params.filter] - A plugin name to filter for.
+ * @param {String} params.home - The path to the appcd home directory.
+ * @param {Array.<String>} [params.searchPaths] - A list of paths to search for plugins.
+ * @returns {Promise<Array.<Object>>} Resolves a list of all installed plugins.
+ */
+export async function list({ filter, home, searchPaths }) {
 	if (!searchPaths) {
 		searchPaths = getPluginPaths(home);
 	} else if (!Array.isArray(searchPaths)) {
@@ -422,6 +462,13 @@ export async function list(home, { filter, searchPaths } = {}) {
 		}));
 }
 
+/**
+ * Loads the monorepo orchestrating `package.json` and returns a unique list of the declared
+ * workspaces.
+ *
+ * @param {String} pluginsDir - The path to the appcd home plugins directory.
+ * @returns {Promise<Array.<String>>}
+ */
 async function loadWorkspaces(pluginsDir) {
 	try {
 		return Array.from(new Set((await fs.readJson(path.join(pluginsDir, 'package.json'))).workspaces));
@@ -430,6 +477,13 @@ async function loadWorkspaces(pluginsDir) {
 	}
 }
 
+/**
+ * Removes a directory and all empty parent directories up to the specified plugins directory.
+ *
+ * @param {String} dir - The directory under the appcd home plugins directory to delete.
+ * @param {String} pluginsDir - The path to the appcd home plugins directory.
+ * @returns {Promise}
+ */
 async function pruneDir(dir, pluginsDir) {
 	logger.log(`Deleting ${highlight(dir)}`);
 	await fs.remove(dir);
@@ -444,6 +498,12 @@ async function pruneDir(dir, pluginsDir) {
 	}
 }
 
+/**
+ * Searches npm for appcd plugins matching the specified criteria.
+ *
+ * @param {String|Array.<String>} criteria - A keyword or list of keywords to search for.
+ * @returns {Promse<Array.<Object>>} Resolves a list of plugin manifest objects.
+ */
 export async function search(criteria) {
 	criteria = (Array.isArray(criteria) ? criteria : [ criteria ]).filter(Boolean);
 	const keywords = new Set([ 'appcd', 'appcd-plugin', ...criteria ]);
@@ -462,7 +522,16 @@ export async function search(criteria) {
 	return results;
 }
 
-export function uninstall(pluginName, home) {
+/**
+ * Uninstalls a plugin. If the plugin name does not contain a version, then all versions of that
+ * plugin are removed.
+ *
+ * @param {Object} params - Various parameters.
+ * @param {String} params.home - The path to the appcd home directory.
+ * @param {String} params.plugin - The name of the plugin.
+ * @returns {HookEmitter}
+ */
+export function uninstall({ home, plugin: pluginName }) {
 	const emitter = new HookEmitter();
 
 	setImmediate(async () => {
@@ -519,7 +588,6 @@ export function uninstall(pluginName, home) {
 			await updateMonorepo({
 				fn: () => emitter.emit('cleanup'),
 				home,
-				pluginsDir,
 				workspaces: Array.from(workspaces),
 				yarn
 			});
@@ -533,13 +601,45 @@ export function uninstall(pluginName, home) {
 	return emitter;
 }
 
-export async function update(pkg) {
-	// get list of installed plugins
-	// check for newer versions
-	// download and install updates
+/**
+ * Installs the latest version for the specified plugin or all plugins.
+ *
+ * @param {Object} params - Various parameters.
+ * @param {String} params.home - The path to the appcd home directory.
+ * @param {String} params.plugin - The name of the plugin.
+ * @returns {HookEmitter}
+ */
+export function update({ home, plugin: pluginName }) {
+	const emitter = new HookEmitter();
+
+	setImmediate(async () => {
+		try {
+			// get list of installed plugins
+			// check for newer versions
+			// download and install updates
+
+			await emitter.emit('finish');
+		} catch (err) {
+			await emitter.emit('error', err);
+		}
+	});
+
+	return emitter;
 }
 
-async function updateMonorepo({ fn, home, pluginsDir, workspaces, yarn }) {
+/**
+ *
+ * @param {Object} params - Various parameters.
+ * @param {Function} [params.fn] - A callback to fire after setup and before calling Yarn.
+ * @param {String} params.home - The path to the appcd home directory.
+ * @param {Array.<String>} params.workspaces - A list of plugin version directory paths relative
+ * to the plugins directory.
+ * @param {String} params.yarn - The path the Yarn binary.
+ * @returns {Promise}
+ */
+async function updateMonorepo({ fn, home, workspaces, yarn }) {
+	const pluginsDir = expandPath(home, 'plugins');
+
 	if (!workspaces) {
 		workspaces = await loadWorkspaces(pluginsDir);
 	}
@@ -626,9 +726,51 @@ async function updateMonorepo({ fn, home, pluginsDir, workspaces, yarn }) {
 	}
 }
 
-export async function view(pluginName) {
-	if (!pluginName || typeof pluginName !== 'string') {
+/**
+ * Checks a npm package manifest to ensure it's an appcd plugin and whether there are any issues.
+ *
+ * @param {Object} manifest - The npm package manifest.
+ * @returns {Object} The original manifest object.
+ */
+function validateManifest(manifest) {
+	if (!manifest.appcd) {
+		throw new Error(`${manifest.name}@${manifest.version} is not an appcd plugin`);
+	}
+
+	// old plugins didn't have an api version, so default it to 1.x
+	if (!manifest.appcd.apiVersion) {
+		manifest.appcd.apiVersion = '1.x';
+	}
+
+	manifest.issues = {};
+
+	if (manifest.appcd.os && !manifest.appcd.os.includes(process.platform)) {
+		manifest.issues.platform = `Plugin ${manifest.name}@${manifest.version} is not compatible with the current platform`;
+	}
+
+	if (manifest.appcd.apiVersion && !semver.satisfies(appcdPluginAPIVersion, manifest.appcd.apiVersion)) {
+		manifest.issues.apiVersion = `${manifest.name}@${manifest.version} is not compatible with plugin API version ${appcdPluginAPIVersion}`;
+	}
+
+	if (manifest.appcd.appcdVersion && !semver.satisfies(appcdCoreVersion, manifest.appcd.appcdVersion)) {
+		manifest.issues.appcdVersoin = `${manifest.name}@${manifest.version} is not compatible with Appcd Core version ${appcdCoreVersion}`;
+	}
+
+	manifest.supported = Object.keys(manifest.issues).length === 0;
+
+	return manifest;
+}
+
+/**
+ * Retrieves an appcd plugin package info from npm. If the package does not exist or is not an
+ * appcd plugin, an error is thrown.
+ *
+ * @param {String} plugin - The name of the plugin to fetch the info for.
+ * @returns {Object}
+ */
+export async function view(plugin) {
+	if (!plugin || typeof plugin !== 'string') {
 		throw new TypeError('Expected plugin name to be a non-empty string');
 	}
-	return await getPluginInfo(pluginName);
+	return await getPluginInfo(plugin);
 }

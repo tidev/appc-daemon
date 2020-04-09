@@ -26,7 +26,7 @@ export default {
 		const start = new Date();
 
 		await new Promise(resolve => {
-			pm.uninstall(argv.plugin, loadConfig(argv).get('home'))
+			pm.uninstall({ plugin: argv.plugin, home: loadConfig(argv).get('home') })
 				.on('uninstall', plugin => console.log(`Removing ${cyan(`${plugin.name}@${plugin.version}`)}...`))
 				.on('cleanup', () => console.log('Cleaning dependencies...'))
 				.on('error', err => console.error(red(err.toString())))

@@ -10,6 +10,7 @@
    longer need to set the config file to save to since it uses the same file path that was used to
    load the config.
  * refactor: Replaced `cli-table2` with `cli-table3`.
+ * feat: Added additional documentation and examples to the help output for some commands.
  * chore: Updated dependencies.
 
 # v3.2.0 (Jan 13, 2020)
