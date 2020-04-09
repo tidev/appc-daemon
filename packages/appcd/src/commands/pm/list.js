@@ -26,7 +26,7 @@ export default {
 
 		const { cyan, gray, green, magenta, yellow } = snooplogg.chalk;
 		const cfg = loadConfig(argv);
-		const plugins = await pm.list(cfg.get('home'), argv.filter);
+		const plugins = await pm.list(cfg.get('home'), { filter: argv.filter });
 
 		if (argv.json) {
 			console.log(JSON.stringify(plugins, null, '  '));

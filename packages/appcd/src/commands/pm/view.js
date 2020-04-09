@@ -16,7 +16,7 @@ export default {
 	desc: 'display info for an appcd plugin',
 	async action({ argv, cli, console }) {
 		const [
-			{ appcdPluginAPIVersion, plugins: pm },
+			{ plugins: pm },
 			{ snooplogg },
 			{ get },
 			{ default: npa },

@@ -4,6 +4,7 @@ import fs from 'fs-extra';
 import globalModules from 'global-modules';
 import globule from 'globule';
 import HookEmitter from 'hook-emitter';
+import npa from 'npm-package-arg';
 import npmsearch from 'libnpmsearch';
 import os from 'os';
 import pacote from 'pacote';
@@ -15,12 +16,95 @@ import { appcdPluginAPIVersion, detectScheme } from 'appcd-plugin';
 import { expandPath } from 'appcd-path';
 import { isFile } from 'appcd-fs';
 import { loadConfig } from './config';
-import { spawn } from 'child_process';
+import { spawnNode } from 'appcd-nodejs';
 
 const logger = appcdLogger('appcd:plugins');
 const { highlight } = appcdLogger.styles;
 
 export const defaultPlugins = fs.readJSONSync(path.resolve(__dirname, '..', 'default-plugins.json'));
+
+const appcdCorePkgJson = fs.readJsonSync(path.resolve(__dirname, '..', 'package.json'));
+const appcdCoreVersion = appcdCorePkgJson.version;
+const appcdCoreNodejs = appcdCorePkgJson.appcd.node;
+
+const yarnDir = process.platform === 'win32'
+	? path.join(os.homedir(), 'AppData', 'Local', 'Yarn')
+	: path.join(os.homedir(), '.config', 'yarn');
+
+function checkVersion(manifest) {
+	if (!manifest.appcd) {
+		throw new Error(`${manifest.name}@${manifest.version} is not an appcd plugin`);
+	}
+
+	manifest.issues = {};
+
+	// old plugins didn't have an api version, so default it to 1.x
+	if (!manifest.appcd.apiVersion) {
+		manifest.appcd.apiVersion = '1.x';
+	}
+
+	if (manifest.appcd.os && !manifest.appcd.os.includes(process.platform)) {
+		manifest.issues.platform = `Plugin ${manifest.name}@${manifest.version} is not compatible with the current platform`;
+	}
+
+	if (manifest.appcd.apiVersion && !semver.satisfies(appcdPluginAPIVersion, manifest.appcd.apiVersion)) {
+		manifest.issues.apiVersion = `${manifest.name}@${manifest.version} is not compatible with plugin API version ${appcdPluginAPIVersion}`;
+	}
+
+	if (manifest.appcd.appcdVersion && !semver.satisfies(appcdCoreVersion, manifest.appcd.appcdVersion)) {
+		manifest.issues.appcdVersoin = `${manifest.name}@${manifest.version} is not compatible with Appcd Core version ${appcdCoreVersion}`;
+	}
+
+	manifest.supported = Object.keys(manifest.issues).length === 0;
+}
+
+async function detectInstalled(pluginsDir) {
+	const installed = {};
+	const packagesDir = path.join(pluginsDir, 'packages');
+	const workspaces = new Set();
+	const cleanup = (src, invalidDest, msg) => {
+		if (fs.lstatSync(src).isSymbolicLink()) {
+			logger.warn(`${msg}, unlinking...`);
+			fs.unlinkSync(src);
+		} else {
+			logger.warn(`${msg}, invalidating...`);
+			fs.moveSync(src, invalidDest, { overwrite: true });
+		}
+	};
+
+	// determine what packages are already installed
+	for (const rel of globule.find('*/*/package.json', '@*/*/*/package.json', { srcBase: packagesDir })) {
+		const pkgJsonFile = path.join(packagesDir, rel);
+		const src = path.dirname(pkgJsonFile);
+		const invalidDest = path.join(pluginsDir, 'invalid', path.dirname(rel));
+		let name, version;
+
+		try {
+			({ name, version } = await fs.readJson(pkgJsonFile));
+		} catch (e) {
+			cleanup(src, invalidDest, 'Bad package.json');
+			continue;
+		}
+
+		const nameDir = path.dirname(path.dirname(rel));
+		const versionDir = path.basename(src);
+
+		if (name !== nameDir) {
+			cleanup(src, invalidDest, `Plugin directory name mismatch: ${highlight(`${name}@${version}`)} found in ${highlight(nameDir)}`);
+		} else if (version !== versionDir) {
+			cleanup(src, invalidDest, `Plugin directory version mismatch: ${highlight(`${name}@${version}`)} found in ${highlight(versionDir)}`);
+		} else {
+			logger.log(`Found installed plugin ${highlight(`${name}@${version}`)}`);
+			if (!installed[name]) {
+				installed[name] = {};
+			}
+			installed[name][version] = path.dirname(pkgJsonFile);
+			workspaces.add(`packages/${name}/${version}`);
+		}
+	}
+
+	return { installed, workspaces };
+}
 
 /**
  * Compares two sets for equality.
@@ -71,34 +155,6 @@ async function find(name) {
 		}
 	}
 	return null;
-}
-
-async function checkVersion(manifest) {
-	if (!manifest.appcd) {
-		throw new Error(`${manifest.name}@${manifest.version} is not an appcd plugin`);
-	}
-
-	manifest.issues = {};
-
-	// old plugins didn't have an api version, so default it to 1.x
-	if (!manifest.appcd.apiVersion) {
-		manifest.appcd.apiVersion = '1.x';
-	}
-
-	if (manifest.appcd.os && !manifest.appcd.os.includes(process.platform)) {
-		manifest.issues.platform = `Plugin ${manifest.name}@${manifest.version} is not compatible with the current platform`;
-	}
-
-	if (manifest.appcd.apiVersion && !semver.satisfies(appcdPluginAPIVersion, manifest.appcd.apiVersion)) {
-		manifest.issues.apiVersion = `${manifest.name}@${manifest.version} is not compatible with plugin API version ${appcdPluginAPIVersion}`;
-	}
-
-	const { version } = await fs.readJson(path.resolve(__dirname, '..', 'package.json'));
-	if (manifest.appcd.appcdVersion && !semver.satisfies(version, manifest.appcd.appcdVersion)) {
-		manifest.issues.appcdVersoin = `${manifest.name}@${manifest.version} is not compatible with Appcd Core version ${version}`;
-	}
-
-	manifest.supported = Object.keys(manifest.issues).length === 0;
 }
 
 async function getPluginInfo(pkg) {
@@ -176,9 +232,6 @@ export function install(pluginName, home) {
 
 			const pluginsDir = expandPath(home, 'plugins');
 			const packagesDir = path.join(pluginsDir, 'packages');
-			const yarnDir = process.platform === 'win32'
-				? path.join(os.homedir(), 'AppData', 'Local', 'Yarn')
-				: path.join(os.homedir(), '.config', 'yarn');
 
 			// check that we can write to the plugins dir
 			try {
@@ -197,11 +250,7 @@ export function install(pluginName, home) {
 			try {
 				await fs.access(yarnDir);
 			} catch (e) {
-				if (e.code === 'EACCES') {
-					const err = new Error(`Cannot write to Yarn config directory: ${yarnDir}`);
-					err.code = e.code;
-					throw err;
-				}
+				throw new Error(`Cannot write to Yarn config directory: ${yarnDir}`);
 			}
 
 			// find yarn and lerna
@@ -212,55 +261,8 @@ export function install(pluginName, home) {
 				throw new Error('Unable to find yarn bin, skipping install default plugins');
 			}
 
-			let existingWorkspaces = new Set();
-			try {
-				existingWorkspaces = new Set((await fs.readJson(path.join(pluginsDir, 'package.json'))).workspaces);
-			} catch (e) {
-				// does not exist or bad
-			}
-
-			const cleanup = (src, invalidDest, msg) => {
-				if (fs.lstatSync(src).isSymbolicLink()) {
-					logger.warn(`${msg}, unlinking...`);
-					fs.unlinkSync(src);
-				} else {
-					logger.warn(`${msg}, invalidating...`);
-					fs.moveSync(src, invalidDest, { overwrite: true });
-				}
-			};
-			const installed = {};
-			const newWorkspaces = new Set();
-
-			// determine what packages are already installed
-			for (const rel of globule.find('*/*/package.json', '@*/*/*/package.json', { srcBase: packagesDir })) {
-				const pkgJsonFile = path.join(packagesDir, rel);
-				const src = path.dirname(pkgJsonFile);
-				const invalidDest = path.join(pluginsDir, 'invalid', path.dirname(rel));
-				let name, version;
-
-				try {
-					({ name, version } = await fs.readJson(pkgJsonFile));
-				} catch (e) {
-					cleanup(src, invalidDest, 'Bad package.json');
-					continue;
-				}
-
-				const nameDir = path.dirname(path.dirname(rel));
-				const versionDir = path.basename(src);
-
-				if (name !== nameDir) {
-					cleanup(src, invalidDest, `Plugin directory name mismatch: ${highlight(`${name}@${version}`)} found in ${highlight(nameDir)}`);
-				} else if (version !== versionDir) {
-					cleanup(src, invalidDest, `Plugin directory version mismatch: ${highlight(`${name}@${version}`)} found in ${highlight(versionDir)}`);
-				} else {
-					logger.log(`Found installed plugin ${highlight(`${name}@${version}`)}`);
-					if (!installed[name]) {
-						installed[name] = {};
-					}
-					installed[name][version] = path.dirname(pkgJsonFile);
-					newWorkspaces.add(`packages/${name}/${version}`);
-				}
-			}
+			const existingWorkspaces = await loadWorkspaces(pluginsDir);
+			const { installed, workspaces: newWorkspaces } = await detectInstalled(pluginsDir);
 
 			// build a list of manifests for each package to be installed
 			const toInstall = [];
@@ -354,23 +356,32 @@ export function install(pluginName, home) {
 						name: 'root',
 						private: true,
 						version: '0.0.0',
-						workspaces
+						workspaces,
+						appcd: {
+							node: appcdCoreNodejs
+						}
 					}, { spaces: 2 });
 
 					await emitter.emit('install');
 
 					// run yarn
-					await new Promise(resolve => {
-						const args = [ yarn, '--no-progress', '--production' ];
-						const cmd = process.platform === 'win32' ? args.shift() : process.execPath;
-						logger.log(`Plugins dir: ${highlight(pluginsDir)}`);
-						logger.log(`Executing: ${highlight(`${cmd} ${args.join(' ')}`)}`);
+					const args = [ yarn, '--no-lockfile', '--no-progress', '--non-interactive', '--production' ];
+					const cmd = process.platform === 'win32' ? args.shift() : process.execPath;
+					logger.log(`Plugins dir: ${highlight(pluginsDir)}`);
+					logger.log(`Executing: ${highlight(`${cmd} ${args.join(' ')}`)}`);
 
-						const child = spawn(cmd, args, {
+					const child = await spawnNode({
+						args,
+						nodeHome: expandPath(home, 'node'),
+						opts: {
 							cwd: pluginsDir,
+							stdio: 'pipe',
 							windowsHide: true
-						});
+						},
+						version: appcdCoreNodejs
+					});
 
+					await new Promise(resolve => {
 						const print = data => data.toString().split(/\r\n|\n/).forEach(line => logger.log(line));
 						child.stdout.on('data', print);
 						child.stderr.on('data', print);
@@ -386,6 +397,17 @@ export function install(pluginName, home) {
 					// restore the plugin names in the package.json files
 					await Promise.all(Object.values(revert).map(async ({ name, pkgJsonFile }) => {
 						const pkgJson = await fs.readJson(pkgJsonFile);
+
+						let garbage = path.join(pluginsDir, 'node_modules', `${pkgJson.name}`);
+						logger.log(`Deleting ${highlight(garbage)}`);
+						await fs.remove(garbage);
+						garbage = path.dirname(garbage);
+						await fs.remove(path.join(garbage, '.DS_Store'));
+						if (!fs.readdirSync(garbage).length) {
+							logger.log(`Deleting ${highlight(garbage)}`);
+							await fs.remove(garbage);
+						}
+
 						logger.log(`Restoring package name ${highlight(pkgJson.name)} => ${highlight(name)}`);
 						pkgJson.name = name;
 						await fs.writeJson(pkgJsonFile, pkgJson, { spaces: 2 });
@@ -402,7 +424,7 @@ export function install(pluginName, home) {
 	return emitter;
 }
 
-export async function list(home, filter, searchPaths) {
+export async function list(home, { filter, searchPaths } = {}) {
 	if (!searchPaths) {
 		searchPaths = getPluginPaths(home);
 	} else if (!Array.isArray(searchPaths)) {
@@ -435,6 +457,14 @@ export async function list(home, filter, searchPaths) {
 		}));
 }
 
+async function loadWorkspaces(pluginsDir) {
+	try {
+		return new Set((await fs.readJson(path.join(pluginsDir, 'package.json'))).workspaces);
+	} catch (e) {
+		return new Set();
+	}
+}
+
 export async function search(criteria) {
 	criteria = (Array.isArray(criteria) ? criteria : [ criteria ]).filter(Boolean);
 	const keywords = new Set([ 'appcd', 'appcd-plugin', ...criteria ]);
@@ -453,12 +483,189 @@ export async function search(criteria) {
 	return results;
 }
 
-export async function uninstall(pkg) {
-	// delete the package
-	// rename all other package names
-	// remove the links under node_modules
-	// remove from package.json workspaces
-	// run yarn
+export function uninstall(pluginName, home) {
+	const emitter = new HookEmitter();
+
+	setImmediate(async () => {
+		try {
+			if (!home) {
+				home = loadConfig().get('home');
+			} else if (typeof home !== 'string') {
+				throw new TypeError('Expected home directory to be a non-empty string');
+			}
+
+			if (!pluginName || typeof pluginName !== 'string') {
+				throw new TypeError('Expected plugin name to install or "default"');
+			}
+
+			// find yarn and lerna
+			const yarn = await find('yarn');
+			if (yarn) {
+				logger.log(`Found yarn: ${highlight(yarn)}`);
+			} else {
+				throw new Error('Unable to find yarn bin, skipping install default plugins');
+			}
+
+			// check yarn config directory permissions
+			try {
+				await fs.access(yarnDir);
+			} catch (e) {
+				throw new Error(`Cannot write to Yarn config directory: ${yarnDir}`);
+			}
+
+			const pluginsDir = expandPath(home, 'plugins');
+			const { name, fetchSpec } = npa(pluginName);
+			const { installed, workspaces } = await detectInstalled(pluginsDir);
+			const revert = {};
+			const toKeep = [];
+			const toRemove = [];
+
+			// build the list of directories to remove
+			for (const [ key, vers ] of Object.entries(installed)) {
+				for (const [ version, dir ] of Object.entries(vers)) {
+					if (key === name && (fetchSpec === 'latest' || fetchSpec === version)) {
+						toRemove.push({
+							name,
+							version,
+							path: dir
+						});
+						workspaces.delete(`packages/${name}/${version}`);
+					} else {
+						toKeep.push({
+							path: dir
+						});
+					}
+				}
+			}
+
+			if (!toRemove.length) {
+				throw new Error(`Plugin ${pluginName} not installed`);
+			}
+
+			// update the package.json workspaces
+			let pkgJson;
+			try {
+				pkgJson = await fs.readJson(path.join(pluginsDir, 'package.json'));
+				if (!pkgJson.appcd) {
+					pkgJson.appcd = {};
+				}
+				pkgJson.appcd.node = appcdCoreNodejs;
+			} catch (e) {
+				// file does not exist or possibly corrupt, create a new one
+				pkgJson = {
+					name: 'root',
+					private: true,
+					version: '0.0.0',
+					appcd: {
+						node: appcdCoreNodejs
+					}
+				};
+			}
+			pkgJson.workspaces = Array.from(workspaces);
+			logger.log(`Writing ${highlight('plugins/package.json')}`);
+			await fs.writeJson(path.join(pluginsDir, 'package.json'), pkgJson, { spaces: 2 });
+
+			// lerna spawns yarn using `execa()` which implicitly overrides the inherited path, so we
+			// have to manually set the environment variables, which for some reason works whereas
+			// setting the `env` in `spawn()` does not.
+			const origPath = process.env.PATH;
+			const origForceColor = process.env.FORCE_COLOR;
+			if (yarn) {
+				process.env.PATH = `${path.dirname(yarn)}${path.delimiter}${origPath}`;
+			}
+			process.env.FORCE_COLOR = '0';
+
+			try {
+				// delete the plugin version directory
+				for (const plugin of toRemove) {
+					await emitter.emit('uninstall', plugin);
+
+					logger.log(`Deleting ${highlight(plugin.path)}`);
+					await fs.remove(plugin.path);
+
+					let i = 0;
+					let parentDir = path.dirname(plugin.path);
+					while (i++ < 5 && parentDir !== pluginsDir) {
+						await fs.remove(path.join(parentDir, '.DS_Store'));
+						if (fs.readdirSync(parentDir).length) {
+							break;
+						}
+						logger.log(`Deleting ${highlight(parentDir)}`);
+						await fs.remove(parentDir);
+						parentDir = path.dirname(parentDir);
+					}
+				}
+
+				await emitter.emit('cleanup');
+
+				// we need to temporarily rename package names before we call yarn
+				for (const plugin of toKeep) {
+					const pkgJsonFile = path.join(plugin.path, 'package.json');
+					const pkgJson = await fs.readJson(pkgJsonFile);
+					const newName = `${pkgJson.name}-${pkgJson.version.replace(/[^\w]/g, '_')}`;
+					revert[newName] = { name: pkgJson.name, pkgJsonFile };
+					logger.log(`Renaming package name ${highlight(pkgJson.name)} => ${highlight(newName)}`);
+					pkgJson.name = newName;
+					await fs.writeJson(pkgJsonFile, pkgJson);
+				}
+
+				// run yarn
+				const args = [ yarn, '--no-lockfile', '--no-progress', '--non-interactive', '--production' ];
+				const cmd = process.platform === 'win32' ? args.shift() : process.execPath;
+				logger.log(`Plugins dir: ${highlight(pluginsDir)}`);
+				logger.log(`Executing: ${highlight(`${cmd} ${args.join(' ')}`)}`);
+
+				const child = await spawnNode({
+					args,
+					nodeHome: expandPath(home, 'node'),
+					opts: {
+						cwd: pluginsDir,
+						stdio: 'pipe',
+						windowsHide: true
+					},
+					version: appcdCoreNodejs
+				});
+
+				await new Promise(resolve => {
+					const print = data => data.toString().split(/\r\n|\n/).forEach(line => logger.log(line));
+					child.stdout.on('data', print);
+					child.stderr.on('data', print);
+					child.on('close', code => {
+						logger.warn(`lerna exited with code ${highlight(code)}`);
+						resolve();
+					});
+				});
+			} finally {
+				process.env.PATH = origPath;
+				process.env.FORCE_COLOR = origForceColor;
+
+				// restore the plugin names in the package.json files
+				await Promise.all(Object.values(revert).map(async ({ name, pkgJsonFile }) => {
+					const pkgJson = await fs.readJson(pkgJsonFile);
+
+					let garbage = path.join(pluginsDir, 'node_modules', `${pkgJson.name}`);
+					logger.log(`Deleting ${highlight(garbage)}`);
+					await fs.remove(garbage);
+					garbage = path.dirname(garbage);
+					await fs.remove(path.join(garbage, '.DS_Store'));
+					if (!fs.readdirSync(garbage).length) {
+						logger.log(`Deleting ${highlight(garbage)}`);
+						await fs.remove(garbage);
+					}
+
+					logger.log(`Restoring package name ${highlight(pkgJson.name)} => ${highlight(name)}`);
+					pkgJson.name = name;
+					await fs.writeJson(pkgJsonFile, pkgJson, { spaces: 2 });
+				}));
+			}
+
+			await emitter.emit('finish');
+		} catch (err) {
+			await emitter.emit('error', err);
+		}
+	});
+
+	return emitter;
 }
 
 export async function update(pkg) {
