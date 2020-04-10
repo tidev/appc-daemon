@@ -34,7 +34,7 @@
     "appcd-telemetry": "^3.0.2",
     "appcd-util": "^2.0.2",
     "bin-links": "^2.1.2",
-    "cli-kit": "^0.14.0",
+    "cli-kit": "^0.15.0",
     "fs-extra": "^9.0.0",
     "gawk": "^4.7.0",
     "global-modules": "^2.0.0",

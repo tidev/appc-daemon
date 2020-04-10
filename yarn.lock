@@ -2966,6 +2966,25 @@ cli-kit@^0.14.0:
     which "^2.0.2"
     ws "^7.2.1"
 
+cli-kit@^0.15.0:
+  version "0.15.0"
+  resolved "https://registry.yarnpkg.com/cli-kit/-/cli-kit-0.15.0.tgz#afd6157f970ebfca04e9def7414613965582c6c1"
+  integrity sha512-/wY2m2ZDuV+QjY0jiCFN0sUUUiwaijh0jkL8W+cKQxc/AdV1Graxa00uk0KCXevg+ElMZDY9uBVg0LcfsGCIXA==
+  dependencies:
+    argv-split "^2.0.1"
+    fast-levenshtein "^2.0.6"
+    fs-extra "^8.1.0"
+    hook-emitter "^4.0.2"
+    lodash.camelcase "^4.3.0"
+    node-pty-prebuilt-multiarch "^0.9.0"
+    pkg-dir "^4.2.0"
+    pluralize "^8.0.0"
+    semver "^7.2.1"
+    snooplogg "^2.3.3"
+    source-map-support "^0.5.16"
+    which "^2.0.2"
+    ws "^7.2.3"
+
 cli-table2@^0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/cli-table2/-/cli-table2-0.2.0.tgz#2d1ef7f218a0e786e214540562d4bd177fe32d97"
