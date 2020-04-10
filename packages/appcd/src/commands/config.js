@@ -58,7 +58,7 @@ When setting a config setting and the Appc Daemon is running, settings will be b
     ${style.highlight('appcd config set telemetry.enabled true')}`
 	},
 	options: {
-		'--json': 'outputs the config as JSON'
+		'--json': 'Outputs the config as JSON'
 	},
 	async action({ argv }) {
 		const [

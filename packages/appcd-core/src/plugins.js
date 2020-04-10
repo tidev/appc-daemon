@@ -60,10 +60,7 @@ const yarnDir = process.platform === 'win32'
  * @returns {Promise<Array.<Object>>} Resolves an array of plugins with updates available.
  */
 export async function checkUpdates({ home, plugin: pluginName }) {
-	const results = {
-		updated: [],
-		available: []
-	};
+	const results = [];
 	const pluginsDir = expandPath(home, 'plugins');
 	const { installed } = await detectInstalled(pluginsDir);
 	const limit = promiseLimit(10);
@@ -71,7 +68,8 @@ export async function checkUpdates({ home, plugin: pluginName }) {
 	await Promise.all(Object.entries(installed).map(([ name, versions ]) => limit(async () => {
 		if (!pluginName || name === pluginName) {
 			const pkg = await getPluginPackument(name);
-			const latest = pkg['dist-tags'].latest || Object.keys(pkg.versions).sort(semver.rcompare)[0];
+			let latestInstalled = null;
+			const latestAvailable = pkg['dist-tags'].latest || Object.keys(pkg.versions).sort(semver.rcompare)[0];
 			const vers = Object.keys(versions).sort(semver.rcompare);
 
 			const installedMajors = getMajors(vers);
@@ -80,13 +78,16 @@ export async function checkUpdates({ home, plugin: pluginName }) {
 			// check each major for any updates
 			for (const major of Object.keys(installedMajors)) {
 				if (availableMajors[major] && semver.gt(availableMajors[major], installedMajors[major])) {
-					results.updated.push({ name, version: availableMajors[major] });
+					results.push({ name, installed: installedMajors[major], available: availableMajors[major] });
+				}
+				if (!latestInstalled || semver.gt(installedMajors[major], latestInstalled)) {
+					latestInstalled = installedMajors[major];
 				}
 			}
 
 			// check if there's a new major that we don't have
-			if (!installedMajors[semver.major(latest)]) {
-				results.available.push({ name, version: latest });
+			if (!installedMajors[semver.major(latestAvailable)]) {
+				results.push({ name, installed: latestInstalled, available: latestAvailable });
 			}
 		}
 	})));

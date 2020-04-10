@@ -9,6 +9,7 @@ export default {
 	],
 	desc: 'Search npm for appcd plugins',
 	options: {
+		'--json': 'Outputs the results as JSON',
 		'--show-deprecated': 'Show deprecated plugins'
 	},
 	async action({ argv, console }) {
@@ -16,7 +17,7 @@ export default {
 			{ plugins: pm },
 			{ snooplogg },
 			{ default: Table },
-			{ default: semver }
+			semver
 		] = await Promise.all([
 			import('appcd-core'),
 			import('appcd-logger'),

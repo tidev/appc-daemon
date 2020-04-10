@@ -9,7 +9,8 @@ export default {
 	],
 	desc: 'Lists all installed plugins',
 	options: {
-		'-d, --detailed': 'Display detailed plugin information'
+		'-d, --detailed': 'Display detailed plugin information',
+		'--json': 'Outputs the results as JSON'
 	},
 	async action({ _argv, argv, console }) {
 		const [

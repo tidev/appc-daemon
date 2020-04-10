@@ -14,13 +14,16 @@ export default {
 		}
 	],
 	desc: 'Display info for an appcd plugin',
+	options: {
+		'--json': 'Outputs the results as JSON'
+	},
 	async action({ argv, cli, console }) {
 		const [
 			{ plugins: pm },
 			{ snooplogg },
 			{ get },
 			{ default: npa },
-			{ default: semver },
+			semver,
 			{ loadConfig },
 		] = await Promise.all([
 			import('appcd-core'),

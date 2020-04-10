@@ -7,6 +7,9 @@ referenced from another project.
 
 This command will scan all Yarn linked packages for appcd plugins and register them in the appcd \
 home plugins directory. This helpful for plugin development.`,
+	options: {
+		'--json': 'Outputs the results as JSON'
+	},
 	async action({ argv, console }) {
 		const [
 			{ plugins: pm },
