@@ -7,9 +7,26 @@ export default {
 		}
 	],
 	desc: 'Check and install plugin updates',
-	async action({ _, argv, console }) {
-		console.log('update command');
-		console.log(_);
-		console.log(argv);
+	async action({ argv, console }) {
+		const [
+			{ plugins: pm },
+			{ snooplogg },
+			{ loadConfig },
+			{ default: Table },
+			{ default: semver }
+		] = await Promise.all([
+			import('appcd-core'),
+			import('appcd-logger'),
+			import('../../common'),
+			import('cli-table3'),
+			import('semver')
+		]);
+
+		const updates = await pm.checkUpdates({
+			home: loadConfig(argv).get('home'),
+			plugin: argv.plugin
+		});
+
+		console.log(updates);
 	}
 };

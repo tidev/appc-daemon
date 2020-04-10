@@ -48,6 +48,46 @@ const yarnDir = process.platform === 'win32'
 	: path.join(os.homedir(), '.config', 'yarn');
 
 /**
+ * Checks if there are newer versions of Installs the latest version for the specified plugin or all plugins.
+ *
+ * @param {Object} params - Various parameters.
+ * @param {String} params.home - The path to the appcd home directory.
+ * @param {String} params.plugin - The name of the plugin.
+ * @returns {Promise<Array.<Object>>} Resolves an array of plugins with updates available.
+ */
+export async function checkUpdates({ home, plugin: pluginName }) {
+	const updates = [];
+	const pluginsDir = expandPath(home, 'plugins');
+	const { installed } = await detectInstalled(pluginsDir);
+	const limit = promiseLimit(10);
+
+	await Promise.all(Object.entries(installed).map(([ name, versions ]) => limit(async () => {
+		if (!pluginName || name === pluginName) {
+			const pkg = await getPluginPackument(name);
+			const latest = pkg['dist-tags'].latest || Object.keys(pkg.versions).sort(semver.rcompare)[0];
+			const vers = Object.keys(versions).sort(semver.rcompare);
+
+			const installedMajors = getMajors(vers);
+			const availableMajors = getMajors(Object.keys(pkg.versions));
+
+			// check each major for any updates
+			for (const major of Object.keys(installedMajors)) {
+				if (availableMajors[major] && semver.gt(availableMajors[major], installedMajors[major])) {
+					updates.push({ name, version: availableMajors[major] });
+				}
+			}
+
+			// check if there's a new major that we don't have
+			if (!installedMajors[semver.major(latest)]) {
+				updates.push({ name, version: latest });
+			}
+		}
+	})));
+
+	return updates;
+}
+
+/**
  * Scans the appcd home plugin directory for existing plugins. This uses a lazy scanning method
  * instead of the more involved scheme detection system in appcd-plugin because we know it's always
  * going to be a nested plugin directory scheme.
@@ -163,6 +203,25 @@ async function findYarn() {
 }
 
 /**
+ * Analyzes a list of versions and determines the latest one per major version.
+ *
+ * @param {Array.<String>} versions - A list of package versions to extract the majors from.
+ * @returns {Object}
+ */
+export function getMajors(versions) {
+	const majors = {};
+
+	for (const ver of versions) {
+		const major = semver.major(ver);
+		if (majors[major] === undefined || semver.gt(ver, majors[major])) {
+			majors[major] = ver;
+		}
+	}
+
+	return majors;
+}
+
+/**
  * Retrieves the packument from npm for the specified package. The packument contains manifests for
  * all versions of a package. If all versions are detected as invalid appcd plugins, then an error
  * is thrown.
@@ -170,7 +229,7 @@ async function findYarn() {
  * @param {String} pkg - The name of the package.
  * @returns {Promise<Object>}
  */
-async function getPluginInfo(pkg) {
+async function getPluginPackument(pkg) {
 	let info;
 
 	try {
@@ -458,7 +517,8 @@ export async function list({ filter, home, searchPaths }) {
 			supported:    plugin.supported,
 			os:           plugin.os,
 			apiVersion:   plugin.apiVersion,
-			appcdVersion: plugin.appcdVersion
+			appcdVersion: plugin.appcdVersion,
+			link:         fs.lstatSync(plugin.origPath).isSymbolicLink()
 		}));
 }
 
@@ -513,7 +573,7 @@ export async function search(criteria) {
 
 	await Promise.all(packages.map(pkg => limit(async () => {
 		try {
-			results.push(await getPluginInfo(pkg.name));
+			results.push(await getPluginPackument(pkg.name));
 		} catch (e) {
 			// silence
 		}
@@ -591,32 +651,6 @@ export function uninstall({ home, plugin: pluginName }) {
 				workspaces: Array.from(workspaces),
 				yarn
 			});
-
-			await emitter.emit('finish');
-		} catch (err) {
-			await emitter.emit('error', err);
-		}
-	});
-
-	return emitter;
-}
-
-/**
- * Installs the latest version for the specified plugin or all plugins.
- *
- * @param {Object} params - Various parameters.
- * @param {String} params.home - The path to the appcd home directory.
- * @param {String} params.plugin - The name of the plugin.
- * @returns {HookEmitter}
- */
-export function update({ home, plugin: pluginName }) {
-	const emitter = new HookEmitter();
-
-	setImmediate(async () => {
-		try {
-			// get list of installed plugins
-			// check for newer versions
-			// download and install updates
 
 			await emitter.emit('finish');
 		} catch (err) {
@@ -772,5 +806,5 @@ export async function view(plugin) {
 	if (!plugin || typeof plugin !== 'string') {
 		throw new TypeError('Expected plugin name to be a non-empty string');
 	}
-	return await getPluginInfo(plugin);
+	return await getPluginPackument(plugin);
 }

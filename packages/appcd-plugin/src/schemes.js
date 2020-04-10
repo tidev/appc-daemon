@@ -42,6 +42,13 @@ export class Scheme extends HookEmitter {
 		super();
 
 		/**
+		 * The original path which may be a symlink and since we don't want to watch symlinks, we
+		 * keep it for reference only.
+		 * @type {String}
+		 */
+		this.origPath = path;
+
+		/**
 		 * The path to watch and detect plugins in.
 		 * @type {String}
 		 */

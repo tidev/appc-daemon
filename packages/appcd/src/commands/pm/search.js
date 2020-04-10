@@ -16,7 +16,7 @@ export default {
 			{ plugins: pm },
 			{ snooplogg },
 			{ default: Table },
-			semver
+			{ default: semver }
 		] = await Promise.all([
 			import('appcd-core'),
 			import('appcd-logger'),
@@ -44,15 +44,9 @@ export default {
 			const latest = pkg['dist-tags'].latest || Object.keys(pkg.versions).sort(semver.rcompare)[0];
 			if (!pkg.versions[latest]?.deprecated || argv.showDeprecated) {
 				// need to identify the latest for each major
-				pkg.majors = {};
-				for (const ver of Object.keys(pkg.versions)) {
-					const major = semver.major(ver);
-					if (pkg.majors[major] === undefined || semver.gt(ver, pkg.majors[major])) {
-						pkg.majors[major] = ver;
-					}
-				}
+				const majors = pm.getMajors(Object.keys(pkg.versions));
 
-				for (const ver of Object.values(pkg.majors).sort(semver.rcompare)) {
+				for (const ver of Object.values(majors).sort(semver.rcompare)) {
 					latestVersions.push(pkg.versions[ver]);
 					if (!pkg.supported) {
 						unsupported++;

@@ -25,8 +25,10 @@ export default {
 		]);
 
 		const { cyan, gray, green, magenta, yellow } = snooplogg.chalk;
-		const cfg = loadConfig(argv);
-		const plugins = await pm.list({ filter: argv.filter, home: cfg.get('home') });
+		const plugins = await pm.list({
+			filter: argv.filter,
+			home: loadConfig(argv).get('home')
+		});
 
 		if (argv.json) {
 			console.log(JSON.stringify(plugins, null, '  '));
@@ -95,9 +97,9 @@ export default {
 
 			for (const plugin of plugins) {
 				if (plugin.supported) {
-					table.push([ green(plugin.name), plugin.version, plugin.description, plugin.endpoint ]);
+					table.push([ green(plugin.name + (plugin.link ? '*' : '')), plugin.version, plugin.description, plugin.endpoint ]);
 				} else {
-					table.push([ gray(plugin.name), gray(plugin.version), gray(plugin.description), gray(plugin.endpoint) ]);
+					table.push([ gray(plugin.name + (plugin.link ? '*' : '')), gray(plugin.version), gray(plugin.description), gray(plugin.endpoint) ]);
 				}
 			}
 
