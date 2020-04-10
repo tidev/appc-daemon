@@ -67,7 +67,6 @@ describe('appcd config', function () {
 				'network.strictSSL                = true',
 				'plugins.autoReload               = true',
 				'plugins.defaultInactivityTimeout = 3600000',
-				'plugins.installDefault           = false',
 				'server.agentPollInterval         = 1000',
 				'server.daemonize                 = true',
 				'server.group                     = null',
@@ -140,7 +139,6 @@ describe('appcd config', function () {
 							'network.strictSSL                = true',
 							'plugins.autoReload               = true',
 							'plugins.defaultInactivityTimeout = 3600000',
-							'plugins.installDefault           = false',
 							'server.agentPollInterval         = 1000',
 							'server.daemonize                 = true',
 							'server.group                     = null',
@@ -187,7 +185,6 @@ describe('appcd config', function () {
 							'network.strictSSL                = true',
 							'plugins.autoReload               = true',
 							'plugins.defaultInactivityTimeout = 3600000',
-							'plugins.installDefault           = false',
 							'server.agentPollInterval         = 1000',
 							'server.daemonize                 = true',
 							'server.group                     = null',
@@ -243,8 +240,7 @@ describe('appcd config', function () {
 								},
 								plugins: {
 									autoReload: true,
-									defaultInactivityTimeout: 60 * 60 * 1000,
-									installDefault: false
+									defaultInactivityTimeout: 60 * 60 * 1000
 								},
 								server: {
 									agentPollInterval: 1000,

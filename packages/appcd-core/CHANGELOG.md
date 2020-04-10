@@ -5,7 +5,8 @@
  * BREAKING CHANGE: Bumped core Node.js version to 12.16.1. This affects all plugins.
    [(DAEMON-319)](https://jira.appcelerator.org/browse/DAEMON-319)
  * BREAKING CHANGE: Main file exports library instead of the main entry point.
- * feat: Added plugin management functions.
+ * feat: Added plugin management functions. This feature has removed the need for
+   `appcd-default-plugins` and the associated `plugins.installDefault` config setting.
    [(DAEMON-311)](https://jira.appcelerator.org/browse/DAEMON-311)
  * refactor: Updated to `appcd-config@3.0.0`, created the Appc Daemon config schema, and converted
    the `default.js` config to `default.json`.

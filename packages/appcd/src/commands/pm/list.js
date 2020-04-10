@@ -94,16 +94,26 @@ export default {
 					'padding-right': 0
 				}
 			});
+			let links = 0;
+			const star = process.platform === 'win32' ? '*' : '★';
 
 			for (const plugin of plugins) {
+				let { name } = plugin;
+				if (plugin.link) {
+					links++;
+					name += star;
+				}
 				if (plugin.supported) {
-					table.push([ green(plugin.name + (plugin.link ? '*' : '')), plugin.version, plugin.description, plugin.endpoint ]);
+					table.push([ green(name), plugin.version, plugin.description, plugin.endpoint ]);
 				} else {
-					table.push([ gray(plugin.name + (plugin.link ? '*' : '')), gray(plugin.version), gray(plugin.description), gray(plugin.endpoint) ]);
+					table.push([ gray(name), gray(plugin.version), gray(plugin.description), gray(plugin.endpoint) ]);
 				}
 			}
 
 			console.log(table.toString());
+			if (links) {
+				console.log(gray(`${star} Yarn linked appcd plugin`));
+			}
 			console.log(`\nFor more info, run ${cyan(`appcd ${_argv.join(' ')} --detailed`)}`);
 		}
 	}

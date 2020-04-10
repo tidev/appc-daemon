@@ -24,9 +24,6 @@ export const defaultConfig = {
 		name: 'test',
 		title: 'Test'
 	},
-	plugins: {
-		installDefault: false
-	},
 	server: {
 		persistDebugLog: true
 	},
