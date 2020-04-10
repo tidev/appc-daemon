@@ -17,6 +17,7 @@ import { expandPath } from 'appcd-path';
 import { isFile } from 'appcd-fs';
 import { loadConfig } from './config';
 import { spawnNode } from 'appcd-nodejs';
+import { tailgate } from 'appcd-util';
 
 const logger = appcdLogger('appcd:plugins');
 const { highlight } = appcdLogger.styles;
@@ -48,7 +49,8 @@ const yarnDir = process.platform === 'win32'
 	: path.join(os.homedir(), '.config', 'yarn');
 
 /**
- * Checks if there are newer versions of Installs the latest version for the specified plugin or all plugins.
+ * Checks if there are updated releases for installed plugins as well as any new releases that are
+ * installed.
  *
  * @param {Object} params - Various parameters.
  * @param {String} params.home - The path to the appcd home directory.
@@ -56,7 +58,10 @@ const yarnDir = process.platform === 'win32'
  * @returns {Promise<Array.<Object>>} Resolves an array of plugins with updates available.
  */
 export async function checkUpdates({ home, plugin: pluginName }) {
-	const updates = [];
+	const results = {
+		updated: [],
+		available: []
+	};
 	const pluginsDir = expandPath(home, 'plugins');
 	const { installed } = await detectInstalled(pluginsDir);
 	const limit = promiseLimit(10);
@@ -73,18 +78,18 @@ export async function checkUpdates({ home, plugin: pluginName }) {
 			// check each major for any updates
 			for (const major of Object.keys(installedMajors)) {
 				if (availableMajors[major] && semver.gt(availableMajors[major], installedMajors[major])) {
-					updates.push({ name, version: availableMajors[major] });
+					results.updated.push({ name, version: availableMajors[major] });
 				}
 			}
 
 			// check if there's a new major that we don't have
 			if (!installedMajors[semver.major(latest)]) {
-				updates.push({ name, version: latest });
+				results.available.push({ name, version: latest });
 			}
 		}
 	})));
 
-	return updates;
+	return results;
 }
 
 /**
@@ -518,7 +523,7 @@ export async function list({ filter, home, searchPaths }) {
 			os:           plugin.os,
 			apiVersion:   plugin.apiVersion,
 			appcdVersion: plugin.appcdVersion,
-			link:         fs.lstatSync(plugin.origPath).isSymbolicLink()
+			link:         plugin.link
 		}));
 }
 
@@ -548,14 +553,21 @@ async function pruneDir(dir, pluginsDir) {
 	logger.log(`Deleting ${highlight(dir)}`);
 	await fs.remove(dir);
 
-	while ((dir = path.dirname(dir)) !== pluginsDir) {
-		await fs.remove(path.join(dir, '.DS_Store'));
-		if (fs.readdirSync(dir).length) {
-			break;
+	dir = path.dirname(dir);
+
+	// since this function can be called async, we want to avoid a race condition and only allow
+	// one of the prune operations to clean up the parent directories
+	await tailgate(`plugins_${dir}`, async () => {
+		while (dir !== pluginsDir) {
+			await fs.remove(path.join(dir, '.DS_Store'));
+			if (fs.readdirSync(dir).length) {
+				break;
+			}
+			logger.log(`Deleting ${highlight(dir)}`);
+			await fs.remove(dir);
+			dir = path.dirname(dir);
 		}
-		logger.log(`Deleting ${highlight(dir)}`);
-		await fs.remove(dir);
-	}
+	});
 }
 
 /**
@@ -580,85 +592,6 @@ export async function search(criteria) {
 	})));
 
 	return results;
-}
-
-/**
- * Uninstalls a plugin. If the plugin name does not contain a version, then all versions of that
- * plugin are removed.
- *
- * @param {Object} params - Various parameters.
- * @param {String} params.home - The path to the appcd home directory.
- * @param {String} params.plugin - The name of the plugin.
- * @returns {HookEmitter}
- */
-export function uninstall({ home, plugin: pluginName }) {
-	const emitter = new HookEmitter();
-
-	setImmediate(async () => {
-		try {
-			if (!home) {
-				home = loadConfig().get('home');
-			} else if (typeof home !== 'string') {
-				throw new TypeError('Expected home directory to be a non-empty string');
-			}
-
-			if (!pluginName || typeof pluginName !== 'string') {
-				throw new TypeError('Expected plugin name to install or "default"');
-			}
-
-			// find yarn
-			const yarn = await findYarn();
-
-			// check yarn config directory permissions
-			try {
-				await fs.access(yarnDir);
-			} catch (e) {
-				throw new Error(`Cannot write to Yarn config directory: ${yarnDir}`);
-			}
-
-			const pluginsDir = expandPath(home, 'plugins');
-			const { name, fetchSpec } = npa(pluginName);
-			const { installed, workspaces } = await detectInstalled(pluginsDir);
-			const toRemove = [];
-
-			// build the list of directories to remove
-			for (const [ key, vers ] of Object.entries(installed)) {
-				for (const [ version, dir ] of Object.entries(vers)) {
-					if (key === name && (fetchSpec === 'latest' || fetchSpec === version)) {
-						toRemove.push({
-							name,
-							version,
-							path: dir
-						});
-						workspaces.delete(`packages/${name}/${version}`);
-					}
-				}
-			}
-
-			if (!toRemove.length) {
-				throw new Error(`Plugin ${pluginName} not installed`);
-			}
-
-			// delete the plugin version directory
-			for (const plugin of toRemove) {
-				await emitter.emit('uninstall', plugin);
-				await pruneDir(plugin.path, pluginsDir);
-			}
-
-			await updateMonorepo({
-				fn: () => emitter.emit('cleanup'),
-				home,
-				workspaces: Array.from(workspaces),
-				yarn
-			});
-
-			await emitter.emit('finish');
-		} catch (err) {
-			await emitter.emit('error', err);
-		}
-	});
-
-	return emitter;
 }
 
 /**
@@ -758,6 +691,85 @@ async function updateMonorepo({ fn, home, workspaces, yarn }) {
 			await fs.writeJson(pkgJsonFile, pkgJson, { spaces: 2 });
 		}));
 	}
+}
+
+/**
+ * Uninstalls a plugin. If the plugin name does not contain a version, then all versions of that
+ * plugin are removed.
+ *
+ * @param {Object} params - Various parameters.
+ * @param {String} params.home - The path to the appcd home directory.
+ * @param {String} params.plugin - The name of the plugin.
+ * @returns {HookEmitter}
+ */
+export function uninstall({ home, plugin: pluginName }) {
+	const emitter = new HookEmitter();
+
+	setImmediate(async () => {
+		try {
+			if (!home) {
+				home = loadConfig().get('home');
+			} else if (typeof home !== 'string') {
+				throw new TypeError('Expected home directory to be a non-empty string');
+			}
+
+			if (!pluginName || typeof pluginName !== 'string') {
+				throw new TypeError('Expected plugin name to install or "default"');
+			}
+
+			// find yarn
+			const yarn = await findYarn();
+
+			// check yarn config directory permissions
+			try {
+				await fs.access(yarnDir);
+			} catch (e) {
+				throw new Error(`Cannot write to Yarn config directory: ${yarnDir}`);
+			}
+
+			const pluginsDir = expandPath(home, 'plugins');
+			const { name, fetchSpec } = npa(pluginName);
+			const { installed, workspaces } = await detectInstalled(pluginsDir);
+			const toRemove = [];
+
+			// build the list of directories to remove
+			for (const [ key, vers ] of Object.entries(installed)) {
+				for (const [ version, dir ] of Object.entries(vers)) {
+					if (key === name && (fetchSpec === 'latest' || fetchSpec === version)) {
+						toRemove.push({
+							name,
+							version,
+							path: dir
+						});
+						workspaces.delete(`packages/${name}/${version}`);
+					}
+				}
+			}
+
+			if (!toRemove.length) {
+				throw new Error(`Plugin ${pluginName} not installed`);
+			}
+
+			// delete the plugin version directory
+			for (const plugin of toRemove) {
+				await emitter.emit('uninstall', plugin);
+				await pruneDir(plugin.path, pluginsDir);
+			}
+
+			await updateMonorepo({
+				fn: () => emitter.emit('cleanup'),
+				home,
+				workspaces: Array.from(workspaces),
+				yarn
+			});
+
+			await emitter.emit('finish');
+		} catch (err) {
+			await emitter.emit('error', err);
+		}
+	});
+
+	return emitter;
 }
 
 /**

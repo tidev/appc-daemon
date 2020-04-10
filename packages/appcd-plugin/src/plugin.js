@@ -18,7 +18,7 @@ import types from './types';
 
 import { arrayify, sha1 } from 'appcd-util';
 import { EventEmitter } from 'events';
-import { expandPath } from 'appcd-path';
+import { expandPath, real } from 'appcd-path';
 import { isDir, isFile } from 'appcd-fs';
 import { Readable } from 'stream';
 import { states } from './plugin-base';
@@ -72,6 +72,7 @@ export default class Plugin extends EventEmitter {
 			os:             undefined,
 			error:          null,
 			supported:      null,
+			link:           fs.lstatSync(pluginPath).isSymbolicLink(),
 			activeRequests: 0,
 			totalRequests:  0,
 			dependencies:   {}
@@ -111,7 +112,7 @@ export default class Plugin extends EventEmitter {
 		if (!pluginPath || typeof pluginPath !== 'string') {
 			throw new PluginError('Expected plugin path to be a non-empty string');
 		}
-		pluginPath = expandPath(pluginPath);
+		pluginPath = real(pluginPath);
 		if (!isDir(pluginPath)) {
 			throw new PluginError('Plugin path does not exist: %s', pluginPath);
 		}

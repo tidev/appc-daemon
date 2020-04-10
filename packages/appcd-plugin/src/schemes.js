@@ -42,8 +42,8 @@ export class Scheme extends HookEmitter {
 		super();
 
 		/**
-		 * The original path which may be a symlink and since we don't want to watch symlinks, we
-		 * keep it for reference only.
+		 * The original path, which may be a symlink and since we don't want to watch symlinks, we
+		 * keep it separate and use it to initialize the `Plugin` instance.
 		 * @type {String}
 		 */
 		this.origPath = path;
@@ -141,7 +141,7 @@ export class PluginScheme extends Scheme {
 	 */
 	async detect() {
 		try {
-			this.plugin = new Plugin(this.path, true);
+			this.plugin = new Plugin(this.origPath, true);
 			return [ this.plugin ];
 		} catch (e) {
 			this.plugin = null;

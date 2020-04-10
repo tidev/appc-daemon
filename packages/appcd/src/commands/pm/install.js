@@ -26,7 +26,7 @@ export default {
 		const start = new Date();
 
 		await new Promise(resolve => {
-			pm.install(argv.plugin, loadConfig(argv).get('home'))
+			pm.install({ home: loadConfig(argv).get('home'), plugin: argv.plugin })
 				// .on('pre-install', manifests => {})
 				.on('download', manifest => console.log(`Downloading ${cyan(`${manifest.name}@${manifest.version}`)}...`))
 				.on('install', () => console.log('Installing dependencies...'))

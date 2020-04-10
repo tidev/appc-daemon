@@ -42,6 +42,8 @@ export default {
 		}
 
 		const unsupported = plugins.reduce((count, plugin) => (plugin.supported ? count + 1 : count), 0);
+		const links = plugins.reduce((count, plugin) => (plugin.link ? count + 1 : count), 0);
+		const star = process.platform === 'win32' ? '*' : '★';
 
 		console.log(`Found ${cyan(plugins.length)} plugin${plugins.length !== 1 ? 's' : ''}${unsupported ? gray(` (${unsupported} unsupported)`) : ''}\n`);
 
@@ -51,7 +53,7 @@ export default {
 				if (i++) {
 					console.log();
 				}
-				console.log(magenta(`${plugin.name} ${plugin.version}`));
+				console.log(green(`${plugin.name} ${plugin.version}`) + (plugin.link ? magenta(`  (${star} yarn link)`) : ''));
 				if (!plugin.supported) {
 					console.log(`  ${yellow(`Unsupported: ${plugin.error}`)}\n`);
 				}
@@ -94,25 +96,19 @@ export default {
 					'padding-right': 0
 				}
 			});
-			let links = 0;
-			const star = process.platform === 'win32' ? '*' : '★';
 
 			for (const plugin of plugins) {
-				let { name } = plugin;
-				if (plugin.link) {
-					links++;
-					name += star;
-				}
+				const x = !links ? '' : plugin.link ? `${magenta(star)} ` : '  ';
 				if (plugin.supported) {
-					table.push([ green(name), plugin.version, plugin.description, plugin.endpoint ]);
+					table.push([ `${x}${green(plugin.name)}`, plugin.version, plugin.description, plugin.endpoint ]);
 				} else {
-					table.push([ gray(name), gray(plugin.version), gray(plugin.description), gray(plugin.endpoint) ]);
+					table.push([ `${x}${gray(plugin.name)}`, gray(plugin.version), gray(plugin.description), gray(plugin.endpoint) ]);
 				}
 			}
 
 			console.log(table.toString());
 			if (links) {
-				console.log(gray(`${star} Yarn linked appcd plugin`));
+				console.log(magenta(`\n(${star} yarn link)`));
 			}
 			console.log(`\nFor more info, run ${cyan(`appcd ${_argv.join(' ')} --detailed`)}`);
 		}

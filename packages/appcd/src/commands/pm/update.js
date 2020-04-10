@@ -12,14 +12,12 @@ export default {
 			{ plugins: pm },
 			{ snooplogg },
 			{ loadConfig },
-			{ default: Table },
-			{ default: semver }
+			{ default: Table }
 		] = await Promise.all([
 			import('appcd-core'),
 			import('appcd-logger'),
 			import('../../common'),
-			import('cli-table3'),
-			import('semver')
+			import('cli-table3')
 		]);
 
 		const updates = await pm.checkUpdates({

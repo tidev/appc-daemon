@@ -10,6 +10,7 @@
    the plugin's `package.json` to the plugin info.
  * feat(scheme): Added `detect()` method to schemes that resolves a list of plugins found. Also
    managed to clean up a bunch of code and tests in the process.
+ * feat: Added symlink flag to plugin descriptor. Used to guess if plugin is a yarn link.
  * fix: Fixed bug where `status` would search an unsorted list of registered plugins which caused
    nondeterministic results. [(DAEMON-328)](https://jira.appcelerator.org/browse/DAEMON-328)
  * chore: Updated dependencies.
