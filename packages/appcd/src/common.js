@@ -87,6 +87,18 @@ export function getAppcdVersion() {
 }
 
 /**
+ * Reads the appcd-core package.json and gets the Node.js version it requires.
+ *
+ * @returns {?String}
+ */
+export function getAppcdCoreNodeVersion() {
+	const corePkgJson = JSON.parse(fs.readFileSync(require.resolve('appcd-core/package.json'), 'utf8'));
+	let nodeVer = corePkgJson.appcd && corePkgJson.appcd.node;
+	const m = nodeVer && nodeVer.match(/(\d+\.\d+\.\d+)/);
+	return m ? m[1] : null;
+}
+
+/**
  * Loads the Appc Daemon config.
  *
  * @param {Object} argv - The parsed command line arguments.
@@ -116,11 +128,7 @@ export async function startServer({ cfg, argv }) {
 	const detached = debug || debugInspect ? false : cfg.get('server.daemonize');
 	const stdio = detached ? [ 'ignore', 'ignore', 'ignore', 'ipc' ] : [ 'inherit', 'inherit', 'inherit', 'ipc' ];
 	const v8mem = cfg.get('core.v8.memory');
-	const corePkgJson = JSON.parse(fs.readFileSync(require.resolve('appcd-core/package.json'), 'utf8'));
-
-	let nodeVer = corePkgJson.appcd && corePkgJson.appcd.node;
-	const m = nodeVer && nodeVer.match(/(\d+\.\d+\.\d+)/);
-	nodeVer = m ? `v${m[1]}` : null;
+	const nodeVer = getAppcdCoreNodeVersion();
 
 	if (debugInspect) {
 		const debugPort = process.env.APPCD_INSPECT_PORT && Math.max(parseInt(process.env.APPCD_INSPECT_PORT), 1024) || 9229;
@@ -148,7 +156,7 @@ export async function startServer({ cfg, argv }) {
 		// check if we should use the core's required Node.js version
 		if (cfg.get('core.enforceNodeVersion') !== false) {
 			if (!nodeVer) {
-				throw new Error(`Invalid Node.js engine version from appcd-core package.json: ${nodeVer}`);
+				throw new Error(`Invalid Node.js engine version from appcd-core package.json: v${nodeVer}`);
 			}
 
 			child = await spawnNode({
@@ -157,7 +165,7 @@ export async function startServer({ cfg, argv }) {
 				nodeHome: expandPath(cfg.get('home'), 'node'),
 				stdio,
 				v8mem,
-				version: nodeVer
+				version: `v${nodeVer}`
 			});
 		} else {
 			// using the current Node.js version which may be incompatible with the core

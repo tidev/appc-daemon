@@ -20,11 +20,12 @@ export default {
 			import('cli-table3')
 		]);
 
-		const updates = await pm.checkUpdates({
+		const { updated, available } = await pm.checkUpdates({
 			home: loadConfig(argv).get('home'),
 			plugin: argv.plugin
 		});
 
-		console.log(updates);
+		console.log(updated);
+		console.log(available);
 	}
 };

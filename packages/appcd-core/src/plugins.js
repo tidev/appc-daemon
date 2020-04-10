@@ -11,6 +11,8 @@ import pacote from 'pacote';
 import path from 'path';
 import promiseLimit from 'promise-limit';
 import semver from 'semver';
+import TemplateEngine from 'template-kit';
+import validate from 'validate-npm-package-name';
 
 import { appcdPluginAPIVersion, detectScheme } from 'appcd-plugin';
 import { expandPath } from 'appcd-path';
@@ -93,6 +95,76 @@ export async function checkUpdates({ home, plugin: pluginName }) {
 }
 
 /**
+ * Creates a new plugin project.
+ *
+ * @param {Object} params - Various parameters.
+ * @param {String} params.dest - The directory to create the plugin project in.
+ * @param {String} params.name - The name of the plugin.
+ * @param {String} [params.template] - A path or URL to the template to use. Defaults to the
+ * built-in plugin template.
+ * @returns {HookEmitter}
+ */
+export function create({ dest, name, template }) {
+	const emitter = new HookEmitter();
+
+	setImmediate(async () => {
+		try {
+			if (!dest || typeof dest !== 'string') {
+				throw new TypeError('Expected destination to be a non-empty string');
+			}
+
+			if (!name || typeof name !== 'string') {
+				throw new TypeError('Expected cwd to be a non-empty string');
+			}
+
+			if (!validate(name).validForNewPackages) {
+				throw new Error(`Template name "${name}" is not a valid package name`);
+			}
+
+			const rel = 'node_modules/@appcd/template-plugin';
+			let dir = path.dirname(__dirname);
+			while (!template) {
+				let tmp = path.join(dir, rel);
+				if (fs.existsSync(tmp)) {
+					template = tmp;
+					break;
+				}
+				tmp = path.dirname(dir);
+				if (tmp === dir) {
+					throw new Error('Cannot find @appcd/template-plugin!');
+				}
+				dir = tmp;
+			}
+
+			const serviceName = name.replace(/^appcd-plugin-/, '');
+			const engine = new TemplateEngine()
+				.on('download',     () => emitter.emit('status', 'Downloading from URL...'))
+				.on('npm-download', () => emitter.emit('status', 'Downloading from npm...'))
+				.on('extract',      () => emitter.emit('status', 'Extracting archive...'))
+				.on('copy',         () => emitter.emit('status', 'Copying files...'))
+				.on('npm-install',  () => emitter.emit('status', 'Installing dependencies...'))
+				.on('git-init',     () => emitter.emit('status', 'Initializing repo...'))
+				.on('cleanup',      () => emitter.emit('status', 'Cleaning up...'));
+
+			await engine.run({
+				data: {
+					packageName: name,
+					serviceName
+				},
+				dest,
+				src: template
+			});
+
+			await emitter.emit('finish', { dest, pluginName: name, serviceName });
+		} catch (err) {
+			await emitter.emit('error', err);
+		}
+	});
+
+	return emitter;
+}
+
+/**
  * Scans the appcd home plugin directory for existing plugins. This uses a lazy scanning method
  * instead of the more involved scheme detection system in appcd-plugin because we know it's always
  * going to be a nested plugin directory scheme.
@@ -116,8 +188,37 @@ async function detectInstalled(pluginsDir) {
 		}
 	};
 
+	const scanVersion = (dir, crumbs, results) => {
+		for (const ver of fs.readdirSync(dir)) {
+			const subdir = path.join(dir, ver);
+			if (!fs.existsSync(subdir) && fs.lstatSync(subdir).isSymbolicLink()) {
+				pruneDir(subdir, packagesDir);
+			} else if (fs.existsSync(path.join(subdir, 'package.json'))) {
+				results.push(`${crumbs.join('/')}/${ver}/package.json`);
+			}
+		}
+	};
+
+	const scan = (dir, crumbs = [], results = []) => {
+		for (const scopeOrPackageName of fs.readdirSync(dir)) {
+			crumbs.push(scopeOrPackageName);
+			try {
+				const subdir = path.join(dir, scopeOrPackageName);
+				if (scopeOrPackageName[0] === '@') {
+					scan(subdir, crumbs, results);
+				} else {
+					scanVersion(subdir, crumbs, results);
+				}
+			} catch (e) {
+				// does not exist, skip it
+			}
+			crumbs.pop();
+		}
+		return results;
+	};
+
 	// determine what packages are already installed
-	for (const rel of globule.find('*/*/package.json', '@*/*/*/package.json', { srcBase: packagesDir })) {
+	for (const rel of scan(packagesDir)) {
 		const pkgJsonFile = path.join(packagesDir, rel);
 		const src = path.dirname(pkgJsonFile);
 		const invalidDest = path.join(pluginsDir, 'invalid', path.dirname(rel));
@@ -446,6 +547,9 @@ export async function link(home) {
 		const linksDir = process.platform === 'win32'
 			? path.join(os.homedir(), 'AppData', 'Local', 'Yarn', 'Data', 'link')
 			: path.join(os.homedir(), '.config', 'yarn', 'link');
+
+		// this is just to clean up anything out of whack
+		await detectInstalled(pluginsDir);
 
 		for (const rel of globule.find('*/package.json', '@*/*/package.json', { srcBase: linksDir })) {
 			const pkgJsonFile = path.join(linksDir, rel);
