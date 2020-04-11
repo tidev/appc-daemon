@@ -15,54 +15,66 @@ export default {
 		const [
 			{ plugins: pm },
 			{ snooplogg },
-			{ loadConfig },
-			{ default: Table },
+			{ colorizeVersionDelta, createTable, loadConfig },
 			semver
 		] = await Promise.all([
 			import('appcd-core'),
 			import('appcd-logger'),
 			import('../../common'),
-			import('cli-table3'),
 			import('semver')
 		]);
 
-		const { green } = snooplogg.chalk;
-		const results = await pm.checkUpdates({
+		const { gray, green } = snooplogg.chalk;
+		let results = await pm.checkUpdates({
 			home: loadConfig(argv).get('home'),
 			plugin: argv.plugin
 		});
 
-		results.sort((a, b) => a.name.localeCompare(b.name) || semver.compare(a.available, b.available));
+		results.sort((a, b) => {
+			return a.name.localeCompare(b.name) || semver.compare(a.available, b.available);
+		});
+
+		const packages = results.map(pkg => `${pkg.name}@${pkg.available}`);
 
 		if (argv.json) {
+			if (argv.yes) {
+				results = await new Promise((resolve, reject) => {
+					pm.update(packages)
+						.on('error', reject)
+						.on('finish', resolve);
+				});
+			}
 			console.log(JSON.stringify(results, null, '  '));
 			return;
 		}
 
-		if (results.length) {
-			const table = new Table({
-				chars: {
-					bottom: '', 'bottom-left': '', 'bottom-mid': '', 'bottom-right': '',
-					left: '', 'left-mid': '',
-					mid: '', 'mid-mid': '', middle: '  ',
-					right: '', 'right-mid': '',
-					top: '', 'top-left': '', 'top-mid': '', 'top-right': ''
-				},
-				head: [ 'Name', 'Installed', '', 'Available' ],
-				style: {
-					head: [ 'bold' ],
-					'padding-left': 0,
-					'padding-right': 0
-				}
-			});
-
-			for (const pkg of results) {
-				table.push([ green(pkg.name), pkg.installed || 'n/a', '→', pkg.available ]);
-			}
-
-			console.log(table.toString());
-		} else {
+		if (!results.length) {
 			console.log('Everything is up-to-date!');
+			return;
 		}
+
+		const table = createTable('Name', 'Installed', '', 'Available');
+		for (const pkg of results) {
+			table.push([
+				green(pkg.name),
+				{ hAlign: 'center', content: pkg.installed || gray('-') },
+				'→',
+				{ hAlign: 'center', content: colorizeVersionDelta(pkg.installed, pkg.available) }
+			]);
+		}
+
+		console.log(table.toString());
+
+		if (!argv.yes) {
+			console.log('prompting!');
+		}
+
+		console.log('Updating!');
+
+		// await new Promise((resolve, reject) => {
+		// 	pm.update(packages)
+		// 		.on('error', reject)
+		// 		.on('finish', resolve);
+		// });
 	}
 };

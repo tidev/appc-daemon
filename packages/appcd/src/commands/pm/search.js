@@ -17,11 +17,12 @@ export default {
 			{ plugins: pm },
 			{ snooplogg },
 			{ default: Table },
+			{ createTable },
 			semver
 		] = await Promise.all([
 			import('appcd-core'),
 			import('appcd-logger'),
-			import('cli-table3'),
+			import('../../common'),
 			import('semver')
 		]);
 
@@ -58,22 +59,7 @@ export default {
 
 		console.log(`Found ${cyan(latestVersions.length)} plugin${latestVersions.length !== 1 ? 's' : ''}${unsupported ? gray(` (${unsupported} unsupported)`) : ''}\n`);
 
-		const table = new Table({
-			chars: {
-				bottom: '', 'bottom-left': '', 'bottom-mid': '', 'bottom-right': '',
-				left: '', 'left-mid': '',
-				mid: '', 'mid-mid': '', middle: '  ',
-				right: '', 'right-mid': '',
-				top: '', 'top-left': '', 'top-mid': '', 'top-right': ''
-			},
-			head: [ 'Name', 'Version', 'Description' ],
-			style: {
-				head: [ 'bold' ],
-				'padding-left': 0,
-				'padding-right': 0
-			}
-		});
-
+		const table = createTable('Name', 'Version', 'Description');
 		for (const pkg of latestVersions) {
 			if (pkg.supported) {
 				table.push([ green(pkg.name), pkg.version, pkg.description || 'n/a' ]);

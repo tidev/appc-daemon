@@ -3,6 +3,7 @@ import Client from 'appcd-client';
 import fs from 'fs';
 import globalPrefix from 'global-prefix';
 import path from 'path';
+import Table from 'cli-table3';
 
 import { expandPath } from 'appcd-path';
 import { isFile } from 'appcd-fs';
@@ -12,6 +13,7 @@ import { spawn } from 'child_process';
 
 const { error, log } = appcdLogger('appcd:common');
 const { highlight } = appcdLogger.styles;
+const { cyan } = appcdLogger.chalk;
 
 let appcdVersion = null;
 
@@ -32,6 +34,54 @@ export function assertNotSudo(out = console) {
 			process.exit(9);
 		}
 	}
+}
+
+/**
+ * Highlights the difference between two version numbers.
+ *
+ * @param {String} fromVer - The reference version number.
+ * @param {String} toVer - The version to colorize.
+ * @returns {String}
+ */
+export function colorizeVersionDelta(fromVer, toVer) {
+	if (!fromVer) {
+		return cyan(toVer);
+	}
+
+	const version = [];
+
+	let [ from, fromTag ] = fromVer.split(/-(.+)/);
+	from = from.replace(/[^.\d]/g, '').split('.').map(x => parseInt(x));
+
+	let [ to, toTag ] = toVer.split(/-(.+)/);
+	const toMatch = to.match(/^([^\d]+)?(.+)$/);
+	to = (toMatch ? toMatch[2] : to).split('.').map(x => parseInt(x));
+
+	const tag = () => {
+		if (!toTag) {
+			return '';
+		}
+		const toNum = toTag.match(/\d+$/);
+		const fromNum = fromTag && fromTag.match(/\d+$/);
+		if (fromNum && parseInt(fromNum[0]) >= parseInt(toNum)) {
+			return `-${toTag}`;
+		} else {
+			return cyan(`-${toTag}`);
+		}
+	};
+
+	while (to.length) {
+		if (to[0] > from[0]) {
+			if (version.length) {
+				return (toMatch && toMatch[1] || '') + version.concat(cyan(to.join('.') + tag())).join('.');
+			}
+			return cyan((toMatch && toMatch[1] || '') + to.join('.') + tag());
+		}
+		version.push(to.shift());
+		from.shift();
+	}
+
+	return (toMatch && toMatch[1] || '') + version.join('.') + tag();
 }
 
 /**
@@ -72,6 +122,30 @@ export function createRequest(cfg, path, data, type) {
 		.on('SIGTERM', disconnect);
 
 	return { client, request };
+}
+
+/**
+ * Creates a table with default styles and padding.
+ *
+ * @param {...String} head - One or more headings.
+ * @returns {Table}
+ */
+export function createTable(...head) {
+	return new Table({
+		chars: {
+			bottom: '', 'bottom-left': '', 'bottom-mid': '', 'bottom-right': '',
+			left: '', 'left-mid': '',
+			mid: '', 'mid-mid': '', middle: '  ',
+			right: '', 'right-mid': '',
+			top: '', 'top-left': '', 'top-mid': '', 'top-right': ''
+		},
+		head,
+		style: {
+			head: [ 'bold' ],
+			'padding-left': 0,
+			'padding-right': 0
+		}
+	});
 }
 
 /**

@@ -16,13 +16,11 @@ export default {
 		const [
 			{ plugins: pm },
 			{ snooplogg },
-			{ loadConfig },
-			{ default: Table }
+			{ createTable, loadConfig }
 		] = await Promise.all([
 			import('appcd-core'),
 			import('appcd-logger'),
-			import('../../common'),
-			import('cli-table3')
+			import('../../common')
 		]);
 
 		const { cyan, gray, green, magenta, yellow } = snooplogg.chalk;
@@ -82,22 +80,7 @@ export default {
 				}
 			}
 		} else {
-			const table = new Table({
-				chars: {
-					bottom: '', 'bottom-left': '', 'bottom-mid': '', 'bottom-right': '',
-					left: '', 'left-mid': '',
-					mid: '', 'mid-mid': '', middle: '  ',
-					right: '', 'right-mid': '',
-					top: '', 'top-left': '', 'top-mid': '', 'top-right': ''
-				},
-				head: [ 'Name', 'Version', 'Description', 'Endpoint' ],
-				style: {
-					head: [ 'bold' ],
-					'padding-left': 0,
-					'padding-right': 0
-				}
-			});
-
+			const table = createTable('Name', 'Version', 'Description', 'Endpoint');
 			for (const plugin of plugins) {
 				const x = !links ? '' : plugin.link ? `${magenta(star)} ` : '  ';
 				if (plugin.supported) {

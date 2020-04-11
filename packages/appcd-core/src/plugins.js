@@ -68,7 +68,6 @@ export async function checkUpdates({ home, plugin: pluginName }) {
 	await Promise.all(Object.entries(installed).map(([ name, versions ]) => limit(async () => {
 		if (!pluginName || name === pluginName) {
 			const pkg = await getPluginPackument(name);
-			let latestInstalled = null;
 			const latestAvailable = pkg['dist-tags'].latest || Object.keys(pkg.versions).sort(semver.rcompare)[0];
 			const vers = Object.keys(versions).sort(semver.rcompare);
 
@@ -80,14 +79,11 @@ export async function checkUpdates({ home, plugin: pluginName }) {
 				if (availableMajors[major] && semver.gt(availableMajors[major], installedMajors[major])) {
 					results.push({ name, installed: installedMajors[major], available: availableMajors[major] });
 				}
-				if (!latestInstalled || semver.gt(installedMajors[major], latestInstalled)) {
-					latestInstalled = installedMajors[major];
-				}
 			}
 
 			// check if there's a new major that we don't have
 			if (!installedMajors[semver.major(latestAvailable)]) {
-				results.push({ name, installed: latestInstalled, available: latestAvailable });
+				results.push({ name, installed: null, available: latestAvailable });
 			}
 		}
 	})));
