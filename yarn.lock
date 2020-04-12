@@ -3064,10 +3064,10 @@ cli-kit@^0.14.0:
     which "^2.0.2"
     ws "^7.2.1"
 
-cli-kit@^0.15.1:
-  version "0.15.1"
-  resolved "https://registry.yarnpkg.com/cli-kit/-/cli-kit-0.15.1.tgz#1b07cb3386bcf779bc0bc0de133183e2b0ee6848"
-  integrity sha512-PQnv876kreIcDEaBksjWATh2QTZo7OqMECA4vkCInXEAG/cmatK0u0E6W3vWaF4OxlInaIS2HQiKQO7KhLjezQ==
+cli-kit@^0.15.2:
+  version "0.15.2"
+  resolved "https://registry.yarnpkg.com/cli-kit/-/cli-kit-0.15.2.tgz#e54eaefdf7715a209a420fd133ed0b97cdd3690c"
+  integrity sha512-N6P3iyMjYbNDXnHczHI6MdZpoh8VnNECQ298/hiyzPXzFnEIxb31aN6tzdhyZ2bC5UQwAwbTvn3+lZuYA+TkOQ==
   dependencies:
     argv-split "^2.0.1"
     fast-levenshtein "^2.0.6"

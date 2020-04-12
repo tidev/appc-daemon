@@ -23,7 +23,9 @@ The Appc Daemon does not bundle any plugins and thus they must be manually insta
   Uninstall a plugin:
     ${style.highlight('appcd pm uninstall default')}`
 	},
-	async action({ help, terminal }) {
-		terminal.stdout.write(await help());
+	action({ argv, cli }) {
+		// since we're in a sub-context, we don't have access to the built-in help command and thus we
+		// have to re-dispatch the help command
+		return cli.exec([ 'pm', '--help', ...(argv.json ? [ '--json' ] : []) ], { exitCode: 0 });
 	}
 };

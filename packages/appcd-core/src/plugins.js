@@ -337,6 +337,9 @@ async function getPluginPackument(pkg) {
 
 	try {
 		info = await pacote.packument(pkg, { fullMetadata: true });
+		const vers = Object.keys(info.versions).sort(semver.rcompare);
+		const { fetchSpec } = npa(pkg);
+		info.version = (fetchSpec && info['dist-tags']?.[fetchSpec]) || (fetchSpec && info.versions[fetchSpec] && fetchSpec) || info['dist-tags']?.latest || vers[0];
 	} catch (e) {
 		if (e.code === 'E404') {
 			const e2 = new Error(`Plugin ${pkg} not found`);

@@ -36,11 +36,10 @@
     "appcd-nodejs": "^3.0.2",
     "appcd-path": "^1.1.10",
     "appcd-util": "^2.0.2",
-    "cli-kit": "^0.15.1",
+    "cli-kit": "^0.15.2",
     "cli-table3": "^0.6.0",
     "global-prefix": "^3.0.0",
     "humanize": "^0.0.9",
-    "npm-package-arg": "^8.0.1",
     "semver": "^7.2.2",
     "source-map-support": "^0.5.16",
     "v8-compile-cache": "^2.1.0"

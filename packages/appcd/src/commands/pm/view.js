@@ -20,20 +20,19 @@ export default {
 			{ plugins: pm },
 			{ snooplogg },
 			{ get },
-			{ default: npa },
 			semver,
 			{ formatError, loadConfig },
+			humanize
 		] = await Promise.all([
 			import('appcd-core'),
 			import('appcd-logger'),
 			import('appcd-util'),
-			import('npm-package-arg'),
 			import('semver'),
-			import('../../common')
+			import('../../common'),
+			import('humanize')
 		]);
 
 		const { bold, cyan, gray, green, magenta, yellow } = snooplogg.chalk;
-		const { fetchSpec } = npa(argv.package);
 		let manifest;
 
 		try {
@@ -43,9 +42,16 @@ export default {
 			process.exit(1);
 		}
 
+		const home = loadConfig(argv).get('home');
+		const plugins = await pm.list({ filter: manifest.name, home });
+		const installed = new Set();
+
+		for (const plugin of plugins) {
+			installed.add(plugin.version);
+		}
+
 		const vers = Object.keys(manifest.versions).sort(semver.rcompare);
-		const ver = (fetchSpec && manifest['dist-tags']?.[fetchSpec]) || (fetchSpec && manifest.versions[fetchSpec] && fetchSpec) || manifest['dist-tags']?.latest || vers[0];
-		let plugin = !argv.json || argv.filter ? manifest.versions[ver] : manifest;
+		let plugin = !argv.json || argv.filter ? manifest.versions[manifest.version] : manifest;
 
 		if (argv.filter) {
 			cli.banner = false;
@@ -86,19 +92,14 @@ export default {
 		console.log(`Core Version: ${cyan(plugin.appcd.appcdVersion || '*')}`);
 		console.log(`Plugin Type:  ${cyan(plugin.appcd.type || 'external')}`);
 		let i = 0;
-		for (const v of vers) {
-			const { supported } = manifest.versions[v];
-			const style = supported ? green : v === ver ? yellow : gray;
-			console.log(`${(i++ ? '' : 'Versions:').padEnd(14)}${style(v)}${v === ver ? ' <--' : ''}`);
+		for (const ver of vers) {
+			const { supported } = manifest.versions[ver];
+			const style = supported ? green : gray;
+			console.log(`${(i++ ? '' : 'Versions:').padEnd(14)}${style(ver)}   ${gray(`${humanize.date('Y-m-d', new Date(manifest.time[ver]))}`)}${installed.has(ver) ? magenta('  installed') : ''}`);
 		}
 		console.log();
 
-		const cfg = loadConfig(argv);
-		const plugins = await pm.list(cfg.get('home'));
-		const installed = plugins.find(p => p.name === plugin.name && p.version === plugin.version);
-		if (installed) {
-			console.log(`${plugin.name}@${plugin.version} is installed ${gray(`(${installed.path})`)}`);
-		} else {
+		if (!installed.has(plugin.version)) {
 			console.log(`To install, run: ${cyan(`appcd pm i ${plugin.name}@${plugin.version}`)}`);
 		}
 	}
