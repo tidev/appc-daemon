@@ -9,7 +9,7 @@ import {
 
 const configFile = path.join(os.homedir(), '.appcelerator', 'appcd', 'config.json');
 
-describe.only('appcd config', function () {
+describe('appcd config', function () {
 	this.timeout(120000);
 
 	describe('help', () => {
