@@ -3,7 +3,7 @@ export default {
 		{
 			name: 'name',
 			desc: 'The plugin name',
-			require: true
+			required: true
 		}
 	],
 	desc: 'Create a new plugin project',
@@ -92,7 +92,7 @@ Link your plugin:
   ${cyan('appcd pm link')}
 
 Ensure the Appc Daemon is running:
-  ${cyan('appcd pm start')}
+  ${cyan('appcd start')}
 
 Test your plugin:
   ${cyan(`appcd exec /${serviceName}/latest`)}

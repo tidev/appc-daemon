@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@appcd/template-plugin@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@appcd/template-plugin/-/template-plugin-1.0.0.tgz#09e83b221eafa7780abdd3935711eccccafd8396"
-  integrity sha512-LhvvqzPf6jO6+yBCUG1ChgCq1YHMCUv2LRngv8ImAyTjbrhk5FlRc2uf2ts4J8yYO09qHUH53H2zhOAxWIYerA==
+"@appcd/template-plugin@^1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@appcd/template-plugin/-/template-plugin-1.0.2.tgz#9c8e913cc249a328fb757181031d72710b9a0c5a"
+  integrity sha512-4ulOb7bIQ/jiOjPPUCv5CoXxDrvVGjnkPR4Ew+7IbRDkZh7TOmJKewbBole5QO+g/rSBPSl9n5X3ghnFKkIglg==
 
 "@babel/code-frame@^7.0.0", "@babel/code-frame@^7.8.3":
   version "7.8.3"
@@ -11482,10 +11482,10 @@ temp-write@^3.4.0:
     temp-dir "^1.0.0"
     uuid "^3.0.1"
 
-template-kit@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/template-kit/-/template-kit-1.1.0.tgz#da508011cb3f1056025ff0598ac8c8c1cc1cf31b"
-  integrity sha512-qQxN1e2eeWwx5RSMABlrSsbO2l29hcvKpTjvAJJtnUurvaPR7A6DuNyoLf+VGBkGafwLrBzHGTBpqNOw/EVHmQ==
+template-kit@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/template-kit/-/template-kit-1.1.1.tgz#78106754c46cc4fe743dc33a614b84b986191799"
+  integrity sha512-ZEBRMNUaMfVu0M5K/Cg5LolMA1DUb/odeWEH3WfV5lrxkgixrP71VMB4mCkPETWCf7EFn/r4n9XPpN5ySk9uWA==
   dependencies:
     appcd-fs "^1.1.10"
     appcd-path "^1.1.10"

@@ -16,7 +16,7 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "@appcd/template-plugin": "^1.0.0",
+    "@appcd/template-plugin": "^1.0.2",
     "accepts": "^1.3.7",
     "appcd-agent": "^1.1.9",
     "appcd-config": "^2.0.2",
@@ -48,7 +48,7 @@
     "pacote": "^11.1.4",
     "promise-limit": "^2.7.0",
     "semver": "^7.2.2",
-    "template-kit": "^1.1.0",
+    "template-kit": "^1.1.1",
     "validate-npm-package-name": "^3.0.0",
     "yarn": "^1.22.4"
   },
