@@ -39,7 +39,7 @@ export default {
 			return;
 		}
 
-		const unsupported = plugins.reduce((count, plugin) => (plugin.supported ? count + 1 : count), 0);
+		const unsupported = plugins.reduce((count, plugin) => (plugin.supported ? count : count + 1), 0);
 		const links = plugins.reduce((count, plugin) => (plugin.link ? count + 1 : count), 0);
 		const star = process.platform === 'win32' ? '*' : '★';
 

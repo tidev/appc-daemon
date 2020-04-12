@@ -30,8 +30,8 @@ export default {
 
 		await new Promise((resolve, reject) => {
 			pm.uninstall({ home, plugins: argv.plugins })
-				.on('uninstall', plugin => console.log(`Removing ${cyan(`${plugin.name}@${plugin.version}`)}...`))
-				.on('cleanup', () => console.log('Cleaning dependencies...'))
+				.on('uninstall', plugin => !argv.json && console.log(`Removing ${cyan(`${plugin.name}@${plugin.version}`)}...`))
+				.on('cleanup', () => !argv.json && console.log('Cleaning dependencies...'))
 				.on('error', reject)
 				.on('finish', uninstalled => {
 					if (argv.json) {

@@ -859,20 +859,22 @@ export function uninstall({ home, plugins }) {
 				}
 			}
 
-			if (toRemove.length) {
-				// delete the plugin version directory
-				for (const plugin of toRemove) {
-					await emitter.emit('uninstall', plugin);
-					await pruneDir(plugin.path, pluginsDir);
-				}
-
-				await updateMonorepo({
-					fn: () => emitter.emit('cleanup'),
-					home,
-					workspaces: Array.from(workspaces),
-					yarn
-				});
+			if (!toRemove.length) {
+				throw new Error(`No plugins found matching "${plugins.join('", "')}"`);
 			}
+
+			// delete the plugin version directory
+			for (const plugin of toRemove) {
+				await emitter.emit('uninstall', plugin);
+				await pruneDir(plugin.path, pluginsDir);
+			}
+
+			await updateMonorepo({
+				fn: () => emitter.emit('cleanup'),
+				home,
+				workspaces: Array.from(workspaces),
+				yarn
+			});
 
 			await emitter.emit('finish', toRemove);
 		} catch (err) {

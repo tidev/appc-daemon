@@ -30,8 +30,8 @@ export default {
 
 		await new Promise(resolve => {
 			pm.install({ home, plugins: argv.plugins })
-				.on('download', manifest => console.log(`Downloading ${cyan(`${manifest.name}@${manifest.version}`)}...`))
-				.on('install', () => console.log('Installing dependencies...'))
+				.on('download', manifest => !argv.json && console.log(`Downloading ${cyan(`${manifest.name}@${manifest.version}`)}...`))
+				.on('install', () => !argv.json && console.log('Installing dependencies...'))
 				.on('error', err => {
 					console.log(formatError(err, argv.json));
 					process.exit(1);
