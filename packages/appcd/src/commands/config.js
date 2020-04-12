@@ -120,14 +120,14 @@ When setting a config setting and the Appc Daemon is running, settings will be b
 								const filter = key && key.split(/\.|\//).join('.') || undefined;
 								const value = cfg.get(filter);
 
-								if (filter) {
-									this.banner = false;
-								}
-
 								if (value === undefined) {
 									const e = new Error(`Not Found: ${key}`);
 									e.exitCode = 6;
 									return reject(e);
+								}
+
+								if (filter) {
+									this.banner = false;
 								}
 
 								await print({ key, value, json: argv.json });

@@ -23,7 +23,7 @@
     "coverage": "gulp coverage",
     "docs": "gulp docs",
     "package": "gulp package",
-    "postinstall": "node postinstall.js",
+    "postinstall": "node postinstall.js || node -e true",
     "prepare": "gulp build",
     "test": "gulp test"
   },

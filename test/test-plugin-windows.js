@@ -88,7 +88,7 @@ describe('plugin windows', function () {
 
 		const info = obj.message.find(p => p.path === pluginPath);
 		expect(info).to.be.an('object');
-		expect(info).to.have.keys('activeRequests', 'totalRequests', 'dependencies', 'path', 'packageName', 'version', 'main', 'name', 'type', 'nodeVersion', 'error', 'supported');
+		expect(info).to.have.keys('activeRequests', 'apiVersion', 'appcdVersion', 'dependencies', 'description', 'error', 'homepage', 'license', 'link', 'main', 'name', 'nodeVersion', 'os', 'packageName', 'path', 'supported', 'totalRequests', 'type', 'version');
 
 		expect(info.activeRequests).to.equal(0);
 		expect(info.totalRequests).to.equal(0);

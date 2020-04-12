@@ -50,6 +50,13 @@ export default class Plugin extends EventEmitter {
 
 		this.logger = appcdLogger(isParent ? 'appcd:plugin' : 'appcd:plugin:host:plugin');
 
+		let link = false;
+		try {
+			link = fs.lstatSync(pluginPath).isSymbolicLink();
+		} catch (e) {
+			// squelch
+		}
+
 		/**
 		 * Internal plugin information storage. Since a `Plugin` object cannot be gawked, we store
 		 * just the properties that can be gawked in a private object, then define setters to make
@@ -72,7 +79,7 @@ export default class Plugin extends EventEmitter {
 			os:             undefined,
 			error:          null,
 			supported:      null,
-			link:           fs.lstatSync(pluginPath).isSymbolicLink(),
+			link,
 			activeRequests: 0,
 			totalRequests:  0,
 			dependencies:   {}
