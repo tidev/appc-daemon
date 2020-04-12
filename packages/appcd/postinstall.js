@@ -1,4 +1,4 @@
-require('child_process').spawnSync(process.execPath, [ 'bin/appcd', 'stop', '--no-banner' ], { stdio: 'inherit' });
+require('child_process').spawnSync(process.execPath, [ `${__dirname}/bin/appcd`, 'stop', '--no-banner' ], { stdio: 'inherit' });
 
 const boxen = require('boxen');
 const { snooplogg } = require('appcd-logger');
