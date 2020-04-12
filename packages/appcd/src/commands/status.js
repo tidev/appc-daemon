@@ -5,12 +5,10 @@ export default {
 	},
 	async action({ argv, console }) {
 		const [
-			{ default: Table },
-			{ createRequest, loadConfig },
+			{ createTable, createRequest, loadConfig },
 			{ createInstanceWithDefaults, StdioStream },
 			{ filesize, numberFormat, relativeTime }
 		] = await Promise.all([
-			import('cli-table3'),
 			import('../common'),
 			import('appcd-logger'),
 			import('humanize')
@@ -44,23 +42,8 @@ export default {
 					return;
 				}
 
-				const params = {
-					chars: {
-						bottom: '', 'bottom-left': '', 'bottom-mid': '', 'bottom-right': '',
-						left: '', 'left-mid': '',
-						mid: '', 'mid-mid': '', middle: '  ',
-						right: '', 'right-mid': '',
-						top: '', 'top-left': '', 'top-mid': '', 'top-right': ''
-					},
-					style: {
-						head: [ 'gray' ],
-						'padding-left': 0,
-						'padding-right': 0
-					}
-				};
-
 				// general information
-				let table = new Table(params);
+				let table = createTable();
 				table.push([ 'Core Version',       highlight(`v${status.version}`) ]);
 				table.push([ 'PID',                highlight(status.pid) ]);
 				table.push([ 'Uptime',             highlight(`${(status.uptime / 60).toFixed(2)} minutes`) ]);
@@ -72,8 +55,7 @@ export default {
 				log();
 
 				// fs watcher information
-				params.head = [ 'Filesystem Watch System' ];
-				table = new Table(params);
+				table = createTable('Filesystem Watch System');
 				table.push([ 'Nodes',               highlight(status.fs.nodes) ]);
 				table.push([ 'Node.js FS Watchers', highlight(status.fs.fswatchers) ]);
 				table.push([ 'Client Watchers',     highlight(status.fs.watchers) ]);
@@ -83,8 +65,7 @@ export default {
 
 				// plugin information
 				if (status.plugins && status.plugins.registered.length) {
-					params.head = [ 'Plugin', 'Type', 'Path', 'Status', 'Active/Total Requests' ];
-					table = new Table(params);
+					table = createTable('Plugin', 'Type', 'Path', 'Status', 'Active/Total Requests');
 					for (const plugin of status.plugins.registered.sort((a, b) => a.name.localeCompare(b.name))) {
 						let status = '';
 						if (plugin.error) {
@@ -128,8 +109,7 @@ export default {
 
 				// subprocess information
 				if (status.subprocesses.length) {
-					params.head = [ 'PID', 'Command', 'Started' ];
-					table = new Table(params);
+					table = createTable('PID', 'Command', 'Started');
 					for (const subprocess of status.subprocesses) {
 						let args = '';
 						if (subprocess.args.length) {

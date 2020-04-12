@@ -3,13 +3,11 @@ export default {
 	args: [
 		{
 			name: 'package',
-			hint: 'package[@version]',
 			desc: 'The plugin package name and version',
 			required: true
 		},
 		{
 			name: 'filter',
-			hint: 'field[.subfield]',
 			desc: 'Display specific plugin fields'
 		}
 	],
@@ -24,7 +22,7 @@ export default {
 			{ get },
 			{ default: npa },
 			semver,
-			{ loadConfig },
+			{ formatError, loadConfig },
 		] = await Promise.all([
 			import('appcd-core'),
 			import('appcd-logger'),
@@ -34,24 +32,15 @@ export default {
 			import('../../common')
 		]);
 
-		const { bold, cyan, gray, green, magenta, red, yellow } = snooplogg.chalk;
+		const { bold, cyan, gray, green, magenta, yellow } = snooplogg.chalk;
 		const { fetchSpec } = npa(argv.package);
 		let manifest;
 
 		try {
 			manifest = await pm.view(argv.package);
-		} catch (e) {
-			if (argv.json) {
-				console.log(JSON.stringify({
-					error: {
-						code: e.code,
-						message: e.message
-					}
-				}, null, '  '));
-			} else {
-				console.log(red(`Error: ${e.message}`));
-			}
-			return;
+		} catch (err) {
+			console.log(formatError(err, argv.json));
+			process.exit(1);
 		}
 
 		const vers = Object.keys(manifest.versions).sort(semver.rcompare);

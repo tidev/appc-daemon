@@ -2,13 +2,15 @@ export default {
 	aliases: [ 'un', 'unlink', 'r', 'rm', 'remove' ],
 	args: [
 		{
-			name: 'plugin',
-			hint: 'plugin[@version]',
-			desc: 'The plugin name and version to uninstall',
+			name: 'plugins...',
+			desc: 'One or more plugins to uninstall',
 			required: true
 		}
 	],
-	desc: 'Uninstall an appcd plugin',
+	desc: 'Uninstall appcd plugins',
+	options: {
+		'--json': 'Outputs the results as JSON'
+	},
 	async action({ argv, console }) {
 		const [
 			{ plugins: pm },
@@ -22,17 +24,23 @@ export default {
 
 		assertNotSudo();
 
-		const { cyan, red } = snooplogg.chalk;
+		const { cyan } = snooplogg.chalk;
+		const home = loadConfig(argv).get('home');
 		const start = new Date();
 
-		await new Promise(resolve => {
-			pm.uninstall({ plugin: argv.plugin, home: loadConfig(argv).get('home') })
+		await new Promise((resolve, reject) => {
+			pm.uninstall({ home, plugins: argv.plugins })
 				.on('uninstall', plugin => console.log(`Removing ${cyan(`${plugin.name}@${plugin.version}`)}...`))
 				.on('cleanup', () => console.log('Cleaning dependencies...'))
-				.on('error', err => console.error(red(err.toString())))
-				.on('finish', resolve);
+				.on('error', reject)
+				.on('finish', uninstalled => {
+					if (argv.json) {
+						console.log(JSON.stringify(uninstalled, null, 2));
+					} else {
+						console.log(`\nFinished in ${cyan(((new Date() - start) / 1000).toFixed(1))} seconds`);
+					}
+					resolve();
+				});
 		});
-
-		console.log(`\nFinished in ${cyan(((new Date() - start) / 1000).toFixed(1))} seconds`);
 	}
 };

@@ -3,7 +3,6 @@ export default {
 	args: [
 		{
 			name: 'filter',
-			hint: 'field[.subfield]',
 			desc: 'Filter installed plugins'
 		}
 	],

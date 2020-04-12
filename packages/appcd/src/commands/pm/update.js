@@ -2,8 +2,8 @@ export default {
 	aliases: [ 'up' ],
 	args: [
 		{
-			name: 'plugin',
-			desc: 'The plugin name to update or blank for all'
+			name: 'plugins...',
+			desc: 'One or more plugins to update or blank for all'
 		}
 	],
 	desc: 'Check and install plugin updates',
@@ -11,11 +11,11 @@ export default {
 		'--json': 'Outputs the results as JSON',
 		'-y, --yes': 'Perform the updates without prompting'
 	},
-	async action({ argv, console }) {
+	async action({ argv, console, terminal }) {
 		const [
 			{ plugins: pm },
 			{ snooplogg },
-			{ colorizeVersionDelta, createTable, loadConfig },
+			{ colorizeVersionDelta, createTable, formatError, loadConfig },
 			semver
 		] = await Promise.all([
 			import('appcd-core'),
@@ -24,23 +24,21 @@ export default {
 			import('semver')
 		]);
 
-		const { gray, green } = snooplogg.chalk;
-		let results = await pm.checkUpdates({
-			home: loadConfig(argv).get('home'),
-			plugin: argv.plugin
-		});
-
-		results.sort((a, b) => {
+		const { cyan, gray, green } = snooplogg.chalk;
+		const home = loadConfig(argv).get('home');
+		let results = (await pm.checkUpdates({ home, plugins: argv.plugins })).sort((a, b) => {
 			return a.name.localeCompare(b.name) || semver.compare(a.available, b.available);
 		});
-
-		const packages = results.map(pkg => `${pkg.name}@${pkg.available}`);
+		const plugins = results.map(pkg => `${pkg.name}@${pkg.available}`);
 
 		if (argv.json) {
 			if (argv.yes) {
-				results = await new Promise((resolve, reject) => {
-					pm.update(packages)
-						.on('error', reject)
+				results = await new Promise(resolve => {
+					pm.install({ home, plugins })
+						.on('error', err => {
+							console.log(formatError(err, true));
+							process.exit(1);
+						})
 						.on('finish', resolve);
 				});
 			}
@@ -64,17 +62,38 @@ export default {
 		}
 
 		console.log(table.toString());
+		console.log();
 
 		if (!argv.yes) {
-			console.log('prompting!');
+			await new Promise(resolve => {
+				terminal.once('keypress', str => {
+					terminal.stdout.write('\n');
+					if (str === 'y' || str === 'Y') {
+						return resolve();
+					}
+					process.exit(0);
+				});
+				terminal.stdout.write('Do you want to update? (y/N) ');
+			});
 		}
 
-		console.log('Updating!');
-
-		// await new Promise((resolve, reject) => {
-		// 	pm.update(packages)
-		// 		.on('error', reject)
-		// 		.on('finish', resolve);
-		// });
+		await new Promise(resolve => {
+			const start = new Date();
+			pm.install({ home, plugins })
+				.on('download', manifest => console.log(`Downloading ${cyan(`${manifest.name}@${manifest.version}`)}...`))
+				.on('install', () => console.log('Installing dependencies...'))
+				.on('error', err => {
+					console.log(formatError(err));
+					process.exit(1);
+				})
+				.on('finish', installed => {
+					if (argv.json) {
+						console.log(JSON.stringify(installed, null, 2));
+					} else {
+						console.log(`\nFinished in ${cyan(((new Date() - start) / 1000).toFixed(1))} seconds`);
+					}
+					resolve();
+				});
+		});
 	}
 };

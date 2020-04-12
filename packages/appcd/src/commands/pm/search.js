@@ -3,8 +3,7 @@ export default {
 	args: [
 		{
 			name: 'search',
-			desc: 'A package name or keywords',
-			required: false
+			desc: 'A package name or keywords'
 		}
 	],
 	desc: 'Search npm for appcd plugins',
@@ -16,7 +15,6 @@ export default {
 		const [
 			{ plugins: pm },
 			{ snooplogg },
-			{ default: Table },
 			{ createTable },
 			semver
 		] = await Promise.all([

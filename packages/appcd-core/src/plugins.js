@@ -19,7 +19,7 @@ import { expandPath } from 'appcd-path';
 import { isFile } from 'appcd-fs';
 import { loadConfig } from './config';
 import { spawnNode } from 'appcd-nodejs';
-import { tailgate } from 'appcd-util';
+import { tailgate, unique } from 'appcd-util';
 
 const logger = appcdLogger('appcd:plugins');
 const { highlight } = appcdLogger.styles;
@@ -56,37 +56,54 @@ const yarnDir = process.platform === 'win32'
  *
  * @param {Object} params - Various parameters.
  * @param {String} params.home - The path to the appcd home directory.
- * @param {String} params.plugin - The name of the plugin.
+ * @param {Array.<String>} [params.plugins] - One or more plugins to check or blank for all.
  * @returns {Promise<Array.<Object>>} Resolves an array of plugins with updates available.
  */
-export async function checkUpdates({ home, plugin: pluginName }) {
+export async function checkUpdates({ home, plugins }) {
 	const results = [];
 	const pluginsDir = expandPath(home, 'plugins');
+	let pluginMap;
 	const { installed } = await detectInstalled(pluginsDir);
 	const limit = promiseLimit(10);
 
-	await Promise.all(Object.entries(installed).map(([ name, versions ]) => limit(async () => {
-		if (!pluginName || name === pluginName) {
-			const pkg = await getPluginPackument(name);
-			const latestAvailable = pkg['dist-tags'].latest || Object.keys(pkg.versions).sort(semver.rcompare)[0];
-			const vers = Object.keys(versions).sort(semver.rcompare);
+	if (plugins) {
+		if (!Array.isArray(plugins) || plugins.some(p => !p || typeof p !== 'string')) {
+			throw new TypeError('Expected plugins to be an array of plugin names');
+		}
 
-			const installedMajors = getMajors(vers);
-			const availableMajors = getMajors(Object.keys(pkg.versions));
-
-			// check each major for any updates
-			for (const major of Object.keys(installedMajors)) {
-				if (availableMajors[major] && semver.gt(availableMajors[major], installedMajors[major])) {
-					results.push({ name, installed: installedMajors[major], available: availableMajors[major] });
-				}
-			}
-
-			// check if there's a new major that we don't have
-			if (!installedMajors[semver.major(latestAvailable)]) {
-				results.push({ name, installed: null, available: latestAvailable });
+		if (plugins.length) {
+			pluginMap = {};
+			for (const plugin of unique(plugins)) {
+				const { name, fetchSpec } = npa(plugin);
+				pluginMap[name] = fetchSpec;
 			}
 		}
-	})));
+	}
+
+	await Promise.all(Object.entries(installed).map(([ name, versions ]) => {
+		return limit(async () => {
+			if (!pluginMap || pluginMap[name]) {
+				const packument = await getPluginPackument(name);
+				const latestAvailable = packument['dist-tags'].latest || Object.keys(packument.versions).sort(semver.rcompare)[0];
+				const vers = Object.keys(versions).sort(semver.rcompare);
+
+				const installedMajors = getMajors(vers);
+				const availableMajors = getMajors(Object.keys(packument.versions));
+
+				// check each major for any updates
+				for (const major of Object.keys(installedMajors)) {
+					if (availableMajors[major] && semver.gt(availableMajors[major], installedMajors[major])) {
+						results.push({ name, installed: installedMajors[major], available: availableMajors[major] });
+					}
+				}
+
+				// check if there's a new major that we don't have
+				if (!installedMajors[semver.major(latestAvailable)]) {
+					results.push({ name, installed: null, available: latestAvailable });
+				}
+			}
+		});
+	}));
 
 	return results;
 }
@@ -118,6 +135,8 @@ export function create({ dest, name, template }) {
 				throw new Error(`Template name "${name}" is not a valid package name`);
 			}
 
+			// note that we can't simply use require.resolve() since templates may not have a
+			// "main" or index.js file, so we must look for it manually
 			const rel = 'node_modules/@appcd/template-plugin';
 			let dir = path.dirname(__dirname);
 			while (!template) {
@@ -246,25 +265,6 @@ async function detectInstalled(pluginsDir) {
 	}
 
 	return { installed, workspaces };
-}
-
-/**
- * Compares two sets for equality.
- *
- * @param {Set} s1 - First set.
- * @param {Set} s2 - Second set.
- * @returns {Boolean}
- */
-function eq(s1, s2) {
-	if (s1.size !== s2.size) {
-		return false;
-	}
-	for (const val of s1) {
-		if (!s2.has(val)) {
-			return false;
-		}
-	}
-	return true;
 }
 
 /**
@@ -406,10 +406,10 @@ export function getPluginPaths(home) {
  *
  * @param {Object} params - Various parameters.
  * @param {String} params.home - The path to the appcd home directory.
- * @param {String} params.plugin - The name of the plugin.
+ * @param {Array.<String>} params.plugins - One or more plugins to install.
  * @returns {HookEmitter}
  */
-export function install({ home, plugin: pluginName }) {
+export function install({ home, plugins }) {
 	const emitter = new HookEmitter();
 
 	setImmediate(async () => {
@@ -420,8 +420,8 @@ export function install({ home, plugin: pluginName }) {
 				throw new TypeError('Expected home directory to be a non-empty string');
 			}
 
-			if (!pluginName || typeof pluginName !== 'string') {
-				throw new TypeError('Expected plugin name to install or "default"');
+			if (!Array.isArray(plugins) || plugins.some(p => !p || typeof p !== 'string')) {
+				throw new TypeError('Expected plugins to be an array of plugin names');
 			}
 
 			const pluginsDir = expandPath(home, 'plugins');
@@ -430,7 +430,7 @@ export function install({ home, plugin: pluginName }) {
 
 			// check that we can write to the plugins dir
 			try {
-				// make sure the plugins/packages directory exists
+				// make sure the plugins/packages directory exists and writable
 				await fs.mkdirs(packagesDir);
 				await fs.access(packagesDir);
 			} catch (e) {
@@ -448,10 +448,10 @@ export function install({ home, plugin: pluginName }) {
 				throw new Error(`Cannot write to Yarn config directory: ${yarnDir}`);
 			}
 
-			const { installed, workspaces: newWorkspaces } = await detectInstalled(pluginsDir);
+			let { installed, workspaces: newWorkspaces } = await detectInstalled(pluginsDir);
 
 			// build a list of manifests for each package to be installed
-			const toInstall = [];
+			let toInstall = {};
 			const addToInstall = manifest => {
 				if (manifest.appcd.os && !manifest.appcd.os.includes(process.platform)) {
 					throw new Error(`Plugin ${manifest.name}@${manifest.version} is not compatible with the current platform`);
@@ -461,65 +461,69 @@ export function install({ home, plugin: pluginName }) {
 					throw new Error(`Plugin ${manifest.name}@${manifest.version} is already installed`);
 				}
 
-				toInstall.push(manifest);
+				const key = `${manifest.name}@${manifest.version}`;
+				if (!toInstall[key]) {
+					toInstall[key] = manifest;
+				}
 			};
 
-			if (pluginName === 'default') {
-				const defaultPlugins = await fs.readJSON(path.resolve(__dirname, '..', 'default-plugins.json'));
-				for (const [ name, specs ] of Object.entries(defaultPlugins)) {
-					if (installed[name]) {
-						for (let i = 0; i < specs.length; i++) {
-							for (const ver of Object.keys(installed[name])) {
-								if (semver.satisfies(ver, specs[i])) {
-									// installed version is good
-									specs.splice(i--, 1);
-									break;
+			const limit = promiseLimit(10);
+
+			for (const plugin of unique(plugins)) {
+				if (plugin === 'default') {
+					const { defaultPlugins } = (await fs.readJSON(path.resolve(__dirname, '..', 'package.json'))).appcd;
+					await Promise.all(defaultPlugins.map(plugin => limit(async () => {
+						try {
+							const packument = await getPluginPackument(plugin);
+							const availableMajors = getMajors(Object.keys(packument.versions));
+							for (const ver of Object.values(availableMajors)) {
+								try {
+									addToInstall(packument.versions[ver]);
+								} catch (e) {
+									// silence
 								}
 							}
-						}
-					}
-					for (const spec of specs) {
-						try {
-							addToInstall(await getPluginManifest(`${name}@${spec}`));
 						} catch (e) {
-							// skip incompatible plugins
+							// silence
 						}
-					}
+					})));
+				} else {
+					addToInstall(await getPluginManifest(plugin));
 				}
-			} else {
-				addToInstall(await getPluginManifest(pluginName));
 			}
 
+			toInstall = Object.values(toInstall);
 			await emitter.emit('pre-install', toInstall);
 
 			for (const manifest of toInstall) {
-				const dest = path.join(packagesDir, manifest.name, manifest.version);
-				if (fs.existsSync(dest)) {
-					logger.log(`Removing destination: ${highlight(dest)}`);
-					await fs.remove(dest);
+				manifest.path = path.join(packagesDir, manifest.name, manifest.version);
+				if (fs.existsSync(manifest.path)) {
+					logger.log(`Removing destination: ${highlight(manifest.path)}`);
+					await fs.remove(manifest.path);
 				}
 
 				logger.log(`Downloading ${highlight(`${manifest.name}@${manifest.version}`)}`);
 				await emitter.emit('download', manifest);
-				await pacote.extract(`${manifest.name}@${manifest.version}`, dest);
+				await pacote.extract(`${manifest.name}@${manifest.version}`, manifest.path);
 
 				newWorkspaces.add(`packages/${manifest.name}/${manifest.version}`);
 			}
 
 			const existingWorkspaces = await loadWorkspaces(pluginsDir);
+			newWorkspaces = Array.from(newWorkspaces).sort();
 
 			// if anything was installed or workspaces changed, write the package.json, then
 			// execute yarn
-			if (toInstall.length || !eq(existingWorkspaces, newWorkspaces)) {
+			if (toInstall.length || existingWorkspaces < newWorkspaces || existingWorkspaces > newWorkspaces) {
 				await updateMonorepo({
 					fn: () => emitter.emit('install'),
 					home,
-					workspaces: Array.from(newWorkspaces),
+					workspaces: newWorkspaces,
 					yarn
 				});
 			}
 
-			await emitter.emit('finish');
+			await emitter.emit('finish', toInstall);
 		} catch (err) {
 			await emitter.emit('error', err);
 		}
@@ -637,7 +641,7 @@ export async function list({ filter, home, searchPaths }) {
  */
 async function loadWorkspaces(pluginsDir) {
 	try {
-		return Array.from(new Set((await fs.readJson(path.join(pluginsDir, 'package.json'))).workspaces));
+		return Array.from(new Set((await fs.readJson(path.join(pluginsDir, 'package.json'))).workspaces)).sort();
 	} catch (e) {
 		return [];
 	}
@@ -800,10 +804,10 @@ async function updateMonorepo({ fn, home, workspaces, yarn }) {
  *
  * @param {Object} params - Various parameters.
  * @param {String} params.home - The path to the appcd home directory.
- * @param {String} params.plugin - The name of the plugin.
+ * @param {Array.<String>} params.plugins - One or more plugins to uninstall.
  * @returns {HookEmitter}
  */
-export function uninstall({ home, plugin: pluginName }) {
+export function uninstall({ home, plugins }) {
 	const emitter = new HookEmitter();
 
 	setImmediate(async () => {
@@ -814,8 +818,8 @@ export function uninstall({ home, plugin: pluginName }) {
 				throw new TypeError('Expected home directory to be a non-empty string');
 			}
 
-			if (!pluginName || typeof pluginName !== 'string') {
-				throw new TypeError('Expected plugin name to install or "default"');
+			if (!plugins || !Array.isArray(plugins) || plugins.some(p => !p || typeof p !== 'string')) {
+				throw new TypeError('Expected plugins to be an array of plugin names');
 			}
 
 			// find yarn
@@ -829,14 +833,19 @@ export function uninstall({ home, plugin: pluginName }) {
 			}
 
 			const pluginsDir = expandPath(home, 'plugins');
-			const { name, fetchSpec } = npa(pluginName);
+			const pluginMap = {};
 			const { installed, workspaces } = await detectInstalled(pluginsDir);
 			const toRemove = [];
 
+			for (const plugin of unique(plugins)) {
+				const { name, fetchSpec } = npa(plugin);
+				pluginMap[name] = fetchSpec;
+			}
+
 			// build the list of directories to remove
-			for (const [ key, vers ] of Object.entries(installed)) {
+			for (const [ name, vers ] of Object.entries(installed)) {
 				for (const [ version, dir ] of Object.entries(vers)) {
-					if (key === name && (fetchSpec === 'latest' || fetchSpec === version)) {
+					if (pluginMap[name] && (pluginMap[name] === 'latest' || semver.eq(pluginMap[name], version))) {
 						toRemove.push({
 							name,
 							version,
@@ -847,24 +856,22 @@ export function uninstall({ home, plugin: pluginName }) {
 				}
 			}
 
-			if (!toRemove.length) {
-				throw new Error(`Plugin ${pluginName} not installed`);
+			if (toRemove.length) {
+				// delete the plugin version directory
+				for (const plugin of toRemove) {
+					await emitter.emit('uninstall', plugin);
+					await pruneDir(plugin.path, pluginsDir);
+				}
+
+				await updateMonorepo({
+					fn: () => emitter.emit('cleanup'),
+					home,
+					workspaces: Array.from(workspaces),
+					yarn
+				});
 			}
 
-			// delete the plugin version directory
-			for (const plugin of toRemove) {
-				await emitter.emit('uninstall', plugin);
-				await pruneDir(plugin.path, pluginsDir);
-			}
-
-			await updateMonorepo({
-				fn: () => emitter.emit('cleanup'),
-				home,
-				workspaces: Array.from(workspaces),
-				yarn
-			});
-
-			await emitter.emit('finish');
+			await emitter.emit('finish', toRemove);
 		} catch (err) {
 			await emitter.emit('error', err);
 		}
