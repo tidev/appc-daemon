@@ -23,7 +23,7 @@
     "coverage": "gulp coverage",
     "docs": "gulp docs",
     "package": "gulp package",
-    "postinstall": "node bin/appcd stop || node -e true",
+    "postinstall": "node postinstall.js",
     "prepare": "gulp build",
     "test": "gulp test"
   },
@@ -36,6 +36,7 @@
     "appcd-nodejs": "^3.0.2",
     "appcd-path": "^1.1.10",
     "appcd-util": "^2.0.2",
+    "boxen": "^4.2.0",
     "cli-kit": "^0.15.2",
     "cli-table3": "^0.6.0",
     "global-prefix": "^3.0.0",
