@@ -218,13 +218,15 @@ async function detectInstalled(pluginsDir) {
 					} else {
 						scanVersion(subdir, crumbs, results);
 					}
-				} finally {
-					crumbs.pop();
+				} catch (e) {
+					// squelch
 				}
+				crumbs.pop();
 			}
-		} finally {
-			return results;
+		} catch (e) {
+			// squelch
 		}
+		return results;
 	};
 
 	// determine what packages are already installed
