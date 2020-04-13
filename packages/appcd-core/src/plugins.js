@@ -16,7 +16,7 @@ import validate from 'validate-npm-package-name';
 
 import { appcdPluginAPIVersion, detectScheme } from 'appcd-plugin';
 import { expandPath } from 'appcd-path';
-import { isFile } from 'appcd-fs';
+import { isDir, isFile } from 'appcd-fs';
 import { loadConfig } from './config';
 import { spawnNode } from 'appcd-nodejs';
 import { tailgate, unique } from 'appcd-util';
@@ -41,14 +41,6 @@ const appcdCoreVersion = appcdCorePkgJson.version;
  * @type {String}
  */
 const appcdCoreNodejs = appcdCorePkgJson.appcd.node;
-
-/**
- * The path to the Yarn config directory.
- * @type {String}
- */
-const yarnDir = process.platform === 'win32'
-	? path.join(os.homedir(), 'AppData', 'Local', 'Yarn')
-	: path.join(os.homedir(), '.config', 'yarn');
 
 /**
  * Checks if there are updated releases for installed plugins as well as any new releases that are
@@ -302,6 +294,20 @@ async function findYarn() {
 	}
 
 	logger.log(`Found yarn: ${highlight(yarn)}`);
+
+	// check yarn config directory permissions
+	if (isDir(yarnDir)) {
+		try {
+			const yarnDir = process.platform === 'win32'
+				? path.join(os.homedir(), 'AppData', 'Local', 'Yarn')
+				: path.join(os.homedir(), '.config', 'yarn');
+
+			await fs.access(yarnDir);
+		} catch (e) {
+			throw new Error(`Cannot write to Yarn config directory: ${yarnDir}`);
+		}
+	}
+
 	return yarn;
 }
 
