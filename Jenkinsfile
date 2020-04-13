@@ -9,6 +9,6 @@ runNPMPackage {
   publish = false
   securityCommands = [ 'yarn run gulp check' ]
   successThreshold = 1
-  testPostInstallCommands = [ 'appcd pm install default' ]
+  testPostInstallCommands = [ 'node packages/appcd/bin/appcd pm install default' ]
   useYarn = true
 }
