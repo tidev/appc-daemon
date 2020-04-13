@@ -564,7 +564,7 @@ export async function link(home) {
 				const issym = fs.lstatSync(d).isSymbolicLink();
 				logger.log('symlink?', issym);
 				if (issym) {
-					logger.log('real path =', fs.realpathSync(d));
+					logger.log('link =', fs.readlinkSync(d));
 				}
 			} catch (e) {
 				logger.log(e);
