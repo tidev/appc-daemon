@@ -553,6 +553,14 @@ export async function link(home) {
 		? path.join(os.homedir(), 'AppData', 'Local', 'Yarn', 'Data', 'link')
 		: path.join(os.homedir(), '.config', 'yarn', 'link');
 
+	try {
+		log('Yarn links directory:');
+		log(globule.find('*', '*/*', { srcBase: linksDir }));
+	} catch (e) {
+		log(`Failed to list yarn links directory: ${linksDir}`);
+		log(e);
+	}
+
 	// this is just to clean up anything out of whack
 	await detectInstalled(pluginsDir);
 
