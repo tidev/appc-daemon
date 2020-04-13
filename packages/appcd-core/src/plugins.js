@@ -557,7 +557,11 @@ export async function link(home) {
 	await detectInstalled(pluginsDir);
 
 	try {
-		for (const rel of globule.find('*/package.json', '@*/*/package.json', { srcBase: linksDir })) {
+		const pkgJsons = globule.find('*/package.json', '@*/*/package.json', { srcBase: linksDir });
+		logger.log(`Found linked packages:`);
+		logger.log(pkgJsons);
+
+		for (const rel of pkgJsons) {
 			const pkgJsonFile = path.join(linksDir, rel);
 			const linkPath = path.dirname(pkgJsonFile);
 			let appcd, name, version;
@@ -570,6 +574,7 @@ export async function link(home) {
 			}
 
 			if (!appcd || !name || !version || (appcd.os && !appcd.os.includes(process.platform))) {
+				logger.warn(`Skipping non-appcd package: ${pkgJsonFile}`);
 				continue;
 			}
 
@@ -716,6 +721,8 @@ export async function search(criteria) {
  */
 async function updateMonorepo({ fn, home, workspaces, yarn }) {
 	const pluginsDir = expandPath(home, 'plugins');
+
+	logger.log('Updating monorepo');
 
 	if (!workspaces) {
 		workspaces = await loadWorkspaces(pluginsDir);
