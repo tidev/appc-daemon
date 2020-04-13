@@ -20,6 +20,7 @@ import { isDir, isFile } from 'appcd-fs';
 import { loadConfig } from './config';
 import { spawnNode } from 'appcd-nodejs';
 import { tailgate, unique } from 'appcd-util';
+import { spawnSync } from 'child_process';
 
 const logger = appcdLogger('appcd:plugins');
 const { highlight } = appcdLogger.styles;
@@ -555,7 +556,9 @@ export async function link(home) {
 
 	try {
 		logger.log('Yarn links directory:');
-		logger.log(globule.find('*', '*/*', '*/*/*', { srcBase: linksDir }));
+		for (let x of globule.find('*', '*/*', { srcBase: linksDir })) {
+			spawnSync('ls', [ '-la', path.join(linksDir, x) ], { stdio: 'inherit' });
+		}
 	} catch (e) {
 		logger.log(`Failed to list yarn links directory: ${linksDir}`);
 		logger.log(e);
