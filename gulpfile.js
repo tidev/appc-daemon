@@ -365,6 +365,9 @@ async function runTests(cover, all) {
 			process.env.HOMEPATH = tmpHomeDir.replace(process.env.HOMEDRIVE, '');
 		}
 
+		log(`Linking default plugins...`);
+		spawnSync(process.execPath, [ 'packages/appcd/bin/appcd', 'pm', 'link' ], { stdio: 'inherit' });
+
 		require('./packages/appcd-gulp/src/test-runner').runTests({ root: __dirname, projectDir: __dirname, cover, all });
 	} finally {
 		// restore home directory so that we can delete the temp one
@@ -382,7 +385,7 @@ exports['integration-test']      = series(nodeInfo, build, function test()     {
 exports['integration-test-only'] = series(nodeInfo,        function test()     { return runTests(); });
 exports['integration-coverage']  = series(nodeInfo,        function coverage() { return runTests(true); });
 exports['coverage']              = series(nodeInfo,        function coverage() { return runTests(true, true); });
-exports['coverage-ci']           = series(nodeInfo, build, function coverage() { return runTests(true, true); });
+exports['coverage-ci']           = series(nodeInfo, build, linkPlugins, function coverage() { return runTests(true, true); });
 
 /*
  * watch/debug tasks

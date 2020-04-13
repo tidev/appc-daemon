@@ -40,6 +40,6 @@
   },
   "scripts": {
     "lint": "gulp lint",
-    "test": "gulp coverage"
+    "test": "gulp coverage-ci"
   }
 }
