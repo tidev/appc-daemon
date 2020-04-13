@@ -296,12 +296,11 @@ async function findYarn() {
 	logger.log(`Found yarn: ${highlight(yarn)}`);
 
 	// check yarn config directory permissions
+	const yarnDir = process.platform === 'win32'
+		? path.join(os.homedir(), 'AppData', 'Local', 'Yarn')
+		: path.join(os.homedir(), '.config', 'yarn');
 	if (isDir(yarnDir)) {
 		try {
-			const yarnDir = process.platform === 'win32'
-				? path.join(os.homedir(), 'AppData', 'Local', 'Yarn')
-				: path.join(os.homedir(), '.config', 'yarn');
-
 			await fs.access(yarnDir);
 		} catch (e) {
 			throw new Error(`Cannot write to Yarn config directory: ${yarnDir}`);
