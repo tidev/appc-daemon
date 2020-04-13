@@ -560,8 +560,12 @@ export async function link(home) {
 			const d = path.join(linksDir, x);
 			try {
 				logger.log(d);
-				logger.log('symlink?', fs.lstatSync(d).isSymbolicLink());
 				logger.log('exists?', fs.existsSync(d));
+				const issym = fs.lstatSync(d).isSymbolicLink();
+				logger.log('symlink?', issym);
+				if (issym) {
+					logger.log('real path =', fs.realpathSync(d));
+				}
 			} catch (e) {
 				logger.log(e);
 			}

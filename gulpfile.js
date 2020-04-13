@@ -391,7 +391,7 @@ async function runTests(cover, all, link) {
 			spawnSync(process.execPath, [ 'packages/appcd/bin/appcd', 'pm', 'link' ], { stdio: 'inherit' });
 		}
 
-		require('./packages/appcd-gulp/src/test-runner').runTests({ root: __dirname, projectDir: __dirname, cover, all });
+		// require('./packages/appcd-gulp/src/test-runner').runTests({ root: __dirname, projectDir: __dirname, cover, all });
 	} finally {
 		// restore home directory so that we can delete the temp one
 		if (tmpHomeDir) {
