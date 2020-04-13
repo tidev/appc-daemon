@@ -557,15 +557,16 @@ export async function link(home) {
 	try {
 		logger.log('Yarn links directory:');
 		for (let x of globule.find('*', '*/*', { srcBase: linksDir })) {
+			const d = path.join(linksDir, x);
 			try {
-				logger.log(x);
-				logger.log('symlink?', fs.lstatSync(x).isSymbolicLink());
-				logger.log('exists?', fs.existsSync(x));
+				logger.log(d);
+				logger.log('symlink?', fs.lstatSync(d).isSymbolicLink());
+				logger.log('exists?', fs.existsSync(d));
 			} catch (e) {
 				logger.log(e);
 			}
-			spawnSync('ls', [ '-la', path.join(linksDir, x) ], { stdio: 'inherit' });
-			spawnSync('ls', [ '-la', `${path.join(linksDir, x)}/` ], { stdio: 'inherit' });
+			spawnSync('ls', [ '-la', d ], { stdio: 'inherit' });
+			spawnSync('ls', [ '-la', `${d}/` ], { stdio: 'inherit' });
 		}
 	} catch (e) {
 		logger.log(`Failed to list yarn links directory: ${linksDir}`);
