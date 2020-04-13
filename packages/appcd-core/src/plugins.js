@@ -208,21 +208,23 @@ async function detectInstalled(pluginsDir) {
 	};
 
 	const scan = (dir, crumbs = [], results = []) => {
-		for (const scopeOrPackageName of fs.readdirSync(dir)) {
-			crumbs.push(scopeOrPackageName);
-			try {
-				const subdir = path.join(dir, scopeOrPackageName);
-				if (scopeOrPackageName[0] === '@') {
-					scan(subdir, crumbs, results);
-				} else {
-					scanVersion(subdir, crumbs, results);
+		try {
+			for (const scopeOrPackageName of fs.readdirSync(dir)) {
+				crumbs.push(scopeOrPackageName);
+				try {
+					const subdir = path.join(dir, scopeOrPackageName);
+					if (scopeOrPackageName[0] === '@') {
+						scan(subdir, crumbs, results);
+					} else {
+						scanVersion(subdir, crumbs, results);
+					}
+				} finally {
+					crumbs.pop();
 				}
-			} catch (e) {
-				// does not exist, skip it
 			}
-			crumbs.pop();
+		} finally {
+			return results;
 		}
-		return results;
 	};
 
 	// determine what packages are already installed
