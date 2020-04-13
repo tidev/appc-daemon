@@ -444,13 +444,6 @@ export function install({ home, plugins }) {
 				throw err;
 			}
 
-			// check yarn config directory permissions
-			try {
-				await fs.access(yarnDir);
-			} catch (e) {
-				throw new Error(`Cannot write to Yarn config directory: ${yarnDir}`);
-			}
-
 			let { installed, workspaces: newWorkspaces } = await detectInstalled(pluginsDir);
 
 			// build a list of manifests for each package to be installed
@@ -825,16 +818,7 @@ export function uninstall({ home, plugins }) {
 				throw new TypeError('Expected plugins to be an array of plugin names');
 			}
 
-			// find yarn
 			const yarn = await findYarn();
-
-			// check yarn config directory permissions
-			try {
-				await fs.access(yarnDir);
-			} catch (e) {
-				throw new Error(`Cannot write to Yarn config directory: ${yarnDir}`);
-			}
-
 			const pluginsDir = expandPath(home, 'plugins');
 			const pluginMap = {};
 			const { installed, workspaces } = await detectInstalled(pluginsDir);
