@@ -10,6 +10,7 @@ const gulp         = require('gulp');
 const ini          = require('ini');
 const libnpm       = require('libnpm');
 let log            = require('fancy-log');
+const os           = require('os');
 const path         = require('path');
 const plumber      = require('gulp-plumber');
 const promiseLimit = require('promise-limit');
