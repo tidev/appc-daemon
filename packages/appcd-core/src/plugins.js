@@ -564,7 +564,11 @@ export async function link(home) {
 				const issym = fs.lstatSync(d).isSymbolicLink();
 				logger.log('symlink?', issym);
 				if (issym) {
-					logger.log('link =', fs.readlinkSync(d));
+					const y = fs.readlinkSync(d);
+					logger.log('link =', y);
+					const z = path.resolve(y);
+					logger.log('resolved =', z);
+					logger.log(fs.readdirSycn(z));
 				}
 			} catch (e) {
 				logger.log(e);
