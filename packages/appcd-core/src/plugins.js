@@ -554,11 +554,11 @@ export async function link(home) {
 		: path.join(os.homedir(), '.config', 'yarn', 'link');
 
 	try {
-		log('Yarn links directory:');
-		log(globule.find('*', '*/*', { srcBase: linksDir }));
+		logger.log('Yarn links directory:');
+		logger.log(globule.find('*', '*/*', { srcBase: linksDir }));
 	} catch (e) {
-		log(`Failed to list yarn links directory: ${linksDir}`);
-		log(e);
+		logger.log(`Failed to list yarn links directory: ${linksDir}`);
+		logger.log(e);
 	}
 
 	// this is just to clean up anything out of whack
