@@ -1,6 +1,9 @@
 [submodule "plugin-android"]
 	path = plugins/android
 	url = https://github.com/appcelerator/appcd-plugin-android.git
+[submodule "plugin-genymotion"]
+	path = plugins/genymotion
+	url = https://github.com/appcelerator/appcd-plugin-genymotion.git
 [submodule "plugin-ios"]
 	path = plugins/ios
 	url = https://github.com/appcelerator/appcd-plugin-ios.git
