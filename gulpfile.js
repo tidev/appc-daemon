@@ -224,8 +224,40 @@ exports.package = series(build, function pkg() {
  * plugin tasks
  */
 async function linkPlugins() {
-	return runLerna([ 'exec', '--scope', '@appcd/plugin-*', 'yarn', 'link' ]);
+	runLerna([ 'exec', '--scope', '@appcd/plugin-*', 'yarn', 'link' ]);
+
+	// fix yarn links
+	const scan = dir => {
+		try {
+			for (const name of fs.readdirSync(dir)) {
+				const file = path.join(dir, name);
+				if (name[0] === '@') {
+					scan(file);
+				} else if (!fs.existsSync(file) && fs.lstatSync(file).isSymbolicLink()) {
+					log(`Fixing symlink: ${cyan(file)}`);
+					const target = path.resolve(fs.readlinkSync(file));
+					fs.unlinkSync(file);
+					if (fs.existsSync(target)) {
+						log(`Linking ${cyan(target)} => ${cyan(file)}`);
+						fs.symlinkSync(target, file);
+					} else {
+						log(`Target ${cyan(target)} does not exist, removing link`);
+					}
+				}
+			}
+		} catch (e) {
+			log(`Failed to scan directory: ${dir}`);
+			log(e);
+		}
+	};
+
+	const linksDir = process.platform === 'win32'
+		? path.join(os.homedir(), 'AppData', 'Local', 'Yarn', 'Data', 'link')
+		: path.join(os.homedir(), '.config', 'yarn', 'link');
+	log(`Checking links: ${cyan(linksDir)}`);
+	scan(linksDir);
 };
+
 exports['link-plugins'] = linkPlugins;
 
 exports['unlink-plugins'] = async function unlinkPlugins() {
@@ -367,27 +399,8 @@ async function runTests(cover, all, link) {
 		}
 
 		if (link) {
-			const linksDir = process.platform === 'win32'
-				? path.join(os.homedir(), 'AppData', 'Local', 'Yarn', 'Data', 'link')
-				: path.join(os.homedir(), '.config', 'yarn', 'link');
-
-			try {
-				log('BEFORE: Yarn links directory:', fs.readdirSync(linksDir));
-			} catch (e) {
-				log(`BEFORE: Failed to list yarn links directory: ${linksDir}`);
-				log(e);
-			}
-
 			log('Linking default plugins...');
 			await linkPlugins();
-
-			try {
-				log('AFTER: Yarn links directory:', fs.readdirSync(linksDir));
-			} catch (e) {
-				log(`AFTER: Failed to list yarn links directory: ${linksDir}`);
-				log(e);
-			}
-
 			spawnSync(process.execPath, [ 'packages/appcd/bin/appcd', 'pm', 'link' ], { stdio: 'inherit' });
 		}
 

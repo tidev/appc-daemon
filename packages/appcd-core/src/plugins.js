@@ -20,7 +20,6 @@ import { isDir, isFile } from 'appcd-fs';
 import { loadConfig } from './config';
 import { spawnNode } from 'appcd-nodejs';
 import { tailgate, unique } from 'appcd-util';
-import { spawnSync } from 'child_process';
 
 const logger = appcdLogger('appcd:plugins');
 const { highlight } = appcdLogger.styles;
@@ -547,39 +546,11 @@ export function install({ home, plugins }) {
 export async function link(home) {
 	const plugins = [];
 	const pluginsDir = expandPath(home, 'plugins');
-	const yarn = await findYarn();
-
 	const packagesDir = path.join(pluginsDir, 'packages');
+	const yarn = await findYarn();
 	const linksDir = process.platform === 'win32'
 		? path.join(os.homedir(), 'AppData', 'Local', 'Yarn', 'Data', 'link')
 		: path.join(os.homedir(), '.config', 'yarn', 'link');
-
-	try {
-		logger.log('Yarn links directory:');
-		for (let x of globule.find('*', '*/*', { srcBase: linksDir })) {
-			const d = path.join(linksDir, x);
-			try {
-				logger.log(d);
-				logger.log('exists?', fs.existsSync(d));
-				const issym = fs.lstatSync(d).isSymbolicLink();
-				logger.log('symlink?', issym);
-				if (issym) {
-					const y = fs.readlinkSync(d);
-					logger.log('link =', y);
-					const z = path.resolve(y);
-					logger.log('resolved =', z);
-					logger.log(fs.readdirSync(z));
-				}
-			} catch (e) {
-				logger.log(e);
-			}
-			spawnSync('ls', [ '-la', d ], { stdio: 'inherit' });
-			spawnSync('ls', [ '-la', `${d}/` ], { stdio: 'inherit' });
-		}
-	} catch (e) {
-		logger.log(`Failed to list yarn links directory: ${linksDir}`);
-		logger.log(e);
-	}
 
 	// this is just to clean up anything out of whack
 	await detectInstalled(pluginsDir);
