@@ -544,15 +544,15 @@ export async function link(home) {
 	const pluginsDir = expandPath(home, 'plugins');
 	const yarn = await findYarn();
 
+	const packagesDir = path.join(pluginsDir, 'packages');
+	const linksDir = process.platform === 'win32'
+		? path.join(os.homedir(), 'AppData', 'Local', 'Yarn', 'Data', 'link')
+		: path.join(os.homedir(), '.config', 'yarn', 'link');
+
+	// this is just to clean up anything out of whack
+	await detectInstalled(pluginsDir);
+
 	try {
-		const packagesDir = path.join(pluginsDir, 'packages');
-		const linksDir = process.platform === 'win32'
-			? path.join(os.homedir(), 'AppData', 'Local', 'Yarn', 'Data', 'link')
-			: path.join(os.homedir(), '.config', 'yarn', 'link');
-
-		// this is just to clean up anything out of whack
-		await detectInstalled(pluginsDir);
-
 		for (const rel of globule.find('*/package.json', '@*/*/package.json', { srcBase: linksDir })) {
 			const pkgJsonFile = path.join(linksDir, rel);
 			const linkPath = path.dirname(pkgJsonFile);
@@ -722,7 +722,7 @@ async function updateMonorepo({ fn, home, workspaces, yarn }) {
 
 	// update the package.json workspaces
 	logger.log(`Writing ${highlight('plugins/package.json')}`);
-	await fs.writeJson(path.join(pluginsDir, 'package.json'), {
+	await fs.outputJson(path.join(pluginsDir, 'package.json'), {
 		name: 'root',
 		private: true,
 		version: '0.0.0',
@@ -750,7 +750,7 @@ async function updateMonorepo({ fn, home, workspaces, yarn }) {
 			revert[newName] = { name: pkgJson.name, pkgJsonFile };
 			logger.log(`Renaming package name ${highlight(pkgJson.name)} => ${highlight(newName)}`);
 			pkgJson.name = newName;
-			await fs.writeJson(pkgJsonFile, pkgJson);
+			await fs.outputJson(pkgJsonFile, pkgJson);
 		}));
 
 		if (typeof fn === 'function') {
@@ -794,7 +794,7 @@ async function updateMonorepo({ fn, home, workspaces, yarn }) {
 
 			logger.log(`Restoring package name ${highlight(pkgJson.name)} => ${highlight(name)}`);
 			pkgJson.name = name;
-			await fs.writeJson(pkgJsonFile, pkgJson, { spaces: 2 });
+			await fs.outputJson(pkgJsonFile, pkgJson, { spaces: 2 });
 		}));
 	}
 }
