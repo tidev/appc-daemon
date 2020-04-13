@@ -555,7 +555,7 @@ export async function link(home) {
 
 	try {
 		logger.log('Yarn links directory:');
-		logger.log(globule.find('*', '*/*', { srcBase: linksDir }));
+		logger.log(globule.find('*', '*/*', '*/*/*', { srcBase: linksDir }));
 	} catch (e) {
 		logger.log(`Failed to list yarn links directory: ${linksDir}`);
 		logger.log(e);
