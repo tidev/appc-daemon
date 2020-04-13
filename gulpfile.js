@@ -366,8 +366,27 @@ async function runTests(cover, all, link) {
 		}
 
 		if (link) {
+			const linksDir = process.platform === 'win32'
+				? path.join(os.homedir(), 'AppData', 'Local', 'Yarn', 'Data', 'link')
+				: path.join(os.homedir(), '.config', 'yarn', 'link');
+
+			try {
+				log('BEFORE: Yarn links directory:', fs.readdirSync(linksDir));
+			} catch (e) {
+				log(`BEFORE: Failed to list yarn links directory: ${linksDir}`);
+				log(e);
+			}
+
 			log('Linking default plugins...');
 			await linkPlugins();
+
+			try {
+				log('AFTER: Yarn links directory:', fs.readdirSync(linksDir));
+			} catch (e) {
+				log(`AFTER: Failed to list yarn links directory: ${linksDir}`);
+				log(e);
+			}
+
 			spawnSync(process.execPath, [ 'packages/appcd/bin/appcd', 'pm', 'link' ], { stdio: 'inherit' });
 		}
 
