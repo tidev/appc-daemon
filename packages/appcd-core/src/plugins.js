@@ -558,7 +558,7 @@ export async function link(home) {
 
 	try {
 		const pkgJsons = globule.find('*/package.json', '@*/*/package.json', { srcBase: linksDir });
-		logger.log(`Found linked packages:`);
+		logger.log('Found linked packages:');
 		logger.log(pkgJsons);
 
 		for (const rel of pkgJsons) {

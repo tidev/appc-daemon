@@ -366,7 +366,7 @@ async function runTests(cover, all, link) {
 		}
 
 		if (link) {
-			log(`Linking default plugins...`);
+			log('Linking default plugins...');
 			await linkPlugins();
 			spawnSync(process.execPath, [ 'packages/appcd/bin/appcd', 'pm', 'link' ], { stdio: 'inherit' });
 		}
