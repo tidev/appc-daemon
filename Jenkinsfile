@@ -8,6 +8,6 @@ runNPMPackage {
   platforms = [ 'linux', 'osx' ]
   publish = false
   securityCommands = [ 'yarn run gulp check' ]
-  successThreshold = 1
+  successThreshold = 50 // require only 50% of test platforms to succeed
   useYarn = true
 }

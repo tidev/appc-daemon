@@ -15,7 +15,7 @@ try {
 	_it = it.skip;
 }
 
-describe.only('plugin titanium', function () {
+describe('plugin titanium', function () {
 	this.timeout(120000);
 
 	_it('should register the titanium plugin', makeTest(async function () {
