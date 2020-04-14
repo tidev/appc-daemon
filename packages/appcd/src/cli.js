@@ -19,8 +19,8 @@ export default new CLI({
 	helpExitCode: 2,
 	name: 'appcd',
 	options: {
-		'--config [json]':      { type: 'json', desc: 'serialized JSON string to mix into the appcd config' },
-		'--config-file [file]': { type: 'file', desc: 'path to a appcd JS config file' }
+		'--config [json]':      { type: 'json', desc: 'Serialized JSON string to mix into the appcd config' },
+		'--config-file [file]': { type: 'file', desc: 'Path to a appcd JS config file' }
 	},
 	version
 });

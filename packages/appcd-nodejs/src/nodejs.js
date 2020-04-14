@@ -370,6 +370,7 @@ export function generateV8MemoryArgument(value, arch) {
  * the Node process. Useful for specifying V8 settings or enabling debugging.
  * @param {String} params.nodeHome - The path to where Node.js executables are
  * stored.
+ * @param {Object} [params.opts] - Additional options to pass into `spawn()`.
  * @param {String|Array.<String>} [params.stdio] - The stdio settings to pass into `spawn()`.
  * Defaults to 'ignore` if `detached` is `true`, otherwise `inherit`.
  * @param {Number|String} params.v8mem - The maximum amount of memory for child
@@ -379,7 +380,7 @@ export function generateV8MemoryArgument(value, arch) {
  * @param {String} params.version - The Node.js version to use.
  * @returns {Promise<ChildProcess>}
  */
-export async function spawnNode({ arch, args, detached, nodeHome, nodeArgs, stdio, v8mem = 'auto', version }) {
+export async function spawnNode({ arch, args, detached, nodeHome, nodeArgs, opts = {}, stdio, v8mem = 'auto', version }) {
 	if (v8mem && (typeof v8mem !== 'number' && v8mem !== 'auto')) {
 		throw new TypeError('Expected v8mem to be a number or "auto"');
 	}
@@ -405,8 +406,9 @@ export async function spawnNode({ arch, args, detached, nodeHome, nodeArgs, stdi
 
 	args.unshift.apply(args, nodeArgs);
 
-	const opts = {
-		stdio: 'inherit'
+	opts = {
+		stdio: 'inherit',
+		...opts
 	};
 
 	if (detached) {

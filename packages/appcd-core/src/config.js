@@ -96,12 +96,7 @@ const schema = Joi.object({
 		'defaultInactivityTimeout': Joi.number()
 			.description('The default number of milliseconds of inactivity before an `external` plugin is deactivated.')
 			.default(defaults.plugins.defaultInactivityTimeout)
-			.min(0),
-
-		'installDefault': Joi.boolean()
-			.description('Ensures that the default plugins are installed in the appcd home directory. This operation requires both an Internet connection and write permissions to the appcd home directory.')
-			.default(defaults.plugins.installDefault)
-			.meta({ readonly: true })
+			.min(0)
 	}),
 
 	'server': Joi.object({

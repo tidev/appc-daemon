@@ -10,13 +10,14 @@ const gulp         = require('gulp');
 const ini          = require('ini');
 const libnpm       = require('libnpm');
 let log            = require('fancy-log');
+const os           = require('os');
 const path         = require('path');
 const plumber      = require('gulp-plumber');
 const promiseLimit = require('promise-limit');
 const semver       = require('semver');
 const spawn        = require('child_process').spawn;
 const spawnSync    = require('child_process').spawnSync;
-const Table        = require('cli-table2');
+const Table        = require('cli-table3');
 const tmp          = require('tmp');
 const toposort     = require('toposort');
 // const util         = require('util');
@@ -223,8 +224,40 @@ exports.package = series(build, function pkg() {
  * plugin tasks
  */
 async function linkPlugins() {
-	return runLerna([ 'exec', '--scope', '@appcd/plugin-*', 'yarn', 'link' ]);
+	runLerna([ 'exec', '--scope', '@appcd/plugin-*', 'yarn', 'link' ]);
+
+	// fix yarn links
+	const scan = dir => {
+		try {
+			for (const name of fs.readdirSync(dir)) {
+				const file = path.join(dir, name);
+				if (name[0] === '@') {
+					scan(file);
+				} else if (!fs.existsSync(file) && fs.lstatSync(file).isSymbolicLink()) {
+					log(`Fixing symlink: ${cyan(file)}`);
+					const target = path.resolve(fs.readlinkSync(file));
+					fs.unlinkSync(file);
+					if (fs.existsSync(target)) {
+						log(`Linking ${cyan(target)} => ${cyan(file)}`);
+						fs.symlinkSync(target, file);
+					} else {
+						log(`Target ${cyan(target)} does not exist, removing link`);
+					}
+				}
+			}
+		} catch (e) {
+			log(`Failed to scan directory: ${dir}`);
+			log(e);
+		}
+	};
+
+	const linksDir = process.platform === 'win32'
+		? path.join(os.homedir(), 'AppData', 'Local', 'Yarn', 'Data', 'link')
+		: path.join(os.homedir(), '.config', 'yarn', 'link');
+	log(`Checking links: ${cyan(linksDir)}`);
+	scan(linksDir);
 };
+
 exports['link-plugins'] = linkPlugins;
 
 exports['unlink-plugins'] = async function unlinkPlugins() {
@@ -364,6 +397,10 @@ async function runTests(cover, all) {
 			process.env.HOMEDRIVE = path.parse(tmpHomeDir).root.replace(/[\\/]/g, '');
 			process.env.HOMEPATH = tmpHomeDir.replace(process.env.HOMEDRIVE, '');
 		}
+
+		log('Linking default plugins...');
+		await linkPlugins();
+		spawnSync(process.execPath, [ 'packages/appcd/bin/appcd', 'pm', 'link' ], { stdio: 'inherit' });
 
 		require('./packages/appcd-gulp/src/test-runner').runTests({ root: __dirname, projectDir: __dirname, cover, all });
 	} finally {

@@ -24,9 +24,6 @@ export const defaultConfig = {
 		name: 'test',
 		title: 'Test'
 	},
-	plugins: {
-		installDefault: false
-	},
 	server: {
 		persistDebugLog: true
 	},
@@ -132,8 +129,12 @@ const api = {
 		isAppcdRunning = true;
 
 		const prom = new Promise((resolve, reject) => {
+			let stdout = '';
+			let stderr = '';
+
 			child.stdout.on('data', data => {
 				const s = data.toString();
+				stdout += s;
 				if (s.includes('Appc Daemon started')) {
 					resolve(child);
 				}
@@ -142,9 +143,15 @@ const api = {
 				}
 			});
 
+			child.stderr.on('data', data => {
+				stderr += data.toString();
+			});
+
 			child.on('close', code => {
 				isAppcdRunning = false;
 				if (code) {
+					stdout && process.stdout.write(stdout);
+					stderr && process.stdout.write(stderr);
 					reject(new Error(`appcd exited (code ${code})`));
 				}
 			});

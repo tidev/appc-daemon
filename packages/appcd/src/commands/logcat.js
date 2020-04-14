@@ -1,9 +1,9 @@
 export default {
 	args: [
-		{ name: 'filters...', desc: 'one or more namespace patterns' }
+		{ name: 'filters...', desc: 'One or more namespace patterns' }
 	],
-	desc: 'streams Appc Daemon debug log output',
-	async action({ argv }) {
+	desc: 'Streams Appc Daemon debug log output',
+	async action({ argv, terminal }) {
 		const [
 			{ createInstanceWithDefaults, Format, StdioStream, StripColors },
 			{ arrayify },
@@ -51,7 +51,7 @@ export default {
 				.request
 				.on('response', (message, response) => {
 					if (logger.isEnabled(response.ns)) {
-						process.stdout.write(message);
+						terminal.stdout.write(message);
 					}
 				})
 				.once('error', err => {

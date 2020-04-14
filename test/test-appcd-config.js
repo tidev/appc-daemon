@@ -28,7 +28,7 @@ describe('appcd config', function () {
 
 			expect(status).to.equal(1);
 			expect(stripColors(stdout.toString())).to.match(/^Appcelerator Daemon, version \d+\.\d+\.\d+\nCopyright \(c\) 2015-\d{4}, Axway, Inc\. All Rights Reserved\./);
-			expect(stderr.toString().split('\n\n')[0]).to.equal('SyntaxError: Failed to load config file: Unexpected token { in JSON at position 1');
+			expect(stripColors(stderr.toString().split('\n\n')[0])).to.equal('SyntaxError: Failed to load config file: Unexpected token { in JSON at position 1');
 		}));
 
 		it('should error when loading a bad config file when starting daemon', makeTest(async function () {
@@ -38,7 +38,7 @@ describe('appcd config', function () {
 
 			expect(status).to.equal(1);
 			expect(stripColors(stdout.toString())).to.match(/^Appcelerator Daemon, version \d+\.\d+\.\d+\nCopyright \(c\) 2015-\d{4}, Axway, Inc\. All Rights Reserved\./);
-			expect(stderr.toString().split('\n\n')[0]).to.equal('SyntaxError: Failed to load config file: Unexpected token { in JSON at position 1');
+			expect(stripColors(stderr.toString().split('\n\n')[0])).to.equal('SyntaxError: Failed to load config file: Unexpected token { in JSON at position 1');
 		}));
 
 		it('should not error when config file is empty', makeTest(async function () {
@@ -67,7 +67,6 @@ describe('appcd config', function () {
 				'network.strictSSL                = true',
 				'plugins.autoReload               = true',
 				'plugins.defaultInactivityTimeout = 3600000',
-				'plugins.installDefault           = false',
 				'server.agentPollInterval         = 1000',
 				'server.daemonize                 = true',
 				'server.group                     = null',
@@ -140,7 +139,6 @@ describe('appcd config', function () {
 							'network.strictSSL                = true',
 							'plugins.autoReload               = true',
 							'plugins.defaultInactivityTimeout = 3600000',
-							'plugins.installDefault           = false',
 							'server.agentPollInterval         = 1000',
 							'server.daemonize                 = true',
 							'server.group                     = null',
@@ -187,7 +185,6 @@ describe('appcd config', function () {
 							'network.strictSSL                = true',
 							'plugins.autoReload               = true',
 							'plugins.defaultInactivityTimeout = 3600000',
-							'plugins.installDefault           = false',
 							'server.agentPollInterval         = 1000',
 							'server.daemonize                 = true',
 							'server.group                     = null',
@@ -243,8 +240,7 @@ describe('appcd config', function () {
 								},
 								plugins: {
 									autoReload: true,
-									defaultInactivityTimeout: 60 * 60 * 1000,
-									installDefault: false
+									defaultInactivityTimeout: 60 * 60 * 1000
 								},
 								server: {
 									agentPollInterval: 1000,
@@ -319,7 +315,7 @@ describe('appcd config', function () {
 						expect(status).to.equal(1);
 
 						expect(stripColors(stdout.toString())).to.match(/^Appcelerator Daemon, version \d+\.\d+\.\d+\nCopyright \(c\) 2015-\d{4}, Axway, Inc\. All Rights Reserved\./);
-						expect(stderr.toString().split('\n\n')[0]).to.equal('Error: Not Found: does.not.exist');
+						expect(stripColors(stderr.toString().split('\n\n')[0])).to.match(/Error: Not Found: does.not.exist/);
 					}));
 
 					it(`should not ${action} a non-existent value as JSON`, makeTest(async function () {
@@ -383,7 +379,7 @@ describe('appcd config', function () {
 
 					const { status, stderr } = this.runAppcdSync([ 'config', 'set' ]);
 					expect(status).to.equal(1);
-					expect(stderr.toString().split('\n\n')[0]).to.equal('Error: Missing the configuration key to set');
+					expect(stripColors(stderr.toString().split('\n\n')[0])).to.equal('Error: Missing the configuration key to set');
 				}));
 
 				it('should error when calling set without a value', makeTest(async function () {
@@ -394,7 +390,7 @@ describe('appcd config', function () {
 
 					const { status, stderr } = this.runAppcdSync([ 'config', 'set', 'appcd-test' ]);
 					expect(status).to.equal(1);
-					expect(stderr.toString().split('\n\n')[0]).to.equal('Error: Missing the configuration value to set');
+					expect(stripColors(stderr.toString().split('\n\n')[0])).to.equal('Error: Missing the configuration value to set');
 				}));
 
 				it('should set a value with no existing config file', makeTest(async function () {
@@ -407,7 +403,7 @@ describe('appcd config', function () {
 					const { status, stdout } = this.runAppcdSync([ 'config', 'set', 'appcd-test', 'it works!' ]);
 
 					expect(status).to.equal(0);
-					expect(stdout.toString().split('\n\n')[1].trim()).to.equal('Saved');
+					expect(stripColors(stdout.toString().split('\n\n')[1].trim())).to.equal('Saved');
 
 					expect(fs.existsSync(configFile)).to.be.true;
 					expect(fs.readJsonSync(configFile)).to.deep.equal({

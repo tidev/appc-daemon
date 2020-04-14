@@ -13,4 +13,5 @@
 | 6     | Config setting is not found                          |
 | 7     | Configuration setting is read-only                   |
 | 8     | Server must be restarted for changes to take effect  |
+| 9     | Process exectuted as wrong user and could alter another user's home directory |
 | 12    | Node.js inspector port already in use                |

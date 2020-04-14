@@ -117,18 +117,18 @@ describe('Plugin Path', () => {
 				}
 			});
 
-		this.pp.detect();
+		this.pp.detect()
+			.then(() => {
+				log('Deleting %s', highlight(file));
+				fs.unlinkSync(file);
 
-		setTimeout(() => {
-			log('Deleting %s', highlight(file));
-			fs.unlinkSync(file);
+				log(renderTree());
 
-			log(renderTree());
-
-			const good = path.join(__dirname, 'fixtures', 'good');
-			log('Copying %s => %s', highlight(good), highlight(file));
-			fs.copySync(good, file);
-		}, 1000);
+				const good = path.join(__dirname, 'fixtures', 'good');
+				log('Copying %s => %s', highlight(good), highlight(file));
+				fs.copySync(good, file);
+			})
+			.catch(done);
 	});
 
 	it('should watch existing directory to become a plugin', function (done) {
@@ -146,13 +146,13 @@ describe('Plugin Path', () => {
 				}
 			});
 
-		this.pp.detect();
-
-		setTimeout(() => {
-			const good = path.join(__dirname, 'fixtures', 'good');
-			log('Copying %s => %s', highlight(good), highlight(tmp));
-			fs.copySync(good, tmp);
-		}, 1000);
+		this.pp.detect()
+			.then(() => {
+				const good = path.join(__dirname, 'fixtures', 'good');
+				log('Copying %s => %s', highlight(good), highlight(tmp));
+				fs.copySync(good, tmp);
+			})
+			.catch(done);
 	});
 
 	it('should watch existing directory to become a directory of plugins', function (done) {
@@ -179,13 +179,13 @@ describe('Plugin Path', () => {
 				}
 			});
 
-		this.pp.detect();
-
-		setTimeout(() => {
-			const good = path.join(__dirname, 'fixtures', 'plugin-dir');
-			log('Copying %s => %s', highlight(good), highlight(tmp));
-			fs.copySync(good, tmp);
-		}, 1000);
+		this.pp.detect()
+			.then(() => {
+				const good = path.join(__dirname, 'fixtures', 'plugin-dir');
+				log('Copying %s => %s', highlight(good), highlight(tmp));
+				fs.copySync(good, tmp);
+			})
+			.catch(done);
 	});
 
 	it('should watch existing directory to become a directory of directories of plugins', function (done) {
@@ -221,18 +221,18 @@ describe('Plugin Path', () => {
 				}
 			});
 
-		this.pp.detect();
-
-		setTimeout(() => {
-			const good = path.join(__dirname, 'fixtures', 'nested-plugin-dir');
-			log('Copying %s => %s', highlight(good), highlight(tmp));
-			fs.copySync(good, tmp);
-		}, 1000);
+		this.pp.detect()
+			.then(() => {
+				const good = path.join(__dirname, 'fixtures', 'nested-plugin-dir');
+				log('Copying %s => %s', highlight(good), highlight(tmp));
+				fs.copySync(good, tmp);
+			})
+			.catch(done);
 	});
 
 	it('should run the path scheme gauntlet and survive', async function () {
-		this.timeout(30000);
-		this.slow(29000);
+		this.timeout(60000);
+		this.slow(30000);
 
 		const tmp = makeTempName();
 		log('Plugin directory will be %s', highlight(tmp));
@@ -366,7 +366,7 @@ describe('Plugin Path', () => {
 			});
 		});
 
-		this.pp.detect();
+		await this.pp.detect();
 
 		await sleep(1000);
 
@@ -655,6 +655,7 @@ describe('Plugin Path', () => {
 		this.slow(9000);
 
 		const tmp = makeTempDir();
+
 		this.pp = new PluginPath(tmp)
 			.on('added', plugin => {
 				try {
@@ -665,33 +666,33 @@ describe('Plugin Path', () => {
 				}
 			});
 
-		this.pp.detect();
-
-		setTimeout(() => {
-			// 1. Write a bad plugin
-			const pkgJsonFile = path.join(tmp, 'package.json');
-			log('Writing bad %s', highlight(pkgJsonFile));
-			fs.writeFileSync(pkgJsonFile, '{}');
-
-			setTimeout(() => {
-				// 2. Update bad plugin, but it is still bad
-				log('Writing bad again %s', highlight(pkgJsonFile));
-				fs.writeFileSync(pkgJsonFile, '{"name":""}');
+		this.pp.detect()
+			.then(() => {
+				// 1. Write a bad plugin
+				const pkgJsonFile = path.join(tmp, 'package.json');
+				log('Writing bad %s', highlight(pkgJsonFile));
+				fs.writeFileSync(pkgJsonFile, '{}');
 
 				setTimeout(() => {
-					try {
-						expect(this.pp.scheme).to.be.instanceof(PluginScheme);
-						expect(Object.keys(this.pp.plugins)).to.have.lengthOf(0);
+					// 2. Update bad plugin, but it is still bad
+					log('Writing bad again %s', highlight(pkgJsonFile));
+					fs.writeFileSync(pkgJsonFile, '{"name":""}');
 
-						// 3. Write good plugin and redetect it
-						const good = path.join(__dirname, 'fixtures', 'good');
-						log('Copying %s => %s', highlight(good), highlight(tmp));
-						fs.copySync(good, tmp);
-					} catch (e) {
-						done(e);
-					}
+					setTimeout(() => {
+						try {
+							expect(this.pp.scheme).to.be.instanceof(PluginScheme);
+							expect(Object.keys(this.pp.plugins)).to.have.lengthOf(0);
+
+							// 3. Write good plugin and redetect it
+							const good = path.join(__dirname, 'fixtures', 'good');
+							log('Copying %s => %s', highlight(good), highlight(tmp));
+							fs.copySync(good, tmp);
+						} catch (e) {
+							done(e);
+						}
+					}, 1000);
 				}, 1000);
-			}, 1000);
-		}, 1000);
+			})
+			.catch(done);
 	});
 });

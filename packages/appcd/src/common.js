@@ -3,28 +3,85 @@ import Client from 'appcd-client';
 import fs from 'fs';
 import globalPrefix from 'global-prefix';
 import path from 'path';
+import Table from 'cli-table3';
 
 import { expandPath } from 'appcd-path';
 import { isFile } from 'appcd-fs';
-import { loadConfig as appcdLoadConfig } from 'appcd-core/dist/config';
+import { loadConfig as appcdLoadConfig } from 'appcd-core';
 import { sleep } from 'appcd-util';
 import { spawn } from 'child_process';
 
 const { error, log } = appcdLogger('appcd:common');
 const { highlight } = appcdLogger.styles;
+const { cyan, red } = appcdLogger.chalk;
 
 let appcdVersion = null;
 
 /**
- * Retrieves the Appc Daemon version.
+ * Ensures that the current process is not being run as sudo as that would likely lead to file
+ * permission issues.
  *
+ * @param {Console} out - A console instance to write output with.
+ */
+export function assertNotSudo(out = console) {
+	const sudoUID = process.getuid && parseInt(process.env.SUDO_UID);
+	if (sudoUID) {
+		const uid = process.getuid();
+		if (sudoUID !== uid) {
+			out.error(red(`Error: Command is being run as a different user (${uid}) than expected (${sudoUID})\n`));
+			out.error('Running this command as a different user will lead to file permission issues.');
+			out.error('Please re-run this command without "sudo".');
+			process.exit(9);
+		}
+	}
+}
+
+/**
+ * Highlights the difference between two version numbers.
+ *
+ * @param {String} fromVer - The reference version number.
+ * @param {String} toVer - The version to colorize.
  * @returns {String}
  */
-export function getAppcdVersion() {
-	if (!appcdVersion) {
-		appcdVersion = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')).version;
+export function colorizeVersionDelta(fromVer, toVer) {
+	if (!fromVer) {
+		return cyan(toVer);
 	}
-	return appcdVersion;
+
+	const version = [];
+
+	let [ from, fromTag ] = fromVer.split(/-(.+)/);
+	from = from.replace(/[^.\d]/g, '').split('.').map(x => parseInt(x));
+
+	let [ to, toTag ] = toVer.split(/-(.+)/);
+	const toMatch = to.match(/^([^\d]+)?(.+)$/);
+	to = (toMatch ? toMatch[2] : to).split('.').map(x => parseInt(x));
+
+	const tag = () => {
+		if (!toTag) {
+			return '';
+		}
+		const toNum = toTag.match(/\d+$/);
+		const fromNum = fromTag && fromTag.match(/\d+$/);
+		if (fromNum && parseInt(fromNum[0]) >= parseInt(toNum)) {
+			return `-${toTag}`;
+		} else {
+			return cyan(`-${toTag}`);
+		}
+	};
+
+	while (to.length) {
+		if (to[0] > from[0]) {
+			if (version.length) {
+				return (toMatch && toMatch[1] || '') + version.concat(cyan(to.join('.') + tag())).join('.');
+			}
+			return cyan((toMatch && toMatch[1] || '') + to.join('.') + tag());
+		}
+		version.push(to.shift());
+		from.shift();
+	}
+
+	return (toMatch && toMatch[1] || '') + version.join('.') + tag();
 }
 
 /**
@@ -68,6 +125,73 @@ export function createRequest(cfg, path, data, type) {
 }
 
 /**
+ * Creates a table with default styles and padding.
+ *
+ * @param {...String} head - One or more headings.
+ * @returns {Table}
+ */
+export function createTable(...head) {
+	return new Table({
+		chars: {
+			bottom: '', 'bottom-left': '', 'bottom-mid': '', 'bottom-right': '',
+			left: '', 'left-mid': '',
+			mid: '', 'mid-mid': '', middle: '  ',
+			right: '', 'right-mid': '',
+			top: '', 'top-left': '', 'top-mid': '', 'top-right': ''
+		},
+		head,
+		style: {
+			head: [ 'bold' ],
+			'padding-left': 0,
+			'padding-right': 0
+		}
+	});
+}
+
+/**
+ * Formats an error.
+ *
+ * @param {Error} err - The error object.
+ * @param {Boolean} json - Return the error as JSON.
+ * @return {String}
+ */
+export function formatError(err, json) {
+	if (json) {
+		return JSON.stringify({
+			error: {
+				code: err.code,
+				message: err.message
+			}
+		}, null, 2);
+	}
+	return red(`Error: ${err.message}`);
+}
+
+/**
+ * Retrieves the Appc Daemon version.
+ *
+ * @returns {String}
+ */
+export function getAppcdVersion() {
+	if (!appcdVersion) {
+		appcdVersion = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')).version;
+	}
+	return appcdVersion;
+}
+
+/**
+ * Reads the appcd-core package.json and gets the Node.js version it requires.
+ *
+ * @returns {?String}
+ */
+export function getAppcdCoreNodeVersion() {
+	const corePkgJson = JSON.parse(fs.readFileSync(require.resolve('appcd-core/package.json'), 'utf8'));
+	let nodeVer = corePkgJson.appcd && corePkgJson.appcd.node;
+	const m = nodeVer && nodeVer.match(/(\d+\.\d+\.\d+)/);
+	return m ? m[1] : null;
+}
+
+/**
  * Loads the Appc Daemon config.
  *
  * @param {Object} argv - The parsed command line arguments.
@@ -97,17 +221,13 @@ export async function startServer({ cfg, argv }) {
 	const detached = debug || debugInspect ? false : cfg.get('server.daemonize');
 	const stdio = detached ? [ 'ignore', 'ignore', 'ignore', 'ipc' ] : [ 'inherit', 'inherit', 'inherit', 'ipc' ];
 	const v8mem = cfg.get('core.v8.memory');
-	const corePkgJson = JSON.parse(fs.readFileSync(require.resolve('appcd-core/package.json'), 'utf8'));
-
-	let nodeVer = corePkgJson.appcd && corePkgJson.appcd.node;
-	const m = nodeVer && nodeVer.match(/(\d+\.\d+\.\d+)/);
-	nodeVer = m ? `v${m[1]}` : null;
+	const nodeVer = getAppcdCoreNodeVersion();
 
 	if (debugInspect) {
 		const debugPort = process.env.APPCD_INSPECT_PORT && Math.max(parseInt(process.env.APPCD_INSPECT_PORT), 1024) || 9229;
 		args.push(`--inspect-brk=${debugPort}`);
 	}
-	args.push(require.resolve('appcd-core'));
+	args.push(require.resolve('appcd-core/dist/main'));
 	if (config) {
 		args.push('--config', JSON.stringify(config));
 	}
@@ -129,7 +249,7 @@ export async function startServer({ cfg, argv }) {
 		// check if we should use the core's required Node.js version
 		if (cfg.get('core.enforceNodeVersion') !== false) {
 			if (!nodeVer) {
-				throw new Error(`Invalid Node.js engine version from appcd-core package.json: ${nodeVer}`);
+				throw new Error(`Invalid Node.js engine version from appcd-core package.json: v${nodeVer}`);
 			}
 
 			child = await spawnNode({
@@ -138,7 +258,7 @@ export async function startServer({ cfg, argv }) {
 				nodeHome: expandPath(cfg.get('home'), 'node'),
 				stdio,
 				v8mem,
-				version: nodeVer
+				version: `v${nodeVer}`
 			});
 		} else {
 			// using the current Node.js version which may be incompatible with the core

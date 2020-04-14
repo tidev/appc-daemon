@@ -11,7 +11,8 @@ Report issues to [GitHub issues][2]. Official issue tracker in [JIRA][3].
 
 ## Plugins
 
-Plugins are installed directly from `npm` or by `appcd-default-plugins` at install or runtime.
+Plugins are installed using the `appcd pm install` command. They can also be globally installed
+using `npm`.
 
 ### Plugin Development Workflow
 

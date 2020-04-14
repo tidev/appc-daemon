@@ -6,6 +6,8 @@
 
 ```bash
 npm install -g appcd
+
+appcd pm install default
 ```
 
 > :key: When globally installing appcd on macOS and Linux machines, you may need to prefix the
@@ -15,16 +17,18 @@ npm install -g appcd
 
 #### Requirements
 
-On client machines, Node.js v8.10.0 or newer is required.
+On client machines, Node.js v10.13.0 or newer is required.
 
 Additionally, developing on the Appc Daemon also requires Gulp 4, Yarn >=1.15, and Lerna >=3.
 
-For development, you will need at least 400 MB of free space for all of the code, the local git
+> :warning: Note: Yarn 2 is not yet supported.
+
+For development, you will need at around 300 MB of free space for all of the code, the local git
 checkout, and all of the npm dependencies and dev dependencies.
 
 > :bulb: Note: The Appc Daemon use Yarn Workspaces which optimizes the `node_modules` directory and
 > saves a significant amount of disk space. Without workspaces, a development checkout is
-> approximately 2.3 GB, however with workspaces this size drops to 371 MB.
+> approximately 2.3 GB, however with workspaces this size drops to 280 MB.
 
 ##### Node.js
 
@@ -88,27 +92,16 @@ cd appc-daemon
 sudo ln -s /usr/local/bin/appcd `pwd`/packages/appcd/bin/appcd
 ```
 
-#### Developing the Default Plugins
+#### Developing Plugins
 
-By default, the plugins will be installed from npm. However, if you need to develop one or more of
-the default plugins, you will need to fork and clone each plugin repo to your local machine.
-
-```bash
-git clone git@github.com:appcelerator/appcd-plugin-<NAME>.git
-
-cd appcd-plugin-<NAME>
-
-yarn
-
-yarn link
-
-cd /path/to/appc-daemon
-
-yarn link appcd-plugin-<NAME>
-```
+Plugins are npm packages and are loaded from either the appcd home plugins directory or the global
+modules path. The default appcd plugins live in their own individual git repositories, but are
+referenced by the main [`appcd-daemon`](https://github.com/appcelerator/appc-daemon) repo as git
+submodules. Once the submodules have been synced, they will be linked via Yarn and linked again
+to the appcd home plugins directory.
 
 From the plugin's directory you can run `gulp build` or `gulp watch` to recompile the code after
-updates. If the daemon is running, and the plugin is "external", then the daemon *should* see the
+updates. If the daemon is running, and the plugin is "external", then the daemon will see the
 plugin was changed and stop the plugin. The daemon will load the new plugin code on the next
 request.
 
@@ -195,8 +188,8 @@ gulp debug
 
 #### Debugging the appcd-core with the Node debugger
 
-If for some reason the appcd Bootstrap is getting in the way of debugging, you can debug the
-appcd-core directly:
+If for some reason the appcd CLI is getting in the way of debugging, you can debug the
+`appcd-core` directly:
 
 ```bash
 gulp build
@@ -212,7 +205,9 @@ there is no security issues. If there are any issues, follow the recommended act
 gulp check
 ```
 
-To upgrade dependencies, run `gulp upgrade`.
+To upgrade dependencies within the defined dependency semver ranges, run `gulp upgrade`.
+
+To upgrade dependency semver ranges, run `gulp upgrade -u`.
 
 ### Updating the Source Code
 

@@ -18,7 +18,7 @@ import types from './types';
 
 import { arrayify, sha1 } from 'appcd-util';
 import { EventEmitter } from 'events';
-import { expandPath } from 'appcd-path';
+import { expandPath, real } from 'appcd-path';
 import { isDir, isFile } from 'appcd-fs';
 import { Readable } from 'stream';
 import { states } from './plugin-base';
@@ -50,6 +50,13 @@ export default class Plugin extends EventEmitter {
 
 		this.logger = appcdLogger(isParent ? 'appcd:plugin' : 'appcd:plugin:host:plugin');
 
+		let link = false;
+		try {
+			link = fs.lstatSync(pluginPath).isSymbolicLink();
+		} catch (e) {
+			// squelch
+		}
+
 		/**
 		 * Internal plugin information storage. Since a `Plugin` object cannot be gawked, we store
 		 * just the properties that can be gawked in a private object, then define setters to make
@@ -61,11 +68,18 @@ export default class Plugin extends EventEmitter {
 			name:           undefined,
 			packageName:    undefined,
 			version:        undefined,
+			description:    undefined,
+			homepage:       undefined,
+			license:        undefined,
 			main:           undefined,
 			type:           'external',
+			appcdVersion:   undefined,
+			apiVersion:     undefined,
 			nodeVersion:    undefined,
+			os:             undefined,
 			error:          null,
 			supported:      null,
+			link,
 			activeRequests: 0,
 			totalRequests:  0,
 			dependencies:   {}
@@ -105,7 +119,7 @@ export default class Plugin extends EventEmitter {
 		if (!pluginPath || typeof pluginPath !== 'string') {
 			throw new PluginError('Expected plugin path to be a non-empty string');
 		}
-		pluginPath = expandPath(pluginPath);
+		pluginPath = real(pluginPath);
 		if (!isDir(pluginPath)) {
 			throw new PluginError('Plugin path does not exist: %s', pluginPath);
 		}
@@ -150,6 +164,10 @@ export default class Plugin extends EventEmitter {
 		}
 		this.version = version;
 
+		this.description = pkgJson.description;
+		this.homepage = pkgJson.homepage;
+		this.license = pkgJson.license;
+
 		// find the main file
 		let main = expandPath(pluginPath, pkgJson.main || 'index.js');
 		if (isDir(main)) {
@@ -162,8 +180,6 @@ export default class Plugin extends EventEmitter {
 			throw new PluginError('Unable to find main file "%s"', pkgJson.main || 'index.js');
 		}
 		this.main = main;
-
-		this.os = null;
 
 		if (pkgJson.dependencies && typeof pkgJson.dependencies === 'object') {
 			for (const pkg of Object.keys(pkgJson.dependencies)) {

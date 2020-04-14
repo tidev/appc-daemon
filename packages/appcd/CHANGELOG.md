@@ -4,9 +4,13 @@
    [(DAEMON-334)](https://jira.appcelerator.org/browse/DAEMON-334)
  * feat: Added Plugin API Version to the status output.
    [(DAEMON-314)](https://jira.appcelerator.org/browse/DAEMON-314)
+ * feat: Added `pm` command for managing appcd plugins.
+   [(DAEMON-311)](https://jira.appcelerator.org/browse/DAEMON-311)
  * refactor: Updated to latest `AppcdConfig` usage where `save()` is now synchronous and we no
    longer need to set the config file to save to since it uses the same file path that was used to
    load the config.
+ * refactor: Replaced `cli-table2` with `cli-table3`.
+ * feat: Added additional documentation and examples to the help output for some commands.
  * chore: Updated dependencies.
 
 # v3.2.0 (Jan 13, 2020)

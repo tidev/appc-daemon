@@ -23,7 +23,7 @@
     "coverage": "gulp coverage",
     "docs": "gulp docs",
     "package": "gulp package",
-    "postinstall": "node bin/appcd stop || node -e true",
+    "postinstall": "node postinstall.js || node -e true",
     "prepare": "gulp build",
     "test": "gulp test"
   },
@@ -36,10 +36,12 @@
     "appcd-nodejs": "^3.0.2",
     "appcd-path": "^1.1.10",
     "appcd-util": "^2.0.2",
-    "cli-kit": "^0.14.0",
-    "cli-table2": "^0.2.0",
+    "boxen": "^4.2.0",
+    "cli-kit": "^0.16.0",
+    "cli-table3": "^0.6.0",
     "global-prefix": "^3.0.0",
     "humanize": "^0.0.9",
+    "semver": "^7.3.2",
     "source-map-support": "^0.5.16",
     "v8-compile-cache": "^2.1.0"
   },

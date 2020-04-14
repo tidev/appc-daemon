@@ -37,9 +37,6 @@ describe('Config', () => {
 					name: 'test',
 					title: 'Test'
 				},
-				plugins: {
-					installDefault: false
-				},
 				server: {
 					persistDebugLog: true
 				},
@@ -73,8 +70,7 @@ describe('Config', () => {
 			},
 			plugins: {
 				autoReload: true,
-				defaultInactivityTimeout: 60 * 60 * 1000,
-				installDefault: false
+				defaultInactivityTimeout: 60 * 60 * 1000
 			},
 			server: {
 				agentPollInterval: 1000,

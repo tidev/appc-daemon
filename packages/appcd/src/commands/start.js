@@ -1,10 +1,10 @@
 export default {
-	desc: 'starts the Appc Daemon if it\'s not already running',
+	desc: 'Starts the Appc Daemon if it\'s not already running',
 	options: {
-		'--debug': 'starts the daemon in debug mode',
-		'--debug-inspect': 'starts the daemon in debug mode and connects to the Node.js debugger'
+		'--debug': 'Starts the daemon in debug mode',
+		'--debug-inspect': 'Starts the daemon in debug mode and connects to the Node.js debugger'
 	},
-	async action({ argv }) {
+	async action({ argv, console }) {
 		const { loadConfig, startServer } = await import('../common');
 
 		const cfg = loadConfig(argv);

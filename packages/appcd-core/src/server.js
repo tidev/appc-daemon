@@ -4,7 +4,6 @@ import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs-extra';
 import FSWatcher from 'appcd-fswatcher';
 import FSWatchManager from 'appcd-fswatch-manager';
-import globalModules from 'global-modules';
 import os from 'os';
 import path from 'path';
 import PluginManager, { appcdPluginAPIVersion } from 'appcd-plugin';
@@ -16,8 +15,8 @@ import WebSocketSession from './websocket-session';
 
 import { arch as getArch, arrayify, get, trackTimers } from 'appcd-util';
 import { expandPath } from 'appcd-path';
+import { getPluginPaths } from './plugins';
 import { i18n } from 'appcd-response';
-import { installDefaultPlugins } from 'appcd-default-plugins';
 import { isDir, isFile } from 'appcd-fs';
 import { loadConfig } from './config';
 import { purgeUnusedNodejsExecutables } from 'appcd-nodejs';
@@ -120,19 +119,6 @@ export default class Server {
 			fs.mkdirsSync(homeDir);
 		}
 
-		if (this.config.get('plugins.installDefault')) {
-			// install default plugins before we drop permissions
-			try {
-				await installDefaultPlugins(path.join(homeDir, 'plugins'));
-			} catch (err) {
-				if (err.code === 'EACCES') {
-					logger.warn(err);
-				} else {
-					logger.error(err);
-				}
-			}
-		}
-
 		// check if the current user is root
 		if (process.getuid && process.getuid() === 0) {
 			process.setuid(uid);
@@ -231,13 +217,7 @@ export default class Server {
 		// init the plugin manager
 		logger.log(`Initializing plugin system (api version ${appcdPluginAPIVersion})`);
 		this.systems.pluginManager = await new PluginManager({
-			paths: [
-				// globally installed plugins
-				path.join(homeDir, 'plugins', 'packages'),
-
-				// global npm directory
-				globalModules
-			]
+			paths: getPluginPaths(this.config.get('home'))
 		}).init();
 
 		Dispatcher.register('/appcd/plugin', this.systems.pluginManager);

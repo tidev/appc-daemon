@@ -119,7 +119,6 @@ The following table describes which `appcd-*` dependencies are auto-injected:
 | appcd-config          | Yes and should be |        |
 | appcd-config-service  | Yes and should be |        |
 | appcd-core            | No                |        |
-| appcd-default-plugins | No                |        |
 | appcd-detect          | Yes and should be |        |
 | appcd-dispatcher      | Yes and should be |        |
 | appcd-fs              | Yes               |        |
@@ -136,7 +135,6 @@ The following table describes which `appcd-*` dependencies are auto-injected:
 | appcd-subprocess      | Yes and should be |        |
 | appcd-telemetry       | Yes               |        |
 | appcd-util            | Yes               |        |
-| appcd-winreg          | Yes               | :warning: Deprecated in appcd-plugin@1.3.0, removed in appcd-plugin@2.0.0 |
 
 Injectable `appcd-*` packages do _not_ need to be added as a dependency in the plugin's
 `package.json`. This helps keep the disk space requirements down.
