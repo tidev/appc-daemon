@@ -24,7 +24,7 @@
     "progress": "^2.0.3",
     "promise-limit": "^2.7.0",
     "retire": "^2.2.0",
-    "semver": "^7.2.2",
+    "semver": "^7.3.2",
     "sloc": "^0.2.1",
     "snooplogg": "^2.3.3",
     "tar-stream": "^2.1.2",
