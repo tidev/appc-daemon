@@ -10,6 +10,8 @@
    [(DAEMON-311)](https://jira.appcelerator.org/browse/DAEMON-311)
  * refactor: Updated to `appcd-config@3.0.0`, created the Appc Daemon config schema, and converted
    the `default.js` config to `default.json`.
+ * refactor: Removed Titanium CLI Genymotion config import.
+   [(DAEMON-313)](https://jira.appcelerator.org/browse/DAEMON-313)
  * chore: Updated dependencies.
 
 # v3.2.0 (Jan 13, 2020)
