@@ -461,12 +461,6 @@ export default class Server {
 		copySetting('android.ndkPath',                   'android.ndk.searchPaths',         'array');
 		copySetting('android.sdkPath',                   'android.sdk.searchPaths',         'array');
 
-		copySetting('genymotion.executables.genymotion', 'android.genymotion.executables.genymotion');
-		copySetting('genymotion.executables.player',     'android.genymotion.executables.player');
-		copySetting('genymotion.executables.vboxmanage', 'android.virtualbox.executables.vboxmanage');
-		copySetting('genymotion.home',                   'android.genymotion.home');
-		copySetting('genymotion.path',                   'android.genymotion.searchPaths',  'array');
-
 		copySetting('java.home',                         'java.searchPaths',                'array');
 
 		copySetting('osx.executables.security',          'ios.executables.security');
