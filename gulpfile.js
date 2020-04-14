@@ -379,7 +379,7 @@ exports.sync = series(async function sync() {
 let origHomeDir = process.env.HOME;
 let tmpHomeDir = null;
 
-async function runTests(cover, all, link) {
+async function runTests(cover, all) {
 	try {
 		process.env.APPCD_TEST_GLOBAL_PACKAGE_DIR = path.join(__dirname, 'packages');
 		process.env.SPAWN_WRAP_SHIM_ROOT = origHomeDir;
@@ -398,11 +398,9 @@ async function runTests(cover, all, link) {
 			process.env.HOMEPATH = tmpHomeDir.replace(process.env.HOMEDRIVE, '');
 		}
 
-		if (link) {
-			log('Linking default plugins...');
-			await linkPlugins();
-			spawnSync(process.execPath, [ 'packages/appcd/bin/appcd', 'pm', 'link' ], { stdio: 'inherit' });
-		}
+		log('Linking default plugins...');
+		await linkPlugins();
+		spawnSync(process.execPath, [ 'packages/appcd/bin/appcd', 'pm', 'link' ], { stdio: 'inherit' });
 
 		require('./packages/appcd-gulp/src/test-runner').runTests({ root: __dirname, projectDir: __dirname, cover, all });
 	} finally {
@@ -421,7 +419,7 @@ exports['integration-test']      = series(nodeInfo, build, function test()     {
 exports['integration-test-only'] = series(nodeInfo,        function test()     { return runTests(); });
 exports['integration-coverage']  = series(nodeInfo,        function coverage() { return runTests(true); });
 exports['coverage']              = series(nodeInfo,        function coverage() { return runTests(true, true); });
-exports['coverage-ci']           = series(nodeInfo, build, function coverage() { return runTests(true, true, true); });
+exports['coverage-ci']           = series(nodeInfo, build, function coverage() { return runTests(true, true); });
 
 /*
  * watch/debug tasks
