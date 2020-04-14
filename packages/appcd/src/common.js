@@ -24,11 +24,11 @@ let appcdVersion = null;
  * @param {Console} out - A console instance to write output with.
  */
 export function assertNotSudo(out = console) {
-	if (process.getuid && process.SUDO_UID) {
-		const sudoUID = parseInt(process.SUDO_UID);
+	const sudoUID = process.getuid && parseInt(process.env.SUDO_UID);
+	if (sudoUID) {
 		const uid = process.getuid();
 		if (sudoUID !== uid) {
-			out.error(`Command is being run for a different user (${uid}) than expected (${sudoUID}).`);
+			out.error(red(`Error: Command is being run as a different user (${uid}) than expected (${sudoUID})\n`));
 			out.error('Running this command as a different user will lead to file permission issues.');
 			out.error('Please re-run this command without "sudo".');
 			process.exit(9);
