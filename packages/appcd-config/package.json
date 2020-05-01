@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "config-kit": "^1.0.0",
-    "source-map-support": "^0.5.16"
+    "source-map-support": "^0.5.19"
   },
   "devDependencies": {
     "appcd-gulp": "^2.4.0"

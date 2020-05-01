@@ -23,8 +23,8 @@
     "koa-helmet": "^5.2.0",
     "koa-send": "^5.0.0",
     "path-to-regexp": "^6.1.0",
-    "source-map-support": "^0.5.16",
-    "ws": "^7.2.3"
+    "source-map-support": "^0.5.19",
+    "ws": "^7.2.5"
   },
   "devDependencies": {
     "appcd-gulp": "^2.4.0",
