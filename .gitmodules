@@ -1,3 +1,6 @@
+[submodule "plugin-amplify"]
+	path = plugins/amplify
+	url = https://github.com/appcelerator/appcd-plugin-amplify.git
 [submodule "plugin-android"]
 	path = plugins/android
 	url = https://github.com/appcelerator/appcd-plugin-android.git
