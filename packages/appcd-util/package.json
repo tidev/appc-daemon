@@ -19,7 +19,7 @@
     "appcd-fs": "^1.1.10",
     "lodash.get": "^4.4.2",
     "semver": "^7.3.2",
-    "source-map-support": "^0.5.16"
+    "source-map-support": "^0.5.19"
   },
   "devDependencies": {
     "appcd-gulp": "^2.4.0"

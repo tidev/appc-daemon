@@ -18,11 +18,11 @@
   "dependencies": {
     "appcd-logger": "^2.0.5",
     "appcd-response": "^2.0.4",
-    "gawk": "^4.7.0",
+    "gawk": "^4.7.1",
     "path-to-regexp": "^6.1.0",
     "pluralize": "^8.0.0",
-    "source-map-support": "^0.5.16",
-    "uuid": "^7.0.3"
+    "source-map-support": "^0.5.19",
+    "uuid": "^8.0.0"
   },
   "devDependencies": {
     "appcd-gulp": "^2.4.0",

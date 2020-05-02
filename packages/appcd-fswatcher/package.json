@@ -18,15 +18,15 @@
   "dependencies": {
     "appcd-logger": "^2.0.5",
     "appcd-util": "^2.0.2",
-    "gawk": "^4.7.0",
+    "gawk": "^4.7.1",
     "pluralize": "^8.0.0",
-    "source-map-support": "^0.5.16"
+    "source-map-support": "^0.5.19"
   },
   "devDependencies": {
     "appcd-gulp": "^2.4.0",
     "appcd-path": "^1.1.10",
     "fs-extra": "^9.0.0",
-    "tmp": "^0.1.0"
+    "tmp": "^0.2.1"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",

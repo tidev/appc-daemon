@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'fs-extra';
 import tmp from 'tmp';
 import _path from 'path';
 
@@ -71,7 +71,7 @@ describe('path', () => {
 			try {
 				expect(path.real(symFilename)).to.equal(fs.realpathSync(filename));
 			} finally {
-				tmpObj.removeCallback();
+				fs.removeSync(tmpObj.name);
 			}
 		});
 
@@ -85,7 +85,7 @@ describe('path', () => {
 			try {
 				expect(path.real(filename)).to.equal(_path.join(fs.realpathSync(tmpObj.name), 'foo.txt'));
 			} finally {
-				tmpObj.removeCallback();
+				fs.removeSync(tmpObj.name);
 			}
 		});
 

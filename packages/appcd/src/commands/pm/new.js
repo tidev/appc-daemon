@@ -41,7 +41,7 @@ will see the plugin change and stop the old plugin from running. All you need to
 your plugin!
 
        To view debug logs, you can run:
-         ${style.highlight('appcd logcat *foo*')}
+         ${style.highlight('appcd logcat "*foo*"')}
 
 Please refer to the plugin system docs for information about plugin development, plugin types, \
 lifecycle, package.json settings, appcd-* dependencies, and debugging: \
@@ -101,7 +101,7 @@ Develop your plugin:
   ${cyan('yarn run watch')}
 
 View debug logs:
-  ${cyan(`appcd logcat *${serviceName}*`)}
+  ${cyan(`appcd logcat "*${serviceName}*"`)}
 `);
 
 		const coreNodeVer = getAppcdCoreNodeVersion();
