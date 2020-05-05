@@ -305,7 +305,8 @@ exports.sync = series(async function sync() {
 	for (const [ section, props ] of Object.entries(gitconfig)) {
 		const m = section.match(sectionRE);
 		if (m && rc.plugins[m[1]] && (!props.url || props.url !== rc.plugins[m[1]])) {
-			props.url = m[1];
+			log(`Updating submodule ${cyan(m[1])} URL: ${cyan(props.url)} => ${cyan(rc.plugins[m[1]])}`);
+			props.url = rc.plugins[m[1]];
 			changed = true;
 		}
 	}
