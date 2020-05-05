@@ -298,7 +298,7 @@ exports.sync = series(async function sync() {
 
 	log(`Checking ${cyan('.git/config')}`);
 	const gitconfigFile = path.join(__dirname, '.git', 'config');
-	const gitconfig = ini.parse(fs.readFileSync(gitconfigFile).toString());
+	const gitconfig = ini.parse(fs.readFileSync(gitconfigFile).toString().trim());
 	let changed = false;
 	const sectionRE = /^submodule "plugin-(.+)"$/;
 
@@ -318,9 +318,10 @@ exports.sync = series(async function sync() {
 			.stringify(gitconfig, { whitespace: true })
 			.replace(/(\r\n|\n)+/g, '\n')
 			.split('\n')
-			.map(line => (/^\s*\[/.test(line) ? '' : '\t') + line.trim())
+			.map(line => (/^\s*(\[|$)/.test(line) ? '' : '\t') + line.trim())
 			.join('\n');
 		log(`Writing ${cyan('.git/config')}`);
+		console.log(`${'-'.repeat(80)}\n${newGitconfig}${'-'.repeat(80)}`);
 		fs.writeFileSync(gitconfigFile, newGitconfig);
 	}
 
