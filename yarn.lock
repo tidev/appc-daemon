@@ -1970,6 +1970,13 @@ appcd-gulp@^2.3.1, appcd-gulp@^2.3.2, appcd-gulp@^2.4.0:
     sinon-chai "^3.4.0"
     webpack "^4.41.5"
 
+appcd-path@^1.1.10, appcd-path@^1.1.9:
+  version "1.1.10"
+  resolved "https://registry.yarnpkg.com/appcd-path/-/appcd-path-1.1.10.tgz#62d8b61a1e0394d613958488e59acff410cede2a"
+  integrity sha512-SHVMoAjhwJIYkqrP3P8JdKGNOOfK9TTsGnXHJ8/FprmvWEvv7p7NbUCPX6GcTahF46QrMIoAqEUeKzO744bd9Q==
+  dependencies:
+    source-map-support "^0.5.16"
+
 append-buffer@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/append-buffer/-/append-buffer-1.0.2.tgz#d8220cf466081525efea50614f3de6514dfa58f1"
