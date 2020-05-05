@@ -298,14 +298,15 @@ exports.sync = series(async function sync() {
 
 	log(`Checking ${cyan('.git/config')}`);
 	const gitconfigFile = path.join(__dirname, '.git', 'config');
-	const gitconfig = ini.parse(fs.readFileSync(gitconfigFile).toString());
+	const gitconfig = ini.parse(fs.readFileSync(gitconfigFile).toString().trim());
 	let changed = false;
 	const sectionRE = /^submodule "plugin-(.+)"$/;
 
 	for (const [ section, props ] of Object.entries(gitconfig)) {
 		const m = section.match(sectionRE);
 		if (m && rc.plugins[m[1]] && (!props.url || props.url !== rc.plugins[m[1]])) {
-			props.url = m[1];
+			log(`Updating submodule ${cyan(m[1])} URL: ${cyan(props.url)} => ${cyan(rc.plugins[m[1]])}`);
+			props.url = rc.plugins[m[1]];
 			changed = true;
 		}
 	}
@@ -317,9 +318,10 @@ exports.sync = series(async function sync() {
 			.stringify(gitconfig, { whitespace: true })
 			.replace(/(\r\n|\n)+/g, '\n')
 			.split('\n')
-			.map(line => (/^\s*\[/.test(line) ? '' : '\t') + line.trim())
+			.map(line => (/^\s*(\[|$)/.test(line) ? '' : '\t') + line.trim())
 			.join('\n');
 		log(`Writing ${cyan('.git/config')}`);
+		console.log(`${'-'.repeat(80)}\n${newGitconfig}${'-'.repeat(80)}`);
 		fs.writeFileSync(gitconfigFile, newGitconfig);
 	}
 
