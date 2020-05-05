@@ -45,7 +45,7 @@
     "libnpmsearch": "^3.0.0",
     "msgpack-lite": "^0.1.26",
     "npm-package-arg": "^8.0.1",
-    "pacote": "^11.1.7",
+    "pacote": "^11.1.9",
     "promise-limit": "^2.7.0",
     "semver": "^7.3.2",
     "template-kit": "^1.1.1",
@@ -53,7 +53,7 @@
     "yarn": "^1.22.4"
   },
   "devDependencies": {
-    "appcd-gulp": "^2.4.0"
+    "appcd-gulp": "^3.0.0"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",

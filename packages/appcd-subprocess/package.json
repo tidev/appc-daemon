@@ -28,7 +28,7 @@
     "which": "^2.0.2"
   },
   "devDependencies": {
-    "appcd-gulp": "^2.4.0",
+    "appcd-gulp": "^3.0.0",
     "tmp": "^0.2.1"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon",
