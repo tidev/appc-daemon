@@ -143,5 +143,4 @@ export default class DataServiceDispatcher extends ServiceDispatcher {
 
 		return result;
 	}
-
 }

@@ -152,7 +152,7 @@ export default class ConfigService extends ServiceDispatcher {
 		if (filter) {
 			log('Filtering config:', filter);
 		}
-		log(this.config.toString());
+		// log(this.config.toString());
 		const node = this.config.get(filter || undefined);
 		if (node === undefined) {
 			throw new DispatcherError(codes.NOT_FOUND, filter && `Not Found: ${filter}`);

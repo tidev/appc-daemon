@@ -91,7 +91,7 @@ export default {
 						if (plugin.supported) {
 							row[0] = highlight(row[0]);
 							if (plugin.error) {
-								row[5] = alert(row[5]);
+								row[3] = alert(row[3]);
 							}
 						} else {
 							for (let i = 0; i < row.length; i++) {
