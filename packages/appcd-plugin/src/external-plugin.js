@@ -433,10 +433,21 @@ export default class ExternalPlugin extends PluginBase {
 							this.appcdLogger.log('Detected change in plugin source file, stopping external plugin: %s', highlight(this.plugin.toString()));
 							await this.stop();
 
+							const wasErrored = !!this.info.error;
+
 							// reset the plugin error state
 							this.appcdLogger.log('Reseting error state');
 							this.info.error = null;
 							this.info.stack = null;
+
+							if (!this.info.autoStart) {
+								if (wasErrored) {
+									this.appcdLogger.warn(`Skipping auto starting ${highlight(`${this.plugin.name}@${this.plugin.version}`)} since plugin stopped due to error`);
+								} else {
+									this.appcdLogger.log(`Auto starting ${highlight(`${this.plugin.name}@${this.plugin.version}`)}`);
+									await this.start();
+								}
+							}
 						} catch (err) {
 							this.appcdLogger.error('Failed to restart %s plugin: %s', highlight(this.plugin.toString()), err);
 						}

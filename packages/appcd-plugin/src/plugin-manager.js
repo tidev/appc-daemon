@@ -285,6 +285,7 @@ export default class PluginManager extends Dispatcher {
 								}
 
 								let plugin = ns.versions[version];
+
 								if (!plugin) {
 									if (version === 'latest') {
 										version = versions[0];
@@ -354,6 +355,11 @@ export default class PluginManager extends Dispatcher {
 
 					// add this version to the namespace
 					ns.versions[plugin.version] = plugin;
+
+					if (plugin.autoStart) {
+						logger.log(`Auto starting ${highlight(`${plugin.name}@${plugin.version}`)}`);
+						await plugin.start();
+					}
 				}
 
 				this.sendTelemetry('plugin.added', plugin);

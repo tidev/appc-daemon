@@ -76,6 +76,7 @@ export default class Plugin extends EventEmitter {
 			appcdVersion:   undefined,
 			apiVersion:     undefined,
 			nodeVersion:    undefined,
+			autoStart:      false,
 			os:             undefined,
 			error:          null,
 			supported:      null,
@@ -259,6 +260,8 @@ export default class Plugin extends EventEmitter {
 				this.os = null;
 			}
 		}
+
+		this.autoStart = !!appcd.autoStart;
 
 		if (appcd.inactivityTimeout) {
 			if (typeof appcd.inactivityTimeout !== 'number' || isNaN(appcd.inactivityTimeout) || appcd.inactivityTimeout < 0) {

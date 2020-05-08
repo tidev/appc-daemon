@@ -82,6 +82,7 @@ A plugin is defined as a directory containing a `package.json` file and a "main"
 	},
 	"appcd": {
 		"appcdVersion": "1.x",
+		"autoStart": false,
 		"ignore": [ "somedir", "somefile.*" ],
 		"inactivityTimeout": 120000,
 		"injectAppcdDependencies": true,
@@ -221,6 +222,11 @@ default, the plugin is compatible with all versions of Appc Daemon.
 
 > :warning: If a plugin uses an `appcd-*` package version that differs from the ones used by the
 > Appc Daemon, multiple class definitions will exist and critical `instanceof` checks will fail.
+
+##### `appcd.autoStart`
+
+When `true`, the plugin is started when the plugin is discovered. If the plugin stops without
+error, it is automatically restarted.
 
 ##### `appcd.config`
 
