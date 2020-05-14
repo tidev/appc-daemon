@@ -51,14 +51,15 @@ export default class Tunnel {
 				let message = res;
 
 				if (res instanceof Error) {
-					message = Object.assign({}, res, {
+					message = {
+						...res,
 						message:    res.message || res.toString(),
 						instanceof: res.constructor.name,
 						stack:      res.stack,
 						status:     res.status || 500,
 						statusCode: res.statusCode || '500',
 						type:       'error'
-					});
+					};
 				} else if (res instanceof DispatcherContext) {
 					message = {
 						message: res.response,

@@ -254,14 +254,15 @@ export default class WebSocketSession extends EventEmitter {
 				info.status = res.status || 500;
 				info.error = errorToJSON(res);
 
-				data = JSON.stringify(Object.assign({}, res, {
+				data = JSON.stringify({
+					...res,
 					id:         res.id,
 					message:    res.message,
 					stack:      res.stack,
 					status:     info.status,
 					statusCode: String(res.statusCode || '500'),
 					type:       'error'
-				}));
+				});
 			} else {
 				if (!chunked) {
 					if (!res.status) {

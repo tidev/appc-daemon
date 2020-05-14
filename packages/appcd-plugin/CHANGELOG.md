@@ -14,6 +14,10 @@
  * feat: Added support for a `autoStart` flag in the plugin's `package.json`.
  * fix: Fixed bug where `status` would search an unsorted list of registered plugins which caused
    nondeterministic results. [(DAEMON-328)](https://jira.appcelerator.org/browse/DAEMON-328)
+ * fix: Fixed bug where an `inactivityTimeout` of zero would be tested as falsey and fallback to
+   the default inactivity timeout.
+ * fix: Fixed bug where error details were not being passed back when an internal plugin-to-plugin
+   call threw an error.
  * chore: Updated dependencies.
 
 # v3.2.2 (Jan 13, 2020)

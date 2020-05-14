@@ -45,7 +45,7 @@
     "libnpmsearch": "^3.0.0",
     "msgpack-lite": "^0.1.26",
     "npm-package-arg": "^8.0.1",
-    "pacote": "^11.1.9",
+    "pacote": "^11.1.10",
     "promise-limit": "^2.7.0",
     "semver": "^7.3.2",
     "template-kit": "^1.1.1",
@@ -70,6 +70,6 @@
       "@appcd/plugin-titanium",
       "@appcd/plugin-windows"
     ],
-    "node": "12.16.2"
+    "node": "12.16.3"
   }
 }

@@ -36,7 +36,7 @@ export default {
 		{ name: 'key', desc: '' },
 		{ name: 'value', desc: '' }
 	],
-	desc: 'Get and set config options',
+	desc: 'Manage configuration options',
 	help: {
 		header() {
 			return `${this.desc}.

@@ -176,6 +176,7 @@ export default class ExternalPlugin extends PluginBase {
 			} catch (err) {
 				// if the call originates from the plugin and the route is not found, then forward
 				// it to the parent process.
+				//
 				// if the call is from the parent and the route is not found, then return a 404.
 				if ((!(payload instanceof DispatcherContext) || payload.origin !== 'parent') && err instanceof DispatcherError && err.statusCode === 404) {
 					this.appcdLogger.log(`No route for ${highlight(path)} in child process, forwarding to parent process`);
@@ -189,6 +190,7 @@ export default class ExternalPlugin extends PluginBase {
 						data: payload
 					});
 				}
+
 				throw err;
 			}
 		};
@@ -477,7 +479,7 @@ export default class ExternalPlugin extends PluginBase {
 				data: {
 					args,
 					options: {
-						env: Object.assign({ FORCE_COLOR: 1 }, process.env),
+						env: { FORCE_COLOR: 1, ...process.env },
 						cwd: this.plugin.path
 					},
 					ipc: true
@@ -607,6 +609,7 @@ export default class ExternalPlugin extends PluginBase {
 								}
 							} catch (err) {
 								send({
+									...err,
 									message: err.message || err,
 									stack: err.stack,
 									status: err.status || 500,
