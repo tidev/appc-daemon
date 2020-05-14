@@ -157,7 +157,7 @@ export default class Telemetry extends Dispatcher {
 				event = `appcd.${event}`;
 			}
 
-			const data = Object.assign({}, ctx.request);
+			const data = { ...ctx.request };
 			delete data.event;
 			delete data.params;
 

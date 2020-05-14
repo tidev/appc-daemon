@@ -24,7 +24,7 @@ const subscriptions = {};
  */
 export async function watch({ debounce, depth, handler, paths, type }) {
 	const callback = debounce ? debouncer(handler) : handler;
-	const sidsByPath = Object.assign({}, subscriptions[type]);
+	const sidsByPath = { ...subscriptions[type] };
 	const results = {};
 
 	await paths.reduce((promise, path) => promise.then(async () => {

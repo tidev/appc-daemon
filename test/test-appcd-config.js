@@ -16,7 +16,7 @@ describe('appcd config', function () {
 		it('should output help as JSON', makeTest(async function () {
 			const { status, stdout } = this.runAppcdSync([ 'config', '--help', '--json' ]);
 			expect(status).to.equal(2);
-			expect(JSON.parse(stdout).desc).to.equal('Get and set config options');
+			expect(JSON.parse(stdout).desc).to.equal('Manage configuration options');
 		}));
 	});
 

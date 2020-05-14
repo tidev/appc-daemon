@@ -263,7 +263,7 @@ export default class Plugin extends EventEmitter {
 
 		this.autoStart = !!appcd.autoStart;
 
-		if (appcd.inactivityTimeout) {
+		if (appcd.inactivityTimeout !== undefined) {
 			if (typeof appcd.inactivityTimeout !== 'number' || isNaN(appcd.inactivityTimeout) || appcd.inactivityTimeout < 0) {
 				throw new PluginError('Expected inactivity timeout to be a non-negative number');
 			}
@@ -362,7 +362,7 @@ export default class Plugin extends EventEmitter {
 
 		// watch the plugin info changes and merge them into the public plugin info
 		gawk.watch(this.impl.info, obj => {
-			const info = Object.assign({}, obj);
+			const info = { ...obj };
 			if (this.info.error) {
 				// if we already had an error, then don't override it
 				info.error = this.info.error;
@@ -430,7 +430,7 @@ export default class Plugin extends EventEmitter {
 
 		const resetTimer = async () => {
 			let timeout = this.inactivityTimeout;
-			if (!timeout) {
+			if (timeout === undefined || timeout === null) {
 				try {
 					const { response } = await Dispatcher.call('/appcd/config/plugins/defaultInactivityTimeout');
 					timeout = response;

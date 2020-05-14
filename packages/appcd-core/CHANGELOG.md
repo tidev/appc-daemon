@@ -2,7 +2,7 @@
 
  * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.
    [(DAEMON-334)](https://jira.appcelerator.org/browse/DAEMON-334)
- * BREAKING CHANGE: Bumped core Node.js version to 12.16.2. This affects all plugins.
+ * BREAKING CHANGE: Bumped core Node.js version to 12.16.3. This affects all plugins.
    [(DAEMON-319)](https://jira.appcelerator.org/browse/DAEMON-319)
  * BREAKING CHANGE: Main file exports library instead of the main entry point.
  * feat: Added plugin management functions. This feature has removed the need for

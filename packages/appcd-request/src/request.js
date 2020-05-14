@@ -69,7 +69,11 @@ export default function request(params, callback) {
 				HTTPS_PROXY
 			} = process.env;
 
-			conf = Object.assign({ method: 'GET' }, conf, params);
+			conf = {
+				method: 'GET',
+				...conf,
+				...params
+			};
 
 			// ca file
 			if (APPCD_NETWORK_CA_FILE && isFile(APPCD_NETWORK_CA_FILE)) {
