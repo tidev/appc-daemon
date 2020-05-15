@@ -491,8 +491,10 @@ export default class ExternalPlugin extends PluginBase {
 				this.tunnel = new Tunnel(ctx.proc, true, async (req, send) => {
 					switch (req.type) {
 						case 'activated':
-							this.appcdLogger.log('External plugin is activated');
-							this.appcdLogger.log(req.services);
+							this.appcdLogger.log(`External plugin is activated with ${req.services.length ? 'the following services:' : 'no services'}`);
+							for (const svc of req.services) {
+								this.appcdLogger.log(`  ${highlight(svc)}`);
+							}
 							this.info.services = req.services;
 							resolve();
 							break;
