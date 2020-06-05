@@ -2,6 +2,8 @@
 
  * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.
    [(DAEMON-334)](https://jira.appcelerator.org/browse/DAEMON-334)
+ * BREAKING CHANGE: Deleting non-existent key returns successfully.
+ * BREAKING CHANGE: `set`, `push`, and `unshift` no longer return the current value.
  * refactor: Updated to `appcd-config@3.0.0`, but no major breaking changes as far as the
    `ConfigService` is concerned.
  * chore: Updated dependencies.

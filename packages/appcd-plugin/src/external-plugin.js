@@ -426,9 +426,35 @@ export default class ExternalPlugin extends PluginBase {
 
 		if (autoReload) {
 			try {
-				const { directories } = this.plugin;
+				const { directories, path: pluginPath } = this.plugin;
 				if (directories.size) {
-					this.appcdLogger.log('Watching plugin source directories for changes...');
+					const subjects = new Set(directories);
+
+					// we only want to watch this directory if it's the plugin root or the top-most
+					// path of common paths
+					for (const dir of directories) {
+						let p = dir;
+						while (p !== pluginPath) {
+							p = path.dirname(p);
+							if (subjects.has(p) && p !== pluginPath) {
+								subjects.delete(dir);
+								break;
+							}
+						}
+					}
+
+					const dirsToWatch = [];
+					for (const dir of subjects) {
+						dirsToWatch.push({
+							dir,
+							recursive: dir !== pluginPath && dir.startsWith(pluginPath)
+						});
+					}
+
+					this.appcdLogger.log('Watching plugin source directories for changes:');
+					for (const { dir, recursive } of dirsToWatch) {
+						this.appcdLogger.log(highlight(`  ${dir}${recursive ? '/**' : ''}`));
+					}
 
 					const onFilesystemChange = debounce(async () => {
 						try {
@@ -442,7 +468,7 @@ export default class ExternalPlugin extends PluginBase {
 							this.info.error = null;
 							this.info.stack = null;
 
-							if (!this.info.autoStart) {
+							if (this.info.autoStart) {
 								if (wasErrored) {
 									this.appcdLogger.warn(`Skipping auto starting ${highlight(`${this.plugin.name}@${this.plugin.version}`)} since plugin stopped due to error`);
 								} else {
@@ -455,17 +481,13 @@ export default class ExternalPlugin extends PluginBase {
 						}
 					}, 2000);
 
-					for (const dir of directories) {
-						if (this.watchers[dir]) {
-							this.appcdLogger.log('Already watching plugin directory %s', highlight(dir));
-						} else {
-							this.watchers[dir] = new FSWatcher(dir)
-								.on('change', evt => {
-									if (!this.plugin.ignore.ignores(path.relative(this.plugin.path, evt.file))) {
-										onFilesystemChange();
-									}
-								});
-						}
+					for (const { dir, recursive } of dirsToWatch) {
+						this.watchers[dir] = new FSWatcher(dir, { recursive })
+							.on('change', evt => {
+								if (!this.plugin.ignore.ignores(path.relative(pluginPath, evt.file))) {
+									onFilesystemChange();
+								}
+							});
 					}
 				}
 			} catch (err) {
@@ -654,7 +676,7 @@ export default class ExternalPlugin extends PluginBase {
 								break;
 
 							case 'exit':
-								this.appcdLogger.log('Plugin host exited: %s', highlight(data.code));
+								this.appcdLogger.log('Plugin host %s exited: %s', this.info.pid, highlight(data.code));
 								this.tunnel = null;
 								this.info.pid = null;
 								this.info.exitCode = data.code || 0;

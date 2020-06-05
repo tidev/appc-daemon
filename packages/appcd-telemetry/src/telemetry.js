@@ -82,7 +82,7 @@ export default class Telemetry extends Dispatcher {
 	/**
 	 * Constructs an analytics instance.
 	 *
-	 * @param {Config} cfg - The Appc Daemon config object.
+	 * @param {AppcdConfig} cfg - The Appc Daemon config object.
 	 * @param {String} version - The app version.
 	 * @access public
 	 */
@@ -113,11 +113,13 @@ export default class Telemetry extends Dispatcher {
 
 		// set the config and wire up the watcher
 		this.updateConfig(cfg.get('telemetry') || {});
-		cfg.watch('telemetry', obj => this.updateConfig(obj));
+		cfg.watch('telemetry', () => {
+			this.updateConfig(cfg.get('telemetry') || {});
+		});
 
 		// wire up the telemetry route
-		this.register('/', this.addEvent.bind(this));
-		this.register('/crash', this.addCrash.bind(this));
+		this.register('/', ctx => this.addEvent(ctx));
+		this.register('/crash', ctx => this.addCrash(ctx));
 
 		{
 			const architecture = arch();
@@ -201,6 +203,8 @@ export default class Telemetry extends Dispatcher {
 
 			ctx.response = new Response(codes.CREATED);
 		} catch (e) {
+			error('Failed to add event:');
+			error(e.stack);
 			ctx.response = e;
 		}
 	}

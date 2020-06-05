@@ -37,13 +37,13 @@
     "appcd-path": "^2.0.0",
     "appcd-util": "^2.0.2",
     "boxen": "^4.2.0",
-    "cli-kit": "^1.1.0",
+    "cli-kit": "^1.2.0",
     "cli-table3": "^0.6.0",
     "global-prefix": "^3.0.0",
     "humanize": "^0.0.9",
     "semver": "^7.3.2",
     "source-map-support": "^0.5.19",
-    "v8-compile-cache": "^2.1.0"
+    "v8-compile-cache": "^2.1.1"
   },
   "devDependencies": {
     "appcd-gulp": "^3.0.0"
