@@ -18,7 +18,7 @@
   "dependencies": {
     "appcd-fs": "^1.1.10",
     "appcd-logger": "^2.0.5",
-    "koa": "^2.11.0",
+    "koa": "^2.12.0",
     "koa-bodyparser": "^4.3.0",
     "koa-helmet": "^5.2.0",
     "koa-send": "^5.0.0",

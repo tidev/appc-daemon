@@ -1,5 +1,5 @@
 export default {
-	aliases: [ 's', 'se' ],
+	aliases: [ 's', '!se' ],
 	args: [
 		{
 			name: 'search',

@@ -24,9 +24,9 @@
     "appcd-request": "^2.2.0",
     "appcd-response": "^2.0.4",
     "appcd-util": "^2.0.2",
-    "fs-extra": "^9.0.0",
+    "fs-extra": "^9.0.1",
     "source-map-support": "^0.5.19",
-    "uuid": "^8.0.0"
+    "uuid": "^8.1.0"
   },
   "devDependencies": {
     "appcd-config": "^2.0.2",

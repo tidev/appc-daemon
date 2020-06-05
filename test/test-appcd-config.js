@@ -49,9 +49,7 @@ describe('appcd config', function () {
 			expect(status).to.equal(0);
 
 			// strip off the banner
-			const chunks = stdout.toString().split('\n\n');
-			expect(stripColors(chunks[0])).to.match(/^Appcelerator Daemon, version \d+\.\d+\.\d+\nCopyright \(c\) 2015-\d{4}, Axway, Inc\. All Rights Reserved\./);
-			expect(chunks[1]).to.equal([
+			expect(stdout.toString()).to.equal([
 				'core.enforceNodeVersion          = true',
 				'core.v8.memory                   = auto',
 				'environment.name                 = test',
@@ -121,9 +119,7 @@ describe('appcd config', function () {
 						expect(status).to.equal(0);
 
 						// strip off the banner
-						const chunks = stdout.toString().split('\n\n');
-						expect(stripColors(chunks[0])).to.match(/^Appcelerator Daemon, version \d+\.\d+\.\d+\nCopyright \(c\) 2015-\d{4}, Axway, Inc\. All Rights Reserved\./);
-						expect(chunks[1]).to.equal([
+						expect(stdout.toString()).to.equal([
 							'core.enforceNodeVersion          = true',
 							'core.v8.memory                   = auto',
 							'environment.name                 = test',
@@ -215,83 +211,32 @@ describe('appcd config', function () {
 						expect(status).to.equal(0);
 
 						expect(JSON.parse(stdout)).to.deep.equal({
-							code: 0,
-							result: {
-								core: {
-									enforceNodeVersion: true,
-									v8: {
-										memory: 'auto'
-									}
-								},
-								environment: {
-									name: 'test',
-									title: 'Test'
-								},
-								home: '~/.appcelerator/appcd',
-								network: {
-									agentOptions: null,
-									caFile: null,
-									certFile: null,
-									httpProxy: null,
-									httpsProxy: null,
-									keyFile: null,
-									passphrase: null,
-									strictSSL: true
-								},
-								plugins: {
-									autoReload: true,
-									defaultInactivityTimeout: 60 * 60 * 1000
-								},
-								server: {
-									agentPollInterval: 1000,
-									daemonize: true,
-									group: null,
-									hostname: '127.0.0.1',
-									nodejsMaxUnusedAge: 90 * 24 * 60 * 60 * 1000,
-									persistDebugLog: true,
-									pidFile: '~/.appcelerator/appcd/appcd.pid',
-									port: 1732,
-									user: null
-								},
-								telemetry: {
-									app: 'ea327577-858f-4d31-905e-fa670f50ef48',
-									enabled: true,
-									environment: 'test',
-									eventsDir: '~/.appcelerator/appcd/telemetry',
-									sendBatchSize: 10,
-									sendInterval: 60000,
-									sendTimeout: 60000,
-									url: 'https://api.appcelerator.com/p/v4/app-track'
+							core: {
+								enforceNodeVersion: true,
+								v8: {
+									memory: 'auto'
 								}
-							}
-						});
-					}));
-
-					it(`should ${action} an existing value as JSON`, makeTest(async function () {
-						if (appcdState === 'started') {
-							await this.installNode();
-							await this.startDaemonDebugMode(defaultConfig);
-						}
-
-						const { status, stdout } = this.runAppcdSync([ 'config', action, 'server.port', '--json' ]);
-						expect(status).to.equal(0);
-						expect(JSON.parse(stdout)).to.deep.equal({
-							code: 0,
-							result: 1732
-						});
-					}));
-
-					it(`should ${action} an existing group of values as JSON`, makeTest(async function () {
-						if (appcdState === 'started') {
-							await this.installNode();
-							await this.startDaemonDebugMode(defaultConfig);
-						}
-
-						const { status, stdout } = this.runAppcdSync([ 'config', action, 'server', '--json' ], {}, defaultConfig);
-						expect(status).to.equal(0);
-						expect(JSON.parse(stdout)).to.deep.equal({
-							code: 0,
-							result: {
+							},
+							environment: {
+								name: 'test',
+								title: 'Test'
+							},
+							home: '~/.appcelerator/appcd',
+							network: {
+								agentOptions: null,
+								caFile: null,
+								certFile: null,
+								httpProxy: null,
+								httpsProxy: null,
+								keyFile: null,
+								passphrase: null,
+								strictSSL: true
+							},
+							plugins: {
+								autoReload: true,
+								defaultInactivityTimeout: 60 * 60 * 1000
+							},
+							server: {
 								agentPollInterval: 1000,
 								daemonize: true,
 								group: null,
@@ -301,71 +246,100 @@ describe('appcd config', function () {
 								pidFile: '~/.appcelerator/appcd/appcd.pid',
 								port: 1732,
 								user: null
+							},
+							telemetry: {
+								app: 'ea327577-858f-4d31-905e-fa670f50ef48',
+								enabled: true,
+								environment: 'test',
+								eventsDir: '~/.appcelerator/appcd/telemetry',
+								sendBatchSize: 10,
+								sendInterval: 60000,
+								sendTimeout: 60000,
+								url: 'https://api.appcelerator.com/p/v4/app-track'
 							}
 						});
 					}));
 
-					it(`should not ${action} a non-existent value as text`, makeTest(async function () {
-						if (appcdState === 'started') {
-							await this.installNode();
-							await this.startDaemonDebugMode(defaultConfig);
-						}
+					if (action === 'get') {
+						it(`should ${action} an existing value as JSON`, makeTest(async function () {
+							if (appcdState === 'started') {
+								await this.installNode();
+								await this.startDaemonDebugMode(defaultConfig);
+							}
 
-						const { status, stdout, stderr } = this.runAppcdSync([ 'config', action, 'does.not.exist' ]);
-						expect(status).to.equal(1);
+							const { status, stdout } = this.runAppcdSync([ 'config', action, 'server.port', '--json' ]);
+							expect(status).to.equal(0);
+							expect(JSON.parse(stdout)).to.equal(1732);
+						}));
 
-						expect(stripColors(stdout.toString())).to.match(/^Appcelerator Daemon, version \d+\.\d+\.\d+\nCopyright \(c\) 2015-\d{4}, Axway, Inc\. All Rights Reserved\./);
-						expect(stripColors(stderr.toString().split('\n\n')[0])).to.match(/Error: Not Found: does.not.exist/);
-					}));
+						it(`should ${action} an existing group of values as JSON`, makeTest(async function () {
+							if (appcdState === 'started') {
+								await this.installNode();
+								await this.startDaemonDebugMode(defaultConfig);
+							}
 
-					it(`should not ${action} a non-existent value as JSON`, makeTest(async function () {
-						if (appcdState === 'started') {
-							await this.installNode();
-							await this.startDaemonDebugMode(defaultConfig);
-						}
-
-						const { status, stdout } = this.runAppcdSync([ 'config', action, 'does.not.exist', '--json' ]);
-						expect(status).to.equal(1);
-
-						const res = JSON.parse(stdout);
-						expect(res.error).to.be.an('object');
-						expect(res.error.type).to.equal('Error');
-						expect(res.error.message).to.equal('Not Found: does.not.exist');
-					}));
-
-					if (appcdState === 'started') {
-						it(`should ${action} a setting passed in from the command line`, makeTest(async function () {
-							await this.installNode();
-							await this.startDaemonDebugMode({ ...defaultConfig, 'appcd-test': 'it works!' });
-
-							const { status, stdout } = this.runAppcdSync([ 'config', action, 'appcd-test', '--json' ], {}, { 'appcd-test': 'it works!' });
+							const { status, stdout } = this.runAppcdSync([ 'config', action, 'server', '--json' ], {}, defaultConfig);
 							expect(status).to.equal(0);
 							expect(JSON.parse(stdout)).to.deep.equal({
-								code: 0,
-								result: 'it works!'
+								agentPollInterval: 1000,
+								daemonize: true,
+								group: null,
+								hostname: '127.0.0.1',
+								nodejsMaxUnusedAge: 90 * 24 * 60 * 60 * 1000,
+								persistDebugLog: true,
+								pidFile: '~/.appcelerator/appcd/appcd.pid',
+								port: 1732,
+								user: null
 							});
 						}));
 
-						it(`should not ${action} a setting passed in from the command line if the server is running`, makeTest(async function () {
-							await this.installNode();
-							await this.startDaemonDebugMode(defaultConfig);
+						it(`should not ${action} a non-existent value as text`, makeTest(async function () {
+							if (appcdState === 'started') {
+								await this.installNode();
+								await this.startDaemonDebugMode(defaultConfig);
+							}
 
-							const { status, stdout } = this.runAppcdSync([ 'config', action, 'appcd-test', '--json' ], {}, { 'appcd-test': 'it works!' });
-							expect(status).to.equal(1);
-							const { error } = JSON.parse(stdout);
-							expect(error).to.be.an('object');
-							expect(error.message).to.equal('Not Found: appcd-test');
-							expect(error.type).to.equal('Error');
+							const { status, stdout } = this.runAppcdSync([ 'config', action, 'does.not.exist' ]);
+							expect(stripColors(stdout.toString().trim())).to.equal('undefined');
+							expect(status).to.equal(6);
 						}));
-					} else {
-						it(`should ${action} a setting passed in from the command line`, makeTest(async function () {
-							const { status, stdout } = this.runAppcdSync([ 'config', action, 'appcd-test', '--json' ], {}, { 'appcd-test': 'it works!' });
-							expect(status).to.equal(0);
-							expect(JSON.parse(stdout)).to.deep.equal({
-								code: 0,
-								result: 'it works!'
-							});
+
+						it(`should not ${action} a non-existent value as JSON`, makeTest(async function () {
+							if (appcdState === 'started') {
+								await this.installNode();
+								await this.startDaemonDebugMode(defaultConfig);
+							}
+
+							const { status, stdout } = this.runAppcdSync([ 'config', action, 'does.not.exist', '--json' ]);
+							expect(stripColors(stdout.toString().trim())).to.equal('undefined');
+							expect(status).to.equal(6);
 						}));
+
+						if (appcdState === 'started') {
+							it(`should ${action} a setting passed in from the command line`, makeTest(async function () {
+								await this.installNode();
+								await this.startDaemonDebugMode({ ...defaultConfig, 'appcd-test': 'it works!' });
+
+								const { status, stdout } = this.runAppcdSync([ 'config', action, 'appcd-test', '--json' ], {}, { 'appcd-test': 'it works!' });
+								expect(status).to.equal(0);
+								expect(JSON.parse(stdout)).to.equal('it works!');
+							}));
+
+							it(`should not ${action} a setting passed in from the command line if the server is running`, makeTest(async function () {
+								await this.installNode();
+								await this.startDaemonDebugMode(defaultConfig);
+
+								const { status, stdout } = this.runAppcdSync([ 'config', action, 'appcd-test', '--json' ], {}, { 'appcd-test': 'it works!' });
+								expect(stripColors(stdout.toString().trim())).to.equal('undefined');
+								expect(status).to.equal(6);
+							}));
+						} else {
+							it(`should ${action} a setting passed in from the command line`, makeTest(async function () {
+								const { status, stdout } = this.runAppcdSync([ 'config', action, 'appcd-test', '--json' ], {}, { 'appcd-test': 'it works!' });
+								expect(status).to.equal(0);
+								expect(JSON.parse(stdout)).to.equal('it works!');
+							}));
+						}
 					}
 				});
 			}
@@ -379,7 +353,7 @@ describe('appcd config', function () {
 
 					const { status, stderr } = this.runAppcdSync([ 'config', 'set' ]);
 					expect(status).to.equal(1);
-					expect(stripColors(stderr.toString().split('\n\n')[0])).to.equal('Error: Missing the configuration key to set');
+					expect(stripColors(stderr.toString().split('\n\n')[0])).to.equal('Error: Missing required argument "key"');
 				}));
 
 				it('should error when calling set without a value', makeTest(async function () {
@@ -390,7 +364,7 @@ describe('appcd config', function () {
 
 					const { status, stderr } = this.runAppcdSync([ 'config', 'set', 'appcd-test' ]);
 					expect(status).to.equal(1);
-					expect(stripColors(stderr.toString().split('\n\n')[0])).to.equal('Error: Missing the configuration value to set');
+					expect(stripColors(stderr.toString().split('\n\n')[0])).to.equal('Error: Missing required argument "value"');
 				}));
 
 				it('should set a value with no existing config file', makeTest(async function () {
@@ -403,7 +377,7 @@ describe('appcd config', function () {
 					const { status, stdout } = this.runAppcdSync([ 'config', 'set', 'appcd-test', 'it works!' ]);
 
 					expect(status).to.equal(0);
-					expect(stripColors(stdout.toString().split('\n\n')[1].trim())).to.equal('Saved');
+					expect(stripColors(stdout.toString().trim())).to.equal('OK');
 
 					expect(fs.existsSync(configFile)).to.be.true;
 					expect(fs.readJsonSync(configFile)).to.deep.equal({
@@ -421,10 +395,7 @@ describe('appcd config', function () {
 					const { status, stdout } = this.runAppcdSync([ 'config', '--json', 'set', 'appcd-test', 'it works!' ]);
 
 					expect(status).to.equal(0);
-					expect(JSON.parse(stdout)).to.deep.equal({
-						code: 0,
-						result: 'Saved'
-					});
+					expect(JSON.parse(stdout)).to.equal('OK');
 
 					expect(fs.existsSync(configFile)).to.be.true;
 					expect(fs.readJsonSync(configFile)).to.deep.equal({
@@ -447,10 +418,7 @@ describe('appcd config', function () {
 
 						expect(status).to.equal(0);
 
-						expect(JSON.parse(stdout)).to.deep.equal({
-							code: 0,
-							result: 'Saved'
-						});
+						expect(JSON.parse(stdout)).to.equal('OK');
 
 						expect(fs.existsSync(configFile)).to.be.true;
 						expect(fs.readJsonSync(configFile)).to.deep.equal({});
@@ -469,7 +437,7 @@ describe('appcd config', function () {
 
 					const { status, stdout } = this.runAppcdSync([ 'config', '--json', 'push', 'foo', 'bar' ]);
 					expect(status).to.equal(0);
-					expect(JSON.parse(stdout).result).to.deep.equal([ 'a', 'b', 'c', 'bar' ]);
+					expect(JSON.parse(stdout)).to.equal('OK');
 					expect(fs.readJsonSync(configFile)).to.deep.equal({
 						foo: [ 'a', 'b', 'c', 'bar' ]
 					});
@@ -485,7 +453,7 @@ describe('appcd config', function () {
 
 					const { status, stdout } = this.runAppcdSync([ 'config', '--json', 'pop', 'foo' ]);
 					expect(status).to.equal(0);
-					expect(JSON.parse(stdout).result).to.equal('c');
+					expect(JSON.parse(stdout)).to.equal('c');
 					expect(fs.readJsonSync(configFile)).to.deep.equal({ foo: [ 'a', 'b' ] });
 				}));
 
@@ -499,7 +467,7 @@ describe('appcd config', function () {
 
 					const { status, stdout } = this.runAppcdSync([ 'config', '--json', 'shift', 'foo' ]);
 					expect(status).to.equal(0);
-					expect(JSON.parse(stdout).result).to.equal('a');
+					expect(JSON.parse(stdout)).to.equal('a');
 					expect(fs.readJsonSync(configFile)).to.deep.equal({ foo: [ 'b', 'c' ] });
 				}));
 
@@ -513,7 +481,7 @@ describe('appcd config', function () {
 
 					const { status, stdout } = this.runAppcdSync([ 'config', '--json', 'unshift', 'foo', 'bar' ]);
 					expect(status).to.equal(0);
-					expect(JSON.parse(stdout).result).to.deep.equal([ 'bar', 'a', 'b', 'c' ]);
+					expect(JSON.parse(stdout)).to.equal('OK');
 					expect(fs.readJsonSync(configFile)).to.deep.equal({ foo: [ 'bar', 'a', 'b', 'c' ] });
 				}));
 			});

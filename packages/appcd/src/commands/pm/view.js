@@ -1,5 +1,5 @@
 export default {
-	aliases: [ 'v', 'info', 'show' ],
+	aliases: [ '!v', 'info', '!show' ],
 	args: [
 		{
 			name: 'package',

@@ -1,5 +1,5 @@
 export default {
-	aliases: [ 'un', 'unlink', 'r', 'rm', 'remove' ],
+	aliases: [ '!un', '!unlink', '!r', 'rm', '!remove' ],
 	args: [
 		{
 			name: 'plugins...',

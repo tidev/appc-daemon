@@ -26,7 +26,7 @@
     "appcd-gulp": "^3.0.0",
     "appcd-path": "^2.0.0",
     "appcd-util": "^2.0.2",
-    "fs-extra": "^9.0.0",
+    "fs-extra": "^9.0.1",
     "tmp": "^0.2.1"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon",

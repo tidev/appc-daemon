@@ -7,11 +7,13 @@ export default {
 		const [
 			{ createTable, createRequest, loadConfig },
 			{ createInstanceWithDefaults, StdioStream },
-			{ filesize, numberFormat, relativeTime }
+			{ filesize, numberFormat, relativeTime },
+			semver
 		] = await Promise.all([
 			import('../common'),
 			import('appcd-logger'),
-			import('humanize')
+			import('humanize'),
+			import('semver')
 		]);
 
 		const logger = createInstanceWithDefaults().config({ theme: 'compact' }).enable('*').pipe(new StdioStream());
@@ -48,7 +50,7 @@ export default {
 				table.push([ 'PID',                highlight(status.pid) ]);
 				table.push([ 'Uptime',             highlight(`${(status.uptime / 60).toFixed(2)} minutes`) ]);
 				table.push([ 'Node Version',       highlight(`v${status.node.version}`) ]);
-				table.push([ 'Plugin API Version', highlight(`v${status.plugins.apiVersion}`) ]);
+				table.push([ 'Plugin API Version', highlight(`v${status.plugins.apiVersion || semver.satisfies(status.version, '^3.2.0') ? '1.1.0' : '1.0.0'}`) ]);
 				table.push([ 'Memory RSS',         highlight(filesize(status.memory.rss)) ]);
 				table.push([ 'Memory Heap',        highlight(`${filesize(status.memory.heapUsed)} / ${filesize(status.memory.heapTotal)}`) ]);
 				log(table.toString());
@@ -67,17 +69,22 @@ export default {
 				if (status.plugins && status.plugins.registered.length) {
 					table = createTable('Plugin', 'Type', 'Path', 'Status', 'Active/Total Requests');
 					for (const plugin of status.plugins.registered.sort((a, b) => a.name.localeCompare(b.name))) {
-						let status = '';
+						let status = 'Stopped';
+						switch (plugin.state) {
+							case 'started':
+								status = 'Started';
+								break;
+							case 'starting':
+								status = 'Starting';
+								break;
+							case 'stopping':
+								status = 'Stopping';
+								break;
+						}
 						if (plugin.error) {
-							status = `${plugin.pid ? '' : 'Inactive: '}${plugin.error}`;
-						} else if (plugin.pid) {
-							if (plugin.type === 'external') {
-								status = `Active, PID=${plugin.pid || 'null'}`;
-							} else {
-								status = 'Active';
-							}
-						} else {
-							status = 'Inactive';
+							status += `${plugin.pid ? `, PID=${plugin.pid}` : ''}: ${plugin.error}`;
+						} else if (plugin.pid && plugin.type === 'external') {
+							status += `, PID=${plugin.pid || 'null'}`;
 						}
 
 						const row = [

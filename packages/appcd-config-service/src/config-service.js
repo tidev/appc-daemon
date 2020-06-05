@@ -8,7 +8,7 @@ import Response, { codes } from 'appcd-response';
 
 import { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
 
-const { log } = appcdLogger('appcd:config-service');
+const { error, log } = appcdLogger('appcd:config-service');
 const { highlight } = appcdLogger.styles;
 
 const writeRegExp = /^set|delete|push|pop|shift|unshift$/;
@@ -100,7 +100,7 @@ export default class ConfigService extends ServiceDispatcher {
 					throw new DispatcherError(codes.FORBIDDEN, `Not allowed to ${action} config root`);
 				}
 
-				let value;
+				ctx.response = new Response(codes.OK);
 
 				try {
 					switch (action) {
@@ -110,37 +110,31 @@ export default class ConfigService extends ServiceDispatcher {
 							break;
 
 						case 'delete':
-							if (!this.config.delete(key)) {
-								ctx.response = new Response(codes.NOT_FOUND);
-								return;
-							}
+							this.config.delete(key);
 							break;
 
 						case 'push':
 							this.config.push(key, data.value);
-							value = this.config.get(key);
 							break;
 
 						case 'pop':
-							value = this.config.pop(key);
+							ctx.response = this.config.pop(key);
 							break;
 
 						case 'shift':
-							value = this.config.shift(key);
+							ctx.response = this.config.shift(key);
 							break;
 
 						case 'unshift':
 							this.config.unshift(key, data.value);
-							value = this.config.get(key);
 							break;
 					}
 				} catch (e) {
+					error(e.stack);
 					throw new DispatcherError(codes.BAD_REQUEST, e.message);
 				}
 
 				this.config.save({ file: data.file });
-
-				ctx.response = value || new Response(codes.OK);
 				return;
 
 			} else {
@@ -148,7 +142,7 @@ export default class ConfigService extends ServiceDispatcher {
 			}
 		}
 
-		const filter = key && key.split(/\.|\//).join('.') || undefined;
+		const filter = key && key.split(/\.|\//).filter(Boolean).join('.') || undefined;
 		if (filter) {
 			log('Filtering config:', filter);
 		}

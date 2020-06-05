@@ -333,7 +333,7 @@ describe('Config Service', () => {
 		await cs.onCall(ctx);
 
 		expect(ctx.response).to.be.instanceof(Response);
-		expect(ctx.response.statusCode).to.equal(404);
+		expect(ctx.response.statusCode).to.equal(200);
 	});
 
 	it('should delete a config value', async () => {
@@ -414,7 +414,8 @@ describe('Config Service', () => {
 
 		await cs.onCall(ctx);
 
-		expect(ctx.response).to.deep.equal([ 'bar', 'baz' ]);
+		expect(ctx.response).to.be.instanceof(Response);
+		expect(ctx.response.statusCode).to.equal(200);
 
 		ctx = {
 			request: {
@@ -432,7 +433,9 @@ describe('Config Service', () => {
 
 		await cs.onCall(ctx);
 
-		expect(ctx.response).to.deep.equal({ foo: [ 'bar', 'baz' ] });
+		expect(ctx.response).to.deep.equal({
+			foo: [ 'bar', 'baz' ]
+		});
 	});
 
 	it('should support unshift', async () => {
@@ -456,7 +459,8 @@ describe('Config Service', () => {
 
 		await cs.onCall(ctx);
 
-		expect(ctx.response).to.deep.equal([ 'baz', 'bar' ]);
+		expect(ctx.response).to.be.instanceof(Response);
+		expect(ctx.response.statusCode).to.equal(200);
 
 		ctx = {
 			request: {
@@ -474,7 +478,9 @@ describe('Config Service', () => {
 
 		await cs.onCall(ctx);
 
-		expect(ctx.response).to.deep.equal({ foo: [ 'baz', 'bar' ] });
+		expect(ctx.response).to.deep.equal({
+			foo: [ 'baz', 'bar' ]
+		});
 	});
 
 	it('should support pop', async () => {
@@ -572,7 +578,7 @@ describe('Config Service', () => {
 
 		let i = 0;
 
-		const publish = (value, src, layer) => {
+		const publish = value => {
 			switch (++i) {
 				case 1:
 					expect(value).to.deep.equal({ foo: 'bar' });

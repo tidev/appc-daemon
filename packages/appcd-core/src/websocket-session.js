@@ -273,6 +273,12 @@ export default class WebSocketSession extends EventEmitter {
 					}
 				}
 
+				// if the message is undefined, we need to delete it so that msgpack doesn't
+				// convert it to `null`
+				if (res.message === undefined) {
+					delete res.message;
+				}
+
 				data = msgpack.encode(res);
 			}
 

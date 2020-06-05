@@ -91,7 +91,7 @@ export default {
 
 			console.log(table.toString());
 			if (links) {
-				console.log(magenta('└─ yarn link'));
+				console.log(magenta('└ yarn link'));
 			}
 			console.log(`\nFor more info, run ${cyan(`appcd ${_argv.join(' ')} --detailed`)}`);
 		}

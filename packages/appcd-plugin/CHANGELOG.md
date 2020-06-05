@@ -19,6 +19,9 @@
    the default inactivity timeout.
  * fix: Fixed bug where error details were not being passed back when an internal plugin-to-plugin
    call threw an error.
+ * fix: Fixed bug where plugin was deactivated before being activated.
+ * fix: Initialize plugin `state` in info object to `stopped`.
+ * fix: Recursively watch plugin directories for changes.
  * chore: Updated dependencies.
 
 # v3.2.2 (Jan 13, 2020)

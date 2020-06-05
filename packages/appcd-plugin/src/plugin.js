@@ -80,6 +80,7 @@ export default class Plugin extends EventEmitter {
 			os:             undefined,
 			error:          null,
 			supported:      null,
+			state:          states.STOPPED,
 			link,
 			activeRequests: 0,
 			totalRequests:  0,
