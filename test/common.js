@@ -69,15 +69,16 @@ const api = {
 
 	runAppcd(args = [], opts = {}, cfg) {
 		const env = { ...(opts.env || process.env) };
-		if (env.APPCD_TEST) {
-			delete env.SNOOPLOGG;
-		}
+		// if (env.APPCD_TEST) {
+		// 	delete env.SNOOPLOGG;
+		// }
 
 		if (cfg) {
 			args.unshift('--config', JSON.stringify(cfg));
 		}
 
 		log(`Executing: ${highlight(`${process.execPath} ${appcdPath} ${args.join(' ')}`)}`);
+
 		return spawn(process.execPath, [ appcdPath, ...args ], {
 			ignoreExitCodes: true,
 			windowsHide: true,
@@ -97,6 +98,7 @@ const api = {
 		}
 
 		log(`Executing: ${highlight(`${process.execPath} ${appcdPath} ${args.join(' ')}`)}`);
+
 		const result = spawnSync(process.execPath, [ appcdPath, ...args ], {
 			ignoreExitCodes: true,
 			windowsHide: true,
@@ -158,10 +160,10 @@ const api = {
 				log(`appcd exited (code ${code})`);
 
 				if (code) {
-					if (stdout && !output) {
+					if (!output && stdout) {
 						testLogger('stdout').log(stdout);
 					}
-					if (stderr) {
+					if (!output && stderr) {
 						testLogger('stderr').log(stderr);
 					}
 					reject(new Error(`appcd exited (code ${code})`));
