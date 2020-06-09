@@ -87,7 +87,7 @@ describe('plugin iOS', function () {
 
 		const info = obj.message.find(p => p.path === pluginPath);
 		expect(info).to.be.an('object');
-		expect(info).to.have.keys('activeRequests', 'apiVersion', 'appcdVersion', 'dependencies', 'description', 'error', 'homepage', 'license', 'link', 'main', 'name', 'nodeVersion', 'os', 'packageName', 'path', 'supported', 'totalRequests', 'type', 'version');
+		expect(info).to.have.keys('activeRequests', 'apiVersion', 'appcdVersion', 'autoStart', 'dependencies', 'description', 'error', 'homepage', 'license', 'link', 'main', 'name', 'nodeVersion', 'os', 'packageName', 'path', 'state', 'supported', 'totalRequests', 'type', 'version');
 
 		expect(info.activeRequests).to.equal(0);
 		expect(info.totalRequests).to.equal(0);
