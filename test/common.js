@@ -128,6 +128,8 @@ const api = {
 		const child = this.runAppcd([ 'start', '--debug' ], opts, cfg);
 		isAppcdRunning = true;
 
+		log(`Spawn appcd in debug mode (pid ${child.pid})`);
+
 		const prom = new Promise((resolve, reject) => {
 			let stdout = '';
 			let stderr = '';
@@ -144,11 +146,17 @@ const api = {
 			});
 
 			child.stderr.on('data', data => {
-				stderr += data.toString();
+				const s = data.toString();
+				stderr += s;
+				if (output) {
+					testLogger('stderr').log(s);
+				}
 			});
 
 			child.on('close', code => {
 				isAppcdRunning = false;
+				log(`appcd exited (code ${code})`);
+
 				if (code) {
 					if (stdout && !output) {
 						testLogger('stdout').log(stdout);
@@ -160,10 +168,6 @@ const api = {
 				}
 			});
 		});
-
-		if (output) {
-			child.stderr.on('data', data => process.stdout.write(data.toString()));
-		}
 
 		await prom;
 	},
