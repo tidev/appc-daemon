@@ -78,7 +78,7 @@ describe('plugin android', function () {
 		expect(obj.statusCode).to.equal('200');
 	}));
 
-	_it('should detect an Android SDK', makeTest(async function () {
+	_it.only('should detect an Android SDK', makeTest(async function () {
 		const src = path.join(__dirname, 'fixtures', 'android', 'sdk', process.platform);
 		let sdkDir = makeTempDir();
 		log(`Copying ${highlight(src)} => ${highlight(sdkDir)}`);

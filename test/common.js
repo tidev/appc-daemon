@@ -139,7 +139,7 @@ const api = {
 					resolve(child);
 				}
 				if (output) {
-					process.stdout.write(s);
+					testLogger('stdout').log(s);
 				}
 			});
 
@@ -150,8 +150,12 @@ const api = {
 			child.on('close', code => {
 				isAppcdRunning = false;
 				if (code) {
-					stdout && process.stdout.write(stdout);
-					stderr && process.stdout.write(stderr);
+					if (stdout && !output) {
+						testLogger('stdout').log(stdout);
+					}
+					if (stderr) {
+						testLogger('stderr').log(stderr);
+					}
 					reject(new Error(`appcd exited (code ${code})`));
 				}
 			});
