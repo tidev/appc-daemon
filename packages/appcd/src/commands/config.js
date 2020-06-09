@@ -73,6 +73,7 @@ async function runConfig(action, { argv, cmd, console, setExitCode }) {
 	let { json, key, value } = argv;
 	const cfg = loadConfig(argv);
 	const data = { action, key, value };
+	const filter = key && key.split(/\.|\//).filter(Boolean).join('.') || undefined;
 
 	if (typeof data.value === 'string') {
 		try {
@@ -127,7 +128,6 @@ async function runConfig(action, { argv, cmd, console, setExitCode }) {
 
 	try {
 		const { client, request } = createRequest(cfg, '/appcd/config', data);
-		const filter = key && key.split(/\.|\//).filter(Boolean).join('.') || undefined;
 
 		await new Promise((resolve, reject) => {
 			request
