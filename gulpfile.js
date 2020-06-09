@@ -254,6 +254,7 @@ async function linkPlugins() {
 	const linksDir = process.platform === 'win32'
 		? path.join(os.homedir(), 'AppData', 'Local', 'Yarn', 'Data', 'link')
 		: path.join(os.homedir(), '.config', 'yarn', 'link');
+
 	log(`Checking links: ${cyan(linksDir)}`);
 	scan(linksDir);
 };
@@ -664,7 +665,7 @@ function runLerna(args) {
 		execPath = process.execPath;
 	}
 	log(`Running ${execPath} ${args.join(' ')}`);
-	spawnSync(execPath, args, { stdio: 'inherit' });
+	spawnSync(execPath, args, { env: process.env, stdio: 'inherit' });
 }
 
 async function checkPackages({ skipSecurity } = {}) {
