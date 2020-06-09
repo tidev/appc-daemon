@@ -93,7 +93,7 @@ describe('plugin android', function () {
 					searchPaths: [ sdkDir ]
 				}
 			}
-		});
+		}, true);
 
 		const { status, stdout } = this.runAppcdSync([ 'exec', `/android/${pluginVersion}/info` ]);
 		expect(status).to.equal(0);
