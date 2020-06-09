@@ -69,9 +69,9 @@ const api = {
 
 	runAppcd(args = [], opts = {}, cfg) {
 		const env = { ...(opts.env || process.env) };
-		// if (env.APPCD_TEST) {
-		// 	delete env.SNOOPLOGG;
-		// }
+		if (env.APPCD_TEST) {
+			delete env.SNOOPLOGG;
+		}
 
 		if (cfg) {
 			args.unshift('--config', JSON.stringify(cfg));
@@ -143,7 +143,7 @@ const api = {
 					resolve(child);
 				}
 				if (output) {
-					testLogger('stdout').log(s);
+					testLogger('stdout').log(s.replace(/\r?\n$/, ''));
 				}
 			});
 
@@ -151,7 +151,7 @@ const api = {
 				const s = data.toString();
 				stderr += s;
 				if (output) {
-					testLogger('stderr').log(s);
+					testLogger('stderr').log(s.replace(/\r?\n$/, ''));
 				}
 			});
 
