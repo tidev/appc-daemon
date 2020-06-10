@@ -102,7 +102,7 @@ export default class Server {
 		if (!isDir(pidDir)) {
 			fs.mkdirsSync(pidDir);
 		}
-		fs.writeFileSync(this.pidFile, process.pid);
+		fs.writeFileSync(this.pidFile, process.pid.toString());
 
 		// rename the process
 		process.title = 'appcd';
@@ -132,7 +132,7 @@ export default class Server {
 			.on('change', ({ action }) => {
 				if (action === 'delete') {
 					logger.log('pid file deleted, recreating');
-					fs.writeFileSync(this.pidFile, process.pid);
+					fs.writeFileSync(this.pidFile, process.pid.toString());
 				}
 			});
 
