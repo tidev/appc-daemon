@@ -8,7 +8,7 @@ module.exports = {
 		appcd.register('/counter', ctx => {
 			counter++;
 			ctx.response = counter;
-			fs.writeFileSync('./counter.txt', counter);
+			fs.writeFileSync('./counter.txt', counter.toString());
 		});
 	},
 

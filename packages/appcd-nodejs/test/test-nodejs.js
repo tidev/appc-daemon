@@ -366,7 +366,7 @@ describe('nodejs', () => {
 				fs.mkdirsSync(dir);
 				fs.writeFileSync(path.join(dir, nodeExecutable), '# mock node executable');
 				if (lastrun) {
-					fs.writeFileSync(path.join(dir, '.lastrun'), lastrun);
+					fs.writeFileSync(path.join(dir, '.lastrun'), lastrun.toString());
 				}
 			};
 
