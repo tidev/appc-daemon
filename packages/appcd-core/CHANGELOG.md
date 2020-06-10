@@ -14,6 +14,7 @@
    [(DAEMON-313)](https://jira.appcelerator.org/browse/DAEMON-313)
  * fix(websocket-session): Removed `message` from response if `undefined` so that msgpack cannot
    convert it to `null`.
+ * fix: Cast the process id to a string when writing the pid file.
  * chore: Updated dependencies.
 
 # v3.2.0 (Jan 13, 2020)

@@ -431,7 +431,7 @@ export async function spawnNode({ arch, args, detached, nodeHome, nodeArgs, opts
 	logger.log('Spawning: %s', highlight(`${node} ${prettyArgs} # ${JSON.stringify(opts)}`));
 
 	// write the last run file
-	fs.writeFileSync(path.join(path.dirname(node), '.lastrun'), Date.now());
+	fs.writeFileSync(path.join(path.dirname(node), '.lastrun'), Date.now().toString());
 
 	let tries = 3;
 
@@ -514,7 +514,7 @@ export function purgeUnusedNodejsExecutables({ maxAge, nodeHome }) {
 
 				// no last run or parsed value was not a number, so create one now
 				logger.log('Creating .lastrun file: %s', highlight(lastRunFile));
-				fs.writeFileSync(lastRunFile, now);
+				fs.writeFileSync(lastRunFile, now.toString());
 			}
 
 			if (isEmpty(platformDir)) {

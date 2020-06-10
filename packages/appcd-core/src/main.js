@@ -19,15 +19,15 @@ process
 	.on('unhandledRejection', (reason, p) => logger.error('Caught unhandled rejection at: Promise ', p, reason));
 
 (async () => {
-	const { argv } = await new CLI({
-		options: {
-			'--config [json]':      { type: 'json', desc: 'serialized JSON string to mix into the appcd config' },
-			'--config-file [file]': { type: 'file', desc: 'path to a config file to use instead of the user config file' }
-		},
-		help: false
-	}).exec();
-
 	try {
+		const { argv } = await new CLI({
+			options: {
+				'--config [json]':      { type: 'json', desc: 'serialized JSON string to mix into the appcd config' },
+				'--config-file [file]': { type: 'file', desc: 'path to a config file to use instead of the user config file' }
+			},
+			help: false
+		}).exec();
+
 		const server = new Server(argv);
 		await server.start();
 
@@ -38,7 +38,7 @@ process
 		if (err.code === 'EADDRINUSE') {
 			process.send('already running');
 		} else {
-			console.error(err);
+			console.error(err.stack);
 		}
 		process.exit(err.code && typeof err.code === 'number' ? err.code : 1);
 	}

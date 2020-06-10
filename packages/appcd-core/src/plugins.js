@@ -18,7 +18,7 @@ import { appcdPluginAPIVersion, detectScheme } from 'appcd-plugin';
 import { expandPath } from 'appcd-path';
 import { isDir, isFile } from 'appcd-fs';
 import { loadConfig } from './config';
-import { spawnNode } from 'appcd-nodejs';
+import { spawn } from 'appcd-subprocess';
 import { tailgate, unique } from 'appcd-util';
 
 const logger = appcdLogger('appcd:plugins');
@@ -530,6 +530,7 @@ export function install({ home, plugins }) {
 
 			await emitter.emit('finish', toInstall);
 		} catch (err) {
+			logger.error(err.stack);
 			await emitter.emit('error', err);
 		}
 	});
@@ -672,7 +673,7 @@ async function pruneDir(dir, pluginsDir) {
 	// since this function can be called async, we want to avoid a race condition and only allow
 	// one of the prune operations to clean up the parent directories
 	await tailgate(`plugins_${dir}`, async () => {
-		while (dir !== pluginsDir) {
+		while (dir !== pluginsDir && fs.existsSync(dir)) {
 			await fs.remove(path.join(dir, '.DS_Store'));
 			if (fs.readdirSync(dir).length) {
 				break;
@@ -769,19 +770,17 @@ async function updateMonorepo({ fn, home, workspaces, yarn }) {
 
 		// run yarn
 		const args = [ yarn, '--no-lockfile', '--no-progress', '--non-interactive', '--production' ];
-		const cmd = process.platform === 'win32' ? args.shift() : process.execPath;
+		const command = process.platform === 'win32' ? args.shift() : process.execPath;
 		logger.log(`Plugins dir: ${highlight(pluginsDir)}`);
-		logger.log(`Executing: ${highlight(`${cmd} ${args.join(' ')}`)}`);
 
-		const child = await spawnNode({
+		const { child } = spawn({
+			command,
 			args,
-			nodeHome: expandPath(home, 'node'),
-			opts: {
+			options: {
 				cwd: pluginsDir,
 				stdio: 'pipe',
 				windowsHide: true
-			},
-			version: appcdCoreNodejs
+			}
 		});
 
 		await new Promise(resolve => {

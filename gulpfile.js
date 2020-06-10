@@ -254,6 +254,7 @@ async function linkPlugins() {
 	const linksDir = process.platform === 'win32'
 		? path.join(os.homedir(), 'AppData', 'Local', 'Yarn', 'Data', 'link')
 		: path.join(os.homedir(), '.config', 'yarn', 'link');
+
 	log(`Checking links: ${cyan(linksDir)}`);
 	scan(linksDir);
 };

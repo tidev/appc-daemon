@@ -78,6 +78,7 @@ const api = {
 		}
 
 		log(`Executing: ${highlight(`${process.execPath} ${appcdPath} ${args.join(' ')}`)}`);
+
 		return spawn(process.execPath, [ appcdPath, ...args ], {
 			ignoreExitCodes: true,
 			windowsHide: true,
@@ -97,6 +98,7 @@ const api = {
 		}
 
 		log(`Executing: ${highlight(`${process.execPath} ${appcdPath} ${args.join(' ')}`)}`);
+
 		const result = spawnSync(process.execPath, [ appcdPath, ...args ], {
 			ignoreExitCodes: true,
 			windowsHide: true,
@@ -128,6 +130,8 @@ const api = {
 		const child = this.runAppcd([ 'start', '--debug' ], opts, cfg);
 		isAppcdRunning = true;
 
+		log(`Spawn appcd in debug mode (pid ${child.pid})`);
+
 		const prom = new Promise((resolve, reject) => {
 			let stdout = '';
 			let stderr = '';
@@ -139,27 +143,33 @@ const api = {
 					resolve(child);
 				}
 				if (output) {
-					process.stdout.write(s);
+					testLogger('stdout').log(s.replace(/\r?\n$/, ''));
 				}
 			});
 
 			child.stderr.on('data', data => {
-				stderr += data.toString();
+				const s = data.toString();
+				stderr += s;
+				if (output) {
+					testLogger('stderr').log(s.replace(/\r?\n$/, ''));
+				}
 			});
 
 			child.on('close', code => {
 				isAppcdRunning = false;
+				log(`appcd exited (code ${code})`);
+
 				if (code) {
-					stdout && process.stdout.write(stdout);
-					stderr && process.stdout.write(stderr);
+					if (!output && stdout) {
+						testLogger('stdout').log(stdout);
+					}
+					if (!output && stderr) {
+						testLogger('stderr').log(stderr);
+					}
 					reject(new Error(`appcd exited (code ${code})`));
 				}
 			});
 		});
-
-		if (output) {
-			child.stderr.on('data', data => process.stdout.write(data.toString()));
-		}
 
 		await prom;
 	},
