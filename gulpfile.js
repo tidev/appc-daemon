@@ -665,7 +665,7 @@ function runLerna(args) {
 		execPath = process.execPath;
 	}
 	log(`Running ${execPath} ${args.join(' ')}`);
-	spawnSync(execPath, args, { env: process.env, stdio: 'inherit' });
+	spawnSync(execPath, args, { stdio: 'inherit' });
 }
 
 async function checkPackages({ skipSecurity } = {}) {
