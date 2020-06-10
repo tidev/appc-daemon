@@ -3039,7 +3039,7 @@ chalk@^3.0.0:
     ansi-styles "^4.1.0"
     supports-color "^7.1.0"
 
-chalk@^4.0.0:
+chalk@^4.0.0, chalk@^4.1.0:
   version "4.1.0"
   resolved "https://registry.yarnpkg.com/chalk/-/chalk-4.1.0.tgz#4e14870a618d9e2edd97dd8345fd9d9dc315646a"
   integrity sha512-qwx12AxXe2Q5xQ43Ac//I6v5aXTipYrSESdOgzrN+9XjgEpyjpKuvSGaN4qE93f7TQTlerQQ8S+EQ0EyDoVL1A==
@@ -3227,7 +3227,7 @@ cli-cursor@^3.1.0:
   dependencies:
     restore-cursor "^3.1.0"
 
-cli-kit@^0.13.0, cli-kit@^0.13.1, cli-kit@^0.13.2:
+cli-kit@^0.13.1, cli-kit@^0.13.2:
   version "0.13.2"
   resolved "https://registry.yarnpkg.com/cli-kit/-/cli-kit-0.13.2.tgz#355f4d6ba0c433f1b05d3b4bc54dc328db9438ad"
   integrity sha512-nl22oyT6KL8fCHIuaa/jRcYQGaVKxAp27pTtKsL/jrD/Jpy+AZuTlm8mY6+z7BpWDfuHID7m12jdjYGw9Xfmyg==
@@ -4762,9 +4762,9 @@ eslint-plugin-es@^3.0.0:
     regexpp "^3.0.0"
 
 eslint-plugin-import@^2.20.2:
-  version "2.21.1"
-  resolved "https://registry.yarnpkg.com/eslint-plugin-import/-/eslint-plugin-import-2.21.1.tgz#3398318e5e4abbd23395c4964ce61538705154c8"
-  integrity sha512-qYOOsgUv63vHof7BqbzuD+Ud34bXHxFJxntuAC1ZappFZXYbRIek3aJ7jc9i2dHDGDyZ/0zlO0cpioES265Lsw==
+  version "2.21.2"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-import/-/eslint-plugin-import-2.21.2.tgz#8fef77475cc5510801bedc95f84b932f7f334a7c"
+  integrity sha512-FEmxeGI6yaz+SnEB6YgNHlQK1Bs2DKLM+YF+vuTk5H8J9CLbJLtlPvRFgZZ2+sXiKAlN5dpdlrWOjK8ZoZJpQA==
   dependencies:
     array-includes "^3.1.1"
     array.prototype.flat "^1.2.3"
@@ -7676,7 +7676,7 @@ lead@^1.0.0:
   dependencies:
     flush-write-stream "^1.0.2"
 
-lerna@^3.22.0, lerna@^3.22.1:
+lerna@^3.22.1:
   version "3.22.1"
   resolved "https://registry.yarnpkg.com/lerna/-/lerna-3.22.1.tgz#82027ac3da9c627fd8bf02ccfeff806a98e65b62"
   integrity sha512-vk1lfVRFm+UuEFA7wkLKeSF7Iz13W+N/vFd48aW2yuS7Kv0RbNm2/qcDPV863056LMfkRlsEe+QYOw3palj5Lg==
@@ -9042,7 +9042,7 @@ node-forge@^0.9.1:
   resolved "https://registry.yarnpkg.com/node-forge/-/node-forge-0.9.1.tgz#775368e6846558ab6676858a4d8c6e8d16c677b5"
   integrity sha512-G6RlQt5Sb4GMBzXvhfkeFmbqR6MzhtnT7VTHuLadjkii3rdYHNdw0m8zA4BTxVIh68FicCQ2NSUANpsqkr9jvQ==
 
-node-gyp-build@^4.1.0, node-gyp-build@^4.2.2:
+node-gyp-build@^4.2.2:
   version "4.2.2"
   resolved "https://registry.yarnpkg.com/node-gyp-build/-/node-gyp-build-4.2.2.tgz#3f44b65adaafd42fb6c3d81afd630e45c847eb66"
   integrity sha512-Lqh7mrByWCM8Cf9UPqpeoVBBo5Ugx+RKu885GAzmLBVYjeywScxHXPGLa4JfYNZmcNGwzR0Glu5/9GaQZMFqyA==
@@ -11364,7 +11364,7 @@ snapdragon@^0.8.1:
     source-map-resolve "^0.5.0"
     use "^3.1.0"
 
-snooplogg@^2.1.0, snooplogg@^2.3.3:
+snooplogg@^2.3.3:
   version "2.3.3"
   resolved "https://registry.yarnpkg.com/snooplogg/-/snooplogg-2.3.3.tgz#5ff87d24e6dd4d59bb45f9c97372b45a64eaeb9d"
   integrity sha512-ibqjTxEjn4axSxl+bX17h71ioK/MN8xHdaLFNAkyqHvywOI5xqT7blyUm6ALPDYzfVNIe6Itr+61odaVSEU20A==
@@ -12957,34 +12957,26 @@ windows-release@^3.1.0:
   dependencies:
     execa "^1.0.0"
 
-windowslib@^2.1.1:
-  version "2.1.2"
-  resolved "https://registry.yarnpkg.com/windowslib/-/windowslib-2.1.2.tgz#e1985fe844e6f9f9d093f27aac7e675b37fa5c5d"
-  integrity sha512-f6tyF30o/S8PgtVhSzRI1PkB3VMAdZIs+5GuXfFzJ+7qcZsjLtRhWbSz5HLKaQB8pvWdA/RoJ3eZtflZMTxwwg==
+windowslib@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/windowslib/-/windowslib-3.0.0.tgz#0bcd7b9757faabb0747e5f29138864c8fe88721b"
+  integrity sha512-A+fnnqJCWrIv/wKIUY+1WNgMo8wd1umBu7HY6wt7L93jb6VTTbSB5wbWWn/y+6DhXXSIvgb0j8XWAHF4jj23zw==
   dependencies:
     appcd-fs "^1.1.10"
-    appcd-path "^1.1.9"
+    appcd-path "^2.0.0"
     appcd-subprocess "^3.0.2"
     appcd-util "^2.0.2"
-    cli-kit "^0.13.0"
-    winreglib "^1.0.5"
-    xmldom "^0.2.1"
+    cli-kit "^1.2.0"
+    winreglib "^2.0.0"
+    xmldom "^0.3.0"
 
-winreglib@^1.0.5:
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/winreglib/-/winreglib-1.0.5.tgz#a3ed6d3b0b8b1a2e9b84c46b0bd7ce4833487edf"
-  integrity sha512-mm7h162Tih+ymQHKgfs1YQagfUimHemm12QYAcFBxeAaX7WS6e6xdUl2wcwOMDK6ZFWxgM+EtqQOXlGpOdgKfg==
+winreglib@^2.0.0, winreglib@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/winreglib/-/winreglib-2.0.1.tgz#0049460b05a847cae160371039032d4bc37c006d"
+  integrity sha512-5byfBNGqCfokISoR82HE/B6fmPGNDgOKCTOMWNtis7KzguHsGQQE3fZDxs1XFOFqshD8wzMJqcm6pxqtOOFjpA==
   dependencies:
     napi-macros "^2.0.0"
-    node-gyp-build "^4.1.0"
-    snooplogg "^2.1.0"
-
-winreglib@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/winreglib/-/winreglib-2.0.0.tgz#267b1bd2ca78dca0162614607a3d52d92e052ab8"
-  integrity sha512-5qUNXNO0GlY3NIjvdd97wr/fcjYJ0/QlHQns82PDbbsznAPBxjpzehzYKuLK6tynGdRmLbBq+5XHXkcLm8pk2w==
-  dependencies:
-    napi-macros "^2.0.0"
+    node-gyp "^7.0.0"
     node-gyp-build "^4.2.2"
     snooplogg "^3.0.0"
 
@@ -13133,6 +13125,11 @@ xmldom@^0.2.1:
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/xmldom/-/xmldom-0.2.1.tgz#cac9465066f161e1c3302793ea4dbe59c518274f"
   integrity sha512-kXXiYvmblIgEemGeB75y97FyaZavx6SQhGppLw5TKWAD2Wd0KAly0g23eVLh17YcpxZpnFym1Qk/eaRjy1APPg==
+
+xmldom@^0.3.0:
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/xmldom/-/xmldom-0.3.0.tgz#e625457f4300b5df9c2e1ecb776147ece47f3e5a"
+  integrity sha512-z9s6k3wxE+aZHgXYxSTpGDo7BYOUfJsIRyoZiX6HTjwpwfS2wpQBQKa2fD+ShLyPkqDYo5ud7KitmLZ2Cd6r0g==
 
 xtend@^4.0.0, xtend@~4.0.0, xtend@~4.0.1:
   version "4.0.2"
