@@ -14,12 +14,15 @@
  * feat: Added additional documentation and examples to the help output for some commands.
  * feat: Show aliases in help for commands such as `config` and `pm`.
  * feat(status): Replaced active/inactive label with the plugin's current state.
+ * feat(status): Added plugin "uptime" column to list of plugins.
  * refactor: Updated to latest `AppcdConfig` usage where `save()` is now synchronous and we no
    longer need to set the config file to save to since it uses the same file path that was used to
    load the config.
  * refactor: Convert actions from arguments to subcommands.
  * refactor: Replaced `cli-table2` with `cli-table3`.
  * refactor(config): Do not show the banner for `config` related commands.
+ * refactor(status): Removed plugin "type" column from list of plugins.
+ * refactor(status): Replace user's home directory references in plugin and subprocess paths with `~`.
  * chore: Updated dependencies.
 
 # v3.2.0 (Jan 13, 2020)

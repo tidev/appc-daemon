@@ -8,11 +8,15 @@ export default {
 			{ createTable, createRequest, loadConfig },
 			{ createInstanceWithDefaults, StdioStream },
 			{ filesize, numberFormat, relativeTime },
+			os,
+			{ default: prettyMs },
 			semver
 		] = await Promise.all([
 			import('../common'),
 			import('appcd-logger'),
 			import('humanize'),
+			import('os'),
+			import('pretty-ms'),
 			import('semver')
 		]);
 
@@ -65,9 +69,11 @@ export default {
 				log(status.fs.tree);
 				log();
 
+				const homeRE = new RegExp(`^${os.homedir()}`);
+
 				// plugin information
 				if (status.plugins && status.plugins.registered.length) {
-					table = createTable('Plugin', 'Type', 'Path', 'Status', 'Active/Total Requests');
+					table = createTable('Plugin', 'Path', 'Status', 'Active/Total Requests');
 					for (const plugin of status.plugins.registered.sort((a, b) => a.name.localeCompare(b.name))) {
 						let status = 'Stopped';
 						switch (plugin.state) {
@@ -84,13 +90,16 @@ export default {
 						if (plugin.error) {
 							status += `${plugin.pid ? `, PID=${plugin.pid}` : ''}: ${plugin.error}`;
 						} else if (plugin.pid && plugin.type === 'external') {
-							status += `, PID=${plugin.pid || 'null'}`;
+							status += ` PID=${plugin.pid || 'null'}`;
+						}
+
+						if (plugin.pid && plugin.startTime) {
+							status += ` Uptime=${prettyMs(Date.now() - plugin.startTime)}`;
 						}
 
 						const row = [
 							`${plugin.name}@${plugin.version}`,
-							plugin.type,
-							plugin.path,
+							plugin.path.replace(homeRE, '~'),
 							status,
 							`${numberFormat(plugin.activeRequests, 0)} / ${numberFormat(plugin.totalRequests, 0)}`
 						];
@@ -122,8 +131,11 @@ export default {
 						if (subprocess.args.length) {
 							args = ' ' + subprocess.args
 								.map(a => {
-									if (typeof a === 'string' && a.indexOf(' ') !== -1) {
-										return `"${a}"`;
+									if (typeof a === 'string') {
+										a = a.replace(homeRE, '~');
+										if (a.indexOf(' ') !== -1) {
+											return `"${a}"`;
+										}
 									}
 									return a;
 								})
@@ -132,7 +144,7 @@ export default {
 
 						table.push([
 							highlight(subprocess.pid),
-							subprocess.command + args,
+							subprocess.command.replace(homeRE, '~') + args,
 							relativeTime(subprocess.startTime.getTime() / 1000)
 						]);
 					}
