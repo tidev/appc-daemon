@@ -97,6 +97,12 @@ export default class PluginBase extends EventEmitter {
 			stack: null,
 
 			/**
+			 * The timestamp the plugin was activated.
+			 * @type {Number}
+			 */
+			startTime: null,
+
+			/**
 			 * The number of milliseconds it took for the module to activate.
 			 * @type {Number}
 			 */
@@ -126,6 +132,7 @@ export default class PluginBase extends EventEmitter {
 					watch,
 					unwatch
 				},
+				logger: appcdLogger,
 				register: this.dispatcher.register.bind(this.dispatcher)
 			},
 
@@ -222,7 +229,8 @@ export default class PluginBase extends EventEmitter {
 		try {
 			const startTime = Date.now();
 			await this.onStart();
-			this.info.startupTime = Date.now() - startTime;
+			this.info.startTime = Date.now();
+			this.info.startupTime = this.info.startTime - startTime;
 			this.setState(states.STARTED);
 		} catch (e) {
 			this.setState(states.STOPPED);
@@ -268,6 +276,7 @@ export default class PluginBase extends EventEmitter {
 			this.info.error = e.message;
 			this.info.stack = e.stack;
 		} finally {
+			this.info.startTime = null;
 			this.deactivate();
 		}
 	}

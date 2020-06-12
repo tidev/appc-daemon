@@ -43,7 +43,7 @@
     "gulp-load-plugins": "^2.0.3",
     "gulp-plumber": "^1.2.1",
     "gulp-sourcemaps": "^2.6.5",
-    "mocha": "^7.2.0",
+    "mocha": "^8.0.1",
     "mocha-jenkins-reporter": "^0.4.3",
     "nyc": "^15.1.0",
     "sinon": "^9.0.2",
