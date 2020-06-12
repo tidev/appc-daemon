@@ -1,6 +1,6 @@
 {
   "name": "appcd-util",
-  "version": "2.0.2",
+  "version": "3.0.0",
   "description": "Various utility functions to support the Appc Daemon.",
   "main": "./dist/util",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
@@ -16,13 +16,13 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-fs": "^1.1.10",
+    "appcd-fs": "^2.0.0",
     "lodash.get": "^4.4.2",
     "semver": "^7.3.2",
     "source-map-support": "^0.5.19"
   },
   "devDependencies": {
-    "appcd-gulp": "^3.0.0"
+    "appcd-gulp": "^3.0.1"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
