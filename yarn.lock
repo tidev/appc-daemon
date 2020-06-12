@@ -1953,6 +1953,19 @@ anymatch@~3.1.1:
     normalize-path "^3.0.0"
     picomatch "^2.0.4"
 
+appcd-dispatcher@^2.0.3:
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/appcd-dispatcher/-/appcd-dispatcher-2.0.3.tgz#1e206cf2fc03cb110fb52589a69f2585d3f441d8"
+  integrity sha512-WmcHdKjIlLjhvjx1XDCQS6MEaQIeqYa3TAT5Tn0impvMaJXYZRwTsQuiB4bcjFpo/MYjL84R4a1plwn22B9kpg==
+  dependencies:
+    appcd-logger "^2.0.5"
+    appcd-response "^2.0.3"
+    gawk "^4.7.0"
+    path-to-regexp "^6.1.0"
+    pluralize "^8.0.0"
+    source-map-support "^0.5.16"
+    uuid "^3.3.3"
+
 appcd-dump-viewer@^1.1.4:
   version "1.1.4"
   resolved "https://registry.yarnpkg.com/appcd-dump-viewer/-/appcd-dump-viewer-1.1.4.tgz#b8a3867250873c4f703ff66b1ceab51c433057d4"
@@ -1967,11 +1980,90 @@ appcd-dump-viewer@^1.1.4:
     vue "^2.5.13"
     vuetify "^1.0.0"
 
+appcd-fs@^1.1.10:
+  version "1.1.10"
+  resolved "https://registry.yarnpkg.com/appcd-fs/-/appcd-fs-1.1.10.tgz#feb17938e2e3d8a09b565a75611203e000aae861"
+  integrity sha512-hLtsgLpR5T5HacraXPCjtNP8yDc9sdGx6cLie0PoutwvhqVJcpkD1LXRLRweKBM/O/Nwwyb8Ry3Um/HxCtMN9g==
+  dependencies:
+    source-map-support "^0.5.16"
+
+appcd-logger@^2.0.5:
+  version "2.0.5"
+  resolved "https://registry.yarnpkg.com/appcd-logger/-/appcd-logger-2.0.5.tgz#19f59f477fb5663046b1da003e2aa2ff6bc7b4c5"
+  integrity sha512-/YHgZEYBKijfp00TvpfCFmRMOqQ9NGRqJ3ydX513+3NztaNDpd5MPzKKwLnbAMEHTS+ttWEpCNpDMcWOyhRh6A==
+  dependencies:
+    snooplogg "^2.3.3"
+    source-map-support "^0.5.16"
+
+appcd-nodejs@^3.0.2:
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/appcd-nodejs/-/appcd-nodejs-3.0.2.tgz#a341b7c94d7b9e85856d3e4d45521128933b4955"
+  integrity sha512-zsT8vrjs+dS6/ch0zJarrSP5IOuTRcHoKaWbpHfpVfu0nCQqjjCHzfKEMjhnoJeekIJlU17o0mXrvRo82dQ9+g==
+  dependencies:
+    appcd-fs "^1.1.10"
+    appcd-logger "^2.0.5"
+    appcd-request "^2.2.0"
+    appcd-util "^2.0.2"
+    fs-extra "^8.1.0"
+    pluralize "^8.0.0"
+    progress "^2.0.3"
+    source-map-support "^0.5.16"
+    tar-stream "^2.1.0"
+    yauzl "^2.10.0"
+
 appcd-path@^1.1.10, appcd-path@^1.1.9:
   version "1.1.10"
   resolved "https://registry.yarnpkg.com/appcd-path/-/appcd-path-1.1.10.tgz#62d8b61a1e0394d613958488e59acff410cede2a"
   integrity sha512-SHVMoAjhwJIYkqrP3P8JdKGNOOfK9TTsGnXHJ8/FprmvWEvv7p7NbUCPX6GcTahF46QrMIoAqEUeKzO744bd9Q==
   dependencies:
+    source-map-support "^0.5.16"
+
+appcd-request@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/appcd-request/-/appcd-request-2.2.0.tgz#2955e6d7fb060a13eae1a2978b30ef881ace10be"
+  integrity sha512-IdDl0TzR1h0sjBeEEUJ9RdOeYwcC09ydoU06IflqmvQkaGfB5lCM+GLJQLRFdXCwAYx/MjY1AK3M+DB5as6PHA==
+  dependencies:
+    appcd-dispatcher "^2.0.3"
+    appcd-fs "^1.1.10"
+    appcd-logger "^2.0.5"
+    humanize "^0.0.9"
+    request "^2.88.0"
+    source-map-support "^0.5.16"
+
+appcd-response@^2.0.3:
+  version "2.0.4"
+  resolved "https://registry.yarnpkg.com/appcd-response/-/appcd-response-2.0.4.tgz#1c5b4d3066576260275a8471d2f1b6a570e383e6"
+  integrity sha512-9QzB7XpqhuSUc8mToIl5zqgzFrfC87oX30smmhUDOlllFDuxOQmOKLWWHtfgDOLyoPNidHLIVhLxiQNklzKaoQ==
+  dependencies:
+    appcd-fs "^1.1.10"
+    appcd-path "^1.1.9"
+    source-map-support "^0.5.16"
+    sprintf-js "^1.1.2"
+
+appcd-subprocess@^3.0.2:
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/appcd-subprocess/-/appcd-subprocess-3.0.2.tgz#b860846fe43767c5574eabfccfaa3ad119796e9f"
+  integrity sha512-iABedfJHOlVXDWQGr1KnBV6HTKwj+440iZsVVXplLwIl/5rdm3e/wDyaBp2W7kVZLWvQbsLLUv+mg5eaGld+yA==
+  dependencies:
+    appcd-dispatcher "^2.0.3"
+    appcd-logger "^2.0.5"
+    appcd-nodejs "^3.0.2"
+    appcd-path "^1.1.9"
+    appcd-response "^2.0.3"
+    appcd-util "^2.0.2"
+    gawk "^4.7.0"
+    ps-tree "^1.2.0"
+    source-map-support "^0.5.16"
+    which "^2.0.2"
+
+appcd-util@^2.0.2:
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/appcd-util/-/appcd-util-2.0.2.tgz#8c524fe78ba6748f6bcf56147be21265caee8ca1"
+  integrity sha512-57fIlDxdrENiist+uBv/1GsyQxC2vJhldxmXk5O+ue4WMtD8BdLDTmy4zX3aXtiFDGF4bTc4Hw1gEHauyWqHSA==
+  dependencies:
+    appcd-fs "^1.1.10"
+    lodash.get "^4.4.2"
+    semver "^7.1.1"
     source-map-support "^0.5.16"
 
 append-buffer@^1.0.2:
