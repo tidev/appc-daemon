@@ -174,7 +174,7 @@ are resolved with the result.
 import { tailgate } from 'appcd-util';
 
 const fn = () => {
-	return tailgate('my tailgate', () {
+	return tailgate('my tailgate', async () => {
 		console.log('I will only be called once');
 	});
 };

@@ -35,7 +35,7 @@
     "appcd-telemetry": "^4.0.0",
     "appcd-util": "^3.0.0",
     "bin-links": "^2.1.2",
-    "cli-kit": "^1.2.0",
+    "cli-kit": "^1.2.2",
     "fs-extra": "^9.0.1",
     "gawk": "^4.7.1",
     "global-modules": "^2.0.0",
@@ -70,6 +70,6 @@
       "@appcd/plugin-titanium",
       "@appcd/plugin-windows"
     ],
-    "node": "12.18.0"
+    "node": "12.18.1"
   }
 }

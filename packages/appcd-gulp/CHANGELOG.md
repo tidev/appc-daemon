@@ -1,3 +1,7 @@
+# v3.1.0
+
+ * feat: Added Babel config for Node 14.
+
 # v3.0.1 (Jun 12, 2020)
 
  * chore: Updated dependencies.
