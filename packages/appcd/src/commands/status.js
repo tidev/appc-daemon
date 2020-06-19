@@ -7,7 +7,7 @@ export default {
 		const [
 			{ createTable, createRequest, loadConfig },
 			{ createInstanceWithDefaults, StdioStream },
-			{ filesize, numberFormat, relativeTime },
+			{ filesize, numberFormat },
 			os,
 			{ default: prettyMs },
 			semver
@@ -65,7 +65,9 @@ export default {
 				log(status.fs.tree);
 				log();
 
+				// eslint-disable-next-line
 				const homeRE = new RegExp(`^${os.homedir()}`);
+				const now = Date.now();
 
 				// plugin information
 				log(note('Plugins'));
@@ -139,7 +141,7 @@ export default {
 						table.push([
 							highlight(subprocess.pid),
 							subprocess.command.replace(homeRE, '~') + args,
-							relativeTime(subprocess.startTime.getTime() / 1000)
+							prettyMs(now - subprocess.startTime.getTime())
 						]);
 					}
 					log(table.toString());
@@ -156,7 +158,7 @@ export default {
 					`${status.system.loadavg[status.system.loadavg.length - 1].toFixed(1)}%`,
 					`${filesize(status.memory.heapUsed)} / ${filesize(status.memory.heapTotal)}`,
 					filesize(status.memory.rss),
-					prettyMs(status.uptime * 1000)
+					prettyMs(status.uptime)
 				]);
 				if (status.plugins && status.plugins.registered.length) {
 					for (const plugin of status.plugins.registered.sort((a, b) => a.name.localeCompare(b.name))) {
@@ -167,7 +169,7 @@ export default {
 								`${plugin.stats.cpu.toFixed(1)}%`,
 								`${filesize(plugin.stats.heapUsed)} / ${filesize(plugin.stats.heapTotal)}`,
 								filesize(plugin.stats.rss),
-								prettyMs(Date.now() - plugin.startTime)
+								prettyMs(now - plugin.startTime)
 							]);
 						}
 					}
