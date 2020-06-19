@@ -1,6 +1,7 @@
 import Agent from 'appcd-agent';
 import gawk from 'gawk';
 import os from 'os';
+import prettyMs from 'pretty-ms';
 import Response, { codes } from 'appcd-response';
 import appcdLogger from './logger';
 
@@ -47,7 +48,7 @@ export default class StatusMonitor extends DataServiceDispatcher {
 			pid:          process.pid,
 			memory:       undefined,
 			startupTime:  null,
-			uptime:       process.uptime(),
+			uptime:       process.uptime() * 1000,
 
 			process: {
 				execPath: process.execPath,
@@ -92,7 +93,7 @@ export default class StatusMonitor extends DataServiceDispatcher {
 						heapUsed:  stats.heapUsed,
 						rss:       stats.rss
 					},
-					uptime: process.uptime(),
+					uptime: process.uptime() * 1000,
 					system: {
 						loadavg: os.loadavg(),
 						memory: {
@@ -226,7 +227,7 @@ export default class StatusMonitor extends DataServiceDispatcher {
 			`CPU: ${cpuUsage}  `
 			+ `Heap:${heapUsage}  ` // purposely don't put a space after the ':', heapUsage is already left padded
 			+ `RSS: ${rssUsage}  `
-			+ `Uptime: ${note(`${(this.data.uptime / 60).toFixed(2)}m`)}`
+			+ `Uptime: ${note(prettyMs(this.data.uptime))}`
 		);
 	}
 }

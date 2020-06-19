@@ -5,6 +5,7 @@
  * BREAKING CHANGE: Bumped core Node.js version to 12.18.1. This affects all plugins.
    [(DAEMON-319)](https://jira.appcelerator.org/browse/DAEMON-319)
  * BREAKING CHANGE: Main file exports library instead of the main entry point.
+ * BREAKING CHANGE(status-monitor): Daemon uptime has changed from seconds to milliseconds.
  * feat: Added plugin management functions. This feature has removed the need for
    `appcd-default-plugins` and the associated `plugins.installDefault` config setting.
    [(DAEMON-311)](https://jira.appcelerator.org/browse/DAEMON-311)
@@ -15,6 +16,7 @@
  * fix(websocket-session): Removed `message` from response if `undefined` so that msgpack cannot
    convert it to `null`.
  * fix: Cast the process id to a string when writing the pid file.
+ * fix(status-monitor): Fixed bug where status was reporting incorrect uptime in debug log.
  * chore: Updated dependencies.
 
 # v3.2.0 (Jan 13, 2020)
