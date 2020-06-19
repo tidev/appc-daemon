@@ -166,6 +166,10 @@ exports.upgrade = async function upgrade() {
 	let results;
 	let recheck = true;
 
+	// `gulp upgrade` just runs `yarn upgrade`... it does not update the dependency versions in the packages
+
+	// `gulp upgrade -u` will update the package.json, run yarn, then run yarn upgrade
+
 	if (process.argv.includes('-u')) {
 		results = await checkPackages({ skipSecurity: true });
 		const { outOfDate } = results;
@@ -178,9 +182,10 @@ exports.upgrade = async function upgrade() {
 		}
 	}
 
-	await upgradeAllPackages();
+	// at this point, all of our direct dependencies should be up-to-date, but deep dependencies
+	// aren't, so we need to run `yarn upgrade`
 
-	runLerna([ 'bootstrap' ]);
+	await run('yarn', [ 'upgrade' ], { cwd: process.cwd(), shell: true });
 
 	if (recheck) {
 		results = await checkPackages({ skipSecurity: true });
@@ -1245,6 +1250,9 @@ function hlVer(toVer, fromVer) {
 	return (toMatch && toMatch[1] || '') + version.join('.') + tag();
 }
 
+/**
+ * Updates all package.json files with out-of-date dependencies.
+ */
 async function upgradeDeps(list) {
 	const components = {};
 	for (const pkg of list) {
@@ -1299,59 +1307,6 @@ async function upgradeDeps(list) {
 
 		fs.writeFileSync(pkgJsonFile, JSON.stringify(pkgJson, null, 2) + '\n');
 	}
-}
-
-function upgradeAllPackages() {
-	const pkgs = {};
-
-	globule
-		.find([ './package.json', 'packages/*/package.json' ])
-		.forEach(file => {
-			const pkgJsonFile = path.resolve(process.cwd(), file);
-			const json = JSON.parse(fs.readFileSync(pkgJsonFile));
-			pkgs[json.name] = {
-				file,
-				json
-			};
-		});
-
-	return Object
-		.keys(pkgs)
-		.sort()
-		.reduce((promise, name) => {
-			const pkg = pkgs[name];
-			const newPkgJson = {
-				name: pkg.json.name
-			};
-			if (pkg.json.dependencies) {
-				newPkgJson.dependencies = {};
-				for (const [ name, ver ] of Object.entries(pkg.json.dependencies)) {
-					if (!pkgs[name]) {
-						newPkgJson.dependencies[name] = ver;
-					}
-				}
-			};
-			if (pkg.json.devDependencies) {
-				newPkgJson.devDependencies = {};
-				for (const [ name, ver ] of Object.entries(pkg.json.devDependencies)) {
-					if (!pkgs[name]) {
-						newPkgJson.devDependencies[name] = ver;
-					}
-				}
-			};
-
-			fs.writeFileSync(pkg.file, JSON.stringify(newPkgJson, null, '  ') + '\n');
-
-			return promise
-				.then(() => run('yarn', [ 'upgrade' ], { cwd: path.dirname(pkg.file), shell: true }))
-				.catch(err => {
-					fs.writeFileSync(pkg.file, JSON.stringify(pkg.json, null, '  ') + '\n');
-					throw err;
-				})
-				.then(() => {
-					fs.writeFileSync(pkg.file, JSON.stringify(pkg.json, null, '  ') + '\n');
-				});
-		}, Promise.resolve());
 }
 
 function computeSloc(type) {
