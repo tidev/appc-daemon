@@ -13,7 +13,6 @@
    [(DAEMON-311)](https://jira.appcelerator.org/browse/DAEMON-311)
  * feat: Added additional documentation and examples to the help output for some commands.
  * feat: Show aliases in help for commands such as `config` and `pm`.
- * feat(status): Replaced active/inactive label with the plugin's current state.
  * feat(status): Added new "Health" section to status output.
  * refactor: Updated to latest `AppcdConfig` usage where `save()` is now synchronous and we no
    longer need to set the config file to save to since it uses the same file path that was used to
@@ -21,7 +20,7 @@
  * refactor: Convert actions from arguments to subcommands.
  * refactor: Replaced `cli-table2` with `cli-table3`.
  * refactor(config): Do not show the banner for `config` related commands.
- * refactor(status): Removed plugin "type" column from list of plugins.
+ * refactor(status): Cleaned up plugin list.
  * refactor(status): Replace user's home directory references in plugin and subprocess paths with `~`.
  * chore: Updated dependencies.
 

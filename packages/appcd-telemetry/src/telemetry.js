@@ -149,17 +149,14 @@ export default class Telemetry extends Dispatcher {
 				throw new AppcdError(codes.TELEMETRY_DISABLED);
 			}
 
-			let { event } = ctx.request;
+			let { app, event } = ctx.request;
 
 			if (!event || typeof event !== 'string') {
 				throw new AppcdError(codes.BAD_REQUEST, 'Invalid telemetry event');
 			}
 
-			if (!/^appcd[.-]/.test(event) && !/^ti\.(start|end)$/.test(event)) {
-				event = `appcd.${event}`;
-			}
-
 			const data = { ...ctx.request };
+			delete data.app;
 			delete data.event;
 			delete data.params;
 
@@ -171,7 +168,7 @@ export default class Telemetry extends Dispatcher {
 				data,
 				event,
 				os: 		this.osInfo,
-				app:		this.app,
+				app:		app || this.app,
 				timestamp: 	Date.now(),
 				version: 	'4',
 				hardware: {
@@ -185,6 +182,8 @@ export default class Telemetry extends Dispatcher {
 					version:        this.version
 				}
 			};
+
+			// TODO: SCRUB data.payload, data.message, data.error
 
 			const filename = path.join(this.eventsDir, `${id}.json`);
 

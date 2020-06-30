@@ -1,3 +1,7 @@
+# v3.1.0
+
+ * feat: Added config file live reloading.
+
 # v3.0.0 (Jun 12, 2020)
 
  * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.

@@ -62,7 +62,7 @@ export default {
 				table.push([ 'Node.js FS Watchers', highlight(status.fs.fswatchers) ]);
 				table.push([ 'Client Watchers',     highlight(status.fs.watchers) ]);
 				log(table.toString());
-				log(status.fs.tree);
+				log(status.fs.tree.replace(/└/g, '╰'));
 				log();
 
 				// eslint-disable-next-line
@@ -72,7 +72,10 @@ export default {
 				// plugin information
 				log(note('Plugins'));
 				if (status.plugins && status.plugins.registered.length) {
-					table = createTable('Name', 'Path', 'Status', 'Active/Total Requests');
+					const cols = [ 'Name', 'Path', 'State', 'Active/Total\nRequests', 'Issues' ];
+					const rows = [];
+					let issues = false;
+
 					for (const plugin of status.plugins.registered.sort((a, b) => a.name.localeCompare(b.name))) {
 						let status = 'Stopped';
 						switch (plugin.state) {
@@ -86,9 +89,7 @@ export default {
 								status = 'Stopping';
 								break;
 						}
-						if (plugin.error) {
-							status += `${plugin.pid ? `, PID=${plugin.pid}` : ''}: ${plugin.error}`;
-						} else if (plugin.pid && plugin.type === 'external') {
+						if (plugin.pid && plugin.type === 'external') {
 							status += ` PID=${plugin.pid || 'null'}`;
 						}
 
@@ -99,10 +100,17 @@ export default {
 							`${numberFormat(plugin.activeRequests, 0)} / ${numberFormat(plugin.totalRequests, 0)}`
 						];
 
+						if (plugin.error) {
+							issues = true;
+							row.push(plugin.error);
+						} else {
+							row.push('');
+						}
+
 						if (plugin.supported) {
 							row[0] = highlight(row[0]);
 							if (plugin.error) {
-								row[3] = alert(row[3]);
+								row[4] = alert(row[4]);
 							}
 						} else {
 							for (let i = 0; i < row.length; i++) {
@@ -110,6 +118,18 @@ export default {
 							}
 						}
 
+						rows.push(row);
+					}
+
+					if (!issues) {
+						cols.pop();
+					}
+
+					table = createTable.apply(null, cols);
+					for (const row of rows) {
+						if (!issues) {
+							row.pop();
+						}
 						table.push(row);
 					}
 					log(table.toString());

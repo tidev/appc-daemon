@@ -1,3 +1,8 @@
+# v5.0.0
+
+ * BREAKING CHANGE: Event names are no longer prefixed with `appcd-`.
+ * chore: Updated dependencies.
+
 # v4.0.0 (Jun 12, 2020)
 
  * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.

@@ -48,7 +48,7 @@ export default {
 
 				for (const ver of Object.values(majors).sort(semver.rcompare)) {
 					latestVersions.push(pkg.versions[ver]);
-					if (!pkg.supported) {
+					if (!pkg.versions[ver].supported) {
 						unsupported++;
 					}
 				}

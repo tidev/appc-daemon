@@ -1,7 +1,8 @@
+import appcdLogger from 'appcd-logger';
 import Dispatcher, { DispatcherError } from 'appcd-dispatcher';
 import PluginBase from './plugin-base';
 
-import { codes } from 'appcd-response';
+const { highlight } = appcdLogger.styles;
 
 /**
  * Internal plugin implementation logic.
@@ -11,16 +12,22 @@ export default class InternalPlugin extends PluginBase {
 	 * Dispatches a request to the plugin's dispatcher.
 	 *
 	 * @param {Object} ctx - A dispatcher context.
-	 * @param {Function} next - A function to continue to next dispatcher route.
 	 * @returns {Promise}
 	 * @access public
 	 */
-	async dispatch(ctx, next) {
+	async dispatch(ctx) {
+		const startTime = new Date();
+		this.appcdLogger.log('Sending request: %s', highlight(ctx.path));
+
 		try {
-			return this.dispatcher.call(ctx.path, ctx);
+			ctx = await this.dispatcher.call(ctx.path, ctx);
+			this.logRequest({ ctx, startTime });
+			return ctx;
 		} catch (err) {
-			if (err instanceof DispatcherError && err.statusCode === codes.NOT_FOUND) {
-				return next();
+			if (err instanceof DispatcherError && err.status === 404) {
+				this.appcdLogger.log('Plugin did not have handler, passing to next route');
+			} else {
+				this.logRequest({ ctx, err, startTime });
 			}
 			throw err;
 		}
@@ -42,18 +49,7 @@ export default class InternalPlugin extends PluginBase {
 			throw err;
 		}
 
-		try {
-			const { response } = await Dispatcher.call('/appcd/config', { type: 'subscribe' });
-			response.on('data', response => {
-				if (response.type === 'event') {
-					this.config = response.message;
-					this.configSubscriptionId = response.sid;
-				}
-			});
-		} catch (err) {
-			this.logger.warn('Failed to subscribe to config');
-			this.logger.warn(err);
-		}
+		await this.init();
 	}
 
 	/**
