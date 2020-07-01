@@ -13,7 +13,7 @@ import path from 'path';
 import request from 'appcd-request';
 import Response, { AppcdError, codes, i18n } from 'appcd-response';
 
-import { arch, osInfo } from 'appcd-util';
+import { arch, osInfo, redact } from 'appcd-util';
 import { expandPath } from 'appcd-path';
 import { isDir } from 'appcd-fs';
 import { v4 as uuidv4 } from 'uuid';
@@ -165,7 +165,7 @@ export default class Telemetry extends Dispatcher {
 			// spec: https://techweb.axway.com/confluence/display/analytics/Analytics+JSON+Payload+V4
 			const payload = {
 				id,
-				data,
+				data:       redact(data),
 				event,
 				os: 		this.osInfo,
 				app:		app || this.app,
@@ -182,8 +182,6 @@ export default class Telemetry extends Dispatcher {
 					version:        this.version
 				}
 			};
-
-			// TODO: SCRUB data.payload, data.message, data.error
 
 			const filename = path.join(this.eventsDir, `${id}.json`);
 

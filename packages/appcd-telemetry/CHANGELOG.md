@@ -1,6 +1,7 @@
 # v5.0.0
 
  * BREAKING CHANGE: Event names are no longer prefixed with `appcd-`.
+ * feat: Scrub potentially sensitive data in telemetry data and error messages.
  * chore: Updated dependencies.
 
 # v4.0.0 (Jun 12, 2020)

@@ -654,6 +654,77 @@ describe('util', () => {
 		});
 	});
 
+	describe.only('redact()', () => {
+		it('should error if options are invalid', () => {
+			expect(() => {
+				util.redact({}, 'foo');
+			}).to.throw(TypeError, 'Expected options to be an object');
+
+			expect(() => {
+				util.redact({}, 123);
+			}).to.throw(TypeError, 'Expected options to be an object');
+		});
+
+		it('should error if props is invalid', () => {
+			expect(() => {
+				util.redact({}, { props: 'foo' });
+			}).to.throw(TypeError, 'Expected props to be a set or array of strings');
+
+			expect(() => {
+				util.redact({}, { props: 123 });
+			}).to.throw(TypeError, 'Expected props to be a set or array of strings');
+
+			expect(() => {
+				util.redact({}, { props: [ 123 ] });
+			}).to.throw(TypeError, 'Expected props to be a set or array of strings');
+
+			expect(() => {
+				util.redact({}, { props: [ {} ] });
+			}).to.throw(TypeError, 'Expected props to be a set or array of strings');
+
+			expect(() => {
+				util.redact({}, { props: new Set([ 123 ]) });
+			}).to.throw(TypeError, 'Expected props to be a set or array of strings');
+
+			expect(() => {
+				util.redact({}, { props: new Set([ {} ]) });
+			}).to.throw(TypeError, 'Expected props to be a set or array of strings');
+		});
+
+		it('should error if replacements is invalid', () => {
+			expect(() => {
+				util.redact({}, { replacements: 'foo' });
+			}).to.throw(TypeError, 'Expected replacements to be an array of replace arguments');
+		});
+
+		it('should redact undefined value', () => {
+			expect(util.redact()).to.equal(undefined);
+		});
+
+		it('should redact null value', () => {
+			expect(util.redact(null)).to.equal(null);
+		});
+
+		it('should redact a string by trigger word', () => {
+			expect(util.redact('my password is 123456')).to.equal('<REDACTED>');
+		});
+
+		it('should redact a property', () => {
+			expect(util.redact({
+				good: 'hi',
+				bad: 'go away'
+			}, { props: [ 'bad' ] })).to.deep.equal({
+				good: 'hi',
+				bad: '<REDACTED>'
+			});
+		});
+
+		it('should redact part of a string', () => {
+			expect(util.redact(`${process.env.HOME}/foo/bar`)).to.equal('~/foo/bar');
+			expect(util.redact(`Hello! My name is ${process.env.USER}`)).to.equal('Hello! My name is <REDACTED>');
+		});
+	});
+
 	describe('sha1()', () => {
 		it('should hash a string', () => {
 			const h1 = util.sha1('foo');

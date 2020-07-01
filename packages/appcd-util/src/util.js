@@ -508,6 +508,115 @@ export function randomBytes(howMany) {
 }
 
 /**
+ * A lookup of various properties that must be redacted during log message serialization.
+ * @type {Array.<String|RegExp>}
+ */
+const mandatoryRedactedProps = [
+	/clientsecret/i,
+	/password/i
+];
+
+/**
+ * A list of regexes that will trigger the entire string to be redacted.
+ * @type {Array.<String|RegExp>}
+ */
+const mandatoryRedactionTriggers = [
+	/password/i
+];
+
+/**
+ * A list of string replacement arguments.
+ * @type {Array.<Array|String>}
+ */
+const mandatoryReplacements = [
+	[ process.env.HOME, '~' ],
+	process.env.USER
+];
+
+/**
+ * Scrubs any potentially sensitive data from a value. If the source is an object, it will be
+ * mutated. Redacted properties or elements will not be removed.
+ *
+ * @param {*} data - The source object to copy from.
+ * @param {Object} [opts] - Various options.
+ * @param {Array|Set} [opts.props] - A list of properties to redact.
+ * @param {String} [opts.redacted="<REDACTED>"] - The string to replace redacted words with.
+ * @param {Array|Set} [opts.replacements] - A list of replacement criteria and an optional value.
+ * @param {Array|Set} [opts.triggers] - A list of keywords that cause an entire string to be
+ * redacted.
+ * @returns {*}
+ */
+export function redact(data, opts = {}) {
+	if (!opts || typeof opts !== 'object') {
+		throw new TypeError('Expected options to be an object');
+	}
+
+	const init = (key, value) => {
+		if (Array.isArray(opts[key]) || opts[key] instanceof Set) {
+			for (const item of opts[key]) {
+				if (item && typeof item === 'string') {
+					value.push(new Function('s', `return s === ${JSON.stringify(item.toLowerCase())}`));
+				} else if (item instanceof RegExp) {
+					value.push(item.test.bind(item));
+				} else {
+					throw new TypeError(`Expected ${key} to be a set or array of strings or regexes`);
+				}
+			}
+		} else if (opts[key]) {
+			throw new TypeError(`Expected ${key} to be a set or array of strings or regexes`);
+		}
+		return value;
+	};
+
+	const redacted = opts.redacted || '<REDACTED>';
+	const props = init('props', mandatoryRedactedProps.map(re => re.test.bind(re)));
+	const triggers = init('triggers', mandatoryRedactionTriggers.map(re => re.test.bind(re)));
+
+	let replacements = mandatoryReplacements;
+	if (Array.isArray(opts.replacements) || opts.replacements instanceof Set) {
+		replacements = replacements.concat(opts.replacements);
+	} else if (opts.replacements) {
+		throw new TypeError('Expected replacements to be an array of replace arguments');
+	}
+	replacements = replacements.map(replacement => {
+		let [ a, b = redacted ] = Array.isArray(replacement) ? replacement : [ replacement ];
+		if (!(a instanceof RegExp)) {
+			a = new RegExp(a, 'g');
+		}
+		return s => s.replace(a, b);
+	});
+
+	return (function scrub(src) {
+		if (Array.isArray(src)) {
+			src.forEach(scrub);
+		} else if (src && typeof src === 'object') {
+			for (const [ key, value ] of Object.entries(src)) {
+				let match = false;
+				for (const test of props) {
+					if (match = test(key)) {
+						src[key] = redacted;
+						break;
+					}
+				}
+				if (!match) {
+					src[key] = scrub(value);
+				}
+			}
+		} else if (src && typeof src === 'string') {
+			for (const replace of replacements) {
+				src = replace(src);
+			}
+			for (const test of triggers) {
+				if (test(src)) {
+					return redacted;
+				}
+			}
+		}
+		return src;
+	}(data));
+}
+
+/**
  * Returns the sha1 of the input string.
  *
  * @param {String} str - The string to hash.
