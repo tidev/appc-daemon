@@ -738,7 +738,7 @@ describe('util', () => {
 		});
 
 		it('should redact part of a string', () => {
-			expect(util.redact(`${process.env.HOME}/foo/bar`)).to.equal('~/foo/bar');
+			expect(util.redact(`${process.env.HOME}/foo/bar`)).to.equal('<HOME>/foo/bar');
 			expect(util.redact(`Hello! My name is ${process.env.USER}`)).to.equal('Hello! My name is <REDACTED>');
 		});
 
@@ -774,7 +774,7 @@ describe('util', () => {
 				{ user: '<REDACTED>', password: '<REDACTED>', email: '<REDACTED>' },
 				'Welcome <REDACTED>!',
 				123,
-				[ '~/foo/bar' ]
+				[ '<HOME>/foo/bar' ]
 			]);
 		});
 	});

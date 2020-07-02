@@ -27,7 +27,7 @@ describe('appcd config', function () {
 			const { status, stdout, stderr } = this.runAppcdSync([ 'config', 'get' ], {}, defaultConfig);
 
 			expect(status).to.equal(1);
-			expect(stripColors(stdout.toString())).to.match(/^Appcelerator Daemon, version \d+\.\d+\.\d+\nCopyright \(c\) 2015-\d{4}, Axway, Inc\. All Rights Reserved\./);
+			expect(stripColors(stdout.toString())).to.match(/^Appcelerator Daemon, version .+\nCopyright \(c\) 2015-\d{4}, Axway, Inc\. All Rights Reserved\./);
 			expect(stripColors(stderr.toString().split('\n\n')[0])).to.equal('SyntaxError: Failed to load config file: Unexpected token { in JSON at position 1');
 		}));
 
@@ -37,7 +37,7 @@ describe('appcd config', function () {
 			const { status, stdout, stderr } = this.runAppcdSync([ 'start' ], {}, defaultConfig);
 
 			expect(status).to.equal(1);
-			expect(stripColors(stdout.toString())).to.match(/^Appcelerator Daemon, version \d+\.\d+\.\d+\nCopyright \(c\) 2015-\d{4}, Axway, Inc\. All Rights Reserved\./);
+			expect(stripColors(stdout.toString())).to.match(/^Appcelerator Daemon, version .+\nCopyright \(c\) 2015-\d{4}, Axway, Inc\. All Rights Reserved\./);
 			expect(stripColors(stderr.toString().split('\n\n')[0])).to.equal('SyntaxError: Failed to load config file: Unexpected token { in JSON at position 1');
 		}));
 

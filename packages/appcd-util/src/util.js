@@ -529,7 +529,7 @@ const mandatoryRedactionTriggers = [
  * @type {Array.<Array|String>}
  */
 const mandatoryReplacements = [
-	[ process.env.HOME, '~' ],
+	[ process.env.HOME, '<HOME>' ],
 	process.env.USER,
 	/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g // email address
 ];

@@ -384,7 +384,7 @@ export default class ExternalPlugin extends PluginBase {
 
 		await this.init();
 
-		if (this.config.plugins?.autoReload) {
+		if (this.config.plugins?.autoReload !== false) {
 			try {
 				const { directories, path: pluginPath } = this.plugin;
 				if (directories.size) {
