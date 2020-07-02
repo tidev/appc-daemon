@@ -376,8 +376,8 @@ describe('appcd config', function () {
 					expect(fs.existsSync(configFile)).to.be.false;
 					const { status, stdout } = this.runAppcdSync([ 'config', 'set', 'appcd-test', 'it works!' ]);
 
-					expect(status).to.equal(0);
 					expect(stripColors(stdout.toString().trim())).to.equal('OK');
+					expect(status).to.equal(0);
 
 					expect(fs.existsSync(configFile)).to.be.true;
 					expect(fs.readJsonSync(configFile)).to.deep.equal({
@@ -394,8 +394,8 @@ describe('appcd config', function () {
 					expect(fs.existsSync(configFile)).to.be.false;
 					const { status, stdout } = this.runAppcdSync([ 'config', '--json', 'set', 'appcd-test', 'it works!' ]);
 
-					expect(status).to.equal(0);
 					expect(JSON.parse(stdout)).to.equal('OK');
+					expect(status).to.equal(0);
 
 					expect(fs.existsSync(configFile)).to.be.true;
 					expect(fs.readJsonSync(configFile)).to.deep.equal({

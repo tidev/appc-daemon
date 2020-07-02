@@ -221,13 +221,7 @@ export function loadConfig({ config, configFile } = {}) {
 	const cfg = new AppcdConfig({ data: config, schema });
 
 	// load the user-defined config file
-	try {
-		cfg.load(expandPath(configFile || path.join(cfg.get('home'), 'config.json')));
-	} catch (e) {
-		if (e.code !== 'ENOENT') {
-			throw e;
-		}
-	}
+	cfg.load(expandPath(configFile || path.join(cfg.get('home'), 'config.json')), { graceful: true });
 
 	return cfg;
 }

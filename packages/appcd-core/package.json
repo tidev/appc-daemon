@@ -1,6 +1,6 @@
 {
   "name": "appcd-core",
-  "version": "3.2.0",
+  "version": "4.0.0-dev",
   "description": "Appc Daemon server implementation.",
   "main": "./dist/index",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",

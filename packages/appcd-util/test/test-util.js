@@ -654,7 +654,7 @@ describe('util', () => {
 		});
 	});
 
-	describe.only('redact()', () => {
+	describe('redact()', () => {
 		it('should error if options are invalid', () => {
 			expect(() => {
 				util.redact({}, 'foo');
@@ -695,6 +695,10 @@ describe('util', () => {
 			expect(() => {
 				util.redact({}, { replacements: 'foo' });
 			}).to.throw(TypeError, 'Expected replacements to be an array of replace arguments');
+
+			expect(() => {
+				util.redact({}, { replacements: [ 123 ] });
+			}).to.throw(TypeError, 'Expected replacements to be an array of replace arguments');
 		});
 
 		it('should redact undefined value', () => {
@@ -709,19 +713,69 @@ describe('util', () => {
 			expect(util.redact('my password is 123456')).to.equal('<REDACTED>');
 		});
 
+		it('should passthrough non-string and non-object based values', () => {
+			expect(util.redact(true)).to.equal(true);
+			expect(util.redact(false)).to.equal(false);
+
+			expect(util.redact(123)).to.equal(123);
+
+			expect(isNaN(util.redact(NaN))).to.equal(true);
+
+			const fn = () => {};
+			expect(util.redact(fn)).to.equal(fn);
+		});
+
 		it('should redact a property', () => {
 			expect(util.redact({
 				good: 'hi',
-				bad: 'go away'
-			}, { props: [ 'bad' ] })).to.deep.equal({
+				bad: 'go away',
+				superbad: 'whoo'
+			}, { props: [ 'bad', /^super/ ] })).to.deep.equal({
 				good: 'hi',
-				bad: '<REDACTED>'
+				bad: '<REDACTED>',
+				superbad: '<REDACTED>'
 			});
 		});
 
 		it('should redact part of a string', () => {
 			expect(util.redact(`${process.env.HOME}/foo/bar`)).to.equal('~/foo/bar');
 			expect(util.redact(`Hello! My name is ${process.env.USER}`)).to.equal('Hello! My name is <REDACTED>');
+		});
+
+		it('should replace a sensitive data in a string', () => {
+			expect(util.redact('Your username is chris!', {
+				replacements: [
+					[ 'chris', '*****' ]
+				]
+			})).to.equal('Your username is *****!');
+
+			expect(util.redact('Account name: foo@bar.com')).to.equal('Account name: <REDACTED>');
+
+			expect(util.redact('Call me at 1-800-555-1212', {
+				replacements: [
+					[ /\d-\d{3}-\d{3}-\d{4}/ ]
+				]
+			})).to.equal('Call me at <REDACTED>');
+
+			const s = 'TODO:\n1. Draw winner\n2. Email foo@bar.com\n3. Ship prize';
+			expect(util.redact(s)).to.equal('TODO:\n1. Draw winner\n2. Email <REDACTED>\n3. Ship prize');
+		});
+
+		it('should redact an array of items', () => {
+			const name = process.env.USER;
+			const arr = util.redact([
+				{ user: 'chris', password: '123456', email: 'foo@bar.com' },
+				`Welcome ${name.substring(0, 1).toUpperCase()}${name.substring(1).toLowerCase()}!`,
+				123,
+				[ `${process.env.HOME}/foo/bar` ]
+			]);
+
+			expect(arr).to.deep.equal([
+				{ user: '<REDACTED>', password: '<REDACTED>', email: '<REDACTED>' },
+				'Welcome <REDACTED>!',
+				123,
+				[ '~/foo/bar' ]
+			]);
 		});
 	});
 

@@ -530,7 +530,8 @@ const mandatoryRedactionTriggers = [
  */
 const mandatoryReplacements = [
 	[ process.env.HOME, '~' ],
-	process.env.USER
+	process.env.USER,
+	/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g // email address
 ];
 
 /**
@@ -545,11 +546,37 @@ const mandatoryReplacements = [
  * @param {Array|Set} [opts.triggers] - A list of keywords that cause an entire string to be
  * redacted.
  * @returns {*}
+ *
+ * @example
+ * > redact('foo')
+ * 'foo'
+ *
+ * @example
+ * > redact('my password is 123456')
+ * '<REDACTED>'
+ *
+ * @example
+ * > redact({
+ *     info: {
+ *         username: 'chris',
+ *         password: '123456,
+ *         desktop: '/Users/chris/Desktop'
+ *     }
+ * })
+ * {
+ *     info: {
+ *         username: '<REDACTED>', // matches process.env.USER
+ *         password: '<REDACTED>', // matches blocked property
+ *         desktop: '~/Desktop'    // matches process.env.HOME
+ *     }
+ * }
  */
 export function redact(data, opts = {}) {
 	if (!opts || typeof opts !== 'object') {
 		throw new TypeError('Expected options to be an object');
 	}
+
+	const redacted = opts.redacted || '<REDACTED>';
 
 	const init = (key, value) => {
 		if (Array.isArray(opts[key]) || opts[key] instanceof Set) {
@@ -568,27 +595,45 @@ export function redact(data, opts = {}) {
 		return value;
 	};
 
-	const redacted = opts.redacted || '<REDACTED>';
 	const props = init('props', mandatoryRedactedProps.map(re => re.test.bind(re)));
 	const triggers = init('triggers', mandatoryRedactionTriggers.map(re => re.test.bind(re)));
 
-	let replacements = mandatoryReplacements;
-	if (Array.isArray(opts.replacements) || opts.replacements instanceof Set) {
-		replacements = replacements.concat(opts.replacements);
-	} else if (opts.replacements) {
-		throw new TypeError('Expected replacements to be an array of replace arguments');
-	}
-	replacements = replacements.map(replacement => {
-		let [ a, b = redacted ] = Array.isArray(replacement) ? replacement : [ replacement ];
-		if (!(a instanceof RegExp)) {
-			a = new RegExp(a, 'g');
+	// init the replacements
+	const replacementMap = new Map();
+	const addReplacement = replacements => {
+		if (Array.isArray(replacements) || replacements instanceof Set) {
+			for (const replacement of replacements) {
+				let pattern, value;
+				if (Array.isArray(replacement)) {
+					([ pattern, value ] = replacement);
+				} else if (typeof replacement === 'string' || replacement instanceof RegExp) {
+					pattern = replacement;
+				} else {
+					throw new TypeError('Expected replacements to be an array of replace arguments');
+				}
+				const key = pattern;
+				if (!(pattern instanceof RegExp)) {
+					pattern = new RegExp(pattern, 'ig');
+				}
+				if (value === undefined || value === null) {
+					value = redacted;
+				}
+				replacementMap.set(key, s => s.replace(pattern, value));
+			}
+		} else if (replacements) {
+			throw new TypeError('Expected replacements to be an array of replace arguments');
 		}
-		return s => s.replace(a, b);
-	});
+	};
+	addReplacement(mandatoryReplacements);
+	addReplacement(opts.replacements);
+	const replacements = Array.from(replacementMap.values());
 
+	// recursively walk the value and return the result
 	return (function scrub(src) {
 		if (Array.isArray(src)) {
-			src.forEach(scrub);
+			for (let i = 0, len = src.length; i < len; i++) {
+				src[i] = scrub(src[i]);
+			}
 		} else if (src && typeof src === 'object') {
 			for (const [ key, value ] of Object.entries(src)) {
 				let match = false;
@@ -598,6 +643,8 @@ export function redact(data, opts = {}) {
 						break;
 					}
 				}
+				// if we found a match, then we just redacted the whole string and there's no need
+				// to scrub it
 				if (!match) {
 					src[key] = scrub(value);
 				}
@@ -605,10 +652,14 @@ export function redact(data, opts = {}) {
 		} else if (src && typeof src === 'string') {
 			for (const replace of replacements) {
 				src = replace(src);
+				if (src === redacted) {
+					break;
+				}
 			}
 			for (const test of triggers) {
 				if (test(src)) {
-					return redacted;
+					src = redacted;
+					break;
 				}
 			}
 		}

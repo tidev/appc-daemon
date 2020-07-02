@@ -1,6 +1,6 @@
 {
   "name": "appcd",
-  "version": "3.2.0",
+  "version": "4.0.0-dev",
   "description": "A daemon that powers Appcelerator tooling and makes the impossible possible.",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "appcd-client": "^3.0.0",
-    "appcd-core": "^3.2.0",
+    "appcd-core": "4.0.0-dev",
     "appcd-dump-viewer": "^1.1.4",
     "appcd-fs": "^2.0.0",
     "appcd-logger": "^3.0.0",
