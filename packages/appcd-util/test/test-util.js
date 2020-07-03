@@ -764,7 +764,7 @@ describe('util', () => {
 		it('should redact an array of items', () => {
 			const name = process.env.USER;
 			const arr = util.redact([
-				{ user: 'chris', password: '123456', email: 'foo@bar.com' },
+				{ user: process.env.USER, password: '123456', email: 'foo@bar.com' },
 				`Welcome ${name.substring(0, 1).toUpperCase()}${name.substring(1).toLowerCase()}!`,
 				123,
 				[ `${process.env.HOME}/foo/bar` ]
