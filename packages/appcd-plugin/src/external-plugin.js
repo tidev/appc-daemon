@@ -4,7 +4,6 @@ import Dispatcher, { DispatcherContext, DispatcherError } from 'appcd-dispatcher
 import FSWatcher from 'appcd-fswatcher';
 import gawk from 'gawk';
 import path from 'path';
-import pluralize from 'pluralize';
 import PluginBase, { states } from './plugin-base';
 import PluginError from './plugin-error';
 import Response, { AppcdError, codes } from 'appcd-response';
@@ -62,61 +61,49 @@ export default class ExternalPlugin extends PluginBase {
 	 * @returns {Promise<Object>}
 	 * @access public
 	 */
-	dispatch(ctx, next) {
+	async dispatch(ctx, next) {
 		if (!this.tunnel) {
 			// this should probably never happen
-			return next();
+			return await next();
 		}
 
 		const startTime = new Date();
-		const { path } = ctx;
-		const logRequest = status => {
-			const style = status < 400 ? ok : alert;
-			let msg = `Plugin dispatcher: ${highlight(`/${this.plugin.name}/${this.plugin.version}${path}`)} ${style(status)}`;
-			if (ctx.type !== 'event') {
-				msg += ` ${highlight(`${new Date() - startTime}ms`)}`;
+		this.appcdLogger.log('Sending request: %s', highlight(ctx.path));
+
+		try {
+			ctx = await this.tunnel.send(ctx);
+			this.logRequest({ ctx, startTime });
+
+			// if the request is a subscription, and thus response is a stream, then listen for
+			// the end event so we can unsubscribe the child side
+			const { sid } = ctx.request;
+			if (sid && ctx.response instanceof Readable) {
+				this.streams[sid] = ctx.response;
+				ctx.response.on('end', () => {
+					if (this.streams[sid]) {
+						// If we still have a response stream reference at this point
+						// the response was not ended by an "unsubscribe" request. Issue
+						// one manually to properly clean up subscriptions.
+						this.tunnel.send({
+							type: 'unsubscribe',
+							sid,
+							path: `/${ctx.request.params.path}`,
+							params: ctx.request.params
+						});
+						delete this.streams[sid];
+					}
+				});
 			}
-			this.appcdLogger.log(msg);
-		};
 
-		this.appcdLogger.log('Sending request: %s', highlight(path));
-
-		return this.tunnel
-			.send(ctx)
-			.then(ctx => {
-				logRequest(ctx.status);
-
-				// if the request is a subscription, and thus response is a stream, then listen for
-				// the end event so we can unsubscribe the child side
-				const { sid } = ctx.request;
-				if (sid && ctx.response instanceof Readable) {
-					this.streams[sid] = ctx.response;
-					ctx.response.on('end', () => {
-						if (this.streams[sid]) {
-							// If we still have a response stream reference at this point
-							// the response was not ended by an "unsubscribe" request. Issue
-							// one manually to properly clean up subscriptions.
-							this.tunnel.send({
-								type: 'unsubscribe',
-								sid,
-								path: `/${ctx.request.params.path}`,
-								params: ctx.request.params
-							});
-							delete this.streams[sid];
-						}
-					});
-				}
-
-				return ctx;
-			})
-			.catch(err => {
-				if (err instanceof DispatcherError && err.status === 404) {
-					this.appcdLogger.log('Plugin did not have handler, passing to next route');
-				} else {
-					logRequest(err.status);
-				}
-				throw err;
-			});
+			return ctx;
+		} catch (err) {
+			if (err instanceof DispatcherError && err.status === 404) {
+				this.appcdLogger.log('Plugin did not have handler, passing to next route');
+			} else {
+				this.logRequest({ ctx, startTime });
+			}
+			throw err;
+		}
 	}
 
 	/**
@@ -147,7 +134,7 @@ export default class ExternalPlugin extends PluginBase {
 		// stop all filesystem watchers
 		const dirs = Object.keys(this.watchers);
 		if (dirs.length) {
-			this.appcdLogger.log(pluralize(`Closing ${dirs.length} fs watcher`, dirs.length));
+			this.appcdLogger.log(`Closing ${dirs.length} fs watcher${dirs.length !== 1 ? 's' : ''}`);
 			for (const dir of dirs) {
 				this.watchers[dir].close();
 				delete this.watchers[dir];
@@ -164,7 +151,7 @@ export default class ExternalPlugin extends PluginBase {
 	 * @returns {Promise}
 	 * @access private
 	 */
-	startChild() {
+	async startChild() {
 		// we need to override the global root dispatcher instance so that we can redirect all calls
 		// back to the parent process
 		this.appcdLogger.log('Patching root dispatcher');
@@ -345,56 +332,35 @@ export default class ExternalPlugin extends PluginBase {
 			}
 		});
 
-		this.agent = new Agent()
-			.on('stats', stats => {
-				// ship stats to parent process
-				this.tunnel.emit({ type: 'stats', stats });
-			})
+		await this.init();
+
+		this.agent = new Agent({ pollInterval: Math.max(1000, this.config.server?.agentPollInterval || 0) })
+			.on('stats', stats => this.tunnel.emit({ type: 'stats', stats }))
 			.start();
 
-		let loadedConfig = false;
+		gawk.watch(this.config, [ 'server', 'agentPollInterval' ], () => {
+			this.agent.pollInterval = Math.max(1000, this.config.server?.agentPollInterval || 0);
+		});
 
-		return this.globals.appcd
-			.call('/appcd/config', { type: 'subscribe' })
-			.then(({ response }) => new Promise(resolve => {
-				response.on('data', ({ message, sid, type }) => {
-					if (type === 'subscribe') {
-						this.configSubscriptionId = sid;
-					} else if (type === 'event') {
-						gawk.set(this.config, message);
-
-						if (this.config.server && this.config.server.agentPollInterval) {
-							this.agent.pollInterval = Math.max(1000, this.config.server.agentPollInterval);
-						}
-
-						if (!loadedConfig) {
-							loadedConfig = true;
-							resolve();
-						}
-					}
-				});
-			}), err => {
-				this.appcdLogger.warn('Failed to subscribe to config');
-				this.appcdLogger.warn(err);
-			})
-			.then(() => this.activate())
-			.then(() => this.tunnel.emit({
+		try {
+			await this.activate();
+			await this.tunnel.emit({
 				type: 'activated',
 				services: this.info.services
-			}))
-			.catch(async (err) => {
-				this.appcdLogger.error(err);
-
-				await cancelConfigSubscription();
-
-				this.tunnel.emit({
-					message: err.message,
-					stack:   err.stack,
-					type:    'activation_error'
-				});
-
-				process.exit(6);
 			});
+		} catch (err) {
+			this.appcdLogger.error(err);
+
+			await cancelConfigSubscription();
+
+			this.tunnel.emit({
+				message: err.message,
+				stack:   err.stack,
+				type:    'activation_error'
+			});
+
+			process.exit(6);
+		}
 	}
 
 	/**
@@ -416,15 +382,9 @@ export default class ExternalPlugin extends PluginBase {
 			args.unshift(`--inspect-brk=${debugPort}`);
 		}
 
-		let autoReload = true;
-		try {
-			const { response } = await Dispatcher.call('/appcd/config/plugins/autoReload');
-			autoReload = response;
-		} catch (e) {
-			// squelch
-		}
+		await this.init();
 
-		if (autoReload) {
+		if (this.config.plugins?.autoReload !== false) {
 			try {
 				const { directories, path: pluginPath } = this.plugin;
 				if (directories.size) {
@@ -685,7 +645,7 @@ export default class ExternalPlugin extends PluginBase {
 								// close any open response streams (i.e. subscriptions)
 								const sids = Object.keys(this.streams);
 								if (sids.length) {
-									this.appcdLogger.log(pluralize('orphaned stream', sids.length, true));
+									this.appcdLogger.log(`${sids.length} orphaned stream${sids.length !== 1 ? 's' : ''}`);
 									for (const sid of sids) {
 										try {
 											this.streams[sid].end();

@@ -1,3 +1,7 @@
+# v3.1.0
+
+ * feat: Added `redact()` function to scrub sensitive information from a value.
+
 # v3.0.0 (Jun 12, 2020)
 
  * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.

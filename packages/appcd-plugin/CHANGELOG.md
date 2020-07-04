@@ -15,6 +15,11 @@
  * feat: Added support for a `autoStart` flag in the plugin's `package.json`.
  * feat: Redact specific sensitive data from plugin debug logging.
  * feat: Added `appcd.logger` for plugins to create new namespaced loggers.
+ * feat: Added support for plugins to specify their own product app telemetry guid `telemetry.app`
+   in their config file. [(DAEMON-299)](https://jira.appcelerator.org/browse/DAEMON-299)
+ * feat: Added `appcd.telemetry(evtData)` API for sending plugin scoped telemetry events.
+ * feat: Wired up dynamic config updates for internal plugins and the parent process for external
+   plugins.
  * fix: Fixed bug where `status` would search an unsorted list of registered plugins which caused
    nondeterministic results. [(DAEMON-328)](https://jira.appcelerator.org/browse/DAEMON-328)
  * fix: Fixed bug where an `inactivityTimeout` of zero would be tested as falsey and fallback to
@@ -23,7 +28,15 @@
    call threw an error.
  * fix: Fixed bug where plugin was deactivated before being activated.
  * fix: Initialize plugin `state` in info object to `stopped`.
- * fix: Recursively watch plugin directories for changes.
+ * fix(plugin-base): Recursively watch plugin directories for changes.
+ * fix(plugin-manager): Check if the plugin config file exists before trying to load it.
+ * fix(plugin-manager): When multiple versions of a plugin were registered, the debug log
+   incorrectly stated the plugin was unsupported and no message was displayed if the plugin was
+   indeed unsupported.
+ * fix(plugin-manager): Gracefully handle config file unloading errors.
+ * fix(plugin): Gracefully handle plugins that declare a config file that does not exist.
+ * refactor(plugin): Code cleanup and moved common code to `PluginBase` to share across internal
+   and external plugins.
  * chore: Updated dependencies.
 
 # v3.2.2 (Jan 13, 2020)

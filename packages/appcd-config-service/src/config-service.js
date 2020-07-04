@@ -4,6 +4,7 @@ if (!Error.prepareStackTrace) {
 }
 
 import appcdLogger from 'appcd-logger';
+import FSWatcher from 'appcd-fswatcher';
 import Response, { codes } from 'appcd-response';
 
 import { DispatcherError, ServiceDispatcher } from 'appcd-dispatcher';
@@ -83,15 +84,31 @@ export default class ConfigService extends ServiceDispatcher {
 				// fall through
 
 			} else if (action === 'load') {
-				this.config.load(data.file, {
-					id:        data.id || data.namespace,
-					namespace: data.namespace || data.id,
-					readonly:  data.readonly,
-					schema:    data.schema
-				});
+				const id = data.id || data.namespace;
+				const load = isReload => {
+					log(`${isReload ? 'Reloading' : 'Loading'} ${id} config: ${highlight(data.file)}`);
+					this.config.load(data.file, {
+						id,
+						namespace: data.namespace || data.id,
+						readonly:  data.readonly,
+						schema:    data.schema
+					});
+				};
+
+				load();
+				this.watchers[id] = new FSWatcher(data.file).on('change', () => load(true));
 
 			} else if (action === 'unload') {
+				const id = data.id || data.namespace;
+
+				log(`Unloading config: ${highlight(id)}`);
 				this.config.unload(data.id || data.namespace);
+
+				if (this.watchers[id]) {
+					log(`Closing ${highlight(id)} fs watcher`);
+					this.watchers[id].close();
+					delete this.watchers[id];
+				}
 
 			} else if (writeRegExp.test(action)) {
 				// performing a modifying action
@@ -144,7 +161,7 @@ export default class ConfigService extends ServiceDispatcher {
 
 		const filter = key && key.split(/\.|\//).filter(Boolean).join('.') || undefined;
 		if (filter) {
-			log('Filtering config:', filter);
+			log(`Filtering config: ${highlight(filter)}`);
 		}
 		// log(this.config.toString());
 		const node = this.config.get(filter || undefined);
@@ -194,5 +211,26 @@ export default class ConfigService extends ServiceDispatcher {
 	destroySubscription({ publish }) {
 		log('Removing config gawk watch');
 		this.config.unwatch(publish);
+	}
+
+	/**
+	 * Closes all open filesystem watchers.
+	 *
+	 * @returns {Promise}
+	 * @access public
+	 */
+	async shutdown() {
+		// stop all filesystem watchers
+		const ids = Object.keys(this.watchers);
+		if (ids.length) {
+			log(`Closing ${ids.length} fs watcher${ids.length !== 1 ? 's' : ''}:`);
+			for (const id of ids) {
+				log(`  ${highlight(id)}`);
+				this.watchers[id].close();
+				delete this.watchers[id];
+			}
+		} else {
+			log('No open fs watchers');
+		}
 	}
 }

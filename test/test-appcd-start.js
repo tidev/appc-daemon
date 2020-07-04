@@ -19,7 +19,7 @@ describe('appcd start', function () {
 		await this.installNode();
 		const { status, stdout } = this.startDaemonSync(defaultConfig);
 		expect(status).to.equal(0);
-		expect(stripColors(stdout.toString())).to.match(/^Appcelerator Daemon, version \d+\.\d+\.\d+\nCopyright \(c\) 2015-\d{4}, Axway, Inc\. All Rights Reserved\.\n\nAppc Daemon started\n$/);
+		expect(stripColors(stdout.toString())).to.match(/^Appcelerator Daemon, version .+\nCopyright \(c\) 2015-\d{4}, Axway, Inc\. All Rights Reserved\.\n\nAppc Daemon started\n$/);
 	}));
 
 	// TODO: debug mode

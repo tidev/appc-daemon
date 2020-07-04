@@ -6,7 +6,7 @@ import PluginModule from './plugin-module';
 import { EventEmitter } from 'events';
 import { watch, unwatch } from './helpers';
 
-const { highlight } = appcdLogger.styles;
+const { alert, highlight, ok } = appcdLogger.styles;
 
 /**
  * The plugin state.
@@ -33,34 +33,21 @@ export default class PluginBase extends EventEmitter {
 		super();
 
 		/**
-		 * The plugin's dispatcher.
-		 * @type {Dispatcher}
-		 */
-		this.dispatcher = new Dispatcher();
-
-		/**
-		 * The plugin's namespaced logger.
-		 * @type {SnoopLogg}
-		 */
-		this.logger = appcdLogger(`appcd:plugin:base:${plugin.isParent ? 'parent' : 'child'}`);
-
-		/**
 		 * The Appc Daemon config.
 		 * @type {Object}
 		 */
 		this.config = gawk({});
 
 		/**
-		 * The plugin's exports.
-		 * @type {Object}
+		 * The appcd config subscription id used to unsubscribe.
 		 */
-		this.module = null;
+		this.configSubscriptionId = null;
 
 		/**
-		 * The plugin reference.
-		 * @type {Plugin}
+		 * The plugin's dispatcher.
+		 * @type {Dispatcher}
 		 */
-		this.plugin = plugin;
+		this.dispatcher = new Dispatcher();
 
 		/**
 		 * Plugin runtime information.
@@ -122,18 +109,115 @@ export default class PluginBase extends EventEmitter {
 		});
 
 		/**
+		 * The plugin's namespaced logger.
+		 * @type {SnoopLogg}
+		 */
+		this.logger = appcdLogger(`appcd:plugin:base:${plugin.isParent ? 'parent' : 'child'}`);
+
+		/**
+		 * The plugin's exports.
+		 * @type {Object}
+		 */
+		this.module = null;
+
+		/**
+		 * The plugin reference.
+		 * @type {Plugin}
+		 */
+		this.plugin = plugin;
+
+		/**
 		 * The default global object for the plugin sandbox.
 		 * @type {Object}
 		 */
 		this.globals = {
 			appcd: {
-				call: Dispatcher.call.bind(Dispatcher),
+				call: async (path, payload) => {
+					if (typeof path !== 'string') {
+						throw new TypeError('Expected path to be a string');
+					}
+
+					const event = `${this.plugin.name}.${path ? `${path.replace(/\?.*$/, '').replace(/[^\w]+/g, '.').replace(/^\.|\.$/g, '')}` : 'dispatch'}`;
+					const startTime = Date.now();
+
+					try {
+						const ctx = await Dispatcher.call(path, payload);
+						this.globals.appcd.telemetry({
+							event,
+							path,
+							payload,
+							startTime,
+							status: ctx.status
+						});
+						return ctx;
+					} catch (error) {
+						if (error.telemetry !== false) {
+							// some errors, such as prompt related errors, we don't want to record
+							this.globals.appcd.telemetry({
+								error,
+								event,
+								path,
+								payload,
+								startTime
+							});
+						}
+						throw error;
+					}
+				},
 				fs: {
 					watch,
 					unwatch
 				},
 				logger: appcdLogger,
-				register: this.dispatcher.register.bind(this.dispatcher)
+				register: this.dispatcher.register.bind(this.dispatcher),
+				telemetry: async payload => {
+					try {
+						const { error, event, startTime } = payload;
+
+						if (!event || typeof event !== 'string') {
+							throw new TypeError('Expected event name to be a non-empty string');
+						}
+
+						const app = this.config[this.plugin.name]?.telemetry?.app;
+						if (!app) {
+							// plugin does not have not have an app guid, ignoring
+							this.appcdLogger.log(`Plugin ${highlight(`${this.plugin.name}@${this.plugin.version}`)} does not have an app guid, skipping telemetry event "${event}"`);
+							return;
+						}
+
+						const data = {
+							...payload,
+							app,
+							plugin: {
+								name:        this.plugin.name,
+								packageName: this.plugin.packageName,
+								version:     this.plugin.version
+							}
+						};
+
+						delete data.error;
+						delete data.startTime;
+
+						if (startTime !== undefined) {
+							if (typeof startTime !== 'number' || startTime <= 0) {
+								throw new TypeError('Expected start time to be a positive integer');
+							}
+							data.responseTime = Date.now() - startTime;
+						}
+
+						let endpoint = '/appcd/telemetry';
+						if (error) {
+							endpoint = '/appcd/telemetry/crash';
+							data.message = error.toString();
+							data.error   = error.stack;
+							data.status  = error.status;
+						}
+
+						await Dispatcher.call(endpoint, data);
+					} catch (err) {
+						this.appcdLogger.warn(err.stack);
+					}
+				}
 			},
 
 			console: this.logger.console
@@ -145,6 +229,8 @@ export default class PluginBase extends EventEmitter {
 	/**
 	 * Loads the plugin's main JS file, evaluates it in a sandbox, and calls its `activate()`
 	 * handler.
+	 *
+	 * Note: For external plugins, this method is called in the child process.
 	 *
 	 * @returns {Promise}
 	 * @access private
@@ -182,6 +268,50 @@ export default class PluginBase extends EventEmitter {
 	 */
 	deactivate() {
 		// noop
+	}
+
+	/**
+	 * Initializes the plugin implementation by wiring up the config watcher.
+	 *
+	 * @returns {Promise}
+	 * @access private
+	 */
+	async init() {
+		try {
+			const { response } = await Dispatcher.call('/appcd/config', { type: 'subscribe' });
+
+			await new Promise(resolve => {
+				response.on('data', ({ message, sid, type }) => {
+					if (type === 'subscribe') {
+						this.configSubscriptionId = sid;
+					} else if (type === 'event') {
+						gawk.set(this.config, message);
+						resolve(); // no biggie if this gets called every config update
+					}
+				});
+			});
+		} catch (err) {
+			this.appcdLogger.warn('Failed to subscribe to config');
+			this.appcdLogger.warn(err);
+		}
+	}
+
+	/**
+	 * Prints the status of the request and dispatches a telemetry event.
+	 *
+	 * @param {Object} opts - Various options.
+	 * @param {Object} opts.ctx - A dispatcher context.
+	 * @param {Number} opts.startTime - The timestamp of when the plugin began to handle the
+	 * incoming request.
+	 * @access private
+	 */
+	logRequest({ ctx, startTime }) {
+		const style = ctx.status < 400 ? ok : alert;
+		let msg = `Plugin dispatcher: ${highlight(`/${this.plugin.name}/${this.plugin.version}${ctx.path}`)} ${style(ctx.status)}`;
+		if (ctx.type !== 'event') {
+			msg += ` ${highlight(`${new Date() - startTime}ms`)}`;
+		}
+		this.appcdLogger.log(msg);
 	}
 
 	/**

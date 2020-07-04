@@ -157,7 +157,8 @@ export default class Server {
 		Dispatcher.register('/appcd/telemetry', this.systems.telemetry);
 
 		// init the config service
-		Dispatcher.register('/appcd/config', new ConfigService(this.config));
+		this.systems.configService = new ConfigService(this.config);
+		Dispatcher.register('/appcd/config', this.systems.configService);
 
 		// init logcat
 		Dispatcher.register('/appcd/logcat', ({ response }) => {
@@ -257,7 +258,7 @@ export default class Server {
 
 		const telemetryRequest = req => {
 			Dispatcher.call('/appcd/telemetry', {
-				event: 'dispatch',
+				event: 'appcd.dispatch',
 				...req
 			}).catch(err => {
 				logger.warn(`Failed to log HTTP dispatcher request: ${err.message}`);
@@ -313,7 +314,7 @@ export default class Server {
 
 		if (purged.length) {
 			Dispatcher.call('/appcd/telemetry', {
-				event: 'server.node_purge',
+				event: 'appcd.server.node_purge',
 				purged
 			});
 		}

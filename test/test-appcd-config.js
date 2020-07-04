@@ -27,7 +27,7 @@ describe('appcd config', function () {
 			const { status, stdout, stderr } = this.runAppcdSync([ 'config', 'get' ], {}, defaultConfig);
 
 			expect(status).to.equal(1);
-			expect(stripColors(stdout.toString())).to.match(/^Appcelerator Daemon, version \d+\.\d+\.\d+\nCopyright \(c\) 2015-\d{4}, Axway, Inc\. All Rights Reserved\./);
+			expect(stripColors(stdout.toString())).to.match(/^Appcelerator Daemon, version .+\nCopyright \(c\) 2015-\d{4}, Axway, Inc\. All Rights Reserved\./);
 			expect(stripColors(stderr.toString().split('\n\n')[0])).to.equal('SyntaxError: Failed to load config file: Unexpected token { in JSON at position 1');
 		}));
 
@@ -37,7 +37,7 @@ describe('appcd config', function () {
 			const { status, stdout, stderr } = this.runAppcdSync([ 'start' ], {}, defaultConfig);
 
 			expect(status).to.equal(1);
-			expect(stripColors(stdout.toString())).to.match(/^Appcelerator Daemon, version \d+\.\d+\.\d+\nCopyright \(c\) 2015-\d{4}, Axway, Inc\. All Rights Reserved\./);
+			expect(stripColors(stdout.toString())).to.match(/^Appcelerator Daemon, version .+\nCopyright \(c\) 2015-\d{4}, Axway, Inc\. All Rights Reserved\./);
 			expect(stripColors(stderr.toString().split('\n\n')[0])).to.equal('SyntaxError: Failed to load config file: Unexpected token { in JSON at position 1');
 		}));
 
@@ -376,8 +376,8 @@ describe('appcd config', function () {
 					expect(fs.existsSync(configFile)).to.be.false;
 					const { status, stdout } = this.runAppcdSync([ 'config', 'set', 'appcd-test', 'it works!' ]);
 
-					expect(status).to.equal(0);
 					expect(stripColors(stdout.toString().trim())).to.equal('OK');
+					expect(status).to.equal(0);
 
 					expect(fs.existsSync(configFile)).to.be.true;
 					expect(fs.readJsonSync(configFile)).to.deep.equal({
@@ -394,8 +394,8 @@ describe('appcd config', function () {
 					expect(fs.existsSync(configFile)).to.be.false;
 					const { status, stdout } = this.runAppcdSync([ 'config', '--json', 'set', 'appcd-test', 'it works!' ]);
 
-					expect(status).to.equal(0);
 					expect(JSON.parse(stdout)).to.equal('OK');
+					expect(status).to.equal(0);
 
 					expect(fs.existsSync(configFile)).to.be.true;
 					expect(fs.readJsonSync(configFile)).to.deep.equal({

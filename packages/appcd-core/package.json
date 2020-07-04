@@ -1,6 +1,6 @@
 {
   "name": "appcd-core",
-  "version": "3.2.0",
+  "version": "4.0.0-dev",
   "description": "Appc Daemon server implementation.",
   "main": "./dist/index",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
@@ -35,7 +35,7 @@
     "appcd-telemetry": "^4.0.0",
     "appcd-util": "^3.0.0",
     "bin-links": "^2.1.2",
-    "cli-kit": "^1.2.3",
+    "cli-kit": "^1.2.4",
     "fs-extra": "^9.0.1",
     "gawk": "^4.7.1",
     "global-modules": "^2.0.0",
@@ -48,7 +48,7 @@
     "pacote": "^11.1.10",
     "promise-limit": "^2.7.0",
     "semver": "^7.3.2",
-    "template-kit": "^1.1.1",
+    "template-kit": "^2.0.0",
     "validate-npm-package-name": "^3.0.0",
     "yarn": "^1.22.4"
   },

@@ -13,7 +13,7 @@ import path from 'path';
 import request from 'appcd-request';
 import Response, { AppcdError, codes, i18n } from 'appcd-response';
 
-import { arch, osInfo } from 'appcd-util';
+import { arch, osInfo, redact } from 'appcd-util';
 import { expandPath } from 'appcd-path';
 import { isDir } from 'appcd-fs';
 import { v4 as uuidv4 } from 'uuid';
@@ -149,17 +149,14 @@ export default class Telemetry extends Dispatcher {
 				throw new AppcdError(codes.TELEMETRY_DISABLED);
 			}
 
-			let { event } = ctx.request;
+			let { app, event } = ctx.request;
 
 			if (!event || typeof event !== 'string') {
 				throw new AppcdError(codes.BAD_REQUEST, 'Invalid telemetry event');
 			}
 
-			if (!/^appcd[.-]/.test(event) && !/^ti\.(start|end)$/.test(event)) {
-				event = `appcd.${event}`;
-			}
-
 			const data = { ...ctx.request };
+			delete data.app;
 			delete data.event;
 			delete data.params;
 
@@ -168,10 +165,10 @@ export default class Telemetry extends Dispatcher {
 			// spec: https://techweb.axway.com/confluence/display/analytics/Analytics+JSON+Payload+V4
 			const payload = {
 				id,
-				data,
+				data:       redact(data),
 				event,
 				os: 		this.osInfo,
-				app:		this.app,
+				app:		app || this.app,
 				timestamp: 	Date.now(),
 				version: 	'4',
 				hardware: {

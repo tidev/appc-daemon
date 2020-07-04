@@ -6,7 +6,6 @@ import Dispatcher, { DataServiceDispatcher } from 'appcd-dispatcher';
 import gawk from 'gawk';
 import Response, { codes } from 'appcd-response';
 import path from 'path';
-import pluralize from 'pluralize';
 import PluginError from './plugin-error';
 import PluginPath from './plugin-path';
 import semver from 'semver';
@@ -14,6 +13,7 @@ import semver from 'semver';
 import { arrayify } from 'appcd-util';
 import { EventEmitter } from 'events';
 import { expandPath } from 'appcd-path';
+import { isFile } from 'appcd-fs';
 
 const logger = appcdLogger('appcd:plugin:manager');
 const { highlight } = appcdLogger.styles;
@@ -253,7 +253,7 @@ export default class PluginManager extends Dispatcher {
 				this.registered.push(plugin.info);
 				this.registry[plugin.path] = plugin;
 
-				if (plugin.configFile) {
+				if (plugin.configFile && isFile(plugin.configFile)) {
 					logger.log('Registering plugin config file:', highlight(plugin.configFile));
 					await Dispatcher.call('/appcd/config', {
 						data: {
@@ -348,9 +348,6 @@ export default class PluginManager extends Dispatcher {
 						};
 
 						Dispatcher.register(ns.path, ns.handler);
-					} else {
-
-						logger.log('Unsupported plugin found: %s', highlight(`${plugin.name}@${plugin.version}`));
 					}
 
 					// add this version to the namespace
@@ -360,6 +357,8 @@ export default class PluginManager extends Dispatcher {
 						logger.log(`Auto starting ${highlight(`${plugin.name}@${plugin.version}`)}`);
 						await plugin.start();
 					}
+				} else {
+					logger.log('Unsupported plugin found: %s', highlight(`${plugin.name}@${plugin.version}`));
 				}
 
 				this.sendTelemetry('plugin.added', plugin);
@@ -370,12 +369,16 @@ export default class PluginManager extends Dispatcher {
 
 					if (plugin.configFile) {
 						logger.log('Unregistering plugin config file:', highlight(plugin.configFile));
-						await Dispatcher.call('/appcd/config', {
-							data: {
-								action: 'unload',
-								id:     `${plugin.packageName}@${plugin.version}`
-							}
-						});
+						try {
+							await Dispatcher.call('/appcd/config', {
+								data: {
+									action: 'unload',
+									id:     `${plugin.packageName}@${plugin.version}`
+								}
+							});
+						} catch (err) {
+							logger.warn(err);
+						}
 					}
 
 					for (let i = 0; i < this.registered.length; i++) {
@@ -419,7 +422,7 @@ export default class PluginManager extends Dispatcher {
 
 		Dispatcher
 			.call('/appcd/telemetry', {
-				event,
+				event: `appcd.${event}`,
 				plugin: {
 					name:        plugin.name,
 					packageName: plugin.packageName,
@@ -452,7 +455,7 @@ export default class PluginManager extends Dispatcher {
 	 */
 	shutdown() {
 		const paths = Object.keys(this.pluginPaths);
-		logger.log(pluralize(`Shutting down plugin manager and ${highlight(paths.length)} plugin path`, paths.length));
+		logger.log(`Shutting down plugin manager and ${highlight(paths.length)} plugin path${paths.length !== 1 ? 's' : ''}`);
 
 		// disable telemetry since we're shutting down
 		this.telemetryEnabled = false;

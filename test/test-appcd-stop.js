@@ -18,6 +18,6 @@ describe('appcd stop', function () {
 		await this.installNode();
 		const { status, stdout } = this.runAppcdSync([ 'stop' ]);
 		expect(status).to.equal(3);
-		expect(stripColors(stdout.toString())).to.match(/^Appcelerator Daemon, version \d+\.\d+\.\d+\nCopyright \(c\) 2015-\d{4}, Axway, Inc\. All Rights Reserved\.\n\nAppc Daemon already stopped\n$/);
+		expect(stripColors(stdout.toString())).to.match(/^Appcelerator Daemon, version .+\nCopyright \(c\) 2015-\d{4}, Axway, Inc\. All Rights Reserved\.\n\nAppc Daemon already stopped\n$/);
 	}));
 });

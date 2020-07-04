@@ -308,7 +308,7 @@ export default class Plugin extends EventEmitter {
 		this.supported = true;
 
 		if (this.configFile && !isFile(this.configFile)) {
-			throw new PluginError(`Plugin config file not found: ${this.configFile}`);
+			this.error = `Plugin config file not found: ${appcd.config}`;
 		}
 
 		if (this.os && !this.os.includes(process.platform)) {
