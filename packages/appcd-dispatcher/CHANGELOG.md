@@ -1,5 +1,6 @@
-# v3.0.1
+# v3.1.0
 
+ * feat: Default `DispatcherContext` response as a `PassThrough` stream.
  * chore: Updated dependencies.
 
 # v3.0.0 (Jun 12, 2020)

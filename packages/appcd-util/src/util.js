@@ -8,6 +8,7 @@ if (!Error.prepareStackTrace) {
 import crypto from 'crypto';
 import fs from 'fs';
 import get from 'lodash.get';
+import set from 'lodash.set';
 import semver from 'semver';
 
 import { ChildProcess, execSync, spawnSync } from 'child_process';
@@ -260,7 +261,7 @@ export function formatNumber(n) {
  * Re-export of lodash's `get()` function.
  *
  * For more information, visit {@link https://www.npmjs.com/package/lodash.get} or
- * {@link https://lodash.com/docs/4.17.4#get}.
+ * {@link https://lodash.com/docs/4.17.15#get}.
  *
  * @param {Object} obj - The object to query.
  * @param {Array.<String>|String} [path] - The path of the property to get.
@@ -535,11 +536,12 @@ const mandatoryReplacements = [
 ];
 
 /**
- * Scrubs any potentially sensitive data from a value. If the source is an object, it will be
- * mutated. Redacted properties or elements will not be removed.
+ * Scrubs any potentially sensitive data from a value. By default, if the source is an object, it
+ * will be mutated. Redacted properties or elements will not be removed.
  *
  * @param {*} data - The source object to copy from.
  * @param {Object} [opts] - Various options.
+ * @param {Boolean} [opts.clone] - When `true`, objects and arrays are cloned instead of mutated.
  * @param {Array|Set} [opts.props] - A list of properties to redact.
  * @param {String} [opts.redacted="<REDACTED>"] - The string to replace redacted words with.
  * @param {Array|Set} [opts.replacements] - A list of replacement criteria and an optional value.
@@ -613,6 +615,7 @@ export function redact(data, opts = {}) {
 				}
 				const key = pattern;
 				if (!(pattern instanceof RegExp)) {
+					// eslint-disable-next-line security/detect-non-literal-regexp
 					pattern = new RegExp(pattern, 'ig');
 				}
 				if (value === undefined || value === null) {
@@ -630,42 +633,58 @@ export function redact(data, opts = {}) {
 
 	// recursively walk the value and return the result
 	return (function scrub(src) {
+		let dest = src;
 		if (Array.isArray(src)) {
+			dest = opts.clone ? [] : src;
 			for (let i = 0, len = src.length; i < len; i++) {
-				src[i] = scrub(src[i]);
+				dest[i] = scrub(src[i]);
 			}
 		} else if (src && typeof src === 'object') {
+			dest = opts.clone ? {} : src;
 			for (const [ key, value ] of Object.entries(src)) {
 				let match = false;
 				for (const test of props) {
 					if (match = test(key)) {
-						src[key] = redacted;
+						dest[key] = redacted;
 						break;
 					}
 				}
 				// if we found a match, then we just redacted the whole string and there's no need
 				// to scrub it
 				if (!match) {
-					src[key] = scrub(value);
+					dest[key] = scrub(value);
 				}
 			}
 		} else if (src && typeof src === 'string') {
 			for (const replace of replacements) {
-				src = replace(src);
-				if (src === redacted) {
+				dest = replace(dest);
+				if (dest === redacted) {
 					break;
 				}
 			}
 			for (const test of triggers) {
-				if (test(src)) {
-					src = redacted;
+				if (test(dest)) {
+					dest = redacted;
 					break;
 				}
 			}
 		}
-		return src;
+		return dest;
 	}(data));
 }
+
+/**
+ * Re-export of lodash's `set()` function.
+ *
+ * For more information, visit {@link https://www.npmjs.com/package/lodash.set} or
+ * {@link https://lodash.com/docs/4.17.15#set}.
+ *
+ * @param {Object} obj - The object to modify.
+ * @param {Array.<String>|String} [path] - The path of the property to set.
+ * @param {*} [defaultValue] - The value to set.
+ * @returns {*}
+ */
+export { set };
 
 /**
  * Returns the sha1 of the input string.

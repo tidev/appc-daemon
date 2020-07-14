@@ -434,7 +434,22 @@ exports['coverage-ci']           = series(nodeInfo, build, function coverage() {
  * watch/debug tasks
  */
 async function startDaemon() {
-	return spawn(process.execPath, [ 'packages/appcd/bin/appcd', 'start', '--debug', '--config', '{ \"telemetry\": { \"environment\": \"development\" } }' ], { stdio: 'inherit' });
+	return spawn(
+		process.execPath,
+		[
+			'packages/appcd/bin/appcd',
+			'start',
+			'--debug',
+			'--config', '{ \"telemetry\": { \"environment\": \"development\" } }'
+		],
+		{
+			env: {
+				...process.env,
+				APPCD_ENV: 'development'
+			},
+			stdio: 'inherit'
+		}
+	);
 }
 
 function stopDaemon() {

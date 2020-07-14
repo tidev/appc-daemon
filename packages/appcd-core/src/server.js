@@ -1,6 +1,6 @@
 import appcdCoreLogger, { Format, LogcatFormatter, StripColors } from './logger';
 import ConfigService from 'appcd-config-service';
-import Dispatcher from 'appcd-dispatcher';
+import Dispatcher, { DispatcherContext } from 'appcd-dispatcher';
 import fs from 'fs-extra';
 import FSWatcher from 'appcd-fswatcher';
 import FSWatchManager from 'appcd-fswatch-manager';
@@ -259,7 +259,7 @@ export default class Server {
 		const telemetryRequest = req => {
 			Dispatcher.call('/appcd/telemetry', {
 				event: 'appcd.dispatch',
-				...req
+				...(req instanceof DispatcherContext ? DispatcherContext.request : req)
 			}).catch(err => {
 				logger.warn(`Failed to log HTTP dispatcher request: ${err.message}`);
 			});

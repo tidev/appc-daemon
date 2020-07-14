@@ -725,16 +725,36 @@ describe('util', () => {
 			expect(util.redact(fn)).to.equal(fn);
 		});
 
-		it('should redact a property', () => {
-			expect(util.redact({
+		it('should redact a property (mutable)', () => {
+			const obj = {
 				good: 'hi',
 				bad: 'go away',
 				superbad: 'whoo'
-			}, { props: [ 'bad', /^super/ ] })).to.deep.equal({
+			};
+			expect(util.redact(obj, { props: [ 'bad', /^super/ ] })).to.deep.equal({
 				good: 'hi',
 				bad: '<REDACTED>',
 				superbad: '<REDACTED>'
 			});
+			expect(obj.good).to.equal('hi');
+			expect(obj.bad).to.equal('<REDACTED>');
+			expect(obj.superbad).to.equal('<REDACTED>');
+		});
+
+		it('should redact a property (immutable)', () => {
+			const obj = {
+				good: 'hi',
+				bad: 'go away',
+				superbad: 'whoo'
+			};
+			expect(util.redact(obj, { clone: true, props: [ 'bad', /^super/ ] })).to.deep.equal({
+				good: 'hi',
+				bad: '<REDACTED>',
+				superbad: '<REDACTED>'
+			});
+			expect(obj.good).to.equal('hi');
+			expect(obj.bad).to.equal('go away');
+			expect(obj.superbad).to.equal('whoo');
 		});
 
 		it('should redact part of a string', () => {

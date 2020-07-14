@@ -1,5 +1,5 @@
 import appcdLogger from 'appcd-logger';
-import Dispatcher from 'appcd-dispatcher';
+import Dispatcher, { DispatcherContext } from 'appcd-dispatcher';
 import gawk from 'gawk';
 import PluginModule from './plugin-module';
 
@@ -132,37 +132,24 @@ export default class PluginBase extends EventEmitter {
 		 */
 		this.globals = {
 			appcd: {
-				call: async (path, payload) => {
+				call: async (path, data) => {
 					if (typeof path !== 'string') {
 						throw new TypeError('Expected path to be a string');
 					}
 
 					const event = `${this.plugin.name}.${path ? `${path.replace(/\?.*$/, '').replace(/[^\w]+/g, '.').replace(/^\.|\.$/g, '')}` : 'dispatch'}`;
-					const startTime = Date.now();
+					const payload = data instanceof DispatcherContext ? data.request : data;
+					const ctx = await Dispatcher.call(path, data);
 
-					try {
-						const ctx = await Dispatcher.call(path, payload);
-						this.globals.appcd.telemetry({
-							event,
-							path,
-							payload,
-							startTime,
-							status: ctx.status
-						});
-						return ctx;
-					} catch (error) {
-						if (error.telemetry !== false) {
-							// some errors, such as prompt related errors, we don't want to record
-							this.globals.appcd.telemetry({
-								error,
-								event,
-								path,
-								payload,
-								startTime
-							});
-						}
-						throw error;
-					}
+					this.globals.appcd.telemetry({
+						event,
+						path,
+						payload,
+						startTime: Date.now(),
+						status: ctx.status
+					});
+
+					return ctx;
 				},
 				fs: {
 					watch,
@@ -186,7 +173,7 @@ export default class PluginBase extends EventEmitter {
 						}
 
 						const data = {
-							...payload,
+							...payload, // FIX ME! payload could be a DispatcherContext!!!
 							app,
 							plugin: {
 								name:        this.plugin.name,

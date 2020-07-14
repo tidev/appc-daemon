@@ -6,7 +6,7 @@ import DispatcherError from './dispatcher-error';
 import Response, { codes, errorToJSON, lookup } from 'appcd-response';
 import ServiceDispatcher from './service-dispatcher';
 
-import { PassThrough, Readable, Transform } from 'stream';
+import { Readable, Transform } from 'stream';
 import { pathToRegexp } from 'path-to-regexp';
 
 const logger = appcdLogger('appcd:dispatcher');
@@ -137,8 +137,7 @@ export default class Dispatcher {
 			ctx = payload;
 		} else {
 			ctx = new DispatcherContext({
-				request: typeof payload === 'object' && payload || {},
-				response: new PassThrough({ objectMode: true })
+				request: typeof payload === 'object' && payload || {}
 			});
 		}
 		ctx.path = path;
@@ -272,7 +271,6 @@ export default class Dispatcher {
 			let ctx = new DispatcherContext({
 				headers,
 				request:  (koactx.method === 'POST' || koactx.method === 'PUT') && koactx.request && koactx.request.body || {},
-				response: new PassThrough({ objectMode: true }),
 				source
 			});
 

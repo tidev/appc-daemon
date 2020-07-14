@@ -10,7 +10,7 @@ import Response, { AppcdError, codes } from 'appcd-response';
 import Tunnel from './tunnel';
 
 import { debounce } from 'appcd-util';
-import { PassThrough, Readable } from 'stream';
+import { Readable } from 'stream';
 
 const { alert, highlight, note, notice, ok } = appcdLogger.styles;
 
@@ -243,7 +243,6 @@ export default class ExternalPlugin extends PluginBase {
 					headers:  req.message.headers,
 					origin:   'parent',
 					request:  req.message.request,
-					response: new PassThrough({ objectMode: true }),
 					source:   req.message.source
 				}));
 
@@ -516,7 +515,6 @@ export default class ExternalPlugin extends PluginBase {
 								const { status, response } = await Dispatcher.call(req.message.path, new DispatcherContext({
 									headers:  req.message.headers,
 									request:  req.message.request,
-									response: new PassThrough({ objectMode: true }),
 									source:   req.message.source
 								}));
 								const style = status < 400 ? ok : alert;

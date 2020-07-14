@@ -3,7 +3,6 @@ import PluginError from './plugin-error';
 import Response, { AppcdError, codes } from 'appcd-response';
 
 import { DispatcherContext, DispatcherError } from 'appcd-dispatcher';
-import { PassThrough } from 'stream';
 import { v4 as uuidv4 } from 'uuid';
 
 const { highlight, magenta } = appcdLogger.styles;
@@ -134,7 +133,6 @@ export default class Tunnel {
 					headers: {},
 					path:    ctxOrPayload.path,
 					request: typeof ctxOrPayload === 'object' && ctxOrPayload.data || ctxOrPayload || {},
-					response: new PassThrough({ objectMode: true }),
 					source: null,
 					status: 200
 				});

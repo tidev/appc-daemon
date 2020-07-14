@@ -6,7 +6,7 @@ import msgpack from 'msgpack-lite';
 import Response, { codes, createErrorClass, errorToJSON } from 'appcd-response';
 
 import { IncomingMessage } from 'http';
-import { PassThrough, Readable } from 'stream';
+import { Readable } from 'stream';
 import { WebSocket } from 'appcd-http';
 
 const logger = appcdLogger('appcd:core:websocket-session');
@@ -123,7 +123,6 @@ export default class WebSocketSession extends EventEmitter {
 				type: req.type,
 				sid:  req.sid
 			},
-			response: new PassThrough({ objectMode: true }),
 			source: 'websocket'
 		});
 
