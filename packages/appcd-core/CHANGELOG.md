@@ -2,7 +2,7 @@
 
  * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.
    [(DAEMON-334)](https://jira.appcelerator.org/browse/DAEMON-334)
- * BREAKING CHANGE: Bumped core Node.js version to 12.18.1. This affects all plugins.
+ * BREAKING CHANGE: Bumped core Node.js version to 12.18.2. This affects all plugins.
    [(DAEMON-319)](https://jira.appcelerator.org/browse/DAEMON-319)
  * BREAKING CHANGE: Main file exports library instead of the main entry point.
  * BREAKING CHANGE(status-monitor): Daemon uptime has changed from seconds to milliseconds.

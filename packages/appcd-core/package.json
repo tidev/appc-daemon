@@ -70,6 +70,6 @@
       "@appcd/plugin-titanium",
       "@appcd/plugin-windows"
     ],
-    "node": "12.18.1"
+    "node": "12.18.2"
   }
 }
