@@ -434,7 +434,22 @@ exports['coverage-ci']           = series(nodeInfo, build, function coverage() {
  * watch/debug tasks
  */
 async function startDaemon() {
-	return spawn(process.execPath, [ 'packages/appcd/bin/appcd', 'start', '--debug', '--config', '{ \"telemetry\": { \"environment\": \"development\" } }' ], { stdio: 'inherit' });
+	return spawn(
+		process.execPath,
+		[
+			'packages/appcd/bin/appcd',
+			'start',
+			'--debug',
+			'--config', '{ \"telemetry\": { \"environment\": \"development\" } }'
+		],
+		{
+			env: {
+				...process.env,
+				APPCD_ENV: 'development'
+			},
+			stdio: 'inherit'
+		}
+	);
 }
 
 function stopDaemon() {
@@ -1526,8 +1541,8 @@ exports['release-notes'] = async function releaseNotes() {
 
 	try {
 		// Step 1: get all the `appcd` releases and their `appcd-*` dependencies
-
-		for (const [ ver, ts ] of Object.entries((await fetch('/appcd')).time)) {
+		const versions = (await fetch('/appcd')).time;
+		for (const [ ver, ts ] of Object.entries(versions)) {
 			if (semver.valid(ver) && semver.gt(ver, '0.0.0')) {
 				const { prerelease } = semver.parse(ver);
 				if (!prerelease || !prerelease.length) {
@@ -1545,11 +1560,55 @@ exports['release-notes'] = async function releaseNotes() {
 			}
 		}
 
-		packages.appcd.latest = Object.keys(packages.appcd.releases).sort(semver.compare).pop();
+		const processChangelog = (name, changelog) => {
+			const changes = changelog.split('\n\n#').map((s, i) => `${i ? '#' : ''}${s}`.trim());
+			for (const chunk of changes) {
+				const m = chunk.match(/^# v?([^\s\n]*)[^\n]*\n+(.+)$/s);
+				if (m && packages[name].releases[m[1]]) {
+					packages[name].releases[m[1]].changelog = m[2];
+				}
+			}
+		};
 
-		// Step 2: for each package, fetch the latest npm package and extract the changelog
+		// Step 2: add in the local packages
+		for (const name of fs.readdirSync(path.join(__dirname, 'packages'))) {
+			const pkgJson = fs.readJsonSync(path.join(__dirname, 'packages', name, 'package.json'));
+			let { version } = pkgJson;
+			const changelog = fs.readFileSync(path.join(__dirname, 'packages', name, 'CHANGELOG.md')).toString();
+			let ts = null;
 
+			const m = changelog.match(/^# v([^\s]+)/);
+			if (m && m[1] !== version) {
+				// set release timestamp to now unless package is appcd, then make it 10 seconds older
+				ts = new Date(Date.now() + (name === 'appcd' ? 10000 : 0));
+				version = m[1];
+			}
+
+			if (!packages[name]) {
+				packages[name] = { latest: null, releases: {} };
+			}
+			packages[name].local = true;
+
+			if (!packages[name].releases[version]) {
+				packages[name].releases[version] = { changelog: null, ts };
+			}
+			packages[name].releases[version].local = true;
+
+			if (changelog) {
+				processChangelog(name, changelog);
+			}
+		}
+
+		// Step 3: for each package, fetch the latest npm package and extract the changelog
 		for (const [ pkg, info ] of Object.entries(packages)) {
+			if (!packages[pkg].latest) {
+				packages[pkg].latest = Object.keys(info.releases).sort(semver.compare).pop();
+			}
+
+			if (info.local) {
+				continue;
+			}
+
 			const url = `https://registry.npmjs.org/${pkg}/-/${pkg}-${info.latest}.tgz`;
 			const file = path.join(tempDir, `${pkg}-${info.latest}.tgz`);
 
@@ -1575,13 +1634,7 @@ exports['release-notes'] = async function releaseNotes() {
 					stream
 						.on('data', chunk => changelog += chunk)
 						.on('end', () => {
-							const changes = changelog.split('\n\n#').map((s, i) => `${i ? '#' : ''}${s}`.trim());
-							for (const chunk of changes) {
-								const m = chunk.match(/^# v?([^\s\n]*)[^\n]*\n+(.+)$/s);
-								if (m && info.releases[m[1]]) {
-									info.releases[m[1]].changelog = m[2];
-								}
-							}
+							processChangelog(pkg, changelog);
 							next();
 						})
 						.on('error', reject)
@@ -1603,15 +1656,15 @@ exports['release-notes'] = async function releaseNotes() {
 	delete packages.appcd;
 	const pkgs = Object.keys(packages).sort();
 
-	// Step 3: loop over every `appcd` release and generate the changelog
-
+	// Step 6: loop over every `appcd` release and generate the changelog
 	for (const ver of Object.keys(appcd.releases).sort(semver.compare)) {
 		const { minor, patch } = semver.parse(ver);
 		const dest = path.join(__dirname, 'docs', 'Release Notes', `Appc Daemon ${ver}.md`);
-		const { changelog, ts } = appcd.releases[ver];
-		const dt = new Date(ts);
-		const rd = dt.toDateString().split(' ').slice(1);
-		let s = `# Appc Daemon ${ver}\n\n## ${rd[0]} ${rd[1]}, ${rd[2]}\n\n`;
+		const { changelog, local, ts } = appcd.releases[ver];
+		const dt = ts ? new Date(ts) : new Date();
+		const rd = ts && dt.toDateString().split(' ').slice(1);
+		let s = `# Appc Daemon ${ver}\n\n## ${local ? 'Unreleased' : `${rd[0]} ${rd[1]}, ${rd[2]}`}\n\n`;
+
 		if (patch === 0) {
 			if (minor === 0) {
 				s += 'This is a major release with breaking changes, new features, bug fixes, and dependency updates.\n\n';
@@ -1625,7 +1678,11 @@ exports['release-notes'] = async function releaseNotes() {
 		s += `### appcd@${ver}\n\n${changelog}\n\n`;
 
 		for (const pkg of pkgs) {
-			const vers = Object.keys(packages[pkg].releases).filter(ver => new Date(packages[pkg].releases[ver].ts) < dt).sort(semver.compare);
+			const vers = Object.keys(packages[pkg].releases).filter(ver => {
+				const { ts } = packages[pkg].releases[ver];
+				return !ts || new Date(ts) < dt;
+			}).sort(semver.compare);
+
 			for (const v of vers) {
 				if (packages[pkg].releases[v].changelog) {
 					s += `### ${pkg}@${v}\n\n${packages[pkg].releases[v].changelog}\n\n`;

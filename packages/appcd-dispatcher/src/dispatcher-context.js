@@ -1,4 +1,5 @@
 import { codes } from 'appcd-response';
+import { PassThrough } from 'stream';
 
 /**
  * A context that contains request information and is routed through the dispatcher.
@@ -32,5 +33,9 @@ export default class DispatcherContext {
 	 */
 	constructor(params) {
 		Object.assign(this, params);
+
+		if (this.response === undefined) {
+			this.response = new PassThrough({ objectMode: true });
+		}
 	}
 }

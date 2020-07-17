@@ -1,5 +1,5 @@
 import util from 'util';
-import { redact } from 'appcd-util';
+import { mergeDeep, redact } from 'appcd-util';
 import { Writable } from 'stream';
 
 /**
@@ -24,20 +24,27 @@ export default class TunnelStream extends Writable {
 	 * @access public
 	 */
 	_write(message, enc, cb) {
-		if (process.connected && typeof data === 'object') {
-			process.send({
-				type: 'log',
-				// important! we must clone `message` because redact() will mutate the message
-				// object which may be referenced elsewhere
-				message: {
-					...message,
-					args: [
-						util.format(...message.args.map(a => {
-							return typeof a === 'string' ? a : util.inspect(redact(a), { colors: true, depth: null });
-						}))
-					]
-				}
-			});
+		if (process.connected && typeof message === 'object') {
+			// important! we must clone `message` because redact() will mutate the message
+			// object which may be referenced elsewhere
+
+			const formatOpts = { colors: true, depth: null };
+
+			message.args = [
+				util.format(...message.args.map(it => {
+					if (process.env.APPCD_ENV === 'development') {
+						return typeof it === 'string' ? it : util.inspect(it, formatOpts);
+					}
+
+					if (typeof it === 'string') {
+						return redact(it);
+					}
+
+					return util.inspect(redact(it, { clone: true }), formatOpts);
+				}))
+			];
+
+			process.send({ message, type: 'log' });
 		}
 		cb();
 	}

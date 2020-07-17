@@ -4,7 +4,7 @@
 
 | Version | Date       | Plugin API Version | System Node.js        | Core Node.js |     |
 | :-----: | :--------: | :----------------: | :-------------------: | :----------: | --- |
-| 4.0.0   | ?          | 2.0.0              | >=10.13.0             | 12.16.1      |     |
+| 4.0.0   | Unreleased | 2.0.0              | >=10.13.0             | 12.18.2      | [Changelog](Release%20Notes/Appc%20Daemon%204.0.0.md) |
 | 3.2.0   | 2020-01-13 | 1.1.0              | ^8.12.0 \|\| >=10.2.0 | 10.16.3      | [Changelog](Release%20Notes/Appc%20Daemon%203.2.0.md) |
 | 3.1.0   | 2019-11-06 | 1.0.0              | ^8.12.0 \|\| >=10.2.0 | 10.16.3      | [Changelog](Release%20Notes/Appc%20Daemon%203.1.0.md) |
 | 3.0.0   | 2019-08-13 | 1.0.0              | >=8.12.0              | 10.16.2      | [Changelog](Release%20Notes/Appc%20Daemon%203.0.0.md) |

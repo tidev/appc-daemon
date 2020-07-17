@@ -13,7 +13,9 @@
    managed to clean up a bunch of code and tests in the process.
  * feat: Added symlink flag to plugin descriptor. Used to guess if plugin is a yarn link.
  * feat: Added support for a `autoStart` flag in the plugin's `package.json`.
- * feat: Redact specific sensitive data from plugin debug logging.
+ * feat: Redact specific sensitive data from plugin debug logging. Redaction is disabled when
+   `APPCD_ENV` environment variable is set to `"development"` as is the case when running the Appc
+   Daemon's top-level `gulp watch` task.
  * feat: Added `appcd.logger` for plugins to create new namespaced loggers.
  * feat: Added support for plugins to specify their own product app telemetry guid `telemetry.app`
    in their config file. [(DAEMON-299)](https://jira.appcelerator.org/browse/DAEMON-299)
