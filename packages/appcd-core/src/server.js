@@ -447,26 +447,27 @@ export default class Server {
 			this.config.set(dest, value);
 		};
 
-		copySetting('android.adb.port',                  'android.adb.port',                'number');
-		copySetting('android.appInstallTimeout',         'android.adb.install.timeout',     'number');
-		copySetting('android.appStartTimeout',           'android.adb.start.timeout',       'number');
-		copySetting('android.appStartRetryInterval',     'android.adb.start.retryInterval', 'number');
-		copySetting('android.emulatorStartTimeout',      'android.emulator.start.timeout',  'number');
-		copySetting('android.executables.aapt',          'android.executables.aapt');
-		copySetting('android.executables.adb',           'android.executables.adb');
-		copySetting('android.executables.aidl',          'android.executables.aidl');
-		copySetting('android.executables.dx',            'android.executables.dx');
-		copySetting('android.executables.emulator',      'android.executables.emulator');
-		copySetting('android.executables.ndkbuild',      'android.executables.ndkbuild');
-		copySetting('android.executables.zipalign',      'android.executables.zipalign');
-		copySetting('android.ndkPath',                   'android.ndk.searchPaths',         'array');
-		copySetting('android.sdkPath',                   'android.sdk.searchPaths',         'array');
+		copySetting('android.adb.port',                   'android.adb.port',                'number');
+		copySetting('android.appInstallTimeout',          'android.adb.install.timeout',     'number');
+		copySetting('android.appStartTimeout',            'android.adb.start.timeout',       'number');
+		copySetting('android.appStartRetryInterval',      'android.adb.start.retryInterval', 'number');
+		copySetting('android.emulatorStartTimeout',       'android.emulator.start.timeout',  'number');
+		copySetting('android.executables.aapt',           'android.executables.aapt');
+		copySetting('android.executables.adb',            'android.executables.adb');
+		copySetting('android.executables.aidl',           'android.executables.aidl');
+		copySetting('android.executables.dx',             'android.executables.dx');
+		copySetting('android.executables.emulator',       'android.executables.emulator');
+		copySetting('android.executables.ndkbuild',       'android.executables.ndkbuild');
+		copySetting('android.executables.zipalign',       'android.executables.zipalign');
+		copySetting('android.ndkPath',                    'android.ndk.searchPaths',         'array');
+		copySetting('android.sdkPath',                    'android.sdk.searchPaths',         'array');
+		copySetting('android.buildTools.selectedVersion', 'titanium.android.buildTools.selectedVersion');
 
-		copySetting('java.home',                         'java.searchPaths',                'array');
+		copySetting('java.home',                          'java.searchPaths',                'array');
 
-		copySetting('osx.executables.security',          'ios.executables.security');
-		copySetting('osx.executables.xcodeSelect',       'ios.executables.xcodeSelect');
-		copySetting('paths.xcode',                       'ios.xcode.searchPaths',           'array');
+		copySetting('osx.executables.security',           'ios.executables.security');
+		copySetting('osx.executables.xcodeSelect',        'ios.executables.xcodeSelect');
+		copySetting('paths.xcode',                        'ios.xcode.searchPaths',           'array');
 
 		const home = this.config.get('home');
 		if (home) {

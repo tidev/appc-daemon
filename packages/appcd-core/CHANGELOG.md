@@ -10,6 +10,7 @@
    `appcd-default-plugins` and the associated `plugins.installDefault` config setting.
    [(DAEMON-311)](https://jira.appcelerator.org/browse/DAEMON-311)
  * feat(server): Stop config service when daemon is gracefully shutdown.
+ * feat(server): Added import for `android.buildTools.selectedVersion` Titanium config setting.
  * refactor: Updated to `appcd-config@3.0.0`, created the Appc Daemon config schema, and converted
    the `default.js` config to `default.json`.
  * refactor: Removed Titanium CLI Genymotion config import.
