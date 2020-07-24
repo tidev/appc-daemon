@@ -51,7 +51,7 @@ export default {
 			return;
 		}
 
-		const table = createTable('Name', 'Installed', '', 'Available');
+		const table = createTable([ 'Name', 'Installed', '', 'Available' ]);
 		for (const pkg of results) {
 			table.push([
 				green(pkg.name),
@@ -67,13 +67,14 @@ export default {
 		if (!argv.yes) {
 			await new Promise(resolve => {
 				terminal.once('keypress', str => {
-					terminal.stdout.write('\n');
+					terminal.stderr.cursorTo(0);
+					terminal.stderr.clearLine();
 					if (str === 'y' || str === 'Y') {
 						return resolve();
 					}
 					process.exit(0);
 				});
-				terminal.stdout.write('Do you want to update? (y/N) ');
+				terminal.stderr.write('Do you want to update? (y/N) ');
 			});
 		}
 

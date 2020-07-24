@@ -1,4 +1,5 @@
 export default {
+	aliases: [ 'plugin' ],
 	commands: `${__dirname}/pm`,
 	desc: 'List, install, update, search, and uninstall appcd plugins',
 	help: {

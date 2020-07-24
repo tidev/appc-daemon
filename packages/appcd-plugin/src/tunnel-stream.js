@@ -1,5 +1,5 @@
 import util from 'util';
-import { mergeDeep, redact } from 'appcd-util';
+import { redact } from 'appcd-util';
 import { Writable } from 'stream';
 
 /**

@@ -57,7 +57,7 @@ export default {
 
 		console.log(`Found ${cyan(latestVersions.length)} plugin${latestVersions.length !== 1 ? 's' : ''}${unsupported ? gray(` (${unsupported} unsupported)`) : ''}\n`);
 
-		const table = createTable('Name', 'Version', 'Description');
+		const table = createTable([ 'Name', 'Version', 'Description' ]);
 		for (const pkg of latestVersions) {
 			if (pkg.supported) {
 				table.push([ green(pkg.name), pkg.version, pkg.description || 'n/a' ]);

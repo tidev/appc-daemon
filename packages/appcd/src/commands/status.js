@@ -22,7 +22,7 @@ export default {
 
 		const logger = createInstanceWithDefaults().config({ theme: 'compact' }).enable('*').pipe(new StdioStream());
 		const { log } = logger;
-		const { alert, highlight, note } = logger.styles;
+		const { alert, highlight, magenta, note } = logger.styles;
 		const cfg = loadConfig(argv);
 		const { client, request } = createRequest(cfg, '/appcd/status');
 
@@ -57,22 +57,22 @@ export default {
 				log();
 
 				// fs watcher information
-				table = createTable(note('Filesystem Watch System'));
+				log(magenta('Filesystem'.toUpperCase()));
+				table = createTable([], 2);
 				table.push([ 'Nodes',               highlight(status.fs.nodes) ]);
 				table.push([ 'Node.js FS Watchers', highlight(status.fs.fswatchers) ]);
 				table.push([ 'Client Watchers',     highlight(status.fs.watchers) ]);
 				log(table.toString());
-				log(status.fs.tree.replace(/└/g, '╰'));
-				log();
+				log(`\n${status.fs.tree}\n`);
 
 				// eslint-disable-next-line
 				const homeRE = new RegExp(`^${os.homedir()}`);
 				const now = Date.now();
 
 				// plugin information
-				log(note('Plugins'));
+				log(magenta('Plugins'.toUpperCase()));
 				if (status.plugins && status.plugins.registered.length) {
-					const cols = [ 'Name', 'Path', 'State', 'Active/Total\nRequests', 'Issues' ];
+					const cols = [ '\nName', '\nPath', '\nState', 'Active/Total\nRequests', '\nIssues' ];
 					const rows = [];
 					let issues = false;
 
@@ -125,7 +125,7 @@ export default {
 						cols.pop();
 					}
 
-					table = createTable.apply(null, cols);
+					table = createTable(cols, 2);
 					for (const row of rows) {
 						if (!issues) {
 							row.pop();
@@ -139,9 +139,9 @@ export default {
 				log();
 
 				// subprocess information
-				log(note('Subprocesses'));
+				log(magenta('Subprocesses'.toUpperCase()));
 				if (status.subprocesses.length) {
-					table = createTable('PID', 'Command', 'Started');
+					table = createTable([ 'PID', 'Command', 'Started' ], 2);
 					for (const subprocess of status.subprocesses) {
 						let args = '';
 						if (subprocess.args.length) {
@@ -170,8 +170,8 @@ export default {
 				}
 				log();
 
-				log(note('Health'));
-				table = createTable('Process', 'PID', 'CPU Usage', 'Heap Used/Total', 'RSS', 'Uptime');
+				log(magenta('Health'.toUpperCase()));
+				table = createTable([ 'Process', 'PID', 'CPU Usage', 'Heap Used/Total', 'RSS', 'Uptime' ], 2);
 				table.push([
 					highlight(`appcd-core@${status.version}`),
 					status.pid,
