@@ -42,6 +42,7 @@ export default {
 		const unsupported = plugins.reduce((count, plugin) => (plugin.supported ? count : count + 1), 0);
 		const links = plugins.reduce((count, plugin) => (plugin.link ? count + 1 : count), 0);
 		const star = process.platform === 'win32' ? '*' : '★';
+		const warn = process.platform === 'win32' ? '!!' : '⚠';
 
 		console.log(`Found ${cyan(plugins.length)} plugin${plugins.length !== 1 ? 's' : ''}${unsupported ? gray(` (${unsupported} unsupported)`) : ''}\n`);
 
@@ -53,12 +54,11 @@ export default {
 				}
 				console.log(green(`${plugin.name} ${plugin.version}`) + (plugin.link ? magenta(`  (${star} yarn link)`) : ''));
 				if (!plugin.supported) {
-					console.log(`  ${yellow(`Unsupported: ${plugin.error}`)}\n`);
+					console.log(`  ${yellow(`${warn} Unsupported: ${plugin.error}`)}`);
 				}
 				if (plugin.description) {
-					console.log(`  ${plugin.description}`);
+					console.log(`  Description:   ${cyan(plugin.description)}`);
 				}
-				console.log();
 				if (plugin.apiVersion) {
 					console.log(`  API Version:   ${cyan(plugin.apiVersion)}`);
 				}
@@ -79,7 +79,7 @@ export default {
 				}
 			}
 		} else {
-			const table = createTable('Name', 'Version', 'Description', 'Endpoint');
+			const table = createTable([ `${links ? '  ' : ''}Name`, 'Version', 'Description', 'Endpoint' ]);
 			for (const plugin of plugins) {
 				const x = !links ? '' : plugin.link ? `${magenta(star)} ` : '  ';
 				if (plugin.supported) {

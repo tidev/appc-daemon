@@ -15,9 +15,10 @@ npm i -g appcd@4.0.0
  * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.
    [(DAEMON-334)](https://jira.appcelerator.org/browse/DAEMON-334)
  * BREAKING CHANGE(config): `config` command no longer returns status as apart of JSON output.
- * BREAKING CHANGE(config): `config` command does not return current value when doing a `set`, `push`, or
-   `unshift`.
- * BREAKING CHANGE(config): `config list` command no longer supports filtering, use `config get` instead.
+ * BREAKING CHANGE(config): `config` command does not return current value when doing a `set`,
+   `push`, or `unshift`.
+ * BREAKING CHANGE(config): `config list` command no longer supports filtering, use `config get`
+   instead.
  * BREAKING CHANGE(config): Write operations such as `set` return `"OK"` instead of `"Saved"`.
  * feat(status): Added Plugin API Version to the status output.
    [(DAEMON-314)](https://jira.appcelerator.org/browse/DAEMON-314)
@@ -29,11 +30,13 @@ npm i -g appcd@4.0.0
  * refactor: Updated to latest `AppcdConfig` usage where `save()` is now synchronous and we no
    longer need to set the config file to save to since it uses the same file path that was used to
    load the config.
- * refactor: Convert actions from arguments to subcommands.
+ * refactor(config): Replaced config action with subcommands for cleaner code and improved help
+   information.
  * refactor: Replaced `cli-table2` with `cli-table3`.
  * refactor(config): Do not show the banner for `config` related commands.
  * refactor(status): Cleaned up plugin list.
- * refactor(status): Replace user's home directory references in plugin and subprocess paths with `~`.
+ * refactor(status): Replace user's home directory references in plugin and subprocess paths with
+   `~`.
  * chore: Updated dependencies.
 
 ### appcd-agent@2.0.0
@@ -94,6 +97,7 @@ npm i -g appcd@4.0.0
    `appcd-default-plugins` and the associated `plugins.installDefault` config setting.
    [(DAEMON-311)](https://jira.appcelerator.org/browse/DAEMON-311)
  * feat(server): Stop config service when daemon is gracefully shutdown.
+ * feat(server): Added import for `android.buildTools.selectedVersion` Titanium config setting.
  * refactor: Updated to `appcd-config@3.0.0`, created the Appc Daemon config schema, and converted
    the `default.js` config to `default.json`.
  * refactor: Removed Titanium CLI Genymotion config import.

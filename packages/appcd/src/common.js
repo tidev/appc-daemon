@@ -127,19 +127,20 @@ export function createRequest(cfg, path, data, type) {
 /**
  * Creates a table with default styles and padding.
  *
- * @param {...String} head - One or more headings.
+ * @param {Array.<String>} head - One or more headings.
+ * @param {Number} [indent] - The number of spaces to indent the table.
  * @returns {Table}
  */
-export function createTable(...head) {
+export function createTable(head, indent = 0) {
 	return new Table({
 		chars: {
 			bottom: '', 'bottom-left': '', 'bottom-mid': '', 'bottom-right': '',
-			left: '', 'left-mid': '',
+			left: ' '.repeat(indent), 'left-mid': '',
 			mid: '', 'mid-mid': '', middle: '  ',
 			right: '', 'right-mid': '',
 			top: '', 'top-left': '', 'top-mid': '', 'top-right': ''
 		},
-		head,
+		head: Array.isArray(head) ? head.map(s => String(s).toUpperCase()) : head,
 		style: {
 			head: [ 'bold' ],
 			'padding-left': 0,
