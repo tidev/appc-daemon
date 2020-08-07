@@ -8,7 +8,7 @@ Allows config settings to be set and deleted.
 
 ```
 $ appcd exec /appcd/config
-{ home: '~/.appcelerator/appcd',
+{ home: '~/.axway/appcd',
   foo: 'bar',
   core: { v8: { memory: 'auto' } },
   network:
@@ -26,12 +26,12 @@ $ appcd exec /appcd/config
      daemonize: true,
      group: null,
      hostname: '127.0.0.1',
-     pidFile: '~/.appcelerator/appcd/appcd.pid',
+     pidFile: '~/.axway/appcd/appcd.pid',
      port: 1732,
      user: null },
   telemetry:
    { enabled: true,
-     eventsDir: '~/.appcelerator/appcd/telemetry',
+     eventsDir: '~/.axway/appcd/telemetry',
      sendBatchSize: 10,
      sendInterval: 60000,
      sendTimeout: 60000,

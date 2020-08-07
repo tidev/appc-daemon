@@ -34,7 +34,7 @@ let pm = null;
 
 const config = new AppcdConfig({
 	data: {
-		home: expandPath('~/.appcelerator/appcd'),
+		home: expandPath('~/.axway/appcd'),
 		plugins: {
 			defaultInactivityTimeout: 60 * 60 * 1000
 		},

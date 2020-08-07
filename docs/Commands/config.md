@@ -14,7 +14,7 @@ read-only, then an error is returned. You can force settings to be changed by sp
 If the Appc Daemon is _not_ running, then the `config` command will use the config files. When
 altering a config setting, it will save the setting to the user config file.
 
-The user config file is located at `~/.appcelerator/appcd/config.json`.
+The user config file is located at `~/.axway/appcd/config.json`.
 
 For the list of config settings, visit the [Configuration](../Configuration.md) document.
 

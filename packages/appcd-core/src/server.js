@@ -308,7 +308,7 @@ export default class Server {
 	 */
 	purgeUnusedNodejs() {
 		const purged = purgeUnusedNodejsExecutables({
-			maxAge: this.config.get('server.nodejsMaxUnusedAge', 90 * 24 * 60 * 60 * 1000),
+			maxAge: this.config.get('server.nodejsMaxUnusedAge', 90 * 24 * 60 * 60 * 1000), // 90 days
 			nodeHome: expandPath(this.config.get('home'), 'node')
 		});
 

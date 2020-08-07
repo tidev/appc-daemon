@@ -39,7 +39,7 @@ let tmpNodePath = null;
 
 const api = {
 	initHomeDir(fixture) {
-		const appcdHome = path.join(os.homedir(), '.appcelerator', 'appcd');
+		const appcdHome = path.join(os.homedir(), '.axway', 'appcd');
 		log(`Copying ${highlight(fixture)} => ${highlight(appcdHome)}`);
 		fs.copySync(fixture, appcdHome);
 	},
@@ -194,7 +194,7 @@ const api = {
 };
 
 export function getDebugLog() {
-	const dir = path.join(os.homedir(), '.appcelerator', 'appcd', 'log');
+	const dir = path.join(os.homedir(), '.axway', 'appcd', 'log');
 	if (fs.existsSync(dir)) {
 		try {
 			for (const name of fs.readdirSync(dir).sort().reverse()) {
@@ -220,7 +220,7 @@ export function makeTest(fn) {
 		} catch (e) {
 			try {
 				const { JENKINS_ARTIFACTS_DIR, JENKINS_NODEJS_VERSION, JENKINS_PLATFORM_NAME } = process.env;
-				const logDir = path.join(os.homedir(), '.appcelerator', 'appcd', 'log');
+				const logDir = path.join(os.homedir(), '.axway', 'appcd', 'log');
 
 				if (JENKINS_ARTIFACTS_DIR && fs.existsSync(logDir)) {
 					const artifactsDir = path.resolve(JENKINS_ARTIFACTS_DIR);
@@ -286,7 +286,7 @@ export function emptyHomeDir() {
 }
 
 export function getAppcdHome() {
-	return path.join(os.homedir(), '.appcelerator', 'appcd');
+	return path.join(os.homedir(), '.axway', 'appcd');
 }
 
 export function stripColors(s) {

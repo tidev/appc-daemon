@@ -1,10 +1,15 @@
 /* eslint-disable quote-props */
 
 import AppcdConfig, { Joi } from 'appcd-config';
+import appcdCoreLogger from './logger';
 import fs from 'fs-extra';
 import path from 'path';
 
 import { expandPath } from 'appcd-path';
+import { isDir } from 'appcd-fs';
+
+const logger = appcdCoreLogger('appcd:config');
+const { highlight } = appcdCoreLogger.styles;
 
 const defaults = fs.readJSONSync(path.resolve(__dirname, '..', 'conf', 'default.json'));
 
@@ -220,8 +225,17 @@ export function loadConfig({ config, configFile } = {}) {
 
 	const cfg = new AppcdConfig({ data: config, schema });
 
+	// in v4.0.0, the appcd home directory was moved from `~/.appcelerator/appcd` to
+	// `~/.axway/appcd` to adhere to the Axway CLI style guidelines
+	const oldAppcdHome = expandPath('~/.appcelerator/appcd');
+	const appcdHome = expandPath(cfg.get('home'));
+	if (isDir(oldAppcdHome) && !isDir(appcdHome)) {
+		logger.log(`Migrating appcd home directory: ${highlight(oldAppcdHome)} => ${highlight(appcdHome)}`);
+		fs.moveSync(oldAppcdHome, appcdHome);
+	}
+
 	// load the user-defined config file
-	cfg.load(expandPath(configFile || path.join(cfg.get('home'), 'config.json')), { graceful: true });
+	cfg.load(expandPath(configFile || path.join(appcdHome, 'config.json')), { graceful: true });
 
 	return cfg;
 }

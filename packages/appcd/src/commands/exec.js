@@ -1,7 +1,7 @@
 export default {
 	args: [
 		{ name: 'path', required: true, regex: /^\//, desc: 'The path to request' },
-		{ name: 'json', type: 'json', desc: 'Optional JSON payload to send' }
+		{ name: 'data', type: 'json', desc: 'Optional JSON payload to send' }
 	],
 	desc: 'Connects to the Appc Daemon and executes the request',
 	help: {
@@ -28,9 +28,9 @@ Note that the command will fail if the Appc Daemon is not running.`;
 		const { createRequest, loadConfig } = await import('../common');
 
 		const cfg = loadConfig(argv);
-		const { path, json } = argv;
+		const { data, path } = argv;
 
-		createRequest(cfg, path, json, argv.subscribe ? 'subscribe' : undefined)
+		createRequest(cfg, path, data, argv.subscribe ? 'subscribe' : undefined)
 			.request
 			.on('response', (message, response) => {
 				console.log(JSON.stringify(response, null, 2));

@@ -20,7 +20,7 @@ loaded config files.
 
 #### `--config-file <file>`
 
-A path to a config file to load. Defaults to `~/.appcelerator/appcd/config.js`.
+A path to a config file to load. Defaults to `~/.axway/appcd/config.js`.
 
 #### `--debug`
 

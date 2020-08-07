@@ -57,7 +57,7 @@ describe('Config', () => {
 				name: 'test',
 				title: 'Test'
 			},
-			home: '~/.appcelerator/appcd',
+			home: '~/.axway/appcd',
 			network: {
 				agentOptions: null,
 				caFile: null,
@@ -79,7 +79,7 @@ describe('Config', () => {
 				hostname: '127.0.0.1',
 				nodejsMaxUnusedAge: 90 * 24 * 60 * 60 * 1000,
 				persistDebugLog: true,
-				pidFile: '~/.appcelerator/appcd/appcd.pid',
+				pidFile: '~/.axway/appcd/appcd.pid',
 				port: 1732,
 				user: null
 			},
@@ -87,7 +87,7 @@ describe('Config', () => {
 				app: 'ea327577-858f-4d31-905e-fa670f50ef48',
 				enabled: true,
 				environment: 'test',
-				eventsDir: '~/.appcelerator/appcd/telemetry',
+				eventsDir: '~/.axway/appcd/telemetry',
 				sendBatchSize: 10,
 				sendInterval: 60000,
 				sendTimeout: 60000,

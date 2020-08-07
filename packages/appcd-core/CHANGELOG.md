@@ -2,7 +2,7 @@
 
  * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.
    [(DAEMON-334)](https://jira.appcelerator.org/browse/DAEMON-334)
- * BREAKING CHANGE: Bumped core Node.js version to 12.18.2. This affects all plugins.
+ * BREAKING CHANGE: Bumped core Node.js version to 12.18.3. This affects all plugins.
    [(DAEMON-319)](https://jira.appcelerator.org/browse/DAEMON-319)
  * BREAKING CHANGE: Main file exports library instead of the main entry point.
  * BREAKING CHANGE(status-monitor): Daemon uptime has changed from seconds to milliseconds.
@@ -15,6 +15,8 @@
    the `default.js` config to `default.json`.
  * refactor: Removed Titanium CLI Genymotion config import.
    [(DAEMON-313)](https://jira.appcelerator.org/browse/DAEMON-313)
+ * refactor: Changed default appcd home directory from `~/.appcelerator/appcd` to `~/.axway/appcd`
+   and migrate the old home directory to the new location.
  * fix(websocket-session): Removed `message` from response if `undefined` so that msgpack cannot
    convert it to `null`.
  * fix: Cast the process id to a string when writing the pid file.
