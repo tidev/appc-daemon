@@ -22,7 +22,7 @@ console.log(`mid: ${mid}`);
 If you want to persist the machine id, pass in a path to the `.mid` file.
 
 ```js
-const mid = await getMachineId('~/.appcelerator/appcd/.mid');
+const mid = await getMachineId('~/.axway/appcd/.mid');
 console.log(`mid: ${mid}`);
 ```
 

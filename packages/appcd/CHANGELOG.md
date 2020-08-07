@@ -25,6 +25,9 @@
  * refactor(status): Cleaned up plugin list.
  * refactor(status): Replace user's home directory references in plugin and subprocess paths with
    `~`.
+ * fix(exec): Renamed `"json"` argument to `"data"`. The `exec` command does not have a  `--json`
+   flag, however if it's passed in, the `"json"` value will be set to `true` instead of an object
+   containing the request data payload.
  * chore: Updated dependencies.
 
 # v3.2.0 (Jan 13, 2020)

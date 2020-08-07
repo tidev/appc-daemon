@@ -24,7 +24,7 @@ The Appc Daemon requires Node.js 10.13.0 or newer installed on your machine.
 The appcd CLI will spawn the appcd core using with the exact Node.js version that the core has
 specified in its `package.json`.
 
-The appcd CLI will check to see if `~/.appcelerator/appcd/node/<version>/<platform>/<arch>/node`
+The appcd CLI will check to see if `~/.axway/appcd/node/<version>/<platform>/<arch>/node`
 exists. If it doesn't, the appcd CLI will download it from Node.js' website, then extract and
 install it.
 
@@ -34,7 +34,7 @@ Note that npm or Yarn can be used to install the Appc Daemon, however Yarn is re
 development.
 
 As the Appc Daemon is upgraded, the appcd core may depend on a new version of Node.js. In order to
-avoid having unused Node.js versions in the `~/.appcelerator/appcd/node` directory, the daemon will
+avoid having unused Node.js versions in the `~/.axway/appcd/node` directory, the daemon will
 delete Node.js versions that haven't been used for some period of time. If an old version is needed,
 it will re-download and install it.
 

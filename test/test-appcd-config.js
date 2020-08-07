@@ -7,7 +7,7 @@ import {
 	stripColors
 } from './common';
 
-const configFile = path.join(os.homedir(), '.appcelerator', 'appcd', 'config.json');
+const configFile = path.join(os.homedir(), '.axway', 'appcd', 'config.json');
 
 describe('appcd config', function () {
 	this.timeout(120000);
@@ -54,7 +54,7 @@ describe('appcd config', function () {
 				'core.v8.memory                   = auto',
 				'environment.name                 = test',
 				'environment.title                = Test',
-				'home                             = ~/.appcelerator/appcd',
+				'home                             = ~/.axway/appcd',
 				'network.agentOptions             = null',
 				'network.caFile                   = null',
 				'network.certFile                 = null',
@@ -71,13 +71,13 @@ describe('appcd config', function () {
 				'server.hostname                  = 127.0.0.1',
 				'server.nodejsMaxUnusedAge        = 7776000000',
 				'server.persistDebugLog           = true',
-				'server.pidFile                   = ~/.appcelerator/appcd/appcd.pid',
+				'server.pidFile                   = ~/.axway/appcd/appcd.pid',
 				'server.port                      = 1732',
 				'server.user                      = null',
 				'telemetry.app                    = ea327577-858f-4d31-905e-fa670f50ef48',
 				'telemetry.enabled                = true',
 				'telemetry.environment            = test',
-				'telemetry.eventsDir              = ~/.appcelerator/appcd/telemetry',
+				'telemetry.eventsDir              = ~/.axway/appcd/telemetry',
 				'telemetry.sendBatchSize          = 10',
 				'telemetry.sendInterval           = 60000',
 				'telemetry.sendTimeout            = 60000',
@@ -124,7 +124,7 @@ describe('appcd config', function () {
 							'core.v8.memory                   = auto',
 							'environment.name                 = test',
 							'environment.title                = Test',
-							'home                             = ~/.appcelerator/appcd',
+							'home                             = ~/.axway/appcd',
 							'network.agentOptions             = null',
 							'network.caFile                   = null',
 							'network.certFile                 = null',
@@ -141,13 +141,13 @@ describe('appcd config', function () {
 							'server.hostname                  = 127.0.0.1',
 							'server.nodejsMaxUnusedAge        = 7776000000',
 							'server.persistDebugLog           = true',
-							'server.pidFile                   = ~/.appcelerator/appcd/appcd.pid',
+							'server.pidFile                   = ~/.axway/appcd/appcd.pid',
 							'server.port                      = 1732',
 							'server.user                      = null',
 							'telemetry.app                    = ea327577-858f-4d31-905e-fa670f50ef48',
 							'telemetry.enabled                = true',
 							'telemetry.environment            = test',
-							'telemetry.eventsDir              = ~/.appcelerator/appcd/telemetry',
+							'telemetry.eventsDir              = ~/.axway/appcd/telemetry',
 							'telemetry.sendBatchSize          = 10',
 							'telemetry.sendInterval           = 60000',
 							'telemetry.sendTimeout            = 60000',
@@ -170,7 +170,7 @@ describe('appcd config', function () {
 							'core.v8.memory                   = auto',
 							'environment.name                 = test',
 							'environment.title                = Test',
-							'home                             = ~/.appcelerator/appcd',
+							'home                             = ~/.axway/appcd',
 							'network.agentOptions             = null',
 							'network.caFile                   = null',
 							'network.certFile                 = null',
@@ -187,13 +187,13 @@ describe('appcd config', function () {
 							'server.hostname                  = 127.0.0.1',
 							'server.nodejsMaxUnusedAge        = 7776000000',
 							'server.persistDebugLog           = true',
-							'server.pidFile                   = ~/.appcelerator/appcd/appcd.pid',
+							'server.pidFile                   = ~/.axway/appcd/appcd.pid',
 							'server.port                      = 1732',
 							'server.user                      = null',
 							'telemetry.app                    = ea327577-858f-4d31-905e-fa670f50ef48',
 							'telemetry.enabled                = true',
 							'telemetry.environment            = test',
-							'telemetry.eventsDir              = ~/.appcelerator/appcd/telemetry',
+							'telemetry.eventsDir              = ~/.axway/appcd/telemetry',
 							'telemetry.sendBatchSize          = 10',
 							'telemetry.sendInterval           = 60000',
 							'telemetry.sendTimeout            = 60000',
@@ -221,7 +221,7 @@ describe('appcd config', function () {
 								name: 'test',
 								title: 'Test'
 							},
-							home: '~/.appcelerator/appcd',
+							home: '~/.axway/appcd',
 							network: {
 								agentOptions: null,
 								caFile: null,
@@ -243,7 +243,7 @@ describe('appcd config', function () {
 								hostname: '127.0.0.1',
 								nodejsMaxUnusedAge: 90 * 24 * 60 * 60 * 1000,
 								persistDebugLog: true,
-								pidFile: '~/.appcelerator/appcd/appcd.pid',
+								pidFile: '~/.axway/appcd/appcd.pid',
 								port: 1732,
 								user: null
 							},
@@ -251,7 +251,7 @@ describe('appcd config', function () {
 								app: 'ea327577-858f-4d31-905e-fa670f50ef48',
 								enabled: true,
 								environment: 'test',
-								eventsDir: '~/.appcelerator/appcd/telemetry',
+								eventsDir: '~/.axway/appcd/telemetry',
 								sendBatchSize: 10,
 								sendInterval: 60000,
 								sendTimeout: 60000,
@@ -287,7 +287,7 @@ describe('appcd config', function () {
 								hostname: '127.0.0.1',
 								nodejsMaxUnusedAge: 90 * 24 * 60 * 60 * 1000,
 								persistDebugLog: true,
-								pidFile: '~/.appcelerator/appcd/appcd.pid',
+								pidFile: '~/.axway/appcd/appcd.pid',
 								port: 1732,
 								user: null
 							});

@@ -11,7 +11,7 @@
 		"title": "Production"
 	},
 
-	"home": "~/.appcelerator/appcd",
+	"home": "~/.axway/appcd",
 
 	"network": {
 		"agentOptions": null,

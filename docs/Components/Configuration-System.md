@@ -3,7 +3,7 @@
 ## Configuration System
 
 The Appc Daemon contains a default configuration file located inside the `appcd-core` package.
-User-defined config settings are stored in `~/.appcelerator/appcd/config.json`.
+User-defined config settings are stored in `~/.axway/appcd/config.json`.
 
 ## Usage
 
