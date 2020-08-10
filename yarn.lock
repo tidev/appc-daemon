@@ -4788,10 +4788,10 @@ esdoc@^1.1.0:
     minimist "1.2.0"
     taffydb "2.7.3"
 
-eslint-config-axway@^4.7.0:
-  version "4.7.0"
-  resolved "https://registry.yarnpkg.com/eslint-config-axway/-/eslint-config-axway-4.7.0.tgz#f9f6abf9413a7ee432b363b3c62d3bdfbba9fbb3"
-  integrity sha512-VA3LcdWpn5SQOqB99CD2K+v6prrRzNkShPFK2eC5a5XV4dNMMHOY/z9A1xS4g1s0IlrJBtee9Z+i0+2o8gFXsA==
+eslint-config-axway@^4.7.1:
+  version "4.7.1"
+  resolved "https://registry.yarnpkg.com/eslint-config-axway/-/eslint-config-axway-4.7.1.tgz#2178240cbce3a16f257029a932b06da16bab3f6b"
+  integrity sha512-WjggddGxiRrgm/s7jxiTC4peqf9tLq/LHxm/qXHijoSDqh7eIf46hNet1dcng6wF/oJxWgKaTtM5+xDta/5LSg==
   dependencies:
     eslint-plugin-chai-expect "^2.1.0"
     eslint-plugin-import "^2.20.2"
@@ -6054,9 +6054,9 @@ glogg@^1.0.0:
     sparkles "^1.0.0"
 
 got@^11.3.0, got@^11.5.1:
-  version "11.5.1"
-  resolved "https://registry.yarnpkg.com/got/-/got-11.5.1.tgz#bf098a270fe80b3fb88ffd5a043a59ebb0a391db"
-  integrity sha512-reQEZcEBMTGnujmQ+Wm97mJs/OK6INtO6HmLI+xt3+9CvnRwWjXutUvb2mqr+Ao4Lu05Rx6+udx9sOQAmExMxA==
+  version "11.5.2"
+  resolved "https://registry.yarnpkg.com/got/-/got-11.5.2.tgz#772e3f3a06d9c7589c7c94dc3c83cdb31ddbf742"
+  integrity sha512-yUhpEDLeuGiGJjRSzEq3kvt4zJtAcjKmhIiwNp/eUs75tRlXfWcHo5tcBaMQtnjHWC7nQYT5HkY/l0QOQTkVww==
   dependencies:
     "@sindresorhus/is" "^3.0.0"
     "@szmarczak/http-timer" "^4.0.5"

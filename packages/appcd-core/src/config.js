@@ -1,15 +1,16 @@
 /* eslint-disable quote-props */
 
+/**
+ * IMPORTANT: This file is required directly by `appcd` and thus MUST NOT require `appcd-logger`
+ * because `appcd-logger` creates a `snooplogg` instance that will pipe to stdout. This means that
+ * any debug logging will be printed for every `appcd` command.
+ */
+
 import AppcdConfig, { Joi } from 'appcd-config';
-import appcdCoreLogger from './logger';
 import fs from 'fs-extra';
 import path from 'path';
-
 import { expandPath } from 'appcd-path';
 import { isDir } from 'appcd-fs';
-
-const logger = appcdCoreLogger('appcd:config');
-const { highlight } = appcdCoreLogger.styles;
 
 const defaults = fs.readJSONSync(path.resolve(__dirname, '..', 'conf', 'default.json'));
 
@@ -230,7 +231,6 @@ export function loadConfig({ config, configFile } = {}) {
 	const oldAppcdHome = expandPath('~/.appcelerator/appcd');
 	const appcdHome = expandPath(cfg.get('home'));
 	if (isDir(oldAppcdHome) && !isDir(appcdHome)) {
-		logger.log(`Migrating appcd home directory: ${highlight(oldAppcdHome)} => ${highlight(appcdHome)}`);
 		fs.moveSync(oldAppcdHome, appcdHome);
 	}
 
