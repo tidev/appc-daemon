@@ -48,5 +48,6 @@ interface (CLI), core, and supporting packages.
 	3. [Node.js](Clients/Nodejs.md)
 14. [Distribution](Distribution.md)
 15. [Unit Testing](Unit-Testing.md)
-16. [JIRA Issue Tracking :link:](https://jira.appcelerator.org/projects/DAEMON/issues)
-17. [Jenkins Continuous Integration :link:](https://jenkins.appcelerator.org/blue/organizations/jenkins/cli%2Fappc-daemon/activity/)
+16. [Troubleshooting](Troubleshooting.md)
+17. [JIRA Issue Tracking :link:](https://jira.appcelerator.org/projects/DAEMON/issues)
+18. [Jenkins Continuous Integration :link:](https://jenkins.appcelerator.org/blue/organizations/jenkins/cli%2Fappc-daemon/activity/)
