@@ -4,6 +4,9 @@ if (!Error.prepareStackTrace) {
 }
 
 import cli from './cli';
+import appcdLogger from 'appcd-logger';
+
+const { alert } = appcdLogger.styles;
 
 cli.exec()
 	.catch(err => {
@@ -15,7 +18,7 @@ cli.exec()
 				result: err.toString()
 			}, null, 2));
 		} else {
-			console.error(err.message || err);
+			console.error(alert(err));
 		}
 
 		process.exit(exitCode);
