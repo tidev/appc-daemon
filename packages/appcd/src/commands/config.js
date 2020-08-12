@@ -134,10 +134,6 @@ async function runConfig(action, { argv, cmd, console, setExitCode }) {
 				.once('error', async (err) => {
 					client.disconnect();
 
-					// in general, we do not want to show the help screen for the errors below
-					// since they are valid messages and we're just using errors for flow control
-					cmd.showHelpOnError = false;
-
 					if (err.code === 'ECONNREFUSED') {
 						// the daemon is not running, need to do things the easy way
 
@@ -204,10 +200,7 @@ async function runConfig(action, { argv, cmd, console, setExitCode }) {
 				});
 		});
 	} catch (err) {
-		if (json) {
-			cmd.showHelpOnError = false;
-			err.json = json;
-		}
+		err.json = json;
 		throw err;
 	}
 }

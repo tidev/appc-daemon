@@ -58,7 +58,6 @@ export default {
 					if (err.code === 'ECONNREFUSED') {
 						err = new Error('Server not running');
 						err.exitCode = 3;
-						this.showHelpOnError = false;
 					}
 					reject(err);
 				});
