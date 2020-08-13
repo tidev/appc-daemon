@@ -5,6 +5,7 @@ import globalPrefix from 'global-prefix';
 import path from 'path';
 import Table from 'cli-table3';
 
+import { ansi } from 'cli-kit';
 import { expandPath } from 'appcd-path';
 import { isFile } from 'appcd-fs';
 import { loadConfig as appcdLoadConfig } from 'appcd-core';
@@ -140,9 +141,9 @@ export function createTable(head, indent = 0) {
 			right: '', 'right-mid': '',
 			top: '', 'top-left': '', 'top-mid': '', 'top-right': ''
 		},
-		head: Array.isArray(head) ? head.map(s => String(s).toUpperCase()) : head,
+		head: Array.isArray(head) ? head.map(ansi.toUpperCase) : head,
 		style: {
-			head: [ 'bold' ],
+			head: [],
 			'padding-left': 0,
 			'padding-right': 0
 		}

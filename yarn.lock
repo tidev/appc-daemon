@@ -2372,9 +2372,9 @@ aws-sign2@~0.7.0:
   integrity sha1-tG6JCTSpWR8tL2+G1+ap8bP+dqg=
 
 aws4@^1.8.0:
-  version "1.10.0"
-  resolved "https://registry.yarnpkg.com/aws4/-/aws4-1.10.0.tgz#a17b3a8ea811060e74d47d306122400ad4497ae2"
-  integrity sha512-3YDiu347mtVtjpyV3u5kVqQLP242c06zwDOgpeRnybmXlYYsLbtTrUBUm8i8srONt+FWobl5aibnU1030PeeuA==
+  version "1.10.1"
+  resolved "https://registry.yarnpkg.com/aws4/-/aws4-1.10.1.tgz#e1e82e4f3e999e2cfd61b161280d16a111f86428"
+  integrity sha512-zg7Hz2k5lI8kb7U32998pRRFin7zJlkfezGJjUc2heaD4Pw2wObakCDVzkKztTm/Ln7eiVvYsjqak0Ed4LkMDA==
 
 babel-code-frame@^6.26.0:
   version "6.26.0"
@@ -3311,13 +3311,13 @@ cli-cursor@^3.1.0:
   dependencies:
     restore-cursor "^3.1.0"
 
-cli-kit@^1.2.0, cli-kit@^1.2.3, cli-kit@^1.6.2:
-  version "1.6.2"
-  resolved "https://registry.yarnpkg.com/cli-kit/-/cli-kit-1.6.2.tgz#c343ea81de23b15d64588583a3bb931a97e530d8"
-  integrity sha512-EmtgRg45jEI1whbWyu7MRZ7ubzLnSb4XdHeNbL3L4c7Z1yCQm8ZSSiPqwDyg6x5/R8QBHLSiysTsQBF4HfNueQ==
+cli-kit@^1.2.0, cli-kit@^1.2.3, cli-kit@^1.6.2, cli-kit@^1.7.0:
+  version "1.7.0"
+  resolved "https://registry.yarnpkg.com/cli-kit/-/cli-kit-1.7.0.tgz#3ae469744d5374d84c823b59ef6dbdaa9c9aa531"
+  integrity sha512-3tF1UuS2nnHTzt1pPlfLmqE641sb4Ay/ROekRcVHS80KpymbGpI3lMgPoQMKvYLyRzq/l3jsAlr2lvH0cuer0A==
   dependencies:
     argv-split "^2.0.1"
-    fastest-levenshtein "^1.0.10"
+    fastest-levenshtein "^1.0.12"
     fs-extra "^9.0.1"
     hook-emitter "^4.1.0"
     lodash.camelcase "^4.3.0"
@@ -4398,9 +4398,9 @@ duplexer3@^0.1.4:
   integrity sha1-7gHdHKwO08vH/b6jfcCo8c4ALOI=
 
 duplexer@^0.1.1, duplexer@~0.1.1:
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/duplexer/-/duplexer-0.1.1.tgz#ace6ff808c1ce66b57d1ebf97977acb02334cfc1"
-  integrity sha1-rOb/gIwc5mtX0ev5eXessCM0z8E=
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/duplexer/-/duplexer-0.1.2.tgz#3abe43aef3835f8ae077d136ddce0f276b0400e6"
+  integrity sha512-jtD6YG370ZCIi/9GTaJKQxWTZD045+4R4hTk/x1UyoqadyJ9x9CgSi1RlVDQF8U2sxLLSnFkCaMihqljHIWgMg==
 
 duplexify@^3.4.2, duplexify@^3.5.0, duplexify@^3.6.0:
   version "3.7.1"
@@ -5268,7 +5268,7 @@ fast-levenshtein@^2.0.6, fast-levenshtein@~2.0.6:
   resolved "https://registry.yarnpkg.com/fast-levenshtein/-/fast-levenshtein-2.0.6.tgz#3d8a5c66883a16a30ca8643e851f19baa7797917"
   integrity sha1-PYpcZog6FqMMqGQ+hR8Zuqd5eRc=
 
-fastest-levenshtein@^1.0.10:
+fastest-levenshtein@^1.0.12:
   version "1.0.12"
   resolved "https://registry.yarnpkg.com/fastest-levenshtein/-/fastest-levenshtein-1.0.12.tgz#9990f7d3a88cc5a9ffd1f1745745251700d497e2"
   integrity sha512-On2N+BpYJ15xIC974QNVuYGMOlEVt4s0EOI3wwMqOmK1fdDY+FN/zltPV8vosq4ad4c/gJ1KHScUn/6AWIgiow==
@@ -8309,9 +8309,9 @@ lodash.uniq@^4.5.0:
   integrity sha1-0CJTc662Uq3BvILklFM5qEJ1R3M=
 
 lodash@^4.0.0, lodash@^4.1.0, lodash@^4.14.0, lodash@^4.15.0, lodash@^4.17.12, lodash@^4.17.14, lodash@^4.17.15, lodash@^4.17.19, lodash@^4.17.4, lodash@^4.2.0, lodash@^4.2.1, lodash@~4.17.10:
-  version "4.17.19"
-  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.19.tgz#e48ddedbe30b3321783c5b4301fbd353bc1e4a4b"
-  integrity sha512-JNvd8XER9GQX0v2qJgsaN/mzFCNA5BRe/j8JN9d+tWyGLSodKQHKFicdwNYzWwI3wjRnaKPsGj1XkBjx/F96DQ==
+  version "4.17.20"
+  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.20.tgz#b44a9b6297bcb698f1c51a3545a2b3b368d59c52"
+  integrity sha512-PlhdFcillOINfeV7Ni6oF1TAEayyZBoZ8bcshTHqOYJYlrqzRK5hagpagky5o4HfCzzd1TRkXPMFq6cKk9rGmA==
 
 log-symbols@3.0.0:
   version "3.0.0"
@@ -9607,9 +9607,9 @@ onetime@^5.1.0:
     mimic-fn "^2.1.0"
 
 onezip@^4.0.0:
-  version "4.2.1"
-  resolved "https://registry.yarnpkg.com/onezip/-/onezip-4.2.1.tgz#f584ab31a782585289d4718218abab2881940953"
-  integrity sha512-jFR3Ic45mr/77pPGBYORDJGaurAd0SMfZ3tBOaIqGntpxnhwxpdNM+ffiYLxtZwc5sNidDd1p+aK7IKtofYF0w==
+  version "4.2.2"
+  resolved "https://registry.yarnpkg.com/onezip/-/onezip-4.2.2.tgz#bce2537491ea7b462ed43f8a61cf3f67e656887b"
+  integrity sha512-iB2LHnVJwx1Q4xVEUeoKF9QJBRbu1iyUwnSiOInYU8Vc507sp2q8+Q1vFVM7W2iFDFCbB3kPvQz4eZOZ0q4GgA==
   dependencies:
     currify "^4.0.0"
     findit2 "^2.2.3"
@@ -9617,7 +9617,7 @@ onezip@^4.0.0:
     mkdirp "^1.0.3"
     pipe-io "^4.0.0"
     try-to-catch "^3.0.0"
-    yargs-parser "^18.1.3"
+    yargs-parser "^19.0.1"
     yauzl "^2.6.0"
     yazl "^2.4.1"
 
@@ -11087,10 +11087,10 @@ ret@~0.1.10:
   resolved "https://registry.yarnpkg.com/ret/-/ret-0.1.15.tgz#b8a4825d5bdb1fc3f6f53c2bc33f81388681c7bc"
   integrity sha512-TTlYpa+OL+vMMNG24xSlQGEJ3B/RzEfUlLct7b5G/ytav+wPrplCpVMFuwzXbkecJrb6IYo1iFb0S9v37754mg==
 
-retire@^2.2.1:
-  version "2.2.1"
-  resolved "https://registry.yarnpkg.com/retire/-/retire-2.2.1.tgz#7157addc70ae33d9045505ee19839ae724b7e3a6"
-  integrity sha512-q/2CnMVhRfYfgwZtpzni+KZQN/8f3zNnZoxDVMB1cnaO+EfBn08vSFqe9v/XF6hehMiNU2xmHdJW2DViEFbXhQ==
+retire@^2.2.2:
+  version "2.2.2"
+  resolved "https://registry.yarnpkg.com/retire/-/retire-2.2.2.tgz#d0797134a41ca11d67ad5d8224f46a6b63590ae2"
+  integrity sha512-UmMTmXtYhbiQYMjjUb2DLtZsjnEcYknZ/LKJkTh53sGx9B3nW7DIuPw2N/EFfPpye5qJ5iTg/e7cgZIsUopuFg==
   dependencies:
     colors "^1.1.2"
     commander "2.5.x"
@@ -11225,17 +11225,10 @@ semver@^7.0.0, semver@^7.1.1, semver@^7.2.1, semver@^7.3.2:
   resolved "https://registry.yarnpkg.com/semver/-/semver-7.3.2.tgz#604962b052b81ed0786aae84389ffba70ffd3938"
   integrity sha512-OrOb32TeeambH6UrhtShmF7CRDqhL6/5XpPNp2DuRH6+9QLw/orhp72j87v8Qa1ScDkvrrBNpZcDejAirJmfXQ==
 
-serialize-javascript@4.0.0:
+serialize-javascript@4.0.0, serialize-javascript@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/serialize-javascript/-/serialize-javascript-4.0.0.tgz#b525e1238489a5ecfc42afacc3fe99e666f4b1aa"
   integrity sha512-GaNA54380uFefWghODBWEGisLZFj00nS5ACs6yHa9nLqlLpVLO8ChDGeKRjZnV4Nh4n0Qi7nhYZD/9fCPzEqkw==
-  dependencies:
-    randombytes "^2.1.0"
-
-serialize-javascript@^3.1.0:
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/serialize-javascript/-/serialize-javascript-3.1.0.tgz#8bf3a9170712664ef2561b44b691eafe399214ea"
-  integrity sha512-JIJT1DGiWmIKhzRsG91aS6Ze4sFUrYbltlkg2onR5OrnNM02Kl/hnY/T4FN2omvyeBbQmMJv+K4cPOpGzOTFBg==
   dependencies:
     randombytes "^2.1.0"
 
@@ -12102,15 +12095,15 @@ term-size@^2.1.0:
   integrity sha512-a6sumDlzyHVJWb8+YofY4TW112G6p2FCPEAFk+59gIYHv3XHRhm9ltVQ9kli4hNWeQBwSpe8cRN25x0ROunMOw==
 
 terser-webpack-plugin@^1.4.3:
-  version "1.4.4"
-  resolved "https://registry.yarnpkg.com/terser-webpack-plugin/-/terser-webpack-plugin-1.4.4.tgz#2c63544347324baafa9a56baaddf1634c8abfc2f"
-  integrity sha512-U4mACBHIegmfoEe5fdongHESNJWqsGU+W0S/9+BmYGVQDw1+c2Ow05TpMhxjPK1sRb7cuYq1BPl1e5YHJMTCqA==
+  version "1.4.5"
+  resolved "https://registry.yarnpkg.com/terser-webpack-plugin/-/terser-webpack-plugin-1.4.5.tgz#a217aefaea330e734ffacb6120ec1fa312d6040b"
+  integrity sha512-04Rfe496lN8EYruwi6oPQkG0vo8C+HT49X687FZnpPF0qMAIHONI6HEXYPKDOE8e5HjXTyKfqRd/agHtH0kOtw==
   dependencies:
     cacache "^12.0.2"
     find-cache-dir "^2.1.0"
     is-wsl "^1.1.0"
     schema-utils "^1.0.0"
-    serialize-javascript "^3.1.0"
+    serialize-javascript "^4.0.0"
     source-map "^0.6.1"
     terser "^4.1.2"
     webpack-sources "^1.4.0"
