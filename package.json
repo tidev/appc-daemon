@@ -19,7 +19,7 @@
     "pretty-log": "^0.1.0",
     "progress": "^2.0.3",
     "promise-limit": "^2.7.0",
-    "retire": "^2.2.1",
+    "retire": "^2.2.2",
     "semver": "^7.3.2",
     "sloc": "^0.2.1",
     "snooplogg": "^3.0.0",

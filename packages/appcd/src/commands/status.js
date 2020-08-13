@@ -70,9 +70,8 @@ export default {
 				const now = Date.now();
 
 				// plugin information
-				log(magenta('Plugins'.toUpperCase()));
 				if (status.plugins && status.plugins.registered.length) {
-					const cols = [ '\nName', '\nPath', '\nState', 'Active/Total\nRequests', '\nIssues' ];
+					const cols = [ `${magenta('Plugins')}\n  Name`, '\nPath', '\nState', 'Active/Total\nRequests', '\nIssues' ];
 					const rows = [];
 					let issues = false;
 
@@ -94,7 +93,7 @@ export default {
 						}
 
 						const row = [
-							`${plugin.name}@${plugin.version}`,
+							`  ${plugin.name}@${plugin.version}`,
 							plugin.path.replace(homeRE, '~'),
 							status,
 							`${numberFormat(plugin.activeRequests, 0)} / ${numberFormat(plugin.totalRequests, 0)}`
@@ -125,7 +124,7 @@ export default {
 						cols.pop();
 					}
 
-					table = createTable(cols, 2);
+					table = createTable(cols);
 					for (const row of rows) {
 						if (!issues) {
 							row.pop();
@@ -134,6 +133,7 @@ export default {
 					}
 					log(table.toString());
 				} else {
+					log(magenta('Plugins'.toUpperCase()));
 					log('No plugins');
 				}
 				log();
