@@ -23,9 +23,10 @@ export default class StatusMonitor extends DataServiceDispatcher {
 	 * status information.
 	 *
 	 * @param {Config} cfg - The Appc Daemon config object.
+	 * @param {String} mid - A unique machine ID.
 	 * @access public
 	 */
-	constructor(cfg) {
+	constructor(cfg, mid) {
 		super();
 
 		/**
@@ -63,11 +64,12 @@ export default class StatusMonitor extends DataServiceDispatcher {
 			},
 
 			system: {
-				platform: process.platform,
 				arch:     process.arch,
 				cpus:     os.cpus().length,
 				loadavg:  undefined,
-				memory:   undefined
+				memory:   undefined,
+				mid,
+				platform: process.platform
 			}
 		});
 

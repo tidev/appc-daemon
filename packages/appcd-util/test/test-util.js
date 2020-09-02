@@ -490,6 +490,42 @@ describe('util', () => {
 		});
 	});
 
+	describe('makeSerializable()', () => {
+		it('should pass through non-objects', () => {
+			expect(util.makeSerializable()).to.equal(undefined);
+			expect(util.makeSerializable(undefined)).to.equal(undefined);
+			expect(util.makeSerializable(null)).to.equal(null);
+			expect(util.makeSerializable(123)).to.equal(123);
+			expect(util.makeSerializable('foo')).to.equal('foo');
+			expect(util.makeSerializable(true)).to.equal(true);
+			expect(util.makeSerializable(false)).to.equal(false);
+		});
+
+		it('should handle NaN', () => {
+			expect(util.makeSerializable(NaN)).to.equal(null);
+		});
+
+		it('should remove non-serializable values', () => {
+			expect(util.makeSerializable({
+				a: () => {},
+				b: Symbol()
+			})).to.deep.equal({
+				a: undefined,
+				b: undefined
+			});
+		});
+
+		it('should remove circular references', () => {
+			const obj = {};
+			obj.a = obj;
+			obj.b = [ obj ];
+			expect(util.makeSerializable(obj)).to.deep.equal({
+				a: undefined,
+				b: [ undefined ]
+			});
+		});
+	});
+
 	describe('mergeDeep()', () => {
 		it('should merge two objects together', () => {
 			const obj = util.mergeDeep({ a: 1 }, { b: 2 });

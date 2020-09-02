@@ -36,8 +36,8 @@ const logger = createInstanceWithDefaults()
 let { error } = logger.ns(ns);
 
 process
-	.on('uncaughtException', err => error('Caught exception:', err.stack || err.toString()))
-	.on('unhandledRejection', (reason, p) => error('Unhandled Rejection at:', p, reason));
+	.on('uncaughtException', err => error(`Caught exception in ${process.argv[2]}: ${err.stack || err.toString()}`))
+	.on('unhandledRejection', err => error(`Unhandled rejection in ${process.argv[2]}: ${err.stack || err.toString()}`));
 
 (async () => {
 	try {

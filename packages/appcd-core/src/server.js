@@ -4,6 +4,7 @@ import Dispatcher, { DispatcherContext } from 'appcd-dispatcher';
 import fs from 'fs-extra';
 import FSWatcher from 'appcd-fswatcher';
 import FSWatchManager from 'appcd-fswatch-manager';
+import getMachineId from 'appcd-machine-id';
 import os from 'os';
 import path from 'path';
 import PluginManager, { appcdPluginAPIVersion } from 'appcd-plugin';
@@ -119,6 +120,9 @@ export default class Server {
 			fs.mkdirsSync(homeDir);
 		}
 
+		// get the machine id for the status monitor and telemetry system
+		const mid = await getMachineId(path.join(homeDir, '.mid'));
+
 		// check if the current user is root
 		if (process.getuid && process.getuid() === 0) {
 			process.setuid(uid);
@@ -152,7 +156,7 @@ export default class Server {
 		await this.importTiConfig();
 
 		// init the telemetry system
-		this.systems.telemetry = new Telemetry(this.config, this.version);
+		this.systems.telemetry = new Telemetry(this.config, this.version, mid);
 		await this.systems.telemetry.init(homeDir);
 		Dispatcher.register('/appcd/telemetry', this.systems.telemetry);
 
@@ -204,7 +208,7 @@ export default class Server {
 		}
 
 		// init the status monitor
-		this.systems.statusMonitor = new StatusMonitor(this.config);
+		this.systems.statusMonitor = new StatusMonitor(this.config, mid);
 		Dispatcher.register('/appcd/status', this.systems.statusMonitor);
 
 		// init the fs watch manager

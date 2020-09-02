@@ -202,8 +202,8 @@ export default class ExternalPlugin extends PluginBase {
 		this.tunnel = new Tunnel(process, false, async (req, send) => {
 			// message from parent process that needs to be dispatched
 
-			this.appcdLogger.log('Received request from parent:');
-			this.appcdLogger.log(req);
+			// this.appcdLogger.log('Received request from parent:');
+			// this.appcdLogger.log(req);
 
 			if (req.message.request.type === 'deactivate') {
 				try {
