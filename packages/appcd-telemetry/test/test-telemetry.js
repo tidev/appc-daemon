@@ -143,10 +143,11 @@ describe('telemetry', () => {
 				}
 			});
 
-			expect(telemetry.hardwareId).to.be.null;
+			expect(telemetry.hardwareId).to.equal(undefined);
 			await telemetry.init(makeTempDir());
 			expect(telemetry.hardwareId).to.be.a('string');
 			expect(telemetry.hardwareId).to.not.equal('');
+			telemetry.hardwareId = null;
 			await telemetry.init(); // would throw a TypeError if no homeDir
 		});
 	});
@@ -737,7 +738,7 @@ describe('telemetry', () => {
 	});
 });
 
-function createTelemetry(json) {
+function createTelemetry(json, mid) {
 	if (!json) {
 		json = {};
 	}
@@ -748,7 +749,7 @@ function createTelemetry(json) {
 		json.telemetry.guid = '<GUID>';
 	}
 	const cfg = new AppcdConfig({ data: json });
-	return new Telemetry(cfg);
+	return new Telemetry(cfg, undefined, mid);
 }
 
 function createInitializedTelemetry(json) {

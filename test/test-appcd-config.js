@@ -28,7 +28,7 @@ describe('appcd config', function () {
 
 			expect(status).to.equal(1);
 			expect(stripColors(stdout.toString())).to.match(/^Appcelerator Daemon, version .+\nCopyright \(c\) 2015-\d{4}, Axway, Inc\. All Rights Reserved\./);
-			expect(stripColors(stderr.toString().split('\n\n')[0])).to.equal('SyntaxError: Failed to load config file: Unexpected token { in JSON at position 1');
+			expect(stripColors(stderr.toString().split('\n\n')[0].trim())).to.equal('SyntaxError: Failed to load config file: Unexpected token { in JSON at position 1');
 		}));
 
 		it('should error when loading a bad config file when starting daemon', makeTest(async function () {
@@ -38,7 +38,7 @@ describe('appcd config', function () {
 
 			expect(status).to.equal(1);
 			expect(stripColors(stdout.toString())).to.match(/^Appcelerator Daemon, version .+\nCopyright \(c\) 2015-\d{4}, Axway, Inc\. All Rights Reserved\./);
-			expect(stripColors(stderr.toString().split('\n\n')[0])).to.equal('SyntaxError: Failed to load config file: Unexpected token { in JSON at position 1');
+			expect(stripColors(stderr.toString().split('\n\n')[0].trim())).to.equal('SyntaxError: Failed to load config file: Unexpected token { in JSON at position 1');
 		}));
 
 		it('should not error when config file is empty', makeTest(async function () {
