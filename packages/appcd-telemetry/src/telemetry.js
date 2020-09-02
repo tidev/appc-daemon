@@ -84,9 +84,10 @@ export default class Telemetry extends Dispatcher {
 	 *
 	 * @param {AppcdConfig} cfg - The Appc Daemon config object.
 	 * @param {String} version - The app version.
+	 * @param {String} [hardwareId] - A unique machine ID.
 	 * @access public
 	 */
-	constructor(cfg, version) {
+	constructor(cfg, version, hardwareId) {
 		if (!cfg || typeof cfg !== 'object') {
 			throw new TypeError('Expected config to be a valid config object');
 		}
@@ -104,6 +105,8 @@ export default class Telemetry extends Dispatcher {
 		 * @type {String}
 		 */
 		this.app = app;
+
+		this.hardwareId = hardwareId;
 
 		/**
 		 * The app version.
@@ -243,7 +246,9 @@ export default class Telemetry extends Dispatcher {
 
 		this.eventsDir = expandPath(this.config.eventsDir || path.join(homeDir, 'telemetry'));
 
-		this.hardwareId = await getMachineId(path.join(homeDir, '.mid'));
+		if (!this.hardwareId) {
+			this.hardwareId = await getMachineId(path.join(homeDir, '.mid'));
+		}
 
 		this.running = true;
 

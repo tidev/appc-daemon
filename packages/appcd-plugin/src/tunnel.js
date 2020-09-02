@@ -3,9 +3,10 @@ import PluginError from './plugin-error';
 import Response, { AppcdError, codes } from 'appcd-response';
 
 import { DispatcherContext, DispatcherError } from 'appcd-dispatcher';
+import { makeSerializable } from 'appcd-util';
 import { v4 as uuidv4 } from 'uuid';
 
-const { highlight, magenta } = appcdLogger.styles;
+// const { highlight, magenta } = appcdLogger.styles;
 
 /**
  * Orchestrates messages across a tunnel between processes. Both the parent and child process would
@@ -82,7 +83,7 @@ export default class Tunnel {
 
 				const response = {
 					id: req.id,
-					message
+					message: makeSerializable(message)
 				};
 
 				// this.logger.log('Sending tunnel response to %s:', highlight(this.remoteName), response);
@@ -147,7 +148,7 @@ export default class Tunnel {
 
 				switch (message.type) {
 					case 'error':
-						this.logger.log('Deleting request handler: %s', highlight(id), magenta(ctx.request.path));
+						// this.logger.log('Deleting request handler: %s', highlight(id), magenta(ctx.request.path));
 						delete this.requests[id];
 
 						const status = message.statusCode || message.status;
@@ -195,7 +196,7 @@ export default class Tunnel {
 						switch (message.data.type) {
 							case 'fin':
 								if (this.requests[id]) {
-									this.logger.log('Deleting request handler: %s', highlight(id), magenta(ctx.request.path));
+									// this.logger.log('Deleting request handler: %s', highlight(id), magenta(ctx.request.path));
 									delete this.requests[id];
 								}
 								ctx.response.end();
@@ -223,7 +224,7 @@ export default class Tunnel {
 						break;
 
 					default:
-						this.logger.log('Deleting request handler: %s %s', highlight(id), magenta(ctx.request.path));
+						// this.logger.log('Deleting request handler: %s %s', highlight(id), magenta(ctx.request.path));
 						delete this.requests[id];
 						if (message.status) {
 							ctx.status = message.status;
@@ -244,7 +245,7 @@ export default class Tunnel {
 				type: 'request'
 			};
 
-			this.logger.log('Sending tunnel request to %s:', highlight(this.remoteName), req);
+			// this.logger.log('Sending tunnel request to %s:', highlight(this.remoteName), req);
 			this.proc.send(req);
 		});
 	}

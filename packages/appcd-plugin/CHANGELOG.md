@@ -37,6 +37,8 @@
    indeed unsupported.
  * fix(plugin-manager): Gracefully handle config file unloading errors.
  * fix(plugin): Gracefully handle plugins that declare a config file that does not exist.
+ * fix(tunnel): Removed circular references when sending data through the IPC tunnel.
+ * fix(host): Improved logging of uncaught exceptions and rejections.
  * refactor(plugin): Code cleanup and moved common code to `PluginBase` to share across internal
    and external plugins.
  * chore: Updated dependencies.
