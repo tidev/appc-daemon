@@ -353,7 +353,7 @@ export function makeSerializable(it) {
 				return null;
 			}
 
-			if (src === null || type === 'string' || type === 'number' || type === 'boolean') {
+			if (src === null || type === 'string' || type === 'number' || type === 'boolean' || src instanceof Date) {
 				return src;
 			}
 

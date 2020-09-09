@@ -499,6 +499,8 @@ describe('util', () => {
 			expect(util.makeSerializable('foo')).to.equal('foo');
 			expect(util.makeSerializable(true)).to.equal(true);
 			expect(util.makeSerializable(false)).to.equal(false);
+			const dt = new Date();
+			expect(util.makeSerializable(dt)).to.equal(dt);
 		});
 
 		it('should handle NaN', () => {
