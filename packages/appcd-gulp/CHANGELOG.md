@@ -1,6 +1,7 @@
 # v3.1.0
 
  * feat: Added Babel config for Node 14.
+ * fix: Explicitly set Node.js API warnings to >=10.
  * chore: Updated dependencies.
 
 # v3.0.1 (Jun 12, 2020)
