@@ -236,7 +236,7 @@ export default class Telemetry extends Dispatcher {
 	 * @access public
 	 */
 	async init(homeDir) {
-		if (this.hardwareId || this.running) {
+		if (this.running) {
 			return;
 		}
 
