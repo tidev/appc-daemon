@@ -4,6 +4,7 @@
  * feat: Added `makeSerializable()` function to remove non-serializable values and circular
    references.
  * feat: Added re-export for Lodash's `set()` function.
+ * fix(sha1): Treat buffers like strings and don't JSON.stringify them.
 
 # v3.0.0 (Jun 12, 2020)
 
