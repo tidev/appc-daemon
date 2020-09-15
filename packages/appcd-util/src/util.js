@@ -733,13 +733,13 @@ export function redact(data, opts = {}) {
 export { set };
 
 /**
- * Returns the sha1 of the input string.
+ * Returns the sha1 of the specified buffer or string.
  *
- * @param {String} str - The string to hash.
+ * @param {Buffer|String} data - The buffer or string to hash.
  * @returns {String}
  */
-export function sha1(str) {
-	return crypto.createHash('sha1').update(typeof str === 'string' ? str : JSON.stringify(str)).digest('hex');
+export function sha1(data) {
+	return crypto.createHash('sha1').update(Buffer.isBuffer(data) || typeof data === 'string' ? data : JSON.stringify(data)).digest('hex');
 }
 
 /**

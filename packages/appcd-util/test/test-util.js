@@ -838,40 +838,20 @@ describe('util', () => {
 	});
 
 	describe('sha1()', () => {
+		it('should hash a buffer', () => {
+			expect(util.sha1(Buffer.from('foo'))).to.equal('0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33');
+		});
+
 		it('should hash a string', () => {
-			const h1 = util.sha1('foo');
-			expect(h1).to.be.a('string');
-			expect(h1).to.have.lengthOf(40);
-
-			const h2 = util.sha1('bar');
-			expect(h2).to.be.a('string');
-			expect(h2).to.have.lengthOf(40);
-
-			expect(h1).to.not.equal(h2);
+			expect(util.sha1('foo')).to.equal('0beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a33');
 		});
 
 		it('should hash a number', () => {
-			const h1 = util.sha1(123);
-			expect(h1).to.be.a('string');
-			expect(h1).to.have.lengthOf(40);
-
-			const h2 = util.sha1(456);
-			expect(h2).to.be.a('string');
-			expect(h2).to.have.lengthOf(40);
-
-			expect(h1).to.not.equal(h2);
+			expect(util.sha1(123)).to.equal('40bd001563085fc35165329ea1ff5c5ecbdbbeef');
 		});
 
 		it('should hash an object', () => {
-			const h1 = util.sha1({ foo: 'bar' });
-			expect(h1).to.be.a('string');
-			expect(h1).to.have.lengthOf(40);
-
-			const h2 = util.sha1({ baz: 'wiz' });
-			expect(h2).to.be.a('string');
-			expect(h2).to.have.lengthOf(40);
-
-			expect(h1).to.not.equal(h2);
+			expect(util.sha1({ foo: 'bar' })).to.equal('a5e744d0164540d33b1d7ea616c28f2fa97e754a');
 		});
 	});
 
