@@ -8,6 +8,8 @@
  * BREAKING CHANGE(config): `config list` command no longer supports filtering, use `config get`
    instead.
  * BREAKING CHANGE(config): Write operations such as `set` return `"OK"` instead of `"Saved"`.
+ * BREAKING CHANGE(config): All network related environment variables have been removed in favor
+   of the config file.
  * feat(status): Added Plugin API Version to the status output.
    [(DAEMON-314)](https://jira.appcelerator.org/browse/DAEMON-314)
  * feat: Added `pm` command for managing appcd plugins.
@@ -25,6 +27,8 @@
  * refactor(status): Cleaned up plugin list.
  * refactor(status): Replace user's home directory references in plugin and subprocess paths with
    `~`.
+ * refactor(request): Replaced `appcd-request` with `@axway/amplify-request` which adds proxy
+   support.
  * fix(exec): Renamed `"json"` argument to `"data"`. The `exec` command does not have a  `--json`
    flag, however if it's passed in, the `"json"` value will be set to `true` instead of an object
    containing the request data payload.

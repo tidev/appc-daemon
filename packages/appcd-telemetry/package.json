@@ -16,12 +16,12 @@
     "test": "gulp test"
   },
   "dependencies": {
+    "@axway/amplify-request": "^2.0.0",
     "appcd-dispatcher": "^3.0.0",
     "appcd-fs": "^2.0.0",
     "appcd-logger": "^3.0.0",
     "appcd-machine-id": "^4.0.0",
     "appcd-path": "^2.0.1",
-    "appcd-request": "^3.0.0",
     "appcd-response": "^3.0.0",
     "appcd-util": "^3.0.0",
     "fs-extra": "^9.0.1",

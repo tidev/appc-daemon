@@ -9,8 +9,10 @@ Exposes the Subprocess Manager.
 ```javascript
 Dispatcher
     .call('/appcd/subprocess/spawn', {
-        command: 'sleep',
-        args: ['10']
+        data: {
+            command: 'sleep',
+            args: ['10']
+        }
     })
     .then(result => {
         console.log('Done!');
@@ -27,7 +29,9 @@ and install that version use it to run the specified JavaScript file. Note that 
 ```javascript
 Dispatcher
     .call('/appcd/subprocess/spawn/node', {
-        args: ['/path/to/myscript.js']
+        data: {
+            args: ['/path/to/myscript.js']
+        }
     })
     .then(result => {
         console.log('Done!');
@@ -37,7 +41,9 @@ Dispatcher
 ```javascript
 Dispatcher
     .call('/appcd/subprocess/spawn/node/7.8.0', {
-        args: ['/path/to/myscript.js']
+        data: {
+            args: ['/path/to/myscript.js']
+        }
     })
     .then(result => {
         console.log('Done!');

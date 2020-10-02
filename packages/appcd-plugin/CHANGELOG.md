@@ -2,6 +2,7 @@
 
  * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.
    [(DAEMON-334)](https://jira.appcelerator.org/browse/DAEMON-334)
+ * BREAKING CHANGE: Removed `appcd-request` and is no longer available to plugins.
  * BREAKING CHANGE: Removed `appcd-winreg` and is no longer available to plugins.
    [(DAEMON-277)](https://jira.appcelerator.org/browse/DAEMON-277)
  * feat: Added Plugin API Version to the status.
@@ -22,6 +23,10 @@
  * feat: Added `appcd.telemetry(evtData)` API for sending plugin scoped telemetry events.
  * feat: Wired up dynamic config updates for internal plugins and the parent process for external
    plugins.
+ * feat: Added `appcd.config.get()`, `appcd.config.watch()`, and `appcd.config.unwatch()` so that
+   plugins don't have to pass the config object from activate around and call gawk to observe it.
+ * feat: `appcd.fs.watch()` within a plugin's context now accepts a numeric debounce value which
+   is the period of time to wait before firing the handler.
  * fix: Fixed bug where `status` would search an unsorted list of registered plugins which caused
    nondeterministic results. [(DAEMON-328)](https://jira.appcelerator.org/browse/DAEMON-328)
  * fix: Fixed bug where an `inactivityTimeout` of zero would be tested as falsey and fallback to
@@ -39,6 +44,9 @@
  * fix(plugin): Gracefully handle plugins that declare a config file that does not exist.
  * fix(tunnel): Removed circular references when sending data through the IPC tunnel.
  * fix(host): Improved logging of uncaught exceptions and rejections.
+ * fix(external-plugin): Track non-subscription stream responses so that they can be closed when
+   the plugin is stopped.
+ * fix(external-plugin): Don't load and track appcd config for parent process, only child process.
  * refactor(plugin): Code cleanup and moved common code to `PluginBase` to share across internal
    and external plugins.
  * chore: Updated dependencies.

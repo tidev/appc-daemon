@@ -257,6 +257,7 @@ export async function startServer({ cfg, argv }) {
 			child = await spawnNode({
 				args,
 				detached,
+				networkConfig: cfg.get('network'),
 				nodeHome: expandPath(cfg.get('home'), 'node'),
 				stdio,
 				v8mem,

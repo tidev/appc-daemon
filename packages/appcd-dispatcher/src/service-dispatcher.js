@@ -60,10 +60,22 @@ export default class ServiceDispatcher {
 		this.path = path instanceof RegExp ? path : (path ? `${path[0] === '/' ? '' : '/'}${path}` : null);
 
 		/**
+		 * An identifier for this dispatcher instance to help with debugging.
+		 * @type {String}
+		 */
+		this.id = uuidv4().substring(0, 8);
+
+		/**
 		 * A reference to the object containing service methods.
 		 * @type {Object}
 		 */
 		this.instance = instance;
+
+		/**
+		 * A namespace logger for this dispatcher instance.
+		 * @type {AppcdLogger}
+		 */
+		this.logger = logger(this.id);
 
 		/**
 		 * A map of subscription ids to topics. This makes it easy to look up the topic from the
@@ -105,11 +117,11 @@ export default class ServiceDispatcher {
 			|| (type === 'subscribe' && typeof this.instance.initSubscription === 'function')
 			|| (type === 'unsubscribe' && typeof this.instance.destroySubscription === 'function')
 		) {
-			logger.log('%s Invoking %s handler: %s', note(`[${subscriptionId}]`), type, highlight(this.path || 'no path'));
+			this.logger.log('%s Invoking %s handler: %s', note(`[${subscriptionId}]`), type, highlight(this.path || 'no path'));
 			return this[type](ctx);
 		}
 
-		logger.log('%s No %s handler: %s', note(`[${subscriptionId}]`), onType, highlight(this.path || 'no path'));
+		this.logger.log('%s No %s handler: %s', note(`[${subscriptionId}]`), onType, highlight(this.path || 'no path'));
 		return next();
 	}
 
@@ -137,16 +149,16 @@ export default class ServiceDispatcher {
 		const firstSubscription = !descriptor;
 
 		if (descriptor) {
-			logger.log('%s Adding subscription: %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
+			this.logger.log('%s Adding subscription: %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
 
 		} else {
-			logger.log('%s Initializing new subscription: %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
+			this.logger.log('%s Initializing new subscription: %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
 
 			descriptor = this.topics[topic] = {
 				subs: new Map(),
 				topic,
 				publishAll: message => {
-					logger.log('%s Publishing%s to %s',
+					this.logger.log('%s Publishing%s to %s',
 						note(`[${subscriptionId}]`),
 						topic ? ` ${highlight(topic || '\'\'')}` : '',
 						pluralize('listener', descriptor.subs.size, true)
@@ -169,14 +181,14 @@ export default class ServiceDispatcher {
 
 		const cleanup = err => {
 			if (err) {
-				logger.error(err);
+				this.logger.error(err);
 			}
 
 			if (descriptor.subs.has(subscriptionId)) {
-				logger.log(`Stream ${err ? 'errored' : 'ended'}, cleaning up`);
+				this.logger.log(`Stream ${err ? 'errored' : 'ended'}, cleaning up`);
 				descriptor.subs.delete(subscriptionId);
 			} else {
-				logger.log(`Stream ${err ? 'errored' : 'ended'}, subscription already cleaned up`);
+				this.logger.log(`Stream ${err ? 'errored' : 'ended'}, subscription already cleaned up`);
 			}
 
 			this.unsubscribe(ctx);
@@ -234,7 +246,7 @@ export default class ServiceDispatcher {
 		}
 
 		if (!Object.prototype.hasOwnProperty.call(this.subscriptions, subscriptionId)) {
-			logger.log('%s No such subscription found', note(`[${subscriptionId}]`));
+			this.logger.log('%s No such subscription found', note(`[${subscriptionId}]`));
 
 			// double check that no topics have this subscription id
 			for (const descriptor of Object.values(this.topics)) {
@@ -249,7 +261,7 @@ export default class ServiceDispatcher {
 		const { topic } = descriptor;
 		const originalResponse = descriptor.subs.get(subscriptionId);
 
-		logger.log('%s Unsubscribing: %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
+		this.logger.log('%s Unsubscribing: %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
 		delete this.subscriptions[subscriptionId];
 
 		const response = new Response(codes.UNSUBSCRIBED);
@@ -267,7 +279,7 @@ export default class ServiceDispatcher {
 					type: 'unsubscribe'
 				});
 
-				logger.log('%s Ending response: %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
+				this.logger.log('%s Ending response: %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
 				originalResponse.end();
 			}
 		} catch (e) {
@@ -275,7 +287,7 @@ export default class ServiceDispatcher {
 		}
 
 		if (typeof this.instance.onUnsubscribe === 'function') {
-			logger.log('%s Calling service\'s onUnsubscribe(): %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
+			this.logger.log('%s Calling service\'s onUnsubscribe(): %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
 			this.instance.onUnsubscribe({
 				ctx,
 				sid: subscriptionId,
@@ -284,11 +296,11 @@ export default class ServiceDispatcher {
 		}
 
 		if (descriptor.subs.size === 0) {
-			logger.log('%s No more listeners, removing descriptor: %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
+			this.logger.log('%s No more listeners, removing descriptor: %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
 			delete this.topics[topic];
 
 			if (typeof this.instance.destroySubscription === 'function') {
-				logger.log('%s Calling service\'s destroySubscription(): %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
+				this.logger.log('%s Calling service\'s destroySubscription(): %s', note(`[${subscriptionId}]`), highlight(topic || '\'\''));
 				this.instance.destroySubscription({
 					ctx,
 					publish: descriptor.publishAll,

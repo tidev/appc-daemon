@@ -2,15 +2,20 @@
 
  * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.
    [(DAEMON-334)](https://jira.appcelerator.org/browse/DAEMON-334)
- * BREAKING CHANGE: Bumped core Node.js version to 12.18.3. This affects all plugins.
+ * BREAKING CHANGE: Bumped core Node.js version to 14.13.0. This affects all plugins.
    [(DAEMON-319)](https://jira.appcelerator.org/browse/DAEMON-319)
  * BREAKING CHANGE: Main file exports library instead of the main entry point.
  * BREAKING CHANGE(status-monitor): Daemon uptime has changed from seconds to milliseconds.
+ * BREAKING CHANGE(config): Removed network config options: `agentOptions` and `passphrase`.
+ * BREAKING CHANGE(config): Combined network config options `httpProxy` to `httpsProxy` into single
+   `network.proxy` setting.
  * feat: Added plugin management functions. This feature has removed the need for
    `appcd-default-plugins` and the associated `plugins.installDefault` config setting.
    [(DAEMON-311)](https://jira.appcelerator.org/browse/DAEMON-311)
  * feat(server): Stop config service when daemon is gracefully shutdown.
  * feat(server): Added import for `android.buildTools.selectedVersion` Titanium config setting.
+ * feat(server): Added `state` property to indicate if the server stopped, starting, started, or
+   stopping.
  * feat(status): Added machine id to status info.
  * refactor: Updated to `appcd-config@3.0.0`, created the Appc Daemon config schema, and converted
    the `default.js` config to `default.json`.
@@ -20,6 +25,8 @@
    and migrate the old home directory to the new location.
  * fix(websocket-session): Removed `message` from response if `undefined` so that msgpack cannot
    convert it to `null`.
+ * fix(server): Add guard around server shutdown to prevent multiple shutdown sequences at the same
+   time.
  * fix: Cast the process id to a string when writing the pid file.
  * fix(status-monitor): Fixed bug where status was reporting incorrect uptime in debug log.
  * chore: Updated dependencies.

@@ -1,5 +1,6 @@
-# v4.0.1
+# v4.1.0
 
+ * feat: Added HTTP proxy support.
  * chore: Updated dependencies.
 
 # v4.0.0 (Jun 12, 2020)

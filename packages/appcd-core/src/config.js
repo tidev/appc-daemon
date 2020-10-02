@@ -50,48 +50,29 @@ const schema = Joi.object({
 		.meta({ env: 'APPCD_HOME', readonly: true }),
 
 	'network': Joi.object({
-		'agentOptions': Joi.object()
-			.description('Additional agent options to pass directly into `request`.')
-			.default(defaults.network.agentOptions)
-			.allow(null),
-
 		'caFile': Joi.string()
 			.description('Path to a pem file containing one or more certificate authorities.')
 			.default(defaults.network.caFile)
-			.allow(null)
-			.meta({ env: 'APPCD_NETWORK_CA_FILE' }),
+			.allow(null),
 
 		'certFile': Joi.string()
 			.description('Path to a cert file.')
 			.default(defaults.network.certFile)
 			.allow(null),
 
-		'httpProxy': Joi.string()
+		'proxy': Joi.string()
 			.description('The proxy URL to use for outgoing HTTP network requests.')
-			.default(defaults.network.httpProxy)
-			.allow(null)
-			.meta({ env: 'HTTP_PROXY' }),
-
-		'httpsProxy': Joi.string()
-			.description('The secure proxy URL to use for outgoing HTTPS network requests.')
-			.default(defaults.network.httpsProxy)
-			.allow(null)
-			.meta({ env: 'HTTPS_PROXY' }),
+			.default(defaults.network.proxy)
+			.allow(null),
 
 		'keyFile': Joi.string()
 			.description('Path to a private key file.')
 			.default(defaults.network.keyFile)
 			.allow(null),
 
-		'passphrase': Joi.string()
-			.description('The private key\'s passphrase.')
-			.default(defaults.network.passphrase)
-			.allow(null),
-
 		'strictSSL': Joi.boolean()
 			.description('Enforces SSL certificates to be valid. Note that the `APPCD_NETWORK_STRICT_SSL` environment variable overrides this value.')
 			.default(defaults.network.strictSSL)
-			.meta({ env: 'APPCD_NETWORK_STRICT_SSL' })
 	}),
 
 	'plugins': Joi.object({

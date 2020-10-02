@@ -11,6 +11,7 @@ import Tunnel from './tunnel';
 
 import { debounce } from 'appcd-util';
 import { Readable } from 'stream';
+import { v4 as uuidv4 } from 'uuid';
 
 const { alert, highlight, note, notice, ok } = appcdLogger.styles;
 
@@ -381,9 +382,8 @@ export default class ExternalPlugin extends PluginBase {
 			args.unshift(`--inspect-brk=${debugPort}`);
 		}
 
-		await this.init();
-
-		if (this.config.plugins?.autoReload !== false) {
+		const autoReload = (await Dispatcher.call('/appcd/config/plugins/autoReload')).response;
+		if (autoReload !== false) {
 			try {
 				const { directories, path: pluginPath } = this.plugin;
 				if (directories.size) {
@@ -532,13 +532,18 @@ export default class ExternalPlugin extends PluginBase {
 									this.appcdLogger.log(`${highlight(req.message.path)} ${data && Array.isArray(data.args) && note(data.args.join(' ')) || ''} returned a streamed response`);
 
 									// track if this stream is a pubsub stream so we know to send the `fin`
-									let sid;
+									let sid = uuidv4();
+
+									this.streams[sid] = response;
 
 									response
 										.on('data', message => {
 											// data was written to the stream
 
 											if (message.type === 'subscribe') {
+												// replace the uuid sid with the subscription id
+												delete this.streams[sid];
+
 												sid = message.sid;
 												this.appcdLogger.log('Detected new subscription: %s', highlight(sid));
 												this.streams[sid] = response;

@@ -10,10 +10,10 @@ import Dispatcher from 'appcd-dispatcher';
 import fs from 'fs-extra';
 import getMachineId from 'appcd-machine-id';
 import path from 'path';
-import request from 'appcd-request';
 import Response, { AppcdError, codes, i18n } from 'appcd-response';
+import * as request from '@axway/amplify-request';
 
-import { arch, osInfo, redact } from 'appcd-util';
+import { arch, debounce, osInfo, redact } from 'appcd-util';
 import { expandPath } from 'appcd-path';
 import { isDir } from 'appcd-fs';
 import { v4 as uuidv4 } from 'uuid';
@@ -30,16 +30,14 @@ const jsonRegExp = /\.json$/;
  */
 export default class Telemetry extends Dispatcher {
 	/**
-	 * The daemon config instance.
+	 * Cache of telemetry specific config settings.
 	 * @type {Object}
 	 */
 	config = {
 		enabled:       false,
 		eventsDir:     null,
 		sendBatchSize: 10,
-		sendInterval:  60000, // 1 minute
-		sendTimeout:   60000, // 1 minute
-		url:           null
+		sendInterval:  60000 // 1 minute
 	};
 
 	/**
@@ -49,17 +47,16 @@ export default class Telemetry extends Dispatcher {
 	lastSend = null;
 
 	/**
-	 * The machine id. This value is used to also determine if the telemetry system has been
-	 * initialized.
-	 * @type {String}
-	 */
-	hardwareId = null;
-
-	/**
 	 * A promise that is resolved when telemetry data is not being sent to the server.
 	 * @type {Promise}
 	 */
 	pending = Promise.resolve();
+
+	/**
+	 * Options to pass into the HTTP client.
+	 * @type {Object}
+	 */
+	requestOptions = {};
 
 	/**
 	 * A flag that indicates if the telemetry system is running.
@@ -106,6 +103,17 @@ export default class Telemetry extends Dispatcher {
 		 */
 		this.app = app;
 
+		/**
+		 * The Appc Daemon config object.
+		 * @type {AppcdConfig}
+		 */
+		this.cfg = cfg;
+
+		/**
+		 * The machine id. This value is used to also determine if the telemetry system has been
+		 * initialized.
+		 * @type {String}
+		 */
 		this.hardwareId = hardwareId;
 
 		/**
@@ -113,12 +121,6 @@ export default class Telemetry extends Dispatcher {
 		 * @type {String}
 		 */
 		this.version = version;
-
-		// set the config and wire up the watcher
-		this.updateConfig(cfg.get('telemetry') || {});
-		cfg.watch('telemetry', () => {
-			this.updateConfig(cfg.get('telemetry') || {});
-		});
 
 		// wire up the telemetry route
 		this.register('/', ctx => this.addEvent(ctx));
@@ -244,6 +246,42 @@ export default class Telemetry extends Dispatcher {
 			throw new TypeError('Expected home directory to be a non-empty string');
 		}
 
+		// set the config and wire up the watcher
+		const updateConfig = debounce(async function () { // note: this cannot be an arrow function
+			const telemetryConfig = this.cfg.get('telemetry') || {};
+
+			const eventsDir = telemetryConfig.eventsDir || null;
+			if (eventsDir !== this.config.eventsDir) {
+				this.eventsDir = eventsDir ? expandPath(eventsDir) : null;
+			}
+
+			// copy over the config
+			Object.assign(this.config, telemetryConfig);
+
+			if (!this.config.environment) {
+				this.config.environment = 'production';
+			}
+
+			// make sure things are sane
+			if (this.config.sendBatchSize) {
+				this.config.sendBatchSize = Math.max(this.config.sendBatchSize, 1);
+			}
+
+			// don't let the sendInterval or sendTimeout dip below 1 second
+			this.config.sendInterval = Math.max(this.config.sendInterval, 1000);
+
+			// set the request options
+			this.requestOptions = await request.options({
+				defaults: this.cfg.get('network') || {},
+				retry:    0,
+				timeout:  Math.max(telemetryConfig.sendTimeout || 60000, 1000),
+				url:      telemetryConfig.url
+			});
+		}).bind(this);
+		await updateConfig();
+		this.cfg.watch('network', () => updateConfig());
+		this.cfg.watch('telemetry', () => updateConfig());
+
 		this.eventsDir = expandPath(this.config.eventsDir || path.join(homeDir, 'telemetry'));
 
 		if (!this.hardwareId) {
@@ -253,7 +291,7 @@ export default class Telemetry extends Dispatcher {
 		this.running = true;
 
 		// send any unsent events
-		this.sendEvents();
+		this.sendEvents().catch(() => {});
 
 		return this;
 	}
@@ -267,27 +305,22 @@ export default class Telemetry extends Dispatcher {
 	async sendBatch(batch) {
 		log(__n(batch.length, 'Sending %%s event', 'Sending %%s events', highlight(batch.length)));
 
-		const [ err, resp ] = await new Promise(resolve => {
-			request({
-				json:    batch.map(b => b.evt),
-				method:  'POST',
-				timeout: this.config.sendTimeout,
-				url:     this.config.url
-			}, (...args) => resolve(args));
-		});
-
-		if (err || resp.statusCode >= 300) {
-			error(__n(
-				batch.length,
-				'Failed to send %%s event: %%s',
-				'Failed to send %%s events: %%s',
-				highlight(batch.length),
-				err ? err.message : `${resp.statusCode} - ${resp.statusMessage}`
-			));
-			throw err || new Error(`${resp.statusCode} - ${resp.statusMessage}`);
-		} else {
+		try {
+			await request.got.post({
+				...this.requestOptions,
+				json: batch.map(b => b.evt)
+			});
 			log(__n(batch.length, 'Successfully sent %%s event', 'Successfully sent %%s events', highlight(batch.length)));
 			await Promise.all(batch.map(({ file }) => fs.remove(file)));
+		} catch (err) {
+			error(__n(
+				batch.length,
+				'Failed to send %%s event:',
+				'Failed to send %%s events:',
+				highlight(batch.length)
+			));
+			error(err.stack);
+			throw err || new Error(`${err.response.statusCode} - ${err.response.statusMessage}`);
 		}
 	}
 
@@ -302,7 +335,7 @@ export default class Telemetry extends Dispatcher {
 		const scheduleSendEvents = () => {
 			// when flushing, we don't schedule a send
 			if (!flush && this.running) {
-				this.sendTimer = setTimeout(() => this.sendEvents(), 1000);
+				this.sendTimer = setTimeout(() => this.sendEvents().catch(() => {}), 1000);
 			}
 		};
 
@@ -359,9 +392,10 @@ export default class Telemetry extends Dispatcher {
 				this.lastSend = Date.now();
 				scheduleSendEvents();
 			})
-			.catch(() => {
+			.catch(err => {
 				this.lastSend = Date.now();
 				scheduleSendEvents();
+				throw err;
 			});
 	}
 
@@ -379,35 +413,11 @@ export default class Telemetry extends Dispatcher {
 		await this.pending;
 
 		// wait for any remaining events to be sent
-		await this.sendEvents(true);
-	}
-
-	/**
-	 * Scrubs and sets updated config settings.
-	 *
-	 * @param {Object} config - The config settings to apply.
-	 * @access private
-	 */
-	updateConfig(config) {
-		const eventsDir = config.eventsDir || null;
-		if (eventsDir !== this.config.eventsDir) {
-			this.eventsDir = eventsDir ? expandPath(eventsDir) : null;
+		try {
+			await this.sendEvents(true);
+		} catch (err) {
+			warn('Failed to send events during shutdown');
+			warn(err.stack);
 		}
-
-		// copy over the config
-		Object.assign(this.config, config);
-
-		if (!this.config.environment) {
-			this.config.environment = 'production';
-		}
-
-		// make sure things are sane
-		if (this.config.sendBatchSize) {
-			this.config.sendBatchSize = Math.max(this.config.sendBatchSize, 1);
-		}
-
-		// don't let the sendInterval or sendTimeout dip below 1 second
-		this.config.sendInterval = Math.max(this.config.sendInterval, 1000);
-		this.config.sendTimeout  = Math.max(this.config.sendTimeout, 1000);
 	}
 }

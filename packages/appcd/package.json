@@ -41,7 +41,7 @@
     "cli-table3": "^0.6.0",
     "global-prefix": "^3.0.0",
     "humanize": "^0.0.9",
-    "pretty-ms": "^7.0.0",
+    "pretty-ms": "^7.0.1",
     "semver": "^7.3.2",
     "source-map-support": "^0.5.19",
     "v8-compile-cache": "^2.1.1"
