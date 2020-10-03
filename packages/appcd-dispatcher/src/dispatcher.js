@@ -166,8 +166,9 @@ export default class Dispatcher {
 		}
 
 		let index = -1;
+		const { log } = this.logger;
 
-		this.logger.log('Searching for route handler: %s', highlight(path));
+		log('Searching for route handler: %s', highlight(path));
 
 		const dispatch = async i => {
 			if (i <= index) {
@@ -180,18 +181,18 @@ export default class Dispatcher {
 			const route = this.routes[i];
 			if (!route) {
 				// end of the line
-				this.logger.log('Route not found: %s', highlight(path));
+				log('Route not found: %s', highlight(path));
 				throw new DispatcherError(codes.NOT_FOUND);
 			}
 
-			this.logger.log('Testing route: %s', highlight(route.path));
+			log('Testing route: %s', highlight(route.path));
 
 			const m = ctx.path.match(route.regexp);
 			if (!m) {
 				return dispatch(i + 1);
 			}
 
-			this.logger.log('Found matching route: %s', highlight(route.path));
+			log('Found matching route: %s', highlight(route.path));
 
 			// extract the params from the path
 			const { keys } = route;
@@ -204,25 +205,25 @@ export default class Dispatcher {
 
 			if (route.handler instanceof Dispatcher) {
 				// call the nested dispatcher
-				this.logger.log(`Calling dispatcher handler ${highlight(route.prefix)} ${note(`(${route.handler.id})`)}`);
+				log(`Calling dispatcher handler ${highlight(route.prefix)} ${note(`(${route.handler.id})`)}`);
 				return route.handler.call(`/${ctx.path.replace(route.prefix, '').replace(/^\//, '')}`, ctx);
 			}
 
 			let fired = false;
 
-			this.logger.log('Invoking route %s handler...', highlight(route.path));
+			log('Invoking route %s handler...', highlight(route.path));
 
 			let result = route.handler(ctx, async function next() {
 				// go to next route
 
 				if (fired) {
-					this.logger.log('next() already fired!');
+					log('next() already fired!');
 					return;
 				}
 
 				fired = true;
 
-				this.logger.log('Route %s handler passed to next route', highlight(route.path));
+				log('Route %s handler passed to next route', highlight(route.path));
 
 				const result = await dispatch(i + 1);
 				return result || ctx;

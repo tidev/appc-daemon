@@ -13,7 +13,7 @@ import path from 'path';
 import Response, { AppcdError, codes, i18n } from 'appcd-response';
 import * as request from '@axway/amplify-request';
 
-import { arch, debounce, osInfo, redact } from 'appcd-util';
+import { arch, osInfo, redact } from 'appcd-util';
 import { expandPath } from 'appcd-path';
 import { isDir } from 'appcd-fs';
 import { v4 as uuidv4 } from 'uuid';
@@ -37,7 +37,8 @@ export default class Telemetry extends Dispatcher {
 		enabled:       false,
 		eventsDir:     null,
 		sendBatchSize: 10,
-		sendInterval:  60000 // 1 minute
+		sendInterval:  60000, // 1 minute
+		url:           null
 	};
 
 	/**
@@ -247,7 +248,7 @@ export default class Telemetry extends Dispatcher {
 		}
 
 		// set the config and wire up the watcher
-		const updateConfig = debounce(async function () { // note: this cannot be an arrow function
+		const updateConfig = async function () { // note: this cannot be an arrow function
 			const telemetryConfig = this.cfg.get('telemetry') || {};
 
 			const eventsDir = telemetryConfig.eventsDir || null;
@@ -277,10 +278,11 @@ export default class Telemetry extends Dispatcher {
 				timeout:  Math.max(telemetryConfig.sendTimeout || 60000, 1000),
 				url:      telemetryConfig.url
 			});
-		}).bind(this);
+		}.bind(this);
+
 		await updateConfig();
-		this.cfg.watch('network', () => updateConfig());
-		this.cfg.watch('telemetry', () => updateConfig());
+		this.cfg.watch('network', updateConfig);
+		this.cfg.watch('telemetry', updateConfig);
 
 		this.eventsDir = expandPath(this.config.eventsDir || path.join(homeDir, 'telemetry'));
 
@@ -409,11 +411,11 @@ export default class Telemetry extends Dispatcher {
 		clearTimeout(this.sendTimer);
 		this.running = false;
 
-		// wait for the pending post to finish
-		await this.pending;
-
-		// wait for any remaining events to be sent
 		try {
+			// wait for the pending post to finish
+			await this.pending;
+
+			// wait for any remaining events to be sent
 			await this.sendEvents(true);
 		} catch (err) {
 			warn('Failed to send events during shutdown');

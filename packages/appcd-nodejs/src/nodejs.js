@@ -163,7 +163,7 @@ export async function downloadNode({ arch, networkConfig, nodeHome, version } = 
 		});
 	} catch (err) {
 		logger.error(err);
-		throw err;
+		throw new Error(`Failed to download Node.js: ${err.response.statusCode}`);
 	} finally {
 		if (isFile(outFile)) {
 			await fs.remove(outFile);

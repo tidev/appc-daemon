@@ -26,54 +26,35 @@ describe('nodejs', () => {
 			delete process.env.APPCD_TEST_PLATFORM;
 		});
 
-		it('should error if architecture is invalid', () => {
-			expect(() => {
-				prepareNode({ arch: {} });
-			}).to.throw(Error, 'Expected arch to be "x86" or "x64"');
-
-			expect(() => {
-				prepareNode({ arch: 'foo' });
-			}).to.throw(Error, 'Expected arch to be "x86" or "x64"');
+		it('should error if architecture is invalid', async () => {
+			await expect(prepareNode({ arch: {} }))
+				.to.eventually.be.rejectedWith(Error, 'Expected arch to be "x86" or "x64"');
+			await expect(prepareNode({ arch: 'foo' }))
+				.to.eventually.be.rejectedWith(Error, 'Expected arch to be "x86" or "x64"');
 		});
 
-		it('should error if node home is invalid', () => {
-			expect(() => {
-				prepareNode({});
-			}).to.throw(TypeError, 'Expected Node home to be a non-empty string');
-
-			expect(() => {
-				prepareNode({ arch: 'x64' });
-			}).to.throw(TypeError, 'Expected Node home to be a non-empty string');
-
-			expect(() => {
-				prepareNode({ arch: 'x64', nodeHome: null });
-			}).to.throw(TypeError, 'Expected Node home to be a non-empty string');
-
-			expect(() => {
-				prepareNode({ arch: 'x64', nodeHome: '' });
-			}).to.throw(TypeError, 'Expected Node home to be a non-empty string');
-
-			expect(() => {
-				prepareNode({ arch: 'x64', nodeHome: 123 });
-			}).to.throw(TypeError, 'Expected Node home to be a non-empty string');
+		it('should error if node home is invalid', async () => {
+			await expect(prepareNode({}))
+				.to.eventually.be.rejectedWith(TypeError, 'Expected Node home to be a non-empty string');
+			await expect(prepareNode({ arch: 'x64' }))
+				.to.eventually.be.rejectedWith(TypeError, 'Expected Node home to be a non-empty string');
+			await expect(prepareNode({ arch: 'x64', nodeHome: null }))
+				.to.eventually.be.rejectedWith(TypeError, 'Expected Node home to be a non-empty string');
+			await expect(prepareNode({ arch: 'x64', nodeHome: '' }))
+				.to.eventually.be.rejectedWith(TypeError, 'Expected Node home to be a non-empty string');
+			await expect(prepareNode({ arch: 'x64', nodeHome: 123 }))
+				.to.eventually.be.rejectedWith(TypeError, 'Expected Node home to be a non-empty string');
 		});
 
-		it('should error if version is invalid', () => {
-			expect(() => {
-				prepareNode({ arch: 'x64', nodeHome: 'foo' });
-			}).to.throw(TypeError, 'Expected version to be a non-empty string');
-
-			expect(() => {
-				prepareNode({ arch: 'x64', nodeHome: 'foo', version: null });
-			}).to.throw(TypeError, 'Expected version to be a non-empty string');
-
-			expect(() => {
-				prepareNode({ arch: 'x64', nodeHome: 'foo', version: '' });
-			}).to.throw(TypeError, 'Expected version to be a non-empty string');
-
-			expect(() => {
-				prepareNode({ arch: 'x64', nodeHome: 'foo', version: 123 });
-			}).to.throw(TypeError, 'Expected version to be a non-empty string');
+		it('should error if version is invalid', async () => {
+			await expect(prepareNode({ arch: 'x64', nodeHome: 'foo' }))
+				.to.eventually.be.rejectedWith(TypeError, 'Expected version to be a non-empty string');
+			await expect(prepareNode({ arch: 'x64', nodeHome: 'foo', version: null }))
+				.to.eventually.be.rejectedWith(TypeError, 'Expected version to be a non-empty string');
+			await expect(prepareNode({ arch: 'x64', nodeHome: 'foo', version: '' }))
+				.to.eventually.be.rejectedWith(TypeError, 'Expected version to be a non-empty string');
+			await expect(prepareNode({ arch: 'x64', nodeHome: 'foo', version: 123 }))
+				.to.eventually.be.rejectedWith(TypeError, 'Expected version to be a non-empty string');
 		});
 	});
 
