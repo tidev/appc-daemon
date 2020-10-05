@@ -797,7 +797,7 @@ describe('util', () => {
 
 		it('should redact part of a string', () => {
 			expect(util.redact(`${process.env.HOME}/foo/bar`)).to.equal('<HOME>/foo/bar');
-			expect(util.redact(`Hello! My name is ${process.env.USER}`)).to.equal('Hello! My name is <REDACTED>');
+			expect(util.redact(`Hello! My name is ${process.platform === 'win32' ? process.env.USERNAME : process.env.USER}`)).to.equal('Hello! My name is <REDACTED>');
 		});
 
 		it('should replace a sensitive data in a string', () => {
@@ -820,9 +820,9 @@ describe('util', () => {
 		});
 
 		it('should redact an array of items', () => {
-			const name = process.env.USER;
+			const name = process.env.USERNAME || process.env.USER;
 			const arr = util.redact([
-				{ user: process.env.USER, password: '123456', email: 'foo@bar.com' },
+				{ user: name, password: '123456', email: 'foo@bar.com' },
 				`Welcome ${name.substring(0, 1).toUpperCase()}${name.substring(1).toLowerCase()}!`,
 				123,
 				[ `${process.env.HOME}/foo/bar` ]

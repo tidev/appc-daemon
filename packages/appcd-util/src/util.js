@@ -577,7 +577,8 @@ const mandatoryRedactionTriggers = [
  */
 const mandatoryReplacements = [
 	[ process.env.HOME, '<HOME>' ],
-	process.env.USER,
+	process.env.USER, // macOS, Linux
+	process.env.USERNAME, // Windows
 	/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g // email address
 ];
 
@@ -652,9 +653,11 @@ export function redact(data, opts = {}) {
 		if (Array.isArray(replacements) || replacements instanceof Set) {
 			for (const replacement of replacements) {
 				let pattern, value;
-				if (Array.isArray(replacement)) {
+				if (!replacement) {
+					continue;
+				} else if (Array.isArray(replacement)) {
 					([ pattern, value ] = replacement);
-				} else if (typeof replacement === 'string' || replacement instanceof RegExp) {
+				} else if (replacement && (typeof replacement === 'string' || replacement instanceof RegExp)) {
 					pattern = replacement;
 				} else {
 					throw new TypeError('Expected replacements to be an array of replace arguments');
@@ -662,7 +665,7 @@ export function redact(data, opts = {}) {
 				const key = pattern;
 				if (!(pattern instanceof RegExp)) {
 					// eslint-disable-next-line security/detect-non-literal-regexp
-					pattern = new RegExp(pattern, 'ig');
+					pattern = new RegExp(pattern.replace(/\\/g, '\\\\'), 'ig');
 				}
 				if (value === undefined || value === null) {
 					value = redacted;
