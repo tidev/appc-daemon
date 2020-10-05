@@ -234,6 +234,10 @@ async function linkPlugins() {
 	// fix yarn links
 	const scan = dir => {
 		try {
+			if (!fs.existsSync(dir)) {
+				return;
+			}
+
 			for (const name of fs.readdirSync(dir)) {
 				const file = path.join(dir, name);
 				if (name[0] === '@') {
