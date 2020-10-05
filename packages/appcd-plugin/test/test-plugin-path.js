@@ -1,3 +1,5 @@
+/* eslint-disable promise/no-callback-in-promise */
+
 import appcdLogger from 'appcd-logger';
 import fs from 'fs-extra';
 import path from 'path';
