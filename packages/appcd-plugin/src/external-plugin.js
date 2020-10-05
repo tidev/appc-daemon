@@ -382,7 +382,7 @@ export default class ExternalPlugin extends PluginBase {
 			args.unshift(`--inspect-brk=${debugPort}`);
 		}
 
-		const autoReload = await Dispatcher.call('/appcd/config/plugins/autoReload').then(ctx => ctx.response).catch(e => true);
+		const autoReload = await Dispatcher.call('/appcd/config/plugins/autoReload').then(ctx => ctx.response).catch(() => true);
 
 		if (autoReload !== false) {
 			try {
