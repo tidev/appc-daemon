@@ -47,6 +47,7 @@ describe('Plugin Path', () => {
 			await this.pp.destroy();
 			this.pp = null;
 		}
+		// log(renderTree());
 	});
 
 	it('should error if plugin path is invalid', () => {
@@ -239,7 +240,7 @@ describe('Plugin Path', () => {
 		const tmp = makeTempName();
 		log('Plugin directory will be %s', highlight(tmp));
 
-		let counter = 0;
+		let counter = 1;
 		let src;
 		let dest;
 
@@ -253,47 +254,51 @@ describe('Plugin Path', () => {
 			this.pp.on('added', plugin => {
 				counter++;
 				log('%s Plugin added: %s', magenta(`[${counter}]`), highlight(`${plugin.name}@${plugin.version}`));
+				// log(renderTree());
 				try {
 					switch (counter) {
-						case 29:
-							expect(destroyLookup.size).to.equal(0);
-						case 1:
-						case 3:
-						case 7:
+						case 2:
+						case 4:
+						case 8:
 							expect(plugin.name).to.equal('good');
 							expect(plugin.version).to.equal('1.2.3');
 							break;
-						case 4:
-						case 9:
+						case 5:
+						case 10:
 							expect(plugin.name).to.equal('good2');
 							expect(plugin.version).to.equal('2.3.4');
-							break;
-						case 11:
-						case 21:
-							expect(plugin.name).to.equal('good');
-							expect(plugin.version).to.equal('1.0.0');
 							break;
 						case 12:
 						case 22:
 							expect(plugin.name).to.equal('good');
-							expect(plugin.version).to.equal('1.1.0');
+							expect(plugin.version).to.equal('1.0.0');
 							break;
 						case 13:
 						case 23:
-							expect(plugin.name).to.equal('good2');
-							expect(plugin.version).to.equal('1.0.0');
+							expect(plugin.name).to.equal('good');
+							expect(plugin.version).to.equal('1.1.0');
 							break;
 						case 14:
 						case 24:
 							expect(plugin.name).to.equal('good2');
-							expect(plugin.version).to.equal('1.1.0');
+							expect(plugin.version).to.equal('1.0.0');
 							break;
 						case 15:
+						case 25:
+							expect(plugin.name).to.equal('good2');
+							expect(plugin.version).to.equal('1.1.0');
+							break;
+						case 16:
 							expect(plugin.name).to.equal('good3');
 							expect(plugin.version).to.equal('3.4.5');
 							break;
 						case 30:
-							expect(plugin.name).to.equal('good2');
+							expect(destroyLookup.size).to.equal(0);
+							expect([ 'good', 'good2' ]).to.include(plugin.name);
+							expect(plugin.version).to.equal('1.2.3');
+							break;
+						case 31:
+							expect([ 'good', 'good2' ]).to.include(plugin.name);
 							expect(plugin.version).to.equal('1.2.3');
 					}
 				} catch (e) {
@@ -303,44 +308,45 @@ describe('Plugin Path', () => {
 			this.pp.on('removed', plugin => {
 				counter++;
 				log('%s Plugin deleted: %s', magenta(`[${counter}]`), highlight(`${plugin.name}@${plugin.version}`));
+				// log(renderTree());
 				try {
 					switch (counter) {
-						case 2:
-						case 5:
-						case 8:
-						case 31:
+						case 3:
+						case 6:
+						case 9:
+						case 32:
 							expect(plugin.name).to.equal('good');
 							expect(plugin.version).to.equal('1.2.3');
 							break;
-						case 6:
-						case 10:
+						case 7:
+						case 11:
 							expect(plugin.name).to.equal('good2');
 							expect(plugin.version).to.equal('2.3.4');
 							break;
-						case 16:
-							expect(plugin.name).to.equal('good');
-							expect(plugin.version).to.equal('1.0.0');
-							break;
 						case 17:
 							expect(plugin.name).to.equal('good');
-							expect(plugin.version).to.equal('1.1.0');
+							expect(plugin.version).to.equal('1.0.0');
 							break;
 						case 18:
-							expect(plugin.name).to.equal('good2');
-							expect(plugin.version).to.equal('1.0.0');
+							expect(plugin.name).to.equal('good');
+							expect(plugin.version).to.equal('1.1.0');
 							break;
 						case 19:
 							expect(plugin.name).to.equal('good2');
-							expect(plugin.version).to.equal('1.1.0');
+							expect(plugin.version).to.equal('1.0.0');
 							break;
 						case 20:
+							expect(plugin.name).to.equal('good2');
+							expect(plugin.version).to.equal('1.1.0');
+							break;
+						case 21:
 							expect(plugin.name).to.equal('good3');
 							expect(plugin.version).to.equal('3.4.5');
 							break;
-						case 25:
 						case 26:
 						case 27:
 						case 28:
+						case 29:
 							// when our test deletes the parent plugin directory, the order in which
 							// the directories are deleted as well as the async completion of the
 							// notifications throws off order, so instead we remove each plugin/ver
@@ -358,8 +364,8 @@ describe('Plugin Path', () => {
 								destroyLookup.delete(plugin.name);
 							}
 							break;
-						case 32:
-							expect(plugin.name).to.equal('good2');
+						case 33:
+							expect([ 'good', 'good2' ]).to.include(plugin.name);
 							expect(plugin.version).to.equal('1.2.3');
 					}
 				} catch (e) {
@@ -377,7 +383,8 @@ describe('Plugin Path', () => {
 
 			(async () => {
 				// 1
-				expect(counter).to.equal(0);
+				log(`Stage 1 (${counter})`);
+				expect(counter).to.equal(1);
 				log(renderTree());
 				expect(this.pp.scheme).to.be.instanceof(InvalidScheme);
 
@@ -390,7 +397,8 @@ describe('Plugin Path', () => {
 				await sleep(1000);
 
 				// 2
-				expect(counter).to.equal(1);
+				log(`Stage 2 (${counter})`);
+				expect(counter).to.equal(2);
 				log(renderTree());
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(1);
 				expect(this.pp.scheme).to.be.instanceof(PluginScheme);
@@ -400,7 +408,7 @@ describe('Plugin Path', () => {
 
 				await sleep(1000);
 
-				expect(counter).to.equal(2);
+				expect(counter).to.equal(3);
 				log(renderTree());
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(0);
 				expect(this.pp.scheme).to.be.instanceof(InvalidScheme);
@@ -411,7 +419,8 @@ describe('Plugin Path', () => {
 				await sleep(1000);
 
 				// 3
-				expect(counter).to.equal(2);
+				log(`Stage 3 (${counter})`);
+				expect(counter).to.equal(3);
 				log(renderTree());
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(0);
 				expect(this.pp.scheme).to.be.instanceof(InvalidScheme);
@@ -425,7 +434,8 @@ describe('Plugin Path', () => {
 				await sleep(1000);
 
 				// 4
-				expect(counter).to.equal(3);
+				log(`Stage 4 (${counter})`);
+				expect(counter).to.equal(4);
 				log(renderTree());
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(1);
 				expect(this.pp.scheme).to.be.instanceof(PluginsDirScheme);
@@ -439,7 +449,8 @@ describe('Plugin Path', () => {
 				await sleep(1000);
 
 				// 5
-				expect(counter).to.equal(4);
+				log(`Stage 5 (${counter})`);
+				expect(counter).to.equal(5);
 				log(renderTree());
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(2);
 				expect(this.pp.scheme).to.be.instanceof(PluginsDirScheme);
@@ -451,7 +462,8 @@ describe('Plugin Path', () => {
 				await sleep(1000);
 
 				// 6
-				expect(counter).to.equal(5);
+				log(`Stage 6 (${counter})`);
+				expect(counter).to.equal(6);
 				log(renderTree());
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(1);
 				expect(this.pp.scheme).to.be.instanceof(PluginsDirScheme);
@@ -463,7 +475,8 @@ describe('Plugin Path', () => {
 				await sleep(1000);
 
 				// 7
-				expect(counter).to.equal(6);
+				log(`Stage 7 (${counter})`);
+				expect(counter).to.equal(7);
 				log(renderTree());
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(0);
 				expect(this.pp.scheme).to.be.instanceof(InvalidScheme);
@@ -477,7 +490,8 @@ describe('Plugin Path', () => {
 				await sleep(1000);
 
 				// 8, 9
-				expect(counter).to.equal(7);
+				log(`Stage 8, 9 (${counter})`);
+				expect(counter).to.equal(8);
 				log(renderTree());
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(1);
 				expect(this.pp.scheme).to.be.instanceof(PluginsDirScheme);
@@ -491,7 +505,8 @@ describe('Plugin Path', () => {
 				await sleep(1000);
 
 				// 10
-				expect(counter).to.equal(9);
+				log(`Stage 10 (${counter})`);
+				expect(counter).to.equal(10);
 				log(renderTree());
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(1);
 				expect(this.pp.scheme).to.be.instanceof(PluginScheme);
@@ -502,6 +517,7 @@ describe('Plugin Path', () => {
 				await sleep(1000);
 
 				// 11, 12, 13, 14
+				log(`Stage 11, 12, 13, 14 (${counter})`);
 				log(renderTree());
 				expect(this.pp.scheme).to.be.instanceof(InvalidScheme);
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(0);
@@ -515,6 +531,7 @@ describe('Plugin Path', () => {
 				await sleep(1000);
 
 				// 15
+				log(`Stage 15 (${counter})`);
 				log(renderTree());
 				expect(this.pp.scheme).to.be.instanceof(NestedPluginsDirScheme);
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(4);
@@ -528,6 +545,7 @@ describe('Plugin Path', () => {
 				await sleep(1000);
 
 				// 16
+				log(`Stage 16 (${counter})`);
 				log(renderTree());
 				expect(this.pp.scheme).to.be.instanceof(NestedPluginsDirScheme);
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(5);
@@ -539,6 +557,7 @@ describe('Plugin Path', () => {
 				await sleep(1000);
 
 				// 17, 18, 19, 20
+				log(`Stage 17, 18, 19, 20 (${counter})`);
 				log(renderTree());
 				expect(this.pp.scheme).to.be.instanceof(NestedPluginsDirScheme);
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(4);
@@ -571,6 +590,7 @@ describe('Plugin Path', () => {
 				await sleep(1000);
 
 				// 21, 22, 23, 24
+				log(`Stage 21, 22, 23, 24 (${counter})`);
 				log(renderTree());
 				expect(this.pp.scheme).to.be.instanceof(InvalidScheme);
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(0);
@@ -584,6 +604,7 @@ describe('Plugin Path', () => {
 				await sleep(1000);
 
 				// 25, 26, 27, 28
+				log(`Stage 25, 26, 27, 28 (${counter})`);
 				log(renderTree());
 				expect(this.pp.scheme).to.be.instanceof(NestedPluginsDirScheme);
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(4);
@@ -594,6 +615,7 @@ describe('Plugin Path', () => {
 				await sleep(1000);
 
 				// 29, 30
+				log(`Stage 29, 30 (${counter})`);
 				log(renderTree());
 				expect(this.pp.scheme).to.be.instanceof(InvalidScheme);
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(0);
@@ -607,6 +629,7 @@ describe('Plugin Path', () => {
 				await sleep(1000);
 
 				// 31, 32
+				log(`Stage 31, 32 (${counter})`);
 				log(renderTree());
 				expect(this.pp.scheme).to.be.instanceof(PluginsDirScheme);
 				expect(Object.keys(this.pp.plugins)).to.have.lengthOf(2);

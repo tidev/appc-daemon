@@ -40,7 +40,7 @@
     "gulp-chug": "^0.5.1",
     "gulp-debug": "^4.0.0",
     "gulp-eslint": "^6.0.0",
-    "gulp-load-plugins": "^2.0.4",
+    "gulp-load-plugins": "^2.0.5",
     "gulp-plumber": "^1.2.1",
     "gulp-sourcemaps": "^2.6.5",
     "mocha": "^8.1.3",

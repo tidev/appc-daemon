@@ -32,6 +32,7 @@
  * fix(exec): Renamed `"json"` argument to `"data"`. The `exec` command does not have a  `--json`
    flag, however if it's passed in, the `"json"` value will be set to `true` instead of an object
    containing the request data payload.
+ * fix(debug): Fixed graceful shutdown when running the daemon in debug mode.
  * chore: Updated dependencies.
 
 # v3.2.0 (Jan 13, 2020)

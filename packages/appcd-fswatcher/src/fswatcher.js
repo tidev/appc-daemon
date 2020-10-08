@@ -151,8 +151,8 @@ export class Node {
 
 		if (!dirOnly || node.type & DIRECTORY || node.type & SYMLINK) {
 			log('Creating node for %s', highlight(node.path));
-			node.init(action);
 			this.children[node.name] = node;
+			node.init(action);
 			return node;
 		}
 
@@ -279,6 +279,12 @@ export class Node {
 
 				if (!this.fswatcher) {
 					this.fswatcher = fs.watch(this.path, { persistent: true }, this.onFSEvent.bind(this));
+
+					// Node's FSWatcher does not actually store path in the instance, so uncomment
+					// this and use appcd-util's `getActiveHandles()` to debug and help locate
+					// orphaned FSWatcher instances
+					// this.fswatcher.path = this.path;
+
 					this.fswatcher.on('error', err => {
 						if (err.code === 'EPERM') {
 							this.closeFSWatcher();

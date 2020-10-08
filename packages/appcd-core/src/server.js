@@ -25,7 +25,7 @@ import { purgeUnusedNodejsExecutables } from 'appcd-nodejs';
 const { __n } = i18n();
 
 const logger = appcdCoreLogger('appcd:server');
-const { highlight, note, notice } = appcdCoreLogger.styles;
+const { highlight, notice } = appcdCoreLogger.styles;
 
 /**
  * The main server logic for the Appc Daemon. It controls all core aspects of the daemon including
@@ -152,32 +152,6 @@ export default class Server {
 					fs.writeFileSync(this.pidFile, process.pid.toString());
 				}
 			});
-
-		// listen for CTRL-C and SIGTERM
-		const shutdown = async signal => {
-			if (this.state === Server.STARTED || this.state === Server.STARTING) {
-				logger.log(`Received signal ${highlight(signal)}, shutting down ${note(`(state=${this.state})`)}`);
-				try {
-					await this.shutdown();
-					process.exit(0);
-				} catch (err) {
-					logger.error(err);
-				}
-			} else if (this.state === Server.STOPPED) {
-				logger.log(`Received signal ${highlight(signal)}, but server already stopped ${note(`(state=${this.state})`)}`);
-			}
-			// if state === stopping, then we just ignore it
-		};
-		if (process.connected) {
-			// wire up the graceful shutdown when running in debug mode
-			process.on('message', msg => {
-				if (msg === 'shutdown') {
-					shutdown();
-				}
-			});
-		}
-		process.on('SIGINT', shutdown);
-		process.on('SIGTERM', shutdown);
 
 		// import any Titanium CLI configuration settings
 		await this.importTiConfig();

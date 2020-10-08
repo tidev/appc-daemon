@@ -29,6 +29,9 @@
    time.
  * fix: Cast the process id to a string when writing the pid file.
  * fix(status-monitor): Fixed bug where status was reporting incorrect uptime in debug log.
+ * fix(telemetry): Lowered telemetry send timeout from 1 minute to 10 seconds to prevent a long
+   hang during telemetry shutdown while it waits to send a batch of events.
+ * fix(server): Decouple shutdown trigger from server by moving to main entry script.
  * chore: Updated dependencies.
 
 # v3.2.0 (Jan 13, 2020)

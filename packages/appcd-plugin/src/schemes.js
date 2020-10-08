@@ -202,7 +202,7 @@ export class PluginScheme extends Scheme {
 					PluginScheme.logger.log(`Plugin was deleted from disk, removing: ${highlight(this.path)}`);
 					await this.emit('plugin-deleted', this.plugin);
 					this.plugin = null;
-				} else if (evt.action ===  'change' && this.plugin && evt.file === _path.join(this.path, 'package.json')) {
+				} else if (evt.action === 'change' && this.plugin && evt.file === _path.join(this.path, 'package.json')) {
 					const plugin = new Plugin(this.path, true);
 					if (plugin.pkgJsonHash !== this.plugin.pkgJsonHash) {
 						PluginScheme.logger.log(`Plugin ${highlight(this.plugin.toString())} package.json changed, removing and re-adding: ${highlight(this.path)}`);
@@ -280,7 +280,7 @@ export class PluginsDirScheme extends Scheme {
 	 * @access public
 	 */
 	async destroy() {
-		await Scheme.prototype.destroy.call(this);
+		await super.destroy();
 		await Promise.all(
 			Object
 				.values(this.pluginSchemes)
@@ -356,14 +356,9 @@ export class PluginsDirScheme extends Scheme {
 				// we only care when evt.file is `<path>/<dir>` and `<path>/@<scope>/<dir>`
 
 				// if this path is being changed, then we need to redetect the scheme
-				if (evt.file === this.path) {
+				if (evt.file === this.path || !isDir(evt.file)) {
 					PluginsDirScheme.logger.log(`Directory changed, triggering redetect scheme: ${highlight(evt.file)}`);
 					await this.emit('redetect-scheme');
-					return;
-				}
-
-				if (!isDir(evt.file)) {
-					// we don't care about files
 					return;
 				}
 
@@ -452,7 +447,7 @@ export class NestedPluginsDirScheme extends Scheme {
 	 * @access public
 	 */
 	async destroy() {
-		await Scheme.prototype.destroy.call(this);
+		await super.destroy(this);
 		await Promise.all(
 			Object
 				.values(this.pluginSchemes)
@@ -534,15 +529,10 @@ export class NestedPluginsDirScheme extends Scheme {
 				// we only care when evt.file is `<path>/<dir>` and `<path>/@<scope>/<dir>`
 
 				// if this path is being changed, then emit the change event
-				if (evt.file === this.path) {
+				if (evt.file === this.path || !isDir(evt.file)) {
 					// signal to check scheme
 					NestedPluginsDirScheme.logger.log(`Directory changed, triggering redetect scheme: ${highlight(evt.file)}`);
 					await this.emit('redetect-scheme');
-					return;
-				}
-
-				if (!isDir(evt.file)) {
-					// we don't care about files
 					return;
 				}
 

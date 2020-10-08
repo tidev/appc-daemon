@@ -52,6 +52,8 @@
    significantly faster and more efficient.
  * refactor(plugin): Code cleanup and moved common code to `PluginBase` to share across internal
    and external plugins.
+ * refactor(telemetry): Removed telemetry events when a plugin is added or removed since these
+   events can be noisy.
  * chore: Updated dependencies.
 
 # v3.2.2 (Jan 13, 2020)
