@@ -261,7 +261,9 @@ export class Node {
 		// if we have a directory, then initialize the listing and recurse if necessary
 		} else if (isDir) {
 			// init the recursion depths
-			this.depths = {};
+			if (!this.depths) {
+				this.depths = {};
+			}
 			if (this.parent) {
 				for (const [ id, depth ] of Object.entries(this.parent.depths)) {
 					if (depth > 0) {
@@ -347,7 +349,7 @@ export class Node {
 						action,
 						filename: this.name,
 						file: this.path
-					}, true);
+					}, true, 0, true);
 				}
 
 				const now = Date.now();
@@ -463,9 +465,11 @@ export class Node {
 	 * it assumes it's a parent node and watchers should only be notified if the parent is watching
 	 * recursively.
 	 * @param {Number} [depth=0] - The depth from which the event originated.
+	 * @param {Boolean} [isNewDir] - When `true`, does not increment the depth when notifying the
+	 * parent node. We only want to decrement if it's a new directory (and isCurrentNode is true).
 	 * @access private
 	 */
-	notify(evt, isCurrentNode, depth = 0) {
+	notify(evt, isCurrentNode, depth = 0, isNewDir) {
 		if (this.watchers.size && isCurrentNode || this.isRecursive) {
 			log('Notifying %s %s: %s → %s', green(this.watchers.size), pluralize('watcher', this.watchers.size), highlight(this.path), highlight(evt.filename));
 			for (const watcher of this.watchers) {
@@ -482,7 +486,7 @@ export class Node {
 		if (this.parent) {
 			// Note: this is a pretty chatty log message
 			// log('Notifying parent: %s', highlight(this.parent.path));
-			this.parent.notify(evt, false, depth + 1);
+			this.parent.notify(evt, false, isNewDir ? depth : (depth + 1));
 		} else {
 			rootEmitter.emit('change', evt);
 		}

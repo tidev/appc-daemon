@@ -78,6 +78,17 @@ export default class ConfigService extends ServiceDispatcher {
 
 			const { action } = data;
 
+			const unload = id => {
+				log(`Unloading config: ${highlight(id)}`);
+				this.config.unload(id);
+
+				if (this.watchers[id]) {
+					log(`Closing ${highlight(id)} fs watcher`);
+					this.watchers[id].close();
+					delete this.watchers[id];
+				}
+			};
+
 			log(`Handling ${highlight(action)} request`);
 
 			if (action === 'get') {
@@ -96,19 +107,17 @@ export default class ConfigService extends ServiceDispatcher {
 				};
 
 				load();
-				this.watchers[id] = new FSWatcher(data.file).on('change', () => load(true));
+
+				this.watchers[id] = new FSWatcher(data.file).on('change', ({ action }) => {
+					if (action === 'delete') {
+						unload(id);
+					} else {
+						load(true);
+					}
+				});
 
 			} else if (action === 'unload') {
-				const id = data.id || data.namespace;
-
-				log(`Unloading config: ${highlight(id)}`);
-				this.config.unload(data.id || data.namespace);
-
-				if (this.watchers[id]) {
-					log(`Closing ${highlight(id)} fs watcher`);
-					this.watchers[id].close();
-					delete this.watchers[id];
-				}
+				unload(data.id || data.namespace);
 
 			} else if (writeRegExp.test(action)) {
 				// performing a modifying action

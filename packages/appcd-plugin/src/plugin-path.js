@@ -3,9 +3,10 @@ import HookEmitter from 'hook-emitter';
 
 import { expandPath } from 'appcd-path';
 import { detectScheme } from './schemes';
+import { debounce } from 'appcd-util';
 
 const { log } = appcdLogger('appcd:plugin:path');
-const { highlight } = appcdLogger.styles;
+const { highlight, note } = appcdLogger.styles;
 
 /**
  * Scans and watches a path for plugins, then emits events when plugins are added or removed.
@@ -54,37 +55,37 @@ export default class PluginPath extends HookEmitter {
 		const SchemeClass = detectScheme(this.path);
 
 		if (this.scheme instanceof SchemeClass) {
-			log(`Detected no scheme change (${SchemeClass.name})`);
+			log(`Detected no scheme change (${SchemeClass.name}): ${highlight(this.path)}`);
 			return;
 		}
 
 		log('Detecting scheme change (%s => %s)', highlight(this.scheme ? Object.getPrototypeOf(this.scheme).constructor.name : null), highlight(SchemeClass.name));
-
-		const scheme = new SchemeClass(this.path)
-			.on('change', async () => {
-				log('File system change, re-detecting scheme');
-				await this.detect();
-			})
-			.on('plugin-added', async (plugin) => {
-				log('Plugin added: %s', highlight(`${plugin.name}@${plugin.version}`));
-				this.plugins[plugin.path] = plugin;
-				await this.emit('added', plugin);
-			})
-			.on('plugin-deleted', async (plugin) => {
-				log('Stopping plugin: %s', highlight(`${plugin.name}@${plugin.version}`));
-				await plugin.stop();
-
-				log('Plugin unloaded: %s', highlight(`${plugin.name}@${plugin.version}`));
-				delete this.plugins[plugin.path];
-				await this.emit('removed', plugin);
-			});
 
 		if (this.scheme) {
 			await this.scheme.destroy();
 			this.scheme = null;
 		}
 
-		this.scheme = await scheme.watch();
+		this.scheme = new SchemeClass(this.path)
+			.on('redetect-scheme', debounce(async () => {
+				log(`Redetecting scheme: ${highlight(this.path)}`);
+				await this.detect();
+			}).bind(this))
+			.on('plugin-added', async plugin => {
+				log(`Plugin added: ${highlight(plugin.toString())} ${note(`(${plugin.path})`)}`);
+				this.plugins[plugin.path] = plugin;
+				await this.emit('added', plugin);
+			})
+			.on('plugin-deleted', async plugin => {
+				log(`Stopping plugin: ${highlight(plugin.toString())} ${note(`(${plugin.path})`)}`);
+				await plugin.stop();
+
+				log(`Plugin unloaded: ${highlight(plugin.toString())} ${note(`(${plugin.path})`)}`);
+				delete this.plugins[plugin.path];
+				await this.emit('removed', plugin);
+			});
+
+		await this.scheme.watch();
 
 		return this;
 	}

@@ -1,4 +1,5 @@
 import appcdLogger from 'appcd-logger';
+import globule from 'globule';
 import fs from 'fs-extra';
 import path from 'path';
 import tmp from 'tmp';
@@ -17,6 +18,7 @@ import {
 	renderTree,
 	status
 } from '../dist/fswatcher';
+import { spawn } from 'child_process';
 
 const logger = appcdLogger('test:appcd:fswatcher');
 const { log } = logger;
@@ -1181,6 +1183,114 @@ describe('FSWatcher', () => {
 						}, 500);
 					}, 500);
 				}, 150);
+			});
+
+			it('should recursively watch a non-existing directory that is created with multiple subdirectories', function (done) {
+				this.timeout(10000);
+				this.slow(8000);
+
+				const tmp = makeTempDir();
+				log('Creating temp directory: %s', highlight(tmp));
+
+				const watchDir = path.join(tmp, 'a', 'b');
+				log('Watching: %s', highlight(watchDir));
+
+				const events = [];
+				const detect = async () => {
+					try {
+						if (globule.find('./package.json', { srcBase: watchDir }).length) {
+							return;
+						}
+					} catch (e) {
+						// squelch
+					}
+
+					try {
+						if (globule.find([ './*/package.json', './@*/*/package.json' ], { srcBase: watchDir }).length) {
+							return;
+						}
+					} catch (e) {
+						// squelch
+					}
+
+					try {
+						if (globule.find([ './*/*/package.json', './@*/*/*/package.json' ], { srcBase: watchDir }).length) {
+							return;
+						}
+					} catch (e) {
+						// squelch
+					}
+				};
+
+				const mkdirsLogger = appcdLogger('test:appcd:fswatcher:mkdirs').log;
+				let timer;
+				const checkEvents = () => {
+					clearTimeout(timer);
+					if (events.length === 3) {
+						timer = setTimeout(() => done(), 1000);
+					} else if (events.length > 3) {
+						done(new Error('Too many fs events fired'));
+					}
+				};
+
+				new FSWatcher(watchDir, { depth: 1, recursive: true })
+					.on('change', async evt => {
+						log(evt);
+						log(renderTree());
+						events.push(evt);
+						await detect();
+						checkEvents();
+					});
+
+				log(renderTree());
+
+				log('Running mkdirs...');
+				const child = spawn(process.execPath, [ path.join(__dirname, 'mkdirs.js'), watchDir ]);
+				child.stdout.on('data', data => mkdirsLogger(data.toString().trim()));
+				child.stderr.on('data', data => mkdirsLogger(data.toString().trim()));
+				child.on('exit', code => mkdirsLogger(`mkdirs exited (code ${code})`));
+			});
+
+			it('should recursively watch a subdirectory for a new directory with depth of 1', function (done) {
+				this.timeout(10000);
+				this.slow(8000);
+
+				const tmp = makeTempDir();
+				log('Creating temp directory: %s', highlight(tmp));
+
+				let counter = 0;
+
+				new FSWatcher(tmp, { depth: 1, recursive: true })
+					.on('change', async evt => {
+						log(evt);
+						log(renderTree());
+
+						try {
+							switch (++counter) {
+								case 1:
+									expect(evt.action).to.equal('add');
+									expect(evt.file).to.equal(real(path.join(tmp, 'foo')));
+									break;
+								case 2:
+									expect(evt.action).to.equal('add');
+									expect(evt.file).to.equal(real(path.join(tmp, 'foo', 'bar')));
+									done();
+									break;
+							}
+						} catch (e) {
+							done(e);
+						}
+					});
+
+				log(renderTree());
+
+				setTimeout(() => {
+					fs.mkdirSync(path.join(tmp, 'foo'));
+
+					setTimeout(() => {
+						fs.mkdirSync(path.join(tmp, 'foo', 'bar'));
+					}, 500);
+				}, 500);
 			});
 		});
 

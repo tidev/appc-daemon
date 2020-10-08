@@ -6,13 +6,11 @@ import HookEmitter from 'hook-emitter';
 import _path from 'path';
 import Plugin from './plugin';
 
-import { debounce } from 'appcd-util';
 import { isDir } from 'appcd-fs';
 import { PluginMissingAppcdError } from './plugin-error';
 import { real } from 'appcd-path';
 
-const { log, warn } = appcdLogger('appcd:plugin:scheme');
-const { highlight } = appcdLogger.styles;
+const { highlight, note } = appcdLogger.styles;
 
 const scopeRegExp = /^@[a-z0-9][\w-.]+$/;
 
@@ -25,12 +23,6 @@ export class Scheme extends HookEmitter {
 	 * @type {Object}
 	 */
 	watchers = {};
-
-	/**
-	 * A function to call when a file system event occurs that will emit the `change` event.
-	 * @type {Function}
-	 */
-	onChange = debounce(() => this.emit('change'));
 
 	/**
 	 * Initializes the scheme.
@@ -56,6 +48,20 @@ export class Scheme extends HookEmitter {
 	}
 
 	/**
+	 * Closes all file system watchers.
+	 *
+	 * @returns {Promise}
+	 * @access public
+	 */
+	async destroy() {
+		// stop all filesystem watchers
+		for (const dir of Object.keys(this.watchers)) {
+			this.watchers[dir].close();
+			delete this.watchers[dir];
+		}
+	}
+
+	/**
 	 * The base implementation that doesn't detect anything.
 	 *
 	 * @returns {Promise<Array>}
@@ -64,29 +70,28 @@ export class Scheme extends HookEmitter {
 	async detect() {
 		return [];
 	}
-
-	/**
-	 * Closes all file system watchers.
-	 *
-	 * @returns {Promise}
-	 * @access public
-	 */
-	async destroy() {
-		// stop the debounce
-		this.onChange.cancel();
-
-		// stop all filesystem watchers
-		for (const dir of Object.keys(this.watchers)) {
-			this.watchers[dir].close();
-			delete this.watchers[dir];
-		}
-	}
 }
 
 /**
  * Watches for a path to exist, become a directory, and be a plugin directory.
  */
 export class InvalidScheme extends Scheme {
+	/**
+	 * Scheme logger namespace.
+	 * @type {Object}
+	 */
+	static logger = appcdLogger('appcd:plugin:invalid-scheme');
+
+	/**
+	 * Returns an empty string since this scheme has no plugins.
+	 *
+	 * @returns {String}
+	 * @access public
+	 */
+	toString() {
+		return '';
+	}
+
 	/**
 	 * Starts listening for file system changes. This is split up from the FSWatcher instantiation
 	 * so that the caller (i.e. `PluginPath`) can destroy a previous scheme before calling this
@@ -98,20 +103,26 @@ export class InvalidScheme extends Scheme {
 	 */
 	async watch() {
 		if (!this.watchers[this.path]) {
-			log('Watching invalid scheme: %s', highlight(this.path));
+			InvalidScheme.logger.log(`Watching invalid scheme: ${highlight(this.path)}`);
 
 			// we have to recursively watch
-			this.watchers[this.path] = new FSWatcher(this.path, { depth: 1, recursive: true })
-				.on('change', () => this.onChange());
+			this.watchers[this.path] = new FSWatcher(this.path, { recursive: true })
+				.on('change', () => this.emit('redetect-scheme'));
 		}
 		return this;
 	}
 }
 
 /**
- * Watches a path containing a plugin.
+ * This is a scheme for a single plugin directory.
  */
 export class PluginScheme extends Scheme {
+	/**
+	 * Scheme logger namespace.
+	 * @type {Object}
+	 */
+	static logger = appcdLogger('appcd:plugin:plugin-scheme');
+
 	/**
 	 * A reference to the plugin descriptor for the plugin found in this scheme's path.
 	 * @type {Plugin}
@@ -119,19 +130,19 @@ export class PluginScheme extends Scheme {
 	plugin = null;
 
 	/**
-	 * A function to call when a file system event occurs that will emit the `change` event.
-	 * @type {Function}
+	 * Closes all file system watchers and plugin schemes.
+	 *
+	 * @returns {Promise}
+	 * @access public
 	 */
-	checkIfPlugin = debounce(async () => {
-		await this.detect();
-
+	async destroy() {
+		await super.destroy();
 		if (this.plugin) {
-			await this.emit('plugin-added', this.plugin);
-		} else {
-			// not a plugin or a bad plugin, emit change and allow redetect
-			await this.emit('change');
+			PluginScheme.logger.log(`Destroying scheme, removing plugin: ${highlight(this.path)}`);
+			await this.emit('plugin-deleted', this.plugin);
+			this.plugin = null;
 		}
-	});
+	}
 
 	/**
 	 * Detects the plugin in the defined path.
@@ -141,15 +152,29 @@ export class PluginScheme extends Scheme {
 	 */
 	async detect() {
 		try {
-			this.plugin = new Plugin(this.origPath, true);
+			const plugin = new Plugin(this.origPath, true);
+			if (!this.plugin || this.plugin.path !== plugin.path || this.plugin.name !== plugin.name || this.plugin.version !== plugin.version) {
+				this.plugin = plugin;
+			}
 			return [ this.plugin ];
 		} catch (e) {
 			this.plugin = null;
 			if (!(e instanceof PluginMissingAppcdError)) {
-				warn(e);
+				PluginScheme.logger.warn(e);
 			}
 		}
 		return [];
+	}
+
+	/**
+	 * Returns a string of this scheme's plugin info or an empty string if this scheme does not
+	 * actually contain a plugin.
+	 *
+	 * @returns {String}
+	 * @access public
+	 */
+	toString() {
+		return this.plugin ? `${this.plugin.toString()} (${this.plugin.path})` : '';
 	}
 
 	/**
@@ -158,39 +183,52 @@ export class PluginScheme extends Scheme {
 	 * previous scheme before calling this function which will only twiddle watcher counts and not
 	 * have to stop and restart Node.js FSWatch instances.
 	 *
+	 * @param {Boolean} [skipDetect] - When true, does not detect the plugins in this scheme.
 	 * @returns {Promise<PluginScheme>}
 	 * @access public
 	 */
-	async watch() {
+	async watch(skipDetect) {
 		if (this.watchers[this.path]) {
 			// already watching
+			PluginScheme.logger.log(`Already watching plugin scheme: ${highlight(this.path)}`);
 			return this;
 		}
 
-		log('Watching plugin scheme: %s', highlight(this.path));
-		this.watchers[this.path] = new FSWatcher(this.path);
+		PluginScheme.logger.log(`Watching plugin scheme: ${highlight(this.path)}`);
 
-		this.watchers[this.path]
+		this.watchers[this.path] = new FSWatcher(this.path)
 			.on('change', async evt => {
-				if (this.plugin && evt.file === this.path && evt.action === 'delete') {
-					this.emit('plugin-deleted', this.plugin);
+				if (evt.action === 'delete' && this.plugin && evt.file === this.path) {
+					PluginScheme.logger.log(`Plugin was deleted from disk, removing: ${highlight(this.path)}`);
+					await this.emit('plugin-deleted', this.plugin);
 					this.plugin = null;
-					this.onChange();
-				} else if (this.plugin && evt.action ===  'change' && evt.file === _path.join(this.path, 'package.json')) {
+				} else if (evt.action ===  'change' && this.plugin && evt.file === _path.join(this.path, 'package.json')) {
 					const plugin = new Plugin(this.path, true);
 					if (plugin.pkgJsonHash !== this.plugin.pkgJsonHash) {
+						PluginScheme.logger.log(`Plugin ${highlight(this.plugin.toString())} package.json changed, removing and re-adding: ${highlight(this.path)}`);
 						await this.emit('plugin-deleted', this.plugin);
 						this.plugin = plugin;
 						await this.emit('plugin-added', this.plugin);
 					}
+					return;
 				} else if (!this.plugin) {
-					await this.checkIfPlugin();
-				} else {
-					this.onChange();
+					try {
+						this.plugin = new Plugin(this.origPath, true);
+						PluginScheme.logger.log(`Found plugin, adding: ${highlight(this.plugin.toString())} ${note(`(${highlight(this.path)}}`)}`);
+						await this.emit('plugin-added', this.plugin);
+						return;
+					} catch (err) {
+						// squelch
+					}
 				}
+
+				PluginScheme.logger.log(`Plugin directory changed, triggering redirect scheme: [${evt.action}] ${highlight(evt.file.toString())} ${note(`(${highlight(this.path)}}`)}`);
+				await this.emit('redetect-scheme');
 			});
 
-		await this.detect();
+		if (!skipDetect) {
+			await this.detect();
+		}
 
 		if (this.plugin) {
 			await this.emit('plugin-added', this.plugin);
@@ -198,26 +236,23 @@ export class PluginScheme extends Scheme {
 
 		return this;
 	}
-
-	/**
-	 * Closes all file system watchers and plugin schemes.
-	 *
-	 * @returns {Promise}
-	 * @access public
-	 */
-	async destroy() {
-		await Scheme.prototype.destroy.call(this);
-		if (this.plugin) {
-			await this.emit('plugin-deleted', this.plugin);
-			this.plugin = null;
-		}
-	}
 }
 
 /**
- * Watches a directory containing plugins.
+ * This is a scheme that is a directory of plugin directories.
+ *
+ * For example:
+ *   ┬─ plugins
+ *   └─┬─ @foo/bar
+ *     └─ baz
  */
 export class PluginsDirScheme extends Scheme {
+	/**
+	 * Scheme logger namespace.
+	 * @type {Object}
+	 */
+	static logger = appcdLogger('appcd:plugin:plugins-dir-scheme');
+
 	/**
 	 * A map of directories to plugin schemes.
 	 * @type {Object}
@@ -233,9 +268,24 @@ export class PluginsDirScheme extends Scheme {
 	 */
 	createPluginScheme(path) {
 		return new PluginScheme(path)
-			.on('change', () => this.onChange())
+			.on('redetect-scheme', () => this.emit('redetect-scheme'))
 			.on('plugin-added', plugin => this.emit('plugin-added', plugin))
 			.on('plugin-deleted', plugin => this.emit('plugin-deleted', plugin));
+	}
+
+	/**
+	 * Closes all file system watchers and plugin schemes.
+	 *
+	 * @returns {Promise}
+	 * @access public
+	 */
+	async destroy() {
+		await Scheme.prototype.destroy.call(this);
+		await Promise.all(
+			Object
+				.values(this.pluginSchemes)
+				.map(scheme => scheme.destroy())
+		);
 	}
 
 	/**
@@ -257,14 +307,14 @@ export class PluginsDirScheme extends Scheme {
 				if (scopeRegExp.test(name)) {
 					for (const packageName of fs.readdirSync(dir)) {
 						const packageDir = _path.join(dir, packageName);
-						if (isDir(packageDir)) {
-							const scheme = this.pluginSchemes[packageDir] = this.createPluginScheme(packageDir);
-							plugins.push.apply(plugins, await scheme.detect());
+						if (isDir(packageDir) && !this.pluginSchemes[packageDir]) {
+							this.pluginSchemes[packageDir] = this.createPluginScheme(packageDir);
+							plugins.push.apply(plugins, await this.pluginSchemes[packageDir].detect());
 						}
 					}
 				} else if (!this.pluginSchemes[dir]) {
-					const scheme = this.pluginSchemes[dir] = this.createPluginScheme(dir);
-					plugins.push.apply(plugins, await scheme.detect());
+					this.pluginSchemes[dir] = this.createPluginScheme(dir);
+					plugins.push.apply(plugins, await this.pluginSchemes[dir].detect());
 				}
 			}
 		}
@@ -273,69 +323,13 @@ export class PluginsDirScheme extends Scheme {
 	}
 
 	/**
-	 * Wires up the scoped directory fs watcher and scans the scoped directory for plugins.
+	 * Returns a string of this scheme's plugins.
 	 *
-	 * @param {String} dir - The path to the scoped directory.
-	 * @param {Boolean} watch - When `true`, starts watching the scoped directory's subdirectories
-	 * to detect plugins. This should only be `true` when a parent directory detects a new scoped
-	 * directory being added.
-	 * @returns {Promise}
-	 * @access private
+	 * @returns {String}
+	 * @access public
 	 */
-	async initScopedDir(dir, watch) {
-		const plugins = [];
-
-		if (watch) {
-			if (this.watchers[dir]) {
-				// already watching
-				return plugins;
-			}
-
-			// we have a @whatever scoped directory, so we watch it for additions/deletions
-			this.watchers[dir] = new FSWatcher(dir);
-
-			this.watchers[dir].on('change', async evt => {
-				switch (evt.action) {
-					case 'add':
-						// only set up the plugin scheme if we're dealing with a directory that is a
-						// subdirectory and not the scoped directory
-						if (evt.file !== dir && isDir(evt.file)) {
-							this.pluginSchemes[evt.file] = this.createPluginScheme(evt.file);
-							await this.pluginSchemes[evt.file].watch();
-						}
-						break;
-
-					case 'delete':
-						if (evt.file === dir) {
-							// the scoped directory was deleted, clean up the fs watcher and notify the
-							// plugin path that the scheme might have changed
-							this.watchers[dir].close();
-							delete this.watchers[dir];
-							this.onChange();
-						} else if (this.pluginSchemes[evt.file]) {
-							await this.pluginSchemes[evt.file].destroy();
-							delete this.pluginSchemes[evt.file];
-						}
-						break;
-				}
-			});
-		}
-
-		// scan the scoped directory for any packages
-		for (const packageName of fs.readdirSync(dir)) {
-			const packageDir = _path.join(dir, packageName);
-			if (isDir(packageDir)) {
-				const scheme = this.pluginSchemes[packageDir] = this.createPluginScheme(packageDir);
-
-				// we only want to watch if this function is triggered via a fs event.
-				// the plugin path will kick off the watching.
-				if (watch) {
-					plugins.push.apply(plugins, await scheme.watch());
-				}
-			}
-		}
-
-		return plugins;
+	toString() {
+		return Object.values(this.pluginSchemes).map(scheme => scheme.toString()).filter(Boolean).join('\n');
 	}
 
 	/**
@@ -344,93 +338,93 @@ export class PluginsDirScheme extends Scheme {
 	 * previous scheme before calling this function which will only twiddle watcher counts and not
 	 * have to stop and restart Node.js FSWatch instances.
 	 *
+	 * @param {Boolean} [skipDetect] - When true, does not detect the plugins in this scheme.
 	 * @returns {Promise<PluginsDirScheme>}
 	 * @access public
 	 */
-	async watch() {
+	async watch(skipDetect) {
 		if (this.watchers[this.path]) {
 			// already watching
 			return this;
 		}
 
-		log('Watching plugins dir scheme: %s', highlight(this.path));
-		this.watchers[this.path] = new FSWatcher(this.path);
+		PluginsDirScheme.logger.log(`Watching plugins dir scheme: ${highlight(this.path)}`);
 
-		this.watchers[this.path]
+		this.watchers[this.path] = new FSWatcher(this.path, { depth: 1, recursive: true })
 			.on('change', async evt => {
-				// if this path is being changed, then emit the change event
+				// evt.file could be `<path>/<file>`, `<path>/<dir>`, `<path>/<dir>/<file>`, or `<path>/<dir>/<dir>`
+				// we only care when evt.file is `<path>/<dir>` and `<path>/@<scope>/<dir>`
+
+				// if this path is being changed, then we need to redetect the scheme
 				if (evt.file === this.path) {
-					this.onChange();
+					PluginsDirScheme.logger.log(`Directory changed, triggering redetect scheme: ${highlight(evt.file)}`);
+					await this.emit('redetect-scheme');
 					return;
 				}
 
-				// some other file is being changed, so wire up the "add" and unwire the "delete"
+				if (!isDir(evt.file)) {
+					// we don't care about files
+					return;
+				}
+
+				const rel = _path.relative(this.path, evt.file).split(/[\\/]/);
+				const scoped = scopeRegExp.test(rel[0]);
+
+				if ((scoped && rel.length === 1) || (!scoped && rel.length > 1)) {
+					// we don't care about `<path>/@<scope>` and `<path>/<dir>/<dir>`
+					PluginsDirScheme.logger.log(`Subdirectory changed, triggering redetect scheme: ${highlight(evt.file)}`);
+					await this.emit('redetect-scheme');
+					return;
+				}
+
 				switch (evt.action) {
 					case 'add':
-						if (isDir(evt.file)) {
-							if (scopeRegExp.test(evt.filename)) {
-								await this.initScopedDir(evt.file, true);
-							} else {
-								this.pluginSchemes[evt.file] = this.createPluginScheme(evt.file);
-								await this.pluginSchemes[evt.file].watch();
-							}
+						if (!this.pluginSchemes[evt.file]) {
+							PluginsDirScheme.logger.log(`Subdirectory added, creating plugin scheme: ${highlight(evt.file)}`);
+							this.pluginSchemes[evt.file] = await this.createPluginScheme(evt.file).watch();
 						}
 						break;
 
 					case 'delete':
-						if (scopeRegExp.test(evt.filename)) {
-							for (const file of Object.keys(this.pluginSchemes)) {
-								if (file.startsWith(`${evt.file}${_path.sep}`)) {
-									await this.pluginSchemes[file].destroy();
-									delete this.pluginSchemes[file];
-								}
-							}
-							if (this.watchers[evt.file]) {
-								this.watchers[evt.file].close();
-								delete this.watchers[evt.file];
-							}
-						} else if (this.pluginSchemes[evt.file]) {
+						if (this.pluginSchemes[evt.file]) {
+							PluginsDirScheme.logger.log(`Subdirectory deleted, removing plugin scheme: ${highlight(evt.file)}`);
 							await this.pluginSchemes[evt.file].destroy();
 							delete this.pluginSchemes[evt.file];
 						}
 						break;
 				}
-
-				// some file or directory in the path changed, so emit the change event
-				if (_path.dirname(evt.file) === this.path) {
-					this.onChange();
-				}
 			});
 
-		await this.detect();
+		if (!skipDetect) {
+			await this.detect();
+		}
 
 		for (const scheme of Object.values(this.pluginSchemes)) {
-			await scheme.watch();
+			await scheme.watch(true);
 		}
 
 		return this;
 	}
-
-	/**
-	 * Closes all file system watchers and plugin schemes.
-	 *
-	 * @returns {Promise}
-	 * @access public
-	 */
-	async destroy() {
-		await Scheme.prototype.destroy.call(this);
-		await Promise.all(
-			Object
-				.values(this.pluginSchemes)
-				.map(scheme => scheme.destroy())
-		);
-	}
 }
 
 /**
- * Watches a directory containing directories of plugins.
+ * This is a scheme that is a directory of directories of plugin directories.
+ *
+ * For example:
+ *   ┬─ plugins
+ *   └─┬─ @foo/bar
+ *     │  ├─ 1.0.0
+ *     │  └─ 1.1.0
+ *     └─ baz
+ *        └─ 2.0.0
  */
 export class NestedPluginsDirScheme extends Scheme {
+	/**
+	 * Scheme logger namespace.
+	 * @type {Object}
+	 */
+	static logger = appcdLogger('appcd:plugin:nested-plugins-dir-scheme');
+
 	/**
 	 * A map of directories to plugin schemes.
 	 * @type {Object}
@@ -446,9 +440,24 @@ export class NestedPluginsDirScheme extends Scheme {
 	 */
 	createPluginsDirScheme(path) {
 		return new PluginsDirScheme(path)
-			.on('change', () => this.onChange())
+			.on('redetect-scheme', () => this.emit('redetect-scheme'))
 			.on('plugin-added', plugin => this.emit('plugin-added', plugin))
 			.on('plugin-deleted', plugin => this.emit('plugin-deleted', plugin));
+	}
+
+	/**
+	 * Closes all file system watchers and plugin schemes.
+	 *
+	 * @returns {Promise}
+	 * @access public
+	 */
+	async destroy() {
+		await Scheme.prototype.destroy.call(this);
+		await Promise.all(
+			Object
+				.values(this.pluginSchemes)
+				.map(scheme => scheme.destroy())
+		);
 	}
 
 	/**
@@ -472,18 +481,34 @@ export class NestedPluginsDirScheme extends Scheme {
 					for (const packageName of fs.readdirSync(dir)) {
 						const packageDir = _path.join(dir, packageName);
 						if (isDir(packageDir)) {
-							const schema = this.pluginSchemes[packageDir] = this.createPluginsDirScheme(packageDir);
-							plugins.push.apply(plugins, await schema.detect());
+							let scheme = this.pluginSchemes[packageDir];
+							if (!scheme) {
+								scheme = this.pluginSchemes[packageDir] = this.createPluginsDirScheme(packageDir);
+							}
+							plugins.push.apply(plugins, await scheme.detect());
 						}
 					}
 				} else {
-					const schema = this.pluginSchemes[dir] = this.createPluginsDirScheme(dir);
-					plugins.push.apply(plugins, await schema.detect());
+					let scheme = this.pluginSchemes[dir];
+					if (!scheme) {
+						scheme = this.pluginSchemes[dir] = this.createPluginsDirScheme(dir);
+					}
+					plugins.push.apply(plugins, await scheme.detect());
 				}
 			}
 		}
 
 		return plugins;
+	}
+
+	/**
+	 * Returns a string of this scheme's plugins.
+	 *
+	 * @returns {String}
+	 * @access public
+	 */
+	toString() {
+		return Object.values(this.pluginSchemes).map(scheme => scheme.toString()).filter(Boolean).join('\n');
 	}
 
 	/**
@@ -501,62 +526,61 @@ export class NestedPluginsDirScheme extends Scheme {
 			return this;
 		}
 
-		log('Watching nested plugins dir scheme: %s', highlight(this.path));
-		this.watchers[this.path] = new FSWatcher(this.path);
+		NestedPluginsDirScheme.logger.log(`Watching nested plugins dir scheme: ${highlight(this.path)}`);
 
-		this.watchers[this.path]
+		this.watchers[this.path] = new FSWatcher(this.path, { depth: 1, recursive: true })
 			.on('change', async evt => {
+				// evt.file could be `<path>/<file>`, `<path>/<dir>`, `<path>/<dir>/<file>`, or `<path>/<dir>/<dir>`
+				// we only care when evt.file is `<path>/<dir>` and `<path>/@<scope>/<dir>`
+
 				// if this path is being changed, then emit the change event
 				if (evt.file === this.path) {
-					this.onChange();
+					// signal to check scheme
+					NestedPluginsDirScheme.logger.log(`Directory changed, triggering redetect scheme: ${highlight(evt.file)}`);
+					await this.emit('redetect-scheme');
 					return;
 				}
 
-				// some other file is being changed, so wire up the "add" and unwire the "delete"
+				if (!isDir(evt.file)) {
+					// we don't care about files
+					return;
+				}
+
+				const rel = _path.relative(this.path, evt.file).split(/[\\/]/);
+				const scoped = scopeRegExp.test(rel[0]);
+
+				if ((scoped && rel.length === 1) || (!scoped && rel.length > 1)) {
+					// we don't care about `<path>/@<scope>` and `<path>/<dir>/<dir>`
+					NestedPluginsDirScheme.logger.log(`Subdirectory changed, triggering redetect scheme: ${highlight(evt.file)}`);
+					await this.emit('redetect-scheme');
+					return;
+				}
+
 				switch (evt.action) {
 					case 'add':
-						if (isDir(evt.file)) {
-							this.pluginSchemes[evt.file] = this.createPluginsDirScheme(evt.file);
-							await this.pluginSchemes[evt.file].watch();
+						if (!this.pluginSchemes[evt.file]) {
+							NestedPluginsDirScheme.logger.log(`Subdirectory added, creating plugin scheme: ${highlight(evt.file)}`);
+							this.pluginSchemes[evt.file] = await this.createPluginsDirScheme(evt.file).watch();
 						}
 						break;
 
 					case 'delete':
 						if (this.pluginSchemes[evt.file]) {
+							NestedPluginsDirScheme.logger.log(`Subdirectory deleted, removing plugin scheme: ${highlight(evt.file)}`);
 							await this.pluginSchemes[evt.file].destroy();
 							delete this.pluginSchemes[evt.file];
 						}
 						break;
-				}
-
-				// some file or directory in the path changed, so emit the change event
-				if (_path.dirname(evt.file) === this.path) {
-					this.onChange();
 				}
 			});
 
 		await this.detect();
 
 		for (const scheme of Object.values(this.pluginSchemes)) {
-			await scheme.watch();
+			await scheme.watch(true);
 		}
 
 		return this;
-	}
-
-	/**
-	 * Closes all file system watchers and plugin schemes.
-	 *
-	 * @returns {Promise}
-	 * @access public
-	 */
-	async destroy() {
-		await Scheme.prototype.destroy.call(this);
-		await Promise.all(
-			Object
-				.values(this.pluginSchemes)
-				.map(scheme => scheme.destroy())
-		);
 	}
 }
 

@@ -47,6 +47,9 @@
  * fix(external-plugin): Track non-subscription stream responses so that they can be closed when
    the plugin is stopped.
  * fix(external-plugin): Don't load and track appcd config for parent process, only child process.
+ * fix(scheme): Rewrote the scheme filesystem watching system to fix bug where scope directories
+   were not being watched for changes and inevitably made scheme detection and watching
+   significantly faster and more efficient.
  * refactor(plugin): Code cleanup and moved common code to `PluginBase` to share across internal
    and external plugins.
  * chore: Updated dependencies.
