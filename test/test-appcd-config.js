@@ -77,7 +77,7 @@ describe('appcd config', function () {
 				'telemetry.eventsDir              = ~/.axway/appcd/telemetry',
 				'telemetry.sendBatchSize          = 10',
 				'telemetry.sendInterval           = 60000',
-				'telemetry.sendTimeout            = 60000',
+				'telemetry.sendTimeout            = 10000',
 				'telemetry.url                    = https://api.appcelerator.com/p/v4/app-track'
 			].join('\n') + '\n');
 		}));
@@ -144,7 +144,7 @@ describe('appcd config', function () {
 							'telemetry.eventsDir              = ~/.axway/appcd/telemetry',
 							'telemetry.sendBatchSize          = 10',
 							'telemetry.sendInterval           = 60000',
-							'telemetry.sendTimeout            = 60000',
+							'telemetry.sendTimeout            = 10000',
 							'telemetry.url                    = https://api.appcelerator.com/p/v4/app-track'
 						].join('\n') + '\n');
 					}));
@@ -187,7 +187,7 @@ describe('appcd config', function () {
 							'telemetry.eventsDir              = ~/.axway/appcd/telemetry',
 							'telemetry.sendBatchSize          = 10',
 							'telemetry.sendInterval           = 60000',
-							'telemetry.sendTimeout            = 60000',
+							'telemetry.sendTimeout            = 10000',
 							'telemetry.url                    = https://api.appcelerator.com/p/v4/app-track'
 						].join('\n') + '\n');
 					}));
@@ -242,7 +242,7 @@ describe('appcd config', function () {
 								eventsDir: '~/.axway/appcd/telemetry',
 								sendBatchSize: 10,
 								sendInterval: 60000,
-								sendTimeout: 60000,
+								sendTimeout: 10000,
 								url: 'https://api.appcelerator.com/p/v4/app-track'
 							}
 						});

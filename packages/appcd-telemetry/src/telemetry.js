@@ -275,7 +275,7 @@ export default class Telemetry extends Dispatcher {
 			this.requestOptions = await request.options({
 				defaults: this.cfg.get('network') || {},
 				retry:    0,
-				timeout:  Math.max(telemetryConfig.sendTimeout || 60000, 1000),
+				timeout:  Math.max(telemetryConfig.sendTimeout || 10000, 1000),
 				url:      telemetryConfig.url
 			});
 		}.bind(this);

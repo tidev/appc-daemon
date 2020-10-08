@@ -87,7 +87,7 @@ describe('Config', () => {
 				eventsDir: '~/.axway/appcd/telemetry',
 				sendBatchSize: 10,
 				sendInterval: 60000,
-				sendTimeout: 60000,
+				sendTimeout: 10000,
 				url: 'https://api.appcelerator.com/p/v4/app-track'
 			}
 		});
