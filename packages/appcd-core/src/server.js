@@ -168,7 +168,15 @@ export default class Server {
 			}
 			// if state === stopping, then we just ignore it
 		};
-		process.on('SIGINT',  shutdown);
+		if (process.connected) {
+			// wire up the graceful shutdown when running in debug mode
+			process.on('message', msg => {
+				if (msg === 'shutdown') {
+					shutdown();
+				}
+			});
+		}
+		process.on('SIGINT', shutdown);
 		process.on('SIGTERM', shutdown);
 
 		// import any Titanium CLI configuration settings
