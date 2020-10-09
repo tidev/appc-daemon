@@ -1,3 +1,11 @@
+# v2.0.1
+
+ * fix: Fixed bug when recursively watching with a depth a non-existent directory that is created
+   with subdirectories where the depths were being reset when the node is reinitialized.
+ * fix: Fixed bug where notification depth counter was off by 1 when emitting the 'add' event for a
+   new subdirectory to parent nodes.
+ * chore: Updated dependencies.
+
 # v2.0.0 (Jun 12, 2020)
 
  * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.

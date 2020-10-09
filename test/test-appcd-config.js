@@ -55,13 +55,10 @@ describe('appcd config', function () {
 				'environment.name                 = test',
 				'environment.title                = Test',
 				'home                             = ~/.axway/appcd',
-				'network.agentOptions             = null',
 				'network.caFile                   = null',
 				'network.certFile                 = null',
-				'network.httpProxy                = null',
-				'network.httpsProxy               = null',
 				'network.keyFile                  = null',
-				'network.passphrase               = null',
+				'network.proxy                    = null',
 				'network.strictSSL                = true',
 				'plugins.autoReload               = true',
 				'plugins.defaultInactivityTimeout = 3600000',
@@ -80,7 +77,7 @@ describe('appcd config', function () {
 				'telemetry.eventsDir              = ~/.axway/appcd/telemetry',
 				'telemetry.sendBatchSize          = 10',
 				'telemetry.sendInterval           = 60000',
-				'telemetry.sendTimeout            = 60000',
+				'telemetry.sendTimeout            = 10000',
 				'telemetry.url                    = https://api.appcelerator.com/p/v4/app-track'
 			].join('\n') + '\n');
 		}));
@@ -125,13 +122,10 @@ describe('appcd config', function () {
 							'environment.name                 = test',
 							'environment.title                = Test',
 							'home                             = ~/.axway/appcd',
-							'network.agentOptions             = null',
 							'network.caFile                   = null',
 							'network.certFile                 = null',
-							'network.httpProxy                = null',
-							'network.httpsProxy               = null',
 							'network.keyFile                  = null',
-							'network.passphrase               = null',
+							'network.proxy                    = null',
 							'network.strictSSL                = true',
 							'plugins.autoReload               = true',
 							'plugins.defaultInactivityTimeout = 3600000',
@@ -150,7 +144,7 @@ describe('appcd config', function () {
 							'telemetry.eventsDir              = ~/.axway/appcd/telemetry',
 							'telemetry.sendBatchSize          = 10',
 							'telemetry.sendInterval           = 60000',
-							'telemetry.sendTimeout            = 60000',
+							'telemetry.sendTimeout            = 10000',
 							'telemetry.url                    = https://api.appcelerator.com/p/v4/app-track'
 						].join('\n') + '\n');
 					}));
@@ -171,13 +165,10 @@ describe('appcd config', function () {
 							'environment.name                 = test',
 							'environment.title                = Test',
 							'home                             = ~/.axway/appcd',
-							'network.agentOptions             = null',
 							'network.caFile                   = null',
 							'network.certFile                 = null',
-							'network.httpProxy                = null',
-							'network.httpsProxy               = null',
 							'network.keyFile                  = null',
-							'network.passphrase               = null',
+							'network.proxy                    = null',
 							'network.strictSSL                = true',
 							'plugins.autoReload               = true',
 							'plugins.defaultInactivityTimeout = 3600000',
@@ -196,7 +187,7 @@ describe('appcd config', function () {
 							'telemetry.eventsDir              = ~/.axway/appcd/telemetry',
 							'telemetry.sendBatchSize          = 10',
 							'telemetry.sendInterval           = 60000',
-							'telemetry.sendTimeout            = 60000',
+							'telemetry.sendTimeout            = 10000',
 							'telemetry.url                    = https://api.appcelerator.com/p/v4/app-track'
 						].join('\n') + '\n');
 					}));
@@ -223,13 +214,10 @@ describe('appcd config', function () {
 							},
 							home: '~/.axway/appcd',
 							network: {
-								agentOptions: null,
 								caFile: null,
 								certFile: null,
-								httpProxy: null,
-								httpsProxy: null,
 								keyFile: null,
-								passphrase: null,
+								proxy: null,
 								strictSSL: true
 							},
 							plugins: {
@@ -254,7 +242,7 @@ describe('appcd config', function () {
 								eventsDir: '~/.axway/appcd/telemetry',
 								sendBatchSize: 10,
 								sendInterval: 60000,
-								sendTimeout: 60000,
+								sendTimeout: 10000,
 								url: 'https://api.appcelerator.com/p/v4/app-track'
 							}
 						});

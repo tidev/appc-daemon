@@ -20,15 +20,15 @@
     "appcd-logger": "^3.0.0",
     "koa": "^2.13.0",
     "koa-bodyparser": "^4.3.0",
-    "koa-helmet": "^5.2.0",
+    "koa-helmet": "^6.0.0",
     "koa-send": "^5.0.1",
-    "path-to-regexp": "^6.1.0",
+    "path-to-regexp": "^6.2.0",
     "source-map-support": "^0.5.19",
     "ws": "^7.3.1"
   },
   "devDependencies": {
     "appcd-gulp": "^3.0.1",
-    "supertest": "^4.0.2"
+    "supertest": "^5.0.0"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",

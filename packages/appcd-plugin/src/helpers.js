@@ -15,7 +15,9 @@ const subscriptions = {};
  * Subscribes to filesystem events for the specified paths.
  *
  * @param {Object} params - Various parameters.
- * @param {Boolean} [params.debounce=false] - When `true`, wraps the `handler` with a debouncer.
+ * @param {Boolean|Number} [params.debounce] - When truthy, wraps the `handler` with a debouncer.
+ * If value is a number, then it is used as the amount of time the debouncer wait before firing the
+ * `handler`.
  * @param {Number} [params.depth] - The max depth to recursively watch.
  * @param {Function} params.handler - A callback function to fire when a fs event occurs.
  * @param {Array.<String>} params.paths - One or more paths to watch.
@@ -23,7 +25,7 @@ const subscriptions = {};
  * @returns {Promise<Object>} Resolves a map of paths to sids.
  */
 export async function watch({ debounce, depth, handler, paths, type }) {
-	const callback = debounce ? debouncer(handler) : handler;
+	const callback = debounce ? debouncer(handler, typeof debounce === 'number' ? debounce : undefined) : handler;
 	const sidsByPath = { ...subscriptions[type] };
 	const results = {};
 

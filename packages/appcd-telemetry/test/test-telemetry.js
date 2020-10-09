@@ -62,16 +62,23 @@ describe('telemetry', () => {
 	});
 
 	describe('Config', () => {
-		it('should init config with defaults', () => {
-			const telemetry = createTelemetry();
-			expect(telemetry.config).to.be.an('object');
-			expect(telemetry.config.enabled).to.be.false;
-			expect(telemetry.config.eventsDir).to.be.null;
-			expect(telemetry.config.sendBatchSize).to.equal(10);
-			expect(telemetry.config.url).to.be.null;
+		it('should init config with defaults', async function () {
+			const homeDir = makeTempName();
+			const telemetry = this.telemetry = createTelemetry();
+			try {
+				await telemetry.init(homeDir);
+				expect(telemetry.config).to.be.an('object');
+				expect(telemetry.config.enabled).to.be.false;
+				expect(telemetry.config.eventsDir).to.be.null;
+				expect(telemetry.config.sendBatchSize).to.equal(10);
+				expect(telemetry.config.url).to.be.null;
+			} finally {
+				await telemetry.shutdown();
+			}
 		});
 
-		it('should init config with custom settings', function () {
+		it('should init config with custom settings', async function () {
+			const homeDir = makeTempName();
 			const eventsDir = makeTempName();
 			const telemetry = this.telemetry = createTelemetry({
 				telemetry: {
@@ -81,11 +88,16 @@ describe('telemetry', () => {
 					url: 'foo'
 				}
 			});
-			expect(telemetry.config).to.be.an('object');
-			expect(telemetry.config.enabled).to.be.true;
-			expect(telemetry.config.eventsDir).to.equal(eventsDir);
-			expect(telemetry.config.sendBatchSize).to.equal(20);
-			expect(telemetry.config.url).to.equal('foo');
+			try {
+				await telemetry.init(homeDir);
+				expect(telemetry.config).to.be.an('object');
+				expect(telemetry.config.enabled).to.be.true;
+				expect(telemetry.config.eventsDir).to.equal(eventsDir);
+				expect(telemetry.config.sendBatchSize).to.equal(20);
+				expect(telemetry.config.url).to.equal('foo');
+			} finally {
+				await telemetry.shutdown();
+			}
 		});
 	});
 

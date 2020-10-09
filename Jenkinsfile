@@ -7,6 +7,6 @@ runNPMPackage {
   packageJsonPath = 'packages/appcd/package.json'
   publish = false
   securityCommands = [ 'yarn run gulp check' ]
-  successThreshold = 50 // require only 50% of test platforms to succeed
+  successThreshold = 43 // require only 43% of test platforms to succeed
   useYarn = true
 }

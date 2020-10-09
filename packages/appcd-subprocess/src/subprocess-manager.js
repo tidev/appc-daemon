@@ -38,11 +38,11 @@ export default class SubprocessManager extends Dispatcher {
 		const subprocesses = this.subprocesses = gawk([]);
 
 		this.register('/spawn/node/:version?', async ctx => {
+			const networkConfig = await Dispatcher.call('/appcd/config/network').then(ctx => ctx.response).catch(() => {});
 			const { data, params } = ctx.request;
-
-			const { response } = await Dispatcher.call('/appcd/config/home');
 			const node = await prepareNode({
-				nodeHome: expandPath(response, 'node'),
+				networkConfig,
+				nodeHome: expandPath((await Dispatcher.call('/appcd/config/home')).response, 'node'),
 				version: params.version || process.version
 			});
 			return await this.call('/spawn', { data: { ...data, command: node } });
@@ -167,6 +167,15 @@ export default class SubprocessManager extends Dispatcher {
 					let writable = true;
 					ctx.response.on('end', () => {
 						writable = false;
+
+						if (proc.pid && !options.detached) {
+							log(`Response stream was closed by other end, killing child process ${highlight(proc.pid)}`);
+							try {
+								child.kill();
+							} catch (err) {
+								// squelch
+							}
+						}
 					});
 
 					log('Spawned %s', highlight(pid));
@@ -205,6 +214,9 @@ export default class SubprocessManager extends Dispatcher {
 								break;
 							}
 						}
+
+						// do this after we remove the subprocess from the list
+						proc.pid = null;
 
 						if (writable) {
 							ctx.response.end({

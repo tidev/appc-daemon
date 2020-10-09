@@ -32,6 +32,17 @@ const { highlight, notice } = appcdCoreLogger.styles;
  * plugins, logging, and request dispatching.
  */
 export default class Server {
+	static STOPPED  = 'stopped';
+	static STARTING = 'starting';
+	static STARTED  = 'started';
+	static STOPPING = 'stopping';
+
+	/**
+	 * The server state.
+	 * @type {String}
+	 */
+	state = Server.STOPPED;
+
 	/**
 	 * Creates a server instance and loads the configuration.
 	 *
@@ -76,6 +87,8 @@ export default class Server {
 	 * @access public
 	 */
 	async start() {
+		this.state = Server.STARTING;
+
 		const uid = this.config.get('server.user');
 		const gid = this.config.get('server.group');
 
@@ -139,18 +152,6 @@ export default class Server {
 					fs.writeFileSync(this.pidFile, process.pid.toString());
 				}
 			});
-
-		// listen for CTRL-C and SIGTERM
-		const shutdown = async () => {
-			try {
-				await this.shutdown();
-				process.exit(0);
-			} catch (err) {
-				logger.error(err);
-			}
-		};
-		process.on('SIGINT',  shutdown);
-		process.on('SIGTERM', shutdown);
 
 		// import any Titanium CLI configuration settings
 		await this.importTiConfig();
@@ -222,7 +223,7 @@ export default class Server {
 		// init the plugin manager
 		logger.log(`Initializing plugin system (api version ${appcdPluginAPIVersion})`);
 		this.systems.pluginManager = await new PluginManager({
-			paths: getPluginPaths(this.config.get('home'))
+			paths: getPluginPaths(homeDir)
 		}).init();
 
 		Dispatcher.register('/appcd/plugin', this.systems.pluginManager);
@@ -303,6 +304,8 @@ export default class Server {
 		// cleanup unused Node.js executables every hour
 		this.unsuedNodeCleanupTimer = setInterval(() => this.purgeUnusedNodejs(), 60 * 60 * 1000);
 		this.purgeUnusedNodejs();
+
+		this.state = Server.STARTED;
 	}
 
 	/**
@@ -331,6 +334,7 @@ export default class Server {
 	 * @access public
 	 */
 	async shutdown() {
+		this.state = Server.STOPPING;
 		logger.log('Shutting down server gracefully');
 
 		if (this.unsuedNodeCleanupTimer) {
@@ -368,6 +372,7 @@ export default class Server {
 			}
 		}
 
+		this.state = Server.STOPPED;
 		logger.log('appcd shutdown successfully');
 		return this;
 	}

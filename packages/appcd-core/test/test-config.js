@@ -59,13 +59,10 @@ describe('Config', () => {
 			},
 			home: '~/.axway/appcd',
 			network: {
-				agentOptions: null,
 				caFile: null,
 				certFile: null,
-				httpProxy: null,
-				httpsProxy: null,
 				keyFile: null,
-				passphrase: null,
+				proxy: null,
 				strictSSL: true
 			},
 			plugins: {
@@ -90,7 +87,7 @@ describe('Config', () => {
 				eventsDir: '~/.axway/appcd/telemetry',
 				sendBatchSize: 10,
 				sendInterval: 60000,
-				sendTimeout: 60000,
+				sendTimeout: 10000,
 				url: 'https://api.appcelerator.com/p/v4/app-track'
 			}
 		});

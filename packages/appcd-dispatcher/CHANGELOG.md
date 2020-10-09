@@ -1,6 +1,10 @@
 # v3.1.0
 
- * feat: Default `DispatcherContext` response as a `PassThrough` stream.
+ * feat(DispatcherContext): Default `DispatcherContext` response as a `PassThrough` stream.
+ * feat(DataServiceDispatcher): Added `setData()` method so that consumers don't need to directly
+   depend on `gawk`.
+ * feat(DataServiceDispatcher): Added path override to disable default `filter` path param.
+ * feat: Added instance id to dispatcher debug logging.
  * chore: Updated dependencies.
 
 # v3.0.0 (Jun 12, 2020)

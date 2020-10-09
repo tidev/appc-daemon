@@ -642,7 +642,7 @@ describe('PluginManager', () => {
 			});
 			await pm.init();
 
-			await sleep(1000);
+			await sleep(2000);
 
 			const ctx = await Dispatcher.call('/foo/1.0.0/reverse', { data: { str: 'Hello world!' } });
 			expect(ctx.response).to.equal('!dlrow olleH');

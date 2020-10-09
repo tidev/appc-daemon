@@ -76,16 +76,6 @@ export default class PluginManager extends Dispatcher {
 		 */
 		this.registry = {};
 
-		/**
-		 * Indicates that telemetry data should be captured.
-		 *
-		 * IMPORTANT! This property MUST be set AFTER doing the initial path scanning and plugin
-		 * registration.
-		 *
-		 * @type {Boolean}
-		 */
-		this.telemetryEnabled = false;
-
 		this.register('/register', ctx => {
 			return this.registerPluginPath(ctx.request.data.path)
 				.then(() => new Response(codes.PLUGIN_REGISTERED))
@@ -182,7 +172,6 @@ export default class PluginManager extends Dispatcher {
 	async init() {
 		if (!this.initialized) {
 			await Promise.all(this.paths.map(dir => dir && this.registerPluginPath(dir)));
-			this.telemetryEnabled = true;
 			this.initialized = true;
 		}
 		return this;
@@ -360,8 +349,6 @@ export default class PluginManager extends Dispatcher {
 				} else {
 					logger.log('Unsupported plugin found: %s', highlight(`${plugin.name}@${plugin.version}`));
 				}
-
-				this.sendTelemetry('plugin.added', plugin);
 			})
 			.on('removed', async plugin => {
 				try {
@@ -397,54 +384,12 @@ export default class PluginManager extends Dispatcher {
 							delete this.namespaces[plugin.name];
 						}
 					}
-
-					this.sendTelemetry('plugin.removed', plugin);
 				} catch (e) {
 					logger.error(e);
 				}
 			});
 
 		await this.pluginPaths[pluginPath].detect();
-	}
-
-	/**
-	 * Creates a telemetry event.
-	 *
-	 * @param {String} event - The name of the telemetry event.
-	 * @param {Plugin} plugin - A reference to the plugin that was added or removed.
-	 * @access private
-	 */
-	sendTelemetry(event, plugin) {
-		// we only want to send telemetry when we're not doing the initial scan or shutting down
-		if (!this.telemetryEnabled) {
-			return;
-		}
-
-		Dispatcher
-			.call('/appcd/telemetry', {
-				event: `appcd.${event}`,
-				plugin: {
-					name:        plugin.name,
-					packageName: plugin.packageName,
-					version:     plugin.version
-				},
-				plugins: this.registered.map(p => {
-					const info = {
-						name:        p.name,
-						packageName: p.packageName,
-						nodeVersion: p.nodeVersion,
-						version:     p.version,
-						type:        p.type
-					};
-					if (p.error) {
-						info.error = p.error;
-					}
-					return info;
-				})
-			})
-			.catch(() => {
-				// squelch
-			});
 	}
 
 	/**
@@ -456,10 +401,6 @@ export default class PluginManager extends Dispatcher {
 	shutdown() {
 		const paths = Object.keys(this.pluginPaths);
 		logger.log(`Shutting down plugin manager and ${highlight(paths.length)} plugin path${paths.length !== 1 ? 's' : ''}`);
-
-		// disable telemetry since we're shutting down
-		this.telemetryEnabled = false;
-
 		return Promise.all(paths.map(this.unregisterPluginPath.bind(this)));
 	}
 

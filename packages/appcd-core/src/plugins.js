@@ -145,7 +145,9 @@ export function create({ dest, name, template }) {
 			}
 
 			const serviceName = name.replace(/^appcd-plugin-/, '');
-			const engine = new TemplateEngine()
+			const engine = new TemplateEngine({
+				requestOptions: loadConfig().get('network')
+			})
 				.on('download',     () => emitter.emit('status', 'Downloading from URL...'))
 				.on('npm-download', () => emitter.emit('status', 'Downloading from npm...'))
 				.on('extract',      () => emitter.emit('status', 'Extracting archive...'))

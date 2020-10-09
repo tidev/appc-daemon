@@ -4,6 +4,7 @@
  * feat: Scrub potentially sensitive data in telemetry data and error messages.
  * feat: Added ability to set a `hardwareId` instead of relying on the telemetry system to identify
    a machine's unique identifier.
+ * feat: Added HTTP proxy support.
  * chore: Updated dependencies.
 
 # v4.0.0 (Jun 12, 2020)

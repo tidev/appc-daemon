@@ -131,7 +131,6 @@ The following table describes which `appcd-*` dependencies are auto-injected:
 | appcd-nodejs          | Yes and should be |        |
 | appcd-path            | Yes               |        |
 | appcd-plugin          | No                |        |
-| appcd-request         | Yes               |        |
 | appcd-response        | Yes and should be |        |
 | appcd-subprocess      | Yes and should be |        |
 | appcd-telemetry       | Yes               |        |

@@ -4,6 +4,7 @@ import gawk from 'gawk';
 import PluginModule from './plugin-module';
 
 import { EventEmitter } from 'events';
+import { get } from 'appcd-util';
 import { watch, unwatch } from './helpers';
 
 const { alert, highlight, ok } = appcdLogger.styles;
@@ -151,6 +152,20 @@ export default class PluginBase extends EventEmitter {
 
 					return ctx;
 				},
+				config: {
+					get: (filter, defaultValue) => {
+						return filter && typeof filter === 'string' ? get(this.config, filter, defaultValue) : this.config;
+					},
+					watch: (filter, listener) => {
+						if (filter && typeof filter === 'string') {
+							filter = filter.split('.');
+						}
+						gawk.watch(this.config, filter, listener);
+					},
+					unwatch: listener => {
+						gawk.unwatch(this.config, listener);
+					}
+				},
 				fs: {
 					watch,
 					unwatch
@@ -168,7 +183,7 @@ export default class PluginBase extends EventEmitter {
 						const app = this.config[this.plugin.name]?.telemetry?.app;
 						if (!app) {
 							// plugin does not have not have an app guid, ignoring
-							this.appcdLogger.log(`Plugin ${highlight(`${this.plugin.name}@${this.plugin.version}`)} does not have an app guid, skipping telemetry event "${event}"`);
+							this.appcdLogger.log(`Plugin ${highlight(this.plugin.toString())} does not have an app guid, skipping telemetry event "${event}"`);
 							return;
 						}
 
@@ -272,6 +287,7 @@ export default class PluginBase extends EventEmitter {
 					if (type === 'subscribe') {
 						this.configSubscriptionId = sid;
 					} else if (type === 'event') {
+						this.appcdLogger.log(`Plugin ${highlight(this.plugin.toString())} config refreshed`);
 						gawk.set(this.config, message);
 						resolve(); // no biggie if this gets called every config update
 					}

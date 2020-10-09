@@ -8,9 +8,10 @@ import ServiceDispatcher from './service-dispatcher';
 
 import { Readable, Transform } from 'stream';
 import { pathToRegexp } from 'path-to-regexp';
+import { v4 as uuidv4 } from 'uuid';
 
 const logger = appcdLogger('appcd:dispatcher');
-const { highlight } = appcdLogger.styles;
+const { highlight, note } = appcdLogger.styles;
 
 /**
  * A regular expression that strips ansi color sequences.
@@ -119,6 +120,25 @@ export default class Dispatcher {
 	routes = [];
 
 	/**
+	 * Initializes the dispatcher id and logger.
+	 *
+	 * @access public
+	 */
+	constructor() {
+		/**
+		 * An identifier for this dispatcher instance to help with debugging.
+		 * @type {String}
+		 */
+		this.id = uuidv4().substring(0, 8);
+
+		/**
+		 * A namespace logger for this dispatcher instance.
+		 * @type {AppcdLogger}
+		 */
+		this.logger = logger(this.id);
+	}
+
+	/**
 	 * Asynchronously dispatch a request. If unable to find a appropriate handler, an error is
 	 * returned.
 	 *
@@ -146,8 +166,9 @@ export default class Dispatcher {
 		}
 
 		let index = -1;
+		const { log } = this.logger;
 
-		logger.log('Searching for route handler: %s', highlight(path));
+		log('Searching for route handler: %s', highlight(path));
 
 		const dispatch = async i => {
 			if (i <= index) {
@@ -160,18 +181,18 @@ export default class Dispatcher {
 			const route = this.routes[i];
 			if (!route) {
 				// end of the line
-				logger.log('Route not found: %s', highlight(path));
+				log('Route not found: %s', highlight(path));
 				throw new DispatcherError(codes.NOT_FOUND);
 			}
 
-			logger.log('Testing route: %s', highlight(route.path));
+			log('Testing route: %s', highlight(route.path));
 
 			const m = ctx.path.match(route.regexp);
 			if (!m) {
 				return dispatch(i + 1);
 			}
 
-			logger.log('Found matching route: %s', highlight(route.path));
+			log('Found matching route: %s', highlight(route.path));
 
 			// extract the params from the path
 			const { keys } = route;
@@ -184,25 +205,25 @@ export default class Dispatcher {
 
 			if (route.handler instanceof Dispatcher) {
 				// call the nested dispatcher
-				logger.log('Calling dispatcher handler %s', highlight(route.prefix));
+				log(`Calling dispatcher handler ${highlight(route.prefix)} ${note(`(${route.handler.id})`)}`);
 				return route.handler.call(`/${ctx.path.replace(route.prefix, '').replace(/^\//, '')}`, ctx);
 			}
 
 			let fired = false;
 
-			logger.log('Invoking route %s handler...', highlight(route.path));
+			log('Invoking route %s handler...', highlight(route.path));
 
 			let result = route.handler(ctx, async function next() {
 				// go to next route
 
 				if (fired) {
-					logger.log('next() already fired!');
+					log('next() already fired!');
 					return;
 				}
 
 				fired = true;
 
-				logger.log('Route %s handler passed to next route', highlight(route.path));
+				log('Route %s handler passed to next route', highlight(route.path));
 
 				const result = await dispatch(i + 1);
 				return result || ctx;
@@ -309,7 +330,7 @@ export default class Dispatcher {
 
 				info.error = errorToJSON(err);
 
-				logger.error(err);
+				this.logger.error(err);
 				koactx.body = err.toString(koactx.request && koactx.request.acceptsLanguages());
 			}
 
@@ -383,7 +404,7 @@ export default class Dispatcher {
 			// if this is a scoped dispatcher and the path is /, then suppress the
 			// redundant log message
 			if (path !== '/') {
-				logger.log(`Registered dispatcher route ${highlight(handle.path)}`);
+				this.logger.log(`Registered dispatcher route ${highlight(handle.path)}`);
 			}
 		}
 

@@ -12,15 +12,14 @@ import os from 'os';
 import path from 'path';
 import pluralize from 'pluralize';
 import progress from 'progress';
-import request from 'appcd-request';
 import tar from 'tar-stream';
 import yauzl from 'yauzl';
 import zlib from 'zlib';
+import * as request from '@axway/amplify-request';
 
 import { execSync, spawn, spawnSync } from 'child_process';
 import { isDir, isFile } from 'appcd-fs';
 import { arch as getArch, formatNumber, randomBytes, sleep } from 'appcd-util';
-import { STATUS_CODES } from 'http';
 
 const logger = appcdLogger('appcd:nodejs');
 const { highlight } = appcdLogger.styles;
@@ -47,12 +46,14 @@ export function getNodeFilename() {
  *
  * @param {Object} params - Various parameters.
  * @param {String} [params.arch] - The compiled machine architecture.
+ * @param {Object} [params.networkConfig] - An object containing network settings: `caFile`,
+ * `certFile`, `keyFile`, `proxy`, and `strictSSL`.
  * @param {String} params.nodeHome - The path to where downloaded Node.js
  * binaries are stored.
  * @param {String} params.version - The Node.js version to ensure is installed.
  * @returns {Promise} Resolves the path to the requested Node.js binary.
  */
-export function prepareNode({ arch, nodeHome, version } = {}) {
+export async function prepareNode({ arch, networkConfig, nodeHome, version } = {}) {
 	if (!arch) {
 		arch = getArch();
 	}
@@ -86,7 +87,7 @@ export function prepareNode({ arch, nodeHome, version } = {}) {
 	// delete the existing path just in case
 	fs.removeSync(binaryPath);
 
-	return downloadNode({ arch, nodeHome, version });
+	return await downloadNode({ arch, networkConfig, nodeHome, version });
 }
 
 /**
@@ -97,10 +98,12 @@ export function prepareNode({ arch, nodeHome, version } = {}) {
  * @param {String} params.arch - The compiled machine architecture.
  * @param {String} params.nodeHome - The path to where downloaded Node.js
  * binary should be extracted to.
+ * @param {Object} [params.networkConfig] - An object containing network settings: `caFile`,
+ * `certFile`, `keyFile`, `proxy`, and `strictSSL`.
  * @param {String} params.version - The Node.js version to download.
- * @returns {Promise}
+ * @returns {Promise} Resolves the path to the requested Node.js binary.
  */
-export async function downloadNode({ arch, nodeHome, version } = {}) {
+export async function downloadNode({ arch, networkConfig, nodeHome, version } = {}) {
 	if (version[0] !== 'v') {
 		version = `v${version}`;
 	}
@@ -118,53 +121,49 @@ export async function downloadNode({ arch, nodeHome, version } = {}) {
 
 	const url = `https://nodejs.org/dist/${version}/${filename}`;
 	const outFile = path.join(os.tmpdir(), filename);
-	const out = fs.createWriteStream(outFile);
+	const reqOpts = await request.options({ defaults: networkConfig, retry: 0 });
+
+	logger.log(reqOpts);
 
 	try {
-		logger.log('Downloading %s => %s', highlight(url), highlight(outFile));
-
 		// download node
-		const req = await request({ url });
+		await new Promise((resolve, reject) => {
+			logger.log(`Downloading ${highlight(url)} => ${highlight(outFile)}`);
+			let bar;
+			const stream = request.got.stream(url, reqOpts)
+				.on('downloadProgress', ({ transferred }) => bar?.tick(transferred))
+				.on('error', reject)
+				.on('response', response => {
+					const len = parseInt(response.headers['content-length']);
 
-		return await new Promise((resolve, reject) => {
-			req.on('response', response => {
-				if (response.statusCode !== 200) {
-					return reject(new Error(`Failed to download Node.js: ${response.statusCode} - ${STATUS_CODES[response.statusCode]}`));
-				}
-
-				const len = parseInt(response.headers['content-length']);
-
-				if (logger.enabled) {
-					const bar = new progress('  [:bar] :percent :etas', {
-						clear: true,
-						complete: '=',
-						incomplete: ' ',
-						width: 50,
-						total: len
-					});
-
-					response.on('data', chunk => bar.tick(chunk.length));
-				}
-
-				response.once('end', async () => {
-					try {
-						logger.log(`Downloaded ${formatNumber(len)} bytes`);
-						resolve(await extractNode({
-							archive: outFile,
-							dest: path.join(nodeHome, version, platform, arch)
-						}));
-					} catch (err) {
-						reject(err);
+					if (len && logger.enabled) {
+						bar = new progress('  [:bar] :percent :etas', {
+							clear: true,
+							complete: '=',
+							incomplete: ' ',
+							width: 50,
+							total: len
+						});
 					}
-				});
-			});
 
-			req.once('error', reject);
-			req.pipe(out);
+					const out = fs.createWriteStream(outFile);
+					out.on('error', reject);
+					out.on('close', () => {
+						logger.log(`Downloaded ${formatNumber(len)} bytes`);
+						bar?.terminate();
+						resolve();
+					});
+					stream.pipe(out);
+				});
+		});
+
+		return await extractNode({
+			archive: outFile,
+			dest: path.join(nodeHome, version, platform, arch)
 		});
 	} catch (err) {
 		logger.error(err);
-		throw err;
+		throw new Error(`Failed to download Node.js: ${err.response.statusCode}`);
 	} finally {
 		if (isFile(outFile)) {
 			await fs.remove(outFile);
@@ -178,7 +177,7 @@ export async function downloadNode({ arch, nodeHome, version } = {}) {
  * @param {Object} params - Various parameters.
  * @param {String} params.archive - The path to the Node.js archive.
  * @param {String} params.dest - The path to extract the Node.js executable to.
- * @returns {Promise}
+ * @returns {Promise} Resolves the path to the requested Node.js binary.
  */
 export function extractNode({ archive, dest }) {
 	return new Promise((resolve, reject) => {
@@ -366,6 +365,8 @@ export function generateV8MemoryArgument(value, arch) {
  * @param {String} params.args - The arguments to pass into Node.js.
  * @param {Boolean} [params.detached=false] - When `true`, detaches the child
  * process.
+ * @param {Object} [params.networkConfig] - An object containing network settings: `caFile`,
+ * `certFile`, `keyFile`, `proxy`, and `strictSSL`.
  * @param {Array<String>} [params.nodeArgs] - Node and V8 arguments to pass into
  * the Node process. Useful for specifying V8 settings or enabling debugging.
  * @param {String} params.nodeHome - The path to where Node.js executables are
@@ -380,7 +381,7 @@ export function generateV8MemoryArgument(value, arch) {
  * @param {String} params.version - The Node.js version to use.
  * @returns {Promise<ChildProcess>}
  */
-export async function spawnNode({ arch, args, detached, nodeHome, nodeArgs, opts = {}, stdio, v8mem = 'auto', version }) {
+export async function spawnNode({ arch, args, detached, networkConfig, nodeHome, nodeArgs, opts = {}, stdio, v8mem = 'auto', version }) {
 	if (v8mem && (typeof v8mem !== 'number' && v8mem !== 'auto')) {
 		throw new TypeError('Expected v8mem to be a number or "auto"');
 	}
@@ -392,7 +393,7 @@ export async function spawnNode({ arch, args, detached, nodeHome, nodeArgs, opts
 		throw new Error('Expected arch to be "x86" or "x64"');
 	}
 
-	const node = await prepareNode({ arch, nodeHome, version });
+	const node = await prepareNode({ arch, networkConfig, nodeHome, version });
 	if (!Array.isArray(nodeArgs)) {
 		nodeArgs = [];
 	}

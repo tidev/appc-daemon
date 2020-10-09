@@ -224,6 +224,7 @@ export async function startServer({ cfg, argv }) {
 	const stdio = detached ? [ 'ignore', 'ignore', 'ignore', 'ipc' ] : [ 'inherit', 'inherit', 'inherit', 'ipc' ];
 	const v8mem = cfg.get('core.v8.memory');
 	const nodeVer = getAppcdCoreNodeVersion();
+	let resolved = false;
 
 	if (debugInspect) {
 		const debugPort = process.env.APPCD_INSPECT_PORT && Math.max(parseInt(process.env.APPCD_INSPECT_PORT), 1024) || 9229;
@@ -257,6 +258,7 @@ export async function startServer({ cfg, argv }) {
 			child = await spawnNode({
 				args,
 				detached,
+				networkConfig: cfg.get('network'),
 				nodeHome: expandPath(cfg.get('home'), 'node'),
 				stdio,
 				v8mem,
@@ -276,9 +278,23 @@ export async function startServer({ cfg, argv }) {
 		}
 
 		if (debug || debugInspect) {
-			process
-				.on('SIGINT', () => child.kill('SIGINT'))
-				.on('SIGTERM', () => child.kill('SIGTERM'));
+			// on Windows, we have to manually listen for ctrl+c to be pressed, then send an IPC
+			// message to the core process
+			if (process.platform === 'win32' && process.stdin && process.stdin.isTTY) {
+				process.stdin.setRawMode(true);
+				process.stdin.on('data',  data => {
+					if (child.connected && data.length === 1 && data[0] === 0x03) {
+						child.send('shutdown');
+					}
+				});
+			} else {
+				process.on('SIGINT', () => {
+					if (child.connected) {
+						child.send('shutdown');
+					}
+				});
+			}
+			process.on('SIGTERM', () => child.kill('SIGTERM'));
 		}
 
 		await new Promise((resolve, reject) => {
@@ -308,13 +324,19 @@ export async function startServer({ cfg, argv }) {
 					}
 					err.exitCode = code;
 					reject(err);
+				} else if (resolved) {
+					// already resolved, so we have to force an exit (for Windows)
+					process.exit(resolved instanceof Error ? (resolved.exitCode || 1) : 0);
 				} else {
 					resolve();
 				}
 			});
 		});
+
+		resolved = true;
 	} catch (err) {
 		log(err);
+		resolved = err;
 		throw err;
 	}
 }
