@@ -26,6 +26,13 @@ export default class PluginPath extends HookEmitter {
 		super();
 
 		/**
+		 * The redetect scheme debouncer function. We save this so we can cancel a pending bounce
+		 * for when we are destroyed.
+		 * @type {Function}
+		 */
+		this.onRedetect = null;
+
+		/**
 		 * The path this instance is to search and watch for plugins within.
 		 * @type {String}
 		 */
@@ -61,16 +68,16 @@ export default class PluginPath extends HookEmitter {
 
 		log('Detecting scheme change (%s => %s)', highlight(this.scheme ? Object.getPrototypeOf(this.scheme).constructor.name : null), highlight(SchemeClass.name));
 
-		if (this.scheme) {
-			await this.scheme.destroy();
-			this.scheme = null;
-		}
+		// we need to get rid of the old scheme before we create a new one
+		await this.destroy();
+
+		this.onRedetect = debounce(async () => {
+			log(`Redetecting scheme: ${highlight(this.path)}`);
+			await this.detect();
+		});
 
 		this.scheme = new SchemeClass(this.path)
-			.on('redetect-scheme', debounce(async () => {
-				log(`Redetecting scheme: ${highlight(this.path)}`);
-				await this.detect();
-			}).bind(this))
+			.on('redetect-scheme', this.onRedetect)
 			.on('plugin-added', async plugin => {
 				log(`Plugin added: ${highlight(plugin.toString())} ${note(`(${plugin.path})`)}`);
 				this.plugins[plugin.path] = plugin;
@@ -97,6 +104,11 @@ export default class PluginPath extends HookEmitter {
 	 * @access public
 	 */
 	async destroy() {
+		if (this.onRedetect) {
+			this.onRedetect.cancel();
+			this.onRedetect = null;
+		}
+
 		if (this.scheme) {
 			await this.scheme.destroy();
 			this.scheme = null;
