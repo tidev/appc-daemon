@@ -45,7 +45,7 @@
     "humanize": "^0.0.9",
     "libnpmsearch": "^3.0.0",
     "msgpack-lite": "^0.1.26",
-    "npm-package-arg": "^8.0.1",
+    "npm-package-arg": "^8.1.0",
     "pacote": "^11.1.11",
     "promise-limit": "^2.7.0",
     "semver": "^7.3.2",
@@ -64,6 +64,7 @@
   },
   "appcd": {
     "defaultPlugins": [
+      "@appcd/plugin-amplify",
       "@appcd/plugin-android",
       "@appcd/plugin-ios",
       "@appcd/plugin-jdk",

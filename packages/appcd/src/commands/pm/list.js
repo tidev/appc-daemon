@@ -3,10 +3,10 @@ export default {
 	args: [
 		{
 			name: 'filter',
-			desc: 'Filter installed plugins'
+			desc: 'Filter plugins'
 		}
 	],
-	desc: 'Lists all installed plugins',
+	desc: 'Lists all appcd plugins',
 	options: {
 		'-d, --detailed': 'Display detailed plugin information',
 		'--json': 'Outputs the results as JSON'

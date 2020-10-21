@@ -48,8 +48,8 @@ lifecycle, package.json settings, appcd-* dependencies, and debugging: \
 ${style.highlight('https://github.com/appcelerator/appc-daemon/blob/master/docs/Components/Plugin-System.md')}`
 	},
 	options: {
-		'-d, --dest [path]': 'The directory to create the project in.',
-		'-t, --template [path|url]': 'A path or URL to the template to use.'
+		'-d, --dest [path]': 'The directory to create the project in',
+		'-t, --template [path|url]': 'A path or URL to the template to use'
 	},
 	async action({ argv, console }) {
 		const [

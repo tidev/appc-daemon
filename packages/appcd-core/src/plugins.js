@@ -43,6 +43,37 @@ const appcdCoreVersion = appcdCorePkgJson.version;
 const appcdCoreNodejs = appcdCorePkgJson.appcd.node;
 
 /**
+ * The Appc Daemon configuration.
+ * @type {AppcdConfig}
+ */
+let config = null;
+
+/**
+ * Loads the Appc Daemon config and caches it, then returns the requested key.
+ *
+ * @param {String} key - The configuration key to get.
+ * @param {*} [defaultValue] - The default value if the key does not exist.
+ * @returns {*}
+ */
+function getConfig(key, defaultValue) {
+	if (!config) {
+		config = loadConfig();
+	}
+	return config.get(key, defaultValue);
+}
+
+/**
+ * Errors if using an HTTPS proxy with strict SSL disabled. This is not supported by Yarn v1.
+ */
+export function assertHttpsProxy() {
+	const { proxy, strictSSL } = getConfig('network', {});
+	if (proxy && /^https/.test(proxy) && !strictSSL) {
+		throw new Error(`HTTPS proxy setting "${proxy}" with strict TLS/SSL disabled is currently not supported
+Use an HTTPS proxy server with a verifiable certificate and strictSSL enabled, an HTTP proxy, or don't use a proxy`);
+	}
+}
+
+/**
  * Checks if there are updated releases for installed plugins as well as any new releases that are
  * installed.
  *
@@ -146,7 +177,7 @@ export function create({ dest, name, template }) {
 
 			const serviceName = name.replace(/^appcd-plugin-/, '');
 			const engine = new TemplateEngine({
-				requestOptions: loadConfig().get('network')
+				requestOptions: getConfig('network')
 			})
 				.on('download',     () => emitter.emit('status', 'Downloading from URL...'))
 				.on('npm-download', () => emitter.emit('status', 'Downloading from npm...'))
@@ -347,7 +378,7 @@ async function getPluginPackument(pkg) {
 	let info;
 
 	try {
-		info = await pacote.packument(pkg, { fullMetadata: true });
+		info = await pacote.packument(pkg, { ...getConfig('network', {}), fullMetadata: true });
 		const vers = Object.keys(info.versions).sort(semver.rcompare);
 		const { fetchSpec } = npa(pkg);
 		info.version = (fetchSpec && info['dist-tags']?.[fetchSpec]) || (fetchSpec && info.versions[fetchSpec] && fetchSpec) || info['dist-tags']?.latest || vers[0];
@@ -385,7 +416,7 @@ async function getPluginManifest(pkg) {
 	let manifest;
 
 	try {
-		manifest = await pacote.manifest(pkg, { fullMetadata: true });
+		manifest = await pacote.manifest(pkg, { ...getConfig('network', {}), fullMetadata: true });
 	} catch (e) {
 		if (e.code === 'E404') {
 			const e2 = new Error(`Plugin ${pkg} not found`);
@@ -406,7 +437,7 @@ async function getPluginManifest(pkg) {
  */
 export function getPluginPaths(home) {
 	if (!home) {
-		home = loadConfig().get('home');
+		home = getConfig('home');
 	}
 
 	return [
@@ -428,8 +459,10 @@ export function install({ home, plugins }) {
 
 	setImmediate(async () => {
 		try {
+			assertHttpsProxy();
+
 			if (!home) {
-				home = loadConfig().get('home');
+				home = getConfig('home');
 			} else if (typeof home !== 'string') {
 				throw new TypeError('Expected home directory to be a non-empty string');
 			}
@@ -511,7 +544,7 @@ export function install({ home, plugins }) {
 
 				logger.log(`Downloading ${highlight(`${manifest.name}@${manifest.version}`)}`);
 				await emitter.emit('download', manifest);
-				await pacote.extract(`${manifest.name}@${manifest.version}`, manifest.path);
+				await pacote.extract(`${manifest.name}@${manifest.version}`, manifest.path, getConfig('network'));
 
 				newWorkspaces.add(`packages/${manifest.name}/${manifest.version}`);
 			}
@@ -547,6 +580,8 @@ export function install({ home, plugins }) {
  * @returns {Promise<Array.<String>>}
  */
 export async function link(home) {
+	assertHttpsProxy();
+
 	const plugins = [];
 	const pluginsDir = expandPath(home, 'plugins');
 	const packagesDir = path.join(pluginsDir, 'packages');
@@ -697,7 +732,7 @@ export async function search(criteria) {
 	criteria = (Array.isArray(criteria) ? criteria : [ criteria ]).filter(Boolean);
 	const keywords = new Set([ 'appcd', 'appcd-plugin', ...criteria ]);
 	const limit = promiseLimit(10);
-	const packages = await npmsearch(Array.from(keywords));
+	const packages = await npmsearch(Array.from(keywords), getConfig('network'));
 	const results = [];
 
 	await Promise.all(packages.map(pkg => limit(async () => {
@@ -773,6 +808,13 @@ async function updateMonorepo({ fn, home, workspaces, yarn }) {
 		// run yarn
 		const args = [ yarn, '--no-lockfile', '--no-progress', '--non-interactive', '--production' ];
 		const command = process.platform === 'win32' ? args.shift() : process.execPath;
+
+		// note: yarn v1 does not support https proxies that have a self-signed cert
+		const { proxy } = getConfig('network', {});
+		if (proxy) {
+			args.push(`--${/^https/.test(proxy) ? 'https-' : ''}proxy=${proxy}`);
+		}
+
 		logger.log(`Plugins dir: ${highlight(pluginsDir)}`);
 
 		const { child } = spawn({
@@ -824,8 +866,10 @@ export function uninstall({ home, plugins }) {
 
 	setImmediate(async () => {
 		try {
+			assertHttpsProxy();
+
 			if (!home) {
-				home = loadConfig().get('home');
+				home = getConfig('home');
 			} else if (typeof home !== 'string') {
 				throw new TypeError('Expected home directory to be a non-empty string');
 			}

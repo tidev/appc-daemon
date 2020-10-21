@@ -1,53 +1,58 @@
-# ![Appc Daemon logo](images/appc-daemon.png) Daemon Project
-
-_appcd_ is the name of the npm package that contains the Appc Daemon bootstrap, command line
-interface (CLI), core, and supporting packages.
+# Documentation
 
 ## Table of Contents
 
-1. [Overview](Overview.md)
-2. [Rationale](Rationale.md)
-3. [Commandments](Commandments.md)
-4. [Getting Started](Getting-Started.md)
-5. [Architecture Overview](Architecture-Overview.md)
-6. [Packages](Packages.md)
-7. [Components](Components/README.md)
-	1. [Configuration System](Components/Configuration-System.md)
-	2. [Dispatcher](Components/Dispatcher.md)
-	3. [File System Watcher](Components/File-System-Watcher.md)
-	4. [Hook System](Components/Hook-System.md)
-	5. [Logging](Components/Logging.md)
-	6. [Plugin System](Components/Plugin-System.md)
-	7. [Status Monitor](Components/Status-Monitor.md)
-	8. [Subprocess Manager](Components/Subprocess-Manager.md)
-	9. [Telemetry](Components/Telemetry.md)
-	10. [Web Server](Components/Web-Server.md)
-8. [Configuration Settings](Configuration-Settings.md)
-9. [Commands](Commands/README.md)
-	1. [config](Commands/config.md)
-	2. [dump](Commands/dump.md)
-	3. [exec](Commands/exec.md)
-	4. [help](Commands/help.md)
-	5. [logcat](Commands/logcat.md)
-	6. [restart](Commands/restart.md)
-	7. [start](Commands/start.md)
-	8. [status](Commands/status.md)
-	9. [stop](Commands/stop.md)
-10. [Environment Variables](Environment-Variables.md)
-11. [Exit Codes](Exit-Codes.md)
-12. [Core Services](Services/README.md)
-	1. [/appcd/config](Services/config.md)
-	2. [/appcd/fswatch](Services/fswatch.md)
-	3. [/appcd/logcat](Services/logcat.md)
-	4. [/appcd/plugin](Services/plugin.md)
-	5. [/appcd/status](Services/status.md)
-	6. [/appcd/subprocess](Services/subprocess.md)
-13. [Clients](Clients/README.md)
-	1. [HTTP](Clients/HTTP.md)
-	2. [WebSocket](Clients/WebSocket.md)
-	3. [Node.js](Clients/Nodejs.md)
-14. [Distribution](Distribution.md)
-15. [Unit Testing](Unit-Testing.md)
-16. [Troubleshooting](Troubleshooting.md)
-17. [JIRA Issue Tracking :link:](https://jira.appcelerator.org/projects/DAEMON/issues)
-18. [Jenkins Continuous Integration :link:](https://jenkins.appcelerator.org/blue/organizations/jenkins/cli%2Fappc-daemon/activity/)
+1. [Introduction](Introduction.md)
+2. [Getting Started](Getting%20Started.md)
+3. [Command Line Interface (CLI)](CLI/README.md)
+   * [config](CLI/config.md)
+   * [dump](CLI/dump.md)
+   * [exec](CLI/exec.md)
+   * [logcat](CLI/logcat.md)
+   * [pm](CLI/pm.md)
+   * [restart](CLI/restart.md)
+   * [start](CLI/start.md)
+   * [status](CLI/status.md)
+   * [stop](CLI/stop.md)
+4. [Integration](Integration/README.md)
+   * [HTTP](Integration/HTTP.md)
+   * [WebSocket](Integration/WebSocket.md)
+   * [Node.js](Integration/Nodejs.md)
+5. [Core Services](Core%20Services/README.md)
+   * [Config](Core%20Services/config.md)
+   * [Filesystem Watcher](Core%20Services/fswatch.md)
+   * [Logcat](Core%20Services/logcat.md)
+   * [Plugin System](Core%20Services/plugin.md)
+   * [Status](Core%20Services/status.md)
+   * [Subprocesses](Core%20Services/subprocess.md)                          :warning: Under construction
+   * [Telemetry](Core%20Services/telemetry.md)                              :warning: Under construction
+6. Plugins
+   * [AMPLIFY Platform](https://github.com/appcelerator/appcd-plugin-amplify#readme)
+   * [Android](https://github.com/appcelerator/appcd-plugin-android#readme)
+   * [iOS](https://github.com/appcelerator/appcd-plugin-ios#readme)
+   * [JDK](https://github.com/appcelerator/appcd-plugin-jdk#readme)
+   * [System Info](https://github.com/appcelerator/appcd-plugin-system-info#readme)
+   * [Titanium SDK](https://github.com/appcelerator/appcd-plugin-titanium#readme)
+   * [Windows](https://github.com/appcelerator/appcd-plugin-windows#readme)
+7. [Development](Development/README.md)                                     :warning: Under construction
+   * [Architecture](Development/Architecture.md)                            :warning: Under construction
+   * [Components](Development/Components/README.md)
+     - [Configuration](Development/Components/Configuration.md)             :warning: Under construction
+     - [Dispatcher](Development/Components/Dispatcher.md)                   :warning: Under construction
+     - [Filesystem Watcher](Development/Components/Filesystem%20Watcher.md) :warning: Under construction
+     - [Logging](Development/Components/Logging.md)                         :warning: Under construction
+     - [Plugin System](Development/Components/Plugin%20System.md)           :warning: Under construction
+     - [Status Monitor](Development/Components/Status%20Monitor.md)         :warning: Under construction
+     - [Subprocess Manager](Development/Components/Subprocess%20Manager.md) :warning: Under construction
+     - [Telemetry](Development/Components/Telemetry.md)                     :warning: Under construction
+     - [Web Server](Development/Components/Web%20Server.md)                 :warning: Under construction
+   * [Distribution](Development/Distribution.md)
+   * [Testing](Development/Testing.md)
+   * [Jenkins Continuous Integration :link:](https://jenkins.appcelerator.org/blue/organizations/jenkins/cli%2Fappc-daemon/activity/)
+8. [Troubleshooting](Troubleshooting.md)
+9. [Release Notes](Release%20Notes/README.md)
+10. Reference
+    * [Config Settings](Config%20Settings.md)
+    * [Environment Variables](Environment%20Variables.md)
+    * [Exit Codes](Exit%20Codes.md)
+11. [Report an Issue :link:](https://jira.appcelerator.org/projects/DAEMON/issues)

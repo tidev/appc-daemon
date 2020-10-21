@@ -1,5 +1,5 @@
 export default {
-	aliases: 'conf',
+	aliases: '!conf',
 	commands: {
 		'@ls, list': {
 			desc: 'Display all config settings',

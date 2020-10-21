@@ -96,6 +96,10 @@ export default class ConfigService extends ServiceDispatcher {
 
 			} else if (action === 'load') {
 				const id = data.id || data.namespace;
+				if (!id || typeof id !== 'string') {
+					throw new DispatcherError(codes.BAD_REQUEST, 'Missing id or namespace');
+				}
+
 				const load = isReload => {
 					log(`${isReload ? 'Reloading' : 'Loading'} ${id} config: ${highlight(data.file)}`);
 					this.config.load(data.file, {
@@ -116,8 +120,13 @@ export default class ConfigService extends ServiceDispatcher {
 					}
 				});
 
+				ctx.response = new Response(codes.OK);
+				return;
+
 			} else if (action === 'unload') {
 				unload(data.id || data.namespace);
+				ctx.response = new Response(codes.OK);
+				return;
 
 			} else if (writeRegExp.test(action)) {
 				// performing a modifying action

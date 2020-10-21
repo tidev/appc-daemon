@@ -432,12 +432,7 @@ export default class Plugin extends EventEmitter {
 		const resetTimer = async () => {
 			let timeout = this.inactivityTimeout;
 			if (timeout === undefined || timeout === null) {
-				try {
-					const { response } = await Dispatcher.call('/appcd/config/plugins/defaultInactivityTimeout');
-					timeout = response;
-				} catch (e) {
-					timeout = 60 * 60 * 1000; // 1 hour
-				}
+				timeout = await Dispatcher.call('/appcd/config/plugins/defaultInactivityTimeout').then(ctx => ctx.response).catch(() => 60 * 60 * 1000); // 1 hour
 			}
 
 			if (this.type === 'external' && timeout !== 0 && this.info.state === states.STARTED) {
