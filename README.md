@@ -1,4 +1,4 @@
-# ![Appc Daemon logo](docs/images/appc-daemon.png) Appc Daemon
+# Appc Daemon
 
 The Appc Daemon is a server that runs on a developer's computer and hosts services which power the
 tooling for Axway products such as Axway Titanium SDK.
