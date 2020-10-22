@@ -32,7 +32,13 @@ Returns the plugin paths and a list of plugins found and registered from those p
 
 :sparkles: This service endpoint supports subscriptions.
 
-### Response
+### Example
+
+```
+$ appcd exec /appcd/plugin
+```
+
+#### Response
 
 ```json
 {
@@ -80,7 +86,13 @@ Returns the plugin paths and a list of plugins found and registered from those p
 
 Returns the plugin paths that are scanned for plugins.
 
-### Response
+### Example
+
+```
+$ appcd exec /appcd/plugin/paths
+```
+
+#### Response
 
 ```json
 {
@@ -98,7 +110,13 @@ Returns the plugin paths that are scanned for plugins.
 
 Returns the list of plugins that have been found and registered.
 
-### Response
+### Example
+
+```
+$ appcd exec /appcd/plugin/registered
+```
+
+#### Response
 
 ```json
 {
@@ -147,7 +165,13 @@ plugins, a directory of nested plugins, or non-existent.
 | ------ | :------: | --------------------- |
 | `path` |   Yes    | The path to register. |
 
-### Response
+### Example
+
+```
+$ appcd exec /appcd/plugin/register '{"path":"/path/to/a/plugin"}'
+```
+
+#### Response
 
 ```json
 {
@@ -169,7 +193,13 @@ nested plugins, or non-existent.
 | ------ | :------: | ----------------------- |
 | `path` |   Yes    | The path to unregister. |
 
-### Response
+### Example
+
+```
+$ appcd exec /appcd/plugin/unregister '{"path":"/path/to/a/plugin"}'
+```
+
+#### Response
 
 ```json
 {
@@ -191,7 +221,13 @@ directory. This request will always return an array with zero or one items.
 | ------ | :------: | -------------------------------------------- |
 | `path` |   Yes    | The absolute path to the plugin's directory. |
 
-### Response
+### Example
+
+```
+$ appcd exec /appcd/plugin/unregister '{"path":"/path/to/a/plugin"}'
+```
+
+#### Response
 
 ```json
 {
@@ -240,7 +276,13 @@ Returns a list containing the status for all plugins with the given name and mat
 | `name`    |   Yes    | The plugin name such as `"@appcd/plugin-ios"` or `"myplugin"`.                |
 | `version` |   No     | An exact version number or a semver range such as `"2.x"`. Defaults to `"*"`. |
 
-### Response
+### Example
+
+```
+$ appcd exec /appcd/plugin/status/@appcd/plugin-system-info/1.x
+```
+
+#### Response
 
 ```json
 {
@@ -288,7 +330,13 @@ Stops a specific plugin using an absolute path to the plugin directory.
 | ------ | :------: | -------------------------------------------- |
 | `path` |   Yes    | The absolute path to the plugin's directory. |
 
-### Response
+### Example
+
+```
+$ appcd exec /appcd/plugin/stop '{"path":"/path/to/a/plugin"}'
+```
+
+#### Response
 
 ```json
 {
@@ -310,7 +358,13 @@ Stops a plugin by name and version.
 | `name`    |   Yes    | The plugin name such as `"@appcd/plugin-ios"` or `"myplugin"`.                |
 | `version` |   No     | An exact version number or a semver range such as `"2.x"`. Defaults to `"*"`. |
 
-### Response
+### Example
+
+```
+$ appcd exec /appcd/plugin/stop/@appcd/plugin-system-info/1.5.2
+```
+
+#### Response
 
 ```json
 {

@@ -25,7 +25,7 @@
    * [Plugin System](Core%20Services/plugin.md)
    * [Status](Core%20Services/status.md)
    * [Subprocesses](Core%20Services/subprocess.md)                          :warning: Under construction
-   * [Telemetry](Core%20Services/telemetry.md)                              :warning: Under construction
+   * [Telemetry](Core%20Services/telemetry.md)
 6. Plugins
    * [AMPLIFY Platform](https://github.com/appcelerator/appcd-plugin-amplify#readme)
    * [Android](https://github.com/appcelerator/appcd-plugin-android#readme)
