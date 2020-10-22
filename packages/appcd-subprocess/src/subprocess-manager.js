@@ -1,16 +1,16 @@
 /* eslint-disable promise/always-return, promise/no-nesting */
 
 import appcdLogger from 'appcd-logger';
-import Dispatcher from 'appcd-dispatcher';
+import Dispatcher, { DataServiceDispatcher } from 'appcd-dispatcher';
 import gawk from 'gawk';
 import psTree from 'ps-tree';
 import Response, { i18n } from 'appcd-response';
 import SubprocessError from './subprocess-error';
 
+import { debounce, sleep } from 'appcd-util';
 import { EventEmitter } from 'events';
 import { expandPath } from 'appcd-path';
 import { prepareNode } from 'appcd-nodejs';
-import { sleep } from 'appcd-util';
 import { spawn } from './subprocess';
 
 const { __n } = i18n();
@@ -35,7 +35,13 @@ export default class SubprocessManager extends Dispatcher {
 		const emitter = new EventEmitter();
 		this.on = emitter.on.bind(emitter);
 
-		const subprocesses = this.subprocesses = gawk([]);
+		const subprocesses = new DataServiceDispatcher([]);
+
+		Object.defineProperty(this, 'subprocesses', {
+			get() {
+				return subprocesses.data;
+			}
+		});
 
 		this.register('/spawn/node/:version?', async ctx => {
 			const networkConfig = await Dispatcher.call('/appcd/config/network').then(ctx => ctx.response).catch(() => {});
@@ -162,7 +168,7 @@ export default class SubprocessManager extends Dispatcher {
 
 					// add it to our list of subprocesses
 					// note: this will kick off an 'change' event and update any status listeners
-					subprocesses.push(proc);
+					subprocesses.data.push(proc);
 
 					let writable = true;
 					ctx.response.on('end', () => {
@@ -208,9 +214,9 @@ export default class SubprocessManager extends Dispatcher {
 					child.once('close', code => {
 						log('%s exited (code %s)', highlight(pid), code);
 
-						for (let i = 0, l = subprocesses.length; i < l; i++) {
-							if (subprocesses[i].pid === pid) {
-								subprocesses.splice(i, 1);
+						for (let i = 0, l = subprocesses.data.length; i < l; i++) {
+							if (subprocesses.data[i].pid === pid) {
+								subprocesses.data.splice(i, 1);
 								break;
 							}
 						}
@@ -248,7 +254,7 @@ export default class SubprocessManager extends Dispatcher {
 				throw new SubprocessError(codes.INVALID_PARAMETER, 'The "%s" parameter must be a positive integer', 'pid');
 			}
 
-			for (const proc of subprocesses) {
+			for (const proc of subprocesses.data) {
 				if (proc.pid === pid) {
 					proc.send(data);
 					ctx.response = { success: true };
@@ -281,19 +287,12 @@ export default class SubprocessManager extends Dispatcher {
 			emitter.emit('kill', pid);
 		});
 
-		this.register('/status', ctx => {
-			ctx.response = this.subprocesses;
-		});
+		// legacy status endpoint
+		this.register('/status', subprocesses);
 
-		gawk.watch(this.subprocesses, (subprocesses, src) => {
-			emitter.emit('change', subprocesses, src);
-			Dispatcher
-				.call('/appcd/status', { data: { subprocesses } })
-				.catch(err => {
-					logger.warn('Failed to update status');
-					logger.warn(err);
-				});
-		});
+		this.register('/', subprocesses);
+
+		gawk.watch(subprocesses.data, debounce(() => emitter.emit('change', subprocesses.data)));
 	}
 
 	/**
