@@ -1,8 +1,8 @@
-# ![Appc Daemon logo](images/appc-daemon.png) Daemon Project
+> [Home](README.md) ➤ Troubleshooting
 
-## Troubleshooting
+# Troubleshooting
 
-### Debug log printed to stdout when not enabled
+## Debug log printed to stdout when not enabled
 
 The debug log should only be printed when `SNOOPLOGG=*` is defined or starting the daemon in debug
 mode. If the debug log is being printed when it's not supposed to, then the most likely culprit is
@@ -17,3 +17,9 @@ stdout.
 
 In the event this should happen, `appcd-core` will need to remove debug logging from the file that
 is being referenced by `appcd`.
+
+## ENOSPC: System limit for number of file watchers reached
+
+This error can occur on Linux systems. To fix, you need to increase the maximum number of watchers:
+
+	echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p

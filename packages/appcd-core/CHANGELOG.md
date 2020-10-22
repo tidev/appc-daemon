@@ -32,6 +32,7 @@
  * fix(telemetry): Lowered telemetry send timeout from 1 minute to 10 seconds to prevent a long
    hang during telemetry shutdown while it waits to send a batch of events.
  * fix(server): Decouple shutdown trigger from server by moving to main entry script.
+ * fix(plugin): Added HTTPS proxy check and error if strictSSL is disabled.
  * chore: Updated dependencies.
 
 # v3.2.0 (Jan 13, 2020)

@@ -36,7 +36,7 @@ require('appcd-gulp')({
 There is currently only one template: `standard`.
 
 You can specify the Node.js version you wish to transpile down to. Possibly values are `node4`,
-`node6`, `node7`, and `node8`.
+`node6`, `node7`, `node8`, `node10`, `node12`, and `node14`.
 
 ## Gulp Tasks
 
@@ -61,8 +61,8 @@ Build and run unit tests using [Mocha](https://mochajs.org/).
 
 	$ gulp test
 
-Build and run unit tests with coverage reports using [Mocha](https://mochajs.org/),
-[Istanbul](https://istanbul.js.org/), and [nyc](https://www.npmjs.com/package/nyc).
+Build and run unit tests with coverage reports using [Mocha](https://mochajs.org/) and
+[nyc](https://www.npmjs.com/package/nyc).
 
 	$ gulp coverage
 

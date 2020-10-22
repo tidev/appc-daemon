@@ -219,6 +219,9 @@ export default class Server {
 		// init the subprocess manager
 		this.systems.subprocessManager = new SubprocessManager();
 		Dispatcher.register('/appcd/subprocess', this.systems.subprocessManager);
+		this.systems.subprocessManager.on('change', subprocesses => {
+			this.systems.statusMonitor.merge({ subprocesses });
+		});
 
 		// init the plugin manager
 		logger.log(`Initializing plugin system (api version ${appcdPluginAPIVersion})`);

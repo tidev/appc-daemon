@@ -13,7 +13,7 @@ export default {
 	],
 	desc: 'Display info for an appcd plugin',
 	options: {
-		'--json': 'Outputs the results as JSON'
+		'--json': 'Outputs the info as JSON'
 	},
 	async action({ argv, cli, console }) {
 		const [

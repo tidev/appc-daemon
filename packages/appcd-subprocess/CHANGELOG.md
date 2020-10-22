@@ -1,7 +1,9 @@
-# v4.0.1
+# v4.1.0
 
+ * feat: Moved subprocess status to top-level route with subscription support.
  * fix: Properly handle IPC send errors when child process goes away.
  * fix: Kill non-detached child processes when response stream is closed by the caller.
+ * fix: Decouple subprocess data from `/appcd/status`.
 
 # v4.0.0 (Jun 12, 2020)
 
