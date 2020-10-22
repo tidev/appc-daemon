@@ -4,7 +4,7 @@
 
 1. [Introduction](Introduction.md)
 2. [Getting Started](Getting%20Started.md)
-3. [Command Line Interface (CLI)](CLI/README.md)
+3. [Command Line Interface (CLI)](CLI/README.md#readme)
    * [config](CLI/config.md)
    * [dump](CLI/dump.md)
    * [exec](CLI/exec.md)
@@ -14,11 +14,11 @@
    * [start](CLI/start.md)
    * [status](CLI/status.md)
    * [stop](CLI/stop.md)
-4. [Integration](Integration/README.md)
+4. [Integration](Integration/README.md#readme)
    * [HTTP](Integration/HTTP.md)
    * [WebSocket](Integration/WebSocket.md)
    * [Node.js](Integration/Nodejs.md)
-5. [Core Services](Core%20Services/README.md)
+5. [Core Services](Core%20Services/README.md#readme)
    * [Config](Core%20Services/config.md)
    * [Filesystem Watcher](Core%20Services/fswatch.md)
    * [Logcat](Core%20Services/logcat.md)
@@ -34,9 +34,9 @@
    * [System Info](https://github.com/appcelerator/appcd-plugin-system-info#readme)
    * [Titanium SDK](https://github.com/appcelerator/appcd-plugin-titanium#readme)
    * [Windows](https://github.com/appcelerator/appcd-plugin-windows#readme)
-7. [Development](Development/README.md)                                     :warning: Under construction
+7. [Development](Development/README.md#readme)                              :warning: Under construction
    * [Architecture](Development/Architecture.md)                            :warning: Under construction
-   * [Components](Development/Components/README.md)
+   * [Components](Development/Components/README.md#readme)
      - [Configuration](Development/Components/Configuration.md)             :warning: Under construction
      - [Dispatcher](Development/Components/Dispatcher.md)                   :warning: Under construction
      - [Filesystem Watcher](Development/Components/Filesystem%20Watcher.md) :warning: Under construction
@@ -50,7 +50,7 @@
    * [Testing](Development/Testing.md)
    * [Jenkins Continuous Integration :link:](https://jenkins.appcelerator.org/blue/organizations/jenkins/cli%2Fappc-daemon/activity/)
 8. [Troubleshooting](Troubleshooting.md)
-9. [Release Notes](Release%20Notes/README.md)
+9. [Release Notes](Release%20Notes/README.md#readme)
 10. Reference
     * [Config Settings](Config%20Settings.md)
     * [Environment Variables](Environment%20Variables.md)
