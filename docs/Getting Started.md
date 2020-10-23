@@ -35,43 +35,36 @@ running:
 
 This will install the latest major versions of the following plugins:
 
-| Package                   |            |           |            |
-| ------------------------- | ---------- | --------- | ---------- |
-| @appcd/plugin-amplify     | [docs][11] | [npm][12] | [repo][13] |
-| @appcd/plugin-android     | [docs][21] | [npm][22] | [repo][23] |
-| @appcd/plugin-ios         | [docs][31] | [npm][32] | [repo][33] |
-| @appcd/plugin-jdk         | [docs][41] | [npm][42] | [repo][43] |
-| @appcd/plugin-system-info | [docs][51] | [npm][52] | [repo][53] |
-| @appcd/plugin-titanium    | [docs][61] | [npm][62] | [repo][63] |
-| @appcd/plugin-windows     | [docs][71] | [npm][72] | [repo][73] |
+| Package                   |            |           |
+| ------------------------- | ---------- | --------- |
+| @appcd/plugin-amplify     | [docs][11] | [npm][12] |
+| @appcd/plugin-android     | [docs][21] | [npm][22] |
+| @appcd/plugin-ios         | [docs][31] | [npm][32] |
+| @appcd/plugin-jdk         | [docs][41] | [npm][42] |
+| @appcd/plugin-system-info | [docs][51] | [npm][52] |
+| @appcd/plugin-titanium    | [docs][61] | [npm][62] |
+| @appcd/plugin-windows     | [docs][71] | [npm][72] |
 
-[11]: Plugins/AMPLIFY.md
+[11]: https://github.com/appcelerator/appcd-plugin-amplify#readme
 [12]: https://npmjs.org/packages/@appcd/plugin-amplify
-[13]: https://github.com/appcelerator/appcd-plugin-amplify
 
-[21]: Plugins/Android.md
+[21]: https://github.com/appcelerator/appcd-plugin-android#readme
 [22]: https://npmjs.org/packages/@appcd/plugin-android
-[23]: https://github.com/appcelerator/appcd-plugin-android
 
-[31]: Plugins/iOS.md
+[31]: https://github.com/appcelerator/appcd-plugin-ios#readme
 [32]: https://npmjs.org/packages/@appcd/plugin-ios
-[33]: https://github.com/appcelerator/appcd-plugin-ios
 
-[41]: Plugins/JDK.md
+[41]: https://github.com/appcelerator/appcd-plugin-jdk#readme
 [42]: https://npmjs.org/packages/@appcd/plugin-jdk
-[43]: https://github.com/appcelerator/appcd-plugin-jdk
 
-[51]: Plugins/System-Info.md
+[51]: https://github.com/appcelerator/appcd-plugin-system-info#readme
 [52]: https://npmjs.org/packages/@appcd/plugin-system-info
-[53]: https://github.com/appcelerator/appcd-plugin-system-info
 
-[61]: Plugins/Titanium.md
+[61]: https://github.com/appcelerator/appcd-plugin-titanium#readme
 [62]: https://npmjs.org/packages/@appcd/plugin-titanium
-[63]: https://github.com/appcelerator/appcd-plugin-titanium
 
-[71]: Plugins/Windows.md
+[71]: https://github.com/appcelerator/appcd-plugin-windows#readme
 [72]: https://npmjs.org/packages/@appcd/plugin-windows
-[73]: https://github.com/appcelerator/appcd-plugin-windows
 
 ## Quick Start
 
