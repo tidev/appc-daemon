@@ -24,27 +24,28 @@ export default class AppcdConfig extends Config {
 	 * @access public
 	 */
 	constructor(opts = {}) {
-		const { file } = opts;
-		delete opts.file;
+		if (!opts || typeof opts !== 'object') {
+			throw new TypeError('Expected options to be an object');
+		}
 
-		opts.allowNulls = opts.allowNulls !== false;
-
-		super(opts);
-
-		this.layers.add({
-			file,
-			id: AppcdConfig.User,
-			order: 1e9,
-			static: true
-		});
-
-		this.layers.add({
-			id: AppcdConfig.Runtime,
-			order: Infinity,
-			static: true,
-			store: new JSONStore({
-				data: opts.data
-			})
+		super({
+			...opts,
+			allowNulls: opts.allowNulls !== false,
+			file:       undefined,
+			layers: [
+				{
+					file:   opts.file,
+					id:     AppcdConfig.User,
+					order:  1e9,
+					static: true
+				},
+				{
+					id:     AppcdConfig.Runtime,
+					order:  Infinity,
+					static: true,
+					store:  new JSONStore({ data: opts.data })
+				}
+			]
 		});
 	}
 

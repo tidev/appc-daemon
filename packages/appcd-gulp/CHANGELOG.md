@@ -2,6 +2,7 @@
 
  * feat: Added Babel config for Node 14.
  * fix: Explicitly set Node.js API warnings to >=10.
+ * fix: Added `--debug` flag for tests since `--inspect` is sometimes intercepted by gulp.
  * chore: Updated dependencies.
 
 # v3.0.1 (Jun 12, 2020)

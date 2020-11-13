@@ -1,5 +1,6 @@
 export default {
 	aliases: '!conf',
+	banner: false,
 	commands: {
 		'@ls, list': {
 			desc: 'Display all config settings',
@@ -60,7 +61,7 @@ When setting a config setting and the Appc Daemon is running, settings will be b
 	}
 };
 
-async function runConfig(action, { argv, cmd, console, setExitCode }) {
+async function runConfig(action, { argv, console, setExitCode }) {
 	const [
 		{ default: appcdLogger },
 		{ createRequest, loadConfig }
@@ -85,7 +86,6 @@ async function runConfig(action, { argv, cmd, console, setExitCode }) {
 
 	const print = ({ code = 0, key = null, value }) => {
 		setExitCode(code);
-		cmd.banner = false;
 
 		if (json) {
 			console.log(JSON.stringify(value, null, 2));

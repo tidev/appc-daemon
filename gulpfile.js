@@ -35,7 +35,13 @@ const cliTableChars = {
 	top: '', 'top-left': '', 'top-mid': '', 'top-right': ''
 };
 
-const dontUpdate = [];
+/*
+ * The following is a list of npm packages that should NOT be upgraded when running `gulp check` or
+ * `gulp upgrade`.
+ */
+const dontUpdate = [
+	'gulp-sourcemaps'
+];
 
 const appcdRE = /^appcd-/;
 const appcdPackages = new Set(fs.readdirSync(path.join(__dirname, 'packages')).filter(name => appcdRE.test(name)));

@@ -54,7 +54,7 @@ exports.runTests = function runTests({ root, projectDir, cover, all }) {
 	args.push(path.join(mocha, 'bin', 'mocha'));
 
 	// add --inspect
-	if (process.argv.indexOf('--inspect') !== -1 || process.argv.indexOf('--inspect-brk') !== -1) {
+	if (process.argv.includes('--debug') || process.argv.includes('--inspect') || process.argv.includes('--inspect-brk')) {
 		args.push('--inspect-brk', '--timeout', '9999999');
 	}
 

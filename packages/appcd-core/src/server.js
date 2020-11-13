@@ -285,7 +285,7 @@ export default class Server {
 
 		// send the server start event
 		await Dispatcher.call('/appcd/telemetry', {
-			amplifyCLI:  process.env.AMPLIFY_CLI || null,
+			axwayCLI:    process.env.AXWAY_CLI || null,
 			arch:        getArch(),
 			cpus:        os.cpus().length,
 			event:       'ti.start',
