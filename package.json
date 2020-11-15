@@ -30,8 +30,7 @@
   },
   "workspaces": {
     "packages": [
-      "packages/*",
-      "plugins/*"
+      "packages/*"
     ]
   },
   "scripts": {
