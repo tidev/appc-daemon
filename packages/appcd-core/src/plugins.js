@@ -765,8 +765,14 @@ async function updateMonorepo({ fn, home, workspaces, yarn }) {
 		workspaces = await loadWorkspaces(pluginsDir);
 	}
 
-	// remove any workspaces that are links
-	workspaces = workspaces.filter(ws => !fs.lstatSync(path.join(pluginsDir, ws)).isSymbolicLink());
+	// remove any workspaces that are invalid or are not links
+	workspaces = workspaces.filter(ws => {
+		try {
+			return !fs.lstatSync(path.join(pluginsDir, ws)).isSymbolicLink();
+		} catch (e) {
+			return false;
+		}
+	});
 
 	// update the package.json workspaces
 	logger.log(`Writing ${highlight('plugins/package.json')}`);
