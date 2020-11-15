@@ -193,6 +193,8 @@ export function getAppcdCoreNodeVersion() {
 	return m ? m[1] : null;
 }
 
+let cfg;
+
 /**
  * Loads the Appc Daemon config.
  *
@@ -200,8 +202,10 @@ export function getAppcdCoreNodeVersion() {
  * @returns {Config}
  */
 export function loadConfig(argv) {
-	const cfg = appcdLoadConfig(argv);
-	log(cfg.toString());
+	if (!cfg) {
+		cfg = appcdLoadConfig(argv);
+		log(cfg.toString());
+	}
 	return cfg;
 }
 

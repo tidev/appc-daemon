@@ -189,7 +189,7 @@ export default {
 								`${plugin.stats.cpu.toFixed(1)}%`,
 								`${filesize(plugin.stats.heapUsed)} / ${filesize(plugin.stats.heapTotal)}`,
 								filesize(plugin.stats.rss),
-								prettyMs(now - plugin.startTime)
+								plugin.startTime ? prettyMs(now - plugin.startTime) : note('n/a')
 							]);
 						}
 					}

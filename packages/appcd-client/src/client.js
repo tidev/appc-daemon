@@ -193,37 +193,37 @@ export default class Client {
 								return tryConnect();
 							}
 
-							log(`${highlight('appcd')} not found, attempting to locate ${highlight('amplify')}...`);
+							log(`${highlight('appcd')} not found, attempting to locate ${highlight('axway')}...`);
 
-							if (this.amplify === undefined) {
-								this.amplify = await find('amplify');
+							if (this.axwayCLI === undefined) {
+								this.axwayCLI = await find('axway');
 							}
 
-							if (this.amplify) {
+							if (this.axwayCLI) {
 								try {
 									// check if appcd is installed
-									log('Checking amplify if appcd is installed...');
-									const packages = JSON.parse(run(this.amplify, 'pm', 'list', '--json').stdout);
+									log('Checking Axway CLI if appcd is installed...');
+									const packages = JSON.parse(run(this.axwayCLI, 'pm', 'list', '--json').stdout);
 									const appcdPkg = Array.isArray(packages) && packages.filter(p => p.name === 'appcd')[0];
 									if (appcdPkg) {
 										const appcdPath = path.resolve(appcdPkg.versions[appcdPkg.version].path, 'bin', 'appcd');
 										if (fs.existsSync(appcdPath)) {
 											this.appcd = appcdPath;
 											this.fetchedAppcdConfig = false;
-											log(`amplify found appcd: ${highlight(appcd)}`);
+											log(`Axway CLI found appcd: ${highlight(appcd)}`);
 										}
 										return tryConnect();
 									}
 								} catch (e) {
-									error(`Failed to check amplify for appcd: ${e.message}`);
+									error(`Failed to check Axway CLI for appcd: ${e.message}`);
 								}
 							} else {
-								log(`${highlight('amplify')} not found`);
+								log(`${highlight('Axway CLI')} not found`);
 							}
 
 							throw new Error(
 								'Unable to find the Appc Daemon (appcd).\n'
-								+ `Run ${this.amplify ? '"amplify pm i appcd" or ' : ''}"npm i -g appcd" to install it.`
+								+ `Run ${this.axwayCLI ? '"axway pm i appcd" or ' : ''}"npm i -g appcd" to install it.`
 							);
 						} catch (e) {
 							emitter.emit('error', e);
