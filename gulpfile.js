@@ -232,50 +232,6 @@ exports.package = series(build, function pkg() {
 });
 
 /*
- * plugin tasks
- *
-async function linkPlugins() {
-	runLerna([ 'exec', '--scope', '@appcd/plugin-*', 'yarn', 'link' ]);
-
-	// fix yarn links
-	const scan = dir => {
-		try {
-			if (!fs.existsSync(dir)) {
-				return;
-			}
-
-			for (const name of fs.readdirSync(dir)) {
-				const file = path.join(dir, name);
-				if (name[0] === '@') {
-					scan(file);
-				} else if (!fs.existsSync(file) && fs.lstatSync(file).isSymbolicLink()) {
-					log(`Fixing symlink: ${cyan(file)}`);
-					const target = path.resolve(fs.readlinkSync(file));
-					fs.unlinkSync(file);
-					if (fs.existsSync(target)) {
-						log(`Linking ${cyan(target)} => ${cyan(file)}`);
-						fs.symlinkSync(target, file);
-					} else {
-						log(`Target ${cyan(target)} does not exist, removing link`);
-					}
-				}
-			}
-		} catch (e) {
-			log(`Failed to scan directory: ${dir}`);
-			log(e);
-		}
-	};
-
-	const linksDir = process.platform === 'win32'
-		? path.join(os.homedir(), 'AppData', 'Local', 'Yarn', 'Data', 'link')
-		: path.join(os.homedir(), '.config', 'yarn', 'link');
-
-	log(`Checking links: ${cyan(linksDir)}`);
-	scan(linksDir);
-};
-*/
-
-/*
  * unit test tasks
  */
 let origHomeDir = process.env.HOME;
@@ -300,9 +256,8 @@ async function runTests(cover, all) {
 			process.env.HOMEPATH = tmpHomeDir.replace(process.env.HOMEDRIVE, '');
 		}
 
-		// log('Linking default plugins...');
-		// await linkPlugins();
-		// spawnSync(process.execPath, [ 'packages/appcd/bin/appcd', 'pm', 'link' ], { stdio: 'inherit' });
+		log('Linking plugins...');
+		spawnSync(process.execPath, [ 'packages/appcd/bin/appcd', 'pm', 'link' ], { stdio: 'inherit' });
 
 		require('./packages/appcd-gulp/src/test-runner').runTests({ root: __dirname, projectDir: __dirname, cover, all });
 	} finally {
