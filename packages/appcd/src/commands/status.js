@@ -171,7 +171,7 @@ export default {
 				log();
 
 				log(magenta('Health'.toUpperCase()));
-				table = createTable([ 'Process', 'PID', 'CPU Usage', 'Heap Used/Total', 'RSS', 'Uptime' ], 2);
+				table = createTable([ 'Process', 'PID', 'CPU', 'Heap Used / Total', 'RSS', 'Uptime' ], 2);
 				table.push([
 					highlight(`appcd-core@${status.version}`),
 					status.pid,

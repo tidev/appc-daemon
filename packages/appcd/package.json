@@ -38,7 +38,7 @@
     "appcd-util": "^3.0.0",
     "boxen": "^4.2.0",
     "check-kit": "^1.0.1",
-    "cli-kit": "^1.8.8",
+    "cli-kit": "^1.8.9",
     "cli-table3": "^0.6.0",
     "global-prefix": "^3.0.0",
     "humanize": "^0.0.9",
