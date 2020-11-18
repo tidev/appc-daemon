@@ -24,7 +24,7 @@
    * [Logcat](Core%20Services/logcat.md)
    * [Plugin System](Core%20Services/plugin.md)
    * [Status](Core%20Services/status.md)
-   * [Subprocesses](Core%20Services/subprocess.md)                          :warning: Under construction
+   * [Subprocesses](Core%20Services/subprocess.md)
    * [Telemetry](Core%20Services/telemetry.md)
 6. Plugins
    * [AMPLIFY Platform](https://github.com/appcelerator/appcd-plugin-amplify#readme)
@@ -34,20 +34,23 @@
    * [System Info](https://github.com/appcelerator/appcd-plugin-system-info#readme)
    * [Titanium SDK](https://github.com/appcelerator/appcd-plugin-titanium#readme)
    * [Windows](https://github.com/appcelerator/appcd-plugin-windows#readme)
-7. [Development](Development/README.md)                                     :warning: Under construction
-   * [Architecture](Development/Architecture.md)                            :warning: Under construction
-   * [Components](Development/Components/README.md)
-     - [Configuration](Development/Components/Configuration.md)             :warning: Under construction
-     - [Dispatcher](Development/Components/Dispatcher.md)                   :warning: Under construction
-     - [Filesystem Watcher](Development/Components/Filesystem%20Watcher.md) :warning: Under construction
-     - [Logging](Development/Components/Logging.md)                         :warning: Under construction
-     - [Plugin System](Development/Components/Plugin%20System.md)           :warning: Under construction
-     - [Status Monitor](Development/Components/Status%20Monitor.md)         :warning: Under construction
-     - [Subprocess Manager](Development/Components/Subprocess%20Manager.md) :warning: Under construction
-     - [Telemetry](Development/Components/Telemetry.md)                     :warning: Under construction
-     - [Web Server](Development/Components/Web%20Server.md)                 :warning: Under construction
-   * [Distribution](Development/Distribution.md)
-   * [Testing](Development/Testing.md)
+7. [Development](Development/README.md)
+   * [Prerequisites](Development/README.md#prerequisites)
+   * [Initialize Local Repository](Development/README.md#initialize-local-repository)
+   * [Appc Daemon Development](Development/appcd/README.md)
+      - [Architecture](Development/appcd/Architecture/README.md)
+         - [Configuration](Development/appcd/Architecture/Configuration.md)
+         - [Dispatcher](Development/appcd/Architecture/Dispatcher.md)
+         - [Filesystem Watcher](Development/Architecture/Filesystem%20Watcher.md)
+         - [Logging](Development/appcd/Architecture/Logging.md)
+         - [Plugin System](Development/appcd/Architecture/Plugin%20System.md)
+         - [Status Monitor](Development/appcd/Architecture/Status%20Monitor.md)
+         - [Subprocess Manager](Development/appcd/Architecture/Subprocess%20Manager.md)
+         - [Telemetry](Development/appcd/Architecture/Telemetry.md)
+         - [Web Server](Development/appcd/Architecture/Web%20Server.md)
+      - [Testing](Development/appcd/Testing.md)
+      - [Distribution](Development/appcd/Distribution.md)
+   * [Developing Plugins](Development/Plugins.md)
    * [Jenkins Continuous Integration :link:](https://jenkins.appcelerator.org/blue/organizations/jenkins/cli%2Fappc-daemon/activity/)
 8. [Troubleshooting](Troubleshooting.md)
 9. [Release Notes](Release%20Notes/README.md)

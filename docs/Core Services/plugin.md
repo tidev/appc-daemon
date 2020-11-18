@@ -161,9 +161,9 @@ plugins, a directory of nested plugins, or non-existent.
 
 ### Request Data
 
-| Name   | Required | Description           |
-| ------ | :------: | --------------------- |
-| `path` |   Yes    | The path to register. |
+| Name   | Type   | Required | Description           |
+| ------ | ------ | :------: | --------------------- |
+| `path` | String |   Yes    | The path to register. |
 
 ### Example
 
@@ -189,9 +189,9 @@ nested plugins, or non-existent.
 
 ### Request Data
 
-| Name   | Required | Description             |
-| ------ | :------: | ----------------------- |
-| `path` |   Yes    | The path to unregister. |
+| Name   | Type   | Required | Description             |
+| ------ | ------ | :------: | ----------------------- |
+| `path` | String |   Yes    | The path to unregister. |
 
 ### Example
 
@@ -217,9 +217,9 @@ directory. This request will always return an array with zero or one items.
 
 ### Request Data
 
-| Name   | Required | Description                                  |
-| ------ | :------: | -------------------------------------------- |
-| `path` |   Yes    | The absolute path to the plugin's directory. |
+| Name   | Type   | Required | Description                                  |
+| ------ | ------ | :------: | -------------------------------------------- |
+| `path` | String |   Yes    | The absolute path to the plugin's directory. |
 
 ### Example
 
@@ -271,10 +271,10 @@ Returns a list containing the status for all plugins with the given name and mat
 
 ### Request Parameters
 
-| Name      | Required | Description                                                                   |
-| --------- | :------: | ----------------------------------------------------------------------------- |
-| `name`    |   Yes    | The plugin name such as `"@appcd/plugin-ios"` or `"myplugin"`.                |
-| `version` |   No     | An exact version number or a semver range such as `"2.x"`. Defaults to `"*"`. |
+| Name      | Type   | Required | Description                                                                   |
+| --------- | ------ | :------: | ----------------------------------------------------------------------------- |
+| `name`    | String |  Yes    | The plugin name such as `"@appcd/plugin-ios"` or `"myplugin"`.                |
+| `version` | String |  No     | An exact version number or a semver range such as `"2.x"`. Defaults to `"*"`. |
 
 ### Example
 
@@ -326,9 +326,9 @@ Stops a specific plugin using an absolute path to the plugin directory.
 
 ### Request Data
 
-| Name   | Required | Description                                  |
-| ------ | :------: | -------------------------------------------- |
-| `path` |   Yes    | The absolute path to the plugin's directory. |
+| Name   | Type   | Required | Description                                  |
+| ------ | ------ | :------: | -------------------------------------------- |
+| `path` | String |   Yes    | The absolute path to the plugin's directory. |
 
 ### Example
 
@@ -353,10 +353,10 @@ Stops a plugin by name and version.
 
 ### Request Parameters
 
-| Name      | Required | Description                                                                   |
-| --------- | :------: | ----------------------------------------------------------------------------- |
-| `name`    |   Yes    | The plugin name such as `"@appcd/plugin-ios"` or `"myplugin"`.                |
-| `version` |   No     | An exact version number or a semver range such as `"2.x"`. Defaults to `"*"`. |
+| Name      | Type   | Required | Description                                                                   |
+| --------- | ------ | :------: | ----------------------------------------------------------------------------- |
+| `name`    | String |   Yes    | The plugin name such as `"@appcd/plugin-ios"` or `"myplugin"`.                |
+| `version` | String |   No     | An exact version number or a semver range such as `"2.x"`. Defaults to `"*"`. |
 
 ### Example
 

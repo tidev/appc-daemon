@@ -106,15 +106,26 @@ export default class SubprocessManager extends Dispatcher {
 					}
 
 					// create the subprocess descriptor
-					const proc = ctx.proc = Object.assign(new EventEmitter(), {
+					const proc = ctx.proc = {
 						pid,
 						command,
 						args,
 						options,
 						startTime: new Date()
-					});
+					};
 
 					Object.defineProperties(proc, {
+						emit: {
+							value(...args) {
+								this.emitter.emit(...args);
+								return this;
+							}
+						},
+
+						emitter: {
+							value: new EventEmitter()
+						},
+
 						kill: {
 							value: forceTimeout => new Promise((resolve, reject) => {
 								let timer;
@@ -154,6 +165,13 @@ export default class SubprocessManager extends Dispatcher {
 									}, forceTimeout);
 								}
 							})
+						},
+
+						on: {
+							value(...args) {
+								this.emitter.on(...args);
+								return this;
+							}
 						},
 
 						send: {

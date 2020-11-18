@@ -6,16 +6,9 @@ export default {
 	},
 	async action({ argv, console }) {
 		const { loadConfig, startServer } = await import('../common');
-
 		const cfg = loadConfig(argv);
 
-		try {
-			await startServer({ cfg, argv });
-			console.log('Appc Daemon started');
-		} catch (err) {
-			const code = err.exitCode || 1;
-			console.error(`${err.message} (code ${code})`);
-			process.exit(code);
-		}
+		await startServer({ cfg, argv });
+		console.log('Appc Daemon started');
 	}
 };

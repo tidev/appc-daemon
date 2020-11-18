@@ -3,14 +3,11 @@
 const ansiColors   = require('ansi-colors');
 const chug         = require('gulp-chug');
 const debug        = require('gulp-debug');
-const execSync     = require('child_process').execSync;
 const fs           = require('fs-extra');
 const globule      = require('globule');
 const gulp         = require('gulp');
-const ini          = require('ini');
 const libnpm       = require('libnpm');
 let log            = require('fancy-log');
-const os           = require('os');
 const path         = require('path');
 const plumber      = require('gulp-plumber');
 const promiseLimit = require('promise-limit');
@@ -40,7 +37,6 @@ const cliTableChars = {
  * `gulp upgrade`.
  */
 const dontUpdate = [
-	'gulp-sourcemaps'
 ];
 
 const appcdRE = /^appcd-/;
@@ -72,6 +68,21 @@ exports.check = async function check() {
 		console.log(JSON.stringify(results, null, 2));
 	} else {
 		renderPackages(results);
+	}
+};
+
+exports['check-npm'] = async function checkNPM() {
+	const agent = process.env.npm_config_user_agent;
+	if (agent && agent.includes('npm/')) {
+		const boxen = require('boxen');
+		console.log(boxen(`${red('npm is not supported')}\n\nPlease use Yarn`, {
+			align: 'center',
+			borderColor: 'red',
+			borderStyle: 'round',
+			margin: { bottom: 1, left: 6, right: 6, top: 1 },
+			padding: { bottom: 1, left: 6, right: 6, top: 1 }
+		}));
+		process.exit(1);
 	}
 };
 

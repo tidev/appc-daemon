@@ -10,12 +10,7 @@ export default {
 		const cfg = loadConfig(argv);
 		const wasRunning = await stopServer({ cfg });
 
-		try {
-			await startServer({ cfg, argv });
-			console.log(wasRunning ? 'Appc Daemon restarted' : 'Appc Daemon started');
-		} catch (err) {
-			console.error(err.message);
-			process.exit(err.exitCode || 1);
-		}
+		await startServer({ cfg, argv });
+		console.log(wasRunning ? 'Appc Daemon restarted' : 'Appc Daemon started');
 	}
 };

@@ -33,8 +33,8 @@ export default {
 				.on('download', manifest => !argv.json && console.log(`Downloading ${cyan(`${manifest.name}@${manifest.version}`)}...`))
 				.on('install', () => !argv.json && console.log('Installing dependencies...'))
 				.on('error', err => {
-					console.log(formatError(err, argv.json));
-					process.exit(1);
+					err.json = argv.json;
+					reject(err);
 				})
 				.on('finish', installed => {
 					if (argv.json) {
