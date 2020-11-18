@@ -79,7 +79,14 @@ export function run(cmd, args, opts) {
  * @param {Object} params - Various parameters.
  * @param {String} params.command - The command to run.
  * @param {Array} [params.args] - An array of arguments to pass into the command.
- * @param {Object} [params.options] - Various spawn params. These
+ * @param {Object} [params.options] - Various spawn options.
+ * @param {String} [params.options.cwd] - The current working directory.
+ * @param {Object} [params.options.env] - A map of environment variables to expose to the
+ * subprocess.
+ * @param {String|Array.<String>} [params.options.stdio] - The same stdio options as Node's
+ * `child_process.spawn()`.
+ * @param {Boolean} [params.options.windowsHide] - When `true` hides the intermediate Windows
+ * command prompt from being displayed.
  * @returns {ChildProcess}
  */
 export function spawn(params = {}) {

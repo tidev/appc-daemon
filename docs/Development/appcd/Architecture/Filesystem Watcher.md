@@ -1,4 +1,4 @@
-> [Home](../../README.md) ➤ [Development](../README.md) ➤ [Components](README.md) ➤ Filesystem Watcher
+> [Home](../../../README.md) ➤ [Development](../../README.md) ➤ [Appc Daemon Development](../README.md) ➤ [Architecture](README.md) ➤ Filesystem Watcher
 
 > :warning: Under construction.
 

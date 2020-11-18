@@ -1,4 +1,4 @@
-> [Home](../../README.md) ➤ [Development](../README.md) ➤ [Components](README.md) ➤ Logging
+> [Home](../../../README.md) ➤ [Development](../../README.md) ➤ [Appc Daemon Development](../README.md) ➤ [Architecture](README.md) ➤ Logging
 
 > :warning: Under construction.
 

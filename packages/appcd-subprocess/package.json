@@ -22,7 +22,7 @@
     "appcd-path": "^2.0.1",
     "appcd-response": "^3.0.0",
     "appcd-util": "^3.0.0",
-    "gawk": "^4.7.1",
+    "gawk": "^5.0.0",
     "ps-tree": "^1.2.0",
     "source-map-support": "^0.5.19",
     "which": "^2.0.2"

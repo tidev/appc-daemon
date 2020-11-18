@@ -1,8 +1,24 @@
-> [Home](../README.md) ➤ [Development](README.md) ➤ Architecture
+> [Home](../../../README.md) ➤ [Development](../../README.md) ➤ [Appc Daemon Development](../README.md) ➤ Architecture
 
 > :warning: Under construction.
 
 # Architecture
+
+ * [Configuration](Configuration.md)
+ * [Dispatcher](Dispatcher.md)
+ * [Filesystem Watcher](Filesystem%20Watcher.md)
+ * [Logging](Logging.md)
+ * [Plugin System](Plugin%20System.md)
+ * [Status Monitor](Status%20Monitor.md)
+ * [Subprocess Manager](Subprocess%20Manager.md)
+ * [Telemetry](Telemetry.md)
+ * [Web Server](Web%20Server.md)
+
+> [Home](../README.md) ➤ [Development](README.md) ➤ Architecture
+
+> :warning: Under construction.
+
+#
 
 The Appc Daemon is comprised of two main components: the CLI and the core.
 

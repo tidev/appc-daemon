@@ -2,7 +2,7 @@
 
  * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.
    [(DAEMON-334)](https://jira.appcelerator.org/browse/DAEMON-334)
- * BREAKING CHANGE: Bumped core Node.js version to 14.15.0 LTS. This affects all plugins.
+ * BREAKING CHANGE: Bumped core Node.js version to 14.15.1 LTS. This affects all plugins.
    [(DAEMON-319)](https://jira.appcelerator.org/browse/DAEMON-319)
  * BREAKING CHANGE: Main file exports library instead of the main entry point.
  * BREAKING CHANGE(status-monitor): Daemon uptime has changed from seconds to milliseconds.
@@ -34,6 +34,7 @@
  * fix(server): Decouple shutdown trigger from server by moving to main entry script.
  * fix(server): Replaced AMPLIFY CLI references with Axway CLI.
  * fix(plugin): Added HTTPS proxy check and error if strictSSL is disabled.
+ * fix(websocket-session): Add support for clients that do not send HTTP headers.
  * chore: Updated dependencies.
 
 # v3.2.0 (Jan 13, 2020)

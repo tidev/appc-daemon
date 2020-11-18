@@ -18,6 +18,7 @@
  * feat: Show aliases in help for commands such as `config` and `pm`.
  * feat(status): Added new "Health" section to status output.
  * feat: Added notificaiton if new version is available.
+ * feat(action): Added install default plugins action.
  * refactor: Updated to latest `AppcdConfig` usage where `save()` is now synchronous and we no
    longer need to set the config file to save to since it uses the same file path that was used to
    load the config.

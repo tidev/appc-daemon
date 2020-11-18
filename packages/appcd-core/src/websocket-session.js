@@ -246,7 +246,7 @@ export default class WebSocketSession extends EventEmitter {
 				source:    ctx.source,
 				status:    ctx.status,
 				time:      ctx.time,
-				userAgent: ctx.headers['user-agent'] || null
+				userAgent: ctx.headers?.['user-agent'] || null
 			} : {};
 
 			if (res instanceof Error) {
