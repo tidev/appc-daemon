@@ -28,7 +28,7 @@ export default {
 		const home = loadConfig(argv).get('home');
 		const start = new Date();
 
-		await new Promise(resolve => {
+		await new Promise((resolve, reject) => {
 			pm.install({ home, plugins: argv.plugins })
 				.on('download', manifest => !argv.json && console.log(`Downloading ${cyan(`${manifest.name}@${manifest.version}`)}...`))
 				.on('install', () => !argv.json && console.log('Installing dependencies...'))
