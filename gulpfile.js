@@ -73,7 +73,7 @@ exports.check = async function check() {
 
 exports['check-npm'] = async function checkNPM() {
 	const agent = process.env.npm_config_user_agent;
-	if (agent && agent.includes('npm/')) {
+	if (agent && !agent.includes('yarn/')) {
 		const boxen = require('boxen');
 		console.log(boxen(`${red('npm is not supported')}\n\nPlease use Yarn`, {
 			align: 'center',
