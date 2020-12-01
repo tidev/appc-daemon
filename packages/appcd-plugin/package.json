@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "appcd-agent": "^2.0.1",
-    "appcd-client": "^3.0.0",
+    "appcd-client": "^3.0.1",
     "appcd-config": "^3.0.1",
     "appcd-config-service": "^3.1.0",
     "appcd-detect": "^3.0.0",

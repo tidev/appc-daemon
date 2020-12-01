@@ -31,7 +31,7 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-client": "^3.0.0",
+    "appcd-client": "^3.0.1",
     "appcd-core": "4.0.0-rc1",
     "appcd-dump-viewer": "^1.1.4",
     "appcd-fs": "^2.0.1",
