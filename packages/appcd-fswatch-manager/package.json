@@ -1,6 +1,6 @@
 {
   "name": "appcd-fswatch-manager",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Filesystem watcher service for the Appc Daemon.",
   "main": "./dist/fswatch-manager",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
