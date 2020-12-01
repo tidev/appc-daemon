@@ -27,7 +27,7 @@
     "appcd-http": "^2.0.1",
     "appcd-logger": "^3.0.1",
     "appcd-machine-id": "^4.0.0",
-    "appcd-nodejs": "^4.0.0",
+    "appcd-nodejs": "^4.1.0",
     "appcd-path": "^2.0.2",
     "appcd-response": "^3.0.1",
     "appcd-subprocess": "^4.0.0",
