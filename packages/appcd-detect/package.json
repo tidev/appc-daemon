@@ -19,7 +19,7 @@
     "appcd-dispatcher": "^3.0.0",
     "appcd-fs": "^2.0.1",
     "appcd-logger": "^3.0.0",
-    "appcd-path": "^2.0.1",
+    "appcd-path": "^2.0.2",
     "appcd-subprocess": "^4.0.0",
     "appcd-util": "^3.1.0",
     "gawk": "^5.0.0",
