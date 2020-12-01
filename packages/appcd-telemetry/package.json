@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@axway/amplify-request": "^2.0.1",
-    "appcd-dispatcher": "^3.0.0",
+    "appcd-dispatcher": "^3.1.0",
     "appcd-fs": "^2.0.1",
     "appcd-logger": "^3.0.1",
     "appcd-machine-id": "^4.0.0",

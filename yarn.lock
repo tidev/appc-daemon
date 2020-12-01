@@ -3385,10 +3385,10 @@ config-chain@^1.1.11:
     ini "^1.3.4"
     proto-list "~1.2.1"
 
-config-kit@^1.4.1:
-  version "1.4.1"
-  resolved "https://registry.yarnpkg.com/config-kit/-/config-kit-1.4.1.tgz#ae5b31c399aa563c1f4cbac2ec37eef02c2b2fc0"
-  integrity sha512-twZV50R9QgHM1ztM9eqks5dnxS6pX9DbkPkJ9D9rcgvwmrIDcDZWs6hhyuXe2uwxSCIdvwwU3/LJrKvU9614rw==
+config-kit@^1.4.2:
+  version "1.4.2"
+  resolved "https://registry.yarnpkg.com/config-kit/-/config-kit-1.4.2.tgz#f3a17a94c6510e95fa7f22d554e95932bf622669"
+  integrity sha512-0LkxoujlNVOfa06KaJC75xMwAf5ko3q3O6uHxW4NN97yA38QbibAGbkfk62B95ASuIx5wwAFwaFHYueJnIwAjg==
   dependencies:
     fs-extra "^9.0.1"
     import-fresh "^3.2.2"
@@ -8851,9 +8851,9 @@ object-copy@^0.1.0:
     kind-of "^3.0.3"
 
 object-inspect@^1.8.0:
-  version "1.8.0"
-  resolved "https://registry.yarnpkg.com/object-inspect/-/object-inspect-1.8.0.tgz#df807e5ecf53a609cc6bfe93eac3cc7be5b3a9d0"
-  integrity sha512-jLdtEOB112fORuypAyl/50VRVIBIdVQOSUUGQHzJ4xBSbit81zRarz7GThkEFZy1RceYrWYcPcBFPQwHyAc1gA==
+  version "1.9.0"
+  resolved "https://registry.yarnpkg.com/object-inspect/-/object-inspect-1.9.0.tgz#c90521d74e1127b67266ded3394ad6116986533a"
+  integrity sha512-i3Bp9iTqwhaLZBxGkRfo5ZbE07BQRT7MGu8+nNgwW9ItGp1TzCTw2DLEoWwjClxBjOFI/hWljTAmYGCEwmtnOw==
 
 object-keys@^1.0.12, object-keys@^1.1.1:
   version "1.1.1"

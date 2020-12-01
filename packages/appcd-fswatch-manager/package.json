@@ -16,7 +16,7 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-dispatcher": "^3.0.0",
+    "appcd-dispatcher": "^3.1.0",
     "appcd-fswatcher": "^2.0.0",
     "appcd-logger": "^3.0.1",
     "appcd-response": "^3.0.1",
