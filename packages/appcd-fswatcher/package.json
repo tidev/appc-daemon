@@ -16,7 +16,7 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-logger": "^3.0.0",
+    "appcd-logger": "^3.0.1",
     "appcd-util": "^3.1.0",
     "gawk": "^5.0.0",
     "pluralize": "^8.0.0",

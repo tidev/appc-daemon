@@ -16,7 +16,7 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-logger": "^3.0.0",
+    "appcd-logger": "^3.0.1",
     "appcd-response": "^3.0.1",
     "gawk": "^5.0.0",
     "path-to-regexp": "^6.2.0",

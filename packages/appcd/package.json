@@ -35,7 +35,7 @@
     "appcd-core": "4.0.0-rc1",
     "appcd-dump-viewer": "^1.1.4",
     "appcd-fs": "^2.0.1",
-    "appcd-logger": "^3.0.0",
+    "appcd-logger": "^3.0.1",
     "appcd-nodejs": "^4.0.0",
     "appcd-path": "^2.0.2",
     "appcd-util": "^3.1.0",
