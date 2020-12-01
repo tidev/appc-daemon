@@ -1,6 +1,6 @@
 # v4.0.0
 
- * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.
+ * BREAKING CHANGE: Requires Node.js 10.19.0 or newer.
    [(DAEMON-334)](https://jira.appcelerator.org/browse/DAEMON-334)
  * BREAKING CHANGE: Bumped core Node.js version to 14.15.1 LTS. This affects all plugins.
    [(DAEMON-319)](https://jira.appcelerator.org/browse/DAEMON-319)

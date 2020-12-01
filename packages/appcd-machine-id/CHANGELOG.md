@@ -1,5 +1,6 @@
 # v4.0.1
 
+ * fix: Bumped minimum Node.js requirement to 10.19.0 to prevent warnings on install.
  * chore: Updated dependencies.
 
 # v4.0.0 (Jun 12, 2020)

@@ -1,5 +1,4 @@
 import appcdLogger from 'appcd-logger';
-import appcdPluginAPIVersion from './plugin-api-version';
 import Dispatcher, { DispatcherError } from 'appcd-dispatcher';
 import ExternalPlugin from './external-plugin';
 import findup from 'findup-sync';
@@ -16,6 +15,7 @@ import slug from 'slugg';
 import sortKeys from 'sort-keys';
 import types from './types';
 
+import { appcdPluginAPIVersion, getNodeVersionForPluginAPIVersion } from './plugin-api-version';
 import { arrayify, sha1 } from 'appcd-util';
 import { EventEmitter } from 'events';
 import { expandPath, real } from 'appcd-path';
@@ -228,6 +228,7 @@ export default class Plugin extends EventEmitter {
 			this.appcdVersion = appcd.appcdVersion;
 		}
 
+		// apiVersion is a semver range such as "^1.1.0" or "1.x || 2.x"
 		if (appcd.apiVersion) {
 			if (!semver.validRange(appcd.apiVersion)) {
 				throw new PluginError('Invalid "apiVersion" property in the "appcd" section of %s', pkgJsonFile);
@@ -301,7 +302,11 @@ export default class Plugin extends EventEmitter {
 			throw new PluginError('Plugin forbidden from using the name "%s"', 'appcd');
 		}
 
-		this.nodeVersion = appcd.node || (pkgJson.engines && pkgJson.engines.node) || process.version.replace(/^v/, '');
+		// determine the Node.js version to use for this plugin
+		this.nodeVersion = appcd.node                              // first we check if the plugin requests a specific Node.js version
+			|| (pkgJson.engines && pkgJson.engines.node)           // otherwise see if it has a specific Node.js requirement
+			|| getNodeVersionForPluginAPIVersion(this.apiVersion)  // try looking up the Node.js version by the plugin API version
+			|| process.version.replace(/^v/, '');                  // last, but not least, use core's Node.js version
 
 		// reset the error
 		this.error = null;

@@ -66,7 +66,7 @@ import appcdLogger from 'appcd-logger';
 				result: err.toString()
 			}, null, 2));
 		} else {
-			console.error(alert(err));
+			console.error(alert(`${process.platform === 'win32' ? 'x' : '✖'} ${err}`));
 		}
 
 		process.exit(exitCode);

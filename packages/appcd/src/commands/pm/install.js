@@ -15,7 +15,7 @@ export default {
 		const [
 			{ plugins: pm },
 			{ snooplogg },
-			{ assertNotSudo, formatError, loadConfig }
+			{ assertNotSudo, loadConfig }
 		] = await Promise.all([
 			import('appcd-core'),
 			import('appcd-logger'),

@@ -86,6 +86,66 @@ exports['check-npm'] = async function checkNPM() {
 	}
 };
 
+// checks to see if an appcd package requires a node version that is less than a dependencies node requirement
+exports['check-engines'] = async function checkEngines() {
+	const cache = {};
+	const issues = [];
+
+	const checkPackage = (pkgPath, depth = 0) => {
+		const pkgJsonPath = path.join(pkgPath, 'package.json');
+		if (!fs.existsSync(pkgJsonPath)) {
+			return false;
+		}
+
+		if (cache[pkgPath]) {
+			return cache[pkgPath];
+		}
+
+		const pkgJson = require(pkgJsonPath);
+		const info = pkgJson.engines && pkgJson.engines.node && semver.coerce(pkgJson.engines.node);
+		const node = cache[pkgPath] = info ? info.version : null;
+
+		// console.log(`${'  '.repeat(depth)}${green(pkgJson.name)}${node ? ` (${node})` : ''}`);
+
+		if (pkgJson.dependencies) {
+			for (const dep of Object.keys(pkgJson.dependencies)) {
+				for (let wd = pkgPath; true; wd = path.dirname(wd)) {
+					const depNode = checkPackage(path.join(wd, 'node_modules', dep), depth + 1);
+					if (!cache[pkgPath] || (depNode && semver.gt(depNode, cache[pkgPath]))) {
+						cache[pkgPath] = depNode;
+					}
+					if (appcdRE.test(pkgJson.name) && node && depNode && semver.lt(node, depNode)) {
+						issues.push({
+							name: pkgJson.name,
+							node,
+							dep,
+							depNode
+						});
+						break;
+					}
+					if (depNode !== false) {
+						// depNode is null (no node version) or a string
+						break;
+					}
+					if (wd === __dirname) {
+						throw new Error(`Unable to find dependency "${dep}"`);
+					}
+				}
+			}
+		}
+
+		return cache[pkgPath];
+	};
+
+	const nodeVer = checkPackage(`${__dirname}/packages/appcd`);
+	console.log(`\nMinimum Node version should be ${cyan(nodeVer)}\n`);
+
+	if (issues.length) {
+		console.log(`Found ${issues.length} issue${issues.length === 1 ? '' : 's'}`);
+		console.log(issues.map(({ name, node, dep, depNode }) => `  ${green(name)} requires ${node}\n    ${cyan(dep)} requires ${depNode}`).join('\n') + '\n');
+	}
+};
+
 function getFilesToNuke() {
 	const nuke = [];
 

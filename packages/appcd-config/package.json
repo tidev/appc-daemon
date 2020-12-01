@@ -16,7 +16,7 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "config-kit": "^1.4.0",
+    "config-kit": "^1.4.1",
     "source-map-support": "^0.5.19"
   },
   "devDependencies": {

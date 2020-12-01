@@ -1,3 +1,7 @@
+# v3.0.1
+
+ * fix: Bumped minimum Node.js requirement to 10.19.0 to prevent warnings on install.
+
 # v3.0.0 (Jun 12, 2020)
 
  * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.
