@@ -1,4 +1,4 @@
-# v2.0.1
+# v2.0.1 (Dec 1, 2020)
 
  * fix: Fixed bug when recursively watching with a depth a non-existent directory that is created
    with subdirectories where the depths were being reset when the node is reinitialized.
