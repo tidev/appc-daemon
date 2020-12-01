@@ -28,7 +28,7 @@
     "winreglib": "^2.0.1"
   },
   "devDependencies": {
-    "appcd-fswatch-manager": "^3.0.0",
+    "appcd-fswatch-manager": "^3.0.1",
     "appcd-fswatcher": "^2.0.1",
     "appcd-gulp": "^3.1.0",
     "fs-extra": "^9.0.1"
