@@ -23,7 +23,7 @@
     "accepts": "^1.3.7",
     "appcd-agent": "^2.0.1",
     "appcd-config": "^3.0.1",
-    "appcd-config-service": "^3.0.0",
+    "appcd-config-service": "^3.1.0",
     "appcd-dispatcher": "^3.1.0",
     "appcd-fs": "^2.0.1",
     "appcd-fswatch-manager": "^3.0.1",
