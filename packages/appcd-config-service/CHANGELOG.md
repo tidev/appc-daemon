@@ -1,4 +1,4 @@
-# v3.1.0
+# v3.1.0 (Dec 1, 2020)
 
  * feat: Added config file live reloading.
  * fix: Unload the config layer if the watched config file is deleted.

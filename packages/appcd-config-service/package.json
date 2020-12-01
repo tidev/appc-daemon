@@ -1,6 +1,6 @@
 {
   "name": "appcd-config-service",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Appc Daemon service for managing the appcd configuration.",
   "main": "./dist/config-service",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
