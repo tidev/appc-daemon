@@ -71,21 +71,6 @@ exports.check = async function check() {
 	}
 };
 
-exports['check-npm'] = async function checkNPM() {
-	const agent = process.env.npm_config_user_agent;
-	if (agent && !agent.includes('yarn/')) {
-		const boxen = require('boxen');
-		console.log(boxen(`${red('npm is not supported')}\n\nPlease use Yarn`, {
-			align: 'center',
-			borderColor: 'red',
-			borderStyle: 'round',
-			margin: { bottom: 1, left: 6, right: 6, top: 1 },
-			padding: { bottom: 1, left: 6, right: 6, top: 1 }
-		}));
-		process.exit(1);
-	}
-};
-
 // checks to see if an appcd package requires a node version that is less than a dependencies node requirement
 exports['check-engines'] = async function checkEngines() {
 	const cache = {};

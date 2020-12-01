@@ -35,7 +35,7 @@
   },
   "scripts": {
     "lint": "gulp lint",
-    "preinstall": "gulp check-npm",
+    "preinstall": "node scripts/check-npm.js",
     "test": "gulp coverage"
   }
 }
