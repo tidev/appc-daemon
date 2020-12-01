@@ -1,6 +1,6 @@
 {
   "name": "appcd",
-  "version": "4.0.0",
+  "version": "4.0.0-rc1",
   "publishConfig": {
     "tag": "next"
   },
@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "appcd-client": "^3.0.0",
-    "appcd-core": "next",
+    "appcd-core": "4.0.0-rc1",
     "appcd-dump-viewer": "^1.1.4",
     "appcd-fs": "^2.0.0",
     "appcd-logger": "^3.0.0",
