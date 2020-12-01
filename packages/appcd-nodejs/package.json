@@ -1,6 +1,6 @@
 {
   "name": "appcd-nodejs",
-  "version": "4.0.0",
+  "version": "4.1.0",
   "description": "Library for managing and spawning Node.js.",
   "main": "./dist/nodejs",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
