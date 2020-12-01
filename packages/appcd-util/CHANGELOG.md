@@ -1,3 +1,7 @@
+# v3.1.1
+
+ * chore: Updated dependencies.
+
 # v3.1.0 (Dec 1, 2020)
 
  * feat: Added `redact()` function to scrub sensitive information from a value.

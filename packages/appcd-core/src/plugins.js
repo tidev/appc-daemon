@@ -18,7 +18,7 @@ import { appcdPluginAPIVersion, detectScheme } from 'appcd-plugin';
 import { expandPath } from 'appcd-path';
 import { isDir, isFile } from 'appcd-fs';
 import { loadConfig } from './config';
-import { spawn } from 'appcd-subprocess';
+import { spawn } from 'child_process';
 import { tailgate, unique } from 'appcd-util';
 
 const logger = appcdLogger('appcd:plugins');
@@ -822,15 +822,12 @@ async function updateMonorepo({ fn, home, workspaces, yarn }) {
 		}
 
 		logger.log(`Plugins dir: ${highlight(pluginsDir)}`);
+		logger.log(`Executing: ${highlight(command)} ${highlight(args.join(' '))}`);
 
-		const { child } = spawn({
-			command,
-			args,
-			options: {
-				cwd: pluginsDir,
-				stdio: 'pipe',
-				windowsHide: true
-			}
+		const { child } = spawn(command, args, {
+			cwd: pluginsDir,
+			stdio: 'pipe',
+			windowsHide: true
 		});
 
 		await new Promise(resolve => {

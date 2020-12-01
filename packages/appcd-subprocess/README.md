@@ -1,6 +1,6 @@
 # appcd-subprocess
 
-Appc Daemon service and library for spawning subprocesses.
+Library for spawning subprocesses.
 
 Visit https://github.com/appcelerator/appc-daemon for more information.
 
@@ -11,19 +11,6 @@ Report issues to [GitHub issues][2]. Official issue tracker in [JIRA][3].
 	npm i appcd-subprocess
 
 ## Usage
-
-```js
-import SubprocessManager from 'appcd-subprocess';
-
-const manager = new SubprocessManager();
-Dispatcher.register('/subprocess', manager);
-
-const ctx = await Dispatcher.call('/subprocess/spawn', {
-	args: [ process.execPath, '--version' ]
-});
-
-console.log(ctx.response);
-```
 
 ```js
 import { run } from 'appcd-subprocess';

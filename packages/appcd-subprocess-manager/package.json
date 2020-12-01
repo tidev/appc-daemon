@@ -1,8 +1,8 @@
 {
-  "name": "appcd-telemetry",
-  "version": "4.0.0",
-  "description": "Library for collecting and sending data to the Appcelerator cloud.",
-  "main": "./dist/telemetry",
+  "name": "appcd-subprocess-manager",
+  "version": "1.0.0",
+  "description": "Appc Daemon service for subprocesses.",
+  "main": "./dist/index",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
     "Chris Barber <cbarber@axway.com>"
@@ -16,26 +16,24 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "@axway/amplify-request": "^2.1.0",
     "appcd-dispatcher": "^3.1.0",
-    "appcd-fs": "^2.0.1",
     "appcd-logger": "^3.0.1",
-    "appcd-machine-id": "^4.0.0",
+    "appcd-nodejs": "^4.0.0",
     "appcd-path": "^2.0.2",
     "appcd-response": "^3.0.1",
+    "appcd-subprocess": "^4.0.0",
     "appcd-util": "^3.1.0",
-    "fs-extra": "^9.0.1",
-    "source-map-support": "^0.5.19",
-    "uuid": "^8.3.1"
+    "gawk": "^5.0.0",
+    "ps-tree": "^1.2.0",
+    "source-map-support": "^0.5.19"
   },
   "devDependencies": {
-    "appcd-config": "^3.0.1",
     "appcd-gulp": "^3.1.0",
     "tmp": "^0.2.1"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
-  "repository": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-telemetry",
+  "repository": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-subprocess-manager",
   "engines": {
     "node": ">=10.19.0"
   }

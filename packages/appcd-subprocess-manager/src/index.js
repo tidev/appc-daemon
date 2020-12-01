@@ -1,22 +1,26 @@
 /* eslint-disable promise/always-return, promise/no-nesting */
 
+/* istanbul ignore if */
+if (!Error.prepareStackTrace) {
+	require('source-map-support/register');
+}
+
 import appcdLogger from 'appcd-logger';
 import Dispatcher, { DataServiceDispatcher } from 'appcd-dispatcher';
 import gawk from 'gawk';
 import psTree from 'ps-tree';
 import Response, { i18n } from 'appcd-response';
-import SubprocessError from './subprocess-error';
 
 import { debounce, sleep } from 'appcd-util';
 import { EventEmitter } from 'events';
 import { expandPath } from 'appcd-path';
 import { prepareNode } from 'appcd-nodejs';
-import { spawn } from './subprocess';
+import { spawn, SubprocessError } from 'appcd-subprocess';
 
 const { __n } = i18n();
 const { codes } = SubprocessError;
 
-const logger = appcdLogger('appcd:subprocess:manager');
+const logger = appcdLogger('appcd:subprocessmanager');
 const { log } = logger;
 const { highlight } = appcdLogger.styles;
 

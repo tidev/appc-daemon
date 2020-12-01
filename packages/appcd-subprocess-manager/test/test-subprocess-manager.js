@@ -6,13 +6,13 @@ import tmp from 'tmp';
 
 import { sleep } from 'appcd-util';
 
-const logger = appcdLogger('test:appcd:subprocess');
+const logger = appcdLogger('test:appcd:subprocess-manager');
 
 tmp.setGracefulCleanup();
 function makeTempDir() {
 	return tmp.dirSync({
 		mode: '755',
-		prefix: 'appcd-subprocess-test-',
+		prefix: 'appcd-subprocess-manager-test-',
 		unsafeCleanup: true
 	}).name;
 }
