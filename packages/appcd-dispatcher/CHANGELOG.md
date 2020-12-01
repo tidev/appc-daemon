@@ -1,4 +1,4 @@
-# v3.1.0
+# v3.1.0 (Dec 1, 2020)
 
  * feat(DispatcherContext): Default `DispatcherContext` response as a `PassThrough` stream.
  * feat(DataServiceDispatcher): Added `setData()` method so that consumers don't need to directly
