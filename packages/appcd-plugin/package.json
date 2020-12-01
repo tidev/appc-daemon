@@ -32,7 +32,7 @@
     "appcd-response": "^3.0.0",
     "appcd-subprocess": "^4.0.0",
     "appcd-telemetry": "^4.0.0",
-    "appcd-util": "^3.0.0",
+    "appcd-util": "^3.1.0",
     "builtin-modules": "^3.1.0",
     "findup-sync": "^4.0.0",
     "fs-extra": "^9.0.1",

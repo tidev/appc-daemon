@@ -20,7 +20,7 @@
     "appcd-logger": "^3.0.0",
     "appcd-path": "^2.0.1",
     "appcd-subprocess": "^4.0.0",
-    "appcd-util": "^3.0.0",
+    "appcd-util": "^3.1.0",
     "fs-extra": "^9.0.1",
     "macaddress": "^0.5.1",
     "simple-plist": "^1.1.1",
