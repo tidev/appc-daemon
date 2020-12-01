@@ -25,7 +25,7 @@
     "appcd-config": "^3.0.0",
     "appcd-config-service": "^3.0.0",
     "appcd-dispatcher": "^3.0.0",
-    "appcd-fs": "^2.0.0",
+    "appcd-fs": "^2.0.1",
     "appcd-fswatch-manager": "^3.0.0",
     "appcd-fswatcher": "^2.0.0",
     "appcd-http": "^2.0.0",
