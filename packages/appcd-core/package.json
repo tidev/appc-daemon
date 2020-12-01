@@ -57,7 +57,7 @@
     "yarn": "^1.22.10"
   },
   "devDependencies": {
-    "appcd-gulp": "^3.0.1"
+    "appcd-gulp": "^3.1.0"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
