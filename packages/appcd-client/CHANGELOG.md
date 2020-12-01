@@ -1,4 +1,4 @@
-# v3.0.1
+# v3.0.1 (Dec 1, 2020)
 
  * fix: Replaced AMPLIFY CLI references with Axway CLI.
  * chore: Updated dependencies.
