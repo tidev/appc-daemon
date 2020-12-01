@@ -38,7 +38,7 @@
     "fs-extra": "^9.0.1",
     "gawk": "^5.0.0",
     "globule": "^1.3.2",
-    "hook-emitter": "^4.1.0",
+    "hook-emitter": "^4.1.1",
     "ignore": "^5.1.8",
     "pretty-ms": "^7.0.1",
     "semver": "^7.3.2",
@@ -56,6 +56,6 @@
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
   "repository": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd-plugin",
   "engines": {
-    "node": ">=10.13.0"
+    "node": ">=10.19.0"
   }
 }

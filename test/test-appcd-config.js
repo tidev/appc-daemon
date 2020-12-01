@@ -8,6 +8,7 @@ import {
 } from './common';
 
 const configFile = path.join(os.homedir(), '.axway', 'appcd', 'config.json');
+const x = process.platform === 'win32' ? 'x' : '✖';
 
 describe('appcd config', function () {
 	this.timeout(120000);
@@ -28,7 +29,7 @@ describe('appcd config', function () {
 
 			expect(status).to.equal(1);
 			expect(stripColors(stdout.toString())).to.match(/^Appcelerator Daemon, version .+\nCopyright \(c\) 2015-\d{4}, Axway, Inc\. All Rights Reserved\./);
-			expect(stripColors(stderr.toString().split('\n\n')[0].trim())).to.equal('SyntaxError: Failed to load config file: Unexpected token { in JSON at position 1');
+			expect(stripColors(stderr.toString().split('\n\n')[0].trim())).to.equal(`${x} SyntaxError: Failed to load config file: Unexpected token { in JSON at position 1`);
 		}));
 
 		it('should error when loading a bad config file when starting daemon', makeTest(async function () {
@@ -38,7 +39,7 @@ describe('appcd config', function () {
 
 			expect(status).to.equal(1);
 			expect(stripColors(stdout.toString())).to.match(/^Appcelerator Daemon, version .+\nCopyright \(c\) 2015-\d{4}, Axway, Inc\. All Rights Reserved\./);
-			expect(stripColors(stderr.toString().split('\n\n')[0].trim())).to.equal('SyntaxError: Failed to load config file: Unexpected token { in JSON at position 1');
+			expect(stripColors(stderr.toString().split('\n\n')[0].trim())).to.equal(`${x} SyntaxError: Failed to load config file: Unexpected token { in JSON at position 1`);
 		}));
 
 		it('should not error when config file is empty', makeTest(async function () {
@@ -341,7 +342,7 @@ describe('appcd config', function () {
 
 					const { status, stderr } = this.runAppcdSync([ 'config', 'set' ]);
 					expect(status).to.equal(1);
-					expect(stripColors(stderr.toString().split('\n\n')[0])).to.equal('Error: Missing required argument "key"');
+					expect(stripColors(stderr.toString().split('\n\n')[0])).to.equal(`${x} Error: Missing required argument "key"`);
 				}));
 
 				it('should error when calling set without a value', makeTest(async function () {
@@ -352,7 +353,7 @@ describe('appcd config', function () {
 
 					const { status, stderr } = this.runAppcdSync([ 'config', 'set', 'appcd-test' ]);
 					expect(status).to.equal(1);
-					expect(stripColors(stderr.toString().split('\n\n')[0])).to.equal('Error: Missing required argument "value"');
+					expect(stripColors(stderr.toString().split('\n\n')[0])).to.equal(`${x} Error: Missing required argument "value"`);
 				}));
 
 				it('should set a value with no existing config file', makeTest(async function () {

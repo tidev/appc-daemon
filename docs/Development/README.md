@@ -25,7 +25,7 @@ The Appc Daemon requires the following:
 
 | Name                                         | Version    | Description        |
 | -------------------------------------------- | ---------- | ------------------ |
-| [Node.js](https://nodejs.org)                | >=10.13.0* | JavaScript runtime |
+| [Node.js](https://nodejs.org)                | >=10.19.0* | JavaScript runtime |
 | [gulp](https://www.npmjs.com/package/gulp)   | 4.x        | Task runner        |
 | [lerna](https://www.npmjs.com/package/lerna) | 3.x        | Monorepo utilities |
 | [Yarn](https://classic.yarnpkg.com/lang/en/) | 1.x        | Package manager    |

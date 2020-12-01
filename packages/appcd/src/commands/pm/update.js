@@ -15,7 +15,7 @@ export default {
 		const [
 			{ plugins: pm },
 			{ snooplogg },
-			{ colorizeVersionDelta, createTable, formatError, loadConfig },
+			{ colorizeVersionDelta, createTable, loadConfig },
 			semver
 		] = await Promise.all([
 			import('appcd-core'),
@@ -33,11 +33,11 @@ export default {
 
 		if (argv.json) {
 			if (argv.yes) {
-				results = await new Promise(resolve => {
+				results = await new Promise((resolve, reject) => {
 					pm.install({ home, plugins })
 						.on('error', err => {
-							console.log(formatError(err, true));
-							process.exit(1);
+							err.json = argv.json;
+							reject(err);
 						})
 						.on('finish', resolve);
 				});
@@ -78,14 +78,14 @@ export default {
 			});
 		}
 
-		await new Promise(resolve => {
+		await new Promise((resolve, reject) => {
 			const start = new Date();
 			pm.install({ home, plugins })
 				.on('download', manifest => console.log(`Downloading ${cyan(`${manifest.name}@${manifest.version}`)}...`))
 				.on('install', () => console.log('Installing dependencies...'))
 				.on('error', err => {
-					console.log(formatError(err));
-					process.exit(1);
+					err.json = argv.json;
+					reject(err);
 				})
 				.on('finish', installed => {
 					if (argv.json) {

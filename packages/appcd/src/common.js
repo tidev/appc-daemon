@@ -151,25 +151,6 @@ export function createTable(head, indent = 0) {
 }
 
 /**
- * Formats an error.
- *
- * @param {Error} err - The error object.
- * @param {Boolean} json - Return the error as JSON.
- * @return {String}
- */
-export function formatError(err, json) {
-	if (json) {
-		return JSON.stringify({
-			error: {
-				code: err.code,
-				message: err.message
-			}
-		}, null, 2);
-	}
-	return red(`Error: ${err.message}`);
-}
-
-/**
  * Retrieves the Appc Daemon version.
  *
  * @returns {String}

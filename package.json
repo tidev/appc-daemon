@@ -22,7 +22,7 @@
     "retire": "^2.2.3",
     "semver": "^7.3.2",
     "sloc": "^0.2.1",
-    "snooplogg": "^3.0.0",
+    "snooplogg": "^3.0.1",
     "tar-stream": "^2.1.4",
     "tmp": "^0.2.1",
     "toposort": "^2.0.2",
@@ -35,7 +35,7 @@
   },
   "scripts": {
     "lint": "gulp lint",
-    "preinstall": "gulp check-npm",
+    "preinstall": "node scripts/check-npm.js",
     "test": "gulp coverage"
   }
 }

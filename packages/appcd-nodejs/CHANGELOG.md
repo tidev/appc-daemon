@@ -1,5 +1,6 @@
 # v4.1.0
 
+ * fix: Bumped minimum Node.js requirement to 10.19.0 to prevent warnings on install.
  * feat: Added HTTP proxy support.
  * chore: Updated dependencies.
 

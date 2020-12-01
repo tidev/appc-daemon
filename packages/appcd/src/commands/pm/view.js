@@ -21,7 +21,7 @@ export default {
 			{ snooplogg },
 			{ get },
 			semver,
-			{ formatError, loadConfig },
+			{ loadConfig },
 			humanize
 		] = await Promise.all([
 			import('appcd-core'),
@@ -38,8 +38,8 @@ export default {
 		try {
 			manifest = await pm.view(argv.package);
 		} catch (err) {
-			console.log(formatError(err, argv.json));
-			process.exit(1);
+			err.json = argv.json;
+			throw err;
 		}
 
 		const home = loadConfig(argv).get('home');

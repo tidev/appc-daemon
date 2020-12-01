@@ -1,6 +1,9 @@
 {
   "name": "appcd",
-  "version": "4.0.0-dev",
+  "version": "4.0.0-rc1",
+  "publishConfig": {
+    "tag": "next"
+  },
   "description": "A daemon that powers Appcelerator tooling and makes the impossible possible.",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
   "maintainers": [
@@ -29,7 +32,7 @@
   },
   "dependencies": {
     "appcd-client": "^3.0.0",
-    "appcd-core": "4.0.0-dev",
+    "appcd-core": "4.0.0-rc1",
     "appcd-dump-viewer": "^1.1.4",
     "appcd-fs": "^2.0.0",
     "appcd-logger": "^3.0.0",
@@ -38,10 +41,11 @@
     "appcd-util": "^3.0.0",
     "boxen": "^4.2.0",
     "check-kit": "^1.0.1",
-    "cli-kit": "^1.8.9",
+    "cli-kit": "^1.9.1",
     "cli-table3": "^0.6.0",
     "global-prefix": "^3.0.0",
     "humanize": "^0.0.9",
+    "infer-owner": "^1.0.4",
     "pretty-ms": "^7.0.1",
     "semver": "^7.3.2",
     "source-map-support": "^0.5.19",
@@ -54,12 +58,9 @@
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
   "repository": "https://github.com/appcelerator/appc-daemon/tree/master/packages/appcd",
   "engines": {
-    "node": ">=10.13.0"
+    "node": ">=10.19.0"
   },
   "cli-kit": {
-    "actions": {
-      "pm:install": "./dist/actions/install.js"
-    },
     "description": "The Appc Daemon for powering client-side tooling.",
     "main": "./dist/cli"
   },

@@ -1,6 +1,7 @@
 # v5.0.0
 
  * BREAKING CHANGE: Event names are no longer prefixed with `appcd-`.
+ * BREAKING CHANGE: Bumped minimum Node.js requirement to 10.19.0.
  * feat: Scrub potentially sensitive data in telemetry data and error messages.
  * feat: Added ability to set a `hardwareId` instead of relying on the telemetry system to identify
    a machine's unique identifier.

@@ -1,6 +1,6 @@
 # v4.0.0
 
- * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.
+ * BREAKING CHANGE: Requires Node.js 10.19.0 or newer.
    [(DAEMON-334)](https://jira.appcelerator.org/browse/DAEMON-334)
  * BREAKING CHANGE: Removed `appcd-request` and is no longer available to plugins.
  * BREAKING CHANGE: Removed `appcd-winreg` and is no longer available to plugins.
@@ -27,6 +27,7 @@
    plugins don't have to pass the config object from activate around and call gawk to observe it.
  * feat: `appcd.fs.watch()` within a plugin's context now accepts a numeric debounce value which
    is the period of time to wait before firing the handler.
+ * feat: Auto select Node.js version to spawn plugin based on plugin's API version.
  * fix: Fixed bug where `status` would search an unsorted list of registered plugins which caused
    nondeterministic results. [(DAEMON-328)](https://jira.appcelerator.org/browse/DAEMON-328)
  * fix: Fixed bug where an `inactivityTimeout` of zero would be tested as falsey and fallback to

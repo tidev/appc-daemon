@@ -1,7 +1,11 @@
 # v4.0.0
 
- * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.
+ * BREAKING CHANGE: Requires Node.js 10.19.0 or newer.
    [(DAEMON-334)](https://jira.appcelerator.org/browse/DAEMON-334)
+ * BREAKING CHANGE: The default appcd plugins are no longer installed as dependencies of `appcd`.
+   The npm post-install script will attempt to install them, but if `appcd` was globally installed
+   on a macOS or Linux machine, then it will likely fail due to permission issues and display a
+   message saying to manually install them by running `appcd pm install default`.
  * BREAKING CHANGE(config): `config` command no longer returns status as apart of JSON output.
  * BREAKING CHANGE(config): `config` command does not return current value when doing a `set`,
    `push`, or `unshift`.
