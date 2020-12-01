@@ -30,7 +30,7 @@
   "devDependencies": {
     "appcd-fswatch-manager": "^3.0.0",
     "appcd-fswatcher": "^2.0.0",
-    "appcd-gulp": "^3.0.1",
+    "appcd-gulp": "^3.1.0",
     "fs-extra": "^9.0.1"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon",
