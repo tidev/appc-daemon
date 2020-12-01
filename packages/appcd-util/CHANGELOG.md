@@ -1,4 +1,4 @@
-# v3.1.0
+# v3.1.0 (Dec 1, 2020)
 
  * feat: Added `redact()` function to scrub sensitive information from a value.
  * feat: Added `makeSerializable()` function to remove non-serializable values and circular
