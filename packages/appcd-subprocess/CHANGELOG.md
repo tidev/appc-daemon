@@ -1,4 +1,4 @@
-# v5.0.0
+# v5.0.0 (Dec 1, 2020)
 
  * BREAKING CHANGE: Moved `SubprocessManager` to separate `appcd-subprocess-manager` package.
  * fix: Bumped minimum Node.js requirement to 10.19.0 to prevent warnings on install.

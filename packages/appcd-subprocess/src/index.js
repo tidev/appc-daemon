@@ -10,7 +10,6 @@ import _which from 'which';
 import { spawn as _spawn } from 'child_process';
 
 const { codes } = SubprocessError;
-
 const isWindows = process.platform === 'win32';
 
 const logger = appcdLogger('appcd:subprocess');
@@ -146,10 +145,10 @@ export function spawn(params = {}) {
 }
 
 /**
- * Wraps `which()` with a promise.
+ * Finds an executable using a list of possible search names.
  *
- * @param {String|Array.<String>} executables - An array of executables to search
- * until it finds a valid executable.
+ * @param {String|Array.<String>} executables - An array of executables to search until it finds a
+ * valid executable.
  * @param {Object} [opts] - Options to pass into `which`.
  * @param {String|RegExp} [opts.colon] - The pattern used to split the list of paths.
  * @param {String} [opts.path] - A delimited list of paths. `which` defaults to `process.env.PATH`.
