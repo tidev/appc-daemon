@@ -1,7 +1,7 @@
-import * as subprocess from '../dist/subprocess';
+import * as subprocess from '../dist/index';
 import path from 'path';
-import SubprocessError from '../dist/subprocess-error';
 
+const { SubprocessError } = subprocess;
 const executable = `test${subprocess.exe}`;
 const dir = path.join(__dirname, 'fixtures');
 const fullpath = path.join(dir, executable);
@@ -162,7 +162,7 @@ describe('subprocess', () => {
 			}).to.throw(SubprocessError, 'Spawn "options" must be an object');
 		});
 
-		it('should spawn a command', function (done) {
+		it('should spawn a command with array arguments', function (done) {
 			this.timeout(20000);
 			this.slow(19000);
 
@@ -192,6 +192,42 @@ describe('subprocess', () => {
 			desc.child.on('close', code => {
 				try {
 					expect(stdout.trim()).to.equal('Hello world!');
+					expect(stderr.trim()).to.equal('');
+					expect(code).to.equal(0);
+					done();
+				} catch (e) {
+					done(e);
+				}
+			});
+		});
+
+		it('should spawn a command with string argument', function (done) {
+			this.timeout(20000);
+			this.slow(19000);
+
+			const desc = subprocess.spawn({
+				command: process.execPath,
+				args: path.join(__dirname, 'fixtures', 'echo.js'),
+				options: { cwd: __dirname }
+			});
+
+			expect(desc).to.be.an('object');
+			expect(desc).to.have.keys('command', 'args', 'options', 'child');
+
+			let stdout = '';
+			let stderr = '';
+
+			desc.child.stdout.on('data', data => {
+				stdout += data.toString();
+			});
+
+			desc.child.stderr.on('data', data => {
+				stderr += data.toString();
+			});
+
+			desc.child.on('close', code => {
+				try {
+					expect(stdout.trim()).to.equal('Hello!');
 					expect(stderr.trim()).to.equal('');
 					expect(code).to.equal(0);
 					done();

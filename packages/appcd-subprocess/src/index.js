@@ -16,6 +16,8 @@ const isWindows = process.platform === 'win32';
 const logger = appcdLogger('appcd:subprocess');
 const { highlight } = appcdLogger.styles;
 
+export { SubprocessError };
+
 export const exe = (isWindows ? '.exe' : '');
 export const cmd = (isWindows ? '.cmd' : '');
 export const bat = (isWindows ? '.bat' : '');

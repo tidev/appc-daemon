@@ -20,7 +20,7 @@ import { spawn, SubprocessError } from 'appcd-subprocess';
 const { __n } = i18n();
 const { codes } = SubprocessError;
 
-const logger = appcdLogger('appcd:subprocessmanager');
+const logger = appcdLogger('appcd:subprocess-manager');
 const { log } = logger;
 const { highlight } = appcdLogger.styles;
 

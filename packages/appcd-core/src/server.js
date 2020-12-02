@@ -9,7 +9,7 @@ import os from 'os';
 import path from 'path';
 import PluginManager, { appcdPluginAPIVersion } from 'appcd-plugin';
 import StatusMonitor from './status-monitor';
-import SubprocessManager from 'appcd-subprocess';
+import SubprocessManager from 'appcd-subprocess-manager';
 import Telemetry from 'appcd-telemetry';
 import WebServer from 'appcd-http';
 import WebSocketSession from './websocket-session';
