@@ -40,8 +40,6 @@ export default {
 		}
 
 		const unsupported = plugins.reduce((count, plugin) => (plugin.supported ? count : count + 1), 0);
-		const links = plugins.reduce((count, plugin) => (plugin.link ? count + 1 : count), 0);
-		const star = process.platform === 'win32' ? '*' : '★';
 		const warn = process.platform === 'win32' ? '!!' : '⚠';
 
 		console.log(`Found ${cyan(plugins.length)} plugin${plugins.length !== 1 ? 's' : ''}${unsupported ? gray(` (${unsupported} unsupported)`) : ''}\n`);
@@ -49,10 +47,18 @@ export default {
 		if (argv.detailed) {
 			let i = 0;
 			for (const plugin of plugins) {
+				const flags = [];
+				if (plugin.autoStart) {
+					flags.push('Auto-start');
+				}
+				if (plugin.link) {
+					flags.push('Yarn link');
+				}
+
 				if (i++) {
 					console.log();
 				}
-				console.log(green(`${plugin.name} ${plugin.version}`) + (plugin.link ? magenta(`  (${star} yarn link)`) : ''));
+				console.log(green(`${plugin.name} ${plugin.version}`));
 				if (!plugin.supported) {
 					console.log(`  ${yellow(`${warn} Unsupported: ${plugin.error}`)}`);
 				}
@@ -77,23 +83,24 @@ export default {
 				if (plugin.type) {
 					console.log(`  Type:          ${cyan(plugin.type)}`);
 				}
+				console.log(`  Flags:         ${flags.length ? cyan(flags.join(', ')) : ''}`);
 			}
 		} else {
-			const table = createTable([ `${links ? '  ' : ''}Name`, 'Version', 'Description', 'Endpoint' ]);
+			const table = createTable([ 'Name', 'Flags', 'Version', 'Description', 'Endpoint' ]);
 			for (const plugin of plugins) {
-				const x = !links ? '' : plugin.link ? `${magenta(star)} ` : '  ';
+				const flags = `${plugin.autoStart ? 'A' : ''}${plugin.link ? 'Y' : ''}`;
 				if (plugin.supported) {
-					table.push([ `${x}${green(plugin.name)}`, plugin.version, plugin.description, plugin.endpoint ]);
+					table.push([ green(plugin.name), magenta(flags), plugin.version, plugin.description, plugin.endpoint ]);
 				} else {
-					table.push([ `${x}${gray(plugin.name)}`, gray(plugin.version), gray(plugin.description), gray(plugin.endpoint) ]);
+					table.push([ gray(plugin.name), gray(flags), gray(plugin.version), gray(plugin.description), gray(plugin.endpoint) ]);
 				}
 			}
 
-			console.log(table.toString());
-			if (links) {
-				console.log(magenta('└ yarn link'));
-			}
-			console.log(`\nFor more info, run ${cyan(`appcd ${_argv.join(' ')} --detailed`)}`);
+			console.log(`${table.toString()}
+
+ ${magenta(' A = Auto-start, Y = Yarn link')}
+
+For more info, run ${cyan(`appcd ${_argv.join(' ')} --detailed`)}`);
 		}
 	}
 };

@@ -344,7 +344,7 @@ export default class PluginManager extends Dispatcher {
 
 					if (plugin.autoStart) {
 						logger.log(`Auto starting ${highlight(`${plugin.name}@${plugin.version}`)}`);
-						await plugin.start();
+						await plugin.start(true);
 					}
 				} else {
 					logger.log('Unsupported plugin found: %s', highlight(`${plugin.name}@${plugin.version}`));

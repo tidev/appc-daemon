@@ -56,6 +56,14 @@ export default class PluginBase extends EventEmitter {
 		 */
 		this.info = gawk({
 			/**
+			 * Indicates if the plugin was auto-started based on the plugin's package.json appcd
+			 * settings.
+			 * @type {Boolean}
+			 */
+			autoStarted: null,
+
+			/**
+			 * The error that occurred when an external plugin exits unexpectedly.
 			 * @type {Error}
 			 */
 			error: null,
@@ -248,7 +256,7 @@ export default class PluginBase extends EventEmitter {
 
 		// call the plugin's activate handler
 		if (this.module && typeof this.module.activate === 'function') {
-			await this.module.activate(this.config);
+			await this.module.activate(this.config, this.pluginInfo);
 		}
 
 		// detect the plugin services
@@ -318,6 +326,18 @@ export default class PluginBase extends EventEmitter {
 	}
 
 	/**
+	 * The plugin state to pass into activate().
+	 *
+	 * @type {Object}
+	 * @access public
+	 */
+	get pluginInfo() {
+		return {
+			autoStarted: this.info.autoStarted
+		};
+	}
+
+	/**
 	 * Sets the plugin state and emits the `state` event if it is changed.
 	 *
 	 * @param {String} state - The new state.
@@ -327,6 +347,7 @@ export default class PluginBase extends EventEmitter {
 	 */
 	setState(state, err) {
 		if (state !== this.info.state) {
+			this.appcdLogger.log(`Changing plugin ${this.plugin.toString()} state: ${this.info.state} => ${state}`);
 			this.info.state = state;
 			this.emit('state', state, err);
 		}
@@ -336,10 +357,11 @@ export default class PluginBase extends EventEmitter {
 	/**
 	 * Loads and activates an internal plugin.
 	 *
+	 * @param {Boolean} [autoStarted=false] - Indicates if the plugin was auto-started.
 	 * @returns {Promise}
 	 * @access public
 	 */
-	async start() {
+	async start(autoStarted) {
 		if (this.info.state === states.STARTED) {
 			this.appcdLogger.log('Plugin %s already started', highlight(this.plugin.toString()));
 			return;
@@ -361,10 +383,15 @@ export default class PluginBase extends EventEmitter {
 		this.setState(states.STARTING);
 		try {
 			const startTime = Date.now();
+			this.info.autoStarted = !!autoStarted;
 			await this.onStart();
-			this.info.startTime = Date.now();
-			this.info.startupTime = this.info.startTime - startTime;
-			this.setState(states.STARTED);
+
+			// check if the plugin is still starting or if the plugin stopped during startup
+			if (this.info.state === states.STARTING) {
+				this.info.startTime = Date.now();
+				this.info.startupTime = this.info.startTime - startTime;
+				this.setState(states.STARTED);
+			}
 		} catch (e) {
 			this.setState(states.STOPPED);
 			throw e;
@@ -378,6 +405,7 @@ export default class PluginBase extends EventEmitter {
 	 * @access public
 	 */
 	async stop() {
+		this.info.autoStarted = null;
 		this.info.stats = {};
 
 		// if the plugin is already stopped, then nothing to do

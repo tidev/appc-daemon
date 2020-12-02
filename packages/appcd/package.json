@@ -32,7 +32,7 @@
   },
   "dependencies": {
     "appcd-client": "^3.0.1",
-    "appcd-core": "^4.0.1",
+    "appcd-core": "^4.1.0",
     "appcd-dump-viewer": "^1.1.4",
     "appcd-fs": "^2.0.1",
     "appcd-logger": "^3.0.1",

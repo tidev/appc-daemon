@@ -1,3 +1,8 @@
+# v4.1.0 (Dec 2, 2020)
+
+ * feat(plugin-base): Added `autoStarted` flag to plugin state and pass it into the plugin on activate.
+ * fix(plugin-base): Improved plugin state management if plugin exits during startup.
+
 # v4.0.0 (Dec 2, 2020)
 
  * BREAKING CHANGE: Requires Node.js 10.19.0 or newer.

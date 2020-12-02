@@ -382,10 +382,11 @@ export default class Plugin extends EventEmitter {
 	/**
 	 * Starts the plugin. This is called from the main process and not the plugin host process.
 	 *
+	 * @param {Boolean} [autoStarted=false] - Indicates if the plugin was auto-started.
 	 * @returns {Promise}
 	 * @access public
 	 */
-	async start() {
+	async start(autoStarted) {
 		if (!this.impl) {
 			throw new PluginError(this.error || 'Plugin not initialized');
 		}
@@ -393,7 +394,7 @@ export default class Plugin extends EventEmitter {
 		this.error = null;
 		this.stack = null;
 
-		return this.impl.start();
+		return this.impl.start(autoStarted);
 	}
 
 	/**

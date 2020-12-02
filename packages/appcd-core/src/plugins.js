@@ -675,6 +675,7 @@ export async function list({ filter, home, searchPaths }) {
 			os:           plugin.os,
 			apiVersion:   plugin.apiVersion,
 			appcdVersion: plugin.appcdVersion,
+			autoStart:    plugin.autoStart,
 			link:         plugin.link
 		}));
 }

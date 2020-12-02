@@ -1,3 +1,8 @@
+# v4.1.0 (Dec 2, 2020)
+
+ * feat(plugins): Added support for the plugin `autoStart` flag.
+ * chore: Updated `appcd-plugin` dependency.
+
 # v4.0.1 (Dec 2, 2020)
 
  * fix(plugins): Fixed bugged code when the spawn code was refactored.

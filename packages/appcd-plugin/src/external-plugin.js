@@ -372,9 +372,11 @@ export default class ExternalPlugin extends PluginBase {
 	async startParent() {
 		const args = [
 			path.resolve(__dirname, '..', 'bin', 'appcd-plugin-host'),
-			this.plugin.path
+			this.plugin.path,
+			JSON.stringify(this.pluginInfo)
 		];
 
+		// check if debugging is enabled and add the flag if so
 		const debuggerRegExp = /^Debugger listening on .+\/([A-Za-z0-9-]+)$/;
 		const debugPort = process.env.APPCD_INSPECT_PLUGIN_PORT && Math.max(parseInt(process.env.APPCD_INSPECT_PLUGIN_PORT), 1024) || 9230;
 		let debugEnabled = process.env.APPCD_INSPECT_PLUGIN === this.plugin.name;
@@ -382,8 +384,9 @@ export default class ExternalPlugin extends PluginBase {
 			args.unshift(`--inspect-brk=${debugPort}`);
 		}
 
+		// check if we should watch the plugin files and automatically stop the plugin when a
+		// plugin file changed
 		const autoReload = await Dispatcher.call('/appcd/config/plugins/autoReload').then(ctx => ctx.response).catch(() => true);
-
 		if (autoReload !== false) {
 			try {
 				const { directories, path: pluginPath } = this.plugin;
@@ -455,6 +458,7 @@ export default class ExternalPlugin extends PluginBase {
 			}
 		}
 
+		// spawn the plugin
 		try {
 			this.appcdLogger.log('Spawning plugin host');
 			const ctx = await Dispatcher.call(`/appcd/subprocess/spawn/node/${this.plugin.nodeVersion}`, {
@@ -663,21 +667,21 @@ export default class ExternalPlugin extends PluginBase {
 								}
 
 								if (this.info.state === states.STARTING) {
-									this.appcdLogger.log('Plugin has not finished activating yet');
+									this.appcdLogger.log(`Plugin stopped during plugin activation (code ${this.info.exitCode})`);
 
-									if (!this.info.error) {
-										if (this.info.exitCode === 0) {
-											this.info.error = 'Plugin stopped while starting';
-										} else {
+									if (this.info.exitCode === 0) {
+										resolve();
+									} else {
+										if (!this.info.error) {
 											this.info.error = `Failed to activate plugin (code ${data.code})`;
 										}
-									}
 
-									err = new PluginError(this.info.error);
-									if (this.info.stack) {
-										err.stack = this.info.stack;
+										err = new PluginError(this.info.error);
+										if (this.info.stack) {
+											err.stack = this.info.stack;
+										}
+										reject(err);
 									}
-									reject(err);
 								}
 
 								this.setState(states.STOPPED, err);

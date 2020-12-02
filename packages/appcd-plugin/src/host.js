@@ -41,6 +41,9 @@ process
 
 (async () => {
 	try {
+		// check if plugin info was passed in
+		const pluginInfo = process.argv[3] ? JSON.parse(process.argv[3]) : {};
+
 		// load the plugin
 		const plugin = new Plugin(process.argv[2]);
 
@@ -62,7 +65,7 @@ process
 		}
 
 		// start the plugin
-		await plugin.start();
+		await plugin.start(pluginInfo.autoStarted);
 	} catch (err) {
 		error(err);
 		process.exit(1);
