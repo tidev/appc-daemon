@@ -1,4 +1,4 @@
-# v1.0.0
+# v1.0.0 (Dec 1, 2020)
 
  * Initial release with `SubprocessManager` migrated from `appcd-subprocess`.
  * feat: Moved subprocess status to top-level route with subscription support.
