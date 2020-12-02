@@ -1,4 +1,4 @@
-# v5.0.0
+# v5.0.0 (Dec 1, 2020)
 
  * BREAKING CHANGE: Event names are no longer prefixed with `appcd-`.
  * BREAKING CHANGE: Bumped minimum Node.js requirement to 10.19.0.
