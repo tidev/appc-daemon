@@ -36,7 +36,7 @@
     "appcd-plugin": "^3.2.2",
     "appcd-response": "^3.0.1",
     "appcd-subprocess-manager": "^1.0.0",
-    "appcd-telemetry": "^4.0.0",
+    "appcd-telemetry": "^5.0.0",
     "appcd-util": "^3.1.0",
     "bin-links": "^2.2.1",
     "cli-kit": "^1.9.1",
@@ -52,7 +52,7 @@
     "pacote": "^11.1.13",
     "promise-limit": "^2.7.0",
     "semver": "^7.3.4",
-    "template-kit": "^2.1.0",
+    "template-kit": "^2.2.0",
     "validate-npm-package-name": "^3.0.0",
     "yarn": "^1.22.10"
   },

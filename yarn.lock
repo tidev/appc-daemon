@@ -7,7 +7,7 @@
   resolved "https://registry.yarnpkg.com/@appcd/template-plugin/-/template-plugin-1.0.3.tgz#46e245923420a219aea4b203684eda75c30c2614"
   integrity sha512-zWjYPbS6jYAw6/CwwsQDEYGjSO5Q3xKgA63lAYGdgkNuPUbuWM03ELwvli2Ix4qBqMCL/OuPsdeA7CHOYwyY1A==
 
-"@axway/amplify-request@^2.0.0", "@axway/amplify-request@^2.0.1", "@axway/amplify-request@^2.1.0":
+"@axway/amplify-request@^2.1.0":
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/@axway/amplify-request/-/amplify-request-2.1.0.tgz#067cda7bba19022a29325d7425790250541d7523"
   integrity sha512-JdwyMusUCkAftWSAjemmOuatuTTbEw3h8wr7kUrcvTpVaUQ62zB+h1e9x41Q1c0Qcbi0fVU8ko14R125uwDHyA==
@@ -1936,22 +1936,6 @@ appcd-dump-viewer@^1.1.4:
     vue "^2.5.13"
     vuetify "^1.0.0"
 
-appcd-subprocess@^4.0.0:
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/appcd-subprocess/-/appcd-subprocess-4.0.0.tgz#626d95fb64c74abec708a4672776cdf0e29b126f"
-  integrity sha512-QLqgx+oWJ3AYe2FNjtePcAGYq18r+bRWFCD9EXPPmJXbWV0ARJgMKivgwkU1sbCcFAPMhMKFgKRrnP893aKcEA==
-  dependencies:
-    appcd-dispatcher "^3.0.0"
-    appcd-logger "^3.0.0"
-    appcd-nodejs "^4.0.0"
-    appcd-path "^2.0.1"
-    appcd-response "^3.0.0"
-    appcd-util "^3.0.0"
-    gawk "^4.7.1"
-    ps-tree "^1.2.0"
-    source-map-support "^0.5.19"
-    which "^2.0.2"
-
 append-buffer@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/append-buffer/-/append-buffer-1.0.2.tgz#d8220cf466081525efea50614f3de6514dfa58f1"
@@ -2923,17 +2907,17 @@ check-error@^1.0.2:
   resolved "https://registry.yarnpkg.com/check-error/-/check-error-1.0.2.tgz#574d312edd88bb5dd8912e9286dd6c0aed4aac82"
   integrity sha1-V00xLt2Iu13YkS6Sht1sCu1KrII=
 
-check-kit@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/check-kit/-/check-kit-1.0.1.tgz#0e68f65c2d397114d8c76b4b6151d794b825c72a"
-  integrity sha512-tOqG75PW2tYLeZkZu4ojhipcnV+/FXh5TDnbgoEgBIqouibdgGIt17VEPQBYAez+XPvMwhGnHV8cbPiBelyXeQ==
+check-kit@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/check-kit/-/check-kit-1.1.0.tgz#a4fc5c640bc890e4837614cb0e3addaa52bda8ba"
+  integrity sha512-0TsgbYVaey5UsIkGc1q9pFem73y17GFap66osYe76xy7Cgw6NbMOCxUEOyQueh6ZizDykDEHICMj8zxpNCNVAQ==
   dependencies:
-    "@axway/amplify-request" "^2.0.1"
+    "@axway/amplify-request" "^2.1.0"
     ci-info "^2.0.0"
     fs-extra "^9.0.1"
-    registry-auth-token "4.2.0"
-    semver "^7.3.2"
-    snooplogg "^3.0.0"
+    registry-auth-token "4.2.1"
+    semver "^7.3.4"
+    snooplogg "^3.0.1"
     source-map-support "^0.5.19"
     tmp "^0.2.1"
 
@@ -5333,14 +5317,6 @@ gauge@~2.7.3:
     strip-ansi "^3.0.1"
     wide-align "^1.1.0"
 
-gawk@^4.7.1:
-  version "4.7.1"
-  resolved "https://registry.yarnpkg.com/gawk/-/gawk-4.7.1.tgz#63a75424048053a62b495da9ecbe61528056be07"
-  integrity sha512-fjKlaTJX+SKQWjuHgBKOztySsWGP596Qou1mM4yKpY6IbWizsOXO9Yuu2az/wmKgvkK2WHTcKUKJprTqBLCgww==
-  dependencies:
-    fast-deep-equal "^3.1.1"
-    source-map-support "^0.5.19"
-
 gawk@^5.0.0:
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/gawk/-/gawk-5.0.0.tgz#440f6eeeab5f894994399f311c82ffd4581ebc99"
@@ -6013,7 +5989,7 @@ homedir-polyfill@^1.0.1:
   dependencies:
     parse-passwd "^1.0.0"
 
-hook-emitter@^4.1.0, hook-emitter@^4.1.1:
+hook-emitter@^4.1.1:
   version "4.1.1"
   resolved "https://registry.yarnpkg.com/hook-emitter/-/hook-emitter-4.1.1.tgz#b0c5a14d99382d64cad7f3ddb48a3a85e746793a"
   integrity sha512-atobP7v7JN3Q4exr9L88YyEWjtFD9Ua31tlUckjBtn5/vHcYlXrEupZmF38SSAZpQlyC/tY5MR0Aq1xrEcKVMg==
@@ -6025,7 +6001,7 @@ hosted-git-info@^2.1.4, hosted-git-info@^2.7.1:
   resolved "https://registry.yarnpkg.com/hosted-git-info/-/hosted-git-info-2.8.8.tgz#7539bd4bc1e0e0a895815a2e0262420b12858488"
   integrity sha512-f/wzC2QaWBs7t9IYqB4T3sR1xviIViXJRJTWBlx2Gf3g0Xi5vI7Yy4koXQ1c9OYDGHN9sBy1DQ2AB8fqZBWhUg==
 
-hosted-git-info@^3.0.5, hosted-git-info@^3.0.6:
+hosted-git-info@^3.0.6, hosted-git-info@^3.0.7:
   version "3.0.7"
   resolved "https://registry.yarnpkg.com/hosted-git-info/-/hosted-git-info-3.0.7.tgz#a30727385ea85acfcee94e0aad9e368c792e036c"
   integrity sha512-fWqc0IcuXs+BmE9orLDyVykAG9GJtGLGuZAAqgcckPgv5xad4AcXGIv8galtQvlwutxSlaMcdw7BUtq2EIvqCQ==
@@ -9225,7 +9201,7 @@ package-json@^4.0.0:
     registry-url "^3.0.3"
     semver "^5.1.0"
 
-pacote@^11.1.11, pacote@^11.1.13:
+pacote@^11.1.13:
   version "11.1.13"
   resolved "https://registry.yarnpkg.com/pacote/-/pacote-11.1.13.tgz#7e85213693b0b4b1119c4026dc1b68c087641dc2"
   integrity sha512-oJ7Bg7p3izrIMhZPHCCHmMHQl+xb+pKBXL5ZYeM2oCZrw6sBRSx7f8l7F+95V2qA0BP3c1cNaaBmUNkbo6Hn9w==
@@ -10140,10 +10116,10 @@ regexpp@^3.0.0, regexpp@^3.1.0:
   resolved "https://registry.yarnpkg.com/regexpp/-/regexpp-3.1.0.tgz#206d0ad0a5648cffbdb8ae46438f3dc51c9f78e2"
   integrity sha512-ZOIzd8yVsQQA7j8GCSlPGXwg5PfmA1mrq0JP4nGhh54LaKN3xdai/vHUDu74pKwV8OxseMS65u2NImosQcSD0Q==
 
-registry-auth-token@4.2.0:
-  version "4.2.0"
-  resolved "https://registry.yarnpkg.com/registry-auth-token/-/registry-auth-token-4.2.0.tgz#1d37dffda72bbecd0f581e4715540213a65eb7da"
-  integrity sha512-P+lWzPrsgfN+UEpDS3U8AQKg/UjZX6mQSJueZj3EK+vNESoqBSpBUD3gmu4sF9lOsjXWjF11dQKUqemf3veq1w==
+registry-auth-token@4.2.1:
+  version "4.2.1"
+  resolved "https://registry.yarnpkg.com/registry-auth-token/-/registry-auth-token-4.2.1.tgz#6d7b4006441918972ccd5fedcd41dc322c79b250"
+  integrity sha512-6gkSb4U6aWJB4SF2ZvLb76yCBjcvufXBqvvEx1HbmKPkutswjW1xNVRY0+daljIYRbogN7O0etYSlbiaEQyMyw==
   dependencies:
     rc "^1.2.8"
 
@@ -10667,7 +10643,7 @@ snapdragon@^0.8.1:
     source-map-resolve "^0.5.0"
     use "^3.1.0"
 
-snooplogg@^3.0.0, snooplogg@^3.0.1:
+snooplogg@^3.0.1:
   version "3.0.1"
   resolved "https://registry.yarnpkg.com/snooplogg/-/snooplogg-3.0.1.tgz#97ce91eae692c430638de782b79f15c7695a08d7"
   integrity sha512-Djg8XAiDclbhfwjj4XLOJ17YN8xZjdJ+rtrokpHmx63U9hYnDh0TqGmwbsn0fNhKjODuNJqjNIU+42Cheoe+Xw==
@@ -11283,25 +11259,25 @@ temp-write@^3.4.0:
     temp-dir "^1.0.0"
     uuid "^3.0.1"
 
-template-kit@^2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/template-kit/-/template-kit-2.1.0.tgz#cbb425c9ddf39cd9bb0b1687c12e2638c0bcb333"
-  integrity sha512-M6bbrVXN+mIbR88rK3qN7WP2j/C3sE0zQ6QpA+OxR8OmJX7DpVPgEIMh5iE3h2ozx5JRobYFTDTNL4+m4TdNJQ==
+template-kit@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/template-kit/-/template-kit-2.2.0.tgz#4d39af44f0174fd66826870dbaf71d4a8a839d17"
+  integrity sha512-Uh6cexd1AdMgIjz111MhXctOUBb9BtoK7Ah6NvDlDMj+9f8tNsKdh+KbFMoxDxPKTAUNtoEBQh2s2tKCYMK79A==
   dependencies:
-    "@axway/amplify-request" "^2.0.0"
-    appcd-fs "^2.0.0"
-    appcd-path "^2.0.1"
-    appcd-subprocess "^4.0.0"
+    "@axway/amplify-request" "^2.1.0"
+    appcd-fs "^2.0.1"
+    appcd-path "^2.0.2"
+    appcd-subprocess "^5.0.0"
     ejs "^3.1.5"
     fs-extra "^9.0.1"
     glob-gitignore "^1.0.14"
     global-modules "^2.0.0"
-    hook-emitter "^4.1.0"
-    hosted-git-info "^3.0.5"
+    hook-emitter "^4.1.1"
+    hosted-git-info "^3.0.7"
     inly "^4.0.8"
     isbinaryfile "^4.0.6"
-    pacote "^11.1.11"
-    snooplogg "^3.0.0"
+    pacote "^11.1.13"
+    snooplogg "^3.0.1"
     source-map-support "^0.5.19"
     tmp "^0.2.1"
     validate-npm-package-name "^3.0.0"

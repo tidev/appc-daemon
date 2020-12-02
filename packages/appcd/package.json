@@ -40,7 +40,7 @@
     "appcd-path": "^2.0.2",
     "appcd-util": "^3.1.0",
     "boxen": "^4.2.0",
-    "check-kit": "^1.0.1",
+    "check-kit": "^1.1.0",
     "cli-kit": "^1.9.1",
     "cli-table3": "^0.6.0",
     "global-prefix": "^3.0.0",
