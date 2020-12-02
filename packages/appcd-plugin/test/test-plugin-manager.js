@@ -7,7 +7,7 @@ import FSWatchManager from 'appcd-fswatch-manager';
 import path from 'path';
 import PluginError from '../dist/plugin-error';
 import PluginManager from '../dist/index';
-import SubprocessManager from 'appcd-subprocess';
+import SubprocessManager from 'appcd-subprocess-manager';
 import tmp from 'tmp';
 
 import { expandPath } from 'appcd-path';
