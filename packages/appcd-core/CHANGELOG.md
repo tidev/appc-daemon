@@ -1,3 +1,7 @@
+# v4.0.1 (Dec 2, 2020)
+
+ * fix(plugins): Fixed bugged code when the spawn code was refactored.
+
 # v4.0.0 (Dec 2, 2020)
 
  * BREAKING CHANGE: Requires Node.js 10.19.0 or newer.

@@ -822,15 +822,16 @@ async function updateMonorepo({ fn, home, workspaces, yarn }) {
 		}
 
 		logger.log(`Plugins dir: ${highlight(pluginsDir)}`);
-		logger.log(`Executing: ${highlight(command)} ${highlight(args.join(' '))}`);
-
-		const { child } = spawn(command, args, {
-			cwd: pluginsDir,
-			stdio: 'pipe',
-			windowsHide: true
-		});
 
 		await new Promise(resolve => {
+			logger.log(`Executing: ${highlight(command)} ${highlight(args.join(' '))}`);
+
+			const child = spawn(command, args, {
+				cwd: pluginsDir,
+				stdio: 'pipe',
+				windowsHide: true
+			});
+
 			const print = data => data.toString().split(/\r\n|\n/).forEach(line => logger.log(line));
 			child.stdout.on('data', print);
 			child.stderr.on('data', print);

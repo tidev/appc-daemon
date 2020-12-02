@@ -71,11 +71,15 @@ export default {
 
 				// plugin information
 				if (status.plugins && status.plugins.registered.length) {
+					const sorted = status.plugins.registered.sort((a, b) => {
+						const r = a.name.localeCompare(b.name);
+						return r === 0 ? semver.compare(a.version, b.version) : r;
+					});
 					const cols = [ `${magenta('Plugins')}\n  Name`, '\nPath', '\nState', 'Active/Total\nRequests', '\nIssues' ];
 					const rows = [];
 					let issues = false;
 
-					for (const plugin of status.plugins.registered.sort((a, b) => a.name.localeCompare(b.name))) {
+					for (const plugin of sorted) {
 						let status = 'Stopped';
 						switch (plugin.state) {
 							case 'started':
