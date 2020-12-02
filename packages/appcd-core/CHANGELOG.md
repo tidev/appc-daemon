@@ -1,4 +1,4 @@
-# v4.0.0
+# v4.0.0 (Dec 2, 2020)
 
  * BREAKING CHANGE: Requires Node.js 10.19.0 or newer.
    [(DAEMON-334)](https://jira.appcelerator.org/browse/DAEMON-334)
@@ -17,7 +17,7 @@
  * feat(server): Added `state` property to indicate if the server stopped, starting, started, or
    stopping.
  * feat(status): Added machine id to status info.
- * refactor: Updated to `appcd-config@3.0.0`, created the Appc Daemon config schema, and converted
+ * refactor: Updated to `appcd-config@3.x`, created the Appc Daemon config schema, and converted
    the `default.js` config to `default.json`.
  * refactor: Removed Titanium CLI Genymotion config import.
    [(DAEMON-313)](https://jira.appcelerator.org/browse/DAEMON-313)
