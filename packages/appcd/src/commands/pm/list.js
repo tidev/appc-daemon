@@ -88,7 +88,7 @@ export default {
 		} else {
 			const table = createTable([ 'Name', 'Flags', 'Version', 'Description', 'Endpoint' ]);
 			for (const plugin of plugins) {
-				const flags = `${plugin.autoStart ? 'A' : ''}${plugin.link ? 'Y' : ''}`;
+				const flags = `${plugin.autoStart ? 'A' : ''}${plugin.link ? 'L' : ''}`;
 				if (plugin.supported) {
 					table.push([ green(plugin.name), magenta(flags), plugin.version, plugin.description, plugin.endpoint ]);
 				} else {
@@ -97,8 +97,7 @@ export default {
 			}
 
 			console.log(`${table.toString()}
-
- ${magenta(' A = Auto-start, Y = Yarn link')}
+${magenta('A = Auto-Start, Y = Yarn Link')}
 
 For more info, run ${cyan(`appcd ${_argv.join(' ')} --detailed`)}`);
 		}

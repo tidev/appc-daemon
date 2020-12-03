@@ -1,3 +1,7 @@
+# v4.2.1 (Dec 3, 2020)
+
+ * fix(plugin-manager): Only auto-start the latest major version of each plugin.
+
 # v4.2.0 (Dec 2, 2020)
 
  * feat(plugin-base): Added the `dataDir` plugin info and pass it into the plugin on activation.

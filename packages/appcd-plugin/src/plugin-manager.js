@@ -171,9 +171,35 @@ export default class PluginManager extends Dispatcher {
 	 */
 	async init() {
 		if (!this.initialized) {
+			// scan all paths and register any found plugins
 			await Promise.all(this.paths.map(dir => dir && this.registerPluginPath(dir)));
+
+			// loop over the list of plugins and figure out which ones should be auto-started
+			const pluginsToStart = {};
+			for (const ns of Object.values(this.namespaces)) {
+				for (const plugin of Object.values(ns.versions)) {
+					if (plugin.autoStart) {
+						const id = `${plugin.packageName}@${semver.major(plugin.version)}`;
+						if (!pluginsToStart[id] || semver.gt(plugin.version, pluginsToStart[id].version)) {
+							pluginsToStart[id] = plugin;
+						}
+					}
+				}
+			}
+
+			const plugins = Object.values(pluginsToStart);
+			if (plugins.length) {
+				for (const plugin of plugins) {
+					logger.log(`Auto-starting ${highlight(`${plugin.name}@${plugin.version}`)}`);
+					await plugin.start(true);
+				}
+			} else {
+				logger.log('No plugins to auto-start');
+			}
+
 			this.initialized = true;
 		}
+
 		return this;
 	}
 
@@ -341,11 +367,6 @@ export default class PluginManager extends Dispatcher {
 
 					// add this version to the namespace
 					ns.versions[plugin.version] = plugin;
-
-					if (plugin.autoStart) {
-						logger.log(`Auto starting ${highlight(`${plugin.name}@${plugin.version}`)}`);
-						await plugin.start(true);
-					}
 				} else {
 					logger.log('Unsupported plugin found: %s', highlight(`${plugin.name}@${plugin.version}`));
 				}

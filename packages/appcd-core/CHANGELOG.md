@@ -1,3 +1,7 @@
+# v4.1.1 (Dec 3, 2020)
+
+ * chore: Updated `appcd-plugin` dependency.
+
 # v4.1.0 (Dec 2, 2020)
 
  * feat(plugins): Added support for the plugin `autoStart` flag.
