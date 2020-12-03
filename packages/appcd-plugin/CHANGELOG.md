@@ -1,6 +1,11 @@
+# v4.2.0 (Dec 2, 2020)
+
+ * feat(plugin-base): Added the `dataDir` plugin info and pass it into the plugin on activation.
+
 # v4.1.0 (Dec 2, 2020)
 
- * feat(plugin-base): Added `autoStarted` flag to plugin state and pass it into the plugin on activate.
+ * feat(plugin-base): Added the `autoStarted` flag to plugin info and pass it into the plugin on
+   activation.
  * fix(plugin-base): Improved plugin state management if plugin exits during startup.
 
 # v4.0.0 (Dec 2, 2020)

@@ -373,7 +373,9 @@ export default class ExternalPlugin extends PluginBase {
 		const args = [
 			path.resolve(__dirname, '..', 'bin', 'appcd-plugin-host'),
 			this.plugin.path,
-			JSON.stringify(this.pluginInfo)
+			JSON.stringify({
+				autoStarted: this.info.autoStarted
+			})
 		];
 
 		// check if debugging is enabled and add the flag if so

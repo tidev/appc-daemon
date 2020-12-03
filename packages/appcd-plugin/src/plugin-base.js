@@ -4,6 +4,7 @@ import gawk from 'gawk';
 import PluginModule from './plugin-module';
 
 import { EventEmitter } from 'events';
+import { expandPath } from 'appcd-path';
 import { get } from 'appcd-util';
 import { watch, unwatch } from './helpers';
 
@@ -61,6 +62,13 @@ export default class PluginBase extends EventEmitter {
 			 * @type {Boolean}
 			 */
 			autoStarted: null,
+
+			/**
+			 * The unique versioned path where plugins can safely store their data. The plugin is
+			 * responsible for ensuring the directory exists.
+			 * @type {String}
+			 */
+			dataDir: null,
 
 			/**
 			 * The error that occurred when an external plugin exits unexpectedly.
@@ -256,7 +264,10 @@ export default class PluginBase extends EventEmitter {
 
 		// call the plugin's activate handler
 		if (this.module && typeof this.module.activate === 'function') {
-			await this.module.activate(this.config, this.pluginInfo);
+			await this.module.activate(this.config, {
+				autoStarted: this.info.autoStarted,
+				dataDir:     this.info.dataDir
+			});
 		}
 
 		// detect the plugin services
@@ -281,7 +292,7 @@ export default class PluginBase extends EventEmitter {
 	}
 
 	/**
-	 * Initializes the plugin implementation by wiring up the config watcher.
+	 * Subscribes to the appcd config and generates the plugin's data directory path.
 	 *
 	 * @returns {Promise}
 	 * @access private
@@ -301,6 +312,9 @@ export default class PluginBase extends EventEmitter {
 					}
 				});
 			});
+
+			// determine the data directory path
+			this.info.dataDir = expandPath(this.config.home, 'plugins', 'data', this.plugin.packageName, this.plugin.version);
 		} catch (err) {
 			this.appcdLogger.warn('Failed to subscribe to config');
 			this.appcdLogger.warn(err);
@@ -323,18 +337,6 @@ export default class PluginBase extends EventEmitter {
 			msg += ` ${highlight(`${new Date() - startTime}ms`)}`;
 		}
 		this.appcdLogger.log(msg);
-	}
-
-	/**
-	 * The plugin state to pass into activate().
-	 *
-	 * @type {Object}
-	 * @access public
-	 */
-	get pluginInfo() {
-		return {
-			autoStarted: this.info.autoStarted
-		};
 	}
 
 	/**
