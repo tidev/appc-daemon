@@ -1,6 +1,6 @@
 {
   "name": "appcd-plugin",
-  "version": "4.2.1",
+  "version": "4.2.2",
   "description": "Library for loading and executing plugins.",
   "main": "./dist/index",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",

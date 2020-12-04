@@ -1,3 +1,7 @@
+# v4.2.2 (Dec 3, 2020)
+
+ * fix(plugin-base): Fixed extra forward slashes in service paths.
+
 # v4.2.1 (Dec 3, 2020)
 
  * fix(plugin-manager): Only auto-start the latest major version of each plugin.

@@ -273,11 +273,10 @@ export default class PluginBase extends EventEmitter {
 		// detect the plugin services
 		(function scan(services, dispatcher, parent = '') {
 			for (const { path, handler } of dispatcher.routes) {
-				if (path !== '/') {
-					services.push(parent + path);
-				}
+				const service = `${parent.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
+				services.push(service);
 				if (handler instanceof Dispatcher) {
-					scan(services, handler, parent + path);
+					scan(services, handler, service);
 				}
 			}
 			return services;
