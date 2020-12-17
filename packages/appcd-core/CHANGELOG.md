@@ -1,3 +1,8 @@
+# v4.2.0
+
+ * feat: Added appcd CLI version to status.
+ * chore: Updated dependencies.
+
 # v4.1.1 (Dec 3, 2020)
 
  * chore: Updated `appcd-plugin` dependency.

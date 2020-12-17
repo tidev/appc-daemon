@@ -1399,65 +1399,89 @@ exports['release-notes'] = async function releaseNotes() {
 	const tar = require('tar-stream');
 	const zlib = require('zlib');
 
-	const packages = {
-		appcd: { latest: null, releases: {} }
-	};
+	const packages = {};
 	const re = /^appcd-/;
 	const tempDir = tmp.dirSync({
 		mode: '755',
 		prefix: 'appcd-release-notes-',
 		unsafeCleanup: true
 	}).name;
+	const cacheDir = path.join(__dirname, '.npm-info');
+
+	await fs.mkdirs(cacheDir);
 
 	const fetch = async name => {
-		log(`Fetching ${cyan(name)}`);
-		return JSON.parse(spawnSync('npm', [ 'view', name, '--json' ]).stdout.toString());
-	};
+		const cacheFile = path.join(cacheDir, `${name}.json`);
+		let info;
 
-	const getReleases = async name => {
-		if (packages[name] || !re.test(name)) {
-			return;
+		if (name !== '_appcd' && fs.existsSync(cacheFile)) {
+			log(`Fetching ${cyan(name)} from cache`);
+			const s = fs.readFileSync(cacheFile, 'utf8');
+			info = s ? JSON.parse(s) : null;
+		} else {
+			log(`Fetching ${cyan(name)}`);
+			const { status, stdout, stderr } = spawnSync('npm', [ 'view', name, '--json' ]);
+			if (status) {
+				console.error('Failed to get package info:');
+				console.error(stdout.toString());
+				console.error(stderr.toString());
+				process.exit(1);
+			}
+			const s = stdout.toString();
+			if (name !== '_appcd') {
+				fs.writeFileSync(cacheFile, s);
+			}
+
+			info = s ? JSON.parse(s) : null;
 		}
 
-		const { time } = await fetch(name);
-		packages[name] = { latest: null, releases: {} };
-
-		for (const [ ver, ts ] of Object.entries(time)) {
-			if (semver.valid(ver) && semver.gt(ver, '0.0.0')) {
-				const { prerelease } = semver.parse(ver);
-				if (!prerelease || !prerelease.length) {
-					packages[name].releases[ver] = { changelog: null, ts };
+		// if more than one is returned, get the latest
+		if (Array.isArray(info)) {
+			let pkg;
+			for (const i of info) {
+				if (!pkg || semver.gt(i.version, pkg.version)) {
+					pkg = i;
 				}
 			}
+			info = pkg;
 		}
 
-		const latest = Object.keys(packages[name].releases).sort(semver.compare).pop();
-		packages[name].latest = latest;
-
-		const release = await fetch(`${name}@${latest}`);
-		for (const type of [ 'dependencies', 'devDependencies' ]) {
-			if (release[type]) {
-				for (const name of Object.keys(release[type])) {
-					await getReleases(name);
-				}
-			}
-		}
+		return info;
 	};
 
-	try {
-		// Step 1: get all the `appcd` releases and their `appcd-*` dependencies
-		const versions = (await fetch('appcd')).time;
-		for (const [ ver, ts ] of Object.entries(versions)) {
-			if (semver.valid(ver) && semver.gt(ver, '0.0.0')) {
-				const { prerelease } = semver.parse(ver);
-				if (!prerelease || !prerelease.length) {
-					packages.appcd.releases[ver] = { changelog: null, ts };
+	const getPackageInfo = async (name, ver) => {
+		const info = await fetch(`${name}@${ver}`);
+		if (!info || packages[name]) {
+			return info;
+		}
 
-					const release = await fetch(`appcd@${ver}`);
-					for (const type of [ 'dependencies', 'devDependencies' ]) {
-						if (release[type]) {
-							for (const name of Object.keys(release[type])) {
-								await getReleases(name);
+		ver = info.version;
+
+		log(`Initializing new package ${name}`);
+		packages[name] = { latest: null, versions: {} };
+
+		log(`  Versions: ${info.versions.join(', ')}`);
+		for (const version of info.versions) {
+			if (!packages[name].versions[version] && semver.valid(version) && semver.gt(version, '0.0.0')) {
+				const { prerelease } = semver.parse(version);
+				if (!prerelease || !prerelease.length) {
+					log(`  Initializing pacakge ${name}@${version}`);
+					const verInfo = await fetch(`${name}@${version}`);
+					if (verInfo) {
+						packages[name].versions[version] = { changelog: null, deps: {}, ts: info.time[version], version };
+						for (const type of [ 'dependencies', 'devDependencies' ]) {
+							if (verInfo[type]) {
+								for (const [ dep, range ] of Object.entries(verInfo[type])) {
+									if (re.test(dep)) {
+										const depInfo = await getPackageInfo(dep, range);
+										if (depInfo) {
+											log(`  ${dep}@${range} => ${depInfo.version}`);
+											packages[name].versions[version].deps[dep] = depInfo.version;
+										} else {
+											log(`  ${dep}@${range} not found! Parent ${name}@${ver}`);
+										}
+									}
+								}
 							}
 						}
 					}
@@ -1465,109 +1489,158 @@ exports['release-notes'] = async function releaseNotes() {
 			}
 		}
 
-		const processChangelog = (name, changelog) => {
-			const changes = changelog.split('\n\n#').map((s, i) => `${i ? '#' : ''}${s}`.trim());
-			for (const chunk of changes) {
-				const m = chunk.match(/^# v?([^\s\n]*)[^\n]*\n+(.+)$/s);
-				if (m && packages[name].releases[m[1]]) {
-					packages[name].releases[m[1]].changelog = m[2];
+		return info;
+	};
+
+	const processChangelog = (name, changelog) => {
+		const changes = changelog.split('\n\n#').map((s, i) => `${i ? '#' : ''}${s}`.trim());
+		for (const chunk of changes) {
+			const m = chunk.match(/^# v?([^\s\n]*)[^\n]*\n+(.+)$/s);
+			if (m && packages[name].versions[m[1]]) {
+				packages[name].versions[m[1]].changelog = m[2];
+			}
+		}
+	};
+
+	try {
+		// Step 1: get all the `appcd` releases and their `appcd-*` dependencies
+		const versions = (await fetch('appcd')).versions;
+		for (const ver of versions) {
+			if (semver.valid(ver) && semver.gt(ver, '0.0.0')) {
+				const { prerelease } = semver.parse(ver);
+				if (!prerelease || !prerelease.length) {
+					await getPackageInfo('appcd', ver);
 				}
 			}
-		};
+		}
 
 		// Step 2: add in the local packages
+		const local = {};
 		for (const subdir of fs.readdirSync(path.join(__dirname, 'packages'))) {
 			try {
 				const pkgJson = fs.readJsonSync(path.join(__dirname, 'packages', subdir, 'package.json'));
 				let { name, version } = pkgJson;
-				const changelog = fs.readFileSync(path.join(__dirname, 'packages', subdir, 'CHANGELOG.md')).toString();
+				local[name] = pkgJson;
+				const changelogFile = path.join(__dirname, 'packages', subdir, 'CHANGELOG.md');
+				log(fs.existsSync(changelogFile), changelogFile);
+				const changelog = fs.existsSync(changelogFile) ? fs.readFileSync(changelogFile, 'utf8') : null;
 				let ts = null;
 
-				const m = changelog.match(/^# v([^\s]+)/);
+				const m = changelog && changelog.match(/^# v([^\s]+)/);
 				if (m && m[1] !== version) {
 					// set release timestamp to now unless package is appcd, then make it 10 seconds older
 					ts = new Date(Date.now() + (name === 'appcd' ? 10000 : 0));
-					version = m[1];
+					// version = m[1];
 				}
 
 				if (!packages[name]) {
-					packages[name] = { latest: null, releases: {} };
+					packages[name] = { latest: null, versions: {} };
 				}
 				packages[name].local = true;
-
-				if (!packages[name].releases[version]) {
-					packages[name].releases[version] = { changelog: null, ts };
-				}
-				packages[name].releases[version].local = true;
+				packages[name].versions[version] = { changelog: null, deps: {}, local: true, ts, version };
 
 				if (changelog) {
 					processChangelog(name, changelog);
 				}
-			} catch (e) {}
+			} catch (e) {
+				console.error(e);
+			}
+		}
+
+		// Step 3: loop over local packages again and populate the deps
+		for (const [ name, pkgJson ] of Object.entries(local)) {
+			for (const type of [ 'dependencies', 'devDependencies' ]) {
+				if (pkgJson[type]) {
+					for (const [ dep, range ] of Object.entries(pkgJson[type])) {
+						if (re.test(dep) && packages[dep]) {
+							log(`  Finding ${dep}@${range} in packages to populate deps for ${name}`);
+							let pkg;
+							for (const [ ver, depInfo ] of Object.entries(packages[dep].versions)) {
+								if (semver.satisfies(ver, range) && (!pkg || semver.gt(ver, pkg.version))) {
+									pkg = depInfo;
+								}
+							}
+							if (pkg) {
+								log(`Setting ${name}@${pkgJson.version} dep ${dep} to ${pkg.version}`);
+								packages[name].versions[pkgJson.version].deps[dep] = pkg.version;
+							}
+						}
+					}
+				}
+			}
 		}
 
 		// Step 3: for each package, fetch the latest npm package and extract the changelog
 		for (const [ pkg, info ] of Object.entries(packages)) {
 			if (!packages[pkg].latest) {
-				packages[pkg].latest = Object.keys(info.releases).sort(semver.compare).pop();
+				packages[pkg].latest = Object.keys(info.versions).sort(semver.compare).pop();
 			}
 
 			if (info.local) {
 				continue;
 			}
 
-			const url = `https://registry.npmjs.org/${pkg}/-/${pkg}-${info.latest}.tgz`;
-			const file = path.join(tempDir, `${pkg}-${info.latest}.tgz`);
+			const changelogFile = path.join(cacheDir, `${pkg}@${info.latest}_CHANGELOG.md`);
+			if (fs.existsSync(changelogFile)) {
+				processChangelog(pkg, fs.readFileSync(changelogFile, 'utf8'));
+			} else {
+				const url = `https://registry.npmjs.org/${pkg}/-/${pkg}-${info.latest}.tgz`;
+				const file = path.join(tempDir, `${pkg}-${info.latest}.tgz`);
 
-			await new Promise((resolve, reject) => {
-				const dest = fs.createWriteStream(file);
-				dest.on('finish', () => dest.close(resolve));
-				log(`Downloading ${cyan(url)}`);
-				https.get(url, response => response.pipe(dest))
-					.on('error', reject);
-			});
-
-			await new Promise((resolve, reject) => {
-				const gunzip = zlib.createGunzip();
-				const extract = tar.extract();
-
-				extract.on('entry', (header, stream, next) => {
-					if (header.name !== 'package/CHANGELOG.md') {
-						stream.resume();
-						return next();
-					}
-
-					let changelog = '';
-					stream
-						.on('data', chunk => changelog += chunk)
-						.on('end', () => {
-							processChangelog(pkg, changelog);
-							next();
-						})
-						.on('error', reject)
-						.resume();
+				await new Promise((resolve, reject) => {
+					const dest = fs.createWriteStream(file);
+					dest.on('finish', () => dest.close(resolve));
+					log(`Downloading ${cyan(url)}`);
+					https.get(url, response => response.pipe(dest))
+						.on('error', reject);
 				});
 
-				extract.on('finish', resolve);
-				extract.on('error', reject);
+				await new Promise((resolve, reject) => {
+					const gunzip = zlib.createGunzip();
+					const extract = tar.extract();
 
-				log(`Extract changelog from ${cyan(file)}`);
-				fs.createReadStream(file).pipe(gunzip).pipe(extract);
-			});
+					extract.on('entry', (header, stream, next) => {
+						if (header.name !== 'package/CHANGELOG.md') {
+							stream.resume();
+							return next();
+						}
+
+						let changelog = '';
+						stream
+							.on('data', chunk => changelog += chunk)
+							.on('end', () => {
+								fs.writeFileSync(changelogFile, changelog, 'utf8');
+								processChangelog(pkg, changelog);
+								next();
+							})
+							.on('error', reject)
+							.resume();
+					});
+
+					extract.on('finish', resolve);
+					extract.on('error', reject);
+
+					log(`Extract changelog from ${cyan(file)}`);
+					fs.createReadStream(file).pipe(gunzip).pipe(extract);
+				});
+			}
 		}
 	} finally {
 		fs.removeSync(tempDir);
 	}
+
+	console.log(JSON.stringify(packages, null, 2));
+	process.exit();
 
 	const { appcd } = packages;
 	delete packages.appcd;
 	const pkgs = Object.keys(packages).sort();
 
 	// Step 4: loop over every `appcd` release and generate the changelog
-	for (const ver of Object.keys(appcd.releases).sort(semver.compare)) {
+	for (const ver of Object.keys(appcd.versions).sort(semver.compare)) {
 		const { minor, patch } = semver.parse(ver);
 		const dest = path.join(__dirname, 'docs', 'Release Notes', `Appc Daemon ${ver}.md`);
-		const { changelog, local, ts } = appcd.releases[ver];
+		const { changelog, local, ts } = appcd.versions[ver];
 		const dt = ts ? new Date(ts) : new Date();
 		const rd = ts && dt.toDateString().split(' ').slice(1);
 		let s = `# Appc Daemon ${ver}\n\n## ${local ? 'Unreleased' : `${rd[0]} ${rd[1]}, ${rd[2]}`}\n\n`;
@@ -1585,16 +1658,16 @@ exports['release-notes'] = async function releaseNotes() {
 		s += `### appcd@${ver}\n\n${changelog}\n\n`;
 
 		for (const pkg of pkgs) {
-			const vers = Object.keys(packages[pkg].releases).filter(ver => {
-				const { ts } = packages[pkg].releases[ver];
+			const vers = Object.keys(packages[pkg].versions).filter(ver => {
+				const { ts } = packages[pkg].versions[ver];
 				return !ts || new Date(ts) < dt;
 			}).sort(semver.compare);
 
 			for (const v of vers) {
-				if (packages[pkg].releases[v].changelog) {
-					s += `### ${pkg}@${v}\n\n${packages[pkg].releases[v].changelog}\n\n`;
+				if (packages[pkg].versions[v].changelog) {
+					s += `### ${pkg}@${v}\n\n${packages[pkg].versions[v].changelog}\n\n`;
 				}
-				delete packages[pkg].releases[v];
+				delete packages[pkg].versions[v];
 			}
 		}
 

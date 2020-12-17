@@ -62,10 +62,16 @@ export default class Server {
 		logger.log(this.config.toString());
 
 		/**
+		 * The appcd core version.
+		 * @type {String}
+		 */
+		this.coreVersion = JSON.parse(fs.readFileSync(path.resolve(__dirname, '..', 'package.json'), 'utf8')).version;
+
+		/**
 		 * The appcd version.
 		 * @type {String}
 		 */
-		this.version = JSON.parse(fs.readFileSync(path.resolve(__dirname, '..', 'package.json'), 'utf8')).version;
+		this.version = process.env.APPCD || this.coreVersion;
 
 		/**
 		 * A function to call that stops tracking timers and returns an array of active timers.
@@ -122,6 +128,7 @@ export default class Server {
 		process.title = 'appcd';
 
 		logger.log(`Appcelerator Daemon v${this.version}`);
+		logger.log(`appcd Core v${this.coreVersion}`);
 		logger.log('Environment: %s', highlight(this.config.get('environment.title')));
 		logger.log(`Node.js ${process.version} (${process.platform}, module v${process.versions.modules})`);
 		logger.log(`PID: ${highlight(process.pid)}`);
@@ -235,6 +242,7 @@ export default class Server {
 		this.systems.statusMonitor
 			.merge({
 				version:      this.version,
+				coreVersion:  this.coreVersion,
 				fs:           this.systems.fswatchManager.status(),
 				subprocesses: this.systems.subprocessManager.subprocesses,
 				plugins:      this.systems.pluginManager.status()
