@@ -1400,7 +1400,7 @@ exports['release-notes'] = async function releaseNotes() {
 	const zlib = require('zlib');
 
 	const packages = {};
-	const re = /^appcd-/;
+	const re = /^appcd-(?!plugin-)/;
 	const tempDir = tmp.dirSync({
 		mode: '755',
 		prefix: 'appcd-release-notes-',
@@ -1496,8 +1496,14 @@ exports['release-notes'] = async function releaseNotes() {
 		const changes = changelog.split('\n\n#').map((s, i) => `${i ? '#' : ''}${s}`.trim());
 		for (const chunk of changes) {
 			const m = chunk.match(/^# v?([^\s\n]*)[^\n]*\n+(.+)$/s);
-			if (m && packages[name].versions[m[1]]) {
+			if (!m) {
+				continue;
+			}
+
+			if (packages[name].versions[m[1]]) {
 				packages[name].versions[m[1]].changelog = m[2];
+			} else {
+				log(red(`Package ${name} does not have a version ${m[1]}!`));
 			}
 		}
 	};
@@ -1522,7 +1528,6 @@ exports['release-notes'] = async function releaseNotes() {
 				let { name, version } = pkgJson;
 				local[name] = pkgJson;
 				const changelogFile = path.join(__dirname, 'packages', subdir, 'CHANGELOG.md');
-				log(fs.existsSync(changelogFile), changelogFile);
 				const changelog = fs.existsSync(changelogFile) ? fs.readFileSync(changelogFile, 'utf8') : null;
 				let ts = null;
 
@@ -1530,14 +1535,18 @@ exports['release-notes'] = async function releaseNotes() {
 				if (m && m[1] !== version) {
 					// set release timestamp to now unless package is appcd, then make it 10 seconds older
 					ts = new Date(Date.now() + (name === 'appcd' ? 10000 : 0));
-					// version = m[1];
+					log(`Changing ${name} version from ${version} => ${m[1]}`);
+					pkgJson.version = version = m[1];
 				}
 
 				if (!packages[name]) {
 					packages[name] = { latest: null, versions: {} };
 				}
-				packages[name].local = true;
-				packages[name].versions[version] = { changelog: null, deps: {}, local: true, ts, version };
+
+				if (!packages[name] || !packages[name].versions[version]) {
+					packages[name].local = true;
+					packages[name].versions[version] = { changelog: null, deps: {}, local: true, ts, version };
+				}
 
 				if (changelog) {
 					processChangelog(name, changelog);
@@ -1561,7 +1570,6 @@ exports['release-notes'] = async function releaseNotes() {
 								}
 							}
 							if (pkg) {
-								log(`Setting ${name}@${pkgJson.version} dep ${dep} to ${pkg.version}`);
 								packages[name].versions[pkgJson.version].deps[dep] = pkg.version;
 							}
 						}
@@ -1570,7 +1578,7 @@ exports['release-notes'] = async function releaseNotes() {
 			}
 		}
 
-		// Step 3: for each package, fetch the latest npm package and extract the changelog
+		// Step 3: for each non-local package, fetch the latest npm package and extract the changelog
 		for (const [ pkg, info ] of Object.entries(packages)) {
 			if (!packages[pkg].latest) {
 				packages[pkg].latest = Object.keys(info.versions).sort(semver.compare).pop();
@@ -1629,21 +1637,19 @@ exports['release-notes'] = async function releaseNotes() {
 		fs.removeSync(tempDir);
 	}
 
-	console.log(JSON.stringify(packages, null, 2));
-	process.exit();
-
 	const { appcd } = packages;
 	delete packages.appcd;
 	const pkgs = Object.keys(packages).sort();
 
 	// Step 4: loop over every `appcd` release and generate the changelog
 	for (const ver of Object.keys(appcd.versions).sort(semver.compare)) {
-		const { minor, patch } = semver.parse(ver);
-		const dest = path.join(__dirname, 'docs', 'Release Notes', `Appc Daemon ${ver}.md`);
+		const { major, minor, patch } = semver.parse(ver);
+		const cleanVersion = `${major}.${minor}.${patch}`;
+		const dest = path.join(__dirname, 'docs', 'Release Notes', `Appc Daemon ${cleanVersion}.md`);
 		const { changelog, local, ts } = appcd.versions[ver];
 		const dt = ts ? new Date(ts) : new Date();
 		const rd = ts && dt.toDateString().split(' ').slice(1);
-		let s = `# Appc Daemon ${ver}\n\n## ${local ? 'Unreleased' : `${rd[0]} ${rd[1]}, ${rd[2]}`}\n\n`;
+		let s = `# Appc Daemon ${cleanVersion}\n\n## ${local ? 'Unreleased' : `${rd[0]} ${rd[1]}, ${rd[2]}`}\n\n`;
 
 		if (patch === 0) {
 			if (minor === 0) {
@@ -1654,8 +1660,8 @@ exports['release-notes'] = async function releaseNotes() {
 		} else {
 			s += 'This is a patch release with bug fixes and minor dependency updates.\n\n';
 		}
-		s += `### Installation\n\n\`\`\`\nnpm i -g appcd@${ver}\n\`\`\`\n\n`
-		s += `### appcd@${ver}\n\n${changelog}\n\n`;
+		s += `### Installation\n\n\`\`\`\nnpm i -g appcd@${cleanVersion}\n\`\`\`\n\n`
+		s += `### appcd@${cleanVersion}\n\n${changelog}\n\n`;
 
 		for (const pkg of pkgs) {
 			const vers = Object.keys(packages[pkg].versions).filter(ver => {

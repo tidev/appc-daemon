@@ -14,8 +14,10 @@ npm i -g appcd@4.0.0
 
  * BREAKING CHANGE: Requires Node.js 10.19.0 or newer.
    [(DAEMON-334)](https://jira.appcelerator.org/browse/DAEMON-334)
- * BREAKING CHANGE: The default plugins are no longer installed with `appcd`. You must manually
-   install them by running `appcd pm i default`.
+ * BREAKING CHANGE: The default appcd plugins are no longer installed as dependencies of `appcd`.
+   The npm post-install script will attempt to install them, but if `appcd` was globally installed
+   on a macOS or Linux machine, then it will likely fail due to permission issues and display a
+   message saying to manually install them by running `appcd pm install default`.
  * BREAKING CHANGE(config): `config` command no longer returns status as apart of JSON output.
  * BREAKING CHANGE(config): `config` command does not return current value when doing a `set`,
    `push`, or `unshift`.
@@ -33,6 +35,8 @@ npm i -g appcd@4.0.0
  * feat(status): Added new "Health" section to status output.
  * feat: Added notificaiton if new version is available.
  * feat(action): Added install default plugins action.
+ * feat(scripts): Added uninstall script to stop the daemon if running.
+ * feat(status): Added appcd CLI version to status output.
  * refactor: Updated to latest `AppcdConfig` usage where `save()` is now synchronous and we no
    longer need to set the config file to save to since it uses the same file path that was used to
    load the config.
@@ -57,6 +61,10 @@ npm i -g appcd@4.0.0
    [(DAEMON-334)](https://jira.appcelerator.org/browse/DAEMON-334)
  * chore: Updated dependencies.
 
+### appcd-agent@2.0.1
+
+ * chore: Updated dependencies.
+
 ### appcd-client@3.0.0
 
  * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.
@@ -67,6 +75,10 @@ npm i -g appcd@4.0.0
 ### appcd-client@3.0.1
 
  * fix: Replaced AMPLIFY CLI references with Axway CLI.
+ * chore: Updated dependencies.
+
+### appcd-client@3.0.2
+
  * chore: Updated dependencies.
 
 ### appcd-config@3.0.0
@@ -120,7 +132,7 @@ npm i -g appcd@4.0.0
  * feat(server): Added `state` property to indicate if the server stopped, starting, started, or
    stopping.
  * feat(status): Added machine id to status info.
- * refactor: Updated to `appcd-config@3.0.0`, created the Appc Daemon config schema, and converted
+ * refactor: Updated to `appcd-config@3.x`, created the Appc Daemon config schema, and converted
    the `default.js` config to `default.json`.
  * refactor: Removed Titanium CLI Genymotion config import.
    [(DAEMON-313)](https://jira.appcelerator.org/browse/DAEMON-313)
@@ -140,6 +152,24 @@ npm i -g appcd@4.0.0
  * fix(websocket-session): Add support for clients that do not send HTTP headers.
  * chore: Updated dependencies.
 
+### appcd-core@4.0.1
+
+ * fix(plugins): Fixed bugged code when the spawn code was refactored.
+
+### appcd-core@4.1.0
+
+ * feat(plugins): Added support for the plugin `autoStart` flag.
+ * chore: Updated `appcd-plugin` dependency.
+
+### appcd-core@4.1.1
+
+ * chore: Updated `appcd-plugin` dependency.
+
+### appcd-core@4.2.0
+
+ * feat: Added appcd CLI version to status.
+ * chore: Updated dependencies.
+
 ### appcd-default-plugins@4.2.1
 
  * fix: Explicitly update PATH environment variable so that it is properly inherited by the child
@@ -154,9 +184,10 @@ npm i -g appcd@4.0.0
    [(DAEMON-334)](https://jira.appcelerator.org/browse/DAEMON-334)
  * chore: Updated dependencies.
 
-### appcd-detect@3.0.1
+### appcd-detect@3.1.0
 
  * fix: Bumped minimum Node.js requirement to 10.19.0 to prevent warnings on install.
+ * chore: Updated dependencies.
 
 ### appcd-dispatcher@3.0.0
 
@@ -173,16 +204,28 @@ npm i -g appcd@4.0.0
  * feat: Added instance id to dispatcher debug logging.
  * chore: Updated dependencies.
 
+### appcd-dispatcher@3.1.1
+
+ * chore: Updated dependencies.
+
 ### appcd-fs@2.0.0
 
  * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.
    [(DAEMON-334)](https://jira.appcelerator.org/browse/DAEMON-334)
  * chore: Updated dependencies.
 
+### appcd-fs@2.0.1
+
+ * chore: Updated dependencies.
+
 ### appcd-fswatch-manager@3.0.0
 
  * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.
    [(DAEMON-334)](https://jira.appcelerator.org/browse/DAEMON-334)
+ * chore: Updated dependencies.
+
+### appcd-fswatch-manager@3.0.1
+
  * chore: Updated dependencies.
 
 ### appcd-fswatcher@2.0.0
@@ -221,6 +264,10 @@ npm i -g appcd@4.0.0
  * fix: Added `--debug` flag for tests since `--inspect` is sometimes intercepted by gulp.
  * chore: Updated dependencies.
 
+### appcd-gulp@3.1.1
+
+ * chore: Updated dependencies.
+
 ### appcd-http@2.0.0
 
  * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.
@@ -231,10 +278,18 @@ npm i -g appcd@4.0.0
 
  * chore: Updated dependencies.
 
+### appcd-http@2.0.2
+
+ * chore: Updated dependencies.
+
 ### appcd-logger@3.0.0
 
  * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.
    [(DAEMON-334)](https://jira.appcelerator.org/browse/DAEMON-334)
+ * chore: Updated dependencies.
+
+### appcd-logger@3.0.1
+
  * chore: Updated dependencies.
 
 ### appcd-machine-id@4.0.0
@@ -243,7 +298,7 @@ npm i -g appcd@4.0.0
    [(DAEMON-334)](https://jira.appcelerator.org/browse/DAEMON-334)
  * chore: Updated dependencies.
 
-### appcd-machine-id@4.0.1
+### appcd-machine-id@4.1.0
 
  * fix: Bumped minimum Node.js requirement to 10.19.0 to prevent warnings on install.
  * chore: Updated dependencies.
@@ -276,6 +331,10 @@ npm i -g appcd@4.0.0
 
  * chore: Updated dependencies.
 
+### appcd-path@2.0.2
+
+ * chore: Updated dependencies.
+
 ### appcd-plugin@4.0.0
 
  * BREAKING CHANGE: Requires Node.js 10.19.0 or newer.
@@ -305,6 +364,7 @@ npm i -g appcd@4.0.0
    plugins don't have to pass the config object from activate around and call gawk to observe it.
  * feat: `appcd.fs.watch()` within a plugin's context now accepts a numeric debounce value which
    is the period of time to wait before firing the handler.
+ * feat: Auto select Node.js version to spawn plugin based on plugin's API version.
  * fix: Fixed bug where `status` would search an unsorted list of registered plugins which caused
    nondeterministic results. [(DAEMON-328)](https://jira.appcelerator.org/browse/DAEMON-328)
  * fix: Fixed bug where an `inactivityTimeout` of zero would be tested as falsey and fallback to
@@ -334,6 +394,28 @@ npm i -g appcd@4.0.0
    events can be noisy.
  * chore: Updated dependencies.
 
+### appcd-plugin@4.1.0
+
+ * feat(plugin-base): Added the `autoStarted` flag to plugin info and pass it into the plugin on
+   activation.
+ * fix(plugin-base): Improved plugin state management if plugin exits during startup.
+
+### appcd-plugin@4.2.0
+
+ * feat(plugin-base): Added the `dataDir` plugin info and pass it into the plugin on activation.
+
+### appcd-plugin@4.2.1
+
+ * fix(plugin-manager): Only auto-start the latest major version of each plugin.
+
+### appcd-plugin@4.2.2
+
+ * fix(plugin-base): Fixed extra forward slashes in service paths.
+
+### appcd-plugin@4.2.3
+
+ * chore: Updated dependencies.
+
 ### appcd-request@3.0.0
 
  * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.
@@ -346,6 +428,10 @@ npm i -g appcd@4.0.0
    [(DAEMON-334)](https://jira.appcelerator.org/browse/DAEMON-334)
  * chore: Updated dependencies.
 
+### appcd-response@3.0.1
+
+ * chore: Updated dependencies.
+
 ### appcd-subprocess@4.0.0
 
  * BREAKING CHANGE: Requires Node.js 10.13.0 or newer.
@@ -353,10 +439,15 @@ npm i -g appcd@4.0.0
  * feat: Added spawn options to `spawnNode()`.
  * chore: Updated dependencies.
 
-### appcd-subprocess@4.1.0
+### appcd-subprocess@5.0.0
 
- * feat: Moved subprocess status to top-level route with subscription support.
+ * BREAKING CHANGE: Moved `SubprocessManager` to separate `appcd-subprocess-manager` package.
  * fix: Bumped minimum Node.js requirement to 10.19.0 to prevent warnings on install.
+
+### appcd-subprocess-manager@1.0.0
+
+ * Initial release with `SubprocessManager` migrated from `appcd-subprocess`.
+ * feat: Moved subprocess status to top-level route with subscription support.
  * fix: Properly handle IPC send errors when child process goes away.
  * fix: Kill non-detached child processes when response stream is closed by the caller.
  * fix: Decouple subprocess data from `/appcd/status`.
@@ -391,3 +482,7 @@ npm i -g appcd@4.0.0
    references.
  * feat: Added re-export for Lodash's `set()` function.
  * fix(sha1): Treat buffers like strings and don't JSON.stringify them.
+
+### appcd-util@3.1.1
+
+ * chore: Updated dependencies.
