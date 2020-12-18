@@ -1414,7 +1414,7 @@ exports['release-notes'] = async function releaseNotes() {
 		const cacheFile = path.join(cacheDir, `${name}.json`);
 		let info;
 
-		if (name !== '_appcd' && fs.existsSync(cacheFile)) {
+		if (fs.existsSync(cacheFile)) {
 			log(`Fetching ${cyan(name)} from cache`);
 			const s = fs.readFileSync(cacheFile, 'utf8');
 			info = s ? JSON.parse(s) : null;
@@ -1427,10 +1427,7 @@ exports['release-notes'] = async function releaseNotes() {
 				console.error(stderr.toString());
 				process.exit(1);
 			}
-			const s = stdout.toString();
-			if (name !== '_appcd') {
-				fs.writeFileSync(cacheFile, s);
-			}
+			fs.writeFileSync(cacheFile, stdout.toString());
 
 			info = s ? JSON.parse(s) : null;
 		}
