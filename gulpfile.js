@@ -1507,7 +1507,7 @@ exports['release-notes'] = async function releaseNotes() {
 
 	try {
 		// Step 1: get all the `appcd` releases and their `appcd-*` dependencies
-		const versions = (await fetch('appcd')).versions;
+		const { versions } = await fetch('appcd');
 		for (const ver of versions) {
 			if (semver.valid(ver) && semver.gt(ver, '0.0.0')) {
 				const { prerelease } = semver.parse(ver);
