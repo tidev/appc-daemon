@@ -1,4 +1,4 @@
-# v4.0.0-rc1 (Nov 3, 2020)
+# v4.0.0-rc2
 
  * BREAKING CHANGE: Requires Node.js 10.19.0 or newer.
    [(DAEMON-334)](https://jira.appcelerator.org/browse/DAEMON-334)
@@ -23,6 +23,8 @@
  * feat(status): Added new "Health" section to status output.
  * feat: Added notificaiton if new version is available.
  * feat(action): Added install default plugins action.
+ * feat(scripts): Added uninstall script to stop the daemon if running.
+ * feat(status): Added appcd CLI version to status output.
  * refactor: Updated to latest `AppcdConfig` usage where `save()` is now synchronous and we no
    longer need to set the config file to save to since it uses the same file path that was used to
    load the config.

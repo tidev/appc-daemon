@@ -91,14 +91,6 @@ npm i -g appcd@3.0.0
 
  * chore: Updated dependencies.
 
-### appcd-machine-id@2.0.2
-
- * Botched release.
-
-### appcd-machine-id@3.0.0
-
- * Botched release.
-
 ### appcd-machine-id@3.0.1
 
  * BREAKING CHANGE: Updated to `appcd-subprocess@3.0.0`.
@@ -135,19 +127,11 @@ npm i -g appcd@3.0.0
  * chore: Fixed eslint `hasOwnProperty` warnings.
  * chore: Updated dependencies.
 
-### appcd-subprocess@2.0.2
-
- * Botched release.
-
 ### appcd-subprocess@3.0.0
 
  * BREAKING CHANGE: Updated to `appcd-nodejs@3.0.0`.
  * chore: Fixed eslint `hasOwnProperty` warnings.
  * chore: Updated dependencies.
-
-### appcd-telemetry@2.0.2
-
- * Botched release.
 
 ### appcd-telemetry@3.0.0
 

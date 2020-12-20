@@ -23,10 +23,6 @@ npm i -g appcd@1.1.0
  * chore: Cleaned up readme.
  * chore: Updated dependencies.
 
-### appcd-agent@1.1.0
-
- * oops: This was a botched release and has been unpublished.
-
 ### appcd-agent@1.1.1
 
  * chore: Minor code clean up.
@@ -68,10 +64,6 @@ npm i -g appcd@1.1.0
  * chore: Improved readme.
  * chore: Updated dependencies.
 
-### appcd-default-plugins@1.1.0
-
- * oops: This was a botched release and has been unpublished.
-
 ### appcd-default-plugins@1.1.1
 
  * feat: Added `appcd-plugin-titanium-sdk` plugin.
@@ -93,10 +85,6 @@ npm i -g appcd@1.1.0
    it will store the value in the original context's response.
  * chore: Improved readme.
  * chore: Updated dependencies.
-
-### appcd-fs@1.1.0
-
- * oops: This was a botched release and has been unpublished.
 
 ### appcd-fs@1.1.1
 
@@ -121,10 +109,6 @@ npm i -g appcd@1.1.0
    [`appcd-fswatch-manager`](https://npmjs.org/package/appcd-fswatch-manager) package.
  * chore: Improved readme.
  * chore: Updated dependencies.
-
-### appcd-gulp@1.1.0
-
- * This was a botched release and has been unpublished.
 
 ### appcd-gulp@1.1.1
 

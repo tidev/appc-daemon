@@ -1,3 +1,7 @@
+# v4.2.3
+
+ * chore: Updated dependencies.
+
 # v4.2.2 (Dec 3, 2020)
 
  * fix(plugin-base): Fixed extra forward slashes in service paths.

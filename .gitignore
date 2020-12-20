@@ -1,5 +1,6 @@
 ._*
 .DS_Store*
+.npm-info
 .nyc_output
 .appcdrc
 /coverage
