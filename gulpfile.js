@@ -1465,18 +1465,12 @@ exports['release-notes'] = async function releaseNotes() {
 					log(`  Initializing pacakge ${name}@${version}`);
 					const verInfo = await fetch(`${name}@${version}`);
 					if (verInfo) {
-						packages[name].versions[version] = { changelog: null, deps: {}, ts: info.time[version], version };
+						packages[name].versions[version] = { changelog: null, ts: info.time[version], version };
 						for (const type of [ 'dependencies', 'devDependencies' ]) {
 							if (verInfo[type]) {
 								for (const [ dep, range ] of Object.entries(verInfo[type])) {
 									if (re.test(dep)) {
-										const depInfo = await getPackageInfo(dep, range);
-										if (depInfo) {
-											log(`  ${dep}@${range} => ${depInfo.version}`);
-											packages[name].versions[version].deps[dep] = depInfo.version;
-										} else {
-											log(`  ${dep}@${range} not found! Parent ${name}@${ver}`);
-										}
+										await getPackageInfo(dep, range);
 									}
 								}
 							}
@@ -1542,7 +1536,7 @@ exports['release-notes'] = async function releaseNotes() {
 
 				if (!packages[name] || !packages[name].versions[version]) {
 					packages[name].local = true;
-					packages[name].versions[version] = { changelog: null, deps: {}, local: true, ts, version };
+					packages[name].versions[version] = { changelog: null, local: true, ts, version };
 				}
 
 				if (changelog) {
@@ -1550,28 +1544,6 @@ exports['release-notes'] = async function releaseNotes() {
 				}
 			} catch (e) {
 				console.error(e);
-			}
-		}
-
-		// Step 3: loop over local packages again and populate the deps
-		for (const [ name, pkgJson ] of Object.entries(local)) {
-			for (const type of [ 'dependencies', 'devDependencies' ]) {
-				if (pkgJson[type]) {
-					for (const [ dep, range ] of Object.entries(pkgJson[type])) {
-						if (re.test(dep) && packages[dep]) {
-							log(`  Finding ${dep}@${range} in packages to populate deps for ${name}`);
-							let pkg;
-							for (const [ ver, depInfo ] of Object.entries(packages[dep].versions)) {
-								if (semver.satisfies(ver, range) && (!pkg || semver.gt(ver, pkg.version))) {
-									pkg = depInfo;
-								}
-							}
-							if (pkg) {
-								packages[name].versions[pkgJson.version].deps[dep] = pkg.version;
-							}
-						}
-					}
-				}
 			}
 		}
 
