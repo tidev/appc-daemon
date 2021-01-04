@@ -1,6 +1,7 @@
 # v4.2.0
 
  * feat: Added appcd CLI version to status.
+ * chore: Updated core to use Node.js 14.15.4.
  * chore: Updated dependencies.
 
 # v4.1.1 (Dec 3, 2020)

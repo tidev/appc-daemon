@@ -24,11 +24,11 @@
     "babel-plugin-dynamic-import-node": "^2.3.3",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
-    "core-js": "^3.8.1",
+    "core-js": "^3.8.2",
     "esdoc": "^1.1.0",
     "esdoc-ecmascript-proposal-plugin": "^1.0.0",
     "esdoc-standard-plugin": "^1.0.0",
-    "eslint": "^7.16.0",
+    "eslint": "^7.17.0",
     "eslint-config-axway": "^5.0.0",
     "eslint-plugin-chai-friendly": "^0.6.0",
     "eslint-plugin-mocha": "^8.0.0",
@@ -48,7 +48,7 @@
     "nyc": "^15.1.0",
     "sinon": "^9.2.2",
     "sinon-chai": "^3.5.0",
-    "webpack": "^5.11.0"
+    "webpack": "^5.11.1"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
