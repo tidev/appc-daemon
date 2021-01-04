@@ -33,7 +33,7 @@
     "appcd-subprocess": "^5.0.0",
     "appcd-telemetry": "^5.0.0",
     "appcd-util": "^3.1.0",
-    "builtin-modules": "^3.1.0",
+    "builtin-modules": "^3.2.0",
     "findup-sync": "^4.0.0",
     "fs-extra": "^9.0.1",
     "gawk": "^5.0.0",
@@ -43,7 +43,7 @@
     "pretty-ms": "^7.0.1",
     "semver": "^7.3.4",
     "slugg": "^1.2.1",
-    "sort-keys": "^4.1.0",
+    "sort-keys": "^4.2.0",
     "source-map-support": "^0.5.19",
     "uuid": "^8.3.2"
   },
