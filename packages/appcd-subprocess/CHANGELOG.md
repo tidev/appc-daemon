@@ -1,3 +1,7 @@
+# v5.0.1 (Jan 5, 2021)
+
+ * chore: Updated dependencies.
+
 # v5.0.0 (Dec 1, 2020)
 
  * BREAKING CHANGE: Moved `SubprocessManager` to separate `appcd-subprocess-manager` package.

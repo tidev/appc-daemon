@@ -1,3 +1,7 @@
+# v3.1.1 (Jan 5, 2021)
+
+* chore: Updated dependencies.
+
 # v3.1.0 (Dec 1, 2020)
 
  * feat: Added config file live reloading.

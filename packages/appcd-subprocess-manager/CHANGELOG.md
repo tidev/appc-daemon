@@ -1,3 +1,7 @@
+# v1.0.1 (Jan 5, 2021)
+
+ * chore: Updated dependencies.
+
 # v1.0.0 (Dec 1, 2020)
 
  * Initial release with `SubprocessManager` migrated from `appcd-subprocess`.

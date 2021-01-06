@@ -1,6 +1,6 @@
 {
   "name": "appcd-subprocess",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "description": "Library for spawning and finding subprocesses.",
   "main": "./dist/index",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
@@ -16,13 +16,13 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-logger": "^3.0.1",
-    "appcd-response": "^3.0.1",
+    "appcd-logger": "^3.0.2",
+    "appcd-response": "^3.0.2",
     "source-map-support": "^0.5.19",
     "which": "^2.0.2"
   },
   "devDependencies": {
-    "appcd-gulp": "^3.1.0",
+    "appcd-gulp": "^3.1.1",
     "tmp": "^0.2.1"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon",

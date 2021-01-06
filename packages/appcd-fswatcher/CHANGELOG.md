@@ -1,3 +1,7 @@
+# v2.0.2 (Jan 5, 2021)
+
+ * chore: Updated dependencies.
+
 # v2.0.1 (Dec 1, 2020)
 
  * fix: Fixed bug when recursively watching with a depth a non-existent directory that is created
