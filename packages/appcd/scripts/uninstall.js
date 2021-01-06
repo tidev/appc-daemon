@@ -2,7 +2,13 @@
 	const { spawnSync } = require('child_process');
 	const path = require('path');
 	const appcd = path.resolve(__dirname, '../bin/appcd');
-	const run = (...args) => spawnSync(process.execPath, [ appcd, ...args ], { windowsHide: true });
+
+	// we must copy the env vars and prevent debug output so we can parse the JSON output
+	const { env } = process;
+	delete env.DEBUG;
+	delete env.SNOOPLOGG;
+
+	const run = (...args) => spawnSync(process.execPath, [ appcd, ...args ], { env, windowsHide: true });
 
 	const { status, stdout } = run('status', '--json');
 	if (status) {
