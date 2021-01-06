@@ -13,6 +13,7 @@
  * If the user is noobody, display the manual install message.
  */
 
+const { expandPath } = require('appcd-path');
 const { snooplogg } = require('appcd-logger');
 const { cyan, yellow } = snooplogg.chalk;
 const { spawnSync } = require('child_process');
@@ -23,15 +24,15 @@ const spawnOpts = {
 	},
 	stdio: 'inherit'
 };
+const appcd = expandPath(`${__dirname}/../bin/appcd`);
 
 console.log(cyan('Appc Daemon Postinstall Script\n'));
 
 // step 1: stop the server if it's running
 console.log('Stopping the Appc Daemon..');
-spawnSync(process.execPath, [ `${__dirname}/bin/appcd`, '--no-banner', 'stop' ], spawnOpts);
+spawnSync(process.execPath, [ appcd, '--no-banner', 'stop' ], spawnOpts);
 
 // step 2: load the config so we can find the appcd home directory
-const { expandPath } = require('appcd-path');
 const { loadConfig } = require('appcd-core');
 const home = expandPath(loadConfig().get('home'));
 
@@ -65,7 +66,7 @@ try {
 
 	// step 4: install the default plugins
 	console.log(`\nInstalling default plugins...${spawnOpts.uid ? ` (uid ${spawnOpts.uid})` : ''}`);
-	spawnSync(process.execPath, [ `${__dirname}/bin/appcd`, '--no-banner', 'pm', 'install', 'default' ], spawnOpts);
+	spawnSync(process.execPath, [ appcd, '--no-banner', 'pm', 'install', 'default' ], spawnOpts);
 } catch (e) {
 	// step ?: fall back to the manual install message
 	const boxen = require('boxen');
