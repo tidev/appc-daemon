@@ -28,7 +28,7 @@ import appcdLogger from 'appcd-logger';
 			pkg:       resolve(__dirname, '..', 'package.json'),
 			proxy:     network?.proxy,
 			strictSSL: network?.strictSSL
-		});
+		}).catch(() => {});
 	});
 
 	try {

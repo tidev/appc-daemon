@@ -1,3 +1,7 @@
+# v4.2.1
+
+ * chore: Updated dependencies.
+
 # v4.2.0 (Jan 5, 2021)
 
  * feat: Added appcd CLI version to status.
