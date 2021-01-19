@@ -1,4 +1,4 @@
-# v4.0.0-rc5 (Jan 11, 2021)
+# v4.0.0-rc6 (Jan 19, 2021)
 
  * BREAKING CHANGE: Requires Node.js 10.19.0 or newer.
    [(DAEMON-334)](https://jira.appcelerator.org/browse/DAEMON-334)
