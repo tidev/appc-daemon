@@ -10,98 +10,146 @@ This is a major release with breaking changes, new features, bug fixes, and depe
 npm i -g appcd@1.0.0
 ```
 
-### appcd@1.0.0
+### appcd
 
- - Initial release.
+ * **v1.0.0** - 12/5/2017
 
-### appcd-agent@1.0.0
+   - Initial release.
 
- - Initial release.
+### appcd-agent
 
-### appcd-client@1.0.0
+ * **v1.0.0** - 12/5/2017
 
- - Initial release.
+   - Initial release.
 
-### appcd-config@1.0.0
+### appcd-client
 
- - Initial release.
+ * **v1.0.0** - 12/5/2017
 
-### appcd-config-service@1.0.0
+   - Initial release.
 
- - Initial release.
+### appcd-config
 
-### appcd-core@1.0.0
+ * **v1.0.0** - 12/5/2017
 
- - Initial release.
+   - Initial release.
 
-### appcd-default-plugins@1.0.0
+### appcd-config-service
 
- - Initial release.
+ * **v1.0.0** - 12/5/2017
 
-### appcd-detect@1.0.0
+   - Initial release.
 
- - Initial release.
+### appcd-core
 
-### appcd-dispatcher@1.0.0
+ * **v1.0.0** - 12/5/2017
 
- - Initial release.
+   - Initial release.
 
-### appcd-fs@1.0.0
+### appcd-default-plugins
 
- - Initial release.
+ * **v1.0.0** - 12/5/2017
 
-### appcd-fswatcher@1.0.0
+   - Initial release.
 
- - Initial release.
+### appcd-detect
 
-### appcd-gulp@1.0.0
+ * **v1.0.0** - 12/5/2017
 
- - Initial release.
+   - Initial release.
 
-### appcd-http@1.0.0
+### appcd-dispatcher
 
- - Initial release.
+ * **v1.0.0** - 12/5/2017
 
-### appcd-logger@1.0.0
+   - Initial release.
 
- - Initial release.
+### appcd-fs
 
-### appcd-machine-id@1.0.0
+ * **v1.0.0** - 12/5/2017
 
- - Initial release.
+   - Initial release.
 
-### appcd-nodejs@1.0.0
+### appcd-fswatcher
 
- - Initial release.
+ * **v1.0.0** - 12/5/2017
 
-### appcd-path@1.0.0
+   - Initial release.
 
- - Initial release.
+### appcd-gulp
 
-### appcd-plugin@1.0.0
+ * **v1.0.0** - 12/5/2017
 
- - Initial release.
+   - Initial release.
 
-### appcd-request@1.0.0
+### appcd-http
 
- - Initial release.
+ * **v1.0.0** - 12/5/2017
 
-### appcd-response@1.0.0
+   - Initial release.
 
- - Initial release.
+### appcd-logger
 
-### appcd-subprocess@1.0.0
+ * **v1.0.0** - 12/5/2017
 
- - Initial release.
+   - Initial release.
 
-### appcd-telemetry@1.0.0
+### appcd-machine-id
 
- - Initial release.
+ * **v1.0.0** - 12/5/2017
 
-### appcd-util@1.0.0
+   - Initial release.
 
- - Initial release.
+### appcd-nodejs
 
-### appcd-winreg@1.0.0
+ * **v1.0.0** - 12/5/2017
 
- - Initial release.
+   - Initial release.
+
+### appcd-path
+
+ * **v1.0.0** - 12/5/2017
+
+   - Initial release.
+
+### appcd-plugin
+
+ * **v1.0.0** - 12/5/2017
+
+   - Initial release.
+
+### appcd-request
+
+ * **v1.0.0** - 12/5/2017
+
+   - Initial release.
+
+### appcd-response
+
+ * **v1.0.0** - 12/5/2017
+
+   - Initial release.
+
+### appcd-subprocess
+
+ * **v1.0.0** - 12/5/2017
+
+   - Initial release.
+
+### appcd-telemetry
+
+ * **v1.0.0** - 12/5/2017
+
+   - Initial release.
+
+### appcd-util
+
+ * **v1.0.0** - 12/5/2017
+
+   - Initial release.
+
+### appcd-winreg
+
+ * **v1.0.0** - 12/5/2017
+
+   - Initial release.

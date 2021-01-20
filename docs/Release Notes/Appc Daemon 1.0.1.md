@@ -10,104 +10,152 @@ This is a patch release with bug fixes and minor dependency updates.
 npm i -g appcd@1.0.1
 ```
 
-### appcd@1.0.1
+### appcd
 
- * fix: Fixed bug where restarting the daemon didn't wait for it to gracefully shutdown.
-   [(DAEMON-207)](https://jira.appcelerator.org/browse/DAEMON-207)
- * chore: Updated dependencies.
+ * **v1.0.1** - 12/15/2017
 
-### appcd-agent@1.0.1
+   * fix: Fixed bug where restarting the daemon didn't wait for it to gracefully shutdown.
+     [(DAEMON-207)](https://jira.appcelerator.org/browse/DAEMON-207)
+   * chore: Updated dependencies.
 
- * chore: Updated dependencies.
+### appcd-agent
 
-### appcd-client@1.0.1
+ * **v1.0.1** - 12/15/2017
 
- * fix: Only set `Accept-Language` if locale is `null`.
-   [(DAEMON-201)](https://jira.appcelerator.org/browse/DAEMON-201)
- * chore: Updated dependencies.
+   * chore: Updated dependencies.
 
-### appcd-config@1.0.1
+### appcd-client
 
- * chore: Updated dependencies.
+ * **v1.0.1** - 12/15/2017
 
-### appcd-config-service@1.0.1
+   * fix: Only set `Accept-Language` if locale is `null`.
+     [(DAEMON-201)](https://jira.appcelerator.org/browse/DAEMON-201)
+   * chore: Updated dependencies.
 
- * chore: Updated dependencies.
+### appcd-config
 
-### appcd-core@1.0.1
+ * **v1.0.1** - 12/15/2017
 
- * chore: Updated dependencies.
+   * chore: Updated dependencies.
 
-### appcd-default-plugins@1.0.1
+### appcd-config-service
 
- * chore: Updated dependencies.
+ * **v1.0.1** - 12/15/2017
 
-### appcd-detect@1.0.1
+   * chore: Updated dependencies.
 
- * chore: Updated dependencies.
+### appcd-core
 
-### appcd-dispatcher@1.0.1
+ * **v1.0.1** - 12/15/2017
 
- * chore: Updated dependencies.
+   * chore: Updated dependencies.
 
-### appcd-fs@1.0.1
+### appcd-default-plugins
 
- * chore: Updated dependencies.
+ * **v1.0.1** - 12/15/2017
 
-### appcd-fswatcher@1.0.1
+   * chore: Updated dependencies.
 
- * chore: Updated dependencies.
+### appcd-detect
 
-### appcd-gulp@1.0.1
+ * **v1.0.1** - 12/15/2017
 
- * Updated dependencies:
-   - core-js 2.5.1 -> 2.5.3
-   - eslint 4.12.0 -> 4.13.1
+   * chore: Updated dependencies.
 
-### appcd-http@1.0.1
+### appcd-dispatcher
 
- * chore: Updated dependencies.
+ * **v1.0.1** - 12/15/2017
 
-### appcd-logger@1.0.1
+   * chore: Updated dependencies.
 
- * chore: Updated dependencies.
+### appcd-fs
 
-### appcd-machine-id@1.0.1
+ * **v1.0.1** - 12/15/2017
 
- * chore: Updated dependencies.
+   * chore: Updated dependencies.
 
-### appcd-nodejs@1.0.1
+### appcd-fswatcher
 
- * chore: Updated dependencies.
+ * **v1.0.1** - 12/15/2017
 
-### appcd-path@1.0.1
+   * chore: Updated dependencies.
 
- * chore: Updated dependencies.
+### appcd-gulp
 
-### appcd-plugin@1.0.1
+ * **v1.0.1** - 12/15/2017
 
- * chore: Updated dependencies.
+   * Updated dependencies:
+     - core-js 2.5.1 -> 2.5.3
+     - eslint 4.12.0 -> 4.13.1
 
-### appcd-request@1.0.1
+### appcd-http
 
- * chore: Updated dependencies.
+ * **v1.0.1** - 12/15/2017
 
-### appcd-response@1.0.1
+   * chore: Updated dependencies.
 
- * chore: Updated dependencies.
+### appcd-logger
 
-### appcd-subprocess@1.0.1
+ * **v1.0.1** - 12/15/2017
 
- * chore: Updated dependencies.
+   * chore: Updated dependencies.
 
-### appcd-telemetry@1.0.1
+### appcd-machine-id
 
- * chore: Updated dependencies:
+ * **v1.0.1** - 12/15/2017
 
-### appcd-util@1.0.1
+   * chore: Updated dependencies.
 
- * chore: Updated dependencies.
+### appcd-nodejs
 
-### appcd-winreg@1.0.1
+ * **v1.0.1** - 12/15/2017
 
- * chore: Updated dependencies.
+   * chore: Updated dependencies.
+
+### appcd-path
+
+ * **v1.0.1** - 12/15/2017
+
+   * chore: Updated dependencies.
+
+### appcd-plugin
+
+ * **v1.0.1** - 12/15/2017
+
+   * chore: Updated dependencies.
+
+### appcd-request
+
+ * **v1.0.1** - 12/15/2017
+
+   * chore: Updated dependencies.
+
+### appcd-response
+
+ * **v1.0.1** - 12/15/2017
+
+   * chore: Updated dependencies.
+
+### appcd-subprocess
+
+ * **v1.0.1** - 12/15/2017
+
+   * chore: Updated dependencies.
+
+### appcd-telemetry
+
+ * **v1.0.1** - 12/15/2017
+
+   * chore: Updated dependencies:
+
+### appcd-util
+
+ * **v1.0.1** - 12/15/2017
+
+   * chore: Updated dependencies.
+
+### appcd-winreg
+
+ * **v1.0.1** - 12/15/2017
+
+   * chore: Updated dependencies.

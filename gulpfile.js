@@ -1427,7 +1427,8 @@ exports['release-notes'] = async function releaseNotes() {
 				console.error(stderr.toString());
 				process.exit(1);
 			}
-			fs.writeFileSync(cacheFile, stdout.toString());
+			const s = stdout.toString();
+			fs.writeFileSync(cacheFile, s);
 
 			info = s ? JSON.parse(s) : null;
 		}
@@ -1630,19 +1631,27 @@ exports['release-notes'] = async function releaseNotes() {
 			s += 'This is a patch release with bug fixes and minor dependency updates.\n\n';
 		}
 		s += `### Installation\n\n\`\`\`\nnpm i -g appcd@${cleanVersion}\n\`\`\`\n\n`
-		s += `### appcd@${cleanVersion}\n\n${changelog}\n\n`;
+		s += '### appcd\n\n';
+		s += ` * **v${cleanVersion}**${ts ? ` - ${dt.toLocaleDateString()}` : ''}\n\n`;
+		s += `${changelog.split('\n').map(s => `  ${s}`).join('\n')}\n\n`;
 
 		for (const pkg of pkgs) {
 			const vers = Object.keys(packages[pkg].versions).filter(ver => {
 				const { ts } = packages[pkg].versions[ver];
 				return !ts || new Date(ts) < dt;
-			}).sort(semver.compare);
+			}).sort(semver.rcompare);
 
+			let vs = '';
 			for (const v of vers) {
 				if (packages[pkg].versions[v].changelog) {
-					s += `### ${pkg}@${v}\n\n${packages[pkg].versions[v].changelog}\n\n`;
+					const pts = new Date(packages[pkg].versions[v].ts);
+					vs += ` * **v${v}** - ${pts.toLocaleDateString()}\n\n`;
+					vs += `${packages[pkg].versions[v].changelog.split('\n').map(s => `  ${s}`).join('\n')}\n\n`;
 				}
 				delete packages[pkg].versions[v];
+			}
+			if (vs) {
+				s += `### ${pkg.replace(/@.+\//, '')}\n\n${vs}`;
 			}
 		}
 

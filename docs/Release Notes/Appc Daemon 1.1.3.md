@@ -10,105 +10,155 @@ This is a patch release with bug fixes and minor dependency updates.
 npm i -g appcd@1.1.3
 ```
 
-### appcd@1.1.3
+### appcd
 
- * chore: Updated dependencies.
+ * **v1.1.3** - 5/24/2018
 
-### appcd-agent@1.1.2
+   * chore: Updated dependencies.
 
- * chore: Updated dependencies.
+### appcd-agent
 
-### appcd-client@1.1.1
+ * **v1.1.2** - 5/24/2018
 
- * chore: Updated dependencies.
+   * chore: Updated dependencies.
 
-### appcd-config@1.1.1
+### appcd-client
 
- * chore: Updated dependencies.
+ * **v1.1.1** - 5/24/2018
 
-### appcd-config-service@1.1.1
+   * chore: Updated dependencies.
 
- * chore: Updated dependencies.
+### appcd-config
 
-### appcd-core@1.1.3
+ * **v1.1.1** - 5/24/2018
 
- * fix: Removed `process.argv` from telemetry payload for GDPR.
-   [(DAEMON-257)](https://jira.appcelerator.org/browse/DAEMON-257)
- * chore: Updated dependencies.
+   * chore: Updated dependencies.
 
-### appcd-default-plugins@1.1.3
+### appcd-config-service
 
- * chore: Updated dependencies.
+ * **v1.1.1** - 5/24/2018
 
-### appcd-detect@1.1.1
+   * chore: Updated dependencies.
 
- * chore: Updated dependencies.
+### appcd-core
 
-### appcd-dispatcher@1.1.1
+ * **v1.1.3** - 5/24/2018
 
- * chore: Updated dependencies.
+   * fix: Removed `process.argv` from telemetry payload for GDPR.
+     [(DAEMON-257)](https://jira.appcelerator.org/browse/DAEMON-257)
+   * chore: Updated dependencies.
 
-### appcd-fs@1.1.2
+### appcd-default-plugins
 
- * chore: Updated dependencies.
+ * **v1.1.3** - 5/24/2018
 
-### appcd-fswatch-manager@1.0.1
+   * chore: Updated dependencies.
 
- * chore: Updated dependencies.
+### appcd-detect
 
-### appcd-fswatcher@1.1.1
+ * **v1.1.1** - 5/24/2018
 
- * chore: Updated dependencies.
+   * chore: Updated dependencies.
 
-### appcd-gulp@1.1.5
+### appcd-dispatcher
 
- * Updated dependencies:
-   - mocha 5.1.1 -> 5.2.0
+ * **v1.1.1** - 5/24/2018
 
-### appcd-http@1.1.1
+   * chore: Updated dependencies.
 
- * chore: Updated dependencies.
+### appcd-fs
 
-### appcd-logger@1.1.1
+ * **v1.1.2** - 5/24/2018
 
- * chore: Updated dependencies.
+   * chore: Updated dependencies.
 
-### appcd-machine-id@1.1.1
+### appcd-fswatch-manager
 
- * chore: Updated dependencies.
+ * **v1.0.1** - 5/24/2018
 
-### appcd-nodejs@1.1.1
+   * chore: Updated dependencies.
 
- * chore: Updated dependencies.
+### appcd-fswatcher
 
-### appcd-path@1.1.1
+ * **v1.1.1** - 5/24/2018
 
- * chore: Updated dependencies.
+   * chore: Updated dependencies.
 
-### appcd-plugin@1.1.2
+### appcd-gulp
 
- * chore: Updated dependencies.
+ * **v1.1.5** - 5/24/2018
 
-### appcd-request@1.1.1
+   * Updated dependencies:
+     - mocha 5.1.1 -> 5.2.0
 
- * chore: Updated dependencies.
+### appcd-http
 
-### appcd-response@1.1.2
+ * **v1.1.1** - 5/24/2018
 
- * chore: Updated dependencies.
+   * chore: Updated dependencies.
 
-### appcd-subprocess@1.1.1
+### appcd-logger
 
- * chore: Updated dependencies.
+ * **v1.1.1** - 5/24/2018
 
-### appcd-telemetry@1.1.1
+   * chore: Updated dependencies.
 
- * chore: Updated dependencies:
+### appcd-machine-id
 
-### appcd-util@1.1.1
+ * **v1.1.1** - 5/24/2018
 
- * chore: Updated dependencies.
+   * chore: Updated dependencies.
 
-### appcd-winreg@1.1.1
+### appcd-nodejs
 
- * chore: Updated dependencies.
+ * **v1.1.1** - 5/24/2018
+
+   * chore: Updated dependencies.
+
+### appcd-path
+
+ * **v1.1.1** - 5/24/2018
+
+   * chore: Updated dependencies.
+
+### appcd-plugin
+
+ * **v1.1.2** - 5/24/2018
+
+   * chore: Updated dependencies.
+
+### appcd-request
+
+ * **v1.1.1** - 5/24/2018
+
+   * chore: Updated dependencies.
+
+### appcd-response
+
+ * **v1.1.2** - 5/24/2018
+
+   * chore: Updated dependencies.
+
+### appcd-subprocess
+
+ * **v1.1.1** - 5/24/2018
+
+   * chore: Updated dependencies.
+
+### appcd-telemetry
+
+ * **v1.1.1** - 5/24/2018
+
+   * chore: Updated dependencies:
+
+### appcd-util
+
+ * **v1.1.1** - 5/24/2018
+
+   * chore: Updated dependencies.
+
+### appcd-winreg
+
+ * **v1.1.1** - 5/24/2018
+
+   * chore: Updated dependencies.

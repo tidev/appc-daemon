@@ -10,70 +10,104 @@ This is a minor release with new features, bug fixes, and dependency updates.
 npm i -g appcd@2.1.0
 ```
 
-### appcd@2.1.0
+### appcd
 
- * chore: Upgraded to appcd-logger@2.0.0.
+ * **v2.1.0** - 1/24/2019
 
-### appcd-client@1.2.0
+   * chore: Upgraded to appcd-logger@2.0.0.
 
- * chore: Upgraded to appcd-logger@2.0.0.
+### appcd-client
 
-### appcd-config@1.2.0
+ * **v1.2.0** - 1/24/2019
 
- * chore: Upgraded to appcd-logger@2.0.0.
+   * chore: Upgraded to appcd-logger@2.0.0.
 
-### appcd-config-service@1.2.0
+### appcd-config
 
- * chore: Upgraded to appcd-logger@2.0.0.
+ * **v1.2.0** - 1/24/2019
 
-### appcd-core@2.1.0
+   * chore: Upgraded to appcd-logger@2.0.0.
 
- * chore: Upgraded to appcd-logger@2.0.0.
+### appcd-config-service
 
-### appcd-detect@1.2.0
+ * **v1.2.0** - 1/24/2019
 
- * chore: Upgraded to appcd-logger@2.0.0.
+   * chore: Upgraded to appcd-logger@2.0.0.
 
-### appcd-dispatcher@1.3.0
+### appcd-core
 
- * chore: Upgraded to appcd-logger@2.0.0.
+ * **v2.1.0** - 1/24/2019
 
-### appcd-fswatch-manager@1.1.0
+   * chore: Upgraded to appcd-logger@2.0.0.
 
- * chore: Upgraded to appcd-logger@2.0.0.
+### appcd-detect
 
-### appcd-fswatcher@1.2.0
+ * **v1.2.0** - 1/24/2019
 
- * chore: Upgraded to appcd-logger@2.0.0.
+   * chore: Upgraded to appcd-logger@2.0.0.
 
-### appcd-http@1.2.0
+### appcd-dispatcher
 
- * chore: Upgraded to appcd-logger@2.0.0.
+ * **v1.3.0** - 1/24/2019
 
-### appcd-logger@2.0.0
+   * chore: Upgraded to appcd-logger@2.0.0.
 
- * BREAKING CHANGE: Republish of appcd-logger@1.1.4.
+### appcd-fswatch-manager
 
-### appcd-machine-id@1.2.0
+ * **v1.1.0** - 1/24/2019
 
- * chore: Upgraded to appcd-logger@2.0.0.
+   * chore: Upgraded to appcd-logger@2.0.0.
 
-### appcd-nodejs@1.2.0
+### appcd-fswatcher
 
- * chore: Upgraded to appcd-logger@2.0.0.
+ * **v1.2.0** - 1/24/2019
 
-### appcd-plugin@1.2.0
+   * chore: Upgraded to appcd-logger@2.0.0.
 
- * chore: Upgraded to appcd-logger@2.0.0.
+### appcd-http
 
-### appcd-request@1.2.0
+ * **v1.2.0** - 1/24/2019
 
- * chore: Upgraded to appcd-logger@2.0.0.
+   * chore: Upgraded to appcd-logger@2.0.0.
 
-### appcd-subprocess@1.2.0
+### appcd-logger
 
- * chore: Upgraded to appcd-logger@2.0.0.
+ * **v2.0.0** - 1/24/2019
 
-### appcd-telemetry@1.2.0
+   * BREAKING CHANGE: Republish of appcd-logger@1.1.4.
 
- * chore: Upgraded to appcd-logger@2.0.0.
+### appcd-machine-id
+
+ * **v1.2.0** - 1/24/2019
+
+   * chore: Upgraded to appcd-logger@2.0.0.
+
+### appcd-nodejs
+
+ * **v1.2.0** - 1/24/2019
+
+   * chore: Upgraded to appcd-logger@2.0.0.
+
+### appcd-plugin
+
+ * **v1.2.0** - 1/24/2019
+
+   * chore: Upgraded to appcd-logger@2.0.0.
+
+### appcd-request
+
+ * **v1.2.0** - 1/24/2019
+
+   * chore: Upgraded to appcd-logger@2.0.0.
+
+### appcd-subprocess
+
+ * **v1.2.0** - 1/24/2019
+
+   * chore: Upgraded to appcd-logger@2.0.0.
+
+### appcd-telemetry
+
+ * **v1.2.0** - 1/24/2019
+
+   * chore: Upgraded to appcd-logger@2.0.0.

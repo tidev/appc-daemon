@@ -10,14 +10,20 @@ This is a patch release with bug fixes and minor dependency updates.
 npm i -g appcd@1.1.1
 ```
 
-### appcd@1.1.1
+### appcd
 
- * fix: Changed `exec` command to return full JSON response instead of just the message.
+ * **v1.1.1** - 4/10/2018
 
-### appcd-gulp@1.1.2
+   * fix: Changed `exec` command to return full JSON response instead of just the message.
 
- * Fixed bug where the main entry point was still referencing `pretty-log` instead of `fancy-log`.
+### appcd-gulp
 
-### appcd-response@1.1.1
+ * **v1.1.2** - 4/9/2018
 
- * feat: Added response code 501 Not Implemented.
+   * Fixed bug where the main entry point was still referencing `pretty-log` instead of `fancy-log`.
+
+### appcd-response
+
+ * **v1.1.1** - 4/10/2018
+
+   * feat: Added response code 501 Not Implemented.

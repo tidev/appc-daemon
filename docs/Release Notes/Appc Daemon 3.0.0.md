@@ -10,145 +10,195 @@ This is a major release with breaking changes, new features, bug fixes, and depe
 npm i -g appcd@3.0.0
 ```
 
-### appcd@3.0.0
+### appcd
 
- * chore: Fixed eslint `hasOwnProperty` warnings.
- * chore: Updated dependencies
+ * **v3.0.0** - 8/13/2019
 
-### appcd-agent@1.1.7
+   * chore: Fixed eslint `hasOwnProperty` warnings.
+   * chore: Updated dependencies
 
- * chore: Fixed eslint `hasOwnProperty` warnings.
- * chore: Updated dependencies.
+### appcd-agent
 
-### appcd-client@2.0.1
+ * **v1.1.7** - 8/13/2019
 
- * chore: Updated dependencies
+   * chore: Fixed eslint `hasOwnProperty` warnings.
+   * chore: Updated dependencies.
 
-### appcd-config@1.3.1
+### appcd-client
 
- * fix: Fixed bug when pushing a config value to an existing key with null value.
- * chore: Fixed eslint `hasOwnProperty` warnings.
- * chore: Updated dependencies.
+ * **v2.0.1** - 8/13/2019
 
-### appcd-config-service@2.0.1
+   * chore: Updated dependencies
 
- * chore: Updated dependencies.
+### appcd-config
 
-### appcd-core@3.0.0
+ * **v1.3.1** - 8/13/2019
 
- * BREAKING CHANGE: Updated to `appcd-default-plugins@4.0.0`, `appcd-nodejs@3.0.0`,
-   `appcd-plugin@3.0.0`, `appcd-subprocess@3.0.0`, `appcd-telemetry@3.0.0`, and `appcd-util@2.0.0`.
- * fix: Added `sid` to WebSocketSession context so remote clients will know the subscription id.
- * fix: Fixed bug where `server.hostname` was not being correctly referenced.
- * chore: Bumped Node.js version from 10.15.3 to 10.16.2.
- * chore: Updated configuration setting descriptions and metadata.
- * chore: Updated dependencies
+   * fix: Fixed bug when pushing a config value to an existing key with null value.
+   * chore: Fixed eslint `hasOwnProperty` warnings.
+   * chore: Updated dependencies.
 
-### appcd-default-plugins@4.0.0
+### appcd-config-service
 
- * BREAKING CHANGE: `appcd-default-plugins` supports both postinstall and runtime installation of
-   default plugins.
- * chore: Updated dependencies.
+ * **v2.0.1** - 8/13/2019
 
-### appcd-detect@2.2.0
+   * chore: Updated dependencies.
 
- * feat: Updated `registryKeys` option for more advanced Windows Registry handling.
- * chore: Updated dependencies.
+### appcd-core
 
-### appcd-dispatcher@2.0.1
+ * **v3.0.0** - 8/13/2019
 
- * chore: Fixed eslint `hasOwnProperty` warnings.
- * chore: Updated dependencies.
+   * BREAKING CHANGE: Updated to `appcd-default-plugins@4.0.0`, `appcd-nodejs@3.0.0`,
+     `appcd-plugin@3.0.0`, `appcd-subprocess@3.0.0`, `appcd-telemetry@3.0.0`, and `appcd-util@2.0.0`.
+   * fix: Added `sid` to WebSocketSession context so remote clients will know the subscription id.
+   * fix: Fixed bug where `server.hostname` was not being correctly referenced.
+   * chore: Bumped Node.js version from 10.15.3 to 10.16.2.
+   * chore: Updated configuration setting descriptions and metadata.
+   * chore: Updated dependencies
 
-### appcd-fs@1.1.8
+### appcd-default-plugins
 
- * chore: Updated dependencies.
+ * **v4.0.0** - 8/13/2019
 
-### appcd-fswatch-manager@2.0.1
+   * BREAKING CHANGE: `appcd-default-plugins` supports both postinstall and runtime installation of
+     default plugins.
+   * chore: Updated dependencies.
 
- * chore: Updated dependencies.
- * chore: Commented out debug log output of FS watcher tree state because it was too noisy.
+### appcd-detect
 
-### appcd-fswatcher@1.2.3
+ * **v2.2.0** - 8/13/2019
 
- * chore: Updated dependencies.
+   * feat: Updated `registryKeys` option for more advanced Windows Registry handling.
+   * chore: Updated dependencies.
 
-### appcd-gulp@2.2.0
+### appcd-dispatcher
 
- * feat: Added Node 12 Babel profile.
-   [(DAEMON-275)](https://jira.appcelerator.org/browse/DAEMON-275)
- * chore: Updated to `eslint-config-axway@4.3.0` which added eslint 6 support and added Node.js
-   eslint rules.
- * chore: Disabled `require-atomic-updates` rule.
- * chore: Removed deprecated @babel/polyfill.
- * chore: Updated dependencies.
+ * **v2.0.1** - 8/13/2019
 
-### appcd-http@1.2.3
+   * chore: Fixed eslint `hasOwnProperty` warnings.
+   * chore: Updated dependencies.
 
- * chore: Updated dependencies.
+### appcd-fs
 
-### appcd-logger@2.0.3
+ * **v1.1.8** - 8/13/2019
 
- * chore: Updated dependencies.
+   * chore: Updated dependencies.
 
-### appcd-machine-id@3.0.1
+### appcd-fswatch-manager
 
- * BREAKING CHANGE: Updated to `appcd-subprocess@3.0.0`.
- * chore: Updated dependencies.
+ * **v2.0.1** - 8/13/2019
 
-### appcd-nodejs@3.0.0
+   * chore: Updated dependencies.
+   * chore: Commented out debug log output of FS watcher tree state because it was too noisy.
 
- * BREAKING CHANGE: Updated to `appcd-util@2.0.0`.
- * chore: Updated dependencies.
+### appcd-fswatcher
 
-### appcd-path@1.1.7
+ * **v1.2.3** - 8/13/2019
 
- * chore: Updated dependencies.
+   * chore: Updated dependencies.
 
-### appcd-plugin@2.2.0
+### appcd-gulp
 
- * chore: Updated to `appcd-config-service@2.0.0`.
+ * **v2.2.0** - 8/13/2019
 
-### appcd-plugin@3.0.0
+   * feat: Added Node 12 Babel profile.
+     [(DAEMON-275)](https://jira.appcelerator.org/browse/DAEMON-275)
+   * chore: Updated to `eslint-config-axway@4.3.0` which added eslint 6 support and added Node.js
+     eslint rules.
+   * chore: Disabled `require-atomic-updates` rule.
+   * chore: Removed deprecated @babel/polyfill.
+   * chore: Updated dependencies.
 
- * BREAKING CHANGE: Updated to `appcd-machine-id@3.0.1`, `appcd-nodejs@3.0.0`,
-   `appcd-subprocess@3.0.0`, `appcd-telemetry@3.0.0`, and `appcd-util@2.0.0`.
- * chore: Fixed eslint `hasOwnProperty` warnings.
- * chore: Updated dependencies.
+### appcd-http
 
-### appcd-request@2.1.0
+ * **v1.2.3** - 8/13/2019
 
- * fix: Fixed request config setting precedence such that environment variables override config
-   settings.
- * chore: Updated dependencies.
+   * chore: Updated dependencies.
 
-### appcd-response@2.0.1
+### appcd-logger
 
- * chore: Fixed eslint `hasOwnProperty` warnings.
- * chore: Updated dependencies.
+ * **v2.0.3** - 8/13/2019
 
-### appcd-subprocess@3.0.0
+   * chore: Updated dependencies.
 
- * BREAKING CHANGE: Updated to `appcd-nodejs@3.0.0`.
- * chore: Fixed eslint `hasOwnProperty` warnings.
- * chore: Updated dependencies.
+### appcd-machine-id
 
-### appcd-telemetry@3.0.0
+ * **v3.0.1** - 8/13/2019
 
- * BREAKING CHANGE: Updated to `appcd-machine-id@3.0.0`.
- * fix: Fixed bug where events were sent out-of-order if there was a connection error sending a
-   batch of data.
- * fix: Fixed bug where the next schuduled sending of events was stopped if shutdown prior to
-   scheduling.
- * fix: Fixed live config changes for environment name.
- * chore: Updated dependencies.
+   * BREAKING CHANGE: Updated to `appcd-subprocess@3.0.0`.
+   * chore: Updated dependencies.
 
-### appcd-util@2.0.0
+### appcd-nodejs
 
- * BREAKING CHANGE: Bumped minimum supported Node.js version from `>=8.0.0` to `>=8.1.0` to fix
-   issue where 8.0.x didn't support `async_hooks.createHook()`, yet `appcd-util` was using it.
- * chore: Updated dependencies
+ * **v3.0.0** - 8/13/2019
 
-### appcd-winreg@1.1.7
+   * BREAKING CHANGE: Updated to `appcd-util@2.0.0`.
+   * chore: Updated dependencies.
 
- * chore: Updated dependencies.
+### appcd-path
+
+ * **v1.1.7** - 8/13/2019
+
+   * chore: Updated dependencies.
+
+### appcd-plugin
+
+ * **v3.0.0** - 8/13/2019
+
+   * BREAKING CHANGE: Updated to `appcd-machine-id@3.0.1`, `appcd-nodejs@3.0.0`,
+     `appcd-subprocess@3.0.0`, `appcd-telemetry@3.0.0`, and `appcd-util@2.0.0`.
+   * chore: Fixed eslint `hasOwnProperty` warnings.
+   * chore: Updated dependencies.
+
+ * **v2.2.0** - 6/25/2019
+
+   * chore: Updated to `appcd-config-service@2.0.0`.
+
+### appcd-request
+
+ * **v2.1.0** - 8/13/2019
+
+   * fix: Fixed request config setting precedence such that environment variables override config
+     settings.
+   * chore: Updated dependencies.
+
+### appcd-response
+
+ * **v2.0.1** - 8/13/2019
+
+   * chore: Fixed eslint `hasOwnProperty` warnings.
+   * chore: Updated dependencies.
+
+### appcd-subprocess
+
+ * **v3.0.0** - 8/13/2019
+
+   * BREAKING CHANGE: Updated to `appcd-nodejs@3.0.0`.
+   * chore: Fixed eslint `hasOwnProperty` warnings.
+   * chore: Updated dependencies.
+
+### appcd-telemetry
+
+ * **v3.0.0** - 8/13/2019
+
+   * BREAKING CHANGE: Updated to `appcd-machine-id@3.0.0`.
+   * fix: Fixed bug where events were sent out-of-order if there was a connection error sending a
+     batch of data.
+   * fix: Fixed bug where the next schuduled sending of events was stopped if shutdown prior to
+     scheduling.
+   * fix: Fixed live config changes for environment name.
+   * chore: Updated dependencies.
+
+### appcd-util
+
+ * **v2.0.0** - 8/13/2019
+
+   * BREAKING CHANGE: Bumped minimum supported Node.js version from `>=8.0.0` to `>=8.1.0` to fix
+     issue where 8.0.x didn't support `async_hooks.createHook()`, yet `appcd-util` was using it.
+   * chore: Updated dependencies
+
+### appcd-winreg
+
+ * **v1.1.7** - 8/13/2019
+
+   * chore: Updated dependencies.
