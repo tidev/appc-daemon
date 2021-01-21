@@ -46,7 +46,7 @@
     "libnpmsearch": "^3.1.0",
     "msgpack-lite": "^0.1.26",
     "npm-package-arg": "^8.1.0",
-    "pacote": "^11.2.2",
+    "pacote": "^11.2.3",
     "promise-limit": "^2.7.0",
     "semver": "^7.3.4",
     "template-kit": "^2.2.1",
