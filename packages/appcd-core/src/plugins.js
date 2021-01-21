@@ -783,7 +783,10 @@ async function updateMonorepo({ fn, home, workspaces, yarn }) {
 		version: '0.0.0',
 		workspaces,
 		appcd: {
-			node: appcdCoreNodejs
+			core:             appcdCoreVersion,
+			node:             appcdCoreNodejs,
+			pluginAPIVersion: appcdPluginAPIVersion,
+			version:          process.env.APPCD || appcdCoreVersion
 		}
 	}, { spaces: 2 });
 

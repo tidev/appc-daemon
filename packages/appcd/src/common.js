@@ -223,7 +223,6 @@ export async function startServer({ cfg, argv }) {
 		args.push('--config-file', configFile);
 	}
 
-	process.env.APPCD = appcdVersion;
 	if ((debug || debugInspect) && !argv.color) {
 		process.env.APPCD_NO_COLORS = 1;
 	}

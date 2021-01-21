@@ -3,7 +3,7 @@ import CLI from 'cli-kit';
 
 import { getAppcdVersion } from './common';
 
-const version = getAppcdVersion();
+const version = process.env.APPCD = getAppcdVersion();
 
 let banner;
 if (!Object.prototype.hasOwnProperty.call(process.env, 'APPC_NPM_VERSION')) {

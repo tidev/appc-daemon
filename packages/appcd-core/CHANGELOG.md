@@ -1,5 +1,7 @@
 # v4.2.1
 
+ * fix(plugins): Added appcd, appcd core, and plugin API version to plugin monorepo
+   `package.json`.
  * chore: Updated dependencies.
 
 # v4.2.0 (Jan 5, 2021)

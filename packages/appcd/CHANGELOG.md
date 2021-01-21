@@ -1,4 +1,4 @@
-# v4.0.0-rc6 (Jan 19, 2021)
+# v4.0.0-rc7
 
  * BREAKING CHANGE: Requires Node.js 10.19.0 or newer.
    [(DAEMON-334)](https://jira.appcelerator.org/browse/DAEMON-334)
@@ -14,6 +14,7 @@
  * BREAKING CHANGE(config): Write operations such as `set` return `"OK"` instead of `"Saved"`.
  * BREAKING CHANGE(config): All network related environment variables have been removed in favor
    of the config file.
+ * feat(status): Added appcd CLI version to status output.
  * feat(status): Added Plugin API Version to the status output.
    [(DAEMON-314)](https://jira.appcelerator.org/browse/DAEMON-314)
  * feat: Added `pm` command for managing appcd plugins.
@@ -24,7 +25,6 @@
  * feat: Added notificaiton if new version is available.
  * feat(action): Added install default plugins action.
  * feat(scripts): Added uninstall script to stop the daemon if running.
- * feat(status): Added appcd CLI version to status output.
  * refactor: Updated to latest `AppcdConfig` usage where `save()` is now synchronous and we no
    longer need to set the config file to save to since it uses the same file path that was used to
    load the config.
@@ -41,6 +41,7 @@
    flag, however if it's passed in, the `"json"` value will be set to `true` instead of an object
    containing the request data payload.
  * fix(debug): Fixed graceful shutdown when running the daemon in debug mode.
+ * fix: Set `APPCD` environment variable for all command, not just starting the server.
  * chore: Updated dependencies.
 
 # v3.2.0 (Jan 13, 2020)
