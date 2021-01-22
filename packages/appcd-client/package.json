@@ -1,6 +1,6 @@
 {
   "name": "appcd-client",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "description": "The Node.js client for connecting to the Appc Daemon.",
   "main": "./dist/client",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
@@ -22,9 +22,9 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-logger": "^3.0.2",
-    "appcd-response": "^3.0.2",
-    "appcd-util": "^3.1.1",
+    "appcd-logger": "^3.0.3",
+    "appcd-response": "^3.0.3",
+    "appcd-util": "^3.1.2",
     "fs-extra": "^9.1.0",
     "msgpack-lite": "^0.1.26",
     "source-map-support": "^0.5.19",
@@ -33,7 +33,7 @@
     "ws": "^7.4.2"
   },
   "devDependencies": {
-    "appcd-gulp": "^3.1.1"
+    "appcd-gulp": "^3.1.2"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
