@@ -1,5 +1,6 @@
 # v4.2.4
 
+ * fix: Gracefully handle plugins that fail to auto-start.
  * chore: Updated dependencies.
 
 # v4.2.3 (Jan 5, 2021)

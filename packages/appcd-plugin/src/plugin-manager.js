@@ -190,8 +190,12 @@ export default class PluginManager extends Dispatcher {
 			const plugins = Object.values(pluginsToStart);
 			if (plugins.length) {
 				for (const plugin of plugins) {
-					logger.log(`Auto-starting ${highlight(`${plugin.name}@${plugin.version}`)}`);
-					await plugin.start(true);
+					logger.log(`Auto-starting ${highlight(`${plugin.toString()}`)}`);
+					try {
+						await plugin.start(true);
+					} catch (err) {
+						logger.error(`Failed to auto-start plugin: ${highlight(plugin.toString())}`);
+					}
 				}
 			} else {
 				logger.log('No plugins to auto-start');
