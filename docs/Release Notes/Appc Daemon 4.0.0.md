@@ -1,6 +1,6 @@
 # Appc Daemon 4.0.0
 
-## Unreleased
+## Jan 22, 2021
 
 This is a major release with breaking changes, new features, bug fixes, and dependency updates.
 
@@ -12,7 +12,7 @@ npm i -g appcd@4.0.0
 
 ### appcd
 
- * **v4.0.0**
+ * **v4.0.0** - 1/22/2021
 
    * BREAKING CHANGE: Requires Node.js 10.19.0 or newer.
      [(DAEMON-334)](https://jira.appcelerator.org/browse/DAEMON-334)
@@ -28,6 +28,7 @@ npm i -g appcd@4.0.0
    * BREAKING CHANGE(config): Write operations such as `set` return `"OK"` instead of `"Saved"`.
    * BREAKING CHANGE(config): All network related environment variables have been removed in favor
      of the config file.
+   * feat(status): Added appcd CLI version to status output.
    * feat(status): Added Plugin API Version to the status output.
      [(DAEMON-314)](https://jira.appcelerator.org/browse/DAEMON-314)
    * feat: Added `pm` command for managing appcd plugins.
@@ -38,7 +39,6 @@ npm i -g appcd@4.0.0
    * feat: Added notificaiton if new version is available.
    * feat(action): Added install default plugins action.
    * feat(scripts): Added uninstall script to stop the daemon if running.
-   * feat(status): Added appcd CLI version to status output.
    * refactor: Updated to latest `AppcdConfig` usage where `save()` is now synchronous and we no
      longer need to set the config file to save to since it uses the same file path that was used to
      load the config.
@@ -55,9 +55,14 @@ npm i -g appcd@4.0.0
      flag, however if it's passed in, the `"json"` value will be set to `true` instead of an object
      containing the request data payload.
    * fix(debug): Fixed graceful shutdown when running the daemon in debug mode.
+   * fix: Set `APPCD` environment variable for all command, not just starting the server.
    * chore: Updated dependencies.
 
 ### appcd-agent
+
+ * **v2.0.3** - 1/22/2021
+
+   * chore: Updated dependencies.
 
  * **v2.0.2** - 1/5/2021
 
@@ -75,7 +80,7 @@ npm i -g appcd@4.0.0
 
 ### appcd-client
 
- * **v3.0.3** - 1/20/2021
+ * **v3.0.3** - 1/22/2021
 
    * chore: Updated dependencies.
 
@@ -96,6 +101,10 @@ npm i -g appcd@4.0.0
    * chore: Updated dependencies.
 
 ### appcd-config
+
+ * **v3.0.3** - 1/22/2021
+
+   * chore: Updated dependencies.
 
  * **v3.0.2** - 1/5/2021
 
@@ -119,9 +128,13 @@ npm i -g appcd@4.0.0
 
 ### appcd-config-service
 
+ * **v3.1.2** - 1/22/2021
+
+   * chore: Updated dependencies.
+
  * **v3.1.1** - 1/5/2021
 
-  * chore: Updated dependencies.
+   * chore: Updated dependencies.
 
  * **v3.1.0** - 12/1/2020
 
@@ -141,8 +154,10 @@ npm i -g appcd@4.0.0
 
 ### appcd-core
 
- * **v4.2.1** - 1/20/2021
+ * **v4.2.1** - 1/22/2021
 
+   * fix(plugins): Added appcd, appcd core, and plugin API version to plugin monorepo
+     `package.json`.
    * chore: Updated dependencies.
 
  * **v4.2.0** - 1/5/2021
@@ -215,7 +230,7 @@ npm i -g appcd@4.0.0
 
 ### appcd-detect
 
- * **v3.1.2** - 1/20/2021
+ * **v3.1.2** - 1/22/2021
 
    * chore: Updated dependencies.
 
@@ -235,6 +250,10 @@ npm i -g appcd@4.0.0
    * chore: Updated dependencies.
 
 ### appcd-dispatcher
+
+ * **v3.1.2** - 1/22/2021
+
+   * chore: Updated dependencies.
 
  * **v3.1.1** - 1/5/2021
 
@@ -257,7 +276,7 @@ npm i -g appcd@4.0.0
 
 ### appcd-fs
 
- * **v2.0.3** - 1/20/2021
+ * **v2.0.3** - 1/22/2021
 
    * chore: Updated dependencies.
 
@@ -277,7 +296,7 @@ npm i -g appcd@4.0.0
 
 ### appcd-fswatch-manager
 
- * **v3.0.3** - 1/20/2021
+ * **v3.0.3** - 1/22/2021
 
    * chore: Updated dependencies.
 
@@ -296,6 +315,10 @@ npm i -g appcd@4.0.0
    * chore: Updated dependencies.
 
 ### appcd-fswatcher
+
+ * **v2.0.3** - 1/22/2021
+
+   * chore: Updated dependencies.
 
  * **v2.0.2** - 1/5/2021
 
@@ -317,7 +340,7 @@ npm i -g appcd@4.0.0
 
 ### appcd-gulp
 
- * **v3.1.2** - 1/20/2021
+ * **v3.1.2** - 1/22/2021
 
    * chore: Updated dependencies.
 
@@ -349,7 +372,7 @@ npm i -g appcd@4.0.0
 
 ### appcd-http
 
- * **v2.0.3** - 1/20/2021
+ * **v2.0.3** - 1/22/2021
 
    * chore: Updated dependencies.
 
@@ -369,6 +392,10 @@ npm i -g appcd@4.0.0
 
 ### appcd-logger
 
+ * **v3.0.3** - 1/22/2021
+
+   * chore: Updated dependencies.
+
  * **v3.0.2** - 1/5/2021
 
    * chore: Updated dependencies.
@@ -385,7 +412,7 @@ npm i -g appcd@4.0.0
 
 ### appcd-machine-id
 
- * **v4.1.2** - 1/20/2021
+ * **v4.1.2** - 1/22/2021
 
    * chore: Updated dependencies.
 
@@ -406,7 +433,7 @@ npm i -g appcd@4.0.0
 
 ### appcd-nodejs
 
- * **v4.1.2** - 1/20/2021
+ * **v4.1.2** - 1/22/2021
 
    * chore: Updated dependencies.
 
@@ -429,7 +456,7 @@ npm i -g appcd@4.0.0
 
 ### appcd-path
 
- * **v2.0.4** - 1/20/2021
+ * **v2.0.4** - 1/22/2021
 
    * chore: Updated dependencies.
 
@@ -458,8 +485,9 @@ npm i -g appcd@4.0.0
 
 ### appcd-plugin
 
- * **v4.2.4** - 1/20/2021
+ * **v4.2.4** - 1/22/2021
 
+   * fix: Gracefully handle plugins that fail to auto-start.
    * chore: Updated dependencies.
 
  * **v4.2.3** - 1/5/2021
@@ -553,6 +581,10 @@ npm i -g appcd@4.0.0
 
 ### appcd-response
 
+ * **v3.0.3** - 1/22/2021
+
+   * chore: Updated dependencies.
+
  * **v3.0.2** - 1/5/2021
 
    * chore: Updated dependencies.
@@ -568,6 +600,10 @@ npm i -g appcd@4.0.0
    * chore: Updated dependencies.
 
 ### appcd-subprocess
+
+ * **v5.0.2** - 1/22/2021
+
+   * chore: Updated dependencies.
 
  * **v5.0.1** - 1/5/2021
 
@@ -587,6 +623,10 @@ npm i -g appcd@4.0.0
 
 ### appcd-subprocess-manager
 
+ * **v1.0.2** - 1/22/2021
+
+   * chore: Updated dependencies.
+
  * **v1.0.1** - 1/5/2021
 
    * chore: Updated dependencies.
@@ -602,7 +642,7 @@ npm i -g appcd@4.0.0
 
 ### appcd-telemetry
 
- * **v5.0.2** - 1/20/2021
+ * **v5.0.2** - 1/22/2021
 
    * chore: Updated dependencies.
 
@@ -627,6 +667,10 @@ npm i -g appcd@4.0.0
    * chore: Updated dependencies.
 
 ### appcd-util
+
+ * **v3.1.2** - 1/22/2021
+
+   * chore: Updated dependencies.
 
  * **v3.1.1** - 1/5/2021
 
