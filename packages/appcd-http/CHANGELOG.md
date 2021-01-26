@@ -1,3 +1,9 @@
+# v2.0.4 (Jan 26, 2021)
+
+ * fix: Adjusted content security policy to allow unsafe inline sources in local content.
+   [(DAEMON-339)](https://jira.appcelerator.org/browse/DAEMON-339)
+ * chore: Updated dependencies.
+
 # v2.0.3 (Jan 22, 2021)
 
  * chore: Updated dependencies.
