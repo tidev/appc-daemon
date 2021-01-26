@@ -1,6 +1,6 @@
 {
   "name": "appcd-fs",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "Library of useful filesystem functions.",
   "main": "./dist/fs",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
@@ -19,7 +19,7 @@
     "source-map-support": "^0.5.19"
   },
   "devDependencies": {
-    "appcd-gulp": "^3.1.2"
+    "appcd-gulp": "^3.1.3"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon",
   "bugs": "https://github.com/appcelerator/appc-daemon/issues",
