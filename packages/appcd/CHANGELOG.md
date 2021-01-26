@@ -1,3 +1,8 @@
+# v4.0.1 (Jan 26, 2021)
+
+ * fix: Fixed bug rendering the plugin API version.
+ * chore: Updated dependencies.
+
 # v4.0.0 (Jan 22, 2021)
 
  * BREAKING CHANGE: Requires Node.js 10.19.0 or newer.

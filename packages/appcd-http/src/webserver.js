@@ -114,7 +114,14 @@ export default class WebServer extends EventEmitter {
 
 		// init the Koa app with helmet and a simple request logger
 		this.app
-			.use(helmet())
+			.use(helmet({
+				contentSecurityPolicy: {
+					directives: {
+						/* eslint-disable-next-line quotes */
+						'default-src': [ "'self'", "'unsafe-inline'" ]
+					}
+				}
+			}))
 			.use(bodyParser())
 			.use((ctx, next) => {
 				ctx.startTime = new Date();

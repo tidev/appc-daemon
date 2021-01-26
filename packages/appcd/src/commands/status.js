@@ -53,7 +53,7 @@ export default {
 				table.push([ 'CLI Version',        highlight(`v${status.version}`) ]);
 				table.push([ 'Core Version',       highlight(`v${status.coreVersion}`) ]);
 				table.push([ 'Node Version',       highlight(`v${status.node.version}`) ]);
-				table.push([ 'Plugin API Version', highlight(`v${status.plugins.apiVersion || semver.satisfies(status.version, '^3.2.0') ? '1.1.0' : '1.0.0'}`) ]);
+				table.push([ 'Plugin API Version', highlight(`v${status.plugins.apiVersion || (semver.satisfies(status.version, '^3.2.0') ? '1.1.0' : '1.0.0')}`) ]);
 				log(table.toString());
 				log();
 

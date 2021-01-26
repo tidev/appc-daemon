@@ -14,7 +14,7 @@ export default appcdPluginAPIVersion;
 export const appcdPluginAPINodejsLookup = {
 	// IMPORTANT!
 	// these must be sorted descending
-	'2.0.x': '14.15.1',
+	'2.0.x': '14.15.4',
 	'1.x':   '10.16.3'
 };
 
