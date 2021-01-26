@@ -1,6 +1,11 @@
+# v4.0.2
+
+ * fix(status): Use the `version` for the appcd core version if `coreVersion` is undefined as is
+   the case in appcd 3.2.0 and older.
+
 # v4.0.1 (Jan 26, 2021)
 
- * fix: Fixed bug rendering the plugin API version.
+ * fix(status): Fixed bug rendering the plugin API version.
  * chore: Updated dependencies.
 
 # v4.0.0 (Jan 22, 2021)
