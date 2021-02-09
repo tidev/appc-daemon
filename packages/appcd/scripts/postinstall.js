@@ -13,6 +13,10 @@
  * If the user is noobody, display the manual install message.
  */
 
+if (process.env.APPCD_SKIP_POSTINSTALL) {
+	return;
+}
+
 const { expandPath } = require('appcd-path');
 const { snooplogg } = require('appcd-logger');
 const { cyan, yellow } = snooplogg.chalk;
