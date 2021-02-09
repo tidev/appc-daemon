@@ -12,7 +12,7 @@
 | APPCD_LOCALE              | The preferred locale to use such as `en_US`. Defaults to the system's value. |
 | APPCD_SERVER_PORT         | The port that the appc daemon should listen on. Defaults to `1732`. The port number must be between `1024` and `65535`. |
 | APPCD_TELEMETRY           | Controls the telemetry system. Set to `0` or `false` to disable telemetry. Defaults to `true`. |
-| APPCD_SKIP_POSTINSTALL    | Disable the postinstall script of the main appcd package |
+| APPCD_SKIP_POSTINSTALL    | Disable the postinstall script of the main appcd package. |
 
 ## Private Environment Variables
 
