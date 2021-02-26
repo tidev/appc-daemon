@@ -40,7 +40,7 @@
 
 	"telemetry": {
 		"app": "ea327577-858f-4d31-905e-fa670f50ef48",
-		"enabled": true,
+		"enabled": false,
 		"environment": "production",
 		"eventsDir": "{{home}}/telemetry",
 		"sendBatchSize": 10,

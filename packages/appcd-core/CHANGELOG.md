@@ -1,3 +1,7 @@
+# v4.2.3
+
+ * chore: Disabled telemetry by default.
+
 # v4.2.2 (Jan 26, 2021)
 
  * chore: Updated dependencies.
