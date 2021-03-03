@@ -1,5 +1,7 @@
 # v3.1.4 (Mar 3, 2021)
 
+ * misc: Improved `package` task support for `__dirname` and `__filename`, but still doesn't
+   support `require.resolve()` or static files that ship with a dependency package.
  * chore: Updated dependencies.
 
 # v3.1.3 (Jan 26, 2021)
