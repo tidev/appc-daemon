@@ -82,7 +82,7 @@ describe('Config', () => {
 			},
 			telemetry: {
 				app: 'ea327577-858f-4d31-905e-fa670f50ef48',
-				enabled: true,
+				enabled: false,
 				environment: 'test',
 				eventsDir: '~/.axway/appcd/telemetry',
 				sendBatchSize: 10,
