@@ -1,3 +1,7 @@
+# v4.2.6 (Mar 3, 2021)
+
+ * chore: Updated dependencies.
+
 # v4.2.5 (Jan 26, 2021)
 
  * fix: Updated Node.js version used by API version 2 plugins from 14.15.1 to 14.15.4 to match

@@ -13,7 +13,7 @@
     "gulp-debug": "^4.0.0",
     "gulp-plumber": "^1.2.1",
     "ini": "^2.0.0",
-    "lerna": "^3.22.1",
+    "lerna": "^4.0.0",
     "libnpm": "^3.0.1",
     "node-gyp": "^7.1.2",
     "pretty-log": "^0.1.0",

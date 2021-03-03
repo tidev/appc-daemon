@@ -41,11 +41,36 @@ module.exports = (opts) => {
 	async function cleanDocs() { return fs.remove(docsDir); }
 	exports.clean = parallel(cleanCoverage, cleanDist, cleanDocs);
 
+	// get the list of node_modules to search for lint related dependencies
+	const appcdNodeModulePaths = (() => {
+		const paths = [];
+		let last;
+		for (let cur = __dirname; cur !== last; last = cur, cur = path.dirname(cur)) {
+			const p = path.join(cur, 'node_modules');
+			if (fs.existsSync(p)) {
+				paths.push(p);
+			}
+		}
+		return paths;
+	})();
+
 	/*
 	 * lint tasks
 	 */
 	function lint(pattern, eslintFile = 'eslint.json') {
+		const orig = Module._nodeModulePaths;
+		Module._nodeModulePaths = from => Array.from(new Set([ ...orig(from), ...appcdNodeModulePaths ]));
+
 		const baseConfig = require(path.resolve(__dirname, '..', eslintFile));
+
+		if (!baseConfig.parserOptions) {
+			baseConfig.parserOptions = {};
+		}
+		if (!baseConfig.parserOptions.babelOptions) {
+			baseConfig.parserOptions.babelOptions = {};
+		}
+		baseConfig.parserOptions.babelOptions.plugins = babelConf.plugins;
+		baseConfig.parserOptions.babelOptions.presets = babelConf.presets;
 
 		// check if the user has a custom .eslintrc in the root of the project
 		let custom = path.join(opts.projectDir, '.eslintrc');
@@ -67,13 +92,15 @@ module.exports = (opts) => {
 		return gulp.src(pattern)
 			.pipe($.eslint({ baseConfig }))
 			.pipe($.eslint.format())
-			.pipe($.eslint.failAfterError());
+			.pipe($.eslint.failAfterError())
+			.on('error', () => {})
+			.on('finish', () => Module._nodeModulePaths = orig);
 	}
 	function lintSrc() { return lint('src/**/*.js'); }
 	function lintTest() { return lint('test/**/test-*.js', 'eslint-tests.json'); }
 	exports['lint-src'] = lintSrc;
 	exports['lint-test'] = lintTest;
-	exports.lint = parallel(
+	exports.lint = series(
 		async function lintSrcWrapper() { return lintSrc(); },
 		async function lintTestWrapper() { return lintTest(); }
 	);
