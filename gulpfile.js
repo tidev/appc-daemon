@@ -37,6 +37,10 @@ const cliTableChars = {
  * `gulp upgrade`.
  */
 const dontUpdate = [
+	'gawk',
+	'hook-emitter',
+	'nanobuffer',
+	'snooplogg'
 ];
 
 const appcdRE = /^appcd-/;

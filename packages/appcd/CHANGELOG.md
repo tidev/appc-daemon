@@ -1,7 +1,8 @@
-# v4.0.2
+# v4.0.2 (Mar 3, 2021)
 
  * fix(status): Use the `version` for the appcd core version if `coreVersion` is undefined as is
    the case in appcd 3.2.0 and older.
+ * chore: Updated dependencies.
 
 # v4.0.1 (Jan 26, 2021)
 
