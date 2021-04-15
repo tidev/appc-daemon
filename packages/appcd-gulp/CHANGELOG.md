@@ -1,4 +1,4 @@
-# v3.1.5
+# v3.1.5 (Apr 15, 2021)
 
  * fix(watch): Improved error handling during `watch` task.
  * fix(lint): Added appcd's `node_modules` to lookup paths when `appcd-gulp` is symlinked (via
