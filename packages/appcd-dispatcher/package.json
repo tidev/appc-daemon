@@ -1,6 +1,6 @@
 {
   "name": "appcd-dispatcher",
-  "version": "3.1.4",
+  "version": "3.1.5",
   "description": "Provides HTTP-like API for exposing services.",
   "main": "./dist/index",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
@@ -16,8 +16,8 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "appcd-logger": "^3.0.5",
-    "appcd-response": "^3.0.5",
+    "appcd-logger": "^3.0.6",
+    "appcd-response": "^3.0.6",
     "gawk": "^5.0.0",
     "path-to-regexp": "^6.2.0",
     "pluralize": "^8.0.0",
@@ -25,7 +25,7 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
-    "appcd-gulp": "^3.1.4",
+    "appcd-gulp": "^3.1.5",
     "memory-streams": "^0.1.3"
   },
   "homepage": "https://github.com/appcelerator/appc-daemon",
