@@ -15,6 +15,7 @@ import { ChildProcess, execSync, spawnSync } from 'child_process';
 import { EventEmitter } from 'events';
 import { isFile } from 'appcd-fs';
 import { Server, Socket } from 'net';
+import { homedir } from 'os';
 
 function getBinding(name) {
 	try {
@@ -576,7 +577,7 @@ const mandatoryRedactionTriggers = [
  * @type {Array.<Array|String>}
  */
 const mandatoryReplacements = [
-	[ process.env.HOME, '<HOME>' ],
+	[ homedir(), '<HOME>' ],
 	process.env.USER, // macOS, Linux
 	process.env.USERNAME, // Windows
 	/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g // email address
