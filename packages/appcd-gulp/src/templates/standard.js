@@ -54,12 +54,17 @@ module.exports = (opts) => {
 		return paths;
 	})();
 
+	let patchedNodeModulePaths = false;
+
 	/*
 	 * lint tasks
 	 */
 	function lint(pattern, eslintFile = 'eslint.json') {
-		const orig = Module._nodeModulePaths;
-		Module._nodeModulePaths = from => Array.from(new Set([ ...orig(from), ...appcdNodeModulePaths ]));
+		if (!patchedNodeModulePaths) {
+			const orig = Module._nodeModulePaths;
+			Module._nodeModulePaths = from => Array.from(new Set([ ...orig(from), ...appcdNodeModulePaths ]));
+			patchedNodeModulePaths = true;
+		}
 
 		const baseConfig = require(path.resolve(__dirname, '..', eslintFile));
 
@@ -90,11 +95,11 @@ module.exports = (opts) => {
 		}
 
 		return gulp.src(pattern)
+			.pipe($.plumber())
+			.pipe($.debug({ title: 'lint' }))
 			.pipe($.eslint({ baseConfig }))
 			.pipe($.eslint.format())
-			.pipe($.eslint.failAfterError())
-			.on('error', () => {})
-			.on('finish', () => Module._nodeModulePaths = orig);
+			.pipe($.eslint.failAfterError());
 	}
 	function lintSrc() { return lint('src/**/*.js'); }
 	function lintTest() { return lint('test/**/test-*.js', 'eslint-tests.json'); }
@@ -161,24 +166,31 @@ module.exports = (opts) => {
 	/*
 	 * test tasks
 	 */
-	exports.test             = series(lintTest, build,                async function test() {     runTests({ root: appcdGulpNodeModulesPath, projectDir }); });
-	exports['test-only']     = series(lintTest,                       async function test() {     runTests({ root: appcdGulpNodeModulesPath, projectDir }); });
-	exports.coverage         = series(cleanCoverage, lintTest, build, async function coverage() { runTests({ root: appcdGulpNodeModulesPath, projectDir, cover: true }); });
-	exports['coverage-only'] = series(cleanCoverage, lintTest,        async function coverage() { runTests({ root: appcdGulpNodeModulesPath, projectDir, cover: true }); });
+	exports.test             = series(lintTest, build,                function test() {     return runTests({ root: appcdGulpNodeModulesPath, projectDir }); });
+	exports['test-only']     = series(lintTest,                       function test() {     return runTests({ root: appcdGulpNodeModulesPath, projectDir }); });
+	exports.coverage         = series(cleanCoverage, lintTest, build, function coverage() { return runTests({ root: appcdGulpNodeModulesPath, projectDir, cover: true }); });
+	exports['coverage-only'] = series(cleanCoverage, lintTest,        function coverage() { return runTests({ root: appcdGulpNodeModulesPath, projectDir, cover: true }); });
 
 	/*
 	 * watch tasks
 	 */
-	exports.watch = series(build, function watch() {
+	exports.watch = function watch() {
 		return new Promise(resolve => {
-			const watcher = gulp.watch(`${process.cwd()}/src/**/*.js`, build);
+			const watcher = gulp.watch(`${process.cwd()}/src/**/*.js`, {
+				ignoreInitial: false
+			}, done => {
+				// this is basically a hack because if build() fails, for some reason the callback
+				// is never fired, so just call done() immediately
+				build();
+				done();
+			});
 			process.on('uncaughtException', () => {});
 			process.on('SIGINT', () => {
 				watcher.close();
 				resolve();
 			});
 		});
-	});
+	};
 
 	exports['watch-test'] = series(build, function watchTest() {
 		return new Promise(resolve => {

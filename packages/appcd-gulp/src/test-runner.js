@@ -1,12 +1,12 @@
 const ansiColors    = require('ansi-colors');
-const fs            = require('fs');
+const fs            = require('fs-extra');
 const log           = require('fancy-log');
 const path          = require('path');
 const { spawnSync } = require('child_process');
 
 const isWindows   = process.platform === 'win32';
 
-exports.runTests = function runTests({ root, projectDir, cover, all }) {
+exports.runTests = async function runTests({ root, projectDir, cover, all }) {
 	const args = [];
 	let { execPath } = process;
 
@@ -105,6 +105,11 @@ exports.runTests = function runTests({ root, projectDir, cover, all }) {
 			throw err;
 		}
 	} finally {
+		const coverageDir = path.join(projectDir, 'coverage');
+		if (cover && fs.existsSync(coverageDir)) {
+			fs.copySync(path.join(__dirname, 'styles'), coverageDir);
+		}
+
 		const after = path.join(projectDir, 'test', 'after.js');
 		if (fs.existsSync(after)) {
 			require(after);
