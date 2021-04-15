@@ -13,9 +13,9 @@ import semver from 'semver';
 
 import { ChildProcess, execSync, spawnSync } from 'child_process';
 import { EventEmitter } from 'events';
+import { homedir } from 'os';
 import { isFile } from 'appcd-fs';
 import { Server, Socket } from 'net';
-import { homedir } from 'os';
 
 function getBinding(name) {
 	try {

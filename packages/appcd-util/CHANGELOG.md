@@ -1,3 +1,8 @@
+# v3.1.5
+
+ * fix(redact): Use `os.homedir()` instead of `process.env.HOME` to get users home directory.
+ * chore: Updated dependencies.
+
 # v3.1.4 (Mar 3, 2021)
 
  * chore: Updated dependencies.

@@ -4,6 +4,7 @@
  * fix(lint): Added appcd's `node_modules` to lookup paths when `appcd-gulp` is symlinked (via
    `yarn link` in this case) into another project.
  * style(test): Updated code coverage HTML report to use a dark mode color palette.
+ * chore: Updated dependencies.
 
 # v3.1.4 (Mar 3, 2021)
 

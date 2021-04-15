@@ -37,17 +37,17 @@
     "appcd-nodejs": "^4.1.4",
     "appcd-path": "^2.0.6",
     "appcd-util": "^3.1.4",
-    "boxen": "^5.0.0",
+    "boxen": "^5.0.1",
     "check-kit": "^1.1.2",
-    "cli-kit": "^1.9.3",
+    "cli-kit": "^1.11.3",
     "cli-table3": "^0.6.0",
     "global-prefix": "^3.0.0",
     "humanize": "^0.0.9",
     "infer-owner": "^1.0.4",
     "pretty-ms": "^7.0.1",
-    "semver": "^7.3.4",
+    "semver": "^7.3.5",
     "source-map-support": "^0.5.19",
-    "v8-compile-cache": "^2.2.0"
+    "v8-compile-cache": "^2.3.0"
   },
   "devDependencies": {
     "appcd-gulp": "^3.1.4"
