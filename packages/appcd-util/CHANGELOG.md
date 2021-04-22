@@ -1,3 +1,8 @@
+# v3.1.6
+
+ * fix(makeSerializable): Only ignore nested duplicates that form circular references instead of
+   anything that is a duplicate. [(DAEMON-342)](https://jira.appcelerator.org/browse/DAEMON-342)
+
 # v3.1.5 (Apr 15, 2021)
 
  * fix(redact): Use `os.homedir()` instead of `process.env.HOME` to get users home directory.

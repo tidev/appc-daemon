@@ -525,6 +525,25 @@ describe('util', () => {
 				a: undefined,
 				b: [ undefined ]
 			});
+
+			const a = { foo: 'bar' };
+			const b = { baz: 'wiz', a };
+			a.b = b;
+			expect(util.makeSerializable({ a, b })).to.deep.equal({
+				a: { foo: 'bar', b: { baz: 'wiz', a: undefined } },
+				b: { baz: 'wiz', a: { foo: 'bar', b: undefined } }
+			});
+		});
+
+		it('should not remove non-ciruclar references', () => {
+			const obj = {};
+			const meta = { msg: 'hi' };
+			obj.a = meta;
+			obj.b = meta;
+			expect(util.makeSerializable(obj)).to.deep.equal({
+				a: { msg: 'hi' },
+				b: { msg: 'hi' }
+			});
 		});
 	});
 
