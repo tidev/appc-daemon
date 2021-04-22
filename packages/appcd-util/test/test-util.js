@@ -490,7 +490,7 @@ describe('util', () => {
 		});
 	});
 
-	describe.only('makeSerializable()', () => {
+	describe('makeSerializable()', () => {
 		it('should pass through non-objects', () => {
 			expect(util.makeSerializable()).to.equal(undefined);
 			expect(util.makeSerializable(undefined)).to.equal(undefined);
@@ -524,6 +524,14 @@ describe('util', () => {
 			expect(util.makeSerializable(obj)).to.deep.equal({
 				a: undefined,
 				b: [ undefined ]
+			});
+
+			const a = { foo: 'bar' };
+			const b = { baz: 'wiz', a };
+			a.b = b;
+			expect(util.makeSerializable({ a, b })).to.deep.equal({
+				a: { foo: 'bar', b: { baz: 'wiz', a: undefined } },
+				b: { baz: 'wiz', a: { foo: 'bar', b: undefined } }
 			});
 		});
 
