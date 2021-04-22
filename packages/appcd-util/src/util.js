@@ -340,46 +340,44 @@ export function inherits(subject, base) {
  * Removes non-serializable properties and circular references from a value such that it can be
  * printed, sent over an IPC channel, or JSON stringified.
  *
- * @param {*} it - The value to scrub.
+ * @param {*} it - The value to serialize.
  * @returns {*}
  */
 export function makeSerializable(it) {
-	let values = new Set();
+	return (function dupe (src, chain = []) {
+		const type = typeof src;
 
-	try {
-		return (function dupe (src) {
-			const type = typeof src;
+		if (type === 'number' && isNaN(src)) {
+			return null;
+		}
 
-			if (type === 'number' && isNaN(src)) {
-				return null;
+		if (src === null || type === 'string' || type === 'number' || type === 'boolean' || src instanceof Date) {
+			return src;
+		}
+
+		if (type === 'object') {
+			if (chain.includes(src)) {
+				return;
 			}
 
-			if (src === null || type === 'string' || type === 'number' || type === 'boolean' || src instanceof Date) {
-				return src;
-			}
+			let result;
 
-			if (type === 'object') {
-				if (values.has(src)) {
-					return;
-				}
+			chain.push(src);
 
-				values.add(src);
-
-				if (Array.isArray(src)) {
-					return src.map(dupe);
-				}
-
-				const obj = {};
+			if (Array.isArray(src)) {
+				result = src.map(it => dupe(it, chain));
+			} else {
+				result = {};
 				for (let [ key, value ] of Object.entries(src)) {
-					obj[key] = dupe(value);
+					result[key] = dupe(value, chain);
 				}
-				return obj;
 			}
-		}(it));
-	} finally {
-		values.clear();
-		values = null;
-	}
+
+			chain.pop();
+
+			return result;
+		}
+	}(it));
 }
 
 /**

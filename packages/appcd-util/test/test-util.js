@@ -490,7 +490,7 @@ describe('util', () => {
 		});
 	});
 
-	describe('makeSerializable()', () => {
+	describe.only('makeSerializable()', () => {
 		it('should pass through non-objects', () => {
 			expect(util.makeSerializable()).to.equal(undefined);
 			expect(util.makeSerializable(undefined)).to.equal(undefined);
@@ -524,6 +524,17 @@ describe('util', () => {
 			expect(util.makeSerializable(obj)).to.deep.equal({
 				a: undefined,
 				b: [ undefined ]
+			});
+		});
+
+		it('should not remove non-ciruclar references', () => {
+			const obj = {};
+			const meta = { msg: 'hi' };
+			obj.a = meta;
+			obj.b = meta;
+			expect(util.makeSerializable(obj)).to.deep.equal({
+				a: { msg: 'hi' },
+				b: { msg: 'hi' }
 			});
 		});
 	});
