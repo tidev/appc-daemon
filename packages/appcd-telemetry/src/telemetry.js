@@ -152,6 +152,7 @@ export default class Telemetry extends Dispatcher {
 			}
 
 			if (!this.config.enabled || !this.eventsDir) {
+				ctx.response = new Response(codes.TELEMETRY_DISABLED);
 				return;
 			}
 
