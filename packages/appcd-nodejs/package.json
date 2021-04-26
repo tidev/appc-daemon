@@ -16,7 +16,7 @@
     "test": "gulp test"
   },
   "dependencies": {
-    "@axway/amplify-request": "^2.1.1",
+    "@axway/amplify-request": "^2.1.2",
     "appcd-fs": "^2.0.6",
     "appcd-logger": "^3.0.6",
     "appcd-util": "^3.1.5",

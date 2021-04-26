@@ -1,7 +1,8 @@
-# v3.1.6
+# v3.1.6 (Apr 26, 2021)
 
  * fix(makeSerializable): Only ignore nested duplicates that form circular references instead of
    anything that is a duplicate. [(DAEMON-342)](https://jira.appcelerator.org/browse/DAEMON-342)
+ * chore: Updated dependencies.
 
 # v3.1.5 (Apr 15, 2021)
 
