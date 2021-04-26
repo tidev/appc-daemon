@@ -1,3 +1,7 @@
+# v5.0.6
+
+ * fix: Don't throw error if telemetry is disabled.
+
 # v5.0.5 (Apr 15, 2021)
 
  * chore: Updated dependencies.

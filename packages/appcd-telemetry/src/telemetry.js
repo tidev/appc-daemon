@@ -152,7 +152,7 @@ export default class Telemetry extends Dispatcher {
 			}
 
 			if (!this.config.enabled || !this.eventsDir) {
-				throw new AppcdError(codes.TELEMETRY_DISABLED);
+				return;
 			}
 
 			let { app, event } = ctx.request;
