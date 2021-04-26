@@ -1,6 +1,6 @@
 # Appc Daemon 4.0.4
 
-## Unreleased
+## Apr 26, 2021
 
 This is a patch release with bug fixes and minor dependency updates.
 
