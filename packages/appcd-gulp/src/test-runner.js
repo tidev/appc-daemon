@@ -6,7 +6,7 @@ const { spawnSync } = require('child_process');
 
 const isWindows   = process.platform === 'win32';
 
-exports.runTests = async function runTests({ root, projectDir, cover, all }) {
+exports.runTests = async function runTests({ all, cover, projectDir, root, slow, timeout }) {
 	const args = [];
 	let { execPath } = process;
 
@@ -56,6 +56,11 @@ exports.runTests = async function runTests({ root, projectDir, cover, all }) {
 	// add --inspect
 	if (process.argv.includes('--debug') || process.argv.includes('--inspect') || process.argv.includes('--inspect-brk')) {
 		args.push('--inspect-brk', '--timeout', '9999999');
+	} else if (timeout) {
+		args.push('--timeout', timeout);
+	}
+	if (slow) {
+		args.push('--slow', slow);
 	}
 
 	const jenkinsReporter = resolveModule(root, 'mocha-jenkins-reporter');
