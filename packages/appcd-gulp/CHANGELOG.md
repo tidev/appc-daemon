@@ -1,3 +1,10 @@
+# 3.2.0
+
+ * feat(test): Exposed Mocha `slow` and `timeout` parameters in test runner.
+ * fix(coverage): Simplified coverage file resolution by letting Node's module system find the
+   module first, then switch the resolved filename from the `dist` version to the `src` version if
+   the file is apart of the package being tested.
+
 # v3.1.6 (Apr 26, 2021)
 
  * chore: Updated dependencies.

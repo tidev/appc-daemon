@@ -69,12 +69,8 @@ if (process.env.APPCD_COVERAGE) {
 	const appcdPkg = /^appcd/;
 
 	Module._resolveFilename = function (request, parent, isMain, options) {
-		const parentId = parent && path.resolve(parent.id);
-
-		if (distRegExp.test(request) && (isMain || (parentId && (parentId.startsWith(cwd) || parentId.startsWith(realcwd)) && !parentId.includes('node_modules')))) {
-			request = request.replace(distGRegExp, (m, q1, q2) => `${q1}src${q2}`);
-
-		} else if (process.env.APPCD_TEST_GLOBAL_PACKAGE_DIR && appcdPkg.test(request)) {
+		if (process.env.APPCD_TEST_GLOBAL_PACKAGE_DIR && appcdPkg.test(request)) {
+			// appcd-* package specific handling
 			const dir = path.resolve(process.env.APPCD_TEST_GLOBAL_PACKAGE_DIR, request);
 			try {
 				if (fs.statSync(dir).isDirectory()) {
@@ -93,6 +89,12 @@ if (process.env.APPCD_COVERAGE) {
 			}
 		}
 
-		return originalResolveFilename(request, parent, isMain, options);
+		let resolved = originalResolveFilename(request, parent, isMain, options);
+
+		if (resolved.startsWith(cwd) && !resolved.includes('node_modules') && distRegExp.test(resolved)) {
+			resolved = resolved.replace(distGRegExp, (m, q1, q2) => `${q1}src${q2}`);
+		}
+
+		return resolved;
 	};
 }
