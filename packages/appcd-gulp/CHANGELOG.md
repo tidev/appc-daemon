@@ -1,4 +1,4 @@
-# 3.2.0
+# 3.2.0 (May 6, 2021)
 
  * feat(test): Exposed Mocha `slow` and `timeout` parameters in test runner.
  * fix(coverage): Simplified coverage file resolution by letting Node's module system find the
