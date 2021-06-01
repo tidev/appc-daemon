@@ -14,11 +14,7 @@
  * [Telemetry](Telemetry.md)
  * [Web Server](Web%20Server.md)
 
-> [Home](../README.md) ➤ [Development](README.md) ➤ Architecture
-
-> :warning: Under construction.
-
-#
+![asdf](architecture.png)
 
 The Appc Daemon is comprised of two main components: the CLI and the core.
 
