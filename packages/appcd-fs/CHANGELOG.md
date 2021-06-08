@@ -1,3 +1,9 @@
+# v2.1.0 (Jun 8, 2021)
+
+ * feat: Added `mkdirpSync()`, `moveSync()`, and `writeFileSync()` helpers that create parent
+   directories and apply parent directory ownership.
+ * chore: Updated dependencies.
+
 # v2.0.7 (Apr 26, 2021)
 
  * chore: Updated dependencies.
