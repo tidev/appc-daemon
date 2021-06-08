@@ -1,14 +1,30 @@
+import fs from 'fs';
 import path from 'path';
+import tmp from 'tmp';
 
 import {
 	existsSync,
 	isDir,
 	isFile,
 	locate,
-	readdirScopedSync
+	mkdirpSync,
+	moveSync,
+	readdirScopedSync,
+	writeFileSync
 } from '../dist/fs';
 
+const {
+	name: tmpDir,
+	removeCallback
+} = tmp.dirSync({
+	mode: '755',
+	prefix: 'appcd-fs-test-',
+	unsafeCleanup: true
+});
+
 describe('fs', () => {
+	after(() => removeCallback());
+
 	describe('existsSync()', () => {
 		it('should check if a file exists', () => {
 			expect(existsSync(__filename)).to.be.true;
@@ -89,6 +105,49 @@ describe('fs', () => {
 		});
 	});
 
+	describe('mkdirpSync()', () => {
+		afterEach(() => {
+			try {
+				fs.rmdirSync(tmpDir, { recursive: true });
+			} catch (e) {
+				// requires Node 12.10.0
+			}
+		});
+
+		it('should create a directory', () => {
+			const p = path.join(tmpDir, 'foo', 'bar');
+			expect(fs.existsSync(p)).to.equal(false);
+			mkdirpSync(p);
+			expect(fs.existsSync(p)).to.equal(true);
+		});
+	});
+
+	describe('moveSync()', () => {
+		afterEach(() => {
+			try {
+				fs.rmdirSync(tmpDir, { recursive: true });
+			} catch (e) {
+				// requires Node 12.10.0
+			}
+		});
+
+		it('should move a file to a directory', () => {
+			const src = path.join(tmpDir, 'foo', 'bar.txt');
+			writeFileSync(src, 'Hello World!');
+
+			const dest = path.join(tmpDir, 'baz', 'wiz.txt');
+			moveSync(src, dest);
+			expect(fs.existsSync(src)).to.equal(false);
+			expect(fs.existsSync(dest)).to.equal(true);
+		});
+
+		it('should error if source file does not exist', () => {
+			expect(() => {
+				moveSync('does_not_exist', tmpDir);
+			}).to.throw(Error, /^ENOENT/);
+		});
+	});
+
 	describe('readdirScoped', () => {
 		const baseDir = path.resolve(__dirname, './fixtures/readdirScopedSync');
 		it('should read dir and have scoped packages as a single entry', () => {
@@ -99,6 +158,22 @@ describe('fs', () => {
 		it('should work normally when no scopes exists and filter files out', () => {
 			const dirs = readdirScopedSync(__dirname);
 			expect(dirs).to.deep.equal([ 'fixtures' ]);
+		});
+	});
+
+	describe('writeFileSync()', () => {
+		afterEach(() => {
+			try {
+				fs.rmdirSync(tmpDir, { recursive: true });
+			} catch (e) {
+				// requires Node 12.10.0
+			}
+		});
+
+		it('should write a file', () => {
+			const f = path.join(tmpDir, 'foo', 'bar.txt');
+			writeFileSync(f, 'Hello World!');
+			expect(fs.readFileSync(f, 'utf8')).to.equal('Hello World!');
 		});
 	});
 });
