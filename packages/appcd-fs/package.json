@@ -1,6 +1,6 @@
 {
   "name": "appcd-fs",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Library of useful filesystem functions.",
   "main": "./dist/fs",
   "author": "Axway, Inc. <npmjs@appcelerator.com>",
