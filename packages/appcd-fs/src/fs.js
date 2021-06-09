@@ -215,7 +215,7 @@ export function readdirScopedSync(dir) {
  */
 export function writeFileSync(dest, contents, opts = {}) {
 	execute(dest, opts, opts => {
-		mkdirpSync(path.dirname(dest), opts, { ...opts, mode: undefined });
+		mkdirpSync(path.dirname(dest), { ...opts, mode: undefined });
 		fs.writeFileSync(dest, contents, opts);
 	});
 }

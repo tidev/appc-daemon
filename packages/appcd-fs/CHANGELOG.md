@@ -1,3 +1,7 @@
+# v2.1.2 (Jun 8, 2021)
+
+ * fix: Fixed typo.
+
 # v2.1.1 (Jun 8, 2021)
 
  * fix: Writing a file with a mode was applying the mode to the file and newly created directories.
